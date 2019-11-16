@@ -1,0 +1,417 @@
+.TH "GTKWAVERC" "5" "3.3.81" "Anthony Bybell" "GTKWave Configuration File"
+.SH "NAME"
+.LP 
+gtkwaverc \- GTKWave Configuration File
+.SH "SYNTAX"
+.LP 
+option <\fIvalue\fP> 
+.TP
+The configuration file is a series of option and value pairs.  Comment lines marked with an initial '#' character are permissible.  Blank lines are ignored.  
+.SH "DESCRIPTION"
+.LP 
+Configuration file for \fIgtkwave\fP(1).  The search path for the configuration file (if unspecified) is the current working directory followed by the user's home directory.
+.SH "OPTIONS"
+.LP 
+.TP
+\fBaccel\fR <\fI"pathvalue" accelerator\fP>
+This allows replacement of menu accelerator keys.  See the .gtkwaverc file in the source distribution for examples on
+pathvalue and accelerator syntax.  The special accelerator value of \fI(null)\fP means that no accelerator is bound to the 
+menu item.
+.TP 
+\fBalt_hier_delimeter\fR <\fIvalue\fP>
+This allows another character in addition to the hier_delimeter to be used to delimit levels in the hierarchy for VCD. Only the first character in the value is significant. Note that this is normally off. The intended use is to resolve the hierarchies of netlist based models that often contain slashes to delimit hierarchy inside of $var statements.
+.TP
+\fBalt_wheel_mode\fR <\fIvalue\fP> 
+Default is on.  Scrollwheel alone pans along a quarter at a time rather than a full page, so you don't get lost. 
+Ctrl+wheel zooms in/out around the mouse cursor position, not the marker position. 
+Alt+wheel edges left/right based on the currently selected signal.  This makes measuring deltas easier. 
+.TP 
+\fBanalog_redraw_skip_count\fR <\fIvalue\fP>
+Specifies how many overlapping analog segments can be drawn for a given X position onscreen.  (Default: 20)  If there are
+gaps in analog traces, this value is too low.
+.TP
+\fBappend_vcd_hier\fR <\fIvalue\fP>
+Allows the specification of a prefix hierarchy for VCD files. This can be done in "pieces," so that multiple layers of hierarchy are prepended to symbol names with the most significant addition occurring first (see .gtkwaverc in the  examples/vcd directory). The intended use of this is to have the ability to add "project" prefixes which allow easier selection of everything from the tree hierarchy.
+.TP 
+\fBatomic_vectors\fR <\fIvalue\fP>
+Speeds up vcd loading and takes up less memory. This option is deprecated; it is currently the default.
+.TP 
+\fBautocoalesce\fR <\fIvalue\fP>
+A nonzero value enables autocoalescing of VCD vectors when applicable. This may be toggled dynamically during wave viewer usage.
+.TP 
+\fBautocoalesce_reversal\fR <\fIvalue\fP>
+causes split vectors to be reconstructed in reverse order (only if autocoalesce is also active).
+.TP 
+\fBautoname_bundles\fR <\fIvalue\fP>
+A nonzero value indicates that GTKWave will create its own bundle names rather than prompting the user for them.
+.TP 
+\fBclipboard_mouseover\fR <\fIvalue\fP>
+A nonzero value indicates that when mouseover is enabled, all values generated for the tooltips will be automatically copied into the clipboard so they may be pasted into other 
+programs such as text editors, etc.
+.TP 
+\fBcolor_0\fR <\fIvalue\fP>
+trace color when 0.
+.TP 
+\fBcolor_1\fR <\fIvalue\fP>
+trace color when 1.
+.TP 
+\fBcolor_1fill\fR <\fIvalue\fP>
+trace color (inside of box) when 1.
+.TP 
+\fBcolor_back\fR <\fIvalue\fP>
+background color.
+.TP 
+\fBcolor_baseline\fR <\fIvalue\fP>
+middle mouse button marker color.
+.TP 
+\fBcolor_black\fR <\fIvalue\fP>
+color value for "black" in signal window.
+.TP 
+\fBcolor_brkred\fE <\fIvalue\fP>
+brick red color for comments.
+.TP
+\fBcolor_dash\fR <\fIvalue\fP>
+trace color when don't care ("-").
+.TP 
+\fBcolor_dashfill\fR <\fIvalue\fP>
+trace color (inside of box) when don't care ("-").
+.TP 
+\fBcolor_dkblue\fR <\fIvalue\fP>
+color value for "dark blue" in signal window.
+.TP 
+\fBcolor_dkgray\fR <\fIvalue\fP>
+color value for "dark gray" in signal window.
+.TP 
+\fBcolor_gmstrd\fR <\fIvalue\fP>
+color value for trace groupings.
+.TP
+\fBcolor_grid\fR <\fIvalue\fP>
+grid color (use Alt-G/Shift-Alt-G to show/hide grid).  This is also the color used for \fBhighlight_wavewindow\fR when enabled.
+.TP
+\fBcolor_grid2\fR <\fIvalue\fP>
+grid color for secondary pattern search.
+.TP 
+\fBcolor_high\fR <\fIvalue\fP>
+trace color when high ("H").
+.TP 
+\fBcolor_highfill\fR <\fIvalue\fP>
+trace color (inside of box) when high ("H").
+.TP
+\fBcolor_low\fR <\fIvalue\fP>
+trace color when low ("L").
+.TP 
+\fBcolor_ltblue\fR <\fIvalue\fP>
+color for shadowed traces.
+.TP 
+\fBcolor_ltgray\fR <\fIvalue\fP>
+color value for "light gray" in signal window.
+.TP 
+\fBcolor_mark\fR <\fIvalue\fP>
+color of the named markers.
+.TP 
+\fBcolor_mdgray\fR <\fIvalue\fP>
+color value for "medium gray" in signal window.
+.TP 
+\fBcolor_mid\fR <\fIvalue\fP>
+trace color when floating ("Z").
+.TP 
+\fBcolor_normal\fR <\fIvalue\fP>
+color value for "normal" GTK state in signal window.
+.TP 
+\fBcolor_time\fR <\fIvalue\fP>
+text color for timebar.
+.TP 
+\fBcolor_timeb\fR <\fIvalue\fP>
+text color for timebar's background.
+.TP 
+\fBcolor_trans\fR <\fIvalue\fP>
+trace color when transitioning.
+.TP 
+\fBcolor_u\fR <\fIvalue\fP>
+trace color when undefined ("U").
+.TP 
+\fBcolor_ufill\fR <\fIvalue\fP>
+trace color (inside of box) when undefined ("U").
+.TP 
+\fBcolor_umark\fR <\fIvalue\fP>
+color of the unnamed (primary) marker.
+.TP 
+\fBcolor_value\fR <\fIvalue\fP>
+text color for vector values.
+.TP 
+\fBcolor_vbox\fR <\fIvalue\fP>
+vector color (horizontal).
+.TP 
+\fBcolor_vtrans\fR <\fIvalue\fP>
+vector color (verticals/transitions).
+.TP 
+\fBcolor_w\fR <\fIvalue\fP>
+trace color when weak ("W").
+.TP 
+\fBcolor_wfill\fR <\fIvalue\fP>
+trace color (inside of box) when weak ("W").
+.TP 
+\fBcolor_white\fR <\fIvalue\fP>
+color value for "white" in signal window.
+.TP 
+\fBcolor_x\fR <\fIvalue\fP>
+trace color when undefined ("X") (collision for VHDL).
+.TP 
+\fBcolor_xfill\fR <\fIvalue\fP>
+trace color (inside of box) when undefined ("X") (collision for VHDL).
+.TP 
+\fBconstant_marker_update\fR <\fIvalue\fP>
+A nonzero value indicates that the values for traces listed in the signal window are to be updated constantly when the left mouse button is being held down rather than only when it is first pressed then when released (which is the default).
+.TP
+\fBcontext_tabposition\fR <\fIvalue\fP>
+Use zero for tabbed viewing with named tabs at the top.  Nonzero places numerically indexed tabs at the left.
+.TP 
+\fBconvert_to_reals\fR <\fIvalue\fP>
+Converts all integer and parameter VCD declarations to real-valued ones when set to a nonzero/yes value. The positive aspect of this is that integers and parameters will take up less space in memory and will automatically display in decimal format. The negative aspect of this is that integers and parameters will only be displayable as decimals and can't be bit reversed, inverted, etc.
+.TP 
+\fBcursor_snap\fR <\fIvalue\fP>
+A nonzero value indicates the number of pixels the marker should snap to for the nearest signal transition.
+.TP 
+\fBdisable_ae2_alias\fR <\fIvalue\fP>
+A nonzero value indicates that the AE2 loader is to ignore the aliasdb keyword and is not to construct facility aliases.
+.TP 
+\fBdisable_auto_comphier\fR <\fIvalue\fP>
+A nonzero value indicates that the loaders that support compressed hierarchies should not automatically turn on compression if the threshold count of signals (500000) has been reached.
+.TP 
+\fBdisable_empty_gui\fR <\fIvalue\fP>
+A nonzero value indicates that if gtkwave is invoked without a dumpfile name, then an empty gtkwave session is to be suppressed.
+Default is a zero value: to bring up an empty session which needs a file loaded or dragged into it.
+.TP 
+\fBdisable_mouseover\fR <\fIvalue\fP>
+A nonzero value indicates that signal/value tooltip pop up bubbles on mouse button presses should be disabled in the value window. A zero value indicates that value tooltips should be active (default is disabled).
+.TP 
+\fBdisable_tooltips\fR <\fIvalue\fP>
+A nonzero value indicates that tooltip pop up bubbles should be disabled. A zero value indicates that tooltips should be active (default).
+.TP 
+\fBdo_initial_zoom_fit\fR <\fIvalue\fP>
+A nonzero value indicates that the trace should initially be crunched to fit the screen. A zero value indicates that the initial zoom should be zero (default).
+.TP 
+\fBdragzoom_threshold\fR <\fIvalue\fP>
+A nonzero value indicates the number of pixels in the x direction the marker must move in order for a dragzoom to be triggered.  This is largely to handle noisy input devices.
+.TP 
+\fBdynamic_resizing\fR <\fIvalue\fP>
+A nonzero value indicates that dynamic resizing should be initially enabled (default). A zero value indicates that dynamic resizing should be initially disabled.
+.TP
+\fBeditor\fR <\fI"value"\fP>
+This is used to specify a string (quotes mandatory) for when gtkwave invokes a text editor (e.g., Open Source Definition).  Examples are:
+editor "vimx -g +%d %s", editor "gedit +%d %s", editor "emacs +%d %s", and for OSX, editor "mate -l %d %s".  The %d may be combined with other characters in a string such as +, etc.  The %s argument must stand by itself.  Note that if this rc variable is not set, 
+then the environment variable GTKWAVE_EDITOR will be consulted next, then finally gedit will be used (if found).
+.TP 
+\fBenable_fast_exit\fR <\fIvalue\fP>
+Allows exit without bringing up a confirmation requester. The default is nonzero/yes.
+.TP 
+\fBenable_ghost_marker\fR <\fIvalue\fP>
+lets the user turn on/off the ghost marker during primary marker dragging. Default is enabled.
+.TP 
+\fBenable_horiz_grid\fR <\fIvalue\fP>
+A nonzero value indicates that when grid drawing is enabled, horizontal lines are to be drawn. This is the default.
+.TP 
+\fBenable_vcd_autosave\fR <\fIvalue\fP>
+causes the vcd loader to automatically generate a .sav file (vcd_autosave.sav ) in the cwd if a save file is not specified on the command line. Note that this mirrors the VCD $var defs and no attempt is made to coalesce split bitvectors back together.
+.TP 
+\fBenable_vert_grid\fR <\fIvalue\fP>
+A nonzero value indicates that when grid drawing is enabled, vertical lines are to be drawn. This is the default. Note that all possible combinations of enable_horiz_grid and enable_vert_grid values are acceptable.
+.TP 
+\fBfill_waveform\fR <\fIvalue\fP>
+A zero value indicates that the waveform should not be filled for 1/H values. This is the default.
+.TP 
+\fBfontname_logfile\fR <\fIvalue\fP>
+When followed by an argument, this indicates the name of the X11 font that you wish to use for the logfile browser. You may generate appropriate fontnames using the xfontsel program.
+.TP 
+\fBfontname_signals\fR <\fIvalue\fP>
+When followed by an argument, this indicates the name of the X11 font that you wish to use for signals. You may generate appropriate fontnames using the xfontsel program.
+.TP 
+\fBfontname_waves\fR <\fIvalue\fP>
+When followed by an argument, this indicates the name of the X11 font that you wish to use for waves. You may generate appropriate fontnames using the xfontsel program. Note that the signal font must be taller than the wave font or the viewer will complain then terminate.
+.TP 
+\fBforce_toolbars\fR <\fIvalue\fP>
+When enabled, this forces everything above the signal and wave windows to be rendered as toolbars. This allows for them to be detached which allows for more usable wave viewer space. By default this is off.
+.TP 
+\fBhide_sst\fR <\fIvalue\fP>
+Hides the Signal Search Tree widget for GTK2.4 and greater such that it is not embedded into the main viewer window.  It is still reachable as an external widget through the menus.
+.TP 
+\fBhier_delimeter\fR <\fIvalue\fP>
+This allows characters other than '/' to be used to delimit levels in the hierarchy. Only the first character in the value is significant.
+.TP 
+\fBhier_grouping\fR <\fIvalue\fP>
+For the tree widgets, this allows the hierarchies to be grouped in a single place rather than spread among the netnames.
+.TP 
+\fBhier_ignore_escapes\fR <\fIvalue\fP>
+A nonzero value indicates that the signal pane ignores escapes in identifiers when determining the hierarchy maximum depth.  Default is disabled so that escapes are examined.
+.TP 
+\fBhier_max_level\fR <\fIvalue\fP>
+Sets the maximum hierarchy depth (from the right side) to display for trace names. Note that a value of zero displays the full hierarchy name.
+.TP 
+\fBhighlight_wavewindow\fR <\fIvalue\fP>
+When enabled, this causes traces highlighted in the signal window also to be highlighted in the wave window.
+.TP
+\fBhpane_pack\fR <\fIvalue\fP>
+A nonzero value indicates that the horizontal pane should be constructed using the gtk_paned_pack functions (default and recommended). A zero value indicates that gtk_paned_add will be used instead.
+.TP 
+\fBignore_savefile_pane_pos\fR <\fIvalue\fP>
+If nonzero, specifies that the pane position attributes (i.e., signal window width size, SST is expanded, etc.) are to be ignored during savefile loading and is to be skipped during saving.  Default is that the attribute is used.
+.TP 
+\fBignore_savefile_pos\fR <\fIvalue\fP>
+If nonzero, specifies that the window position attribute is to be ignored during savefile loading and is to be skipped during saving.  Default is that the position attribute is used.
+
+.TP
+\fBignore_savefile_size\fR <\fIvalue\fP>
+If nonzero, specifies that the window size attribute is to be ignored during savefile loading and is to be skipped during saving.  Default is that the size attribute is used.
+.TP
+\fBinitial_signal_window_width\fR <\fIvalue\fP>
+Sets the creation width for the signal pane on GUI initialization.  Also sets another potential minimum value for dynamic resizing.
+.TP
+\fBinitial_window_x\fR <\fIvalue\fP>
+Sets the size of the initial width of the wave viewer window. Values less than or equal to zero will set the initial width equal to \-1 which will let GTK determine the minimum size.
+.TP 
+\fBinitial_window_xpos\fR <\fIvalue\fP>
+Sets the size of the initial x coordinate of the wave viewer window. \-1 will let the window manager determine the position.
+.TP 
+\fBinitial_window_y\fR <\fIvalue\fP>
+Sets the size of the initial height of the wave viewer window. Values less than or equal to zero will set the initial width equal to \-1 which will let GTK determine the minimum size.
+.TP 
+\fBinitial_window_ypos\fR <\fIvalue\fP>
+Sets the size of the initial y coordinate of the wave viewer window. \-1 will let the window manager determine the position.
+.TP 
+\fBkeep_xz_colors\fR <\fIvalue\fP>
+When nonzero, indicates that the original color scheme for non 0/1 signal values is to be used when Color Format overrides are in effect.  Default is off.
+.TP 
+\fBleft_justify_sigs\fR <\fIvalue\fP>
+When nonzero, indicates that the signal window signal name justification should default to left, else the justification is to the right (default).
+.TP 
+\fBlxt_clock_compress_to_z\fR <\fIvalue\fP>
+For LXT (not LXT2) allows clocks to compress to a 'z' value so that regular/periodic value changes may be noted.
+.TP
+\fBmax_fsdb_trees\fR <\fIvalue\fP>
+sets the maximum number of hierarchy and signal trees to process for an FSDB file.  Default = 0 = unlimited.  The intent of this is to work around sim environments that accidentally call fsdbDumpVars multiple times. 
+.TP
+\fBpage_divisor\fR <\fIvalue\fP>
+Sets the scroll amount for page left and right operations. (The buttons, not the hscrollbar.) Values over 1.0 are taken as 1/x and values equal to and less than 1.0 are taken literally. (i.e., 2 gives a half-page scroll and .67 gives 2/3). The default is 1.0.
+.TP 
+\fBps_maxveclen\fR <\fIvalue\fP>
+sets the maximum number of characters that can be printed for a value in the signal window portion of a postscript file (not including the net name itself). Legal values are 4 through 66 (default).
+.TP 
+\fBruler_origin\fR <\fIvalue\fP>
+sets the zero origin for alternate time tick marks.
+.TP 
+\fBruler_step\fR <\fIvalue\fP>
+sets the left/right step value for the alternate time tick marks from the origin.  When this value is zero, alternate time tick marks are disabled.
+.TP 
+\fBscale_to_time_dimension\fR <\fIvalue\fP>
+The value can be any of the characters m, u, n, f, p, or s, which indicates which time dimension to convert the time values to. The default for this is * which means that time dimension conversion is disabled.
+.TP
+\fBshow_base_symbols\fR <\fIvalue\fP>
+A nonzero value (default) indicates that the numeric base symbols for hexadecimal ('$'), binary ('%'), and octal ('#') should be rendered. Otherwise they will be omitted.
+.TP 
+\fBshow_grid\fR <\fIvalue\fP>
+A nonzero value (default) indicates that a grid should be drawn behind the traces. A zero indicates that no grid should be drawn.
+.TP 
+\fBsplash_disable\fR <\fIvalue\fP>
+Turning this off enables the splash screen with the GTKWave mascot when loading a trace. Default is on.
+.TP
+\fBsst_dbl_action_type\fR <\fIvalue\fP>
+Allows double-clicking to be active in the SST signals pane with the following actions possible: insert (default), replace, append, prepend, none.  The value specified for the 
+action is case insensitive and only the first letter is required.  Invalid action types default to none.
+.TP 
+\fBsst_dynamic_filter\fR <\fIvalue\fP>
+When true (default) allows the SST dialog signal filter to filter signals while keys are being pressed, otherwise enter must be pressed to cause the filter to go active.
+.TP 
+\fBsst_expanded\fR <\fIvalue\fP>
+When true allows the SST dialog (when not hidden) to come up already expanded.
+.TP 
+\fBstrace_repeat_count\fR <\fIvalue\fP>
+Determines how many times that edge search and pattern search will iterate on a search.  This allows, for example, skipping ahead 10 clock edges instead of 1.
+.TP
+\fBuse_big_fonts\fR <\fIvalue\fP>
+A nonzero value indicates that any text rendered into the wave window will use fonts that are four points larger in size than normal. This can enhance readability. A zero value indicates that normal font sizes should be used.
+.TP 
+\fBuse_frequency_delta\fR <\fIvalue\fP>
+allows you to switch between the delta time and frequency display in the upper right corner of the main
+window when measuring distances between markers.  Default behavior is that the delta time is displayed (off).
+.TP
+\fBuse_full_precision\fR <\fIvalue\fP>
+does not round time values when the number of ticks per pixel onscreen is greater than 10 when active. The default is that this feature is disabled.
+.TP 
+\fBuse_maxtime_display\fR <\fIvalue\fP>
+A nonzero value indicates that the maximum time will be displayed in the upper right corner of the screen. Otherwise, the current primary (unnamed) marker time will be displayed. This can be toggled at any time with the Toggle Max-Marker menu option.
+.TP 
+\fBuse_nonprop_fonts\fR <\fIvalue\fP>
+Allows accelerated redraws of the signalwindow that can be done because the font width is constant. Default is off.
+.TP 
+\fBuse_pango_fonts\fR <\fIvalue\fP>
+Uses anti-aliased pango fonts (GTK2) rather than bitmapped X11 ones. Default is on.
+.TP 
+\fBuse_roundcaps\fR <\fIvalue\fP>
+A nonzero value indicates that vector traces should be drawn with rounded caps rather than perpendicular ones. The default for this is zero.
+.TP 
+\fBuse_scrollbar_only\fR <\fIvalue\fP>
+A nonzero value indicates that the page, shift, fetch, and discard buttons should not be drawn (i.e., time manipulations should be through the scrollbar only rather than front panel buttons). The default for this is zero.
+.TP 
+\fBuse_scrollwheel_as_y\fR <\fIvalue\fP>
+A nonzero value indicates that the scroll wheel on the mouse should be used to scroll the signals up and down rather than scrolling the time value from left to right.
+.TP
+\fBuse_standard_clicking\fR <\fIvalue\fP>
+This option no longer has any effect in gtkwave: normal GTK click semantics are used in the signalwindow.
+.TP 
+\fBuse_standard_trace_select\fR <\fIvalue\fP>
+A nonzero value keeps the currently selected traces from deselecting on mouse button press. This allows drag and drop to function more smoothly.  As this behavior is not how GTK normally functions, it is by default disabled.
+.TP 
+\fBuse_toolbutton_interface\fR <\fIvalue\fP>
+A nonzero value indicates that a toolbar with buttons should be at the top of the screen instead of the traditional style gtkwave button groups.  Default is on.
+.TP
+\fBvcd_explicit_zero_subscripts\fR <\fIvalue\fP>
+indicates that signal names should be stored internally as name.bitnumber when enabled. When disabled, a more "normal" ordering of name[bitnumber] is used. Note that when disabled, the Bundle Up and Bundle Down options are disabled in the Signal Search Regexp,  Signal Search Hierarchy, and Signal Search Tree options. This is necessary as the internal data structures for signals are represented with one "less" level of hierarchy than when enabled and those functions would not work properly. This should not be an issue if atomic_vectors are enabled. Default for vcd_explicit_zero_subscripts is disabled.
+.TP 
+\fBvcd_preserve_glitches\fR <\fIvalue\fP>
+indicates that any repeat equal values for a net spanning different time values in the VCD/FST file are not to be compressed into a single value change but should remain in order to allow glitches to be present for this case. Default for vcd_preserve_glitches is disabled.
+.TP 
+\fBvcd_preserve_glitches_real\fR <\fIvalue\fP>
+indicates that any repeat equal values for a real net spanning different time values in the VCD/FST file are not to be compressed into a single value change but should remain for this case. Default for vcd_preserve_glitches is disabled.
+The intended use is for when viewing analog interpolated data such that removing
+duplicate values would incorrectly deform the interpolation.
+.TP 
+\fBvcd_warning_filesize\fR <\fIvalue\fP>
+produces a warning message if the VCD filesize is greater than the argument's size in MB.  Set to zero to disable this.
+.TP 
+\fBvector_padding\fR <\fIvalue\fP>
+indicates the number of pixels of extra whitespace that should be added to any strings for the purpose of calculating text in vectors. Permissible values are 0 to 16 with the default being 4.
+.TP 
+
+\fBvlist_compression\fR <\fIvalue\fP>
+indicates the value to pass to zlib during vlist processing (which is used in the VCD recoder).  \-1 disables compression,
+0-9 correspond to the value zlib expects.  4 is default.
+.TP 
+\fBvlist_prepack\fR <\fIvalue\fP>
+indicates that the VCD recoder should pre-compress data going into the value change vlists in order to reduce memory usage. This is done before potential zlib packing.  Default is off.
+.TP 
+\fBvlist_spill\fR <\fIvalue\fP>
+indicates that the VCD recoder should spill all generated vlists to a tempfile on disk in order to reduce memory usage. Default is off.
+.TP 
+\fBwave_scrolling\fR <\fIvalue\fP>
+a nonzero value enables scrolling by dragging the marker off the left or right sides of the wave window. A zero value disables it.
+.TP 
+\fBzoom_base\fR <\fIvalue\fP>
+allows setting of the zoom base with a value between 1.5 and 10.0. Default is 2.0.
+.TP 
+\fBzoom_center\fR <\fIvalue\fP>
+a nonzero value enables center zooming, a zero value disables it.
+.TP 
+\fBzoom_dynamic\fR <\fIvalue\fP>
+a nonzero value enables dynamic full zooming when using the partial VCD (incremental) loader, a zero value disables it.
+.TP 
+\fBzoom_dynamic_end\fR <\fIvalue\fP>
+a nonzero value enables dynamic zoom to the end when using the partial VCD (incremental) loader, a zero value disables it.
+.TP
+\fBzoom_pow10_snap\fR <\fIvalue\fP>
+corresponds to the Zoom Pow10 Snap menu option. Default for this is disabled (zero).
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIgtkwave\fP(1)

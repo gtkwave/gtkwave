@@ -1,0 +1,57 @@
+%{
+
+/* AIX may need this for alloca to work */
+#if defined _AIX
+  #pragma alloca
+#endif
+
+#include <config.h>
+#include <string.h>
+#include "vcd.h"
+
+struct vcd_keyword { const char *name; int token; };
+
+%}
+struct vcd_keyword
+%%
+event, V_EVENT
+parameter, V_PARAMETER
+integer, V_INTEGER
+real, V_REAL
+real_parameter, V_REAL_PARAMETER
+realtime, V_REALTIME
+reg, V_REG
+supply0, V_SUPPLY0
+supply1, V_SUPPLY1
+time, V_TIME
+tri, V_TRI
+triand, V_TRIAND
+trior, V_TRIOR
+trireg, V_TRIREG
+tri0, V_TRI0
+tri1, V_TRI1
+wand, V_WAND
+wire, V_WIRE
+wor, V_WOR
+port, V_PORT
+in, V_IN
+out, V_OUT
+inout, V_INOUT
+string, V_STRINGTYPE
+bit, V_BIT
+logic, V_LOGIC
+int, V_INT
+shortint, V_SHORTINT
+longint, V_LONGINT
+byte, V_BYTE
+enum, V_ENUM
+shortreal, V_SHORTREAL
+$end, V_END
+%%
+
+int vcd_keyword_code(const char *s, unsigned int len)
+{
+const struct vcd_keyword *rc = check_identifier(s, len);
+return(rc ? rc->token : V_STRING);
+}
+

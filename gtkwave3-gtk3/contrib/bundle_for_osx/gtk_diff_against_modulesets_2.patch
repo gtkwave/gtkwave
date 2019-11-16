@@ -1,0 +1,30 @@
+--- gtk+/gdk/quartz/gdkimage-quartz.c	2011-12-03 14:24:03.000000000 -0600
++++ gtk+664894/gdk/quartz/gdkimage-quartz.c	2013-10-15 18:52:24.000000000 -0500
+@@ -150,6 +150,10 @@ _gdk_quartz_image_copy_to_image (GdkDraw
+       data = [rep bitmapData];
+       size = [rep size];
+ 
++      int bpr = [rep bytesPerRow];
++      int wid = size.width;
++      int bpx = bpr/wid;
++
+       for (y = 0; y < size.height; y++)
+ 	{
+ 	  guchar *src = data + y * [rep bytesPerRow];
+@@ -158,12 +162,15 @@ _gdk_quartz_image_copy_to_image (GdkDraw
+ 	    {
+ 	      gint32 pixel;
+ 
++              if (bpx == 4) // fix gdk_pixbuf_get_from_drawable "yellow stripes"
++                pixel = src[0] << 16 | src[1] << 8 | src[2];
++              else
+ 	      if (image->byte_order == GDK_LSB_FIRST)
+ 		pixel = src[0] << 8 | src[1] << 16 |src[2] << 24;
+ 	      else
+ 		pixel = src[0] << 16 | src[1] << 8 |src[2];
+ 
+-	      src += 3;
++	      src += bpx;
+ 
+ 	      gdk_image_put_pixel (image, dest_x + x, dest_y + y, pixel);
+ 	    }

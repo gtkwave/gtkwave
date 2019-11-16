@@ -1,0 +1,50 @@
+.TH "VZT2VCD" "1" "3.3.39" "Anthony Bybell" "Filetype Conversion"
+.SH "NAME"
+.LP 
+vzt2vcd \- Converts VZT files to VCD
+.SH "SYNTAX"
+.LP 
+vzt2vcd [\fIoption\fP]... [\fIVZTFILE\fP]
+.SH "DESCRIPTION"
+.LP 
+Converts VZT files to VCD files.  If an output filename is not specified, the VCD is emitted to stdout.
+
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-v,\-\-vztname\fR <\fIfilename\fP>
+Specify VZT input filename.
+.TP
+\fB\-o,\-\-output\fR <\fIfilename\fP>
+Specify optional VCD output filename.
+.TP
+\fB\-f,\-\-flatearth\fR
+Emit flattened hierarchies.
+.TP
+\fB\-c,\-\-coalesce\fR
+Coalesce bitblasted vectors.
+.TP
+\fB\-n,\-\-notruncate\fR
+Do not shorten bitvectors.  This disables binary value compression as
+described in the IEEE-1364 specification.  (i.e., all values except for '1'
+left propagate as a sign bit on vectors which do not fill up their entire
+declared width)
+.TP
+\fB\-h,\-\-help\fR
+Display help then exit.
+
+.SH "EXAMPLES"
+.LP 
+To run this program the standard way type:
+.TP 
+vzt2vcd filename.vzt
+The VCD conversion is emitted to stdout.
+.SH "LIMITATIONS"
+\fIvzt2vcd\fP does not re-create glitches as these are coalesced together into one value change during the writing of the VZT file.
+.LP
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIvcd2lxt2\fP(1) \fIvcd2lxt\fP(1) \fIlxt2vcd\fP(1) \fIgtkwave\fP(1)

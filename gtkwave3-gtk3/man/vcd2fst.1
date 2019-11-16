@@ -1,0 +1,54 @@
+.TH "VCD2FST" "1" "3.3.53" "Anthony Bybell" "Filetype Conversion"
+.SH "NAME"
+.LP 
+vcd2fst \- Converts VCD files to FST files
+.SH "SYNTAX"
+.LP 
+vcd2fst [\fIoption\fP]... [\fIVCDFILE\fP] [\fIFSTFILE\fP]
+.SH "DESCRIPTION"
+.LP 
+Converts VCD files to FST files.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-v,\-\-vcdname\fR <\fIfilename\fP>
+Specify VCD/FSDB/VPD/WLF input filename.  Processing of filetypes other than
+VCD requires that the appropriate 2vcd converter was found during ./configure.
+.TP 
+\fB\-f,\-\-fstname\fR <\fIfilename\fP>
+Specify FST output filename.
+.TP 
+\fB\-4,\-\-fourpack\fR
+Indicates that LZ4 should be used for value change data (default).
+.TP 
+\fB\-F,\-\-fastpack\fR
+Indicates that fastlz should be used instead of LZ4 for value change data.
+.TP 
+\fB\-4,\-\-zlibpack\fR
+Indicates that zlib should be used instead of LZ4 for value change data.
+.TP 
+\fB\-c,\-\-compress\fR
+Indicates that the entire file should be run through gzip on close.  This
+results in much smaller files at the expense of a one-time decompression
+penalty on file open during reads.
+.TP 
+\fB\-p,\-\-parallel\fR
+Indicates that parallel mode should be enabled.  This spawns a worker thread
+to continue with FST block processing while conversion continues on the main thread for new FST block data.
+.TP
+\fB\-h,\-\-help\fR
+Show help screen.
+.TP 
+
+.SH "EXAMPLES"
+.LP 
+Note that you should specify dumpfile.vcd directly or use "\-" for stdin.
+.TP 
+vcd2fst dumpfile.vcd dumpfile.fst \-\-compress
+This indicates that the FST file should be post-compressed on close.
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIfst2vcd\fP(1) \fIvcd2lxt\fP(1) \fIvcd2lxt2\fP(1) \fIlxt2vcd\fP(1) \fIvcd2vzt\fP(1) \fIvzt2vcd\fP(1) \fIgtkwave\fP(1)

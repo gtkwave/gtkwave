@@ -1,0 +1,36 @@
+.TH "XML2STEMS" "1" "3.3.93" "Anthony Bybell" "Filetype Conversion"
+.SH "NAME"
+.LP 
+xml2stems \- Verilator XML to rtlbrowse stems conversion.
+.SH "SYNTAX"
+.LP 
+xml2stems [\fIoption\fP]... \fIINFILE\fP [\fIOUTFILE\fP]
+.SH "DESCRIPTION"
+.LP 
+Converts Verilator XML AST representation to stems file for use with rtlbrowse.  
+Intended to replace the obsolete vermin, and in the future, advanced tool features may possibly use additional data provided by the Verilator AST.
+Using "-" as an input filename reads from stdin.  Omitting the output filename outputs to stdout.
+.SH "OPTIONS"
+.LP
+.TP
+\fB\-V\fR,\fB\-\-vl_sim\fR
+Adds TOP hierarchy for Verilator sim.  Not necessary for other simulators.
+.TP
+\fB\-h\fR,\fB\-\-help\fR
+Display help then exit.
+.SH "EXAMPLES"
+.LP 
+The following is a chain of commands to compile Verilog source and then bring up gtkwave and rtlbrowse together for source code annotation.
+This assumes the file des.fst was already generated from a prior simulation.
+.TP 
+verilator -Wno-fatal des.v -xml-only --bbox-sys
+.TP 
+xml2stems obj_dir/Vdes.xml des.stems
+.TP
+gtkwave -t des.stems des.fst
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIrtlbrowse\fP(1) \fIgtkwave\fP(1)

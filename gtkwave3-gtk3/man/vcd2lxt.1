@@ -1,0 +1,42 @@
+.TH "VCD2LXT" "1" "1.3.34" "Anthony Bybell" "Filetype Conversion"
+.SH "NAME"
+.LP 
+vcd2lxt \- Converts VCD files to interlaced or linear LXT files
+.SH "SYNTAX"
+.LP 
+vcd2lxt [\fIVCDFILE\fP] [\fILXTFILE\fP] [\fIoption\fP]... 
+.SH "DESCRIPTION"
+.LP 
+Converts VCD files to interlaced or linear LXT files.  Noncompressed interlaced files will provide the fastest access, linear files will provide the slowest yet have the greatest compression ratios.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-stats\fR
+Prints out statistics on all nets in VCD file in addition to performing the conversion.
+.TP 
+\fB\-clockpack\fR
+Apply two\-way subtraction algorithm in order to identify nets whose value changes by a constant XOR or whose value increases/decreases by a constant amount per constant unit of time.  This option can reduce dumpfile size dramatically as value changes can be represented by an equation rather than explicitly as a triple of time, net, and value.
+.TP 
+\fB\-chgpack\fR
+Emit data to file after being filtered through zlib (gzip).
+.TP 
+\fB\-linear\fR
+Write out LXT in "linear" format with no backpointers.  These are re\-generated during initialization in \fIgtkwave\fP.  Additionally, use libbz2 (bzip2) as the compression filter.
+.TP 
+\fB\-dictpack\fR <\fIsize\fP>
+Store value changes greater than or equal to \fIsize\fP bits as an index into a dictionary.  Experimentation shows that a value of 18 is optimal for most cases.
+.SH "EXAMPLES"
+.LP 
+Note that you should specify dumpfile.vcd directly or use "\-" for stdin.
+.TP 
+vcd2lxt dumpfile.vcd dumpfile.lxt \-clockpack \-chgpack \-dictpack 18
+This turns on clock packing, zlib compression, and enables the dictionary encoding.  Note that using no options writes out a normal LXT file.
+.TP 
+vcd2lxt dumpfile.vcd dumpfile.lxt \-clockpack \-linear \-dictpack 18
+Uses linear mode for even smaller files.
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIlxt2vcd\fP(1) \fIvcd2lxt2\fP(1) \fIgtkwave\fP(1)

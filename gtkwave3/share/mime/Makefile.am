@@ -1,0 +1,5 @@
+## -*- makefile
+##
+
+SUBDIRS= packages
+

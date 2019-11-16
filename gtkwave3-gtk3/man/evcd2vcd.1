@@ -1,0 +1,32 @@
+.TH "EVCD2VCD" "1" "3.2.2" "Anthony Bybell" "Filetype Conversion"
+.SH "NAME"
+.LP 
+evcd2vcd \- Converts EVCD files to VCD files
+.SH "SYNTAX"
+.LP 
+evcd2vcd [\fIoption\fP]... [\fIEVCDFILE\fP]
+.SH "DESCRIPTION"
+.LP 
+Converts EVCD files with bidirectional port definitions to VCD files with separate in and out ports.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-f,\-\-filename\fR <\fIfilename\fP>
+Specify EVCD input filename.
+.TP 
+\fB\-h,\-\-help\fR
+Show help screen.
+.TP 
+
+.SH "EXAMPLES"
+.LP 
+Note that you should specify dumpfile.vcd directly or use "\-" for stdin.
+.TP 
+evcd2vcd dumpfile.evcd
+VCD is emitted to stdout.
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIvcd2fst\fP(1) \fIfst2vcd\fP(1) \fIvcd2lxt\fP(1) \fIvcd2lxt2\fP(1) \fIlxt2vcd\fP(1) \fIvcd2vzt\fP(1) \fIvzt2vcd\fP(1) \fIgtkwave\fP(1)

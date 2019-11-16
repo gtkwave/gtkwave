@@ -1,0 +1,34 @@
+.TH "TWINWAVE" "1" "3.3.79" "Anthony Bybell" "Simulation Wave Viewer Multiplexer"
+.SH "NAME"
+.LP 
+twinwave \- Wraps multiple GTKWave sessions in one window or two synchronized windows
+.SH "SYNTAX"
+.LP 
+twinwave <\fIarglist1\fP> <\fIseparator\fP> <\fIarglist2\fP>
+.SH "DESCRIPTION"
+.LP 
+Wraps multiple GTKWave sessions with synchronized markers, horizontal scrolling, and zooming.
+.SH "EXAMPLES"
+.LP 
+To run this program the standard way type:
+.TP 
+twinwave filename1.vcd filename1.sav + filename2.vcd filename2.sav
+Two synchronized viewers are then opened in one window.  Note that accelerator keys for menus will be disabled as some window managers have focus issues and route keystrokes to the wrong part of the window.
+.TP 
+twinwave filename1.vcd filename1.sav ++ filename2.vcd filename2.sav
+Two synchronized viewers are then opened in two windows.
+.SH "LIMITATIONS"
+\fItwinwave\fP uses the GtkSocket/GtkPlug mechanism to embed two \fIgtkwave\fP(1) sessions into one window.  The amount of
+coupling is currently limited to communication of temporal information.  Other than that, the two gtkwave processes are isolated
+from each other as if the viewers were spawned separately.
+Keep in mind that using the same save file for each session
+may cause unintended behavior problems if the save file is written back to disk: only the session written last will be saved.  (i.e.,
+the save file isn't cloned and made unique to each session.)
+Note that \fItwinwave\fP compiled against Quartz (not X11) on OSX as well as MinGW does not place both sessions in a single window.
+.LP
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIgtkwave\fP(1)

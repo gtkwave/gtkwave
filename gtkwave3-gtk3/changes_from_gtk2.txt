@@ -1,0 +1,378 @@
+Conversions from gtkwave-3.3.86 (gtk1/2 codebase)
+
+01 changes:
+ls -1 | awk '{print "cat "$0" | sed s/GtkSignalFunc/GCallback/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/GTK_SIGNAL_FUNC/G_CALLBACK/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+change gtkctree in treesearch_gtk2 widget to treeview
+
+02 changes:
+tooltip: https://developer.gnome.org/gtk2/stable/GtkTooltip.html
+
+03 changes:
+remove stray any_tree_node left over from 01
+remove gdk font support (use pango only now)
+
+04 changes:
+enable WAVE_USE_MLIST_T to replace deprecated GtkItemFactory code.
+change GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_DEFAULT) to gtk_widget_set_can_default(widget, TRUE).
+
+05 changes:
+change GtkCList usage in translate.c/ptranslate.c/ttranslate.c to use gtk list stores.
+remove stray unused GtkCList* declaration in treesearch_gtk2.c, remove treesearch_gtk1.c support.
+change GtkCList usage in search.c to use gtk list stores.
+change GtkCList usage in hiersearch.c to use gtk list stores.  
+
+06 changes:
+removed GtkFileSelection code paths in file.c (GtkFileChooser is already used anyway)
+change remaining GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_DEFAULT) to gtk_widget_set_can_default(widget, TRUE), change GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_FOCUS) to gtk_widget_set_can_focus(widget, TRUE).
+change from using deprecated portions of GtkToolbar API.
+change remaining pixmap.c usages of pixmap usages to pixbuf
+change gtk_entry_new_with_max_length calls with wrapped XXX_gtk_entry_new_with_max_length ones (gtk_entry_new + gtk_entry_set_max_length)
+removed stray GtkCTree references in tcl_support_commands.h, changed GtkNotebookPage* to gpointer in main.c.
+
+07 changes:
+ls -1 | awk '{print "cat "$0" | sed s/gtk_signal_connect_object/g_signal_connect_swapped/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_signal_connect/g_signal_connect/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+replace gtk_signal_disconnect with g_signal_handler_disconnect.
+ls -1 | awk '{print "cat "$0" | sed s/gtk_container_border_width/gtk_container_set_border_width/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_label_set/gtk_label_set_text/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+change gtk_menu_append to gtk_menu_shell_append.
+change gtk_radio_menu_item_group to gtk_radio_menu_item_get_group.
+change gtk_radio_button_group to gtk_radio_button_get_group.
+change gtk_toggle_button_set_state to gtk_toggle_button_set_active.
+change gtk_button_box_set_spacing to gtk_box_set_spacing.
+change GtkOptionMenu usages to GtkComboBox.
+change GtkProgress to GtkProgressBar.
+change GTK_WIDGET_HAS_FOCUS() to gtk_widget_has_focus().
+change !GTK_WIDGET_NO_WINDOW() to gtk_widget_get_has_window().
+change GTK_WIDGET_STATE() to gtk_widget_get_state().
+* now compiles OK with: make CFLAGS+="-DGTK_DISABLE_DEPRECATED"
+
+08 changes:
+replaced gtk legacy format GDK_A type define usages to GDK_KEY_A.
+* now compiles OK with: make CFLAGS+="-D__G_IR_SCANNER__"
+
+09 changes:
+includes fixes
+* now compiles OK with: make CFLAGS+="-DGTK_DISABLE_SINGLE_INCLUDES"
+
+10 changes:
+gtk_adjustment_get_value ()
+gtk_adjustment_get_lower ()
+gtk_adjustment_get_upper ()
+gtk_adjustment_set_value ()
+gtk_widget_get_allocation ()
+gtk_widget_get_window ()
+gtk_entry_get_text_length ()
+gtk_text_view_get_buffer ()
+gtk_text_view_get_vadjustment ()
+gtk_widget_get_style ()
+gtk_toggle_button_get_active ()
+gdk_drag_context_get_actions ()
+gtk_selection_data_get_length ()
+gtk_selection_data_get_data ()
+gtk_adjustment_set_lower ()
+gtk_adjustment_set_upper ()
+gtk_adjustment_get_page_size ()
+gtk_adjustment_get_page_increment ()
+gtk_adjustment_get_step_increment ()
+GtkAllocation allocation; gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
+* now compiles OK with make CFLAGS+="-DGSEAL_ENABLE"
+
+11 changes:
+make shadow rgb_gcs for cairo operations that have the proper RGB values.  these will replace existing GCs that specify individual colors.
+remove GLOBALS->signalpixmap usages (e.g., via gdk_draw_pixmap) and replace with corresponding cairo operations
+fixed improperly converted ->page_size and ->page increment for signal/wavewindow vertical slider that used incorrect value of 1.0.
+remove GLOBALS->wavepixmap_wavewindow_c_1 usages (e.g., via gdk_draw_pixmap) and replace with corresponding cairo operations
+remove GLOBALS->wave_splash_pixmap usages (e.g., via gdk_draw_pixmap) and replace with corresponding cairo operations
+Needed to make GLOBALS->timestart_from_savefile_valid a down counter from 2 rather than a simple 1/0 value as does not now work without that
+remove GLOBALS->mo_pixmap_mouseover_c_1 (e.g., via gdk_draw_pixmap) and replace with corresponding cairo operations
+remove usage of fonts_gc for pango fonts as is unnecessary
+remove any usages/definitions of GdkGC remaining (not used by any code)
+* now compiles OK with make CFLAGS+="-DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED"
+
+12 changes:
+added configure.3 for gtk3, still need to convert more gtk2->gtk3 items
+redefine GTK_OBJECT to GTK_OBJECT(x) x.  Change GtkObject to gpointer.
+Remove stray GdkFont usages.
+Change GdkNativeWindow to Window.
+Use gdk_screen_get_default() in fonts.c to prevent from having to use a GdkDrawable for configuring the pango fonts.
+Remove set_scroll_adjustments() function call hanging off TextViewClass.
+ls -1 | awk '{print "cat "$0" | sed s/GTK_OBJECT/XXX_GTK_OBJECT/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/GDK_DRAWABLE/XXX_GDK_DRAWABLE/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_signal_emit_by_name/g_signal_emit_by_name/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_widget_set_usize/gtk_widget_set_size_request/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_widget_set_usize/gtk_widget_set_size_request/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_entry_select_region/gtk_editable_select_region/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+Replace gtk_window_set_policy with gtk_window_set_resizable.
+Replace gtk_entry_set_editable with gtk_editable_set_editable.
+Replace gtk_timeout_add with g_timeout_add.
+Replace gtk_timeout_remove with g_source_remove.
+Comment out gtk_object_set_data(XXX_GTK_OBJECT(pFileChoose), "FileChooseWindow", pFileChoose); in file.c
+Now compiles in gtk3...need to do various adjustments such as handling expose events.
+
+13 changes:
+Change expose_event to draw.
+Added XXX_resize_sstpane_y_hack_for_gtk3() hack to get GtkExpander more-or-less sizing its child contents properly.
+Converted most of rtl browser using above.  Still need to convert over GtkCList tree.
+
+14 changes:
+Compiles in both gtk2 and gtk3.  Need to address various gtk2->gtk3 glitches as outlined below.
+ls -1 *.c *.h | awk '{print "cppp -DWAVE_USE_GTK2 "$0" >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 *.c *.h | awk '{print "cppp -UGTK_ENABLE_BROKEN "$0" >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 *.c *.h | awk '{print "cppp -DWAVE_USE_MLIST_T "$0" >"$0".xxx ; mv "$0".xxx "$0}' | sh
+Removed XXX_resize_sstpane_y_hack_for_gtk3(), changed GtkExpander to gtkframe in gtk3 to get child contents resizing properly.
+Removed obsolete GTK_CHECK_VERSION instantiations for gtk2.
+Changed rtlbrose expose_event to use draw so text search can work in gtk3.
+Re-enabled fileselbox_old() code for comdlg requester during MinGW32 builds.
+
+15 changes:
+fold in mainline 3.3.87 change for missing ghw_read_sm_hdr prototype in ghwlib.h.
+intptr_t/uintptr_t changes vs long during casting for win64.
+update GtkStyle.draw_slider usage for gtk3.
+
+16 changes:
+change package name to gtwave-gtk3.  This and the regular gtkwave should *not* be installed at the same time!
+add back in dashed lines for 2nd pattern marks.
+added code in to zoombuttons.c to work around GTK3 value clamping (adjustment set functions have side effects and not just changing the value directly)
+recycled some WAVE_ALLOW_QUARTZ_FLUSH_WORKAROUND as WAVE_ALLOW_GTK3_VSLIDER_WORKAROUND to get wave_vslider to update properly on gtk3 startup.
+change top level for splash on gtk3 win32/64 to use GTK_WINDOW_TOPLEVEL as apparently GTK_WINDOW_POPUP is not handling the render events for the black status bar.
+expanded size of window in des.gtkw example file so Marker|Cursor display is visible.
+converted named markers to using cairo dashed lines (rather than drawing segments manually)
+
+17 changes:
+removed all GTK_CHECK_VERSION for less than 3.0 and made = defined by using cppp.
+minor change of placement of zoom full so des.tcl renders properly
+bump up gtk2 requirement version to 2.24.9. (matches OSX build machine)
+removed most _MSC_VER from code as MinGW is the preferred Win32/64 build environment, however left in helpers and non-gtkwave/non-rtlbrowse code.
+remove local libz and libbz2 source code as almost all systems have this installed now.
+added gtk_widget_set_vexpand_set() to fix SST vertical size in gtk3 (vertical pane wouldn't grow properly to fill full y direction)
+added GLOBALS->h_debounce gating in in hiersearch.c, xxx_view_selection_func does not seem to function correctly and sometimes goes up multiple levels per .. selection.  it seems to be that selection_func is not a good place for tree updates.!
+normalize all xxx_ function names created from gtk1/2 -> gtk2/3 conversion to XXX_
+
+18 changes:
+gtk_tree_view_[g|s]et_[v|h]adjustment -> gtk_scrollable_[g|s]et_[v|h]adjustment for gtk3
+gtk_text_view_get_vadjustment -> gtk_scrollable_get_vadjustment
+
+19 changes:
+fixed overwide x-size misallocation in pattern search window.  seems to be a problem with hbox allocations.
+
+20 changes:
+fixed internal in gtk3 toolkit: (gtkwave:9908): Gtk-WARNING **: Allocating size to GtkFrame 0x1820c00 without calling gtk_widget_get_preferred_width/height().  gtk_container_set_resize_mode() is needed in create_wavewindow() because for some reason the vertical scrollbar attached to the table does not propagate resize allocations up to the frame.
+ifdef'd out gtk_widget_get_style/gtk_widget_set_style/gtk_rc_style_new/gtk_widget_modify_style as there is no apparent effect on gtk3.
+twinwave: gtk_[v|h]box_new -> gtk_box_new + gtk_box_set_homogeneous
+twinwave: gtk_[v|h]paned_new -> gtk_paned_new
+rtlbrowse: gtk_hpaned_new -> gtk_paned_new
+ls -1 | awk '{print "cat "$0" | sed s/gtk_hbox_new/XXX_gtk_hbox_new/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_vbox_new/XXX_gtk_vbox_new/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+gtkwave: gtk_[v|h]paned_new -> XXX_gtk_[v|h]paned_new
+gtk_hseparator_new() -> gtk_separator_new(GTK_ORIENTATION_HORIZONTAL)
+gtk_menu_popup -> gtk_menu_popup_at_pointer
+gtk_button_set_focus_on_click -> gtk_widget_set_focus_on_click
+gtk_[h|v]scrollbar_new -> gtk_scrollbar_new
+rtlbrowse: gtk_table_attach -> gtk_grid_attach/gtk_widget_set_hexpand/gtk_widget_set_vexpand
+ls -1 | awk '{print "cat "$0" | sed s/gtk_table_new/XXX_gtk_table_new/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/gtk_table_attach/XXX_gtk_table_attach/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+ls -1 | awk '{print "cat "$0" | sed s/GTK_TABLE/XXX_GTK_TABLE/g >"$0".xxx ; mv "$0".xxx "$0}' | sh
+Ifdef removal of gtk_handle_box_new force_toolbars code.
+rtlbrowse: gtk_image_new_from_stock -> gtk_image_new_from_icon_name
+rtlbrowse: gtk_tool_button_new_from_stock -> gtk_image_new_from_icon_name + gtk_tool_button_new
+Convert GtkStock strings to freedesktop ones using table from https://wiki.gnome.org/Attic/GtkNamingSpecInvestigation webpage.
+gdk_pointer_grab -> gdk_seat_grab
+gdk_pointer_ungrab -> gdk_seat_ungrab
+gdk_cursor_new -> gdk_cursor_new_for_display
+gdk_window_get_pointer->gdk_window_get_device_position
+gdk_cairo_create->gdk_window_begin_draw_frame and related support functions
+cairo_destroy->gdk_window_end_draw_frame
+
+===
+
+to do:
+
+remove gtksocket/plug mechanism and simply use separate windows to avoid gtkx/X11 dependencies?
+
+for GLOBALS->treeview_main, see what hadj/vadj work is required in globals.c to get this to scroll to the correct position.  it's not currently working right/consistently.
+
+internal in gtk3 toolkit using + option (++ works): (twinwave:9756): Gtk-CRITICAL **: gtk_widget_destroy: assertion 'GTK_IS_WIDGET (widget)'
+
+Look for size allocation issues with the tabbed viewing in gtkwave when resizing, etc.
+
+Splash screen does not raise or have centered window position for Wayland.
+
+===
+
+Future possible use on signalarea in case it moves to gestures.  Getting modifiers inside a gesture:
+
+GdkDevice *device = gtk_gesture_get_device (GTK_GESTURE(gesture));
+if(device)
+        {
+        GdkModifierType mask;
+        gdk_device_get_state (device, gtk_widget_get_window(GLOBALS->wavearea), NULL, &mask);
+        ev.state = mask;
+        }
+
+
+Determine x/y position in DnD:
+
+GdkDevice *device = gdk_drag_context_get_device(dc);
+GdkInputSource is = gdk_device_get_source(device);
+
+gint x, y;
+gdk_device_get_position (device, NULL, &x, &y);
+printf("x: %d, y: %d\n", x, y);
+
+if(is == GDK_SOURCE_TOUCHSCREEN) // gtk 3.0 only
+        {
+        }
+
+===
+
+Momentum scrolling fundamentals:
+
+https://ariya.io/2011/10/flick-list-with-its-momentum-scrolling-and-deceleration
+
+===
+
+Notes on GMenu usage so they don't get lost if there is a forced migration to them:
+
+##############################
+
+#ifdef WAVE_USE_GTK_APPLICATION
+GtkApplication *app = NULL;
+int my_argc;
+char **my_argv;
+
+static void
+activate_main (GApplication *app,
+          gpointer      user_data)
+{
+printf("XXX activate\n");
+main_2(0, my_argc, my_argv);
+}
+
+
+int main(int argc, char *argv[])
+{
+int status;
+
+app = gtk_application_new ("org.gnome.example", G_APPLICATION_FLAGS_NONE);
+g_signal_connect (app, "activate", G_CALLBACK (activate_main), NULL);
+my_argc = argc;
+my_argv = argv;
+status = g_application_run (G_APPLICATION (app), 1, argv);
+g_object_unref (app);
+
+printf("status = %d\n", status);
+return status;
+}
+#else
+int main(int argc, char *argv[])
+{
+return(main_2(0, argc, argv));
+}
+#endif
+
+##############################
+
+#define WAVE_GTKIFE(a,b,c,d,e) {a,b,c,d,e,NULL,"app." #d}
+
+struct gtkwave_mlist_t
+{
+  gchar *path;
+  gchar *accelerator;
+
+  gtkwave_mlist_callback callback;
+  guint                  callback_action;
+
+  /* possible values:
+   * "<Item>"           -> create a simple item
+   * "<ToggleItem>"     -> create a toggle item
+   * "<Separator>"	-> create a separator
+   */
+  gchar          *item_type;
+
+  /* Extra data for some item types:
+   *  ImageItem  -> pointer to inlined pixbuf stream
+   *  StockItem  -> name of stock item
+   */
+  gconstpointer extra_data;
+
+  const char *detailed_action_name;
+};
+
+##############################
+
+static void activate_cb (GSimpleAction *action,
+                     GVariant      *parameter,
+                     gpointer       user_data)
+{
+printf("XXX %p '%s'\n", user_data, menu_items[(intptr_t)user_data].path); //
+}
+
+static void *alt_menu_walk_2(gtkwave_mlist_t *mi, struct menu_item_t *lst, int depth)
+{
+struct menu_item_t *ptr = lst;
+struct menu_item_t *optr;
+GMenu *menu = g_menu_new();
+GMenu *tmenu = g_menu_new();
+
+while(ptr)
+	{
+	/*  mi[ptr->idx] is menu item */
+	int skip = 0;
+	int tog = ((!strcmp(mi[ptr->idx].item_type, "<ToggleItem>")) && !ptr->child);
+
+	if(!strcmp(mi[ptr->idx].item_type, "<Separator>"))
+		{
+		skip = 1;
+		if(ptr->next)
+			{
+			g_menu_append_section (menu, NULL, G_MENU_MODEL (tmenu));
+			g_object_unref (tmenu);
+			tmenu = g_menu_new();
+			}
+		}
+
+	if(ptr->child)
+		{
+		GMenu *cmenu = alt_menu_walk_2(mi, ptr->child, depth+1);
+		g_menu_append_submenu (tmenu, ptr->name, G_MENU_MODEL (cmenu));
+		}
+		else
+		{
+		if(!skip) 
+			{
+			const char *dit = mi[ptr->idx].detailed_action_name;
+			const GActionEntry app_entries = { dit+4, activate_cb, NULL, tog ? "true" : NULL, NULL }; /* dit string is "app.whatever" */
+			g_action_map_add_action_entries (G_ACTION_MAP (app), &app_entries, 1, (gpointer)(intptr_t)mi[ptr->idx].callback_action);
+			g_menu_append (tmenu, ptr->name, dit);
+
+			const gchar *accels[2];
+			accels[0] = mi[ptr->idx].accelerator;
+			accels[1] = NULL;
+			gtk_application_set_accels_for_action (GTK_APPLICATION (app), dit, accels);
+			}
+		}
+
+	optr = ptr;
+	ptr = ptr->next;
+
+	free_2(optr->name);
+	free_2(optr);
+	}
+
+g_menu_append_section (menu, NULL, G_MENU_MODEL (tmenu));
+g_object_unref (tmenu);
+
+if(!depth)
+	{
+	menu = (void *)gtk_menu_bar_new_from_model (G_MENU_MODEL (menu));
+	gtk_application_add_window (app, GTK_WINDOW(GLOBALS->mainwindow));
+	}
+
+return(menu);
+}
+
+##############################
+
+===
