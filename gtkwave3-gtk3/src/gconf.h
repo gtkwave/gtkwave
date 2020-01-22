@@ -26,7 +26,7 @@
 /*                      12345678901234567 */
 #define WAVE_GCONF_DIR_LEN (17)
 
-int wave_rpc_id;
+extern int wave_rpc_id;
 
 void wave_gconf_init(int argc, char **argv);
 gboolean wave_gconf_client_set_string(const gchar *key, const gchar *val);
