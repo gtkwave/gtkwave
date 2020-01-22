@@ -1467,6 +1467,7 @@ else
 #if defined(EXTLOAD_SUFFIX)
 if(
    (suffix_check(GLOBALS->loaded_file_name, "."EXTLOAD_SUFFIX      ) && !opt_vcd) ||
+   (suffix_check(GLOBALS->loaded_file_name, ".vf"                  ) && !opt_vcd) ||   /* virtual file */
    (suffix_check(GLOBALS->loaded_file_name, "."EXTLOAD_SUFFIX".gz" ) && !opt_vcd) ||   /* loader automatically does gzip -cd */
    (suffix_check(GLOBALS->loaded_file_name, "."EXTLOAD_SUFFIX".bz2") && !opt_vcd)      /* loader automatically does bzip2 -cd */
   )
