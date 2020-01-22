@@ -1780,3 +1780,5 @@
                 Fix to make the coloration red on 'u' traces.  (Bug from 
 		Dinotrace-like rendering in 3.3.96.)
 		Typo fix on missing group start on vectors.
+3.3.104	22jan20	Added support for loading .vf files (provided FSDB       
+                reader libraries are enabled).
