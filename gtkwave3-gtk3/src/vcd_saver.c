@@ -15,6 +15,8 @@
 #include "hierpack.h"
 #include <time.h>
 
+WAVE_NODEVARTYPE_STR
+
 static void w32redirect_fprintf(int is_trans, FILE *sfd, const char *format, ...)
 {
 #if defined __MINGW32__
@@ -608,7 +610,7 @@ for(i=0;i<nodecnt;i++)
 				}
 				else
 				{
-				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var wire 1 %s %s $end\n", vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
+				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s 1 %s %s $end\n", vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype], vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 				}
 			}
 			else
@@ -620,7 +622,7 @@ for(i=0;i<nodecnt;i++)
 				}
 				else
 				{
-				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var wire %d %s %s $end\n", len, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
+				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s %d %s %s $end\n", vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype], len, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 				}
 			GLOBALS->hp_vcd_saver_c_1[i]->len = len;
 			if(len > max_len) max_len = len;
