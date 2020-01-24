@@ -1662,6 +1662,7 @@ if(len>1)
 	else
 	{
 	htemp->v.h_val = AN_X;		/* x */
+        htempx = htemp;
 	}
 htemp->time = MAX_HISTENT_TIME-1;
 htemp->next = histent_tail;
@@ -1703,7 +1704,7 @@ if(!(f->flags&(VZT_RD_SYM_F_DOUBLE|VZT_RD_SYM_F_STRING)))
                 }
                 else
                 {
-                htemp2->v.h_val = htemp->v.h_val;
+                htemp2->v.h_val = htempx->v.h_val;
 		}
 	htemp2->next = htemp;
         htemp = htemp2;
@@ -1919,6 +1920,7 @@ for(txidxi=0;txidxi<GLOBALS->fst_maxhandle;txidxi++)
 			else
 			{
 			htemp->v.h_val = AN_X;		/* x */
+			htempx = htemp;
 			}
 		htemp->time = MAX_HISTENT_TIME-1;
 		htemp->next = histent_tail;
@@ -1960,7 +1962,7 @@ for(txidxi=0;txidxi<GLOBALS->fst_maxhandle;txidxi++)
                                 }
                                 else
                                 {
-                                htemp2->v.h_val = htemp->v.h_val;
+                                htemp2->v.h_val = htempx->v.h_val;
 				}
                         htemp2->next = htemp;
                         htemp = htemp2;

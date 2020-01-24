@@ -2171,7 +2171,7 @@ np->mv.mvlfac=NULL;
  */
 void import_extload_trace(nptr np)
 {
-struct HistEnt *htemp, *histent_tail;
+struct HistEnt *htemp, *htempx=NULL, *histent_tail;
 int len, i;
 struct fac *f;
 int txidx, txidx_in_trace;
@@ -2359,6 +2359,7 @@ if(f->flags&(VZT_RD_SYM_F_DOUBLE|VZT_RD_SYM_F_STRING))
 		htemp->v.h_val = AN_X;		/* x */
 		}
 	}
+htempx = htemp;
 htemp->time = MAX_HISTENT_TIME-1;
 htemp->next = histent_tail;
 
@@ -2402,11 +2403,11 @@ if(!(f->flags&(VZT_RD_SYM_F_DOUBLE|VZT_RD_SYM_F_STRING)))
                 {
 	        if(len>1)
 	        	{
-	                htemp2->v.h_vector = htemp->v.h_vector;
+	                htemp2->v.h_vector = htempx->v.h_vector;
 	                }
 	                else
 	                {
-	                htemp2->v.h_val = htemp->v.h_val;
+	                htemp2->v.h_val = htempx->v.h_val;
 	                }
 		}
 	htemp2->next = htemp;
