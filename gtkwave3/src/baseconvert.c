@@ -196,7 +196,8 @@ static void cvt_fpsdec(Trptr t, TimeType val, char *os, int len, int nbits)
 
 int shamt = t->t_fpdecshift;
 TimeType lpart = val >> shamt;
-TimeType rmsk = (1 << shamt);
+TimeType rmsk = (ULLDescriptor(1) << shamt);
+
 TimeType rbit = (val >= 0) ? (val & (rmsk-1)) : ((-val) & (rmsk-1));
 double rfrac;
 int negflag = 0;
