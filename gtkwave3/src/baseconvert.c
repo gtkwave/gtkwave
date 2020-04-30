@@ -29,6 +29,152 @@
 #endif
 
 /*
+ * file/translate/process filters
+ */
+static char *dofilter(Trptr t, char *s)
+{
+GLOBALS->xl_file_filter[t->f_filter] = xl_splay(s, GLOBALS->xl_file_filter[t->f_filter]);
+
+if(!strcasecmp(s, GLOBALS->xl_file_filter[t->f_filter]->item))
+	{
+	free_2(s);
+	s = malloc_2(strlen(GLOBALS->xl_file_filter[t->f_filter]->trans) + 1);
+	strcpy(s, GLOBALS->xl_file_filter[t->f_filter]->trans);
+	}
+
+if((*s == '?') && (!GLOBALS->color_active_in_filter))
+	{
+	char *s2a;
+	char *s2 = strchr(s+1, '?');
+	if(s2)
+		{
+		s2++;
+		s2a = malloc_2(strlen(s2)+1);
+		strcpy(s2a, s2);
+		free_2(s);
+		s = s2a;
+		}
+	}
+
+return(s);
+}
+
+static char *edofilter(Trptr t, char *s)
+{
+if(t->flags & TR_ENUM)
+	{
+	int filt = t->e_filter - 1;
+
+#ifdef _WAVE_HAVE_JUDY
+	PPvoid_t pv = JudyHSGet(GLOBALS->xl_enum_filter[filt], s, strlen(s));
+	if(pv)
+		{
+		free_2(s);
+		s = malloc_2(strlen(*pv) + 1);
+		strcpy(s, *pv);
+		}
+#else
+	GLOBALS->xl_enum_filter[filt] = xl_splay(s, GLOBALS->xl_enum_filter[filt]);
+
+	if(!strcasecmp(s, GLOBALS->xl_enum_filter[filt]->item))
+		{
+		free_2(s);
+		s = malloc_2(strlen(GLOBALS->xl_enum_filter[filt]->trans) + 1);
+		strcpy(s, GLOBALS->xl_enum_filter[filt]->trans);
+		}
+#endif
+	else
+		{
+		char *zerofind = s;
+		char *dst = s, *src;
+		while(*zerofind == '0') zerofind++;
+		if(zerofind != s)
+			{
+			src = (!*zerofind) ? (zerofind-1) : zerofind;
+			while(*src)
+				{
+				*(dst++) = *(src++);
+				}
+			*dst = 0;
+			}
+		}
+	}
+
+return(s);
+}
+
+static char *pdofilter(Trptr t, char *s)
+{
+struct pipe_ctx *p = GLOBALS->proc_filter[t->p_filter];
+char buf[1025];
+int n;
+
+if(p)
+	{
+#if !defined _MSC_VER && !defined __MINGW32__
+	fputs(s, p->sout);
+	fputc('\n', p->sout);
+	fflush(p->sout);
+
+	buf[0] = 0;
+
+	n = fgets(buf, 1024, p->sin) ? strlen(buf) : 0;
+	buf[n] = 0;
+#else
+	{
+	BOOL bSuccess;
+	DWORD dwWritten, dwRead;
+
+	WriteFile(p->g_hChildStd_IN_Wr, s, strlen(s), &dwWritten, NULL);
+	WriteFile(p->g_hChildStd_IN_Wr, "\n", 1, &dwWritten, NULL);
+
+	for(n=0;n<1024;n++)
+		{
+		do 	{
+			bSuccess = ReadFile(p->g_hChildStd_OUT_Rd, buf+n, 1, &dwRead, NULL);
+			if((!bSuccess)||(buf[n]=='\n'))
+				{
+				goto ex;
+				}
+
+			} while(buf[n]=='\r');
+		}
+ex:	buf[n] = 0;
+	}
+
+#endif
+
+	if(n)
+		{
+		if(buf[n-1] == '\n') { buf[n-1] = 0; n--; }
+		}
+
+	if(buf[0])
+		{
+		free_2(s);
+		s = malloc_2(n + 1);
+		strcpy(s, buf);
+		}
+	}
+
+if((*s == '?') && (!GLOBALS->color_active_in_filter))
+	{
+	char *s2a;
+	char *s2 = strchr(s+1, '?');
+	if(s2)
+		{
+		s2++;
+		s2a = malloc_2(strlen(s2)+1);
+		strcpy(s2a, s2);
+		free_2(s);
+		s = s2a;
+		}
+	}
+return(s);
+}
+
+
+/*
  * convert binary <=> gray/popcnt in place
  */
 #define cvt_gray(f,p,n) \
@@ -897,6 +1043,26 @@ if(t && (t->flags & TR_REAL2BITS) && d) /* "real2bits" also allows other filters
 		}
 	}
 
+if(!(t->f_filter|t->p_filter|t->e_filter))
+        {
+	}
+        else
+        {
+        if(t->e_filter)
+                {
+                rv = edofilter(t, rv);
+                }
+        else
+        if(t->f_filter)
+                {
+                rv = dofilter(t, rv);
+                }
+                else
+                {
+                rv = pdofilter(t, rv);
+                }
+        }
+
 return(rv);
 }
 
@@ -1594,149 +1760,6 @@ else	/* decimal when all else fails */
 
 free_2(newbuff);
 return(os);
-}
-
-
-static char *dofilter(Trptr t, char *s)
-{
-GLOBALS->xl_file_filter[t->f_filter] = xl_splay(s, GLOBALS->xl_file_filter[t->f_filter]);
-
-if(!strcasecmp(s, GLOBALS->xl_file_filter[t->f_filter]->item))
-	{
-	free_2(s);
-	s = malloc_2(strlen(GLOBALS->xl_file_filter[t->f_filter]->trans) + 1);
-	strcpy(s, GLOBALS->xl_file_filter[t->f_filter]->trans);
-	}
-
-if((*s == '?') && (!GLOBALS->color_active_in_filter))
-	{
-	char *s2a;
-	char *s2 = strchr(s+1, '?');
-	if(s2)
-		{
-		s2++;
-		s2a = malloc_2(strlen(s2)+1);
-		strcpy(s2a, s2);
-		free_2(s);
-		s = s2a;
-		}
-	}
-
-return(s);
-}
-
-static char *edofilter(Trptr t, char *s)
-{
-if(t->flags & TR_ENUM)
-	{
-	int filt = t->e_filter - 1;
-
-#ifdef _WAVE_HAVE_JUDY
-	PPvoid_t pv = JudyHSGet(GLOBALS->xl_enum_filter[filt], s, strlen(s));
-	if(pv)
-		{
-		free_2(s);
-		s = malloc_2(strlen(*pv) + 1);
-		strcpy(s, *pv);
-		}
-#else
-	GLOBALS->xl_enum_filter[filt] = xl_splay(s, GLOBALS->xl_enum_filter[filt]);
-
-	if(!strcasecmp(s, GLOBALS->xl_enum_filter[filt]->item))
-		{
-		free_2(s);
-		s = malloc_2(strlen(GLOBALS->xl_enum_filter[filt]->trans) + 1);
-		strcpy(s, GLOBALS->xl_enum_filter[filt]->trans);
-		}
-#endif
-	else
-		{
-		char *zerofind = s;
-		char *dst = s, *src;
-		while(*zerofind == '0') zerofind++;
-		if(zerofind != s)
-			{
-			src = (!*zerofind) ? (zerofind-1) : zerofind;
-			while(*src)
-				{
-				*(dst++) = *(src++);
-				}
-			*dst = 0;
-			}
-		}
-	}
-
-return(s);
-}
-
-static char *pdofilter(Trptr t, char *s)
-{
-struct pipe_ctx *p = GLOBALS->proc_filter[t->p_filter];
-char buf[1025];
-int n;
-
-if(p)
-	{
-#if !defined _MSC_VER && !defined __MINGW32__
-	fputs(s, p->sout);
-	fputc('\n', p->sout);
-	fflush(p->sout);
-
-	buf[0] = 0;
-
-	n = fgets(buf, 1024, p->sin) ? strlen(buf) : 0;
-	buf[n] = 0;
-#else
-	{
-	BOOL bSuccess;
-	DWORD dwWritten, dwRead;
-
-	WriteFile(p->g_hChildStd_IN_Wr, s, strlen(s), &dwWritten, NULL);
-	WriteFile(p->g_hChildStd_IN_Wr, "\n", 1, &dwWritten, NULL);
-
-	for(n=0;n<1024;n++)
-		{
-		do 	{
-			bSuccess = ReadFile(p->g_hChildStd_OUT_Rd, buf+n, 1, &dwRead, NULL);
-			if((!bSuccess)||(buf[n]=='\n'))
-				{
-				goto ex;
-				}
-
-			} while(buf[n]=='\r');
-		}
-ex:	buf[n] = 0;
-	}
-
-#endif
-
-	if(n)
-		{
-		if(buf[n-1] == '\n') { buf[n-1] = 0; n--; }
-		}
-
-	if(buf[0])
-		{
-		free_2(s);
-		s = malloc_2(n + 1);
-		strcpy(s, buf);
-		}
-	}
-
-if((*s == '?') && (!GLOBALS->color_active_in_filter))
-	{
-	char *s2a;
-	char *s2 = strchr(s+1, '?');
-	if(s2)
-		{
-		s2++;
-		s2a = malloc_2(strlen(s2)+1);
-		strcpy(s2a, s2);
-		free_2(s);
-		s = s2a;
-		}
-	}
-return(s);
 }
 
 
