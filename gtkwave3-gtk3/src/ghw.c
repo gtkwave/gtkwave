@@ -173,42 +173,52 @@ for(i=0;i<GLOBALS->numfacs;i++)
 	{
 	if(psr)
 		{
-		char *fstr1 = GLOBALS->facs[i-1]->name;
-		char *fstr2 = GLOBALS->facs[i]->name;
-		int p1 = strand_pnt(fstr1);
-		int p2 = strand_pnt(fstr2);
+		int ev1 = GLOBALS->facs[i-1]->n->extvals;
+		int ev2 = GLOBALS->facs[i]->n->extvals;
 
-		if(!root)
+		if(!ev1 && !ev2)
 			{
-			if((p1>=0)&&(p1==p2))
+			char *fstr1 = GLOBALS->facs[i-1]->name;
+			char *fstr2 = GLOBALS->facs[i]->name;
+			int p1 = strand_pnt(fstr1);
+			int p2 = strand_pnt(fstr2);
+	
+			if(!root)
 				{
-				if(!strncmp(fstr1, fstr2, p1))
+				if((p1>=0)&&(p1==p2))
 					{
-					root = GLOBALS->facs[i-1];
-					root->vec_root = root;
-					root->vec_chain = GLOBALS->facs[i];
-					GLOBALS->facs[i]->vec_root = root;
+					if(!strncmp(fstr1, fstr2, p1))
+						{
+						root = GLOBALS->facs[i-1];
+						root->vec_root = root;
+						root->vec_chain = GLOBALS->facs[i];
+						GLOBALS->facs[i]->vec_root = root;
+						}
 					}
 				}
-			}
-			else
-			{
-			if((p1>=0)&&(p1==p2))
+				else
 				{
-				if(!strncmp(fstr1, fstr2, p1))
+				if((p1>=0)&&(p1==p2))
 					{
-					psr->vec_chain = GLOBALS->facs[i];
-					GLOBALS->facs[i]->vec_root = root;
+					if(!strncmp(fstr1, fstr2, p1))
+						{
+						psr->vec_chain = GLOBALS->facs[i];
+						GLOBALS->facs[i]->vec_root = root;
+						}
+						else
+						{
+						root = NULL;
+						}
 					}
 					else
 					{
 					root = NULL;
 					}
 				}
-				else
-				{
-				root = NULL;
-				}
+			}
+			else
+			{
+			root = NULL;
 			}
 		}
 
