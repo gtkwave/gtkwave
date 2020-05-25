@@ -1790,4 +1790,3 @@
 		Fix left shift overflow in cvt_fpsdec().
 		Add in missing file/translate/process filter for reals.
 		Fix for bitvec merging in GHW so integers arrays can be viewed.
-		Remove extern keyword from wave_rpc_id  in gconf.h.
