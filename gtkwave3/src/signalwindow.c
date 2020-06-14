@@ -471,6 +471,7 @@ int target;
 int which;
 gint rc = FALSE;
 int yscroll;
+int ud_kill = 0;
 
 #ifdef FOCUS_DEBUG_MSGS
 printf("focus: %d %08x %08x %08x\n", GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box),
@@ -549,7 +550,80 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
 			num_traces_displayable=(GLOBALS->signalarea->allocation.height)/(GLOBALS->fontheight);
 			num_traces_displayable--;   /* for the time trace that is always there */
 
-			if(num_traces_displayable<GLOBALS->traces.visible)
+                        if(event->state & GDK_SHIFT_MASK)
+                                {
+                                Trptr t = NULL, t2 = NULL;
+
+                                if((event->keyval == GDK_KEY_Up) || (event->keyval == GDK_KEY_KP_Up))
+                                        {
+                                        for(t=GLOBALS->traces.first;t;t=t->t_next)
+                                                {
+                                                if (!(t->flags&TR_HIGHLIGHT)) continue; else break;
+                                                }
+                                        t = t ? GivePrevTrace(t) : GLOBALS->topmost_trace;
+                                        }
+                                else
+                                if((event->keyval == GDK_KEY_Down) || (event->keyval == GDK_KEY_KP_Down))
+                                        {
+                                        for(t=GLOBALS->traces.first;t;t=t->t_next)
+                                                {
+                                                if (t->flags&TR_HIGHLIGHT) t2 = t;
+                                                }
+                                        t = t2 ? GiveNextTrace(t2) : GLOBALS->topmost_trace;
+                                        }
+
+                                if(t)
+                                     	{
+                                        int top_target = 0;
+                                        target = 0;
+                                        which=num_traces_displayable-1;
+
+                                        ClearTraces();
+                                        t->flags |= TR_HIGHLIGHT;
+                                        t2 = t;
+
+                                        for(t=GLOBALS->traces.first;t;t=t->t_next)
+                                                {
+                                                if(t == GLOBALS->topmost_trace) break;
+                                                top_target++;
+                                                }
+
+                                        for(t=GLOBALS->traces.first;t;t=t->t_next)
+                                                {
+                                                if(t2 == t) break;
+                                                target++;
+                                                }
+
+                                        if((target >= top_target) && (target <= top_target+which))
+                                                {
+                                                /* nothing */
+                                                }
+                                                else
+                                                {
+                                                if((event->keyval == GDK_KEY_Up) || (event->keyval == GDK_KEY_KP_Up))
+                                                        {
+                                                        if(target<0) target=0;
+                                                        }
+                                                else
+                                                if((event->keyval == GDK_KEY_Down) || (event->keyval == GDK_KEY_KP_Down))
+                                                        {
+                                                        target = target - which;
+                                                        if(target+which>=(GLOBALS->traces.visible-1)) target=GLOBALS->traces.visible-which-1;
+                                                        }
+
+						wadj->value = target;
+                                                }
+
+                                        if(GLOBALS->cachedwhich_signalwindow_c_1==which) GLOBALS->cachedwhich_signalwindow_c_1=which-1; /* force update */
+
+                                        g_signal_emit_by_name (GTK_OBJECT (wadj), "changed"); /* force bar update */
+                                        g_signal_emit_by_name (GTK_OBJECT (wadj), "value_changed"); /* force text update */
+                                        }
+
+                                ud_kill = 1;
+                                }
+
+			if((num_traces_displayable<GLOBALS->traces.visible) && (!ud_kill))
 				{
 				switch(event->keyval)
 					{
