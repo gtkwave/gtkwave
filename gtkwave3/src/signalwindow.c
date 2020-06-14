@@ -556,6 +556,7 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
 
                                 if((event->keyval == GDK_KEY_Up) || (event->keyval == GDK_KEY_KP_Up))
                                         {
+	                                ud_kill = 1;
                                         for(t=GLOBALS->traces.first;t;t=t->t_next)
                                                 {
                                                 if (!(t->flags&TR_HIGHLIGHT)) continue; else break;
@@ -565,6 +566,7 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
                                 else
                                 if((event->keyval == GDK_KEY_Down) || (event->keyval == GDK_KEY_KP_Down))
                                         {
+	                                ud_kill = 1;
                                         for(t=GLOBALS->traces.first;t;t=t->t_next)
                                                 {
                                                 if (t->flags&TR_HIGHLIGHT) t2 = t;
@@ -619,8 +621,6 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
                                         g_signal_emit_by_name (GTK_OBJECT (wadj), "changed"); /* force bar update */
                                         g_signal_emit_by_name (GTK_OBJECT (wadj), "value_changed"); /* force text update */
                                         }
-
-                                ud_kill = 1;
                                 }
 
 			if((num_traces_displayable<GLOBALS->traces.visible) && (!ud_kill))
