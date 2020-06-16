@@ -3237,19 +3237,17 @@ if(((t)&&(t->flags&TR_INVERT))&&(!is_event))
 yu=(_y0+_y1)/2;
 ytext=yu-(GLOBALS->wavefont->ascent/2)+GLOBALS->wavefont->ascent;
 
+if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white)&&(!kill_grid))
+	{
+	gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+		TRUE,0, liney - GLOBALS->fontheight,
+		GLOBALS->wavewidth, GLOBALS->fontheight);
+	}
+else
 if((GLOBALS->display_grid)&&(GLOBALS->enable_horiz_grid)&&(!kill_grid))
 	{
-	if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white))
-		{
-		gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-			TRUE,0, liney - GLOBALS->fontheight,
-			GLOBALS->wavewidth, GLOBALS->fontheight);
-		}
-		else
-		{
-		gdk_draw_line(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-			(GLOBALS->tims.start<GLOBALS->tims.first)?(GLOBALS->tims.first-GLOBALS->tims.start)*GLOBALS->pxns:0, liney,(GLOBALS->tims.last<=GLOBALS->tims.end)?(GLOBALS->tims.last-GLOBALS->tims.start)*GLOBALS->pxns:GLOBALS->wavewidth-1, liney);
-		}
+	gdk_draw_line(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+		(GLOBALS->tims.start<GLOBALS->tims.first)?(GLOBALS->tims.first-GLOBALS->tims.start)*GLOBALS->pxns:0, liney,(GLOBALS->tims.last<=GLOBALS->tims.end)?(GLOBALS->tims.last-GLOBALS->tims.start)*GLOBALS->pxns:GLOBALS->wavewidth-1, liney);
 	}
 
 if((h)&&(GLOBALS->tims.start==h->time))
@@ -3996,31 +3994,33 @@ _y0=liney-2;
 yu=(_y0+_y1)/2;
 ytext=yu-(GLOBALS->wavefont->ascent/2)+GLOBALS->wavefont->ascent;
 
+if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white))
+	{
+	Trptr tn = GiveNextTrace(t);
+	if((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH))
+		{
+                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+                        TRUE,0, liney - GLOBALS->fontheight,
+                        GLOBALS->wavewidth, GLOBALS->fontheight);
+		}
+		else
+                {
+                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+                        TRUE,0, liney - GLOBALS->fontheight,
+                        GLOBALS->wavewidth, GLOBALS->fontheight);
+                }
+	}
+else
 if((GLOBALS->display_grid)&&(GLOBALS->enable_horiz_grid))
 	{
 	Trptr tn = GiveNextTrace(t);
 	if((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH))
 		{
-	 	if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white))
-	                {
-	                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-	                        TRUE,0, liney - GLOBALS->fontheight,
-	                        GLOBALS->wavewidth, GLOBALS->fontheight);
-	                }
 		}
 		else
 		{
-	 	if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white))
-	                {
-	                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-	                        TRUE,0, liney - GLOBALS->fontheight,
-	                        GLOBALS->wavewidth, GLOBALS->fontheight);
-	                }
-	                else
-	                {
-			gdk_draw_line(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-				(GLOBALS->tims.start<GLOBALS->tims.first)?(GLOBALS->tims.first-GLOBALS->tims.start)*GLOBALS->pxns:0, liney,(GLOBALS->tims.last<=GLOBALS->tims.end)?(GLOBALS->tims.last-GLOBALS->tims.start)*GLOBALS->pxns:GLOBALS->wavewidth-1, liney);
-			}
+		gdk_draw_line(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+			(GLOBALS->tims.start<GLOBALS->tims.first)?(GLOBALS->tims.first-GLOBALS->tims.start)*GLOBALS->pxns:0, liney,(GLOBALS->tims.last<=GLOBALS->tims.end)?(GLOBALS->tims.last-GLOBALS->tims.start)*GLOBALS->pxns:GLOBALS->wavewidth-1, liney);
 		}
 	}
 
@@ -4817,31 +4817,33 @@ _y0=liney-2;
 yu=(_y0+_y1)/2;
 ytext=yu-(GLOBALS->wavefont->ascent/2)+GLOBALS->wavefont->ascent;
 
+if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white))
+	{
+	Trptr tn = GiveNextTrace(t);
+	if((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH))
+		{
+                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+                        TRUE,0, liney - GLOBALS->fontheight,
+                        GLOBALS->wavewidth, GLOBALS->fontheight);
+		}
+		else
+                {
+                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+                        TRUE,0, liney - GLOBALS->fontheight,
+                        GLOBALS->wavewidth, GLOBALS->fontheight);
+                }
+	}
+else
 if((GLOBALS->display_grid)&&(GLOBALS->enable_horiz_grid))
 	{
 	Trptr tn = GiveNextTrace(t);
 	if((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH))
 		{
-	 	if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white))
-	                {
-	                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-	                        TRUE,0, liney - GLOBALS->fontheight,
-	                        GLOBALS->wavewidth, GLOBALS->fontheight);
-	                }
 		}
 		else
 		{
-	 	if((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) && (!GLOBALS->black_and_white))
-	                {
-	                gdk_draw_rectangle(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-	                        TRUE,0, liney - GLOBALS->fontheight,
-	                        GLOBALS->wavewidth, GLOBALS->fontheight);
-	                }
-	                else
-	                {
-			gdk_draw_line(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
-				(GLOBALS->tims.start<GLOBALS->tims.first)?(GLOBALS->tims.first-GLOBALS->tims.start)*GLOBALS->pxns:0, liney,(GLOBALS->tims.last<=GLOBALS->tims.end)?(GLOBALS->tims.last-GLOBALS->tims.start)*GLOBALS->pxns:GLOBALS->wavewidth-1, liney);
-			}
+		gdk_draw_line(GLOBALS->wavepixmap_wavewindow_c_1, GLOBALS->gc.gc_grid_wavewindow_c_1,
+			(GLOBALS->tims.start<GLOBALS->tims.first)?(GLOBALS->tims.first-GLOBALS->tims.start)*GLOBALS->pxns:0, liney,(GLOBALS->tims.last<=GLOBALS->tims.end)?(GLOBALS->tims.last-GLOBALS->tims.start)*GLOBALS->pxns:GLOBALS->wavewidth-1, liney);
 		}
 	}
 
