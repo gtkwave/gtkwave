@@ -2448,7 +2448,7 @@ while(v)
 		str=(slen>max_slen)?(wave_alloca((max_slen=slen)+32)):(str); /* more than enough */
 		strcpy(str,v->name);
 
-		if(v->msi>=0)
+		if((v->msi>=0)||(v->msi != v->lsi))
 			{
 			strcpy(str+slen,GLOBALS->vcd_hier_delimeter);
 			slen++;
