@@ -1119,7 +1119,7 @@ return(ok);
 
 void read_rc_file(char *override_rc)
 {
-FILE *handle;
+FILE *handle = NULL;
 int i;
 int num_rcitems = sizeof(rcitems)/sizeof(struct rc_entry);
 
@@ -1144,16 +1144,24 @@ else
 #if !defined __MINGW32__
 if(!(handle=fopen(rcname,"rb")))
 	{
-	char *home;
-	char *rcpath;
+        struct passwd *pw = NULL;
+        char *home = NULL;
+        char *rcpath = NULL;
 
-	home=getpwuid(geteuid())->pw_dir;
-	rcpath=(char *)alloca(strlen(home)+1+strlen(rcname)+1);
-	strcpy(rcpath,home);
-	strcat(rcpath,"/");
-	strcat(rcpath,rcname);
+        pw=getpwuid(geteuid());
+        if(pw)
+              	{
+                home=pw->pw_dir;
+                if(home)
+                        {
+                        rcpath=(char *)alloca(strlen(home)+1+strlen(rcname)+1);
+                        strcpy(rcpath,home);
+                        strcat(rcpath,"/");
+                        strcat(rcpath,rcname);
+                        }
+                }
 
-	if(!(handle=fopen(rcpath,"rb")))
+	if( !rcpath || !(handle=fopen(rcpath,"rb")) )
 		{
 #ifdef MAC_INTEGRATION
 		const gchar *bundle_id = gtkosx_application_get_bundle_id();
