@@ -1734,3 +1734,4 @@
 		Fix negative MSBs on VCD loaders for vectors.
 		Fix getpwuid() null pointer exception.
 		Add missing recursion case to treenamefix().
+		Fix lock/unlock misuse of pthread mutexes across threads.
