@@ -25,6 +25,8 @@
 #endif
 #include <math.h>
 
+#define WAVE_CAIRO_050_OFFSET (0.5)
+
 static void rendertimebar(void);
 static void draw_hptr_trace(Trptr t, hptr h, int which, int dodraw, int kill_grid);
 static void draw_hptr_trace_vector(Trptr t, hptr h, int which);
@@ -244,15 +246,15 @@ return(FALSE);
 void XXX_gdk_draw_line(cairo_t *cr, wave_rgb_t gc, gint _x1, gint _y1, gint _x2, gint _y2)
 {
 cairo_set_source_rgba (cr, gc.r, gc.g, gc.b, gc.a);
-cairo_move_to (cr, _x1+0.5, _y1+0.5);
-cairo_line_to (cr, _x2+0.5, _y2+0.5);
+cairo_move_to (cr, _x1+WAVE_CAIRO_050_OFFSET, _y1+WAVE_CAIRO_050_OFFSET);
+cairo_line_to (cr, _x2+WAVE_CAIRO_050_OFFSET, _y2+WAVE_CAIRO_050_OFFSET);
 cairo_stroke (cr);
 }
 
 void XXX_gdk_draw_rectangle(cairo_t *cr, wave_rgb_t gc, gboolean filled, gint _x1, gint _y1, gint _w, gint _h)
 {
 cairo_set_source_rgba (cr, gc.r, gc.g, gc.b, gc.a);
-cairo_rectangle (cr, _x1+0.5, _y1+0.5, _w, _h);
+cairo_rectangle (cr, _x1+WAVE_CAIRO_050_OFFSET, _y1+WAVE_CAIRO_050_OFFSET, _w, _h);
 if(filled)
 	{
         cairo_fill(cr);
@@ -522,8 +524,8 @@ if((t=GLOBALS->named_markers[i])!=-1)
 				{
 				XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->wavefont_smaller,
 					&gc,
-					xl-(font_engine_string_measure(GLOBALS->wavefont_smaller, nbuff)>>1)+0.5,
-					GLOBALS->fontheight-2+0.5, nbuff);
+					xl-(font_engine_string_measure(GLOBALS->wavefont_smaller, nbuff)>>1)+WAVE_CAIRO_050_OFFSET,
+					GLOBALS->fontheight-2+WAVE_CAIRO_050_OFFSET, nbuff);
 				}
 				else
 				{
@@ -537,8 +539,8 @@ if((t=GLOBALS->named_markers[i])!=-1)
 
 				XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->wavefont_smaller,
 					&gc,
-					xl-(width>>1)+0.5,
-					GLOBALS->fontheight-2+0.5, GLOBALS->marker_names[i]);
+					xl-(width>>1)+WAVE_CAIRO_050_OFFSET,
+					GLOBALS->fontheight-2+WAVE_CAIRO_050_OFFSET, GLOBALS->marker_names[i]);
 				}
 			}
 		}
@@ -2693,14 +2695,14 @@ if(!GLOBALS->use_dark)
 	}
 
 cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc_white.r, GLOBALS->rgb_gc_white.g, GLOBALS->rgb_gc_white.b, GLOBALS->rgb_gc_white.a);
-cairo_move_to (GLOBALS->cr_signalpixmap, 0.5, GLOBALS->fontheight-1+0.5);
-cairo_line_to (GLOBALS->cr_signalpixmap, GLOBALS->signal_fill_width-1+0.5, GLOBALS->fontheight-1+0.5);
+cairo_move_to (GLOBALS->cr_signalpixmap, WAVE_CAIRO_050_OFFSET, GLOBALS->fontheight-1+WAVE_CAIRO_050_OFFSET);
+cairo_line_to (GLOBALS->cr_signalpixmap, GLOBALS->signal_fill_width-1+WAVE_CAIRO_050_OFFSET, GLOBALS->fontheight-1+WAVE_CAIRO_050_OFFSET);
 cairo_stroke (GLOBALS->cr_signalpixmap);
 
 if(!GLOBALS->use_dark)
 	{
 	XXX_font_engine_draw_string(GLOBALS->cr_signalpixmap, GLOBALS->signalfont, &(GLOBALS->rgb_gc_black),
-		3+xsrc+0.5, GLOBALS->fontheight-4+0.5, "Time");
+		3+xsrc+WAVE_CAIRO_050_OFFSET, GLOBALS->fontheight-4+WAVE_CAIRO_050_OFFSET, "Time");
 	}
 
 t=GLOBALS->traces.first;
@@ -2925,8 +2927,8 @@ int RenderSig(Trptr t, int i, int dobackground)
 
 
   cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc_white.r, GLOBALS->rgb_gc_white.g, GLOBALS->rgb_gc_white.b, GLOBALS->rgb_gc_white.a);
-  cairo_move_to (GLOBALS->cr_signalpixmap, 0.5, liney+0.5);
-  cairo_line_to (GLOBALS->cr_signalpixmap, GLOBALS->signal_fill_width-1+0.5, liney+0.5);
+  cairo_move_to (GLOBALS->cr_signalpixmap, WAVE_CAIRO_050_OFFSET, liney+WAVE_CAIRO_050_OFFSET);
+  cairo_line_to (GLOBALS->cr_signalpixmap, GLOBALS->signal_fill_width-1+WAVE_CAIRO_050_OFFSET, liney+WAVE_CAIRO_050_OFFSET);
   cairo_stroke (GLOBALS->cr_signalpixmap);
 
   if((t->name)||(subname))
@@ -2935,8 +2937,8 @@ int RenderSig(Trptr t, int i, int dobackground)
 			      GLOBALS->signalfont,
 			      &text_color,
 			      (left_justify?3:3+GLOBALS->max_signal_name_pixel_width-
-			      font_engine_string_measure(GLOBALS->signalfont, buf))+0.5,
-			      texty+0.5,
+			      font_engine_string_measure(GLOBALS->signalfont, buf))+WAVE_CAIRO_050_OFFSET,
+			      texty+WAVE_CAIRO_050_OFFSET,
 			      buf);
     }
 
@@ -2946,8 +2948,8 @@ int RenderSig(Trptr t, int i, int dobackground)
 	XXX_font_engine_draw_string(GLOBALS->cr_signalpixmap,
 				GLOBALS->signalfont,
 				&text_color,
-				GLOBALS->max_signal_name_pixel_width+6+0.5,
-				texty+0.5,
+				GLOBALS->max_signal_name_pixel_width+6+WAVE_CAIRO_050_OFFSET,
+				texty+WAVE_CAIRO_050_OFFSET,
 				t->asciivalue);
     }
 
@@ -3515,8 +3517,8 @@ WAVE_STRACE_ITERATOR(s_ctx_iter)
 	}
 
 cairo_set_source_rgba (GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.r, GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.g, GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.b, GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.a);
-cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, 0.5);
-cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, (((!timearray_encountered)&&(GLOBALS->display_grid)&&(GLOBALS->enable_vert_grid))?GLOBALS->waveheight:fhminus2)+0.5);
+cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, WAVE_CAIRO_050_OFFSET);
+cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, (((!timearray_encountered)&&(GLOBALS->display_grid)&&(GLOBALS->enable_vert_grid))?GLOBALS->waveheight:fhminus2)+WAVE_CAIRO_050_OFFSET);
 cairo_stroke (GLOBALS->cr_wavepixmap_wavewindow_c_1);
 
 if(tim==GLOBALS->tims.last) return;
@@ -3526,8 +3528,8 @@ DEBUG(printf("Rborder: %lld, Wavewidth: %d\n", rborder, GLOBALS->wavewidth));
 if(rborder>GLOBALS->wavewidth) rborder=GLOBALS->wavewidth;
 if((rhs=x+GLOBALS->pixelsperframe)>rborder) rhs=rborder;
 
-cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, GLOBALS->wavecrosspiece+0.5);
-cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, rhs+0.5, GLOBALS->wavecrosspiece+0.5);
+cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, GLOBALS->wavecrosspiece+WAVE_CAIRO_050_OFFSET);
+cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, rhs+WAVE_CAIRO_050_OFFSET, GLOBALS->wavecrosspiece+WAVE_CAIRO_050_OFFSET);
 cairo_stroke (GLOBALS->cr_wavepixmap_wavewindow_c_1);
 
 dx = x + (hashoffset=GLOBALS->hashstep);
@@ -3535,8 +3537,8 @@ x  = dx;
 
 while((hashoffset<GLOBALS->pixelsperframe)&&(x<=rhs)&&(iter<9))
 	{
-	cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, GLOBALS->wavecrosspiece+0.5);
-	cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, fhminus2+0.5);
+	cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, GLOBALS->wavecrosspiece+WAVE_CAIRO_050_OFFSET);
+	cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, fhminus2+WAVE_CAIRO_050_OFFSET);
 	cairo_stroke (GLOBALS->cr_wavepixmap_wavewindow_c_1);
 
 	hashoffset+=GLOBALS->hashstep;
@@ -3615,8 +3617,8 @@ WAVE_STRACE_ITERATOR_FWD(s_ctx_iter)
 							}
 						oldx=x;
 
-						cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, y+0.5);
-					        cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, GLOBALS->waveheight+0.5);
+						cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, y+WAVE_CAIRO_050_OFFSET);
+					        cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, GLOBALS->waveheight+WAVE_CAIRO_050_OFFSET);
 						cairo_stroke (GLOBALS->cr_wavepixmap_wavewindow_c_1);
 						}
 						else
@@ -3680,8 +3682,8 @@ if(GLOBALS->ruler_step && !timearray_encountered)
 		if(x>=GLOBALS->wavewidth) break;
 		oldx=x;
 
-		cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, y+0.5);
-	        cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+0.5, GLOBALS->waveheight+0.5);
+		cairo_move_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, y+WAVE_CAIRO_050_OFFSET);
+	        cairo_line_to (GLOBALS->cr_wavepixmap_wavewindow_c_1, x+WAVE_CAIRO_050_OFFSET, GLOBALS->waveheight+WAVE_CAIRO_050_OFFSET);
 		cairo_stroke (GLOBALS->cr_wavepixmap_wavewindow_c_1);
 		}
 	}
@@ -3727,7 +3729,7 @@ for(;;)
 
 	if((x-lenhalf >= lastx) || (GLOBALS->pixelsperframe >= 200))
 		{
-		XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,&GLOBALS->rgb_gc.gc_time_wavewindow_c_1,x-lenhalf+0.5, GLOBALS->wavefont->ascent-1+0.5,timebuff);
+		XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,&GLOBALS->rgb_gc.gc_time_wavewindow_c_1,x-lenhalf+WAVE_CAIRO_050_OFFSET, GLOBALS->wavefont->ascent-1+WAVE_CAIRO_050_OFFSET,timebuff);
 		lastx = x+lenhalf;
 		}
 
@@ -4126,7 +4128,7 @@ if(_x0!=_x1)
 				{
 				if((_x1>=GLOBALS->wavewidth)||(font_engine_string_measure(GLOBALS->wavefont, identifier_str)+GLOBALS->vector_padding<=width))
 					{
-		                        XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,  &GLOBALS->rgb_gc.gc_value_wavewindow_c_1,  _x0+2+0.5,ytext+0.5,identifier_str);
+		                        XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,  &GLOBALS->rgb_gc.gc_value_wavewindow_c_1,  _x0+2+WAVE_CAIRO_050_OFFSET,ytext+WAVE_CAIRO_050_OFFSET,identifier_str);
 					}
 				}
 			}
@@ -4999,7 +5001,7 @@ if(_x0<0) _x0=0;	/* fixup left margin */
 
 		if((_x1>=GLOBALS->wavewidth)||(font_engine_string_measure(GLOBALS->wavefont, ascii2)+GLOBALS->vector_padding<=width))
 			{
-			XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,&GLOBALS->rgb_gc.gc_value_wavewindow_c_1,_x0+2+0.5,ytext+0.5,ascii2);
+			XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,&GLOBALS->rgb_gc.gc_value_wavewindow_c_1,_x0+2+WAVE_CAIRO_050_OFFSET,ytext+WAVE_CAIRO_050_OFFSET,ascii2);
 			}
 		else
 			{
@@ -5011,7 +5013,7 @@ if(_x0<0) _x0=0;	/* fixup left margin */
 				*mod='+';
 				*(mod+1)=0;
 
-				XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,&GLOBALS->rgb_gc.gc_value_wavewindow_c_1,_x0+2+0.5,ytext+0.5,ascii2);
+				XXX_font_engine_draw_string(GLOBALS->cr_wavepixmap_wavewindow_c_1,GLOBALS->wavefont,&GLOBALS->rgb_gc.gc_value_wavewindow_c_1,_x0+2+WAVE_CAIRO_050_OFFSET,ytext+WAVE_CAIRO_050_OFFSET,ascii2);
 				}
 			}
 		}
