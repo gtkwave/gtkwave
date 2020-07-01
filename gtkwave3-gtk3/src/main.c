@@ -898,6 +898,7 @@ if(!GLOBALS)
 	GLOBALS->save_on_exit = old_g->save_on_exit;
 
 	GLOBALS->cr_line_width = old_g->cr_line_width;
+	GLOBALS->cairo_050_offset = old_g->cairo_050_offset;
 
 #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 	GLOBALS->header_bar = old_g->header_bar;
