@@ -25,7 +25,7 @@
 #endif
 #include <math.h>
 
-#define WAVE_CAIRO_050_OFFSET (0.5)
+#define WAVE_CAIRO_050_OFFSET (GLOBALS->cairo_050_offset)
 
 static void rendertimebar(void);
 static void draw_hptr_trace(Trptr t, hptr h, int which, int dodraw, int kill_grid);

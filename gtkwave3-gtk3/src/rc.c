@@ -588,6 +588,7 @@ int f_use_fat_lines(char *str)
 {
 DEBUG(printf("f_use_fat_lines(\"%s\")\n",str));
 GLOBALS->cr_line_width = atoi_64(str) ? 2.0 : 1.0;
+GLOBALS->cairo_050_offset = atoi_64(str) ? 0.0 : 0.5;
 return(0);
 }
 

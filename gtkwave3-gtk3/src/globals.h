@@ -1362,6 +1362,7 @@ struct wave_rgbmaster_t rgb_gc;
 struct wave_rgbmaster_t rgb_gccache;
 
 double cr_line_width;
+double cairo_050_offset;
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
 gdouble wavearea_gesture_initial_zoom;
 #ifdef WAVE_GTK3_GESTURE_ZOOM_IS_1D

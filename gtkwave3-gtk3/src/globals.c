@@ -1348,6 +1348,7 @@ RGB_WAVE_RAINBOW_INITIALIZER, /* rgb_gc_rainbow */
 {{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0}}, /* rgb_gccache */
 
 1.0, /* cr_line_width */
+0.5, /* cairo_050_offset */
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
 0.0, /* wavearea_gesture_initial_zoom */
 #ifdef WAVE_GTK3_GESTURE_ZOOM_IS_1D
@@ -1810,6 +1811,7 @@ void reload_into_new_context_2(void)
  new_globals->use_standard_clicking = GLOBALS->use_standard_clicking;
  new_globals->dragzoom_threshold = GLOBALS->dragzoom_threshold;
  new_globals->cr_line_width = GLOBALS->cr_line_width;
+ new_globals->cairo_050_offset = GLOBALS->cairo_050_offset;
 
  new_globals->ignore_savefile_pane_pos = 1; /* to keep window from resizing/jumping */
  new_globals->ignore_savefile_pos = 1; /* to keep window from resizing/jumping */
