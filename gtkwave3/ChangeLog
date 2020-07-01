@@ -1723,7 +1723,7 @@
 		Added support for dumping variable types in vcd saveer, not
 		just using "wire" for non-reals/strings.
 		Fix for uninitialized values at time 0 for FST, FSDB loaders.
-3.3.105	28jun20	Fix bad (void) of is_closing in fstDestroyMmaps when using
+3.3.105	01jul20	Fix bad (void) of is_closing in fstDestroyMmaps when using
 		Cygwin or MinGW.
 		Fix left shift overflow in cvt_fpsdec().
 		Add in missing file/translate/process filter for reals.
@@ -1735,3 +1735,4 @@
 		Fix getpwuid() null pointer exception.
 		Add missing recursion case to treenamefix().
 		Fix lock/unlock misuse of pthread mutexes across threads.
+		Examine env var $HOME for home dir on geteuid failure.
