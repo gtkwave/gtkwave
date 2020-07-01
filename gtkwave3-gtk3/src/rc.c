@@ -1150,15 +1150,21 @@ if(!(handle=fopen(rcname,"rb")))
 
         pw=getpwuid(geteuid());
         if(pw)
-              	{
+                {
                 home=pw->pw_dir;
-                if(home)
-                        {
-                        rcpath=(char *)alloca(strlen(home)+1+strlen(rcname)+1);
-                        strcpy(rcpath,home);
-                        strcat(rcpath,"/");
-                        strcat(rcpath,rcname);
-                        }
+                }
+
+        if(!home)
+                {
+                home = getenv("HOME");
+                }
+
+        if(home)
+                {
+                rcpath=(char *)alloca(strlen(home)+1+strlen(rcname)+1);
+                strcpy(rcpath,home);
+                strcat(rcpath,"/");
+                strcat(rcpath,rcname);
                 }
 
 	if( !rcpath || !(handle=fopen(rcpath,"rb")) )

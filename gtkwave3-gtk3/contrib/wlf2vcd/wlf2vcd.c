@@ -10,7 +10,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <time.h>
-#include "wlf_api.h"
+#include <wlf_api.h>
 
 /* skips using wlfValueToString() and determines string directly from value representation */
 #define BYPASS_USING_VALUE_TO_STRING
