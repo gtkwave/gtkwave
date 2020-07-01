@@ -1798,4 +1798,4 @@
 		Add missing recursion case to treenamefix().
 		Fix lock/unlock misuse of pthread mutexes across threads.
 		Examine	env var	$HOME for home dir on geteuid failure.
-		Fix blurring on use_far_lines rc variable usage.
+		Fix blurring on use_fat_lines rc variable usage.
