@@ -20,6 +20,18 @@
 #ifndef GDK_KEY_equal
 #define GDK_KEY_equal GDK_equal
 #endif
+#ifndef GDK_KEY_Up
+#define GDK_KEY_Up GDK_Up
+#endif
+#ifndef GDK_KEY_KP_Up
+#define GDK_KEY_KP_Up GDK_KP_Up
+#endif
+#ifndef GDK_KEY_Down
+#define GDK_KEY_Down GDK_Down
+#endif
+#ifndef GDK_KEY_KP_Down
+#define GDK_KEY_KP_Down GDK_KP_Down
+#endif
 
 #undef FOCUS_DEBUG_MSGS
 
@@ -618,8 +630,8 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
 
                                         if(GLOBALS->cachedwhich_signalwindow_c_1==which) GLOBALS->cachedwhich_signalwindow_c_1=which-1; /* force update */
 
-                                        g_signal_emit_by_name (GTK_OBJECT (wadj), "changed"); /* force bar update */
-                                        g_signal_emit_by_name (GTK_OBJECT (wadj), "value_changed"); /* force text update */
+                                        gtk_signal_emit_by_name (GTK_OBJECT (wadj), "changed"); /* force bar update */
+                                        gtk_signal_emit_by_name (GTK_OBJECT (wadj), "value_changed"); /* force text update */
                                         }
                                 }
 
