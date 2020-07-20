@@ -1,0 +1,70 @@
+name: 'build'
+
+on:
+  push:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+
+  msys2:
+    runs-on: windows-latest
+    strategy:
+        fail-fast: false
+        max-parallel: 2
+        matrix:
+          target: [
+            { msys2: MINGW32, arch: i686 },
+            { msys2: MINGW64, arch: x86_64}
+          ]
+          gtk: [ 2, 3 ]
+    continue-on-error: true
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - run: git config --global core.autocrlf input
+      shell: bash
+
+    - uses: actions/checkout@v2
+
+    - uses: eine/setup-msys2@v1
+      with:
+        update: true
+        install: base-devel git mingw-w64-${{ matrix.target.arch }}-toolchain
+        msystem: ${{ matrix.target.msys2 }}
+
+    - name: Build package
+      run: |
+        cd MSYS2/gtk${{ matrix.gtk }}
+        export MINGW_INSTALLS="$(echo "$MSYSTEM" | tr '[:upper:]' '[:lower:]')"
+        makepkg-mingw --noconfirm -sCLfc
+
+    - uses: actions/upload-artifact@v2
+      with:
+         path: ./MSYS2/gtk${{ matrix.gtk }}/mingw-*gtkwave*.pkg.tar.zst
+
+    - if: matrix.gtk == 3
+      name: Install and create standalone package
+      run: |
+        pacman -U --noconfirm ./MSYS2/gtk${{ matrix.gtk }}/mingw-*gtkwave*.pkg.tar.zst
+        ./MSYS2/gtk3/standalone_pkg/run.sh
+
+    - if: matrix.gtk == 3
+      uses: actions/upload-artifact@v2
+      with:
+         path: gtkwave_gtk3_*_standalone.tgz
+
+  nightly:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: [ msys2 ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v2
+    - uses: eine/tip@master
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: 'nightly'
+        rm: false
+        files: artifact/*

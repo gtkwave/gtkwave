@@ -1,0 +1,40 @@
+_realname=gtkwave-gtk3
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=ci
+pkgrel=1
+pkgdesc="GtkWave, a fully featured GTK+ based wave viewer which reads VCD, GHW, LXT, LXT2, VZT and FST files"
+arch=('any')
+depends=("${MINGW_PACKAGE_PREFIX}-gtk3"
+         "${MINGW_PACKAGE_PREFIX}-tk"
+         "${MINGW_PACKAGE_PREFIX}-tklib-git"
+         "${MINGW_PACKAGE_PREFIX}-tcl"
+         "${MINGW_PACKAGE_PREFIX}-tcllib")
+makedepends=('perlxml' 'intltool')
+
+prepare() {
+  cp -r "../../../gtkwave3-gtk3" "${srcdir}"
+  cd "$srcdir/gtkwave3-gtk3"
+  ./autogen.sh
+}
+
+build() {
+  cd "$srcdir/gtkwave3-gtk3"
+
+  ./configure \
+    --prefix=${MINGW_PREFIX} \
+    --host=${MINGW_CHOST} \
+    --target=${MINGW_CHOST} \
+    --build=${MINGW_CHOST} \
+    --with-tcl=${MINGW_PREFIX}/lib \
+    --with-tk=${MINGW_PREFIX}/lib \
+    --disable-mime-update \
+    --enable-gtk3
+
+  make
+}
+
+package() {
+  cd "$srcdir/gtkwave3-gtk3"
+  make DESTDIR="${pkgdir}" install
+}
