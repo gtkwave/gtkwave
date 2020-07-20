@@ -20,6 +20,18 @@
 #ifndef GDK_KEY_equal
 #define GDK_KEY_equal GDK_equal
 #endif
+#ifndef GDK_KEY_Up
+#define GDK_KEY_Up GDK_Up
+#endif
+#ifndef GDK_KEY_KP_Up
+#define GDK_KEY_KP_Up GDK_KP_Up
+#endif
+#ifndef GDK_KEY_Down
+#define GDK_KEY_Down GDK_Down
+#endif
+#ifndef GDK_KEY_KP_Down
+#define GDK_KEY_KP_Down GDK_KP_Down
+#endif
 
 #undef FOCUS_DEBUG_MSGS
 
