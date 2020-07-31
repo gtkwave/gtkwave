@@ -223,6 +223,22 @@ void ClearGroupTraces(Trptr t_grp)
     }
 }
 
+void MarkTraceCursor(Trptr t_curs)
+{
+if(t_curs)
+	{
+        Trptr t=GLOBALS->traces.first;
+
+        while(t)
+                {
+                t->is_cursor = 0;
+                t=t->t_next;
+                }
+
+        t_curs->is_cursor = 1;
+        }
+}
+
 /*
  * Add a trace to the display...
  */
