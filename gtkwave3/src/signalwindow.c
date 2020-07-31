@@ -642,13 +642,13 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
                                         t->flags |= TR_HIGHLIGHT;
                                         t2 = t;
 
-                                        for(t=GLOBALS->traces.first;t;t=t->t_next)
+                                        for(t=GLOBALS->traces.first;t;t=GiveNextTrace(t))
                                                 {
                                                 if(t == GLOBALS->topmost_trace) break;
                                                 top_target++;
                                                 }
 
-                                        for(t=GLOBALS->traces.first;t;t=t->t_next)
+                                        for(t=GLOBALS->traces.first;t;t=GiveNextTrace(t))
                                                 {
                                                 if(t2 == t) break;
                                                 target++;
@@ -678,6 +678,8 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
 
                                         gtk_signal_emit_by_name (GTK_OBJECT (wadj), "changed"); /* force bar update */
                                         gtk_signal_emit_by_name (GTK_OBJECT (wadj), "value_changed"); /* force text update */
+					signalarea_configure_event(GLOBALS->signalarea, NULL);
+					wavearea_configure_event(GLOBALS->wavearea, NULL);
                                         }
                                 }
 
@@ -700,6 +702,8 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
 
                         			gtk_signal_emit_by_name (GTK_OBJECT (wadj), "changed"); /* force bar update */
                         			gtk_signal_emit_by_name (GTK_OBJECT (wadj), "value_changed"); /* force text update */
+						signalarea_configure_event(GLOBALS->signalarea, NULL);
+						wavearea_configure_event(GLOBALS->wavearea, NULL);
 						break;
 
 					case GDK_Up:

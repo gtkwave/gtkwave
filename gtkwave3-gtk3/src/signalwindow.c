@@ -718,13 +718,13 @@ if(gtk_widget_has_focus(GLOBALS->signalarea_event_box))
 					t->flags |= TR_HIGHLIGHT;
 					t2 = t;
 
-					for(t=GLOBALS->traces.first;t;t=t->t_next)
+					for(t=GLOBALS->traces.first;t;t=GiveNextTrace(t))
 						{
 						if(t == GLOBALS->topmost_trace) break;
 						top_target++;
 						}
 
-					for(t=GLOBALS->traces.first;t;t=t->t_next)
+					for(t=GLOBALS->traces.first;t;t=GiveNextTrace(t))
 						{
 						if(t2 == t) break;
 						target++;
