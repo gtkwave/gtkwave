@@ -513,6 +513,7 @@ typedef struct TraceEnt
     unsigned int t_color;	/* trace color index */
     unsigned char t_fpdecshift; /* for fixed point decimal */
 
+    unsigned is_cursor : 1;     /* set to mark a cursor trace */
     unsigned is_alias : 1;	/* set when it's an alias (safe to free t->name then) */
     unsigned is_depacked : 1;	/* set when it's been depacked from a compressed entry (safe to free t->name then) */
     unsigned vector : 1;	/* 1 if bit vector, 0 if node */
@@ -538,6 +539,7 @@ enum TraceEntFlagBits
   TR_FPDECSHIFT_B,
   TR_TIME_B,
   TR_ENUM_B,
+  TR_CURSOR_B,
 
   TR_RSVD_B /* for use internally such as temporary caching of highlighting, not for use in traces */
 };
@@ -587,6 +589,8 @@ enum TraceEntFlagBits
 
 #define TR_TIME         (UINT64_C(1)<<TR_TIME_B)
 #define TR_ENUM         (UINT64_C(1)<<TR_ENUM_B)
+
+#define TR_CURSOR	(UINT64_C(1)<<TR_CURSOR_B)
 
 #define TR_ANALOGMASK	(TR_ANALOG_STEP|TR_ANALOG_INTERPOLATED)
 
@@ -647,6 +651,7 @@ void OpenTrace(Trptr t);
 void CloseTrace(Trptr t);
 void ClearTraces(void);
 void ClearGroupTraces(Trptr t);
+void MarkTraceCursor(Trptr t);
 
 char *varxt_fix(char *s);
 

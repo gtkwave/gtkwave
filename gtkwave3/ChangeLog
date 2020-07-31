@@ -1737,3 +1737,4 @@
 		Fix lock/unlock misuse of pthread mutexes across threads.
 		Examine env var $HOME for home dir on geteuid failure.
 3.3.106	06jul20	Fix for GDK_KEY_* definitions missing in older GDK versions.
+		Fix Shift-Up/Down highlight to traverse inside groups.

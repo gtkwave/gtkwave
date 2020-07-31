@@ -565,25 +565,71 @@ if(GTK_WIDGET_HAS_FOCUS(GLOBALS->signalarea_event_box))
                         if(event->state & GDK_SHIFT_MASK)
                                 {
                                 Trptr t = NULL, t2 = NULL;
+				Trptr tc = NULL, th = NULL;
+				int num_high = 0;
 
                                 if((event->keyval == GDK_KEY_Up) || (event->keyval == GDK_KEY_KP_Up))
                                         {
-	                                ud_kill = 1;
+                                        ud_kill = 1;
                                         for(t=GLOBALS->traces.first;t;t=t->t_next)
                                                 {
-                                                if (!(t->flags&TR_HIGHLIGHT)) continue; else break;
+                                                if(t->flags&TR_HIGHLIGHT)
+                                                        {
+                                                        if(!th) th = t;
+                                                        num_high++;
+                                                        }
+
+                                                if(t->is_cursor)
+                                                        {
+                                                        tc = t;
+                                                        }
                                                 }
-                                        t = t ? GivePrevTrace(t) : GLOBALS->topmost_trace;
+
+                                        if(num_high <= 1)
+                                                {
+                                                t = th ? GivePrevTrace(th) : GLOBALS->topmost_trace;
+                                                }
+                                                else
+                                                {
+                                                t = tc ? GivePrevTrace(tc) : GLOBALS->topmost_trace;
+                                                }
+
+                                        MarkTraceCursor(t);
                                         }
                                 else
                                 if((event->keyval == GDK_KEY_Down) || (event->keyval == GDK_KEY_KP_Down))
                                         {
-	                                ud_kill = 1;
+                                        ud_kill = 1;
                                         for(t=GLOBALS->traces.first;t;t=t->t_next)
                                                 {
-                                                if (t->flags&TR_HIGHLIGHT) t2 = t;
+                                                if(t->flags&TR_HIGHLIGHT)
+                                                        {
+                                                        th = t;
+                                                        num_high++;
+                                                        }
+                                                if(t->is_cursor)
+                                                        {
+                                                        tc = t;
+                                                        }
                                                 }
-                                        t = t2 ? GiveNextTrace(t2) : GLOBALS->topmost_trace;
+
+                                        if(num_high <= 1)
+                                                {
+                                                t = th ? GiveNextTrace(th) : GLOBALS->topmost_trace;
+                                                }
+                                                else
+                                                {
+                                                if(tc)
+                                                      	{
+                                                        t = GiveNextTrace(tc);
+                                                        }
+                                                else
+                                                    	{
+                                                        t = th ? GiveNextTrace(th) : GLOBALS->topmost_trace;
+                                                        }
+                                                }
+
+                                        MarkTraceCursor(t);
                                         }
 
                                 if(t)
@@ -1314,14 +1360,14 @@ if((GLOBALS->traces.visible)&&(GLOBALS->signalpixmap))
 		    }
 		  else
 		    {
-		      t->flags ^= TR_HIGHLIGHT;
+		      t->flags ^= TR_HIGHLIGHT; MarkTraceCursor(t);
 		    }
 		  }
 		}
 	else
 	if((event->state&GDK_SHIFT_MASK)&&(GLOBALS->starting_unshifted_trace))
 		{
-		int src = -1, dst = -1;
+		int src = -1, dst = -1, dsto = -1;
 		int cnt = 0;
 
 		t2=GLOBALS->traces.first;
@@ -1351,6 +1397,7 @@ if((GLOBALS->traces.visible)&&(GLOBALS->signalpixmap))
 				  cnt++;
 				}
 
+			dsto = dst;
 			if(src > dst) { int cpy; cpy = src; src = dst; dst = cpy; }
 			cnt = 0;
 			t2=GLOBALS->traces.first;
@@ -1360,6 +1407,8 @@ if((GLOBALS->traces.visible)&&(GLOBALS->signalpixmap))
 					{
 					  t2->flags |= TR_HIGHLIGHT;
 					}
+
+				if(cnt == dsto) { MarkTraceCursor(t2); }
 
 				cnt++;
 				t2=t2->t_next;
@@ -1384,7 +1433,7 @@ else if( (!GLOBALS->use_standard_trace_select) || (GLOBALS->standard_trace_dnd_d
 			t2 = t2->t_next;
 			}
 
-		if(t) { t->flags |= TR_HIGHLIGHT; } /* scan-build */
+		if(t) { t->flags |= TR_HIGHLIGHT; MarkTraceCursor(t); } /* scan-build */
 		}
 
 	GLOBALS->standard_trace_dnd_degate = 0;
