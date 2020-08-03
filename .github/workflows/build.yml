@@ -22,6 +22,8 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+    env:
+      MINGW_INSTALLS: ${{ matrix.target.msys2 }}
     steps:
 
     - run: git config --global core.autocrlf input
@@ -29,32 +31,28 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - uses: eine/setup-msys2@v1
+    - uses: msys2/setup-msys2@v2
       with:
         update: true
         install: base-devel git mingw-w64-${{ matrix.target.arch }}-toolchain
         msystem: ${{ matrix.target.msys2 }}
 
     - name: Build package
+      working-directory: MSYS2/gtk${{ matrix.gtk }}
+      run: makepkg-mingw --noconfirm -sCLfc
+
+    - name: Install and create standalone package
+      working-directory: ./MSYS2/gtk${{ matrix.gtk }}
       run: |
-        cd MSYS2/gtk${{ matrix.gtk }}
-        export MINGW_INSTALLS="$(echo "$MSYSTEM" | tr '[:upper:]' '[:lower:]')"
-        makepkg-mingw --noconfirm -sCLfc
+        pacman -U --noconfirm mingw-*gtkwave*.pkg.tar.zst
+        mv mingw-*gtkwave*.pkg.tar.zst ../../
+        ../standalone_pkg.sh
 
     - uses: actions/upload-artifact@v2
       with:
-         path: ./MSYS2/gtk${{ matrix.gtk }}/mingw-*gtkwave*.pkg.tar.zst
-
-    - if: matrix.gtk == 3
-      name: Install and create standalone package
-      run: |
-        pacman -U --noconfirm ./MSYS2/gtk${{ matrix.gtk }}/mingw-*gtkwave*.pkg.tar.zst
-        ./MSYS2/gtk3/standalone_pkg/run.sh
-
-    - if: matrix.gtk == 3
-      uses: actions/upload-artifact@v2
-      with:
-         path: gtkwave_gtk3_*_standalone.tgz
+        path: |
+          mingw-*gtkwave*.pkg.tar.zst
+          gtkwave_*_standalone.tgz
 
   nightly:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
