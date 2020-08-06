@@ -450,7 +450,8 @@ build_hierarchy_array (struct ghw_handler *h, union ghw_type *arr, int dim,
 		       const char *pfx, struct tree **res, unsigned int **sig)
 {
   union ghw_type *idx;
-  struct ghw_type_array *base = arr->sa.base;
+  struct ghw_type_array *base =
+    (struct ghw_type_array *) ghw_get_base_type (arr->sa.base);
   char *name = NULL;
 
   if ((unsigned int)dim == base->nbr_dim)
@@ -459,7 +460,7 @@ build_hierarchy_array (struct ghw_handler *h, union ghw_type *arr, int dim,
       sprintf (GLOBALS->asbuf, "%s]", pfx);
       name = strdup_2(GLOBALS->asbuf);
 
-      t = build_hierarchy_type (h, base->el, name, sig);
+      t = build_hierarchy_type (h, arr->sa.el, name, sig);
 
       if (*res != NULL)
 	(*res)->next = t;
