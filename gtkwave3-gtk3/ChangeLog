@@ -1800,3 +1800,4 @@
 		Examine	env var	$HOME for home dir on geteuid failure.
 		Fix blurring on use_fat_lines rc variable usage.
 3.3.106	31jul20	Fix Shift-Up/Down highlight to traverse inside groups.
+		Resync ghwlib to handled unbounded arrays.
