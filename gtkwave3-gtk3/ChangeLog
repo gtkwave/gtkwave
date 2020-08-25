@@ -1801,4 +1801,4 @@
 		Fix blurring on use_fat_lines rc variable usage.
 3.3.106	31jul20	Fix Shift-Up/Down highlight to traverse inside groups.
 		Resync ghwlib to handled unbounded arrays.
-3.3.107	10aug20	Prepare	for new	version.
+3.3.107 23aug20 Fix left shift overflow in cvt_fpsudec for fixed point.

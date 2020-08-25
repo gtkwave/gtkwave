@@ -392,7 +392,7 @@ static void cvt_fpsudec(Trptr t, TimeType val, char *os, int len)
 {
 int shamt = t->t_fpdecshift;
 UTimeType lpart = ((UTimeType)val) >> shamt;
-TimeType rmsk = (1 << shamt);
+TimeType rmsk = (ULLDescriptor(1) << shamt);
 TimeType rbit = (val & (rmsk-1));
 double rfrac;
 char dbuf[32];
