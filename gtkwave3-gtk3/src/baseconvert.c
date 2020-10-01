@@ -171,14 +171,15 @@ return(s);
 
 
 /*
- * convert binary <=> gray/popcnt in place
+ * convert binary <=> gray/ffo/popcnt in place
  */
 #define cvt_gray(f,p,n) \
 do { \
-if((f)&(TR_GRAYMASK|TR_POPCNT)) \
+if((f)&(TR_GRAYMASK|TR_POPCNT|TR_FFO)) \
 	{ \
 	if((f)&TR_BINGRAY) { convert_bingray((p),(n)); } \
 	if((f)&TR_GRAYBIN) { convert_graybin((p),(n)); } \
+	if((f)&TR_FFO)     { convert_ffo((p),(n)); } \
 	if((f)&TR_POPCNT)  { convert_popcnt((p),(n)); } \
 	} \
 } while(0)
@@ -306,6 +307,40 @@ for(i=nbits-1;i>=0;i--) /* always requires less number of bits */
 	{
 	pnt[i] = (pop & 1) ? AN_1 : AN_0;
 	pop >>= 1;
+	}
+}
+
+
+static void convert_ffo(char *pnt, int nbits)
+{
+int i;
+int ffo = -1;
+
+for(i=0;i<nbits;i++)
+	{
+	char ch = pnt[i];
+
+	if((ch == AN_1) || (ch == AN_H))
+		{
+		ffo = (nbits-1) - i;
+		break;
+		}
+	}
+
+if(ffo >= 0)
+	{
+	for(i=nbits-1;i>=0;i--) /* always requires less number of bits */
+		{
+		pnt[i] = (ffo & 1) ? AN_1 : AN_0;
+		ffo >>= 1;
+		}
+	}
+	else
+	{
+	for(i=nbits-1;i>=0;i--) /* always requires less number of bits */
+		{
+		pnt[i] = AN_X;
+		}
 	}
 }
 
@@ -608,7 +643,7 @@ if(flags&TR_ASCII)
 	if(GLOBALS->show_base) { *(pnt++)='"'; }
 	*(pnt)=0x00; /* scan build : remove dead increment */
 	}
-else if((flags&TR_HEX)||((flags&(TR_DEC|TR_SIGNED))&&(nbits>64)&&(!(flags&TR_POPCNT))))
+else if((flags&TR_HEX)||((flags&(TR_DEC|TR_SIGNED))&&(nbits>64)&&(!(flags&(TR_POPCNT|TR_FFO)))))
 	{
 	char *parse;
 
@@ -1375,7 +1410,7 @@ if(flags&TR_ASCII)
 	if(GLOBALS->show_base) { *(pnt++)='"'; }
 	*(pnt)=0x00; /* scan build : remove dead increment */
 	}
-else if((flags&TR_HEX)||((flags&(TR_DEC|TR_SIGNED))&&(nbits>64)&&(!(flags&TR_POPCNT))))
+else if((flags&TR_HEX)||((flags&(TR_DEC|TR_SIGNED))&&(nbits>64)&&(!(flags&(TR_POPCNT|TR_FFO)))))
 	{
 	char *parse;
 

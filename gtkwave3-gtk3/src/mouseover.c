@@ -84,16 +84,19 @@ if((flags & TR_PTRANSLATED) != 0) { ch[pos++] = 'P'; }
 if((flags & TR_TTRANSLATED) != 0) { ch[pos++] = 'T'; }
 
 /* [14] */
-if((flags & TR_POPCNT) != 0) { ch[pos++] = 'p'; }
+if((flags & TR_FFO) != 0) { ch[pos++] = 'f'; }
 
 /* [15] */
+if((flags & TR_POPCNT) != 0) { ch[pos++] = 'p'; }
+
+/* [16] */
 if((flags & TR_FPDECSHIFT) != 0)
         {       
         int ln = sprintf(ch+pos, "s(%d)", t->t_fpdecshift);
         pos += ln;
         }
 
-/* [16+] */
+/* [17+] */
 ch[pos] = 0;
 
 return(pos);

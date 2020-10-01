@@ -539,6 +539,7 @@ enum TraceEntFlagBits
   TR_TIME_B,
   TR_ENUM_B,
   TR_CURSOR_B,
+  TR_FFO_B,
 
   TR_RSVD_B /* for use internally such as temporary caching of highlighting, not for use in traces */
 };
@@ -575,6 +576,7 @@ enum TraceEntFlagBits
 #define TR_REAL2BITS            (UINT64_C(1)<<TR_REAL2BITS_B)
 
 #define TR_NUMMASK	(TR_ASCII|TR_HEX|TR_DEC|TR_BIN|TR_OCT|TR_SIGNED|TR_REAL|TR_TIME|TR_ENUM)
+#define TR_ATTRIBS      (TR_RJUSTIFY|TR_INVERT|TR_REVERSE|TR_EXCLUDE|TR_POPCNT|TR_FFO)
 
 #define TR_COLLAPSED	(UINT64_C(1)<<TR_COLLAPSED_B)
 #define TR_ISCOLLAPSED	(TR_BLANK|TR_COLLAPSED)
@@ -590,6 +592,7 @@ enum TraceEntFlagBits
 #define TR_ENUM         (UINT64_C(1)<<TR_ENUM_B)
 
 #define TR_CURSOR       (UINT64_C(1)<<TR_CURSOR_B)
+#define TR_FFO          (UINT64_C(1)<<TR_FFO_B)
 
 #define TR_ANALOGMASK	(TR_ANALOG_STEP|TR_ANALOG_INTERPOLATED)
 

@@ -61,6 +61,12 @@ static void toggle5_callback(GtkWidget *widget, GtkWidget *nothing)
 
 toggle_generic(widget, TR_POPCNT);
 }
+static void toggle6_callback(GtkWidget *widget, GtkWidget *nothing)
+{
+(void)nothing;
+
+toggle_generic(widget, TR_FFO);
+}
 
 static void enter_callback(GtkWidget *widget, GtkWidget *nothing)
 {
@@ -292,6 +298,12 @@ void showchange(char *title, Trptr t, GCallback func)
   if(GLOBALS->flags_showchange_c_1&TR_POPCNT)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle5_showchange_c_1), TRUE);
   gtk_widget_show (GLOBALS->toggle5_showchange_c_1);
   gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle5_showchange_c_1), "toggled", G_CALLBACK(toggle5_callback), NULL);
+
+  GLOBALS->toggle6_showchange_c_1=gtk_check_button_new_with_label("Find First One");
+  gtk_box_pack_start (GTK_BOX (box1), GLOBALS->toggle6_showchange_c_1, TRUE, TRUE, 0);
+  if(GLOBALS->flags_showchange_c_1&TR_FFO)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle6_showchange_c_1), TRUE);
+  gtk_widget_show (GLOBALS->toggle6_showchange_c_1);
+  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle6_showchange_c_1), "toggled", G_CALLBACK(toggle6_callback), NULL);
 
 #if GTK_CHECK_VERSION(3,0,0)
   gtk_box_pack_start(GTK_BOX(main_vbox), hbox, TRUE, FALSE, 0);

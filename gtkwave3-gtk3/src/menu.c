@@ -4156,12 +4156,12 @@ TraceFlagsType flags;
 t=GLOBALS->showchangeall_menu_c_1;
 if(t)
 	{
-	flags = t->flags & (TR_NUMMASK | TR_HIGHLIGHT);
+	flags = t->flags & (TR_NUMMASK | TR_HIGHLIGHT | TR_ATTRIBS);
 	while(t)
 		{
 		if((t->flags&TR_HIGHLIGHT)&&(!(t->flags&(TR_BLANK|TR_ANALOG_BLANK_STRETCH)))&&(t->name))
 			{
-			t->flags = (t->flags & ~(TR_NUMMASK | TR_HIGHLIGHT)) | flags;
+			t->flags = (t->flags & ~(TR_NUMMASK | TR_HIGHLIGHT | TR_ATTRIBS)) | flags;
 			t->minmax_valid = 0; /* force analog traces to regenerate if necessary */
 			}
 		t=t->t_next;
@@ -6478,6 +6478,49 @@ if(GLOBALS->helpbox_is_active)
 dataformat( ~(TR_POPCNT), 0 );
 }
 
+void
+menu_dataformat_ffo_on(gpointer null_data, guint callback_action, GtkWidget *widget)
+{
+(void)null_data;
+(void)callback_action;
+(void)widget;
+
+if(GLOBALS->helpbox_is_active)
+        {
+        help_text_bold("\n\nData Format-Find First Rightmost One Index-On");
+        help_text(
+                " will step through all highlighted traces and ensure that"
+                " bits and vectors with this qualifier will be displayed after"
+                " going through a right->left FFO conversion.  This is a filter"
+                " which sits before other Data Format options such as hex, etc."
+        );
+        return;
+        }
+
+dataformat( ~(TR_FFO), TR_FFO );
+}
+
+void
+menu_dataformat_ffo_off(gpointer null_data, guint callback_action, GtkWidget *widget)
+{
+(void)null_data;
+(void)callback_action;
+(void)widget;
+
+if(GLOBALS->helpbox_is_active)
+        {
+        help_text_bold("\n\nData Format-Find First Rightmost One Index-Off");
+        help_text(
+                " will step through all highlighted traces and ensure that"
+                " bits and vectors with this qualifier will be displayed with"
+                " normal encoding."
+        );
+        return;
+        }
+
+dataformat( ~(TR_FFO), 0 );
+}
+
 
 void
 menu_dataformat_time(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -7742,6 +7785,8 @@ static gtkwave_mlist_t menu_items[] =
     WAVE_GTKIFE("/Edit/Data Format/Gray Filters/None", NULL, menu_dataformat_nogray,    WV_MENU_GBNONE, "<Item>"),
     WAVE_GTKIFE("/Edit/Data Format/Popcnt/On", NULL, menu_dataformat_popcnt_on, WV_MENU_POPON, "<Item>"),
     WAVE_GTKIFE("/Edit/Data Format/Popcnt/Off", NULL, menu_dataformat_popcnt_off,    WV_MENU_POPOFF, "<Item>"),
+    WAVE_GTKIFE("/Edit/Data Format/Find First One/On", NULL, menu_dataformat_ffo_on, WV_MENU_FFOON, "<Item>"),
+    WAVE_GTKIFE("/Edit/Data Format/Find First One/Off", NULL, menu_dataformat_ffo_off,    WV_MENU_FFOOFF, "<Item>"),
     WAVE_GTKIFE("/Edit/Data Format/Fixed Point Shift/On", NULL, menu_dataformat_fpshift_on, WV_MENU_FPSHIFTON, "<Item>"),
     WAVE_GTKIFE("/Edit/Data Format/Fixed Point Shift/Off", NULL, menu_dataformat_fpshift_off,    WV_MENU_FPSHIFTOFF, "<Item>"),
     WAVE_GTKIFE("/Edit/Data Format/Fixed Point Shift/Specify", NULL, menu_dataformat_fpshift_specify,    WV_MENU_FPSHIFTVAL, "<Item>"),
@@ -8279,6 +8324,8 @@ static gtkwave_mlist_t popmenu_items[] =
     WAVE_GTKIFE("/Data Format/Gray Filters/None", NULL, menu_dataformat_nogray,    WV_MENU_GBNONE, "<Item>"),
     WAVE_GTKIFE("/Data Format/Popcnt/On", NULL, menu_dataformat_popcnt_on, WV_MENU_POPON, "<Item>"),
     WAVE_GTKIFE("/Data Format/Popcnt/Off", NULL, menu_dataformat_popcnt_off,    WV_MENU_POPOFF, "<Item>"),
+    WAVE_GTKIFE("/Data Format/Find First One/On", NULL, menu_dataformat_ffo_on, WV_MENU_FFOON, "<Item>"),
+    WAVE_GTKIFE("/Data Format/Find First One/Off", NULL, menu_dataformat_ffo_off,    WV_MENU_FFOOFF, "<Item>"),
     WAVE_GTKIFE("/Data Format/Fixed Point Shift/On", NULL, menu_dataformat_fpshift_on, WV_MENU_FPSHIFTON, "<Item>"),
     WAVE_GTKIFE("/Data Format/Fixed Point Shift/Off", NULL, menu_dataformat_fpshift_off,    WV_MENU_FPSHIFTOFF, "<Item>"),
     WAVE_GTKIFE("/Data Format/Fixed Point Shift/Specify", NULL, menu_dataformat_fpshift_specify,    WV_MENU_FPSHIFTVAL, "<Item>"),

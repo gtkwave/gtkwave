@@ -836,6 +836,7 @@ GtkWidget *toggle2_showchange_c_1; /* from showchange.c 389 */
 GtkWidget *toggle3_showchange_c_1; /* from showchange.c 390 */
 GtkWidget *toggle4_showchange_c_1; /* from showchange.c 391 */
 GtkWidget *toggle5_showchange_c_1; /* from showchange.c 391 */
+GtkWidget *toggle6_showchange_c_1; /* from showchange.c 391 */
 GtkWidget *window_showchange_c_8; /* from showchange.c 392 */
 void (*cleanup_showchange_c_6)(void); /* from showchange.c 393 */
 struct TraceEnt *tcache_showchange_c_1; /* from showchange.c 394 */
