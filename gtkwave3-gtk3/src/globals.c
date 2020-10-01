@@ -815,6 +815,7 @@ NULL, /* toggle2_showchange_c_1 364 */
 NULL, /* toggle3_showchange_c_1 364 */
 NULL, /* toggle4_showchange_c_1 364 */
 NULL, /* toggle5_showchange_c_1 364 */
+NULL, /* toggle6_showchange_c_1 364 */
 NULL, /* window_showchange_c_8 365 */
 NULL, /* cleanup_showchange_c_6 366 */
 NULL, /* tcache_showchange_c_1 367 */
