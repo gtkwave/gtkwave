@@ -287,6 +287,9 @@ When nonzero, indicates that the signal window signal name justification should 
 \fBlxt_clock_compress_to_z\fR <\fIvalue\fP>
 For LXT (not LXT2) allows clocks to compress to a 'z' value so that regular/periodic value changes may be noted.
 .TP
+\fBlz_removal\fR <\fIvalue\fP>
+When nonzero, suppresses the display of leading zeros on non-filtered traces.  This has no effect on filtered traces.
+.TP
 \fBmax_fsdb_trees\fR <\fIvalue\fP>
 sets the maximum number of hierarchy and signal trees to process for an FSDB file.  Default = 0 = unlimited.  The intent of this is to work around sim environments that accidentally call fsdbDumpVars multiple times. 
 .TP

@@ -275,6 +275,13 @@ GLOBALS->fill_waveform=atoi_64(str)?1:0;
 return(0);
 }
 
+int f_lz_removal(char *str)
+{
+DEBUG(printf("f_lz_removal(\"%s\")\n",str));
+GLOBALS->lz_removal=atoi_64(str)?1:0;
+return(0);
+}
+
 int f_fontname_logfile(char *str)
 {
 DEBUG(printf("f_fontname_logfile(\"%s\")\n",str));
@@ -962,6 +969,7 @@ static struct rc_entry rcitems[]=
 { "keep_xz_colors", f_keep_xz_colors },
 { "left_justify_sigs", f_left_justify_sigs },
 { "lxt_clock_compress_to_z", f_lxt_clock_compress_to_z },
+{ "lz_removal", f_lz_removal },
 { "max_fsdb_trees", f_max_fsdb_trees },
 { "page_divisor", f_page_divisor },
 { "ps_maxveclen", f_ps_maxveclen },

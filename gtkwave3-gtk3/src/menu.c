@@ -7597,6 +7597,35 @@ if(GLOBALS->helpbox_is_active)
 }
 
 /**/
+void menu_lz_removal(gpointer null_data, guint callback_action, GtkWidget *widget)
+{
+(void)null_data;
+(void)callback_action;
+(void)widget;
+
+if(GLOBALS->helpbox_is_active)
+        {
+        help_text_bold("\n\nLeading Zero Removal");
+        help_text(
+		" toggles the display of leading zeros on non-filtered traces.  This has no effect on filtered traces."
+        );
+        }
+	else
+	{
+	GLOBALS->lz_removal = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]));
+	if(GLOBALS->signalarea && GLOBALS->wavearea)
+		{
+		GLOBALS->signalwindow_width_dirty=1;
+		MaxSignalLength();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		}
+	DEBUG(printf("Leading Zero Removal\n"));
+	}
+
+}
+
+/**/
 void menu_show_mouseover(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
 (void)null_data;
@@ -7908,6 +7937,7 @@ static gtkwave_mlist_t menu_items[] =
     WAVE_GTKIFE("/View/<separator>", NULL, NULL, WV_MENU_SEP9, "<Separator>"),
     WAVE_GTKIFE("/View/Show Wave Highlight", NULL, menu_show_wave_highlight, WV_MENU_SHW, "<ToggleItem>"),
     WAVE_GTKIFE("/View/Show Filled High Values", NULL, menu_show_filled_high_values, WV_MENU_FILL1, "<ToggleItem>"),
+    WAVE_GTKIFE("/View/Leading Zero Removal", NULL, menu_lz_removal, WV_MENU_LZ_REMOVAL, "<ToggleItem>"),
     WAVE_GTKIFE("/View/<separator>", NULL, NULL, WV_MENU_SEP9B, "<Separator>"),
     WAVE_GTKIFE("/View/Show Mouseover", NULL, menu_show_mouseover, WV_MENU_VSMO, "<ToggleItem>"),
     WAVE_GTKIFE("/View/Mouseover Copies To Clipboard", NULL, menu_clipboard_mouseover, WV_MENU_VSMC, "<ToggleItem>"),
@@ -8013,6 +8043,7 @@ gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TOOLBAR]),
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]), GLOBALS->display_grid);
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]), GLOBALS->highlight_wavewindow);
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]), GLOBALS->fill_waveform);
+gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]), GLOBALS->lz_removal);
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HSWM]), GLOBALS->alt_wheel_mode);
 
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]), !GLOBALS->disable_mouseover);

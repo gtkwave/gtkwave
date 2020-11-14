@@ -1339,6 +1339,7 @@ NULL, /* wave_hslider */
 0, /* ruler_origin */
 0, /* ruler_step */
 0, /* fill_waveform */
+0, /* lz_removal */
 
 NULL, /* surface_wavepixmap_wavewindow_c_1 */
 NULL, /* cr_wavepixmap_wavewindow_c_1 */
@@ -1896,6 +1897,7 @@ void reload_into_new_context_2(void)
  new_globals->time_mainbox = GLOBALS->time_mainbox;
  new_globals->highlight_wavewindow = GLOBALS->highlight_wavewindow;
  new_globals->fill_waveform = GLOBALS->fill_waveform;
+ new_globals->lz_removal = GLOBALS->lz_removal;
  new_globals->use_standard_trace_select = GLOBALS->use_standard_trace_select;
  new_globals->use_big_fonts = GLOBALS->use_big_fonts;
  new_globals->use_full_precision = GLOBALS->use_full_precision;
@@ -2864,6 +2866,7 @@ switch(type)
 							GLOBALS->time_mainbox = g_old->time_mainbox;
 							GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
 							GLOBALS->fill_waveform = g_old->fill_waveform;
+							GLOBALS->lz_removal = g_old->lz_removal;
 							GLOBALS->use_standard_trace_select = g_old->use_standard_trace_select;
 							GLOBALS->disable_mouseover = g_old->disable_mouseover;
 							GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;

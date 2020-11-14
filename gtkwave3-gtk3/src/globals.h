@@ -1353,6 +1353,7 @@ int str_wid_height;
 TimeType ruler_origin;
 TimeType ruler_step;
 char fill_waveform;
+char lz_removal;
 
 cairo_surface_t *surface_wavepixmap_wavewindow_c_1;
 cairo_t *cr_wavepixmap_wavewindow_c_1;

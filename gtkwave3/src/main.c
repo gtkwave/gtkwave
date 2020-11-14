@@ -117,6 +117,7 @@ GLOBALS->show_base = g_old->show_base;
 GLOBALS->display_grid = g_old->display_grid;
 GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
 GLOBALS->fill_waveform = g_old->fill_waveform;
+GLOBALS->lz_removal = g_old->lz_removal;
 GLOBALS->use_standard_trace_select = g_old->use_standard_trace_select;
 GLOBALS->disable_mouseover = g_old->disable_mouseover;
 GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
@@ -634,6 +635,7 @@ if(!GLOBALS)
 	GLOBALS->enable_ghost_marker = old_g->enable_ghost_marker;
 	GLOBALS->enable_horiz_grid = old_g->enable_horiz_grid;
 	GLOBALS->fill_waveform = old_g->fill_waveform;
+	GLOBALS->lz_removal = old_g->lz_removal;
 	GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
 	GLOBALS->enable_vert_grid = old_g->enable_vert_grid;
 	GLOBALS->force_toolbars = old_g->force_toolbars;
@@ -649,7 +651,6 @@ if(!GLOBALS)
 	GLOBALS->show_base = old_g->show_base;
 	GLOBALS->display_grid = old_g->display_grid;
 	GLOBALS->highlight_wavewindow = old_g->highlight_wavewindow;
-	GLOBALS->fill_waveform = old_g->fill_waveform;
 	GLOBALS->use_standard_trace_select = old_g->use_standard_trace_select;
 	GLOBALS->use_big_fonts = old_g->use_big_fonts;
 	GLOBALS->use_full_precision = old_g->use_full_precision;
