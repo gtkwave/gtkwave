@@ -1382,6 +1382,7 @@ WAVE_RAINBOW_INITIALIZER, /* gc_rainbow */
 0, /* ruler_origin */
 0, /* ruler_step */
 0, /* fill_waveform */
+0, /* lz_removal */
 FALSE, /*save_on_exit */
 
 
@@ -1903,6 +1904,7 @@ void reload_into_new_context_2(void)
  new_globals->display_grid = GLOBALS->display_grid;
  new_globals->highlight_wavewindow = GLOBALS->highlight_wavewindow;
  new_globals->fill_waveform = GLOBALS->fill_waveform;
+ new_globals->lz_removal = GLOBALS->lz_removal;
  new_globals->use_standard_trace_select = GLOBALS->use_standard_trace_select;
  new_globals->use_big_fonts = GLOBALS->use_big_fonts;
  new_globals->use_full_precision = GLOBALS->use_full_precision;
@@ -2850,6 +2852,7 @@ switch(type)
 							GLOBALS->display_grid = g_old->display_grid;
 							GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
 							GLOBALS->fill_waveform = g_old->fill_waveform;
+							GLOBALS->lz_removal = g_old->lz_removal;
 							GLOBALS->use_standard_trace_select = g_old->use_standard_trace_select;
 							GLOBALS->disable_mouseover = g_old->disable_mouseover;
 							GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;

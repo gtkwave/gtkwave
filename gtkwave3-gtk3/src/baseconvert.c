@@ -25,6 +25,29 @@
 #include "pipeio.h"
 
 /*
+ * filters mutually exclusive with file/translate/process filters
+ */
+static char *lzremoval(char *s)
+{
+char *p = s;
+
+if(*p)
+	{
+	while((*p=='0') && *(p+1))
+		{
+		p++;
+		}
+	}
+
+if(p != s)
+	{
+	memmove(s, p, strlen(p) + 1);
+	}
+
+return(s);
+}
+
+/*
  * file/translate/process filters
  */
 static char *dofilter(Trptr t, char *s)
@@ -1075,6 +1098,7 @@ if(t && (t->flags & TR_REAL2BITS) && d) /* "real2bits" also allows other filters
 
 if(!(t->f_filter|t->p_filter|t->e_filter))
         {
+	if(GLOBALS->lz_removal) lzremoval(rv);
         }
         else
         {
@@ -1797,6 +1821,7 @@ char *s = convert_ascii_vec_2(t, vec);
 
 if(!(t->f_filter|t->p_filter|t->e_filter))
 	{
+	if(GLOBALS->lz_removal) lzremoval(s);
 	}
 	else
 	{
@@ -1847,6 +1872,7 @@ if((!t->t_filter_converted) && (!(v->flags & HIST_STRING)))
 
 if(!(t->f_filter|t->p_filter|t->e_filter))
 	{
+	if(GLOBALS->lz_removal) lzremoval(s);
 	}
 	else
 	{
