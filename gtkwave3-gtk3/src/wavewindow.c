@@ -822,9 +822,7 @@ if(GLOBALS->cr_signalpixmap)
 			cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 			cairo_clip (cr);
 
-			cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-			cairo_paint (cr);			
-
+            signalwindow_paint(cr);
 			draw_signalarea_focus(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
 			gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
@@ -841,8 +839,7 @@ if(GLOBALS->cr_signalpixmap)
 			cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 			cairo_clip (cr);
 
-			cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-			cairo_paint (cr);			
+            signalwindow_paint(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
                         gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
 #else
@@ -885,8 +882,7 @@ if(GLOBALS->signalarea_has_focus)
 	cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 	cairo_clip (cr);
 
-	cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -(gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(GLOBALS->signal_hslider))), 0);
-	cairo_paint (cr);			
+    signalwindow_paint(cr);
 
 	draw_signalarea_focus(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
@@ -904,8 +900,7 @@ if(GLOBALS->signalarea_has_focus)
 	cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 	cairo_clip (cr);
 
-	cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -(gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(GLOBALS->signal_hslider))), 0);
-	cairo_paint (cr);			
+    signalwindow_paint(cr);
 
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
         gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);

@@ -26,6 +26,7 @@ gint signalarea_configure_event(GtkWidget *widget, GdkEventConfigure *event);
 void dnd_error(void);
 gint install_keypress_handler(void);
 void remove_keypress_handler(gint id);
+void signalwindow_paint(cairo_t* cr);
 
 #endif
 
