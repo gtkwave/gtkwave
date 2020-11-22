@@ -167,3 +167,12 @@ gtk_toolbar_insert (GTK_TOOLBAR (toolbar), ti, position);
 }
 
 
+gint XXX_gtk_widget_get_scale_factor (GtkWidget *widget)
+{
+#if GTK_CHECK_VERSION(3,0,0)
+gint rc = widget ? gtk_widget_get_scale_factor(widget) : 1;
+#else
+return(1);
+#endif
+}
+

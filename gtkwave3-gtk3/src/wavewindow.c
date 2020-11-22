@@ -39,6 +39,16 @@ static const GdkModifierType   bmask[4]= {0, GDK_BUTTON1_MASK, 0, GDK_BUTTON3_MA
 static const GdkEventMask    m_bmask[4]= {0, GDK_BUTTON1_MOTION_MASK, 0, GDK_BUTTON3_MOTION_MASK };     /* button 1, 3 motion encodings */
 #endif
 
+void wavewindow_paint(cairo_t *cr) {
+    int scale_factor = XXX_gtk_widget_get_scale_factor(GLOBALS->signalarea);
+	cairo_matrix_t prev_matrix;
+	cairo_get_matrix(cr, &prev_matrix);
+	cairo_scale(cr, 1.0/scale_factor, 1.0/scale_factor);
+    cairo_set_source_surface(cr, GLOBALS->surface_wavepixmap_wavewindow_c_1, 0, 0);
+    cairo_paint (cr);
+    cairo_set_matrix(cr, &prev_matrix);
+}
+
 /******************************************************************/
 
 static void update_dual(void)
@@ -682,8 +692,7 @@ draw_marker();
 GdkDrawingContext *gdc;
 #endif
 cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(GLOBALS->wavearea)), &gdc);
-cairo_set_source_surface(cr, GLOBALS->surface_wavepixmap_wavewindow_c_1, 0, 0);
-cairo_paint (cr);
+wavewindow_paint(cr);
 
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
 gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->wavearea), gdc);
@@ -822,9 +831,7 @@ if(GLOBALS->cr_signalpixmap)
 			cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 			cairo_clip (cr);
 
-			cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-			cairo_paint (cr);			
-
+            signalwindow_paint(cr);
 			draw_signalarea_focus(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
 			gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
@@ -841,8 +848,7 @@ if(GLOBALS->cr_signalpixmap)
 			cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 			cairo_clip (cr);
 
-			cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-			cairo_paint (cr);			
+            signalwindow_paint(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
                         gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
 #else
@@ -885,8 +891,7 @@ if(GLOBALS->signalarea_has_focus)
 	cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 	cairo_clip (cr);
 
-	cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -(gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(GLOBALS->signal_hslider))), 0);
-	cairo_paint (cr);			
+    signalwindow_paint(cr);
 
 	draw_signalarea_focus(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
@@ -904,8 +909,7 @@ if(GLOBALS->signalarea_has_focus)
 	cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
 	cairo_clip (cr);
 
-	cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -(gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(GLOBALS->signal_hslider))), 0);
-	cairo_paint (cr);			
+    signalwindow_paint(cr);
 
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
         gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
@@ -1827,6 +1831,8 @@ if((!widget)||(!gtk_widget_get_window(widget))) return(TRUE);
 GtkAllocation allocation;
 gtk_widget_get_allocation(widget, &allocation);
 
+int scale_factor = XXX_gtk_widget_get_scale_factor(widget);
+
 DEBUG(printf("WaveWin Configure Event h: %d, w: %d\n",allocation.height,
 		allocation.width));
 
@@ -1840,8 +1846,9 @@ if(GLOBALS->cr_wavepixmap_wavewindow_c_1)
                 cairo_destroy (GLOBALS->cr_wavepixmap_wavewindow_c_1);
                 cairo_surface_destroy (GLOBALS->surface_wavepixmap_wavewindow_c_1);
 
-                GLOBALS->surface_wavepixmap_wavewindow_c_1 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->wavewidth, allocation.height);
+                GLOBALS->surface_wavepixmap_wavewindow_c_1 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->wavewidth*scale_factor, allocation.height*scale_factor);
                 GLOBALS->cr_wavepixmap_wavewindow_c_1 = cairo_create (GLOBALS->surface_wavepixmap_wavewindow_c_1);
+                cairo_scale(GLOBALS->cr_wavepixmap_wavewindow_c_1, scale_factor, scale_factor);
                 cairo_set_line_width(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->cr_line_width);
 		}
 	GLOBALS->old_wvalue=-1.0;
@@ -1851,8 +1858,9 @@ if(GLOBALS->cr_wavepixmap_wavewindow_c_1)
 	GLOBALS->wavewidth=allocation.width;
 	GLOBALS->waveheight=allocation.height;
 
-        GLOBALS->surface_wavepixmap_wavewindow_c_1 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->wavewidth, allocation.height);
+        GLOBALS->surface_wavepixmap_wavewindow_c_1 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->wavewidth*scale_factor, allocation.height*scale_factor);
         GLOBALS->cr_wavepixmap_wavewindow_c_1 = cairo_create (GLOBALS->surface_wavepixmap_wavewindow_c_1);
+        cairo_scale(GLOBALS->cr_wavepixmap_wavewindow_c_1, scale_factor, scale_factor);
         cairo_set_line_width(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->cr_line_width);
 	}
 
@@ -2020,8 +2028,7 @@ gint page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(GLOBALS->notebook));
 
 set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
-cairo_set_source_surface(cr, GLOBALS->surface_wavepixmap_wavewindow_c_1, 0, 0);
-cairo_paint (cr);
+wavewindow_paint(cr);
 
 draw_marker();
 
@@ -2042,8 +2049,7 @@ cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(widg
 gdk_cairo_region (cr, event->region);
 cairo_clip (cr);
 
-cairo_set_source_surface(cr, GLOBALS->surface_wavepixmap_wavewindow_c_1, 0, 0);
-cairo_paint (cr);
+wavewindow_paint(cr);
 
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
 gdk_window_end_draw_frame(gtk_widget_get_window(widget), gdc);

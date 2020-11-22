@@ -43,6 +43,15 @@ void dnd_error(void)
 status_text("Can't perform that operation when waveform drag and drop is in progress!\n");
 }
 
+void signalwindow_paint(cairo_t *cr) {
+	int scale_factor = XXX_gtk_widget_get_scale_factor(GLOBALS->signalarea);
+	cairo_matrix_t prev_matrix;
+	cairo_get_matrix(cr, &prev_matrix);
+	cairo_scale(cr, 1.0/scale_factor, 1.0/scale_factor);
+	cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -(gint)(gtk_adjustment_get_value(GTK_ADJUSTMENT(GLOBALS->signal_hslider))), 0);
+	cairo_paint (cr);
+	cairo_set_matrix(cr, &prev_matrix);
+}
 
 static void
 service_hslider(GtkWidget *text, gpointer data)
@@ -90,8 +99,7 @@ if(GLOBALS->cr_signalpixmap)
                 cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
                 cairo_clip (cr);
 
-                cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-                cairo_paint (cr);
+				signalwindow_paint(cr);
 
                 draw_signalarea_focus(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
@@ -112,8 +120,7 @@ if(GLOBALS->cr_signalpixmap)
                 cairo_rectangle (cr, 0.0, 0.0, allocation.width, allocation.height);
                 cairo_clip (cr);
 
-                cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-                cairo_paint (cr);
+				signalwindow_paint(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
                 gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
 #else
@@ -503,8 +510,8 @@ if(GLOBALS->std_dnd_tgt_on_signalarea || GLOBALS->std_dnd_tgt_on_wavearea)
                 cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
                 cairo_clip (cr);
 
-                cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-                cairo_paint (cr);
+		signalwindow_paint(cr);
+
 		draw_signalarea_focus(cr);
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
 		gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
@@ -1554,8 +1561,10 @@ gint signalarea_configure_event(GtkWidget *widget, GdkEventConfigure *event)
 GtkAdjustment *wadj, *hadj;
 int num_traces_displayable;
 int width;
+int scale_factor;
 
 if((!widget)||(!gtk_widget_get_window(widget))) return(TRUE);
+scale_factor = XXX_gtk_widget_get_scale_factor(widget);
 
 #if defined(WAVE_ALLOW_QUARTZ_FLUSH_WORKAROUND) || defined(WAVE_ALLOW_GTK3_VSLIDER_WORKAROUND)
 if(!GLOBALS->force_hide_show)
@@ -1589,15 +1598,17 @@ if(GLOBALS->cr_signalpixmap)
 	        cairo_destroy (GLOBALS->cr_signalpixmap);
 	        cairo_surface_destroy (GLOBALS->surface_signalpixmap);
 
-		GLOBALS->surface_signalpixmap = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->signal_fill_width, allocation.height);
+		GLOBALS->surface_signalpixmap = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->signal_fill_width*scale_factor, allocation.height*scale_factor);
 		GLOBALS->cr_signalpixmap = cairo_create (GLOBALS->surface_signalpixmap);
+		cairo_scale(GLOBALS->cr_signalpixmap, scale_factor, scale_factor);
 		cairo_set_line_width(GLOBALS->cr_signalpixmap, 1.0);
 		}
 	}
 	else
 	{
-	GLOBALS->surface_signalpixmap = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->signal_fill_width, allocation.height);
+	GLOBALS->surface_signalpixmap = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GLOBALS->signal_fill_width*scale_factor, allocation.height*scale_factor);
 	GLOBALS->cr_signalpixmap = cairo_create (GLOBALS->surface_signalpixmap);
+	cairo_scale(GLOBALS->cr_signalpixmap, scale_factor, scale_factor);
 	cairo_set_line_width(GLOBALS->cr_signalpixmap, 1.0);
 	}
 
@@ -1859,14 +1870,7 @@ gint page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(GLOBALS->notebook));
 
 set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
-GtkAdjustment *hadj;
-int xsrc;
-
-hadj=GTK_ADJUSTMENT(GLOBALS->signal_hslider);
-xsrc=(gint)gtk_adjustment_get_value(hadj);
-
-cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-cairo_paint (cr);
+signalwindow_paint(cr);
 
 draw_signalarea_focus(cr);
 
@@ -1878,11 +1882,6 @@ return(rc);
 #else
 static gint expose_event(GtkWidget *widget, GdkEventExpose *event)
 {
-GtkAdjustment *hadj;
-int xsrc;
-
-hadj=GTK_ADJUSTMENT(GLOBALS->signal_hslider);
-xsrc=(gint)gtk_adjustment_get_value(hadj);
 
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
 GdkDrawingContext *gdc;
@@ -1891,8 +1890,7 @@ cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(widg
 gdk_cairo_region (cr, event->region);
 cairo_clip (cr);
 
-cairo_set_source_surface(cr, GLOBALS->surface_signalpixmap, -xsrc, 0);
-cairo_paint (cr);
+signalwindow_paint(cr);
 
 draw_signalarea_focus(cr);
 

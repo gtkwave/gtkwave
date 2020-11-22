@@ -194,4 +194,7 @@ XXX_gtk_toolbar_insert_widget (GtkToolbar *toolbar,
                            const char *tooltip_private_text,
                            gint position);
 
+gint 
+XXX_gtk_widget_get_scale_factor (GtkWidget *widget);
+
 #endif
