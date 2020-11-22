@@ -44,7 +44,7 @@ status_text("Can't perform that operation when waveform drag and drop is in prog
 }
 
 void signalwindow_paint(cairo_t *cr) {
-	int scale_factor = gtk_widget_get_scale_factor(GLOBALS->signalarea);
+	int scale_factor = XXX_gtk_widget_get_scale_factor(GLOBALS->signalarea);
 	cairo_matrix_t prev_matrix;
 	cairo_get_matrix(cr, &prev_matrix);
 	cairo_scale(cr, 1.0/scale_factor, 1.0/scale_factor);
@@ -1561,9 +1561,10 @@ gint signalarea_configure_event(GtkWidget *widget, GdkEventConfigure *event)
 GtkAdjustment *wadj, *hadj;
 int num_traces_displayable;
 int width;
-int scale_factor = gtk_widget_get_scale_factor(widget);
+int scale_factor;
 
 if((!widget)||(!gtk_widget_get_window(widget))) return(TRUE);
+scale_factor = XXX_gtk_widget_get_scale_factor(widget);
 
 #if defined(WAVE_ALLOW_QUARTZ_FLUSH_WORKAROUND) || defined(WAVE_ALLOW_GTK3_VSLIDER_WORKAROUND)
 if(!GLOBALS->force_hide_show)
