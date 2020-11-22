@@ -43,7 +43,7 @@ void dnd_error(void)
 status_text("Can't perform that operation when waveform drag and drop is in progress!\n");
 }
 
-void signalwindow_paint(cairo_t* cr) {
+void signalwindow_paint(cairo_t *cr) {
 	int scale_factor = gtk_widget_get_scale_factor(GLOBALS->signalarea);
 	cairo_matrix_t prev_matrix;
 	cairo_get_matrix(cr, &prev_matrix);
