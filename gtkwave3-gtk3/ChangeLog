@@ -1804,6 +1804,7 @@
 3.3.107 30sep20 Fix left shift overflow in cvt_fpsudec for fixed point.
 		Added Find First One trace type options.
 		Fixed bug in Show-Change All Highlighted.
-3.3.108	22nov20	Added View/Leading Zero Removal toggle item also controlled
+3.3.108	28nov20	Added View/Leading Zero Removal toggle item also controlled
 		by lz_removal rc var.
 		User submitted patch using gtk_widget_get_scale_factor().
+		Add include of X11/X.h for Arch Linux.

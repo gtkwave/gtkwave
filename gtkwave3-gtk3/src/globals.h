@@ -72,6 +72,15 @@
 #endif
 
 
+#if GTK_CHECK_VERSION(3,0,0)
+#ifdef GDK_WINDOWING_X11
+#ifndef X_H
+#include <X11/X.h>
+#endif
+#endif
+#endif
+
+
 struct Global{
 
 /*
