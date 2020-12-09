@@ -1,4 +1,4 @@
-3.0.0	01may06	Initial release after promotion from 1.3.86 in order to reduce
+	3.0.0	01may06	Initial release after promotion from 1.3.86 in order to reduce
 		confusion with 2.x series.
 		Added user's manual pdf file to distribution in doc/.
 		Added vertex and rtlbrowse for sourcecode annotation.
@@ -1804,7 +1804,9 @@
 3.3.107 30sep20 Fix left shift overflow in cvt_fpsudec for fixed point.
 		Added Find First One trace type options.
 		Fixed bug in Show-Change All Highlighted.
-3.3.108	28nov20	Added View/Leading Zero Removal toggle item also controlled
+3.3.108	08dec20	Added View/Leading Zero Removal toggle item also controlled
 		by lz_removal rc var.
 		User submitted patch using gtk_widget_get_scale_factor().
 		Add include of X11/X.h for Arch Linux.
+		Fix VZT writer crash when dumpoff is invoked before first
+		timestep.

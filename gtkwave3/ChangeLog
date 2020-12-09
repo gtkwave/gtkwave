@@ -1742,4 +1742,6 @@
 3.3.107 30sep20 Fix left shift overflow in cvt_fpsudec for fixed point.
                 Added Find First One trace type	options.
                 Fixed bug in Show-Change All Highlighted.
-3.3.108	05oct20	Version bump for revision control.
+3.3.108	08dec20	Version bump for revision control.
+                Fix VZT	writer crash when dumpoff is invoked before first
+                timestep.
