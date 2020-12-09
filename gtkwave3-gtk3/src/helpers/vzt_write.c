@@ -1859,6 +1859,17 @@ if(lt)
 	msk     = (~0U <<  lt->timepos);
 	msk_n   = ~msk;
 
+	if(!lt->emitted) 
+	        {
+	        vzt_wr_emitfacs(lt);
+	        lt->emitted = 1;
+	
+	        if(!lt->timeset)
+	                {
+	                vzt_wr_set_time(lt, 0);
+	                }
+	        }
+
 	for(j=0;j<lt->numfacs;j++)
 		{
 		struct vzt_wr_symbol *s = lt->sorted_facs[j];
