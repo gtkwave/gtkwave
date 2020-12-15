@@ -339,7 +339,7 @@ static void convert_ffo(char *pnt, int nbits)
 int i;
 int ffo = -1;
 
-for(i=0;i<nbits;i++)
+for(i=(nbits-1);i>=0;i--)
 	{
 	char ch = pnt[i];
 
