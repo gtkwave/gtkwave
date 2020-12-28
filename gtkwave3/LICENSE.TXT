@@ -1,14 +1,14 @@
 ##########################################################################
 
-GTKWave 3.3.108 Wave Viewer is Copyright (C) 1999-2020 Tony Bybell.  
-Portions of GTKWave are Copyright (C) 1999-2020 Udi Finkelstein. 
-Context support is Copyright (C) 2007-2020 Kermin Elliott Fleming.
-Trace group support is  Copyright (C) 2009-2020 Donald Baltus.
-GHW and additional GUI support is Copyright (C) 2005-2020 Tristan Gingold.
-Analog support is Copyright (C) 2005-2020 Thomas Sailer.
-External DnD support is Copyright (C) 2008-2020 Concept Engineering GmbH.
-FastLZ is Copyright (C) 2005-2020 Ariya Hidayat.
-LZ4 is Copyright (C) 2011-2020 Yann Collet.
+GTKWave 3.3.108 Wave Viewer is Copyright (C) 1999-2021 Tony Bybell.  
+Portions of GTKWave are Copyright (C) 1999-2021 Udi Finkelstein. 
+Context support is Copyright (C) 2007-2021 Kermin Elliott Fleming.
+Trace group support is  Copyright (C) 2009-2021 Donald Baltus.
+GHW and additional GUI support is Copyright (C) 2005-2021 Tristan Gingold.
+Analog support is Copyright (C) 2005-2021 Thomas Sailer.
+External DnD support is Copyright (C) 2008-2021 Concept Engineering GmbH.
+FastLZ is Copyright (C) 2005-2021 Ariya Hidayat.
+LZ4 is Copyright (C) 2011-2021 Yann Collet.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
