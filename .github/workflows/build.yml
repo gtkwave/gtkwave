@@ -34,12 +34,20 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: base-devel git mingw-w64-${{ matrix.target.arch }}-toolchain
+        install: >
+          base-devel
+          git
+          mingw-w64-${{ matrix.target.arch }}-toolchain
         msystem: ${{ matrix.target.msys2 }}
 
     - name: Build package
       working-directory: MSYS2/gtk${{ matrix.gtk }}
-      run: makepkg-mingw --noconfirm -sCLfc
+      run: |
+        tries=0
+        # Try building three times due to the arbitrary 'Bad address' error
+        while [ $tries -lt 3 ]; do
+          makepkg-mingw --noconfirm --noprogressbar -sCLfc && break || tries=$((tries+1))
+        done
 
     - name: Install and create standalone package
       working-directory: ./MSYS2/gtk${{ matrix.gtk }}
@@ -64,5 +72,5 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: 'nightly'
-        rm: false
+        rm: true
         files: artifact/*
