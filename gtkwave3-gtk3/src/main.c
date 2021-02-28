@@ -45,6 +45,7 @@
 #else
 #undef WAVE_USE_XID
 #endif
+#undef WAVE_USE_XID
 
 #ifdef HAVE_GETOPT_LONG
 #include <getopt.h>

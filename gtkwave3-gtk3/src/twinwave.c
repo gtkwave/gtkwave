@@ -136,6 +136,7 @@ gtk_widget_show(mainwindow);
 g_signal_connect(XXX_GTK_OBJECT(mainwindow), "destroy", G_CALLBACK(quit_callback), "WM destroy");
 
 #ifndef __MINGW32__
+#ifdef NONONO
 #ifdef GDK_WINDOWING_WAYLAND
 if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
         {
@@ -177,6 +178,7 @@ if(!twinwayland)
 	g_signal_connect(XXX_GTK_OBJECT(xsocket[1]), "plug-removed", G_CALLBACK(plug_removed), NULL);
 	gtk_paned_pack2 (GTK_PANED (vpan), xsocket[1], TRUE, FALSE);
 	}
+#endif
 #endif
 
 #ifdef __MINGW32__
@@ -430,7 +432,7 @@ if(shmid >=0)
 				if(use_embedded)
 					{
 #ifdef MAC_INTEGRATION
-					sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
+					//sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
 #else
 					sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
 #endif
@@ -468,7 +470,7 @@ if(shmid >=0)
 			if(use_embedded)
 				{
 #ifdef MAC_INTEGRATION
-				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
+				//sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
 #else
 				sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
 #endif
