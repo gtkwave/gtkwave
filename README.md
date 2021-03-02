@@ -10,5 +10,5 @@ GTKWave is a fully featured GTK+ based wave viewer for Unix and Win32 which read
 - brew install tcl
 - brew install xz
 - export PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig  (ATTENTION: This is for Big Sur, under older OS X revisions this might be under /usr/local)
-- autoconf
+- autoconf (only when configure.ac was changed, should not be the case)
 - CPPFLAGS="-I$(brew --prefix)/include" LDFLAGS="-L$(brew --prefix)/lib" ./configure --enable-gtk3 --with-tcl=$(brew --prefix)/opt/tcl-tk/lib --with-tk=$(brew --prefix)/opt/tcl-tk/lib --prefix=<wherever you like> 
