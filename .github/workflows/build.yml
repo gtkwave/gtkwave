@@ -62,6 +62,27 @@ jobs:
           mingw-*gtkwave*.pkg.tar.zst
           gtkwave_*_standalone.tgz
 
+
+  macos:
+    runs-on: macOS-10.15
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Dependencies (brew)
+      run: |
+        brew install gtk+3
+        brew install adwaita-icon-theme
+        brew install tcl
+        brew install xz
+
+    - name: Build
+      run: |
+        export PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig
+        autoconf
+        CPPFLAGS="-I$(brew --prefix)/include" LDFLAGS="-L$(brew --prefix)/lib" ./configure --enable-gtk3 --with-tcl=$(brew --prefix)/opt/tcl-tk/lib --with-tk=$(brew --prefix)/opt/tcl-tk/lib
+
+
   nightly:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     needs: [ msys2 ]
