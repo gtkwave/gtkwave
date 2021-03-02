@@ -78,7 +78,7 @@ jobs:
 
     - name: Build
       run: |
-        export PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig
+        export PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig
         autoconf
         CPPFLAGS="-I$(brew --prefix)/include" LDFLAGS="-L$(brew --prefix)/lib" ./configure --enable-gtk3 --with-tcl=$(brew --prefix)/opt/tcl-tk/lib --with-tk=$(brew --prefix)/opt/tcl-tk/lib
 
