@@ -610,9 +610,9 @@ if test "X$GTK3" = "Xyes" ; then
         PKG_CHECK_MODULES(GTK, gtk+-3.0 >= 3.0.0)
         GTK_VER=`$PKG_CONFIG gtk+-3.0 --modversion`
 
-        _gdk_tgt=`$PKG_CONFIG --variable=target gdk-3.0`
+        _gdk_tgt=`$PKG_CONFIG --variable=targets gdk-3.0`
         if test "x$_gdk_tgt" = xquartz; then
-           PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration >= 3.0.0)
+           PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration-gtk3 >= 3.0.0)
            AC_SUBST(GTK_MAC_LIBS)
            AC_SUBST(GTK_MAC_CFLAGS)
 

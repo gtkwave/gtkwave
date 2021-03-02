@@ -46,6 +46,10 @@
 #undef WAVE_USE_XID
 #endif
 
+#ifdef MAC_INTEGRATION
+#undef WAVE_USE_XID
+#endif
+
 #ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
 #else
