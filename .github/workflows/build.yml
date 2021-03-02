@@ -72,6 +72,7 @@ jobs:
     - name: Dependencies (brew)
       run: |
         brew install gtk+3
+        brew install gtk-mac-integration
         brew install adwaita-icon-theme
         brew install tcl
         brew install xz
