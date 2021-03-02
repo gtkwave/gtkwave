@@ -136,7 +136,7 @@ gtk_widget_show(mainwindow);
 g_signal_connect(XXX_GTK_OBJECT(mainwindow), "destroy", G_CALLBACK(quit_callback), "WM destroy");
 
 #ifndef __MINGW32__
-#ifdef NONONO
+#ifndef MAC_INTEGRATION
 #ifdef GDK_WINDOWING_WAYLAND
 if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
         {
