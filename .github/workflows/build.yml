@@ -78,6 +78,7 @@ jobs:
 
     - name: Build
       run: |
+        cd gtkwave3-gtk3
         export PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig
         CPPFLAGS="-I$(brew --prefix)/include" LDFLAGS="-L$(brew --prefix)/lib" ./configure --enable-gtk3 --with-tcl=$(brew --prefix)/opt/tcl-tk/lib --with-tk=$(brew --prefix)/opt/tcl-tk/lib
 
