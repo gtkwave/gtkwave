@@ -371,7 +371,7 @@ int force_open_tree_node(char *name, int keep_path_nodes_open, struct tree **t_p
 	  gtk_clist_thaw(GTK_CLIST(ctree));
 
 	  gtk_ctree_node_moveto(ctree, nodehist[depth-1],
-				depth /*column*/,
+				0, /*column*/ /* was originally depth instead of zero */
 				0.5 /*row_align*/,
 				0.5 /*col_align*/);
 	  /* printf("[treeopennode] '%s' ok\n", name); */
