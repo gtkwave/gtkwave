@@ -1742,8 +1742,9 @@
 3.3.107 30sep20 Fix left shift overflow in cvt_fpsudec for fixed point.
                 Added Find First One trace type	options.
                 Fixed bug in Show-Change All Highlighted.
-3.3.108	13mar21	Fix VZT writer crash when dumpoff is invoked before first
+3.3.108	14mar21	Fix VZT writer crash when dumpoff is invoked before first
                 timestep.
 		Fix convert_ffo() that scanned in wrong direction.
 		Fix use	after free in fstapi.c.
 		gtk_ctree_node_moveto bugfix in SST.
+		MSVC compiler fix for fstapi.
