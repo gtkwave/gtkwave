@@ -35,308 +35,331 @@ using namespace std;
 
 void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
 {
-std::map <string, string> fId;
-std::stack<string> mId;
+	std::map <string, string> fId;
+	std::stack<string> mId;
+	std::stack<string> mName;
+	const char *topname = NULL;
 
-while(!feof(fi))
+	while(!feof(fi))
 	{
-	char buf[BUF_SIZ + 1];
-	int endtag;
-	char *ln = fgets(buf, BUF_SIZ, fi);	
-	char *pnt = ln;
-	if(!pnt) goto bot;
+		char buf[BUF_SIZ + 1];
+		int endtag;
+		char *ln = fgets(buf, BUF_SIZ, fi);	
+		char *pnt = ln;
 
-	while(*pnt)
+		if(!pnt) goto bot;
+
+		while(*pnt)
 		{
-		if(*pnt == ' ') { pnt++; continue; } else { break; }
+			if(*pnt == ' ') { pnt++; continue; } else { break; }
 		}
-	if(*pnt != '<') goto bot;
+		if(*pnt != '<') goto bot;
 
-	pnt++;
-	endtag = (*pnt == '/');
-	pnt += endtag;
+		pnt++;
+		endtag = (*pnt == '/');
+		pnt += endtag;
 
-	switch(*pnt)
+		switch(*pnt)
 		{
-		case 'm':
-			if(!strncmp(pnt, "module", 6))
+			case 'm':
+				if(!strncmp(pnt, "module", 6))
 				{
-				if(!endtag)
+					if(!endtag)
 					{
-					char *qts[6];
-					char *s = pnt + 6;
-					int numqt = 0;
-					int tm = 0;
+						char *qts[8];
+						char *s = pnt + 6;
+						int numqt = 0;
+						int tm = 0;
 
-					while(*s)
+						while(*s)
 						{
-						if(*s == '"')
+							if(*s == '"')
 							{
-							qts[numqt++] = s;
-							if(numqt == 6) break;
+								qts[numqt++] = s;
+								if(numqt == 8) break;
 							}
-						s++;
-						}
-	
-					if(numqt == 6)
-						{
-						if(strstr(qts[3]+1, "topModule=\"1\""))
-							{
-							numqt = 4;
-							tm = is_verilator_sim;
-							}
+							s++;
 						}
 
-					if(numqt == 4)
+						if(numqt == 8)
 						{
-						char *fl = qts[0] + 1;
-						char *nam = qts[2] + 1;
-						qts[1][0] = qts[3][0] = 0;
-	
-						mId.push(nam);
-
-						char fl_dup[strlen(fl)+1];
-						char *s = fl; char *d = fl_dup;
-						while(isalpha(*s)) { *(d++) = *(s++); }
-						*d = 0;
-
-						unsigned int lineno = atoi(s);
-						const char *mnam = fId[fl_dup].c_str();
-						fprintf(fo, "++ module %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */
-						if(tm)
+							if(strstr(qts[5]+2, "topModule=\"1\""))
 							{
-							fprintf(fo, "++ module TOP file %s lines %d - %d\n", "(VerilatorTop)", 1, 1);
-							fprintf(fo, "++ comp %s type %s parent TOP\n", nam, nam);
+								tm = is_verilator_sim;
+								numqt = 6;
+							}
+
+							else // instance
+							{
+								numqt = 4;
+							}
+						}
+						if (numqt == 4)
+						{
+							char *fl = qts[0] + 1;
+                                                        qts[3][0] = qts[5][0] = 0;
+                                                        char fl_dup[strlen(fl)+1];
+                                                        char *s = fl; char *d = fl_dup;
+                                                        while(isalpha(*s)) { *(d++) = *(s++); }
+                                                        *d = 0;
+                                                        
+							unsigned int lineno = atoi(s);
+                                                        const char *mnam = fId[fl_dup].c_str();
+                                                        fprintf(fo, "++ module %s file %s parent %s lines %d - %d\n", mName.top().c_str(), mnam, topname, lineno, lineno);
+							mName.pop();
+						}
+						if(numqt == 6)
+						{
+							char *fl = qts[0] + 1;
+							char *nam = qts[4] + 1;
+							qts[3][0] = qts[5][0] = 0;
+
+							mId.push(nam);
+
+							char fl_dup[strlen(fl)+1];
+							char *s = fl; char *d = fl_dup;
+							while(isalpha(*s)) { *(d++) = *(s++); }
+							*d = 0;
+
+							unsigned int lineno = atoi(s);
+							const char *mnam = fId[fl_dup].c_str();
+							fprintf(fo, "++ module %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */
+							if(tm)
+							{
+								fprintf(fo, "++ module TOP file %s lines %d - %d\n", "(VerilatorTop)", 1, 1);
+								fprintf(fo, "++ comp %s type %s parent TOP\n", nam, nam);
 							}
 						}
 					}
 					else
 					{
-					if(!mId.empty())
+						if(!mId.empty())
 						{
-						mId.pop();
+							mId.pop();
 						}
 					}
 				}
 
-		case 'f':
-			if((!endtag) && (!strncmp(pnt, "file id", 7)))
+			case 'f':
+				if((!endtag) && (!strncmp(pnt, "file id", 7)))
 				{
-				char *qts[4];
-				char *s = pnt + 7;
-				int numqt = 0;
-			
-				while(*s)
-					{
-					if(*s == '"')
-						{
-						qts[numqt++] = s;
-						if(numqt == 4) break;
-						}
-					s++;
-					}
-
-				if(numqt == 4)
-					{
-					char *cod = qts[0] + 1;
-					char *fil = qts[2] + 1;
-					qts[1][0] = qts[3][0] = 0;
-
-					fId.insert(pair <string, string> (cod, fil));
-					}
-				}
-			break;
-
-		case 'i':
-			if((!endtag) && (!strncmp(pnt, "instance", 8)))
-				{
-				char *qts[6];
-				char *s = pnt + 8;
-				int numqt = 0;
-			
-				while(*s)
-					{
-					if(*s == '"')
-						{
-						qts[numqt++] = s;
-						if(numqt == 6) break;
-						}
-					s++;
-					}
-
-				if(numqt == 6)
-					{
-					char *cod = qts[0] + 1;
-					char *nam = qts[2] + 1;
-					char *defnam = qts[4] + 1;
-					qts[1][0] = qts[3][0] = qts[5][0] = 0;
-
-					if(!mId.empty())
-						{
-						fprintf(fo, "++ comp %s type %s parent %s\n", nam, defnam, mId.top().c_str()); 
-						}
-					}
-				}
-			break;
-
-
-		case 'p':
-			if(!strncmp(pnt, "primitive", 9))
-				{
-				if(!endtag)
-					{
 					char *qts[4];
-					char *s = pnt + 9;
+					char *s = pnt + 7;
 					int numqt = 0;
 
 					while(*s)
-						{
+					{
 						if(*s == '"')
-							{
-							qts[numqt++] = s;
-							if(numqt == 6) break;
-							}
-						s++;
-						}
-	
-					if(numqt == 4)
 						{
-						char *fl = qts[0] + 1;
-						char *nam = qts[2] + 1;
+							qts[numqt++] = s;
+							if(numqt == 4) break;
+						}
+						s++;
+					}
+
+					if(numqt == 4)
+					{
+						char *cod = qts[0] + 1;
+						char *fil = qts[2] + 1;
 						qts[1][0] = qts[3][0] = 0;
-	
-						mId.push(nam);
 
-						char fl_dup[strlen(fl)+1];
-						char *s = fl; char *d = fl_dup;
-						while(isalpha(*s)) { *(d++) = *(s++); }
-						*d = 0;
+						fId.insert(pair <string, string> (cod, fil));
+					}
+				}
+				break;
 
-						unsigned int lineno = atoi(s);
-						const char *mnam = fId[fl_dup].c_str();
-						fprintf(fo, "++ udp %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */
+			case 'i':
+				if((!endtag) && (!strncmp(pnt, "instance", 8)))
+				{
+					char *qts[8];
+					char *s = pnt + 8;
+					int numqt = 0;
+
+					while(*s)
+					{
+						if(*s == '"')
+						{
+							qts[numqt++] = s;
+							if(numqt == 8) break;
+						}
+						s++;
+					}
+
+					if(numqt == 8)
+					{
+						char *cod = qts[0] + 1;
+						char *nam = qts[4] + 1;
+						char *defnam = qts[4] + 1;
+						qts[3][0] = qts[5][0] = qts[5][0] = 0;
+
+						if(!mId.empty())
+						  {
+						    fprintf(fo, "++ comp %s type %s parent %s\n", nam, defnam, mId.top().c_str());
+						    topname = mId.top().c_str();
+						    mName.push(nam);
+						  }
+					}
+				}
+				break;
+
+
+			case 'p':
+				if(!strncmp(pnt, "primitive", 9))
+				{
+					if(!endtag)
+					{
+						char *qts[4];
+						char *s = pnt + 9;
+						int numqt = 0;
+
+						while(*s)
+						{
+							if(*s == '"')
+							{
+								qts[numqt++] = s;
+								if(numqt == 6) break;
+							}
+							s++;
+						}
+
+						if(numqt == 4)
+						{
+							char *fl = qts[0] + 1;
+							char *nam = qts[2] + 1;
+							qts[1][0] = qts[3][0] = 0;
+
+							mId.push(nam);
+
+							char fl_dup[strlen(fl)+1];
+							char *s = fl; char *d = fl_dup;
+							while(isalpha(*s)) { *(d++) = *(s++); }
+							*d = 0;
+
+							unsigned int lineno = atoi(s);
+							const char *mnam = fId[fl_dup].c_str();
+							fprintf(fo, "++ udp %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */
 						}
 					}
 					else
 					{
-					if(!mId.empty())
+						if(!mId.empty())
 						{
-						mId.pop();
+							mId.pop();
 						}
 					}
 				}
-			break;
-			
-		default:
-			break;
+				break;
+
+			default:
+				break;
 		}
 
-	bot: 1;
+bot: 1;
 	}
 }
 
 
 int main(int argc, char **argv)
 {
-FILE *fi, *fo;
-int rc = 0;
-int is_verilator_sim = 0;
+	FILE *fi, *fo;
+	int rc = 0;
+	int is_verilator_sim = 0;
 
-while(argc > 1)
+	while(argc > 1)
 	{
-	if(*argv[1] != '-')
+		if(*argv[1] != '-')
 		{
-		break;
+			break;
 		}
-	else
-	if(!strcmp(argv[1], "--"))
-		{
-		argc--;
-		argv++;
-		break;
-		}
-	else
-	if(!strcmp(argv[1], "-V") || !strcmp(argv[1], "--vl_sim"))
-		{
-		is_verilator_sim = 1;
-		argc--;
-		argv++;
-		}
-	else
-	if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))
-		{
-		argc = 1;
-		break;
-		}
-	else
-		{
-		fprintf(stderr, "%s: unrecognized option '%s'\n", argv[0], argv[1]);
-		argc = 1;
-		break;		
-		}
+		else
+			if(!strcmp(argv[1], "--"))
+			{
+				argc--;
+				argv++;
+				break;
+			}
+			else
+				if(!strcmp(argv[1], "-V") || !strcmp(argv[1], "--vl_sim"))
+				{
+					is_verilator_sim = 1;
+					argc--;
+					argv++;
+				}
+				else
+					if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))
+					{
+						argc = 1;
+						break;
+					}
+					else
+					{
+						fprintf(stderr, "%s: unrecognized option '%s'\n", argv[0], argv[1]);
+						argc = 1;
+						break;		
+					}
 	}
 
-switch(argc)
+	switch(argc)
 	{
-	case 2:
-		fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
-		if(fi)
+		case 2:
+			fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
+			if(fi)
 			{
-			fo = stdout;
-			xml2stems(fi, fo, is_verilator_sim);
-			if(fi != stdin) fclose(fi);
+				fo = stdout;
+				xml2stems(fi, fo, is_verilator_sim);
+				if(fi != stdin) fclose(fi);
 			}
 			else
 			{
-			fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
-			perror("Why");
-			rc = 255;
+				fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
+				perror("Why");
+				rc = 255;
 			}
-		break;
+			break;
 
-	case 3:
-		fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
-		if(fi)
+		case 3:
+			fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
+			if(fi)
 			{
-			fo = fopen(argv[2], "wb");
-			if(fo)
+				fo = fopen(argv[2], "wb");
+				if(fo)
 				{
-				xml2stems(fi, fo, is_verilator_sim);
-				if(fi != stdin) fclose(fi);
-				fclose(fo);
+					xml2stems(fi, fo, is_verilator_sim);
+					if(fi != stdin) fclose(fi);
+					fclose(fo);
 				}
 				else
 				{
-				if(fi != stdin) fclose(fi);
-				fprintf(stderr, "Could not open '%s', exiting.\n", argv[2]);
-				perror("Why");
-				rc = 255;
+					if(fi != stdin) fclose(fi);
+					fprintf(stderr, "Could not open '%s', exiting.\n", argv[2]);
+					perror("Why");
+					rc = 255;
 				}
 			}
 			else
 			{
-			fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
-			perror("Why");
-			rc = 255;
+				fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
+				perror("Why");
+				rc = 255;
 			}
-		break;
+			break;
 
-	default:
-		printf("Usage: %s [OPTION] infile.xml [outfile.stems]\n\n"
+		default:
+			printf("Usage: %s [OPTION] infile.xml [outfile.stems]\n\n"
 
-                        "  -V, --vl_sim               add TOP hierarchy for Verilator sim\n"
-			"  -h, --help                 display this help then exit\n\n"
+					"  -V, --vl_sim               add TOP hierarchy for Verilator sim\n"
+					"  -h, --help                 display this help then exit\n\n"
 
-			"Converts Verilator XML file to rtlbrowse stems format.  For example:\n\n"
-			"verilator -Wno-fatal des.v -xml-only --bbox-sys\n"
-			"xml2stems obj_dir/Vdes.xml des.stems\n"
-			"gtkwave -t des.stems des.fst\n\n"
-			"Use - as input filename for stdin.\n"
-			"Omitting optional stems outfile name emits to stdout.\n", 
-			argv[0]);
-		break;
+					"Converts Verilator XML file to rtlbrowse stems format.  For example:\n\n"
+					"verilator -Wno-fatal des.v -xml-only --bbox-sys\n"
+					"xml2stems obj_dir/Vdes.xml des.stems\n"
+					"gtkwave -t des.stems des.fst\n\n"
+					"Use - as input filename for stdin.\n"
+					"Omitting optional stems outfile name emits to stdout.\n", 
+					argv[0]);
+			break;
 	}
 
 bot:
-return(rc);
+	return(rc);
 }
