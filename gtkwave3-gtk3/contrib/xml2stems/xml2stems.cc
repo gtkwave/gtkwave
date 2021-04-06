@@ -32,334 +32,327 @@ using namespace std;
 
 #define BUF_SIZ 65536
 
+std::map <string, string>* parse_xml_tags(char *s)
+{
+std::map <string, string> *fId = new std::map <string, string>;
+
+while(*s)
+	{
+	if(!isspace(*s) && (*s != '>'))
+		{
+		char *tag_s = s;
+		char *tag_e = NULL;
+		char *val_s = NULL;
+		char *val_e = NULL;
+
+		while(*s)
+			{
+			if(!s) goto bot;
+			if(*s == '=') { tag_e = s; break; }
+			s++;
+			}
+
+		while(*s)
+			{
+			if(!s) goto bot;
+			if(*s == '"') { val_s = ++s; break; }
+			s++;
+			}
+
+		while(*s)
+			{
+			if(!s) goto bot;
+			if(*s == '"') { val_e = s; break; }
+			s++;
+			}
+
+		if(tag_e && val_e)
+			{
+			*tag_e = 0;
+			*val_e = 0;
+			fId->insert(pair <string, string> (tag_s, val_s));
+			}
+		}
+
+	s++;
+	}
+
+bot: return(fId);
+}
+
+
 
 void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
 {
-	std::map <string, string> fId;
-	std::stack<string> mId;
-	std::stack<string> mName;
-	const char *topname = NULL;
+std::map <string, string> fId;
+std::stack<string> mId;
+int in_files = 0;
 
-	while(!feof(fi))
+while(!feof(fi))
 	{
-		char buf[BUF_SIZ + 1];
-		int endtag;
-		char *ln = fgets(buf, BUF_SIZ, fi);	
-		char *pnt = ln;
+	char buf[BUF_SIZ + 1];
+	int endtag;
+	char *ln = fgets(buf, BUF_SIZ, fi);	
+	char *pnt = ln;
+	if(!pnt) goto bot;
 
-		if(!pnt) goto bot;
-
-		while(*pnt)
+	while(*pnt)
 		{
-			if(*pnt == ' ') { pnt++; continue; } else { break; }
+		if(*pnt == ' ') { pnt++; continue; } else { break; }
 		}
-		if(*pnt != '<') goto bot;
+	if(*pnt != '<') goto bot;
 
-		pnt++;
-		endtag = (*pnt == '/');
-		pnt += endtag;
+	pnt++;
+	endtag = (*pnt == '/');
+	pnt += endtag;
 
-		switch(*pnt)
+	switch(*pnt)
 		{
-			case 'm':
-				if(!strncmp(pnt, "module", 6))
+		case 'm':
+			if(!strncmp(pnt, "module", 6) && strncmp(pnt, "module_files", 12))
 				{
-					if(!endtag)
+				if(!endtag)
 					{
-						char *qts[8];
-						char *s = pnt + 6;
-						int numqt = 0;
-						int tm = 0;
+					char *s = pnt + 6;
 
-						while(*s)
+                                	std::map <string, string>*xmt = parse_xml_tags(s);
+					if(xmt)
 						{
-							if(*s == '"')
-							{
-								qts[numqt++] = s;
-								if(numqt == 8) break;
-							}
-							s++;
-						}
+						const char *fl = (*xmt)[string("fl")].c_str();
+						const char *nam = (*xmt)[string("name")].c_str();
+						const char *tms = (*xmt)[string("topModule")].c_str();
 
-						if(numqt == 8)
-						{
-							if(strstr(qts[5]+2, "topModule=\"1\""))
+						if(fl && nam && tms)
 							{
-								tm = is_verilator_sim;
-								numqt = 6;
-							}
-
-							else // instance
-							{
-								numqt = 4;
-							}
-						}
-						if (numqt == 4)
-						{
-							char *fl = qts[0] + 1;
-                                                        qts[3][0] = qts[5][0] = 0;
-                                                        char fl_dup[strlen(fl)+1];
-                                                        char *s = fl; char *d = fl_dup;
-                                                        while(isalpha(*s)) { *(d++) = *(s++); }
-                                                        *d = 0;
-                                                        
-							unsigned int lineno = atoi(s);
-                                                        const char *mnam = fId[fl_dup].c_str();
-                                                        fprintf(fo, "++ module %s file %s parent %s lines %d - %d\n", mName.top().c_str(), mnam, topname, lineno, lineno);
-							mName.pop();
-						}
-						if(numqt == 6)
-						{
-							char *fl = qts[0] + 1;
-							char *nam = qts[4] + 1;
-							qts[3][0] = qts[5][0] = 0;
+							int tm = (tms[0] == '1') ? is_verilator_sim : 0;
 
 							mId.push(nam);
 
 							char fl_dup[strlen(fl)+1];
-							char *s = fl; char *d = fl_dup;
+							const char *s = fl; char *d = fl_dup;
 							while(isalpha(*s)) { *(d++) = *(s++); }
 							*d = 0;
-
+	
 							unsigned int lineno = atoi(s);
 							const char *mnam = fId[fl_dup].c_str();
 							fprintf(fo, "++ module %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */
 							if(tm)
-							{
+								{
 								fprintf(fo, "++ module TOP file %s lines %d - %d\n", "(VerilatorTop)", 1, 1);
 								fprintf(fo, "++ comp %s type %s parent TOP\n", nam, nam);
+								}
 							}
+						delete xmt;
 						}
 					}
 					else
 					{
-						if(!mId.empty())
+					if(!mId.empty())
 						{
-							mId.pop();
+						mId.pop();
 						}
 					}
 				}
 
-			case 'f':
-				if((!endtag) && (!strncmp(pnt, "file id", 7)))
+		case 'f':
+			if(!strncmp(pnt, "files", 5))
 				{
-					char *qts[4];
-					char *s = pnt + 7;
-					int numqt = 0;
-
-					while(*s)
-					{
-						if(*s == '"')
-						{
-							qts[numqt++] = s;
-							if(numqt == 4) break;
-						}
-						s++;
-					}
-
-					if(numqt == 4)
-					{
-						char *cod = qts[0] + 1;
-						char *fil = qts[2] + 1;
-						qts[1][0] = qts[3][0] = 0;
-
-						fId.insert(pair <string, string> (cod, fil));
-					}
+				in_files = (!endtag);
 				}
-				break;
-
-			case 'i':
-				if((!endtag) && (!strncmp(pnt, "instance", 8)))
+			else
 				{
-					char *qts[8];
-					char *s = pnt + 8;
-					int numqt = 0;
-
-					while(*s)
+				if((!endtag) && (in_files) && (!strncmp(pnt, "file", 4)))
 					{
-						if(*s == '"')
-						{
-							qts[numqt++] = s;
-							if(numqt == 8) break;
-						}
-						s++;
-					}
-
-					if(numqt == 8)
-					{
-						char *cod = qts[0] + 1;
-						char *nam = qts[4] + 1;
-						char *defnam = qts[4] + 1;
-						qts[3][0] = qts[5][0] = qts[5][0] = 0;
-
-						if(!mId.empty())
-						  {
-						    fprintf(fo, "++ comp %s type %s parent %s\n", nam, defnam, mId.top().c_str());
-						    topname = mId.top().c_str();
-						    mName.push(nam);
-						  }
-					}
-				}
-				break;
-
-
-			case 'p':
-				if(!strncmp(pnt, "primitive", 9))
-				{
-					if(!endtag)
-					{
-						char *qts[4];
-						char *s = pnt + 9;
-						int numqt = 0;
-
-						while(*s)
-						{
-							if(*s == '"')
+					char *s = pnt + 4;
+	                                std::map <string, string>*xmt = parse_xml_tags(s);
+	
+	                                if(xmt)
+	                                       	{
+	                                        const char *cod = (*xmt)[string("id")].c_str();
+	                                        const char *fil = (*xmt)[string("filename")].c_str();
+	
+						if(cod && fil)
 							{
-								qts[numqt++] = s;
-								if(numqt == 6) break;
+							fId.insert(pair <string, string> (cod, fil));
 							}
-							s++;
+	
+						delete xmt;
+						}
+					}
+				}
+			break;
+
+		case 'i':
+			if((!endtag) && (!strncmp(pnt, "instance", 8)))
+				{
+				char *s = pnt + 8;
+				std::map <string, string>*xmt = parse_xml_tags(s);
+			
+				if(xmt)
+					{
+					const char *nam = (*xmt)[string("name")].c_str();
+					const char *defnam = (*xmt)[string("defName")].c_str();
+					if(!mId.empty() && nam && defnam)
+						{
+						fprintf(fo, "++ comp %s type %s parent %s\n", nam, defnam, mId.top().c_str()); 
 						}
 
-						if(numqt == 4)
+					delete xmt;
+					}
+				}
+			break;
+
+
+		case 'p':
+			if(!strncmp(pnt, "primitive", 9))
+				{
+				if(!endtag)
+					{
+					char *s = pnt + 9;
+
+                                	std::map <string, string>*xmt = parse_xml_tags(s);
+					if(xmt)
 						{
-							char *fl = qts[0] + 1;
-							char *nam = qts[2] + 1;
-							qts[1][0] = qts[3][0] = 0;
-
+						const char *fl = (*xmt)[string("fl")].c_str();
+						const char *nam = (*xmt)[string("name")].c_str();
+	
+						if(fl && nam)
+							{
 							mId.push(nam);
-
+	
 							char fl_dup[strlen(fl)+1];
-							char *s = fl; char *d = fl_dup;
+							const char *s = fl; char *d = fl_dup;
 							while(isalpha(*s)) { *(d++) = *(s++); }
 							*d = 0;
-
+	
 							unsigned int lineno = atoi(s);
 							const char *mnam = fId[fl_dup].c_str();
 							fprintf(fo, "++ udp %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */
+							}
+
+						delete xmt;
 						}
 					}
 					else
 					{
-						if(!mId.empty())
+					if(!mId.empty())
 						{
-							mId.pop();
+						mId.pop();
 						}
 					}
 				}
-				break;
-
-			default:
-				break;
+			break;
+			
+		default:
+			break;
 		}
 
-bot: 1;
+	bot: 1;
 	}
 }
 
 
 int main(int argc, char **argv)
 {
-	FILE *fi, *fo;
-	int rc = 0;
-	int is_verilator_sim = 0;
+FILE *fi, *fo;
+int rc = 0;
+int is_verilator_sim = 0;
 
-	while(argc > 1)
+while(argc > 1)
 	{
-		if(*argv[1] != '-')
+	if(*argv[1] != '-')
 		{
-			break;
+		break;
 		}
-		else
-			if(!strcmp(argv[1], "--"))
-			{
-				argc--;
-				argv++;
-				break;
-			}
-			else
-				if(!strcmp(argv[1], "-V") || !strcmp(argv[1], "--vl_sim"))
-				{
-					is_verilator_sim = 1;
-					argc--;
-					argv++;
-				}
-				else
-					if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))
-					{
-						argc = 1;
-						break;
-					}
-					else
-					{
-						fprintf(stderr, "%s: unrecognized option '%s'\n", argv[0], argv[1]);
-						argc = 1;
-						break;		
-					}
+	else
+	if(!strcmp(argv[1], "--"))
+		{
+		argc--;
+		argv++;
+		break;
+		}
+	else
+	if(!strcmp(argv[1], "-V") || !strcmp(argv[1], "--vl_sim"))
+		{
+		is_verilator_sim = 1;
+		argc--;
+		argv++;
+		}
+	else
+	if(!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))
+		{
+		argc = 1;
+		break;
+		}
+	else
+		{
+		fprintf(stderr, "%s: unrecognized option '%s'\n", argv[0], argv[1]);
+		argc = 1;
+		break;		
+		}
 	}
 
-	switch(argc)
+switch(argc)
 	{
-		case 2:
-			fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
-			if(fi)
+	case 2:
+		fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
+		if(fi)
 			{
-				fo = stdout;
-				xml2stems(fi, fo, is_verilator_sim);
-				if(fi != stdin) fclose(fi);
+			fo = stdout;
+			xml2stems(fi, fo, is_verilator_sim);
+			if(fi != stdin) fclose(fi);
 			}
 			else
 			{
-				fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
-				perror("Why");
-				rc = 255;
+			fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
+			perror("Why");
+			rc = 255;
 			}
-			break;
+		break;
 
-		case 3:
-			fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
-			if(fi)
+	case 3:
+		fi = (!strcmp("-", argv[1])) ? stdin : fopen(argv[1], "rb");
+		if(fi)
 			{
-				fo = fopen(argv[2], "wb");
-				if(fo)
+			fo = fopen(argv[2], "wb");
+			if(fo)
 				{
-					xml2stems(fi, fo, is_verilator_sim);
-					if(fi != stdin) fclose(fi);
-					fclose(fo);
+				xml2stems(fi, fo, is_verilator_sim);
+				if(fi != stdin) fclose(fi);
+				fclose(fo);
 				}
 				else
 				{
-					if(fi != stdin) fclose(fi);
-					fprintf(stderr, "Could not open '%s', exiting.\n", argv[2]);
-					perror("Why");
-					rc = 255;
+				if(fi != stdin) fclose(fi);
+				fprintf(stderr, "Could not open '%s', exiting.\n", argv[2]);
+				perror("Why");
+				rc = 255;
 				}
 			}
 			else
 			{
-				fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
-				perror("Why");
-				rc = 255;
+			fprintf(stderr, "Could not open '%s', exiting.\n", argv[1]);
+			perror("Why");
+			rc = 255;
 			}
-			break;
+		break;
 
-		default:
-			printf("Usage: %s [OPTION] infile.xml [outfile.stems]\n\n"
+	default:
+		printf("Usage: %s [OPTION] infile.xml [outfile.stems]\n\n"
 
-					"  -V, --vl_sim               add TOP hierarchy for Verilator sim\n"
-					"  -h, --help                 display this help then exit\n\n"
+                        "  -V, --vl_sim               add TOP hierarchy for Verilator sim\n"
+			"  -h, --help                 display this help then exit\n\n"
 
-					"Converts Verilator XML file to rtlbrowse stems format.  For example:\n\n"
-					"verilator -Wno-fatal des.v -xml-only --bbox-sys\n"
-					"xml2stems obj_dir/Vdes.xml des.stems\n"
-					"gtkwave -t des.stems des.fst\n\n"
-					"Use - as input filename for stdin.\n"
-					"Omitting optional stems outfile name emits to stdout.\n", 
-					argv[0]);
-			break;
+			"Converts Verilator XML file to rtlbrowse stems format.  For example:\n\n"
+			"verilator -Wno-fatal des.v -xml-only --bbox-sys\n"
+			"xml2stems obj_dir/Vdes.xml des.stems\n"
+			"gtkwave -t des.stems des.fst\n\n"
+			"Use - as input filename for stdin.\n"
+			"Omitting optional stems outfile name emits to stdout.\n", 
+			argv[0]);
+		break;
 	}
 
 bot:
-	return(rc);
+return(rc);
 }
