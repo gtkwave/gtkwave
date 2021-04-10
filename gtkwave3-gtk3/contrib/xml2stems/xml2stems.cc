@@ -28,26 +28,42 @@
 #include <string>
 #include <map>
 #include <stack>
+#include <queue>
 using namespace std;
 
 #define BUF_SIZ 65536
 
-std::map <string, string>* parse_xml_tags(char *s)
+std::map <string, string>* parse_xml_tags(char *s, int *oneline)
 {
+char sprev;
 std::map <string, string> *fId = new std::map <string, string>;
+if(oneline) *oneline = 0;
 
 while(*s)
 	{
-	if(!isspace(*s) && (*s != '>'))
+	if(!isspace(*s))
 		{
 		char *tag_s = s;
 		char *tag_e = NULL;
 		char *val_s = NULL;
 		char *val_e = NULL;
 
+		sprev = 0;
 		while(*s)
 			{
 			if(!s) goto bot;
+
+			if(*s == '>')
+				{
+				if(sprev == '/')
+					{
+					if(oneline) *oneline = 1;
+					}
+	
+				goto bot;
+				}
+			sprev = *s;
+
 			if(*s == '=') { tag_e = s; break; }
 			s++;
 			}
@@ -73,7 +89,6 @@ while(*s)
 			fId->insert(pair <string, string> (tag_s, val_s));
 			}
 		}
-
 	s++;
 	}
 
@@ -86,6 +101,7 @@ void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
 {
 std::map <string, string> fId;
 std::stack<string> mId;
+queue<string> bQueue;
 int in_files = 0;
 
 while(!feof(fi))
@@ -108,6 +124,53 @@ while(!feof(fi))
 
 	switch(*pnt)
 		{
+		case 'b':
+			if(!strncmp(pnt, "begin", 5))
+				{
+				if(!endtag)
+					{
+					char *s = pnt + 5;
+					int oneline = 0;
+					std::map <string, string>*xmt = parse_xml_tags(s, &oneline);
+					if(xmt)
+						{
+						const char *nam = (*xmt)[string("name")].c_str();
+						const char *fl = (*xmt)[string("fl")].c_str();
+
+						if(!oneline) 
+							{
+							bQueue.push((*xmt)[string("name")]);
+							if(fl && nam && nam[0])
+								{
+								char fl_dup[strlen(fl)+1];
+								const char *s = fl; char *d = fl_dup;
+								while(isalpha(*s)) { *(d++) = *(s++); }
+								*d = 0;
+	
+								unsigned int lineno = atoi(s);
+								const char *mnam = fId[fl_dup].c_str();
+
+								fprintf(fo, "++ begin %s file %s line %d\n", nam, mnam, lineno);
+								}
+							}
+
+						delete xmt;
+						}
+					}
+				else
+					{
+					string bs = bQueue.front();
+					bQueue.pop();
+					const char *nam = bs.c_str();
+					if(nam && nam[0])
+						{
+						fprintf(fo, "++ endbegin %s\n", nam);
+						}
+					}
+				
+				}
+			break;
+
 		case 'm':
 			if(!strncmp(pnt, "module", 6) && strncmp(pnt, "module_files", 12))
 				{
@@ -115,7 +178,7 @@ while(!feof(fi))
 					{
 					char *s = pnt + 6;
 
-                                	std::map <string, string>*xmt = parse_xml_tags(s);
+                                	std::map <string, string>*xmt = parse_xml_tags(s, NULL);
 					if(xmt)
 						{
 						const char *fl = (*xmt)[string("fl")].c_str();
@@ -164,7 +227,7 @@ while(!feof(fi))
 				if((!endtag) && (in_files) && (!strncmp(pnt, "file", 4)))
 					{
 					char *s = pnt + 4;
-	                                std::map <string, string>*xmt = parse_xml_tags(s);
+	                                std::map <string, string>*xmt = parse_xml_tags(s, NULL);
 	
 	                                if(xmt)
 	                                       	{
@@ -186,7 +249,7 @@ while(!feof(fi))
 			if((!endtag) && (!strncmp(pnt, "instance", 8)))
 				{
 				char *s = pnt + 8;
-				std::map <string, string>*xmt = parse_xml_tags(s);
+				std::map <string, string>*xmt = parse_xml_tags(s, NULL);
 			
 				if(xmt)
 					{
@@ -210,7 +273,7 @@ while(!feof(fi))
 					{
 					char *s = pnt + 9;
 
-                                	std::map <string, string>*xmt = parse_xml_tags(s);
+                                	std::map <string, string>*xmt = parse_xml_tags(s, NULL);
 					if(xmt)
 						{
 						const char *fl = (*xmt)[string("fl")].c_str();
