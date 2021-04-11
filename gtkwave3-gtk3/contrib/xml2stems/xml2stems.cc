@@ -103,6 +103,7 @@ std::map <string, string> fId;
 std::stack<string> mId;
 queue<string> bQueue;
 int in_files = 0;
+int geninst = 0;
 
 while(!feof(fi))
 	{
@@ -151,6 +152,13 @@ while(!feof(fi))
 								const char *mnam = fId[fl_dup].c_str();
 
 								fprintf(fo, "++ begin %s file %s line %d\n", nam, mnam, lineno);
+
+								char *genname = (char *)malloc(strlen(nam) + 32);
+								sprintf(genname, "%s:G%d", nam, geninst++);
+								fprintf(fo, "++ comp %s type %s parent %s\n", genname, genname, mId.top().c_str()); 
+								fprintf(fo, "++ module %s file %s lines %d - %d\n", genname, mnam, lineno, lineno); /* don't need line number it truly ends at */
+								mId.push(genname);
+								free(genname);
 								}
 							}
 
@@ -164,6 +172,7 @@ while(!feof(fi))
 					const char *nam = bs.c_str();
 					if(nam && nam[0])
 						{
+						mId.pop();
 						fprintf(fo, "++ endbegin %s\n", nam);
 						}
 					}

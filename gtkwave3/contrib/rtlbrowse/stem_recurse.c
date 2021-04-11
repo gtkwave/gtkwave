@@ -108,9 +108,27 @@ char *compname_full;
 char *txt, *txt2 = NULL;
 ds_Tree *tdup = malloc(sizeof(ds_Tree));
 int numcomps;
+char *colon;
+char *compname2 = compname ? strdup(compname) : NULL;
+char *compname_colon = NULL;
+
+if(compname2)
+        {
+	compname_colon = strchr(compname2, ':');
+        if(compname_colon)
+                {
+                *compname_colon = 0;
+                }
+        }
 
 memcpy(tdup, t, sizeof(ds_Tree));
 t = tdup;
+colon = strchr(t->item, ':');
+if(colon)
+        {
+        *colon = 0; /* remove generate hack */
+        }
+
 
 t->next_flat = flattened_mod_list_root;
 flattened_mod_list_root = t;
@@ -119,10 +137,10 @@ if(compname_build)
 	{
 	int cnl = strlen(compname_build);
 
-	compname_full = malloc(cnl + 1 + strlen(compname) + 1);
+	compname_full = malloc(cnl + 1 + strlen(compname2) + 1);
 	strcpy(compname_full, compname_build);
 	compname_full[cnl] = '.';
-	strcpy(compname_full + cnl + 1, compname);
+	strcpy(compname_full + cnl + 1, compname2);
 	}
 	else
 	{
@@ -130,7 +148,7 @@ if(compname_build)
 	}
 
 t->fullname = compname_full;
-txt = compname_build ? compname : t->item;
+txt = compname_build ? compname2 : t->item;
 if(!t->filename)
 	{
 	txt2 = malloc(strlen(txt) + strlen(" [MISSING]") + 1);
@@ -138,6 +156,11 @@ if(!t->filename)
 	strcat(txt2, " [MISSING]");
 	txt = txt2;
 	}
+
+if(colon)
+	{
+	*colon = ':';
+        }
 
 comp = t->comp;
 if(comp)
@@ -191,6 +214,8 @@ while(comp)
 	comp = comp->next;
 	}
 #endif
+
+free(compname2); compname2 = NULL;
 
 return(subtree);
 }
