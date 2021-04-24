@@ -1,21 +1,22 @@
 ## -*- makefile -*-
 ##
 
-SUBDIRS=	liblzma helpers helpers/fst cocoa
-DIST_SUBDIRS=	liblzma helpers helpers/fst cocoa
+SUBDIRS=	liblzma ghw helpers helpers/fst cocoa
+DIST_SUBDIRS=	liblzma ghw helpers helpers/fst cocoa
 
-LIBFST_CFLAGS  = -I$(srcdir)/helpers/fst
-LIBFST_LDADD   = ./helpers/fst/libfst.a
-LIBLZMA_CFLAGS = -I$(srcdir)/liblzma $(LIBXZ_CFLAGS)
-LIBLZMA_LDADD  = ./liblzma/libgwlzma.a $(LIBXZ_LDADD)
+LIBFST_CFLAGS   = -I$(srcdir)/helpers/fst
+LIBFST_LDADD    = ./helpers/fst/libfst.a
+LIBLZMA_CFLAGS  = -I$(srcdir)/liblzma $(LIBXZ_CFLAGS)
+LIBLZMA_LDADD   = ./liblzma/libgwlzma.a $(LIBXZ_LDADD)
 LIBCOCOA_CFLAGS = -I$(srcdir)/cocoa
-LIBCOCOA_LDADD = ./cocoa/libgtkwmacintegration.a $(COCOA_GTK_LDADD)
+LIBCOCOA_LDADD  = ./cocoa/libgtkwmacintegration.a $(COCOA_GTK_LDADD)
+LIBGHW_CFLAGS   = -I$(srcdir)/ghw
 #DEBUGS = -DDEBUG_FACILITIES -DDEBUG_PRINTF -DDEBUG_MALLOC -DSTRICT_VCD_ONLY -DDEBUG_MALLOC_LINES
 
 bin_PROGRAMS=	gtkwave twinwave
 
 AM_CFLAGS=	-I$(srcdir)/.. -I$(srcdir)/helpers $(FASTTREE_CFLAGS) $(GTK_CFLAGS) $(LIBLZMA_CFLAGS) \
-		$(LIBZ_CFLAGS) $(LIBBZ2_CFLAGS) $(LIBFST_CFLAGS) $(AET2_CFLAGS) $(FSDB_CFLAGS) $(TCL_INCLUDE_SPEC) \
+		$(LIBZ_CFLAGS) $(LIBBZ2_CFLAGS) $(LIBFST_CFLAGS) $(LIBGHW_CFLAGS) $(AET2_CFLAGS) $(FSDB_CFLAGS) $(TCL_INCLUDE_SPEC) \
 		$(TCL_DEFADD) $(TK_INCLUDE_SPEC) $(EXTLOAD_CFLAGS) $(GEDIT_CFLAGS) $(LIBJUDY_CFLAGS) \
 		$(GTK_MAC_CFLAGS) $(GCONF_CFLAGS) $(GSETTINGS_CFLAGS) $(LIBCOCOA_CFLAGS) $(GTK_UNIX_PRINT_CFLAGS)
 
@@ -38,7 +39,7 @@ gtkwave_SOURCES= \
 	debug.c debug.h discardbuttons.c edgebuttons.c \
 	entry.c extload.c extload.h fetchbuttons.c fgetdynamic.c fgetdynamic.h file.c fonts.c fonts.h fst.c fst.h \
 	gconf.c gconf.h getopt.c \
-	getopt1.c ghw.c ghw.h libghw.c libghw.h gnu-getopt.h gnu_regex.h gtk23compat.c gtk23compat.h \
+	getopt1.c ghw.c ghw.h ghw/libghw.c ghw/libghw.h gnu-getopt.h gnu_regex.h gtk23compat.c gtk23compat.h \
 	hierpack.c hierpack.h jrb.c jrb.h help.c helpers/lxt2_read.c \
 	helpers/lxt_write.c helpers/vzt_read.c hiersearch.c interp.c \
 	logfile.c lx2.c lx2.h lxt.c lxt.h main.c main.h markerbox.c menu.c menu.h mouseover.c \

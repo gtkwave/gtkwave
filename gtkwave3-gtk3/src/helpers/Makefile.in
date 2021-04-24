@@ -154,11 +154,11 @@ am__v_P_1 = :
 AM_V_GEN = $(am__v_GEN_@AM_V@)
 am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN     " $@;
-am__v_GEN_1 = 
+am__v_GEN_1 =
 AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
-am__v_at_1 = 
+am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -166,19 +166,19 @@ am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
-am__v_lt_1 = 
+am__v_lt_1 =
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
+am__v_CC_1 =
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
+am__v_CCLD_1 =
 SOURCES = $(evcd2vcd_SOURCES) $(fst2vcd_SOURCES) $(fstminer_SOURCES) \
 	$(ghwdump_SOURCES) $(lxt2miner_SOURCES) $(lxt2vcd_SOURCES) \
 	shmidcat.c $(vcd2fst_SOURCES) $(vcd2lxt_SOURCES) \
@@ -394,7 +394,7 @@ vztminer_SOURCES = vztminer.c vzt_read.c vzt_read.h $(srcdir)/../liblzma/LzmaLib
 vztminer_LDADD = $(LIBZ_LDADD) $(LIBBZ2_LDADD) $(LIBLZMA_LDADD) $(RPC_LDADD)
 lxt2miner_SOURCES = lxt2miner.c lxt2_read.c lxt2_read.h
 lxt2miner_LDADD = $(LIBZ_LDADD)
-ghwdump_SOURCES = ghwdump.c $(srcdir)/../libghw.c
+ghwdump_SOURCES = ghwdump.c $(srcdir)/../ghw/libghw.c
 evcd2vcd_SOURCES = evcd2vcd.c $(srcdir)/../../contrib/rtlbrowse/jrb.h $(srcdir)/../../contrib/rtlbrowse/jrb.c
 all: all-am
 
@@ -473,55 +473,55 @@ uninstall-binPROGRAMS:
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
-evcd2vcd$(EXEEXT): $(evcd2vcd_OBJECTS) $(evcd2vcd_DEPENDENCIES) $(EXTRA_evcd2vcd_DEPENDENCIES) 
+evcd2vcd$(EXEEXT): $(evcd2vcd_OBJECTS) $(evcd2vcd_DEPENDENCIES) $(EXTRA_evcd2vcd_DEPENDENCIES)
 	@rm -f evcd2vcd$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(evcd2vcd_OBJECTS) $(evcd2vcd_LDADD) $(LIBS)
 
-fst2vcd$(EXEEXT): $(fst2vcd_OBJECTS) $(fst2vcd_DEPENDENCIES) $(EXTRA_fst2vcd_DEPENDENCIES) 
+fst2vcd$(EXEEXT): $(fst2vcd_OBJECTS) $(fst2vcd_DEPENDENCIES) $(EXTRA_fst2vcd_DEPENDENCIES)
 	@rm -f fst2vcd$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fst2vcd_OBJECTS) $(fst2vcd_LDADD) $(LIBS)
 
-fstminer$(EXEEXT): $(fstminer_OBJECTS) $(fstminer_DEPENDENCIES) $(EXTRA_fstminer_DEPENDENCIES) 
+fstminer$(EXEEXT): $(fstminer_OBJECTS) $(fstminer_DEPENDENCIES) $(EXTRA_fstminer_DEPENDENCIES)
 	@rm -f fstminer$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fstminer_OBJECTS) $(fstminer_LDADD) $(LIBS)
 
-ghwdump$(EXEEXT): $(ghwdump_OBJECTS) $(ghwdump_DEPENDENCIES) $(EXTRA_ghwdump_DEPENDENCIES) 
+ghwdump$(EXEEXT): $(ghwdump_OBJECTS) $(ghwdump_DEPENDENCIES) $(EXTRA_ghwdump_DEPENDENCIES)
 	@rm -f ghwdump$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ghwdump_OBJECTS) $(ghwdump_LDADD) $(LIBS)
 
-lxt2miner$(EXEEXT): $(lxt2miner_OBJECTS) $(lxt2miner_DEPENDENCIES) $(EXTRA_lxt2miner_DEPENDENCIES) 
+lxt2miner$(EXEEXT): $(lxt2miner_OBJECTS) $(lxt2miner_DEPENDENCIES) $(EXTRA_lxt2miner_DEPENDENCIES)
 	@rm -f lxt2miner$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(lxt2miner_OBJECTS) $(lxt2miner_LDADD) $(LIBS)
 
-lxt2vcd$(EXEEXT): $(lxt2vcd_OBJECTS) $(lxt2vcd_DEPENDENCIES) $(EXTRA_lxt2vcd_DEPENDENCIES) 
+lxt2vcd$(EXEEXT): $(lxt2vcd_OBJECTS) $(lxt2vcd_DEPENDENCIES) $(EXTRA_lxt2vcd_DEPENDENCIES)
 	@rm -f lxt2vcd$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(lxt2vcd_OBJECTS) $(lxt2vcd_LDADD) $(LIBS)
 
-shmidcat$(EXEEXT): $(shmidcat_OBJECTS) $(shmidcat_DEPENDENCIES) $(EXTRA_shmidcat_DEPENDENCIES) 
+shmidcat$(EXEEXT): $(shmidcat_OBJECTS) $(shmidcat_DEPENDENCIES) $(EXTRA_shmidcat_DEPENDENCIES)
 	@rm -f shmidcat$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(shmidcat_OBJECTS) $(shmidcat_LDADD) $(LIBS)
 
-vcd2fst$(EXEEXT): $(vcd2fst_OBJECTS) $(vcd2fst_DEPENDENCIES) $(EXTRA_vcd2fst_DEPENDENCIES) 
+vcd2fst$(EXEEXT): $(vcd2fst_OBJECTS) $(vcd2fst_DEPENDENCIES) $(EXTRA_vcd2fst_DEPENDENCIES)
 	@rm -f vcd2fst$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(vcd2fst_OBJECTS) $(vcd2fst_LDADD) $(LIBS)
 
-vcd2lxt$(EXEEXT): $(vcd2lxt_OBJECTS) $(vcd2lxt_DEPENDENCIES) $(EXTRA_vcd2lxt_DEPENDENCIES) 
+vcd2lxt$(EXEEXT): $(vcd2lxt_OBJECTS) $(vcd2lxt_DEPENDENCIES) $(EXTRA_vcd2lxt_DEPENDENCIES)
 	@rm -f vcd2lxt$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(vcd2lxt_OBJECTS) $(vcd2lxt_LDADD) $(LIBS)
 
-vcd2lxt2$(EXEEXT): $(vcd2lxt2_OBJECTS) $(vcd2lxt2_DEPENDENCIES) $(EXTRA_vcd2lxt2_DEPENDENCIES) 
+vcd2lxt2$(EXEEXT): $(vcd2lxt2_OBJECTS) $(vcd2lxt2_DEPENDENCIES) $(EXTRA_vcd2lxt2_DEPENDENCIES)
 	@rm -f vcd2lxt2$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(vcd2lxt2_OBJECTS) $(vcd2lxt2_LDADD) $(LIBS)
 
-vcd2vzt$(EXEEXT): $(vcd2vzt_OBJECTS) $(vcd2vzt_DEPENDENCIES) $(EXTRA_vcd2vzt_DEPENDENCIES) 
+vcd2vzt$(EXEEXT): $(vcd2vzt_OBJECTS) $(vcd2vzt_DEPENDENCIES) $(EXTRA_vcd2vzt_DEPENDENCIES)
 	@rm -f vcd2vzt$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(vcd2vzt_OBJECTS) $(vcd2vzt_LDADD) $(LIBS)
 
-vzt2vcd$(EXEEXT): $(vzt2vcd_OBJECTS) $(vzt2vcd_DEPENDENCIES) $(EXTRA_vzt2vcd_DEPENDENCIES) 
+vzt2vcd$(EXEEXT): $(vzt2vcd_OBJECTS) $(vzt2vcd_DEPENDENCIES) $(EXTRA_vzt2vcd_DEPENDENCIES)
 	@rm -f vzt2vcd$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(vzt2vcd_OBJECTS) $(vzt2vcd_LDADD) $(LIBS)
 
-vztminer$(EXEEXT): $(vztminer_OBJECTS) $(vztminer_DEPENDENCIES) $(EXTRA_vztminer_DEPENDENCIES) 
+vztminer$(EXEEXT): $(vztminer_OBJECTS) $(vztminer_DEPENDENCIES) $(EXTRA_vztminer_DEPENDENCIES)
 	@rm -f vztminer$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(vztminer_OBJECTS) $(vztminer_LDADD) $(LIBS)
 
@@ -629,19 +629,19 @@ fstapi.obj: $(srcdir)/fst/fstapi.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fstapi.obj `if test -f '$(srcdir)/fst/fstapi.c'; then $(CYGPATH_W) '$(srcdir)/fst/fstapi.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/fst/fstapi.c'; fi`
 
-libghw.o: $(srcdir)/../libghw.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libghw.o -MD -MP -MF $(DEPDIR)/libghw.Tpo -c -o libghw.o `test -f '$(srcdir)/../libghw.c' || echo '$(srcdir)/'`$(srcdir)/../libghw.c
+libghw.o: $(srcdir)/../ghw/libghw.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libghw.o -MD -MP -MF $(DEPDIR)/libghw.Tpo -c -o libghw.o `test -f '$(srcdir)/../ghw/libghw.c' || echo '$(srcdir)/'`$(srcdir)/../ghw/libghw.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libghw.Tpo $(DEPDIR)/libghw.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../libghw.c' object='libghw.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../ghw/libghw.c' object='libghw.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libghw.o `test -f '$(srcdir)/../libghw.c' || echo '$(srcdir)/'`$(srcdir)/../libghw.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libghw.o `test -f '$(srcdir)/../ghw/libghw.c' || echo '$(srcdir)/'`$(srcdir)/../ghw/libghw.c
 
-libghw.obj: $(srcdir)/../libghw.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libghw.obj -MD -MP -MF $(DEPDIR)/libghw.Tpo -c -o libghw.obj `if test -f '$(srcdir)/../libghw.c'; then $(CYGPATH_W) '$(srcdir)/../libghw.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../libghw.c'; fi`
+libghw.obj: $(srcdir)/../ghw/libghw.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libghw.obj -MD -MP -MF $(DEPDIR)/libghw.Tpo -c -o libghw.obj `if test -f '$(srcdir)/../ghw/libghw.c'; then $(CYGPATH_W) '$(srcdir)/../ghw/libghw.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../ghw/libghw.c'; fi`
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libghw.Tpo $(DEPDIR)/libghw.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../libghw.c' object='libghw.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../ghw/libghw.c' object='libghw.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libghw.obj `if test -f '$(srcdir)/../libghw.c'; then $(CYGPATH_W) '$(srcdir)/../libghw.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../libghw.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libghw.obj `if test -f '$(srcdir)/../ghw/libghw.c'; then $(CYGPATH_W) '$(srcdir)/../ghw/libghw.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../ghw/libghw.c'; fi`
 
 LzmaLib.o: $(srcdir)/../liblzma/LzmaLib.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT LzmaLib.o -MD -MP -MF $(DEPDIR)/LzmaLib.Tpo -c -o LzmaLib.o `test -f '$(srcdir)/../liblzma/LzmaLib.c' || echo '$(srcdir)/'`$(srcdir)/../liblzma/LzmaLib.c

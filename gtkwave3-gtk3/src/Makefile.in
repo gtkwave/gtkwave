@@ -143,11 +143,11 @@ am__v_P_1 = :
 AM_V_GEN = $(am__v_GEN_@AM_V@)
 am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN     " $@;
-am__v_GEN_1 = 
+am__v_GEN_1 =
 AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
-am__v_at_1 = 
+am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -155,32 +155,32 @@ am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
-am__v_lt_1 = 
+am__v_lt_1 =
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
+am__v_CC_1 =
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
+am__v_CCLD_1 =
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 AM_V_CXX = $(am__v_CXX_@AM_V@)
 am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
 am__v_CXX_0 = @echo "  CXX     " $@;
-am__v_CXX_1 = 
+am__v_CXX_1 =
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
-am__v_CXXLD_1 = 
+am__v_CXXLD_1 =
 SOURCES = $(gtkwave_SOURCES) $(twinwave_SOURCES)
 DIST_SOURCES = $(gtkwave_SOURCES) $(twinwave_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
@@ -412,8 +412,9 @@ LIBLZMA_CFLAGS = -I$(srcdir)/liblzma $(LIBXZ_CFLAGS)
 LIBLZMA_LDADD = ./liblzma/libgwlzma.a $(LIBXZ_LDADD)
 LIBCOCOA_CFLAGS = -I$(srcdir)/cocoa
 LIBCOCOA_LDADD = ./cocoa/libgtkwmacintegration.a $(COCOA_GTK_LDADD)
+LIBGHW_CFLAGS = -I$(srcdir)/ghw
 AM_CFLAGS = -I$(srcdir)/.. -I$(srcdir)/helpers $(FASTTREE_CFLAGS) $(GTK_CFLAGS) $(LIBLZMA_CFLAGS) \
-		$(LIBZ_CFLAGS) $(LIBBZ2_CFLAGS) $(LIBFST_CFLAGS) $(AET2_CFLAGS) $(FSDB_CFLAGS) $(TCL_INCLUDE_SPEC) \
+		$(LIBZ_CFLAGS) $(LIBBZ2_CFLAGS) $(LIBFST_CFLAGS) $(LIBGHW_CFLAGS) $(AET2_CFLAGS) $(FSDB_CFLAGS) $(TCL_INCLUDE_SPEC) \
 		$(TCL_DEFADD) $(TK_INCLUDE_SPEC) $(EXTLOAD_CFLAGS) $(GEDIT_CFLAGS) $(LIBJUDY_CFLAGS) \
 		$(GTK_MAC_CFLAGS) $(GCONF_CFLAGS) $(GSETTINGS_CFLAGS) $(LIBCOCOA_CFLAGS) $(GTK_UNIX_PRINT_CFLAGS)
 
@@ -429,7 +430,7 @@ gtkwave_SOURCES = \
 	debug.c debug.h discardbuttons.c edgebuttons.c \
 	entry.c extload.c extload.h fetchbuttons.c fgetdynamic.c fgetdynamic.h file.c fonts.c fonts.h fst.c fst.h \
 	gconf.c gconf.h getopt.c \
-	getopt1.c ghw.c ghw.h libghw.c libghw.h gnu-getopt.h gnu_regex.h gtk23compat.c gtk23compat.h \
+	getopt1.c ghw.c ghw.h ghw/libghw.c ghw/libghw.h gnu-getopt.h gnu_regex.h gtk23compat.c gtk23compat.h \
 	hierpack.c hierpack.h jrb.c jrb.h help.c helpers/lxt2_read.c \
 	helpers/lxt_write.c helpers/vzt_read.c hiersearch.c interp.c \
 	logfile.c lx2.c lx2.h lxt.c lxt.h main.c main.h markerbox.c menu.c menu.h mouseover.c \
@@ -528,11 +529,11 @@ uninstall-binPROGRAMS:
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 
-gtkwave$(EXEEXT): $(gtkwave_OBJECTS) $(gtkwave_DEPENDENCIES) $(EXTRA_gtkwave_DEPENDENCIES) 
+gtkwave$(EXEEXT): $(gtkwave_OBJECTS) $(gtkwave_DEPENDENCIES) $(EXTRA_gtkwave_DEPENDENCIES)
 	@rm -f gtkwave$(EXEEXT)
 	$(AM_V_CXXLD)$(gtkwave_LINK) $(gtkwave_OBJECTS) $(gtkwave_LDADD) $(LIBS)
 
-twinwave$(EXEEXT): $(twinwave_OBJECTS) $(twinwave_DEPENDENCIES) $(EXTRA_twinwave_DEPENDENCIES) 
+twinwave$(EXEEXT): $(twinwave_OBJECTS) $(twinwave_DEPENDENCIES) $(EXTRA_twinwave_DEPENDENCIES)
 	@rm -f twinwave$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(twinwave_OBJECTS) $(twinwave_LDADD) $(LIBS)
 
