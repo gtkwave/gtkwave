@@ -26,7 +26,7 @@
 #include "config.h"
 #endif
 
-/* The ghwlib uses the standard c99 int32_t and int64_t.  They are declared
+/* The libghw uses the standard c99 int32_t and int64_t.  They are declared
    in stdint.h.  Header inttypes.h includes stdint.h and provides macro for
    printf and co specifiers.  Use it if known to be available.  */
 
