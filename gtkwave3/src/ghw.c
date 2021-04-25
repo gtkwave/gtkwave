@@ -20,7 +20,7 @@
 #include "globals.h"
 #include <config.h>
 #include "ghw.h"
-#include "ghwlib.h"
+#include "libghw.h"
 #include "tree.h"
 
 /************************ splay ************************/
@@ -182,7 +182,7 @@ for(i=0;i<GLOBALS->numfacs;i++)
 			char *fstr2 = GLOBALS->facs[i]->name;
 			int p1 = strand_pnt(fstr1);
 			int p2 = strand_pnt(fstr2);
-	
+
 			if(!root)
 				{
 				if((p1>=0)&&(p1==p2))
@@ -243,9 +243,9 @@ if(t)
 	int i;
 	int cnt = 1;
 	struct tree **ar;
-	
+
 	while((t2 = t2->next)) { cnt++; }
-	
+
 	ar = malloc_2(cnt * sizeof(struct tree *));
 	t2 = t;
 	for(i=0;i<cnt;i++)
@@ -254,16 +254,16 @@ if(t)
 		if(t2->child) { recurse_tree_build_whichcache(t2->child); }
 		t2 = t2->next;
 		}
-	
+
 	for(i=cnt-1;i>=0;i--)
 		{
 		t = ar[i];
-		if(t->t_which >= 0) 
+		if(t->t_which >= 0)
 			{
 			GLOBALS->gwt_ghw_c_1 = ghw_insert(t, GLOBALS->gwt_ghw_c_1, t->t_which, GLOBALS->facs[t->t_which]);
 			}
 		}
-	
+
 	free_2(ar);
 	}
 }
@@ -276,9 +276,9 @@ if(t)
 	int i;
 	int cnt = 1;
 	struct tree **ar;
-	
+
 	while((t2 = t2->next)) { cnt++; }
-	
+
 	ar = malloc_2(cnt * sizeof(struct tree *));
 	t2 = t;
 	for(i=0;i<cnt;i++)
@@ -287,7 +287,7 @@ if(t)
 		if(t2->child) { recurse_tree_fix_from_whichcache(t2->child); }
 		t2 = t2->next;
 		}
-	
+
 	for(i=cnt-1;i>=0;i--)
 		{
 		t = ar[i];
@@ -295,11 +295,11 @@ if(t)
 			{
 			GLOBALS->gwt_ghw_c_1 = ghw_splay(t, GLOBALS->gwt_ghw_c_1);
 			GLOBALS->gwt_corr_ghw_c_1 = ghw_splay(GLOBALS->gwt_ghw_c_1->sym, GLOBALS->gwt_corr_ghw_c_1); /* all facs are in this tree so this is OK */
-	
+
 			t->t_which = GLOBALS->gwt_corr_ghw_c_1->val_old;
 			}
 		}
-	
+
 	free_2(ar);
 	}
 }

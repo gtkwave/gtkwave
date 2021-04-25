@@ -42,6 +42,6 @@ vztminer_LDADD= $(LIBZ_LDADD) $(LIBBZ2_LDADD) $(LIBLZMA_LDADD) $(RPC_LDADD)
 lxt2miner_SOURCES= lxt2miner.c lxt2_read.c lxt2_read.h
 lxt2miner_LDADD= $(LIBZ_LDADD)
 
-ghwdump_SOURCES= ghwdump.c $(srcdir)/../ghwlib.c
+ghwdump_SOURCES= ghwdump.c $(srcdir)/../libghw.c
 
 evcd2vcd_SOURCES= evcd2vcd.c $(srcdir)/../../contrib/rtlbrowse/jrb.h $(srcdir)/../../contrib/rtlbrowse/jrb.c
