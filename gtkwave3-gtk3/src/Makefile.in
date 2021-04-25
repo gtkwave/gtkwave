@@ -98,7 +98,7 @@ am_gtkwave_OBJECTS = fsdb_wrapper_api.$(OBJEXT) globals.$(OBJEXT) \
 	entry.$(OBJEXT) extload.$(OBJEXT) fetchbuttons.$(OBJEXT) \
 	fgetdynamic.$(OBJEXT) file.$(OBJEXT) fonts.$(OBJEXT) \
 	fst.$(OBJEXT) gconf.$(OBJEXT) getopt.$(OBJEXT) \
-	getopt1.$(OBJEXT) ghw.$(OBJEXT) ghwlib.$(OBJEXT) \
+	getopt1.$(OBJEXT) ghw.$(OBJEXT) libghw.$(OBJEXT) \
 	gtk23compat.$(OBJEXT) hierpack.$(OBJEXT) jrb.$(OBJEXT) \
 	help.$(OBJEXT) lxt2_read.$(OBJEXT) lxt_write.$(OBJEXT) \
 	vzt_read.$(OBJEXT) hiersearch.$(OBJEXT) interp.$(OBJEXT) \
@@ -429,7 +429,7 @@ gtkwave_SOURCES = \
 	debug.c debug.h discardbuttons.c edgebuttons.c \
 	entry.c extload.c extload.h fetchbuttons.c fgetdynamic.c fgetdynamic.h file.c fonts.c fonts.h fst.c fst.h \
 	gconf.c gconf.h getopt.c \
-	getopt1.c ghw.c ghw.h ghwlib.c ghwlib.h gnu-getopt.h gnu_regex.h gtk23compat.c gtk23compat.h \
+	getopt1.c ghw.c ghw.h libghw.c libghw.h gnu-getopt.h gnu_regex.h gtk23compat.c gtk23compat.h \
 	hierpack.c hierpack.h jrb.c jrb.h help.c helpers/lxt2_read.c \
 	helpers/lxt_write.c helpers/vzt_read.c hiersearch.c interp.c \
 	logfile.c lx2.c lx2.h lxt.c lxt.h main.c main.h markerbox.c menu.c menu.h mouseover.c \
@@ -566,7 +566,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ghw.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ghwlib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtk23compat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/help.Po@am__quote@
@@ -574,6 +573,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hiersearch.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jrb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libghw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lx2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lxt.Po@am__quote@

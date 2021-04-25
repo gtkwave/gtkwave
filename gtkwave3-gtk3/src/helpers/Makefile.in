@@ -106,7 +106,7 @@ am_fstminer_OBJECTS = fstminer.$(OBJEXT) lz4.$(OBJEXT) \
 	fastlz.$(OBJEXT) fstapi.$(OBJEXT)
 fstminer_OBJECTS = $(am_fstminer_OBJECTS)
 fstminer_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-am_ghwdump_OBJECTS = ghwdump.$(OBJEXT) ghwlib.$(OBJEXT)
+am_ghwdump_OBJECTS = ghwdump.$(OBJEXT) libghw.$(OBJEXT)
 ghwdump_OBJECTS = $(am_ghwdump_OBJECTS)
 ghwdump_LDADD = $(LDADD)
 am_lxt2miner_OBJECTS = lxt2miner.$(OBJEXT) lxt2_read.$(OBJEXT)
@@ -394,7 +394,7 @@ vztminer_SOURCES = vztminer.c vzt_read.c vzt_read.h $(srcdir)/../liblzma/LzmaLib
 vztminer_LDADD = $(LIBZ_LDADD) $(LIBBZ2_LDADD) $(LIBLZMA_LDADD) $(RPC_LDADD)
 lxt2miner_SOURCES = lxt2miner.c lxt2_read.c lxt2_read.h
 lxt2miner_LDADD = $(LIBZ_LDADD)
-ghwdump_SOURCES = ghwdump.c $(srcdir)/../ghwlib.c
+ghwdump_SOURCES = ghwdump.c $(srcdir)/../libghw.c
 evcd2vcd_SOURCES = evcd2vcd.c $(srcdir)/../../contrib/rtlbrowse/jrb.h $(srcdir)/../../contrib/rtlbrowse/jrb.c
 all: all-am
 
@@ -538,8 +538,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fstapi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fstminer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ghwdump.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ghwlib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jrb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libghw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lxt2_read.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lxt2_write.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lxt2miner.Po@am__quote@
@@ -629,19 +629,19 @@ fstapi.obj: $(srcdir)/fst/fstapi.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fstapi.obj `if test -f '$(srcdir)/fst/fstapi.c'; then $(CYGPATH_W) '$(srcdir)/fst/fstapi.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/fst/fstapi.c'; fi`
 
-ghwlib.o: $(srcdir)/../ghwlib.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ghwlib.o -MD -MP -MF $(DEPDIR)/ghwlib.Tpo -c -o ghwlib.o `test -f '$(srcdir)/../ghwlib.c' || echo '$(srcdir)/'`$(srcdir)/../ghwlib.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ghwlib.Tpo $(DEPDIR)/ghwlib.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../ghwlib.c' object='ghwlib.o' libtool=no @AMDEPBACKSLASH@
+libghw.o: $(srcdir)/../libghw.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libghw.o -MD -MP -MF $(DEPDIR)/libghw.Tpo -c -o libghw.o `test -f '$(srcdir)/../libghw.c' || echo '$(srcdir)/'`$(srcdir)/../libghw.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libghw.Tpo $(DEPDIR)/libghw.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../libghw.c' object='libghw.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ghwlib.o `test -f '$(srcdir)/../ghwlib.c' || echo '$(srcdir)/'`$(srcdir)/../ghwlib.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libghw.o `test -f '$(srcdir)/../libghw.c' || echo '$(srcdir)/'`$(srcdir)/../libghw.c
 
-ghwlib.obj: $(srcdir)/../ghwlib.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ghwlib.obj -MD -MP -MF $(DEPDIR)/ghwlib.Tpo -c -o ghwlib.obj `if test -f '$(srcdir)/../ghwlib.c'; then $(CYGPATH_W) '$(srcdir)/../ghwlib.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../ghwlib.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/ghwlib.Tpo $(DEPDIR)/ghwlib.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../ghwlib.c' object='ghwlib.obj' libtool=no @AMDEPBACKSLASH@
+libghw.obj: $(srcdir)/../libghw.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libghw.obj -MD -MP -MF $(DEPDIR)/libghw.Tpo -c -o libghw.obj `if test -f '$(srcdir)/../libghw.c'; then $(CYGPATH_W) '$(srcdir)/../libghw.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../libghw.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libghw.Tpo $(DEPDIR)/libghw.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../libghw.c' object='libghw.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ghwlib.obj `if test -f '$(srcdir)/../ghwlib.c'; then $(CYGPATH_W) '$(srcdir)/../ghwlib.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../ghwlib.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libghw.obj `if test -f '$(srcdir)/../libghw.c'; then $(CYGPATH_W) '$(srcdir)/../libghw.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../libghw.c'; fi`
 
 LzmaLib.o: $(srcdir)/../liblzma/LzmaLib.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT LzmaLib.o -MD -MP -MF $(DEPDIR)/LzmaLib.Tpo -c -o LzmaLib.o `test -f '$(srcdir)/../liblzma/LzmaLib.c' || echo '$(srcdir)/'`$(srcdir)/../liblzma/LzmaLib.c

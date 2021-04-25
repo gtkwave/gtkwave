@@ -1,34 +1,28 @@
-/*  Display a GHDL Wavefile for debugging.
-    Copyright (C) 2005-2008 Tristan Gingold
+/* Display a GHDL Wavefile for debugging.
+  Copyright (C) 2005 Tristan Gingold
 
-    GHDL is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License as published by the Free
-    Software Foundation; either version 2, or (at your option) any later
-    version.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 2 of the License, or
+  (at your option) any later version.
 
-    GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-    for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with GCC; see the file COPYING.  If not, write to the Free
-    Software Foundation, 51 Franklin Street - Suite 500, Boston, MA
-    02110-1335, USA.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <gnu.org/licenses>.
 */
 
-#include <config.h>
-#include <stdio.h>
-#if HAVE_STDINT_H
+#include <assert.h>
 #include <stdint.h>
-#endif
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include "ghwlib.h"
-
-#include "wave_locale.h"
+#include "libghw.h"
 
 static const char *progname;
 void
@@ -38,10 +32,104 @@ usage (void)
   printf ("Options are:\n"
 	  " -t  display types\n"
 	  " -h  display hierarchy\n"
+	  " -H  display hierarchy with full pathnames\n"
 	  " -T  display time\n"
 	  " -s  display signals (and time)\n"
-	  " -l  display list of sections\n"
-	  " -v  verbose\n");
+	  " -S  display strings\n"
+	  " -f  <lst> list of signals to display (default: all, example: -f "
+	  "1,3,5-7,21-33)\n"
+	  " -l  display list of sections\n" " -v  verbose\n");
+}
+
+static void
+add_single_signal (int **signalSet, int *nbSignals, int signal)
+{
+  assert (NULL != signalSet);
+  assert (NULL != nbSignals);
+  assert (0 <= nbSignals[0]);
+  assert (0 <= signal);
+
+  int newSize = (1 + nbSignals[0]);
+  /*printf("adding signal %6d set of signals to display\n", signal); */
+  signalSet[0] = (int *) realloc (signalSet[0], newSize * sizeof (int));
+  signalSet[0][nbSignals[0]] = signal;
+  nbSignals[0] = newSize;
+}
+
+static void
+add_signal_range (int **signalSet, int *nbSignals, const char *s,
+		  const char *e)
+{
+
+  int i;
+  int rangeSize;
+  int rangeEnd = -1;
+  int rangeStart = -1;
+  int bytesMatched = -1;
+  int expected = ((e - s) - 1);
+  int itemsMatched =
+    sscanf (s, "%d-%d%n", &rangeStart, &rangeEnd, &bytesMatched);
+  if (2 == itemsMatched && expected == bytesMatched)
+    {
+      if (rangeEnd < rangeStart)
+	{
+	  int t = rangeEnd;
+	  rangeEnd = rangeStart;
+	  rangeStart = t;
+	}
+    }
+  else
+    {
+      itemsMatched = sscanf (s, "%d%n", &rangeStart, &bytesMatched);
+      if (1 == itemsMatched && expected == bytesMatched)
+	{
+	  if (0 <= rangeStart)
+	    {
+	      rangeEnd = rangeStart;
+	    }
+	}
+    }
+
+  rangeSize = (rangeEnd - rangeStart);
+  if (rangeEnd < 0 || rangeStart < 0 || rangeSize < 0)
+    {
+      fprintf (stderr,
+	       "incorrect signal range specification\"%s\" found in "
+	       "command line, aborting\n", s);
+      exit (1);
+    }
+
+  for (i = rangeStart; i <= rangeEnd; ++i)
+    {
+      add_single_signal (signalSet, nbSignals, i);
+    }
+}
+
+static void
+add_signals (int **signalSet, int *nbSignals, const char *arg)
+{
+  int c = -1;
+  const char *e;
+  const char *s = e = arg;
+  while (0 != c)
+    {
+      c = *(e++);
+      if (',' == c || 0 == c)
+	{
+	  add_signal_range (signalSet, nbSignals, s, e);
+	  s = e;
+	}
+    }
+}
+
+static void
+disp_string_table (struct ghw_handler *hp)
+{
+  int i;
+  printf ("String table:\n");
+
+  for (i = 1; i < hp->nbr_str; i++)
+    printf (" %s\n", hp->str_table[i]);
 }
 
 int
@@ -52,26 +140,34 @@ main (int argc, char **argv)
   int flag_disp_hierarchy;
   int flag_disp_time;
   int flag_disp_signals;
+  int flag_disp_strings;
+  int flag_full_names;
   int flag_list;
   int flag_verbose;
+  int nb_signals;
+  int *signal_set;
+  int filter_done;
   int eof;
   enum ghw_sm_type sm;
 
   progname = argv[0];
   flag_disp_types = 0;
   flag_disp_hierarchy = 0;
+  flag_full_names = 0;
   flag_disp_time = 0;
   flag_disp_signals = 0;
+  flag_disp_strings = 0;
   flag_list = 0;
   flag_verbose = 0;
-
-  WAVE_LOCALE_FIX
+  nb_signals = 0;
+  signal_set = NULL;
+  filter_done = 0;
 
   while (1)
     {
       int c;
 
-      c = getopt (argc, argv, "thTslv");
+      c = getopt (argc, argv, "thHTsSlvf:");
       if (c == -1)
 	break;
       switch (c)
@@ -82,12 +178,22 @@ main (int argc, char **argv)
 	case 'h':
 	  flag_disp_hierarchy = 1;
 	  break;
+	case 'H':
+	  flag_disp_hierarchy = 1;
+	  flag_full_names = 1;
+	  break;
 	case 'T':
 	  flag_disp_time = 1;
 	  break;
 	case 's':
 	  flag_disp_signals = 1;
 	  flag_disp_time = 1;
+	  break;
+	case 'S':
+	  flag_disp_strings = 1;
+	  break;
+	case 'f':
+	  add_signals (&signal_set, &nb_signals, optarg);
 	  break;
 	case 'l':
 	  flag_list = 1;
@@ -123,6 +229,7 @@ main (int argc, char **argv)
 	{
 	  while (1)
 	    {
+	      const char *section_name;
 	      int section;
 
 	      section = ghw_read_section (hp);
@@ -141,9 +248,15 @@ main (int argc, char **argv)
 		  printf ("Unknown section\n");
 		  break;
 		}
-	      printf ("Section %s\n", ghw_sections[section].name);
-	      if ((*ghw_sections[section].handler)(hp) < 0)
+	      section_name = ghw_sections[section].name;
+	      printf ("Section %s\n", section_name);
+	      if ((*ghw_sections[section].handler) (hp) < 0)
 		break;
+
+	      if (flag_disp_strings && strcmp (section_name, "STR") == 0)
+		disp_string_table (hp);
+	      else if (flag_disp_types && strcmp (section_name, "TYP") == 0)
+		ghw_disp_types (hp);
 	    }
 	}
       else
@@ -153,18 +266,13 @@ main (int argc, char **argv)
 	      fprintf (stderr, "cannot read ghw file\n");
 	      return 2;
 	    }
-	  if (0)
-	    {
-	      unsigned ix;
-	      printf ("String table:\n");
-
-	      for (ix = 1; ix < hp->nbr_str; ix++)
-		printf (" %s\n", hp->str_table[ix]);
-	    }
 	  if (flag_disp_types)
 	    ghw_disp_types (hp);
 	  if (flag_disp_hierarchy)
-	    ghw_disp_hie (hp, hp->hie);
+	    {
+	      hp->flag_full_names = flag_full_names;
+	      ghw_disp_hie (hp, hp->hie);
+	    }
 
 #if 1
 	  sm = ghw_sm_init;
@@ -176,9 +284,16 @@ main (int argc, char **argv)
 		case ghw_res_snapshot:
 		case ghw_res_cycle:
 		  if (flag_disp_time)
-		    printf ("Time is "GHWPRI64" fs\n", hp->snap_time);
+		    printf ("Time is %lld fs\n", hp->snap_time);
 		  if (flag_disp_signals)
-		    ghw_disp_values (hp);
+		    {
+		      if (!filter_done)
+			{
+			  ghw_filter_signals (hp, signal_set, nb_signals);
+			  filter_done = 1;
+			}
+		      ghw_disp_values (hp);
+		    }
 		  break;
 		case ghw_res_eof:
 		  eof = 1;
@@ -200,4 +315,3 @@ main (int argc, char **argv)
     }
   return 0;
 }
-
