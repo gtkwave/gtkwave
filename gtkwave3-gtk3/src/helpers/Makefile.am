@@ -8,7 +8,7 @@ LIBLZMA_LDADD  = $(LIBXZ_LDADD)
 
 AM_CFLAGS=	-I$(srcdir)/.. -I$(srcdir)/../.. $(LIBZ_CFLAGS) $(LIBBZ2_CFLAGS) $(LIBLZMA_CFLAGS) $(LIBJUDY_CFLAGS) $(EXTLOAD_CFLAGS) $(RPC_CFLAGS) -I$(srcdir)/fst -I$(srcdir)/../../contrib/rtlbrowse
 
-bin_PROGRAMS= evcd2vcd fst2vcd vcd2fst fstminer ghwdump lxt2miner lxt2vcd \
+bin_PROGRAMS= evcd2vcd fst2vcd vcd2fst fstminer lxt2miner lxt2vcd \
 	shmidcat vcd2lxt vcd2lxt2 vcd2vzt \
 	vzt2vcd vztminer
 
@@ -41,7 +41,5 @@ vztminer_LDADD= $(LIBZ_LDADD) $(LIBBZ2_LDADD) $(LIBLZMA_LDADD) $(RPC_LDADD)
 
 lxt2miner_SOURCES= lxt2miner.c lxt2_read.c lxt2_read.h
 lxt2miner_LDADD= $(LIBZ_LDADD)
-
-ghwdump_SOURCES= ghwdump.c $(srcdir)/../libghw.c
 
 evcd2vcd_SOURCES= evcd2vcd.c $(srcdir)/../../contrib/rtlbrowse/jrb.h $(srcdir)/../../contrib/rtlbrowse/jrb.c

@@ -1,7 +1,6 @@
 evcd2vcd.exe
 fst2vcd.exe
 fstminer.exe
-ghwdump.exe
 gtkwave.exe
 lxt2miner.exe
 lxt2vcd.exe

@@ -26,7 +26,7 @@
 
     <!-- Comment this out to keep the install names in binaries -->
     <run-install-name-tool/>
- 
+
     <!-- Optionally specify a launcher script to use. If the
          application sets up everything needed itself, like
          environment variable, linker paths, etc, a launcher script is
@@ -56,7 +56,6 @@
   <binary>${prefix}/bin/evcd2vcd</binary>
   <binary>${prefix}/bin/fst2vcd</binary>
   <binary>${prefix}/bin/vcd2fst</binary>
-  <binary>${prefix}/bin/ghwdump</binary>
   <binary>${prefix}/bin/lxt2miner</binary>
   <binary>${prefix}/bin/lxt2vcd</binary>
   <binary>${prefix}/bin/shmidcat</binary>
@@ -174,9 +173,6 @@
   <data dest="${bundle}/Contents/Resources/man/fst2vcd.1">
     ${project}/../../man/fst2vcd.1
   </data>
-  <data dest="${bundle}/Contents/Resources/man/ghwdump.1">
-    ${project}/../../man/ghwdump.1
-  </data>
   <data dest="${bundle}/Contents/Resources/man/gtkwave.1">
     ${project}/../../man/gtkwave.1
   </data>
@@ -272,16 +268,16 @@
   </data>
 
 
-  <!-- Copy in the patches so users can recreate gtk from source. 
-       This might be obsolete in future versions of gtk. 
-       See bug #664894. 
+  <!-- Copy in the patches so users can recreate gtk from source.
+       This might be obsolete in future versions of gtk.
+       See bug #664894.
     -->
   <data dest="${bundle}/Contents/Resources/share/patches/gtk_diff_against_modulesets.patch">
     ${project}/gtk_diff_against_modulesets.patch
   </data>
 
   <!-- Copy in the patches so users can recreate gtk from source.
-       This might be obsolete in future versions of gtk. 
+       This might be obsolete in future versions of gtk.
        No bug reported yet: this fixes yellow bars from gdk_pixbuf_get_from_drawable()
        which invokes _gdk_quartz_image_copy_to_image() that attempts to use 24-bit
        RGB pixels instead of 32-bit RGBA ones.
