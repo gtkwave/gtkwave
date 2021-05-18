@@ -1811,5 +1811,7 @@
 3.3.109 10apr21	gtk_ctree_node_moveto bugfix in SST.
 		MSVC compiler fix for fstapi.
 		Update xml2stems and rtlbrowse to support generate.
-3.3.110 13may21 Removed ghwdump and ghwdump.1 from the distribution (now 
+3.3.110 18may21 Removed ghwdump and ghwdump.1 from the distribution (now 
 		provided with GHDL).
+		Fix for when WAVE_GTK3_GESTURE_ZOOM_USES_GTK_PHASE_CAPTURE
+		is disabled.
