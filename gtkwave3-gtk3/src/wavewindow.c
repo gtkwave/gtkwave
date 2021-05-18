@@ -2289,7 +2289,7 @@ wavearea_zoom_update_event (GtkGestureZoom   *gesture,
 
 wavearea_zoom_scale_changed_event(gesture, gtk_gesture_zoom_get_scale_delta (gesture), user_data);
 }
-
+#endif
 
 static void
 wavearea_zoom_end_event (GtkGestureZoom   *gesture,
@@ -2321,7 +2321,6 @@ if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
 	gesture_filter_cnt = 10; /* to prevent mouse pointer from flying all over at zoom release */
 	}
 }
-#endif
 
 
 void
