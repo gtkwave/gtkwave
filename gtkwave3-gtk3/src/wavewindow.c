@@ -2386,7 +2386,7 @@ if(GLOBALS->swipe_init_time)
 	{
 	GDateTime *gd2 = g_date_time_new_now_utc();
 	GTimeSpan elapsed = g_date_time_difference(gd2, GLOBALS->swipe_init_time);
-	gdouble decaying;
+	gdouble decaying = 0.0;
 	g_date_time_unref(gd2);
 	if(elapsed < WAVE_GTK3_SWIPE_MICROSECONDS)
 		{
