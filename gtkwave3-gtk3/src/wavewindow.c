@@ -2196,7 +2196,7 @@ wavearea_zoom_scale_changed_event (GtkGestureZoom *controller,
 (void) controller;
 gdouble zb, ls, lzb, r, z0;
 #ifdef WAVE_GTK3_GESTURE_ZOOM_IS_1D
-gdouble x1, y1, x2, y2;
+gdouble x1 = 0.0, y1 = 0.0, x2 = 0.0, y2 = 0.0;
 
 if(gesture_filter_set) return; /* to prevent floods of zoom events */
 gesture_filter_set = 1;

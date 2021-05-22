@@ -1096,26 +1096,29 @@ if(t && (t->flags & TR_REAL2BITS) && d) /* "real2bits" also allows other filters
 		}
 	}
 
-if(!(t->f_filter|t->p_filter|t->e_filter))
-        {
-	if(GLOBALS->lz_removal) lzremoval(rv);
-        }
-        else
-        {
-        if(t->e_filter)
-                {
-                rv = edofilter(t, rv);
-                }
-        else
-        if(t->f_filter)
-                {
-                rv = dofilter(t, rv);
-                }
-                else
-                {
-                rv = pdofilter(t, rv);
-                }
-        }
+if(t)
+	{
+	if(!(t->f_filter|t->p_filter|t->e_filter))
+	        {
+		if(GLOBALS->lz_removal) lzremoval(rv);
+	        }
+	        else
+	        {
+	        if(t->e_filter)
+	                {
+	                rv = edofilter(t, rv);
+	                }
+	        else
+	        if(t->f_filter)
+	                {
+	                rv = dofilter(t, rv);
+	                }
+	                else
+	                {
+	                rv = pdofilter(t, rv);
+	                }
+	        }
+	}
 
 return(rv);
 }
