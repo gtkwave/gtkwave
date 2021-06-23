@@ -40,7 +40,7 @@
 #include <sys/types.h>
 #endif
 
-#if !defined __MINGW32__
+#if !(defined(__MINGW32__) || defined(MAC_INTEGRATION))
 #define WAVE_USE_XID
 #else
 #undef WAVE_USE_XID
