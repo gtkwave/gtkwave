@@ -27,11 +27,17 @@
 
 #include "wave_locale.h"
 
+#include <assert.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "debug.h"
+
+#ifdef MAC_INTEGRATION
+#define GDK_WINDOWING_WAYLAND 1
+#define GDK_IS_WAYLAND_DISPLAY(x) 1
+#endif
 
 static int use_embedded = 1;
 static int twinwayland = 0;
@@ -142,13 +148,14 @@ if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
 	twinwayland = 1;
 	use_embedded = 0;
 	}
-#endif
+#else
 	{
 	xsocket[0] = gtk_socket_new ();
 	xsocket[1] = gtk_socket_new ();
 	gtk_widget_show (xsocket[0]);
 	gtk_widget_show (xsocket[1]);
 	}
+#endif
 
 if(!twinwayland)
 g_signal_connect(XXX_GTK_OBJECT(xsocket[0]), "plug-removed", G_CALLBACK(plug_removed), NULL);
@@ -430,7 +437,7 @@ if(shmid >=0)
 				if(use_embedded)
 					{
 #ifdef MAC_INTEGRATION
-					sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
+					assert(!"not implemented");
 #else
 					sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
 #endif
@@ -468,7 +475,7 @@ if(shmid >=0)
 			if(use_embedded)
 				{
 #ifdef MAC_INTEGRATION
-				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
+				assert(!"not implemented 2");
 #else
 				sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
 #endif
