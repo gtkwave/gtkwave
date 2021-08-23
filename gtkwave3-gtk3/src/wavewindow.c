@@ -264,13 +264,14 @@ cairo_stroke (cr);
 void XXX_gdk_draw_rectangle(cairo_t *cr, wave_rgb_t gc, gboolean filled, gint _x1, gint _y1, gint _w, gint _h)
 {
 cairo_set_source_rgba (cr, gc.r, gc.g, gc.b, gc.a);
-cairo_rectangle (cr, _x1+WAVE_CAIRO_050_OFFSET, _y1+WAVE_CAIRO_050_OFFSET, _w, _h);
 if(filled)
 	{
+	cairo_rectangle (cr, _x1, _y1, _w, _h);
         cairo_fill(cr);
 	}
 	else
 	{
+	cairo_rectangle (cr, _x1+WAVE_CAIRO_050_OFFSET, _y1+WAVE_CAIRO_050_OFFSET, _w, _h);
         cairo_stroke(cr);
 	}
 }
@@ -611,6 +612,7 @@ GdkDrawingContext *gdc;
 #endif
 cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(GLOBALS->wavearea)), &gdc);
 cairo_set_line_width(cr, GLOBALS->cr_line_width);
+cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
 
 GLOBALS->m1x_wavewindow_c_1=GLOBALS->m2x_wavewindow_c_1=-1;
 
@@ -1850,6 +1852,7 @@ if(GLOBALS->cr_wavepixmap_wavewindow_c_1)
                 GLOBALS->cr_wavepixmap_wavewindow_c_1 = cairo_create (GLOBALS->surface_wavepixmap_wavewindow_c_1);
                 cairo_scale(GLOBALS->cr_wavepixmap_wavewindow_c_1, scale_factor, scale_factor);
                 cairo_set_line_width(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->cr_line_width);
+		cairo_set_line_cap(GLOBALS->cr_wavepixmap_wavewindow_c_1, CAIRO_LINE_CAP_SQUARE);
 		}
 	GLOBALS->old_wvalue=-1.0;
 	}
@@ -1862,6 +1865,7 @@ if(GLOBALS->cr_wavepixmap_wavewindow_c_1)
         GLOBALS->cr_wavepixmap_wavewindow_c_1 = cairo_create (GLOBALS->surface_wavepixmap_wavewindow_c_1);
         cairo_scale(GLOBALS->cr_wavepixmap_wavewindow_c_1, scale_factor, scale_factor);
         cairo_set_line_width(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->cr_line_width);
+	cairo_set_line_cap(GLOBALS->cr_wavepixmap_wavewindow_c_1, CAIRO_LINE_CAP_SQUARE);
 	}
 
 if(!GLOBALS->made_gc_contexts_wavewindow_c_1)
