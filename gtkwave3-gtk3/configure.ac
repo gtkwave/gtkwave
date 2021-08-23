@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(gtkwave-gtk3, 3.3.110, bybell@rocketmail.com)
+AC_INIT(gtkwave-gtk3, 3.3.111, bybell@rocketmail.com)
 AC_CONFIG_SRCDIR([src/vcd.c])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([config.h])
