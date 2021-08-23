@@ -314,7 +314,7 @@ if(!GLOBALS->disable_menus)
 			gtk_widget_show(pan_dn);
 			gtk_tooltips_set_tip_2(pan_dn, "Show toolbar");
 	
-			GtkWidget *fs = gtk_button_new_from_icon_name("view-fullscreen", GTK_ICON_SIZE_BUTTON);
+			GtkWidget *fs = gtk_button_new_from_icon_name("view-fullscreen-symbolic", GTK_ICON_SIZE_BUTTON);
 			gtk_header_bar_pack_end(GTK_HEADER_BAR(GLOBALS->header_bar),fs);
 			gtk_widget_show(fs);
 			gtk_tooltips_set_tip_2(fs, "Fullscreen");
