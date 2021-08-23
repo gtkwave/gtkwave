@@ -1546,7 +1546,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     GtkWidget *scrolled_win, *sig_scroll_win;
     GtkWidget *hbox;
     GtkWidget *button1, *button2, *button4;
-    GtkWidget *frameh, *sig_frame;
+    GtkWidget *sig_frame;
     GtkWidget *vbox, *vpan, *filter_hbox;
     GtkWidget *filter_label;
     GtkWidget *sig_view;
@@ -1693,13 +1693,14 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 
     /* Filter.  */
     filter_hbox = XXX_gtk_hbox_new (FALSE, 1);
+    gtk_container_set_border_width (GTK_CONTAINER (filter_hbox), 2);
     gtk_widget_show (filter_hbox);
 
-    filter_label = gtk_label_new ("Filter:");
-    gtk_widget_show (filter_label);
-    gtk_box_pack_start (GTK_BOX (filter_hbox), filter_label, FALSE, FALSE, 1);
-
+#if GTK_CHECK_VERSION(3,0,0)
+    GLOBALS->filter_entry = gtk_search_entry_new ();
+#else
     GLOBALS->filter_entry = gtk_entry_new ();
+#endif
     if(GLOBALS->filter_str_treesearch_gtk2_c_1) { gtk_entry_set_text(GTK_ENTRY(GLOBALS->filter_entry), GLOBALS->filter_str_treesearch_gtk2_c_1); }
     gtk_widget_show (GLOBALS->filter_entry);
 
@@ -1720,18 +1721,11 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 	   " The filter may be preceded with the port direction if it exists such as ++ (show only non-port), +I+, +O+, +IO+, etc."
 	   " Use -- to exclude all non-ports (i.e., show only all ports), -I- to exclude all input ports, etc."
 	   );
-
-    gtk_box_pack_start (GTK_BOX (filter_hbox), GLOBALS->filter_entry, FALSE, FALSE, 1);
+    gtk_box_pack_start (GTK_BOX (filter_hbox), GLOBALS->filter_entry, TRUE, TRUE, 1);
 
     gtk_box_pack_start (GTK_BOX (vbox), filter_hbox, FALSE, FALSE, 1);
 
     /* Buttons.  */
-    frameh = gtk_frame_new (NULL);
-    gtk_container_set_border_width (GTK_CONTAINER (frameh), 3);
-    gtk_widget_show(frameh);
-    gtk_box_pack_start (GTK_BOX (vbox), frameh, FALSE, FALSE, 1);
-
-
     hbox = XXX_gtk_hbox_new (FALSE, 1);
     gtk_widget_show (hbox);
 
@@ -1760,7 +1754,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 		"Replace highlighted signals on the main window with signals selected above.");
     gtk_box_pack_start (GTK_BOX (hbox), button4, TRUE, FALSE, 0);
 
-    gtk_container_add (GTK_CONTAINER (frameh), hbox);
+    gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 1);
     return vbox;
 }
 
