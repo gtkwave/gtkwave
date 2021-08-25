@@ -1072,16 +1072,6 @@ if(GLOBALS->splash_fix_win_title)
 	wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname, GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED: WAVE_SET_TITLE_NONE, 0);
 	}
 
-if(GLOBALS->window_entry_c_1)
-        {
-	GLOBALS->entry_raise_timer++;
-	if(GLOBALS->entry_raise_timer > 50)
-		{
-		gdk_window_raise(gtk_widget_get_window(GLOBALS->window_entry_c_1));
-		GLOBALS->entry_raise_timer = 0;
-		}
-        }
-
 #ifdef MAC_INTEGRATION
 if(GLOBALS->dnd_helper_quartz)
         {
