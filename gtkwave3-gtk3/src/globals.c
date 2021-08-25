@@ -229,11 +229,7 @@ NULL, /* atoi_cont_ptr 78 */
 /*
  * entry.c
  */
-0, /* window_entry_c_1 80 */
-0, /* entry_entry_c_1 81 */
 NULL, /* entrybox_text 82 */
-0, /* cleanup_entry_c_1 83 */
-0, /* entry_raise_timer */
 
 /*
  * extload.c
@@ -2164,7 +2160,6 @@ void reload_into_new_context_2(void)
  widget_only_destroy(&GLOBALS->window_help_c_2); 		/* help.c : reload is gated off during help so this should never execute */
 
  /* windows which in theory should never destroy as they will have grab focus which means reload will not be called */
- widget_ungrab_destroy(&GLOBALS->window_entry_c_1);		/* entry.c */
  widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1);	/* hiersearch.c */
  widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4);		/* markerbox.c */
  widget_ungrab_destroy(&GLOBALS->window1_search_c_2);		/* search.c */
@@ -2735,7 +2730,6 @@ void free_and_destroy_page_context(void)
  widget_only_destroy(&GLOBALS->window_help_c_2); 		/* help.c : reload is gated off during help so this should never execute */
 
  /* windows which in theory should never destroy as they will have grab focus which means reload will not be called */
- widget_ungrab_destroy(&GLOBALS->window_entry_c_1);		/* entry.c */
  widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1);	/* hiersearch.c */
  widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4);		/* markerbox.c */
  widget_ungrab_destroy(&GLOBALS->window1_search_c_2);		/* search.c */
