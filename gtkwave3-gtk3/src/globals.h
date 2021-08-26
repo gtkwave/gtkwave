@@ -825,30 +825,6 @@ GtkWidget *sig_view_search;
 
 
 /*
- * showchange.c
- */
-GtkWidget *button1_showchange_c_1; /* from showchange.c 382 */
-GtkWidget *button2_showchange_c_1; /* from showchange.c 383 */
-GtkWidget *button3_showchange_c_1; /* from showchange.c 384 */
-GtkWidget *button4_showchange_c_1; /* from showchange.c 385 */
-GtkWidget *button5_showchange_c_1; /* from showchange.c 386 */
-GtkWidget *button6_showchange_c_1; /* from showchange.c 387 */
-GtkWidget *button7_showchange_c_1; /* from showchange.c 387 */
-GtkWidget *button8_showchange_c_1; /* from showchange.c 387 */
-GtkWidget *button9_showchange_c_1; /* from showchange.c 387 */
-GtkWidget *toggle1_showchange_c_1; /* from showchange.c 388 */
-GtkWidget *toggle2_showchange_c_1; /* from showchange.c 389 */
-GtkWidget *toggle3_showchange_c_1; /* from showchange.c 390 */
-GtkWidget *toggle4_showchange_c_1; /* from showchange.c 391 */
-GtkWidget *toggle5_showchange_c_1; /* from showchange.c 391 */
-GtkWidget *toggle6_showchange_c_1; /* from showchange.c 391 */
-GtkWidget *window_showchange_c_8; /* from showchange.c 392 */
-void (*cleanup_showchange_c_6)(void); /* from showchange.c 393 */
-struct TraceEnt *tcache_showchange_c_1; /* from showchange.c 394 */
-TraceFlagsType flags_showchange_c_1; /* from showchange.c 395 */
-
-
-/*
  * signalwindow.c
  */
 GtkWidget *signalarea; /* from signalwindow.c 396 */

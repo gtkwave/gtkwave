@@ -8384,13 +8384,14 @@ static gtkwave_mlist_t popmenu_items[] =
     WAVE_GTKIFE("/Paste", NULL, menu_paste_traces, WV_MENU_EP, "<Item>"),
     WAVE_GTKIFE("/Delete", NULL, menu_delete_traces, WV_MENU_DEL, "<Item>"),
     WAVE_GTKIFE("/<separator>", NULL, NULL, WV_MENU_SEP4, "<Separator>"),
-    WAVE_GTKIFE("/Open Scope", NULL, menu_open_hierarchy, WV_MENU_OPENH, "<Item>")
+    WAVE_GTKIFE("/Open Scope", NULL, menu_open_hierarchy, WV_MENU_OPENH, "<Item>"),
 #if !defined __MINGW32__
-    ,
     /* see do_popup_menu() for specific patch for this for if(!GLOBALS->stem_path_string_table) ... */
     WAVE_GTKIFE("/Open Source Definition", NULL, menu_open_hierarchy_source, WV_MENU_OPENHS, "<Item>"),
-    WAVE_GTKIFE("/Open Source Instantiation", NULL, menu_open_hierarchy_isource, WV_MENU_OPENIHS, "<Item>")
+    WAVE_GTKIFE("/Open Source Instantiation", NULL, menu_open_hierarchy_isource, WV_MENU_OPENIHS, "<Item>"),
 #endif
+    WAVE_GTKIFE("/<separator>", NULL, NULL, WV_MENU_SEP5, "<Separator>"),
+    WAVE_GTKIFE("/Trace Properties", NULL, menu_showchange, WV_MENU_ESCFH, "<Item>"),
 };
 
 
