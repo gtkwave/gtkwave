@@ -7,10 +7,6 @@
  * of the License, or (at your option) any later version.
  */
 
-/* This file extracted from the GTK tutorial. */
-
-/* radiobuttons.c */
-
 #include "globals.h"
 #include <config.h>
 #include <gtk/gtk.h>
@@ -18,330 +14,314 @@
 #include "symbol.h"
 #include "debug.h"
 
+typedef struct {
+    const char* label;
+    uint64_t value;
+} LabeledUint64;
 
-static void toggle_generic(GtkWidget *widget, TraceFlagsType msk)
-{
-if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
-	{
-	GLOBALS->flags_showchange_c_1|=msk;
-	}
-	else
-	{
-	GLOBALS->flags_showchange_c_1&=(~msk);
-	}
+typedef struct {
+    const char *label;
+    int64_t value;
+} LabeledInt64;
+
+static const LabeledUint64 ATTRIBUTES[] = {
+    { "Right Justify", TR_RJUSTIFY },
+    { "Invert", TR_INVERT },
+    { "Reverse", TR_REVERSE },
+    { "Exclude", TR_EXCLUDE },
+    { "Popcnt", TR_POPCNT },
+    { "Find First One", TR_FFO },
+    {}
+};
+
+static const LabeledUint64 BASES[] = {
+    { "Hex", TR_HEX },
+    { "Decimal", TR_DEC },
+    { "Signed Decimal", TR_SIGNED },
+    { "Binary", TR_BIN },
+    { "Octal", TR_OCT },
+    { "ASCII", TR_ASCII },
+    { "Real", TR_REAL },
+    { "Time", TR_TIME | TR_DEC },
+    { "Enum", TR_ENUM | TR_BIN },
+    {}
+};
+
+static const LabeledInt64 COLORS[] = {
+    { "Normal", WAVE_COLOR_NORMAL },
+    { "Red", WAVE_COLOR_RED },
+    { "Orange", WAVE_COLOR_ORANGE },
+    { "Yellow", WAVE_COLOR_YELLOW },
+    { "Green", WAVE_COLOR_GREEN },
+    { "Blue", WAVE_COLOR_BLUE },
+    { "Indigo", WAVE_COLOR_INDIGO },
+    { "Violet", WAVE_COLOR_VIOLET },
+    // { "Cycle", WAVE_COLOR_CYCLE },
+    {}
+};
+
+static const LabeledUint64 ANALOG_FORMATS[] = {
+    { "Off", 0 },
+    { "Step", TR_ANALOG_STEP },
+    { "Interpolated", TR_ANALOG_INTERPOLATED },
+    { "Interpolated Annotated", TR_ANALOG_INTERPOLATED | TR_ANALOG_STEP },
+    {}
+};
+
+static const LabeledUint64 ANALOG_RESIZING[] = {
+    { "Screen Data", 0 },
+    { "All Data", TR_ANALOG_FULLSCALE },
+    {}
+};
+
+enum {
+    COLUMN_LABEL,
+    COLUMN_VALUE,
+    COLUMN_COLORED_DOT // only used for color combo box
+};
+
+static GtkListStore *flags_list_store_new(const LabeledUint64 *flags) {
+    GtkListStore *list_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_UINT64);
+
+    GtkTreeIter iter;
+    const LabeledUint64 *flag;
+    for (flag = flags; flag->label; flag++) {
+        gtk_list_store_append(list_store, &iter);
+        gtk_list_store_set(list_store, &iter,
+            COLUMN_LABEL, flag->label,
+            COLUMN_VALUE, flag->value,
+            -1
+        );
+    }
+
+    return list_store;
 }
 
-static void toggle1_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)nothing;
+static GtkWidget *flags_combo_box_new(const LabeledUint64 *flags, TraceFlagsType active) {
+    GtkListStore *list_store = flags_list_store_new(flags);
 
-toggle_generic(widget, TR_RJUSTIFY);
-}
-static void toggle2_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)nothing;
+    GtkWidget *combo_box = gtk_combo_box_new_with_model(GTK_TREE_MODEL(list_store));
 
-toggle_generic(widget, TR_INVERT);
-}
-static void toggle3_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)nothing;
+    GtkCellRenderer *cell_renderer = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo_box), cell_renderer, TRUE);
+    gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(combo_box), cell_renderer,
+        "text", COLUMN_LABEL,
+        NULL
+    );
 
-toggle_generic(widget, TR_REVERSE);
-}
-static void toggle4_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)nothing;
+    g_object_unref(list_store);
 
-toggle_generic(widget, TR_EXCLUDE);
-}
-static void toggle5_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)nothing;
+    // Set active entry
+    int i = 0;
+    const LabeledUint64 *flag;
+    for (flag = flags; flag->label; flag++) {
+        if (flag->value == active) {
+            gtk_combo_box_set_active(GTK_COMBO_BOX(combo_box), i);
+            break;
+        }
 
-toggle_generic(widget, TR_POPCNT);
-}
-static void toggle6_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)nothing;
+        i++;
+    }
 
-toggle_generic(widget, TR_FFO);
+    return combo_box;
 }
 
-static void enter_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)widget;
-(void)nothing;
+static GtkListStore *color_list_store_new(void) {
+    GtkListStore *list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING);
 
-  GLOBALS->flags_showchange_c_1=GLOBALS->flags_showchange_c_1&(~(TR_HIGHLIGHT|TR_NUMMASK));
+    GtkTreeIter iter;
+    const LabeledInt64 *color;
+    for (color = COLORS; color->label; color++) {
+        gtk_list_store_append(list_store, &iter);
+        gtk_list_store_set(list_store, &iter,
+            COLUMN_LABEL, color->label,
+            COLUMN_VALUE, color->value,
+            -1
+        );
 
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button1_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=TR_HEX;
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button2_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=TR_DEC;
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button3_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=TR_BIN;
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button4_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=TR_OCT;
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button5_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=TR_SIGNED;
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button6_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=TR_ASCII;
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button7_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=TR_REAL;
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button8_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=(TR_TIME|TR_DEC);
-	}
-  else
-  if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(GLOBALS->button9_showchange_c_1)))
-	{
-	GLOBALS->flags_showchange_c_1|=(TR_ENUM|TR_BIN);
-	}
+        if (color->value != WAVE_COLOR_NORMAL && color->value != WAVE_COLOR_CYCLE) {
+            const uint32_t RAINBOW_COLORS[] = WAVE_RAINBOW_RGB;
 
+            gchar *dot = g_strdup_printf(
+                "<span foreground=\"#%06X\">&#x2B24;</span>",
+                RAINBOW_COLORS[color->value - 1]
+            );
+            gtk_list_store_set(list_store, &iter, COLUMN_COLORED_DOT, dot, -1);
+            g_free(dot);
+        }
+    }
 
-  GLOBALS->tcache_showchange_c_1->flags=GLOBALS->flags_showchange_c_1;
-  GLOBALS->tcache_showchange_c_1->minmax_valid = 0; /* force analog traces to regenerate if necessary */
-
-  wave_gtk_grab_remove(GLOBALS->window_showchange_c_8);
-  gtk_widget_destroy(GLOBALS->window_showchange_c_8);
-  GLOBALS->window_showchange_c_8 = NULL;
-
-  GLOBALS->cleanup_showchange_c_6();
+    return list_store;
 }
 
+static GtkWidget *color_combo_box_new(void) {
+    GtkListStore *color_list_store = color_list_store_new();
 
-static void destroy_callback(GtkWidget *widget, GtkWidget *nothing)
-{
-(void)widget;
-(void)nothing;
+    GtkWidget *combo_box = gtk_combo_box_new_with_model(GTK_TREE_MODEL(color_list_store));
 
-  wave_gtk_grab_remove(GLOBALS->window_showchange_c_8);
-  gtk_widget_destroy(GLOBALS->window_showchange_c_8);
-  GLOBALS->window_showchange_c_8 = NULL;
+    GtkCellRenderer *cell_renderer = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo_box), cell_renderer, TRUE);
+    gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(combo_box), cell_renderer,
+        "text", COLUMN_LABEL,
+        NULL
+    );
+
+    cell_renderer = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo_box), cell_renderer, FALSE);
+    gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(combo_box), cell_renderer,
+        "markup", COLUMN_COLORED_DOT,
+        NULL
+    );
+
+    g_object_unref(color_list_store);
+
+    return combo_box;
 }
 
+static gboolean combo_box_get_active_value(GtkWidget *combo_box, void *value) {
+    GtkTreeIter iter;
+    gboolean has_active;
+
+    has_active = gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo_box), &iter);
+
+    if (has_active) {
+        GtkTreeModel *model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo_box));
+
+        gtk_tree_model_get(model, &iter, COLUMN_VALUE, value, -1);
+    }
+
+    return has_active;
+}
+
+static void add_header(GtkWidget *grid, const gchar *text) {
+    gchar *markup = g_markup_printf_escaped("<b>%s</b>", text);;
+
+    GtkWidget *label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), markup);
+    gtk_widget_set_halign(label, GTK_ALIGN_START);
+    gtk_widget_set_hexpand(label, TRUE);
+    gtk_widget_set_margin_top(label, 6);
+
+    gtk_grid_attach_next_to(GTK_GRID(grid), label, NULL, GTK_POS_BOTTOM, 2, 1);
+
+    g_free(markup);
+}
+
+static void add_labeled_widget(GtkWidget *grid, const gchar *text, GtkWidget *widget) {
+    GtkWidget *label = gtk_label_new(text);
+    gtk_widget_set_halign(label, GTK_ALIGN_START);
+    gtk_widget_set_hexpand(label, TRUE);
+
+    gtk_grid_attach_next_to(GTK_GRID(grid), label, NULL, GTK_POS_BOTTOM, 1, 1);
+    gtk_grid_attach_next_to(GTK_GRID(grid), widget, label, GTK_POS_RIGHT, 1, 1);
+}
 
 void showchange(char *title, Trptr t, GCallback func)
 {
-  GtkWidget *main_vbox;
-  GtkWidget *ok_hbox;
-  GtkWidget *hbox;
-  GtkWidget *box1;
-  GtkWidget *box2;
-  GtkWidget *label;
-  GtkWidget *button;
-  GtkWidget *separator;
-  GSList *group;
-  GtkWidget *frame1, *frame2;
+    TraceFlagsType old_flags = t->flags;
+    unsigned int old_color = t->t_color;
 
-  GLOBALS->cleanup_showchange_c_6=func;
-  GLOBALS->tcache_showchange_c_1=t;
-  GLOBALS->flags_showchange_c_1=t->flags;
+    GtkWidget *dialog = gtk_dialog_new_with_buttons(
+        "Trace Properties",
+        GTK_WINDOW(GLOBALS->mainwindow),
+        GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_USE_HEADER_BAR,
+        "Cancel",
+        GTK_RESPONSE_CANCEL,
+        "Ok",
+        GTK_RESPONSE_OK,
+        NULL
+    );
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-  /* fix problem where ungrab doesn't occur if button pressed + simultaneous accelerator key occurs */
-  if(GLOBALS->in_button_press_wavewindow_c_1) { XXX_gdk_pointer_ungrab(GDK_CURRENT_TIME); }
+    GtkWidget *grid = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 6);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(grid), 12);
 
-  GLOBALS->window_showchange_c_8 = gtk_window_new (GLOBALS->disable_window_manager ? GTK_WINDOW_POPUP : GTK_WINDOW_TOPLEVEL);
-  install_focus_cb(GLOBALS->window_showchange_c_8, ((char *)&GLOBALS->window_showchange_c_8) - ((char *)GLOBALS));
+    GtkWidget *base_combo_box = flags_combo_box_new(BASES, old_flags & TR_NUMMASK);
+    add_labeled_widget(grid, "Base", base_combo_box);
 
-  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->window_showchange_c_8), "delete_event",G_CALLBACK(destroy_callback),NULL);
+    GtkWidget *color_combo_box = color_combo_box_new();
+    gtk_combo_box_set_active(GTK_COMBO_BOX(color_combo_box), old_color);
+    add_labeled_widget(grid, "Color", color_combo_box);
 
-  gtk_window_set_title (GTK_WINDOW (GLOBALS->window_showchange_c_8), title);
-  gtk_container_set_border_width (GTK_CONTAINER (GLOBALS->window_showchange_c_8), 0);
+    add_header(grid, "Analog");
 
+    GtkWidget *analog_format_combo_box = flags_combo_box_new(ANALOG_FORMATS, old_flags & TR_ANALOGMASK);
+    add_labeled_widget(grid, "Format", analog_format_combo_box);
 
-  main_vbox = XXX_gtk_vbox_new (FALSE, 1);
-  gtk_container_set_border_width (GTK_CONTAINER (main_vbox), 1);
-  gtk_widget_show (main_vbox);
+    GtkWidget *analog_resizing_combo_box = flags_combo_box_new(ANALOG_RESIZING, old_flags & TR_ANALOG_FULLSCALE);
+    add_labeled_widget(grid, "Resizing", analog_resizing_combo_box);
 
-  label=gtk_label_new(t->name);
-  gtk_box_pack_start (GTK_BOX (main_vbox), label, FALSE, TRUE, 0);
-  gtk_widget_show (label);
+    add_header(grid, "Attributes");
 
-  separator = XXX_gtk_hseparator_new ();
-  gtk_box_pack_start (GTK_BOX (main_vbox), separator, FALSE, TRUE, 0);
-  gtk_widget_show (separator);
+    GSList *attribute_check_buttons = NULL;
+    const LabeledUint64 *attribute;
+    for (attribute = ATTRIBUTES; attribute->label; attribute++) {
+        GtkWidget *check_button = gtk_check_button_new_with_label(attribute->label);
+        gtk_widget_set_hexpand(check_button, TRUE);
+        gtk_widget_set_margin_start(check_button, 12);
+        gtk_grid_attach_next_to(GTK_GRID(grid), check_button, NULL, GTK_POS_BOTTOM, 2, 1);
 
-#if GTK_CHECK_VERSION(3,0,0)
-  hbox = XXX_gtk_hbox_new(FALSE, 5);
-#else
-  hbox = gtk_hbutton_box_new ();
-  gtk_button_box_set_layout(GTK_BUTTON_BOX(hbox), GTK_BUTTONBOX_END);
-#endif
-  gtk_box_set_spacing(GTK_BOX(hbox), 5);
-  gtk_widget_show (hbox);
+        gboolean active = old_flags & attribute->value;
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check_button), active);
 
-  box2 = XXX_gtk_vbox_new (FALSE, 5);
-  gtk_container_set_border_width (GTK_CONTAINER (box2), 5);
-  gtk_widget_show (box2);
+        attribute_check_buttons = g_slist_prepend(attribute_check_buttons, check_button);
+    }
+    attribute_check_buttons = g_slist_reverse(attribute_check_buttons);
 
-  GLOBALS->button1_showchange_c_1 = gtk_radio_button_new_with_label (NULL, "Hex");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button1_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_HEX) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button1_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button1_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button1_showchange_c_1));
+    gtk_widget_show_all(grid);
 
-  GLOBALS->button2_showchange_c_1 = gtk_radio_button_new_with_label(group, "Decimal");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button2_showchange_c_1, TRUE, TRUE, 0);
-  if((GLOBALS->flags_showchange_c_1&TR_DEC) && (!(GLOBALS->flags_showchange_c_1&TR_TIME))) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button2_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button2_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button2_showchange_c_1));
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    gtk_container_add(GTK_CONTAINER(content_area), grid);
 
-  GLOBALS->button5_showchange_c_1 = gtk_radio_button_new_with_label(group, "Signed Decimal");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button5_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_SIGNED) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button5_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button5_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button5_showchange_c_1));
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK) {
+        TraceFlagsType new_flags = old_flags;
+        unsigned int new_color = old_color;
 
-  GLOBALS->button3_showchange_c_1 = gtk_radio_button_new_with_label(group, "Binary");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button3_showchange_c_1, TRUE, TRUE, 0);
-  if((GLOBALS->flags_showchange_c_1&TR_BIN) && (!(GLOBALS->flags_showchange_c_1&TR_ENUM))) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button3_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button3_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button3_showchange_c_1));
+        uint64_t base;
+        if (combo_box_get_active_value(base_combo_box, &base)) {
+            new_flags = new_flags & ~TR_NUMMASK | base;
+        }
 
-  GLOBALS->button4_showchange_c_1 = gtk_radio_button_new_with_label(group, "Octal");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button4_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_OCT) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button4_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button4_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button4_showchange_c_1));
+        int64_t color;
+        if (combo_box_get_active_value(color_combo_box, &color)) {
+            new_color = color;
+        }
 
-  GLOBALS->button6_showchange_c_1 = gtk_radio_button_new_with_label(group, "ASCII");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button6_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_ASCII) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button6_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button6_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button6_showchange_c_1));
+        uint64_t analog_format;
+        if (combo_box_get_active_value(analog_format_combo_box, &analog_format)) {
+            new_flags = new_flags & ~TR_ANALOGMASK | analog_format;
+        }
 
-  GLOBALS->button7_showchange_c_1 = gtk_radio_button_new_with_label(group, "Real");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button7_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_ASCII) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button7_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button7_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button7_showchange_c_1));
+        uint64_t analog_resizing;
+        if (combo_box_get_active_value(analog_resizing_combo_box, &analog_resizing)) {
+            new_flags = new_flags & ~TR_ANALOG_FULLSCALE | analog_resizing;
+        }
 
-  GLOBALS->button8_showchange_c_1 = gtk_radio_button_new_with_label(group, "Time");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button8_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_ASCII) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button8_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button8_showchange_c_1);
-  group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (GLOBALS->button8_showchange_c_1));
+        int i = 0;
+	GSList *list;
+        for (list = attribute_check_buttons; list != NULL; list = list->next) {
+            GtkWidget *attribute_check_button = list->data;
 
-  GLOBALS->button9_showchange_c_1 = gtk_radio_button_new_with_label(group, "Enum");
-  gtk_box_pack_start (GTK_BOX (box2), GLOBALS->button9_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_ASCII) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (GLOBALS->button9_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->button9_showchange_c_1);
+            if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(attribute_check_button))) {
+                new_flags |= ATTRIBUTES[i].value;
+            } else {
+                new_flags &= ~ATTRIBUTES[i].value;
+            }
 
-  frame2 = gtk_frame_new ("Base");
-  gtk_container_set_border_width (GTK_CONTAINER (frame2), 3);
-  gtk_container_add (GTK_CONTAINER (frame2), box2);
-  gtk_widget_show (frame2);
-  gtk_box_pack_start(GTK_BOX (hbox), frame2, TRUE, TRUE, 0);
+            i++;
+        }
 
-/****************************************************************************************************/
+        if (t->flags != new_flags || t->t_color != new_color) {
+            t->flags = new_flags;
+            t->t_color = new_color;
+            t->minmax_valid = 0; // force analog traces to regenerate if necessary
 
-  box1 = XXX_gtk_vbox_new (FALSE, 5);
-  gtk_container_set_border_width (GTK_CONTAINER (box1), 5);
-  gtk_widget_show (box1);
+            func();
+        }
+    }
 
-
-  frame1 = gtk_frame_new ("Attributes");
-  gtk_container_set_border_width (GTK_CONTAINER (frame1), 3);
-  gtk_container_add (GTK_CONTAINER (frame1), box1);
-  gtk_box_pack_start(GTK_BOX (hbox), frame1, TRUE, TRUE, 0);
-  gtk_widget_show (frame1);
-
-  GLOBALS->toggle1_showchange_c_1=gtk_check_button_new_with_label("Right Justify");
-  gtk_box_pack_start (GTK_BOX (box1), GLOBALS->toggle1_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_RJUSTIFY)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle1_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->toggle1_showchange_c_1);
-  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle1_showchange_c_1), "toggled", G_CALLBACK(toggle1_callback), NULL);
-
-  GLOBALS->toggle2_showchange_c_1=gtk_check_button_new_with_label("Invert");
-  gtk_box_pack_start (GTK_BOX (box1), GLOBALS->toggle2_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_INVERT)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle2_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->toggle2_showchange_c_1);
-  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle2_showchange_c_1), "toggled", G_CALLBACK(toggle2_callback), NULL);
-
-  GLOBALS->toggle3_showchange_c_1=gtk_check_button_new_with_label("Reverse");
-  gtk_box_pack_start (GTK_BOX (box1), GLOBALS->toggle3_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_REVERSE)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle3_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->toggle3_showchange_c_1);
-  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle3_showchange_c_1), "toggled", G_CALLBACK(toggle3_callback), NULL);
-
-  GLOBALS->toggle4_showchange_c_1=gtk_check_button_new_with_label("Exclude");
-  gtk_box_pack_start (GTK_BOX (box1), GLOBALS->toggle4_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_EXCLUDE)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle4_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->toggle4_showchange_c_1);
-  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle4_showchange_c_1), "toggled", G_CALLBACK(toggle4_callback), NULL);
-
-  GLOBALS->toggle5_showchange_c_1=gtk_check_button_new_with_label("Popcnt");
-  gtk_box_pack_start (GTK_BOX (box1), GLOBALS->toggle5_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_POPCNT)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle5_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->toggle5_showchange_c_1);
-  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle5_showchange_c_1), "toggled", G_CALLBACK(toggle5_callback), NULL);
-
-  GLOBALS->toggle6_showchange_c_1=gtk_check_button_new_with_label("Find First One");
-  gtk_box_pack_start (GTK_BOX (box1), GLOBALS->toggle6_showchange_c_1, TRUE, TRUE, 0);
-  if(GLOBALS->flags_showchange_c_1&TR_FFO)gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(GLOBALS->toggle6_showchange_c_1), TRUE);
-  gtk_widget_show (GLOBALS->toggle6_showchange_c_1);
-  gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->toggle6_showchange_c_1), "toggled", G_CALLBACK(toggle6_callback), NULL);
-
-#if GTK_CHECK_VERSION(3,0,0)
-  gtk_box_pack_start(GTK_BOX(main_vbox), hbox, TRUE, FALSE, 0);
-#else
-  gtk_container_add (GTK_CONTAINER (main_vbox), hbox);
-#endif
-
-  separator = XXX_gtk_hseparator_new ();
-  gtk_box_pack_start (GTK_BOX (main_vbox), separator, FALSE, TRUE, 0);
-  gtk_widget_show (separator);
-
-/****************************************************************************************************/
-
-  ok_hbox = XXX_gtk_hbox_new (FALSE, 1);
-  gtk_container_set_border_width (GTK_CONTAINER (ok_hbox), 1);
-  gtk_widget_show (ok_hbox);
-
-  button = gtk_button_new_with_label ("Cancel");
-  gtkwave_signal_connect_object (XXX_GTK_OBJECT (button), "clicked",G_CALLBACK(destroy_callback),XXX_GTK_OBJECT (GLOBALS->window_showchange_c_8));
-  gtk_box_pack_end (GTK_BOX (ok_hbox), button, TRUE, TRUE, 0);
-  gtk_widget_set_can_default (button, TRUE);
-  gtk_widget_show (button);
-
-  gtk_container_add (GTK_CONTAINER (main_vbox), ok_hbox);
-
-  button = gtk_button_new_with_label ("  OK  ");
-  gtkwave_signal_connect_object (XXX_GTK_OBJECT (button), "clicked",G_CALLBACK(enter_callback),XXX_GTK_OBJECT (GLOBALS->window_showchange_c_8));
-
-  gtkwave_signal_connect_object (XXX_GTK_OBJECT (button), "realize", (GCallback) gtk_widget_grab_default, XXX_GTK_OBJECT (button));
-
-  gtk_box_pack_end (GTK_BOX (ok_hbox), button, TRUE, TRUE, 0);
-  gtk_widget_set_can_default (button, TRUE);
-  gtk_widget_show (button);
-
-/****************************************************************************************************/
-
-  gtk_container_add (GTK_CONTAINER (GLOBALS->window_showchange_c_8), main_vbox);
-  gtk_widget_show (GLOBALS->window_showchange_c_8);
-  wave_gtk_grab_add(GLOBALS->window_showchange_c_8);
+    g_slist_free(attribute_check_buttons);
+    gtk_widget_destroy(dialog);
 }
-

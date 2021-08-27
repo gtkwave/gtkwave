@@ -1822,3 +1822,4 @@
 		Use GtkSearchEntry in SST.
 		Convert entrybox to use dialog box.
 		Entrybox: use default response instead of signal handler.
+		Updated show-change widget.
