@@ -14,11 +14,6 @@
 #include "debug.h"
 #include <string.h>
 
-static void entry_activate(GtkWidget *widget, GtkWidget *dialog)
-{
-    gtk_dialog_response (GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-}
-
 void entrybox(char *title, int width, char *dflt_text, char *comment, int maxch, GCallback func)
 {
     GtkWidget *dialog;
@@ -64,6 +59,7 @@ void entrybox(char *title, int width, char *dflt_text, char *comment, int maxch,
         GTK_RESPONSE_OK,
         NULL
     );
+    gtk_dialog_set_default_response (GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_container_set_border_width (GTK_CONTAINER(dialog), 12);
 
     content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
@@ -80,8 +76,8 @@ void entrybox(char *title, int width, char *dflt_text, char *comment, int maxch,
     entry = gtk_entry_new ();
     gtk_entry_set_text (GTK_ENTRY (entry), dflt_text);
     gtk_entry_set_max_length (GTK_ENTRY(entry), maxch);
+    gtk_entry_set_activates_default (GTK_ENTRY (entry), TRUE);
     gtk_widget_set_size_request (entry, width, -1);
-    g_signal_connect (entry, "activate", G_CALLBACK (entry_activate), dialog);
     gtk_box_pack_start (GTK_BOX(content), entry, FALSE, FALSE, 0);
 
     gtk_widget_show_all (content);
