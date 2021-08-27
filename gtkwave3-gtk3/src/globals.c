@@ -795,30 +795,6 @@ NULL, /* sig_selection_search */
 NULL, /* sig_view_search */
 
 /*
- * showchange.c
- */
-NULL, /* button1_showchange_c_1 363 */
-NULL, /* button1_showchange_c_2 363 */
-NULL, /* button1_showchange_c_3 363 */
-NULL, /* button1_showchange_c_4 363 */
-NULL, /* button1_showchange_c_5 363 */
-NULL, /* button1_showchange_c_6 363 */
-NULL, /* button1_showchange_c_7 363 */
-NULL, /* button1_showchange_c_8 363 */
-NULL, /* button1_showchange_c_9 363 */
-NULL, /* toggle1_showchange_c_1 364 */
-NULL, /* toggle2_showchange_c_1 364 */
-NULL, /* toggle3_showchange_c_1 364 */
-NULL, /* toggle4_showchange_c_1 364 */
-NULL, /* toggle5_showchange_c_1 364 */
-NULL, /* toggle6_showchange_c_1 364 */
-NULL, /* window_showchange_c_8 365 */
-NULL, /* cleanup_showchange_c_6 366 */
-NULL, /* tcache_showchange_c_1 367 */
-0, /* flags_showchange_c_1 368 */
-
-
-/*
  * signalwindow.c
  */
 NULL, /* signalarea 369 */
@@ -2163,7 +2139,6 @@ void reload_into_new_context_2(void)
  widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1);	/* hiersearch.c */
  widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4);		/* markerbox.c */
  widget_ungrab_destroy(&GLOBALS->window1_search_c_2);		/* search.c */
- widget_ungrab_destroy(&GLOBALS->window_showchange_c_8);	/* showchange.c */
  widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9);		/* simplereq.c */
  widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk1_c);	/* treesearch_gtk1.c */
  widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3);	/* treesearch_gtk2.c */
@@ -2733,7 +2708,6 @@ void free_and_destroy_page_context(void)
  widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1);	/* hiersearch.c */
  widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4);		/* markerbox.c */
  widget_ungrab_destroy(&GLOBALS->window1_search_c_2);		/* search.c */
- widget_ungrab_destroy(&GLOBALS->window_showchange_c_8);	/* showchange.c */
  widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9);		/* simplereq.c */
  widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk1_c);	/* treesearch_gtk1.c */
  widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3);	/* treesearch_gtk2.c */
