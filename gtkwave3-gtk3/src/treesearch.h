@@ -28,5 +28,9 @@ void recurse_import(GtkWidget *widget, guint callback_action);
 
 enum sst_cb_action { SST_ACTION_INSERT, SST_ACTION_REPLACE, SST_ACTION_APPEND, SST_ACTION_PREPEND, SST_ACTION_NONE };
 
+enum { VIEW_DRAG_INACTIVE, TREE_TO_VIEW_DRAG_ACTIVE, SEARCH_TO_VIEW_DRAG_ACTIVE };
+
+void action_callback(enum sst_cb_action action);
+
 #endif
 

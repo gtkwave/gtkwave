@@ -27,6 +27,7 @@
 #include "lx2.h"
 #include "hierpack.h"
 #include "tcl_helper.h"
+#include "signal_list.h"
 #include <cocoa_misc.h>
 #include <assert.h>
 
@@ -203,9 +204,7 @@ if((GLOBALS->tims.baseline>=0) && (GLOBALS->tims.marker>=0))
 	}
 
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
@@ -263,9 +262,7 @@ GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
 
 update_markertime(GLOBALS->tims.marker);
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 static void lock_marker_right(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -321,9 +318,7 @@ GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
 update_markertime(GLOBALS->tims.marker);
 
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
@@ -346,9 +341,7 @@ if(GLOBALS->helpbox_is_active)
 GLOBALS->named_marker_lock_idx = -1;
 
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
@@ -372,8 +365,7 @@ if(GLOBALS->helpbox_is_active)
 		{
 		GLOBALS->scale_to_time_dimension = 0;
 		set_scale_to_time_dimension_toggles();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -396,8 +388,7 @@ if(GLOBALS->helpbox_is_active)
 		{
 		GLOBALS->scale_to_time_dimension = 's';
 		set_scale_to_time_dimension_toggles();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -420,8 +411,7 @@ if(GLOBALS->helpbox_is_active)
 		{
 		GLOBALS->scale_to_time_dimension = 'm';
 		set_scale_to_time_dimension_toggles();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -444,8 +434,7 @@ if(GLOBALS->helpbox_is_active)
 		{
 		GLOBALS->scale_to_time_dimension = 'u';
 		set_scale_to_time_dimension_toggles();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -468,8 +457,7 @@ if(GLOBALS->helpbox_is_active)
 		{
 		GLOBALS->scale_to_time_dimension = 'n';
 		set_scale_to_time_dimension_toggles();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -492,8 +480,7 @@ if(GLOBALS->helpbox_is_active)
 		{
 		GLOBALS->scale_to_time_dimension = 'p';
 		set_scale_to_time_dimension_toggles();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -516,8 +503,7 @@ if(GLOBALS->helpbox_is_active)
 		{
 		GLOBALS->scale_to_time_dimension = 'f';
 		set_scale_to_time_dimension_toggles();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -891,9 +877,7 @@ while(t)
 if(found)
 	{
 	GLOBALS->signalwindow_width_dirty=1;
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 
@@ -930,9 +914,7 @@ while(t)
 if(found)
 	{
 	GLOBALS->signalwindow_width_dirty=1;
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 
@@ -982,9 +964,7 @@ if(GLOBALS->entrybox_text)
 	}
 
 	GLOBALS->signalwindow_width_dirty=1;
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 }
 
 void menu_warp_traces(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -1127,9 +1107,7 @@ if(GLOBALS->helpbox_is_active)
 
 
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 /**/
@@ -1338,9 +1316,7 @@ void set_hier_cleanup(GtkWidget *widget, gpointer data, int level)
     }
 
   GLOBALS->signalwindow_width_dirty=1;
-  MaxSignalLength();
-  signalarea_configure_event(GLOBALS->signalarea, NULL);
-  wavearea_configure_event(GLOBALS->wavearea, NULL);
+  redraw_signals_and_waves();
   sprintf(update_string, "Trace Hier Max Depth is now: %d\n", GLOBALS->hier_max_level);
   status_text(update_string);
 
@@ -1436,12 +1412,7 @@ if(GLOBALS->helpbox_is_active)
                 {
                 status_text("Using flatcaps.\n");
                 }
-        if(GLOBALS->signalarea && GLOBALS->wavearea)
-                {
-                MaxSignalLength();
-                signalarea_configure_event(GLOBALS->signalarea, NULL);
-                wavearea_configure_event(GLOBALS->wavearea, NULL);
-                }
+		redraw_signals_and_waves();
 	}
 
 }
@@ -1505,6 +1476,7 @@ if(GLOBALS->helpbox_is_active)
 
 	calczoom(GLOBALS->tims.zoom);
 
+#if 0
 	if(GLOBALS->wave_hslider)
 		{
 		fix_wavehadj();
@@ -1514,6 +1486,7 @@ if(GLOBALS->helpbox_is_active)
 
 		update_maxmarker_labels();
 		}
+		#endif
 	}
 
 }
@@ -1548,9 +1521,7 @@ if(GLOBALS->helpbox_is_active)
 		strace_maketimetrace(0);
 		}
 
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 /**/
@@ -1571,9 +1542,7 @@ if(GLOBALS->helpbox_is_active)
 	{
 	force_normal_gcs();
 
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 /**/
@@ -1595,9 +1564,7 @@ if(GLOBALS->helpbox_is_active)
 	{
 	force_screengrab_gcs();
 
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 /**/
@@ -1720,7 +1687,7 @@ if(GLOBALS->helpbox_is_active)
 	status_text("Left Justification.\n");
 	GLOBALS->left_justify_sigs=~0;
 	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 	}
 }
 
@@ -1743,7 +1710,7 @@ if(GLOBALS->helpbox_is_active)
 	status_text("Right Justification.\n");
 	GLOBALS->left_justify_sigs=0;
 	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 	}
 }
 
@@ -1848,9 +1815,7 @@ if(GLOBALS->helpbox_is_active)
 		for(i=0;i<2;i++)
 			{
 	                GLOBALS->signalwindow_width_dirty=1;
-	                MaxSignalLength();
-	                signalarea_configure_event(GLOBALS->signalarea, NULL);
-	                wavearea_configure_event(GLOBALS->wavearea, NULL);
+	                redraw_signals_and_waves();
 			}
                 }
 	}
@@ -2100,9 +2065,7 @@ update_basetime(GLOBALS->tims.baseline);
 
 gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname);
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 void menu_quit_close(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -2182,9 +2145,7 @@ menu_open_group(GtkWidget *widget, gpointer data)
    {
      OpenTrace(t);
      GLOBALS->signalwindow_width_dirty=1;
-     MaxSignalLength();
-     signalarea_configure_event(GLOBALS->signalarea, NULL);
-     wavearea_configure_event(GLOBALS->wavearea, NULL);
+     redraw_signals_and_waves();
    }
  else
    {
@@ -2222,9 +2183,7 @@ menu_close_group(GtkWidget *widget, gpointer data)
 
      CloseTrace(t);
      GLOBALS->signalwindow_width_dirty=1;
-     MaxSignalLength();
-     signalarea_configure_event(GLOBALS->signalarea, NULL);
-     wavearea_configure_event(GLOBALS->wavearea, NULL);
+     redraw_signals_and_waves();
    }
  else
    {
@@ -2343,9 +2302,7 @@ create_group_cleanup(GtkWidget *widget, gpointer data)
     	else
 	{
       	GLOBALS->signalwindow_width_dirty=1;
-      	MaxSignalLength();
-      	signalarea_configure_event(GLOBALS->signalarea, NULL);
-      	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 
@@ -2595,16 +2552,16 @@ menu_expand(gpointer null_data, guint callback_action, GtkWidget *widget)
 	}
 
       j = GetTraceNumber(t);
+      #if 0
       wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
       if (j < gtk_adjustment_get_value(wadj))
 	{
 	  SetTraceScrollbarRowValue(j, 0);
 	}
+	#endif
 
       GLOBALS->signalwindow_width_dirty=1;
-      MaxSignalLength();
-      signalarea_configure_event(GLOBALS->signalarea, NULL);
-      wavearea_configure_event(GLOBALS->wavearea, NULL);
+      redraw_signals_and_waves();
     }
   else
     {
@@ -2729,9 +2686,7 @@ static void rename_cleanup(GtkWidget *widget, gpointer data)
 	}
 
       GLOBALS->signalwindow_width_dirty=1;
-      MaxSignalLength();
-      signalarea_configure_event(GLOBALS->signalarea, NULL);
-      wavearea_configure_event(GLOBALS->wavearea, NULL);
+      redraw_signals_and_waves();
     }
 }
 
@@ -3392,9 +3347,7 @@ menu_combine_down(gpointer null_data, guint callback_action, GtkWidget *widget)
       create_group("unused_0", t);
 
       GLOBALS->signalwindow_width_dirty=1;
-      MaxSignalLength();
-      signalarea_configure_event(GLOBALS->signalarea, NULL);
-      wavearea_configure_event(GLOBALS->wavearea, NULL);
+      redraw_signals_and_waves();
 
       menu_rename(widget, null_data);
     }
@@ -3446,9 +3399,7 @@ menu_combine_up(gpointer null_data, guint callback_action, GtkWidget *widget)
       create_group("unused_1", t);
 
       GLOBALS->signalwindow_width_dirty=1;
-      MaxSignalLength();
-      signalarea_configure_event(GLOBALS->signalarea, NULL);
-      wavearea_configure_event(GLOBALS->wavearea, NULL);
+      redraw_signals_and_waves();
 
       menu_rename(widget, null_data);
     }
@@ -3918,9 +3869,7 @@ if(GLOBALS->helpbox_is_active)
     GLOBALS->tims.baseline = GLOBALS->tims.marker;
     update_basetime(GLOBALS->tims.baseline);
     GLOBALS->signalwindow_width_dirty=1;
-    MaxSignalLength();
-    signalarea_configure_event(GLOBALS->signalarea, NULL);
-    wavearea_configure_event(GLOBALS->wavearea, NULL);
+    redraw_signals_and_waves();
   }
 }
 
@@ -3960,9 +3909,7 @@ if(GLOBALS->tims.marker!=-1)
 
 	update_markertime(GLOBALS->tims.marker=-1);
 	GLOBALS->signalwindow_width_dirty=1;
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 
@@ -4005,8 +3952,7 @@ for(i=0;i<WAVE_NUM_NAMED_MARKERS;i++)
 
 if(dirty)
 	{
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 /**/
@@ -4037,8 +3983,7 @@ if(GLOBALS->tims.marker!=-1)
 		if(GLOBALS->named_markers[i]==GLOBALS->tims.marker)
 			{
 			GLOBALS->named_markers[i]=-1;
-			signalarea_configure_event(GLOBALS->signalarea, NULL);
-			wavearea_configure_event(GLOBALS->wavearea, NULL);
+			redraw_signals_and_waves();
 
 			if(GLOBALS->marker_names[i])
 				{
@@ -4102,8 +4047,7 @@ if(GLOBALS->tims.marker!=-1)
 		if(GLOBALS->named_markers[i]==-1)
 			{
 			GLOBALS->named_markers[i]=GLOBALS->tims.marker;
-			signalarea_configure_event(GLOBALS->signalarea, NULL);
-			wavearea_configure_event(GLOBALS->wavearea, NULL);
+			redraw_signals_and_waves();
 			return;
 			}
 		}
@@ -4115,9 +4059,7 @@ void menu_treesearch_cleanup(GtkWidget *widget, gpointer data)
 (void)widget;
 (void)data;
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 DEBUG(printf("menu_treesearch_cleanup()\n"));
 }
 
@@ -4172,9 +4114,7 @@ if(t)
 	}
 
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 DEBUG(printf("menu_showchangeall_cleanup()\n"));
 }
 
@@ -4222,9 +4162,7 @@ menu_showchange_cleanup(GtkWidget *widget, gpointer data)
 (void)data;
 
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 DEBUG(printf("menu_showchange_cleanup()\n"));
 }
 
@@ -4333,9 +4271,7 @@ void menu_remove_aliases(gpointer null_data, guint callback_action, GtkWidget *w
   if(dirty)
     {
       GLOBALS->signalwindow_width_dirty=1;
-      MaxSignalLength();
-      signalarea_configure_event(GLOBALS->signalarea, NULL);
-      wavearea_configure_event(GLOBALS->wavearea, NULL);
+      redraw_signals_and_waves();
       DEBUG(printf("menu_remove_aliases()\n"));
     }
   if (none_selected)
@@ -4386,9 +4322,7 @@ static void alias_cleanup(GtkWidget *widget, gpointer data)
 	}
 
       GLOBALS->signalwindow_width_dirty=1;
-      MaxSignalLength();
-      signalarea_configure_event(GLOBALS->signalarea, NULL);
-      wavearea_configure_event(GLOBALS->wavearea, NULL);
+      redraw_signals_and_waves();
     }
 }
 
@@ -4456,9 +4390,7 @@ void menu_hiersearch_cleanup(GtkWidget *widget, gpointer data)
 (void)widget;
 (void)data;
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 DEBUG(printf("menu_hiersearch_cleanup()\n"));
 }
 
@@ -4488,9 +4420,7 @@ void menu_signalsearch_cleanup(GtkWidget *widget, gpointer data)
 (void)widget;
 (void)data;
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 DEBUG(printf("menu_signalsearch_cleanup()\n"));
 }
 
@@ -4558,8 +4488,7 @@ if(GLOBALS->entrybox_text)
 
 	if(dirty)
 		{
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -5099,8 +5028,7 @@ if(GLOBALS->dnd_state) { dnd_error(); return; } /* don't mess with sigs when dnd
 DEBUG(printf("Insert Blank Trace\n"));
 
 InsertBlankTrace(NULL, 0);
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 void
@@ -5126,8 +5054,7 @@ if(GLOBALS->dnd_state) { dnd_error(); return; } /* don't mess with sigs when dnd
 DEBUG(printf("Insert Analog Blank Trace\n"));
 
 InsertBlankTrace(NULL, TR_ANALOG_BLANK_STRETCH);
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 /**/
 static void
@@ -5139,9 +5066,7 @@ comment_trace_cleanup(GtkWidget *widget, gpointer data)
 InsertBlankTrace(GLOBALS->entrybox_text, 0);
 if(GLOBALS->entrybox_text) { free_2(GLOBALS->entrybox_text); GLOBALS->entrybox_text=NULL; }
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 void
@@ -5247,8 +5172,10 @@ if(GLOBALS->entrybox_text)
 	if(gt<GLOBALS->tims.first) gt=GLOBALS->tims.first;
 	else if(gt>GLOBALS->tims.last) gt=GLOBALS->tims.last;
 
+#if 0
 	hadj=GTK_ADJUSTMENT(GLOBALS->wave_hslider);
 	gtk_adjustment_set_value(hadj, gt);
+	#endif
 
 	pageinc=(TimeType)(((gdouble)GLOBALS->wavewidth)*GLOBALS->nspx);
 	if(gt<(GLOBALS->tims.last-pageinc+1))
@@ -5497,9 +5424,7 @@ static void colorformat(int color)
       if(fix)
         {
           GLOBALS->signalwindow_width_dirty=1;
-          MaxSignalLength();
-          signalarea_configure_event(GLOBALS->signalarea, NULL);
-          wavearea_configure_event(GLOBALS->wavearea, NULL);
+          redraw_signals_and_waves();
         }
     }
 }
@@ -5977,9 +5902,7 @@ if((t=GLOBALS->traces.first))
 	if(fix)
 		{
 		GLOBALS->signalwindow_width_dirty=1;
-		MaxSignalLength();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+          	redraw_signals_and_waves();
 		}
 
 	}
@@ -6131,9 +6054,7 @@ static void dataformat(TraceFlagsType mask, TraceFlagsType patch)
       if(fix)
 	{
 	  GLOBALS->signalwindow_width_dirty=1;
-	  MaxSignalLength();
-	  signalarea_configure_event(GLOBALS->signalarea, NULL);
-	  wavearea_configure_event(GLOBALS->wavearea, NULL);
+	  redraw_signals_and_waves();
 	}
     }
 }
@@ -6640,17 +6561,13 @@ menu_dataformat_fpshift_specify_cleanup(GtkWidget *widget, gpointer data)
       if(fix)
 	{
 	  GLOBALS->signalwindow_width_dirty=1;
-	  MaxSignalLength();
-	  signalarea_configure_event(GLOBALS->signalarea, NULL);
-	  wavearea_configure_event(GLOBALS->wavearea, NULL);
+	  redraw_signals_and_waves();
 	}
     }
 
 if(GLOBALS->entrybox_text) { free_2(GLOBALS->entrybox_text); GLOBALS->entrybox_text=NULL; }
 GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
@@ -7019,8 +6936,7 @@ if((t=GLOBALS->traces.first))
 		t->flags|=TR_HIGHLIGHT;
 		t=t->t_next;
 		}
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 
@@ -7050,8 +6966,7 @@ if((t=GLOBALS->traces.first))
 		t->flags&=(~TR_HIGHLIGHT);
 		t=t->t_next;
 		}
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 
@@ -7076,8 +6991,7 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_LEX))
 		{
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -7103,8 +7017,7 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_NORM))
 		{
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -7130,8 +7043,7 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_INS))
 		{
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -7157,8 +7069,7 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_RVS))
 		{
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -7187,32 +7098,6 @@ if(GLOBALS->dnd_state) { dnd_error(); return; } /* don't mess with sigs when dnd
 
 DEBUG(printf("Cut Traces\n"));
 
-/* fix up if there are traces above the	current	row being cut */
-if(GLOBALS->wave_vslider)
-        {
-        GtkAdjustment *wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
-        int value = (int)gtk_adjustment_get_value(wadj);
-
-        Trptr t = GLOBALS->traces.first;
-        int cnt = 0;
-        int high = 0;
-
-        while(t)
-                {
-                if(cnt >= value) break;
-
-                if(t->flags & TR_HIGHLIGHT)
-                        {
-                        high++;
-                        }
-
-                t = GiveNextTrace(t);
-                cnt++;
-                }
-
-        if(value - high > 0) { gtk_adjustment_set_value(wadj, value - high); }
-        }
-
 cutbuffer = CutBuffer();
 if(cutbuffer)
 	{
@@ -7223,9 +7108,7 @@ if(cutbuffer)
 	GLOBALS->cutcopylist = emit_gtkwave_savefile_formatted_entries_in_tcl_list(cutbuffer, FALSE);
 	/* printf("Cutlist: '%s'\n", GLOBALS->cutcopylist); */
 
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 	else
 	{
@@ -7259,9 +7142,7 @@ DEBUG(printf("Delete Traces\n"));
 num_cut = DeleteBuffer();
 if(num_cut)
 	{
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 	else
 	{
@@ -7347,9 +7228,7 @@ DEBUG(printf("Paste Traces\n"));
 if(PasteBuffer())
 	{
 	GLOBALS->signalwindow_width_dirty=1;
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 	else
 	{
@@ -7359,9 +7238,7 @@ if(PasteBuffer())
 		/* printf("Pastelist: %d '%s'\n", num_traces, GLOBALS->cutcopylist); */
 
 	        GLOBALS->signalwindow_width_dirty=1;
-	        MaxSignalLength();
-	        signalarea_configure_event(GLOBALS->signalarea, NULL);
-	        wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 
@@ -7416,9 +7293,7 @@ if(GLOBALS->helpbox_is_active)
 	{
 	GLOBALS->show_base = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]));
 	GLOBALS->signalwindow_width_dirty=1;
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	DEBUG(printf("Show Base Symbols\n"));
 	}
 
@@ -7462,11 +7337,13 @@ if(GLOBALS->helpbox_is_active)
 		gtk_window_unfullscreen (GTK_WINDOW(GLOBALS->mainwindow));
 		}
 
+#if 0
 	if(GLOBALS->wave_hslider)
 		{
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+		#endif
 	DEBUG(printf("Fullscreen\n"));
 	}
 
@@ -7509,11 +7386,13 @@ if(GLOBALS->helpbox_is_active)
 		if(GLOBALS->top_table) gtk_widget_hide(GLOBALS->top_table);
 		}
 
+#if 0
 	if(GLOBALS->wave_hslider)
 		{
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+		#endif
 	DEBUG(printf("Show Toolbar\n"));
 	}
 }
@@ -7535,11 +7414,13 @@ if(GLOBALS->helpbox_is_active)
 	else
 	{
 	GLOBALS->display_grid = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]));
+	#if 0
 	if(GLOBALS->wave_hslider)
 		{
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+		#endif
 	DEBUG(printf("Show Grid\n"));
 	}
 
@@ -7562,11 +7443,13 @@ if(GLOBALS->helpbox_is_active)
 	else
 	{
 	GLOBALS->highlight_wavewindow = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]));
+	#if 0
 	if(GLOBALS->wave_hslider)
 		{
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+		#endif
 	DEBUG(printf("Show Wave Highlight\n"));
 	}
 
@@ -7589,11 +7472,13 @@ if(GLOBALS->helpbox_is_active)
 	else
 	{
 	GLOBALS->fill_waveform = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]));
+	#if 0
 	if(GLOBALS->wave_hslider)
 		{
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
 		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+		#endif
 	DEBUG(printf("Show Filled High Values\n"));
 	}
 
@@ -7619,9 +7504,7 @@ if(GLOBALS->helpbox_is_active)
 	if(GLOBALS->signalarea && GLOBALS->wavearea)
 		{
 		GLOBALS->signalwindow_width_dirty=1;
-		MaxSignalLength();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	DEBUG(printf("Leading Zero Removal\n"));
 	}
@@ -8533,6 +8416,7 @@ void do_sst_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
 
 void SetTraceScrollbarRowValue(int row, unsigned location)
 {
+	#if 0
   if(row >= 0)
     {
       GtkAdjustment *wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
@@ -8565,6 +8449,7 @@ void SetTraceScrollbarRowValue(int row, unsigned location)
       gtkwave_main_iteration();
 
     }
+    #endif
 }
 
 

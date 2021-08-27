@@ -72,6 +72,7 @@
 #include "translate.h"
 #include "ptranslate.h"
 #include "ttranslate.h"
+#include "signal_list.h"
 
 #include "tcl_helper.h"
 #if defined(HAVE_LIBTCL)
@@ -156,9 +157,7 @@ if(GLOBALS->second_page_created)
 	{
 	wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname, GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED: WAVE_SET_TITLE_NONE, 0);
 
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 
 }
@@ -2573,10 +2572,14 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 	}
 
 
-GLOBALS->wavewindow = create_wavewindow();
 load_all_fonts(); /* must be done before create_signalwindow() */
-gtk_widget_show(GLOBALS->wavewindow);
 GLOBALS->signalwindow = create_signalwindow();
+
+/* must be created after the signalwindow because it uses the signal_list vadjustment */
+GLOBALS->wavewindow = create_wavewindow();
+gtk_widget_show(GLOBALS->wavewindow);
+
+redraw_signals_and_waves();
 
 if(GLOBALS->do_resize_signals)
                 {
@@ -2655,8 +2658,6 @@ if(GLOBALS->dnd_sigview)
 	{
 	dnd_setup(NULL, GLOBALS->signalarea, 1);
 	}
-/* dnd_setup(GLOBALS->signalarea, GLOBALS->signalarea); */
-dnd_setup(GLOBALS->signalarea, GLOBALS->wavearea, 1);
 
 if((!GLOBALS->hide_sst)&&(GLOBALS->loaded_file_type != MISSING_FILE))
 	{
@@ -2708,9 +2709,7 @@ if(!mainwindow_already_built)
         	for(dri=0;dri<2;dri++)
         	        {
         	        GLOBALS->signalwindow_width_dirty=1;
-        	        MaxSignalLength();
-        	        signalarea_configure_event(GLOBALS->signalarea, NULL);
-        	        wavearea_configure_event(GLOBALS->wavearea, NULL);
+        	        redraw_signals_and_waves();
         	        }
 		}
 	}

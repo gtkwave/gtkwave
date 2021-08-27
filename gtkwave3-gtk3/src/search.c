@@ -25,6 +25,7 @@
 #include "debug.h"
 #include "busy.h"
 #include "hierpack.h"
+#include "signal_list.h"
 
 enum { NAME_COLUMN, PTR_COLUMN, N_COLUMNS };
 
@@ -213,9 +214,7 @@ if(GLOBALS->entrybox_text_local_search_c_2)
 	free_2(GLOBALS->entrybox_text_local_search_c_2);
 	}
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 static void
@@ -397,10 +396,7 @@ GLOBALS->traces.buffercount=tcache.buffercount;
 GLOBALS->traces.buffer=tcache.buffer;
 GLOBALS->traces.bufferlast=tcache.bufferlast;
 
-MaxSignalLength();
-
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 
 gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (GLOBALS->pdata->pbar), 0.0);
 GLOBALS->pdata->oldvalue = -1.0;
@@ -593,9 +589,7 @@ if(tp)
 	}
 }
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 
 gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (GLOBALS->pdata->pbar), 0.0);
 GLOBALS->pdata->oldvalue = -1.0;
@@ -726,9 +720,8 @@ while(symc)
 	}
 
 GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
+redraw_signals_and_waves();
 
 gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (GLOBALS->pdata->pbar), 0.0);
 GLOBALS->pdata->oldvalue = -1.0;

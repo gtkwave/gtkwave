@@ -29,6 +29,7 @@
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_np.h"
+#include "signal_list.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -694,8 +695,7 @@ if((t=GLOBALS->traces.first))
                 t->flags&=~TR_HIGHLIGHT;
                 t=t->t_next;
                 }
-        signalarea_configure_event(GLOBALS->signalarea, NULL);
-        wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 
 trtarget = ((int)y / (int)GLOBALS->fontheight) - 2;
@@ -705,7 +705,7 @@ if(trtarget < 0)
 	}
 	else
 	{
-	t=GLOBALS->topmost_trace;
+	t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
 	}
 
 trwhich=0;

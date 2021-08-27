@@ -23,12 +23,11 @@
 #include "hierpack.h"
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
+#include "signal_list.h"
 
 WAVE_NODEVARTYPE_STR
 WAVE_NODEVARDIR_STR
 WAVE_NODEVARDATATYPE_STR
-
-enum { VIEW_DRAG_INACTIVE, TREE_TO_VIEW_DRAG_ACTIVE, SEARCH_TO_VIEW_DRAG_ACTIVE };
 
 /* Treesearch is a pop-up window used to select signals.
    It is composed of two main areas:
@@ -1098,7 +1097,7 @@ sig_selection_foreach_preload_lx2
 }
 
 
-static void
+void
 action_callback(enum sst_cb_action action)
 {
   if(action == SST_ACTION_NONE) return; /* only used for double-click in signals pane of SST */
@@ -1130,10 +1129,9 @@ action_callback(enum sst_cb_action action)
   if(action == SST_ACTION_APPEND)
 	{
 	GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
+	gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
 	}
-  MaxSignalLength();
-  signalarea_configure_event(GLOBALS->signalarea, NULL);
-  wavearea_configure_event(GLOBALS->wavearea, NULL);
+  redraw_signals_and_waves(); 
 }
 
 static void insert_callback(GtkWidget *widget, GtkWidget *nothing)
@@ -1758,7 +1756,6 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     return vbox;
 }
 
-
 /****************************************************************
  **
  ** dnd
@@ -1806,9 +1803,7 @@ GLOBALS->dnd_state = 0;
 GLOBALS->tree_dnd_begin = VIEW_DRAG_INACTIVE;
 GLOBALS->tree_dnd_requested = 0;
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 
 return(FALSE);
 }
@@ -1869,11 +1864,13 @@ if((t=GLOBALS->traces.first))
                 t->flags&=~TR_HIGHLIGHT;
                 t=t->t_next;
                 }
-        signalarea_configure_event(GLOBALS->signalarea, NULL);
+        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
         wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 
 trtarget = ((int)y / (int)GLOBALS->fontheight) - 2;
+//TODO: fix
+#if 0
 if(trtarget < 0)
 	{
 	Trptr tp = GLOBALS->topmost_trace ? GivePrevTrace(GLOBALS->topmost_trace): NULL;
@@ -1903,6 +1900,7 @@ if(trtarget < 0)
 	{
 	t=GLOBALS->topmost_trace;
 	}
+#endif
 
 trwhich=0;
 while(t)
@@ -1942,9 +1940,7 @@ if(t)
 
 dnd_import_fini:
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
@@ -2119,9 +2115,7 @@ else if(widget == GLOBALS->dnd_sigview)
 
 if(upd)
 	{
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
 
@@ -2223,16 +2217,12 @@ if(!GLOBALS->splash_is_loading)
 
 		if(num_found)
 		        {
-		        MaxSignalLength();
-		        signalarea_configure_event(GLOBALS->signalarea, NULL);
-		        wavearea_configure_event(GLOBALS->wavearea, NULL);
+			redraw_signals_and_waves();
 		        }
 		}
 		else
 		{
-	        MaxSignalLength();
-	        signalarea_configure_event(GLOBALS->signalarea, NULL);
-	        wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 		}
 	}
 }
@@ -2287,6 +2277,7 @@ void dnd_setup(GtkWidget *src, GtkWidget *w, int enable_receive)
                 target_entry[2].flags = 0;
                 target_entry[2].info = WAVE_DRAG_TAR_INFO_2;
 
+#if 0
 		/* Set the drag destination for this widget, using the
 		 * above target entry types, accept move's and coppies'.
 		 */
@@ -2299,6 +2290,7 @@ void dnd_setup(GtkWidget *src, GtkWidget *w, int enable_receive)
 			GDK_ACTION_MOVE | GDK_ACTION_COPY
 		);
 		gtkwave_signal_connect(XXX_GTK_OBJECT(w), "drag_motion", G_CALLBACK(DNDDragMotionCB), win);
+#endif
 
 		/* Set the drag source for this widget, allowing the user
 		 * to drag items off of this clist.
@@ -2322,7 +2314,9 @@ void dnd_setup(GtkWidget *src, GtkWidget *w, int enable_receive)
 			}
 
 
+#if 0
                 if(enable_receive) gtkwave_signal_connect(XXX_GTK_OBJECT(w),   "drag_data_received", G_CALLBACK(DNDDataReceivedCB), win);
+#endif
 	}
 }
 
@@ -2420,9 +2414,8 @@ for(i=GLOBALS->fetchlow;i<=GLOBALS->fetchhigh;i++)
 set_window_idle(widget);
 
 GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
+redraw_signals_and_waves();
 }
 
 
@@ -2535,9 +2528,7 @@ GLOBALS->traces.buffercount=tcache.buffercount;
 GLOBALS->traces.buffer=tcache.buffer;
 GLOBALS->traces.bufferlast=tcache.bufferlast;
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
@@ -2696,9 +2687,7 @@ if(tp)
         }
 }
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
