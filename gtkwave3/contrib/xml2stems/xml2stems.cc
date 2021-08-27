@@ -104,6 +104,7 @@ std::stack<string> mId;
 queue<string> bQueue;
 int in_files = 0;
 int geninst = 0;
+int func_nesting_cnt = 0;
 
 while(!feof(fi))
 	{
@@ -126,7 +127,7 @@ while(!feof(fi))
 	switch(*pnt)
 		{
 		case 'b':
-			if(!strncmp(pnt, "begin", 5))
+			if(!strncmp(pnt, "begin", 5) && !func_nesting_cnt)
 				{
 				if(!endtag)
 					{
@@ -227,6 +228,11 @@ while(!feof(fi))
 				}
 
 		case 'f':
+			if(!strncmp(pnt, "func", 4))
+				{
+				func_nesting_cnt = (!endtag) ? (func_nesting_cnt+1) : (func_nesting_cnt-1);
+				}
+			else
 			if(!strncmp(pnt, "files", 5))
 				{
 				in_files = (!endtag);

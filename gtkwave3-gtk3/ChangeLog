@@ -1823,3 +1823,4 @@
 		Convert entrybox to use dialog box.
 		Entrybox: use default response instead of signal handler.
 		Updated show-change widget.
+		Fix xml2stems when begin blocs are in functions.
