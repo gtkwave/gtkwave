@@ -4152,17 +4152,20 @@ menu_showchangeall_cleanup(GtkWidget *widget, gpointer data)
 
 Trptr t;
 TraceFlagsType flags;
+unsigned int t_color;
 
 t=GLOBALS->showchangeall_menu_c_1;
 if(t)
 	{
 	flags = t->flags & (TR_NUMMASK | TR_HIGHLIGHT | TR_ATTRIBS);
+	t_color = t->t_color;
 	while(t)
 		{
 		if((t->flags&TR_HIGHLIGHT)&&(!(t->flags&(TR_BLANK|TR_ANALOG_BLANK_STRETCH)))&&(t->name))
 			{
 			t->flags = (t->flags & ~(TR_NUMMASK | TR_HIGHLIGHT | TR_ATTRIBS)) | flags;
 			t->minmax_valid = 0; /* force analog traces to regenerate if necessary */
+			t->t_color = t_color;
 			}
 		t=t->t_next;
 		}
@@ -8391,7 +8394,7 @@ static gtkwave_mlist_t popmenu_items[] =
     WAVE_GTKIFE("/Open Source Instantiation", NULL, menu_open_hierarchy_isource, WV_MENU_OPENIHS, "<Item>"),
 #endif
     WAVE_GTKIFE("/<separator>", NULL, NULL, WV_MENU_SEP5, "<Separator>"),
-    WAVE_GTKIFE("/Trace Properties", NULL, menu_showchange, WV_MENU_ESCFH, "<Item>"),
+    WAVE_GTKIFE("/Trace Properties", NULL, menu_showchangeall, WV_MENU_ESCFH, "<Item>"),
 };
 
 

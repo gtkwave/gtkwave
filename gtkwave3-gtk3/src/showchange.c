@@ -84,7 +84,8 @@ static GtkListStore *flags_list_store_new(const LabeledUint64 *flags) {
     GtkListStore *list_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_UINT64);
 
     GtkTreeIter iter;
-    for (const LabeledUint64 *flag = flags; flag->label; flag++) {
+    const LabeledUint64 *flag;
+    for (flag = flags; flag->label; flag++) {
         gtk_list_store_append(list_store, &iter);
         gtk_list_store_set(list_store, &iter,
             COLUMN_LABEL, flag->label,
@@ -112,7 +113,8 @@ static GtkWidget *flags_combo_box_new(const LabeledUint64 *flags, TraceFlagsType
 
     // Set active entry
     int i = 0;
-    for (const LabeledUint64 *flag = flags; flag->label; flag++) {
+    const LabeledUint64 *flag;
+    for (flag = flags; flag->label; flag++) {
         if (flag->value == active) {
             gtk_combo_box_set_active(GTK_COMBO_BOX(combo_box), i);
             break;
@@ -128,7 +130,8 @@ static GtkListStore *color_list_store_new(void) {
     GtkListStore *list_store = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_INT64, G_TYPE_STRING);
 
     GtkTreeIter iter;
-    for (const LabeledInt64 *color = COLORS; color->label; color++) {
+    const LabeledInt64 *color;
+    for (color = COLORS; color->label; color++) {
         gtk_list_store_append(list_store, &iter);
         gtk_list_store_set(list_store, &iter,
             COLUMN_LABEL, color->label,
@@ -253,7 +256,8 @@ void showchange(char *title, Trptr t, GCallback func)
     add_header(grid, "Attributes");
 
     GSList *attribute_check_buttons = NULL;
-    for (const LabeledUint64 *attribute = ATTRIBUTES; attribute->label; attribute++) {
+    const LabeledUint64 *attribute;
+    for (attribute = ATTRIBUTES; attribute->label; attribute++) {
         GtkWidget *check_button = gtk_check_button_new_with_label(attribute->label);
         gtk_widget_set_hexpand(check_button, TRUE);
         gtk_widget_set_margin_start(check_button, 12);
@@ -296,7 +300,8 @@ void showchange(char *title, Trptr t, GCallback func)
         }
 
         int i = 0;
-        for (GSList *list = attribute_check_buttons; list != NULL; list = list->next) {
+	GSList *list;
+        for (list = attribute_check_buttons; list != NULL; list = list->next) {
             GtkWidget *attribute_check_button = list->data;
 
             if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(attribute_check_button))) {
