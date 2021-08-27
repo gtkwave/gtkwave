@@ -780,6 +780,7 @@ if((GLOBALS->cr_wavepixmap_wavewindow_c_1)&&(GLOBALS->wavewidth>1))
                 {
                 XXX_gdk_draw_rectangle(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->rgb_gc.gc_back_wavewindow_c_1, TRUE, 0, 0,GLOBALS->wavewidth, GLOBALS->waveheight);
                 rendertimebar();
+		gtk_widget_queue_draw(GLOBALS->wavewindow);
                 }
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
 	if(gesture_in_zoom) gesture_in_zoom--;
