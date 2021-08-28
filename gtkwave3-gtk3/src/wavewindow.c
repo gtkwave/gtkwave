@@ -860,6 +860,8 @@ if(GLOBALS->cr_signalpixmap)
 			}
 
 		draw_marker();
+
+	gtk_widget_queue_draw(GLOBALS->signalarea);
 	}
 }
 
@@ -920,6 +922,8 @@ if(GLOBALS->signalarea_has_focus)
         cairo_destroy (cr);
 #endif
 	}
+
+	gtk_widget_queue_draw(GLOBALS->signalarea);
 }
 
 static void button_motion_common(gint xin, gint yin, int pressrel, int is_button_2)
@@ -2754,6 +2758,7 @@ if((GLOBALS->cr_wavepixmap_wavewindow_c_1)&&(update_waves))
 	/* if(GLOBALS->display_grid) */ rendertimes();
 
 	rendertraces();
+	gtk_widget_queue_draw(GLOBALS->wavewindow);
 	}
 }
 

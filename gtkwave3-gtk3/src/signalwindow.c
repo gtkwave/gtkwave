@@ -128,6 +128,8 @@ if(GLOBALS->cr_signalpixmap)
 #endif
 		}
 	}
+
+	gtk_widget_queue_draw(GLOBALS->signalarea);
 }
 
 
@@ -518,6 +520,8 @@ if(GLOBALS->std_dnd_tgt_on_signalarea || GLOBALS->std_dnd_tgt_on_wavearea)
 #else
 		cairo_destroy (cr);
 #endif
+
+		gtk_widget_queue_draw(GLOBALS->signalarea);
 
 		/* printf("drop to %d of %d: '%s'\n", which, GLOBALS->traces.total, t ? t->name : "undef"); */
 		}
