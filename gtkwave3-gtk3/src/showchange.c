@@ -193,6 +193,7 @@ static gboolean combo_box_get_active_value(GtkWidget *combo_box, void *value) {
     return has_active;
 }
 
+#if GTK_CHECK_VERSION(3,0,0)
 static void add_header(GtkWidget *grid, const gchar *text) {
     gchar *markup = g_markup_printf_escaped("<b>%s</b>", text);;
 
@@ -215,6 +216,31 @@ static void add_labeled_widget(GtkWidget *grid, const gchar *text, GtkWidget *wi
     gtk_grid_attach_next_to(GTK_GRID(grid), label, NULL, GTK_POS_BOTTOM, 1, 1);
     gtk_grid_attach_next_to(GTK_GRID(grid), widget, label, GTK_POS_RIGHT, 1, 1);
 }
+#else
+static guint current_row;
+
+static void add_header(GtkWidget *table, const gchar *text) {
+    gchar *markup = g_markup_printf_escaped("<b>%s</b>", text);;
+
+    GtkWidget *label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_markup(GTK_LABEL(label), markup);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 2, current_row, current_row + 1);
+
+    current_row++;
+
+    g_free(markup);
+}
+
+static void add_labeled_widget(GtkWidget *table, const gchar *text, GtkWidget *widget) {
+    GtkWidget *label = gtk_label_new(text);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, current_row, current_row + 1);
+    gtk_table_attach_defaults(GTK_TABLE(table), widget, 1, 2, current_row, current_row + 1);
+
+    current_row++;
+}
+#endif
 
 void showchange(char *title, Trptr t, GCallback func)
 {
@@ -224,7 +250,11 @@ void showchange(char *title, Trptr t, GCallback func)
     GtkWidget *dialog = gtk_dialog_new_with_buttons(
         "Trace Properties",
         GTK_WINDOW(GLOBALS->mainwindow),
+#if GTK_CHECK_VERSION(3,0,0)
         GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_USE_HEADER_BAR,
+#else
+        GTK_DIALOG_DESTROY_WITH_PARENT,
+#endif
         "Cancel",
         GTK_RESPONSE_CANCEL,
         "Ok",
@@ -233,10 +263,17 @@ void showchange(char *title, Trptr t, GCallback func)
     );
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
+#if GTK_CHECK_VERSION(3,0,0)
     GtkWidget *grid = gtk_grid_new();
     gtk_grid_set_column_spacing(GTK_GRID(grid), 6);
     gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
     gtk_container_set_border_width(GTK_CONTAINER(grid), 12);
+#else
+    current_row = 0;
+    GtkWidget *grid = gtk_table_new(1, 2, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(grid), 6);
+    gtk_table_set_row_spacings(GTK_TABLE(grid), 6);
+#endif
 
     GtkWidget *base_combo_box = flags_combo_box_new(BASES, old_flags & TR_NUMMASK);
     add_labeled_widget(grid, "Base", base_combo_box);
@@ -259,9 +296,14 @@ void showchange(char *title, Trptr t, GCallback func)
     const LabeledUint64 *attribute;
     for (attribute = ATTRIBUTES; attribute->label; attribute++) {
         GtkWidget *check_button = gtk_check_button_new_with_label(attribute->label);
+#if GTK_CHECK_VERSION(3,0,0)
         gtk_widget_set_hexpand(check_button, TRUE);
         gtk_widget_set_margin_start(check_button, 12);
         gtk_grid_attach_next_to(GTK_GRID(grid), check_button, NULL, GTK_POS_BOTTOM, 2, 1);
+#else
+        gtk_table_attach_defaults(GTK_TABLE(grid), check_button, 0, 2, current_row, current_row + 1);
+        current_row++;
+#endif
 
         gboolean active = old_flags & attribute->value;
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check_button), active);
