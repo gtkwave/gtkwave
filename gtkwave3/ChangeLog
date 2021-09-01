@@ -1752,5 +1752,6 @@
 3.3.110 22may21 Removed ghwdump and ghwdump.1 from the distribution (now 
 		provided with GHDL).
 		Minor scan-build fixes.
-3.3.111 27aug21	Fix in fstapi for read start limit time.
-		Fix xml2stems when begin blocs are in functions.
+3.3.111 01sep21	Fix in fstapi for read start limit time.
+		Fix xml2stems when begin blocks are in functions.
+		Skip over decimal point in timescale in viewer.

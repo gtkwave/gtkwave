@@ -28,7 +28,38 @@ char buf[32], sfx[2];
 int i, len;
 int prefix_idx = 0;
 
-if(*s != '0') return;
+if(*s != '0')
+        {
+        unsigned char *dot = strchr(s, '.');
+        unsigned char *src, *dst;
+        if(dot)
+                {
+                unsigned char *pnt = dot+1;
+                int alpha_found = 0;
+                while(*pnt)
+                        {
+                        if(isalpha(*pnt))
+                                {
+                                alpha_found = 1;
+                                break;
+                                }
+                        pnt++;
+                        }
+
+                if(alpha_found)
+                        {
+                        src = pnt;
+                        dst = dot;
+                        while(*src)
+                                {
+                                *dst = *src;
+                                dst++; src++;
+                                }
+                        *dst = 0;
+                        }
+                }
+        return;
+        }
 
 len = strlen(s);
 for(i=0;i<len;i++)

@@ -1154,6 +1154,11 @@ while(!feof(f))
 			{
 			exp+=2;
 			}
+		else
+		if(tv == 1000) /* nonstandard */
+			{
+			exp+=3;
+			}
 
 		fstWriterSetTimescale(ctx, exp);
 		}
