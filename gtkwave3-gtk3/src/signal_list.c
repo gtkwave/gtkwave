@@ -261,22 +261,6 @@ static gint configure_event(GtkWidget *widget, GdkEventConfigure *event)
     return GDK_EVENT_STOP;
 }
 
-static void update_vadjustment(GwSignalList *signal_list, gdouble value) {
-    int num_traces_displayable = gw_signal_list_get_num_traces_displayable(signal_list);
-
-	UpdateTracesVisible();
-
-    gdouble lower = 0.0;
-    gdouble upper = MAX((gdouble)GLOBALS->traces.visible, 1.0);
-    gdouble increment = 1.0;
-    gdouble page_size = (gdouble)num_traces_displayable;
-    gdouble page_increment = page_size;
-
-    gtk_adjustment_configure(signal_list->vadjustment,
-        value, lower, upper, increment, page_increment, page_size
-    );
-}
-
 static void update_hadjustment(GwSignalList *signal_list) {
 #if GTK_CHECK_VERSION(3, 0, 0)
     gdouble width = (gdouble)gtk_widget_get_allocated_width(GTK_WIDGET(signal_list));
@@ -308,8 +292,9 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
 
     // Update surface if dirty flag is set
     if (signal_list->dirty) {
-	    UpdateTracesVisible();
-        update_vadjustment(signal_list, gtk_adjustment_get_value(signal_list->vadjustment));
+        // Update scroll bounds.
+        gw_signal_list_scroll(signal_list, gtk_adjustment_get_value(signal_list->vadjustment));
+
         update_hadjustment(signal_list);
         make_sigarea_gcs(widget);
         render_signals(signal_list);
@@ -608,6 +593,26 @@ static gboolean button_release_event(GtkWidget *widget, GdkEventButton *event)
     return GDK_EVENT_STOP;
 }
 
+// Scroll the list to show the trace with the given index as the topmost trace.
+void gw_signal_list_scroll(GwSignalList *signal_list, int index)
+{
+    g_return_if_fail(GW_IS_SIGNAL_LIST(signal_list));
+
+    int num_traces_displayable = gw_signal_list_get_num_traces_displayable(signal_list);
+
+	UpdateTracesVisible();
+
+    gdouble lower = 0.0;
+    gdouble upper = MAX((gdouble)GLOBALS->traces.visible, 1.0);
+    gdouble increment = 1.0;
+    gdouble page_size = (gdouble)num_traces_displayable;
+    gdouble page_increment = page_size;
+
+    gtk_adjustment_configure(signal_list->vadjustment,
+        index, lower, upper, increment, page_increment, page_size
+    );
+}
+
 // Scroll the list vertically to show the given trace.
 void gw_signal_list_scroll_to_trace(GwSignalList *signal_list, Trptr trace)
 {
@@ -637,10 +642,10 @@ void gw_signal_list_scroll_to_trace(GwSignalList *signal_list, Trptr trace)
         value = which - num_traces + 1;
     }
 
-    // Use update_vadjustment instead of gtk_adjustment_set_value to make sure
-    // the upper and lower bounds are updated if they have been changed and no
-    // redraw has occured since then.
-    update_vadjustment(signal_list, value);
+    // Use gw_signal_list_scroll instead of gtk_adjustment_set_value to make
+    // sure the upper and lower bounds are updated if they have been changed
+    // and no redraw has occured since then.
+    gw_signal_list_scroll(signal_list, value);
 }
 
 // Scroll list upward

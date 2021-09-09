@@ -8411,17 +8411,11 @@ void do_sst_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
 
 void SetTraceScrollbarRowValue(int row, unsigned location)
 {
-	#if 0
   if(row >= 0)
     {
-      GtkAdjustment *wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
       int target = row;
 
-      GtkAllocation allocation;
-      gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
-
-      int num_traces_displayable=(allocation.height)/(GLOBALS->fontheight);
-      num_traces_displayable--;   /* for the time trace that is always there */
+      int num_traces_displayable=gw_signal_list_get_num_traces_displayable(GW_SIGNAL_LIST(GLOBALS->signalarea));
 
       /* center */
       if (location == 1) {
@@ -8433,18 +8427,11 @@ void SetTraceScrollbarRowValue(int row, unsigned location)
 	target = target - num_traces_displayable;
       }
 
-      if(target > GLOBALS->traces.visible - num_traces_displayable) target = GLOBALS->traces.visible - num_traces_displayable;
+	  gw_signal_list_scroll(GW_SIGNAL_LIST(GLOBALS->signalarea), target);
 
-      if(target < 0) target = 0;
-
-      gtk_adjustment_set_value(wadj, target);
-
-      g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "changed"); /* force bar update */
-      g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "value_changed"); /* force text update */
       gtkwave_main_iteration();
 
     }
-    #endif
 }
 
 
