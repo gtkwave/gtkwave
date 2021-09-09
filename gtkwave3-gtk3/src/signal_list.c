@@ -533,6 +533,11 @@ static gboolean button_press_event(GtkWidget *widget, GdkEventButton *event)
         } else if (event->type == GDK_2BUTTON_PRESS) {
             // Double primary press -> open/close groups and expand/collapse waves
 
+            // After a double click was detected the user input can no longer be
+            // the start of a drag gesture. Reset the  pending flag to make sure
+            // the release handler doesn't cause unwanted selection changes.
+            signal_list->drag.pending = FALSE;
+
             Trptr t = get_trace_for_y(signal_list, (int)event->y);
             if (t != NULL) {
                 if (IsGroupBegin(t) || IsGroupEnd(t)) {
