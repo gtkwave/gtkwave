@@ -463,8 +463,6 @@ typedef struct
     Trptr    bufferlast;	/* last element of bufferchain */
     int      buffercount;	/* number of traces in buffer */
 
-    Trptr    scroll_top;	/* for autoscrolling */
-    Trptr    scroll_bottom;
     unsigned dirty : 1;		/* to notify Tcl that traces were added/deleted/moved */
   } Traces;
 

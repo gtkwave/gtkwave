@@ -23,6 +23,7 @@
 #include "vcd.h"
 #include "busy.h"
 #include "debug.h"
+#include "signal_list.h"
 
 
 enum { NAME_COLUMN, PTR_COLUMN, N_COLUMNS };
@@ -498,7 +499,7 @@ for(i=GLOBALS->fetchlow;i<=GLOBALS->fetchhigh;i++)
 
 set_window_idle(widget);
 
-GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
+gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
 redraw_signals_and_waves();
 }
 

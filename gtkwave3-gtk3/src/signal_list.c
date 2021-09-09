@@ -261,15 +261,16 @@ static gint configure_event(GtkWidget *widget, GdkEventConfigure *event)
     return GDK_EVENT_STOP;
 }
 
-static void update_vadjustment(GwSignalList *signal_list) {
+static void update_vadjustment(GwSignalList *signal_list, gdouble value) {
     int num_traces_displayable = gw_signal_list_get_num_traces_displayable(signal_list);
+
+	UpdateTracesVisible();
 
     gdouble lower = 0.0;
     gdouble upper = MAX((gdouble)GLOBALS->traces.visible, 1.0);
     gdouble increment = 1.0;
     gdouble page_size = (gdouble)num_traces_displayable;
     gdouble page_increment = page_size;
-    gdouble value = gtk_adjustment_get_value(signal_list->vadjustment);
 
     gtk_adjustment_configure(signal_list->vadjustment,
         value, lower, upper, increment, page_increment, page_size
@@ -308,7 +309,7 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
     // Update surface if dirty flag is set
     if (signal_list->dirty) {
 	    UpdateTracesVisible();
-        update_vadjustment(signal_list);
+        update_vadjustment(signal_list, gtk_adjustment_get_value(signal_list->vadjustment));
         update_hadjustment(signal_list);
         make_sigarea_gcs(widget);
         render_signals(signal_list);
@@ -623,20 +624,23 @@ void gw_signal_list_scroll_to_trace(GwSignalList *signal_list, Trptr trace)
         which++;
     }
 
-    int vadj = gtk_adjustment_get_value(signal_list->vadjustment);
+    int value = gtk_adjustment_get_value(signal_list->vadjustment);
     int num_traces = gw_signal_list_get_num_traces_displayable(signal_list);
 
-    if (which < vadj) {
+    if (which < value) {
         // The trace is above the current top trace
         // -> move scrollbar up to show trace as the new top trace
-
-        gtk_adjustment_set_value(signal_list->vadjustment, which);
-    } else if (which >= vadj + num_traces) {
+        value = which;
+    } else if (which >= value + num_traces) {
         // The trace is below the current bottom trace
         // -> move scrollbar down to show trace as the new bottom trace
-
-        gtk_adjustment_set_value(signal_list->vadjustment, which - num_traces + 1);
+        value = which - num_traces + 1;
     }
+
+    // Use update_vadjustment instead of gtk_adjustment_set_value to make sure
+    // the upper and lower bounds are updated if they have been changed and no
+    // redraw has occured since then.
+    update_vadjustment(signal_list, value);
 }
 
 // Scroll list upward
@@ -783,7 +787,6 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event)
                 gtk_widget_queue_draw(widget);
                 break;
         }
-
     } else if (!state) {
         switch (event->keyval) {
             // Left: Find next edge to the left

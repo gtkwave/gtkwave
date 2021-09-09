@@ -719,7 +719,6 @@ while(symc)
 	free_2(symc_current);
 	}
 
-GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
 gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
 redraw_signals_and_waves();
 

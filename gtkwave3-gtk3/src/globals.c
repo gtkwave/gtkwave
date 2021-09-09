@@ -107,7 +107,7 @@ NULL, /* ae2_time_xlate */
 TR_RJUSTIFY, /* default_flags 5 */
 0, /* default_fpshift */
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0}, /* tims 6 */
-{0, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0}, /* traces 9 */
+{0, 0, NULL, NULL, NULL, NULL, 0, 0}, /* traces 9 */
 0, /* hier_max_level 8 */
 0, /* hier_max_level_shadow */
 0, /* timestart_from_savefile */
@@ -1020,7 +1020,7 @@ NULL, /* afl_treesearch_gtk2_c_1 464 */
 NULL, /* window_treesearch_gtk2_c_12 465 */
 NULL, /* cleanup_treesearch_gtk2_c_8 468 */
 0, /* pre_import_treesearch_gtk2_c_1 469 */
-{0,0,NULL,NULL,NULL,NULL,0,NULL,NULL,0}, /* tcache_treesearch_gtk2_c_2 470 */
+{0,0,NULL,NULL,NULL,NULL,0,0}, /* tcache_treesearch_gtk2_c_2 470 */
 0, /* dnd_tgt_on_signalarea_treesearch_gtk2_c_1 471 */
 0, /* dnd_tgt_on_wavearea_treesearch_gtk2_c_1 */
 NULL, /* dnd_sigview */
