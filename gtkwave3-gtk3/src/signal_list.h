@@ -1,6 +1,7 @@
 #ifndef WAVE_SIGNAL_LIST_H
 #define WAVE_SIGNAL_LIST_H
 
+#include "config.h"
 #include <gtk/gtk.h>
 #include "analyzer.h"
 
