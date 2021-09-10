@@ -165,7 +165,7 @@ static void DNDBeginCB(
 (void)data;
 
 #ifdef GDK_WINDOWING_WAYLAND
-if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) 
+if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
 	{
 	GdkDevice *device = gdk_drag_context_get_device(dc);
 	const gchar *gn = gdk_device_get_name(device);
@@ -545,6 +545,28 @@ if(!GLOBALS || !GLOBALS->filter_entry || !event)
 	}
 }
 
+enum SignalMovementFlagBits { SMF_UP, SMF_DOWN };
+static void moveSignalSelection(int ud)
+{
+Trptr t, p;
+Trptr (*next)(Trptr t) = ud == SMF_UP ? GivePrevTrace : GiveNextTrace;
+
+/* find selected trace */
+for(p = GLOBALS->traces.first; p && !IsSelected(p); p = GiveNextTrace(p));
+if(!p) return;
+
+/* select next trace */
+for(t = next(p); t && (t->flags & (TR_GRP_BEGIN | TR_GRP_END)); t = next(t));
+if(!t) return;
+
+t->flags |= TR_HIGHLIGHT;
+p->flags &= ~TR_HIGHLIGHT;
+
+/* update UI */
+UpdateTracesVisible();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+}
+
 /*
  * keypress processing, return TRUE to block the event from gtk
  */
@@ -635,10 +657,6 @@ if(gtk_widget_has_focus(GLOBALS->signalarea_event_box))
 		case GDK_KEY_KP_Page_Up:
 		case GDK_KEY_Page_Down:
 		case GDK_KEY_KP_Page_Down:
-		case GDK_KEY_Up:
-		case GDK_KEY_KP_Up:
-		case GDK_KEY_Down:
-		case GDK_KEY_KP_Down:
 			wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
    		      	GtkAllocation allocation;
       			gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
@@ -768,8 +786,6 @@ if(gtk_widget_has_focus(GLOBALS->signalarea_event_box))
 				{
 				switch(event->keyval)
 					{
-					case GDK_KEY_Down:
-					case GDK_KEY_KP_Down:
 					case GDK_KEY_Page_Down:
 					case GDK_KEY_KP_Page_Down:
 						yscroll = ((event->keyval == GDK_KEY_Page_Down) || (event->keyval == GDK_KEY_KP_Page_Down)) ? num_traces_displayable : 1;
@@ -785,8 +801,6 @@ if(gtk_widget_has_focus(GLOBALS->signalarea_event_box))
                         			g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "value_changed"); /* force text update */
 						break;
 
-					case GDK_KEY_Up:
-					case GDK_KEY_KP_Up:
 					case GDK_KEY_Page_Up:
 					case GDK_KEY_KP_Page_Up:
 						yscroll = ((event->keyval == GDK_KEY_Page_Up) || (event->keyval == GDK_KEY_KP_Page_Up)) ? num_traces_displayable : 1;
@@ -850,6 +864,18 @@ if(gtk_widget_has_focus(GLOBALS->signalarea_event_box))
 			signalarea_configure_event(GLOBALS->signalarea, NULL);
 			*/
 
+			rc = TRUE;
+			break;
+
+		case GDK_KEY_Up:
+		case GDK_KEY_KP_Up:
+			moveSignalSelection(SMF_UP);
+			rc = TRUE;
+			break;
+
+		case GDK_KEY_Down:
+		case GDK_KEY_KP_Down:
+			moveSignalSelection(SMF_DOWN);
 			rc = TRUE;
 			break;
 
@@ -943,11 +969,11 @@ scroll_event( GtkWidget * widget, GdkEventScroll * event )
   switch ( event->direction )
   {
     case GDK_SCROLL_UP:
-      ev_fake.keyval = GDK_KEY_Up;
+      ev_fake.keyval = GDK_KEY_Page_Up;
       keypress_local(widget, &ev_fake, GLOBALS->signalarea_event_box);
       break;
     case GDK_SCROLL_DOWN:
-      ev_fake.keyval = GDK_KEY_Down;
+      ev_fake.keyval = GDK_KEY_Page_Down;
       keypress_local(widget, &ev_fake, GLOBALS->signalarea_event_box);
 
     default:
@@ -2114,5 +2140,3 @@ void remove_keypress_handler(gint id)
 {
 g_signal_handler_disconnect(XXX_GTK_OBJECT(GLOBALS->mainwindow), id);
 }
-
-
