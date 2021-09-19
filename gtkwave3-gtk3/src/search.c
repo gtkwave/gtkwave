@@ -1015,7 +1015,7 @@ void searchbox(char *title, GCallback func)
 
     gtk_widget_show (GLOBALS->sig_view_search);
 
-    dnd_setup(GLOBALS->sig_view_search, GLOBALS->signalarea, 0);
+    dnd_setup(GLOBALS->sig_view_search, TRUE);
 
     scrolled_win = gtk_scrolled_window_new (NULL, NULL);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),

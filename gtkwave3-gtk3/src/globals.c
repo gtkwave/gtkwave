@@ -808,7 +808,6 @@ NULL, /* signalfont 370 */
 1, /* right_align_active */
 1, /* fontheight 376 */
 0, /* dnd_state 377 */
-0, /* dnd_cursor_timer */
 NULL, /* hscroll_signalwindow_c_1 378 */
 0, /* cachedhiflag_signalwindow_c_1 380 */
 -1, /* cachedwhich_signalwindow_c_1 381 */
@@ -816,12 +815,9 @@ NULL, /* cachedtrace 382 */
 NULL, /* shift_click_trace 383 */
 0, /* trtarget_signalwindow_c_1 384 */
 NULL, /* starting_unshifted_trace */
-0, /* standard_trace_dnd_degate */
 0, /* use_standard_trace_select */
 1, /* use_standard_clicking */
 0, /* std_collapse_pressed */
-0, /* std_dnd_tgt_on_signalarea */
-0, /* std_dnd_tgt_on_wavearea */
 0, /* keypress_handler_id */
 0, /* cached_mouseover_x */
 0, /* cached_mouseover_y */
@@ -987,13 +983,8 @@ NULL, /* void (*cleanup_treesearch_gtk1_c)(); */
 /*
  * treesearch_gtk2.c
  */
-#ifdef MAC_INTEGRATION
-NULL, /* dnd_helper_quartz */
-#endif
 NULL, /* treeopen_chain_head */
 NULL, /* treeopen_chain_curr */
-0, /* tree_dnd_begin */
-0, /* tree_dnd_requested */
 1, /* do_dynamic_treefilter */
 NULL, /* treesearch_gtk2_window_vbox */
 NULL, /* selected_hierarchy_name */
@@ -1021,8 +1012,6 @@ NULL, /* window_treesearch_gtk2_c_12 465 */
 NULL, /* cleanup_treesearch_gtk2_c_8 468 */
 0, /* pre_import_treesearch_gtk2_c_1 469 */
 {0,0,NULL,NULL,NULL,NULL,0,0}, /* tcache_treesearch_gtk2_c_2 470 */
-0, /* dnd_tgt_on_signalarea_treesearch_gtk2_c_1 471 */
-0, /* dnd_tgt_on_wavearea_treesearch_gtk2_c_1 */
 NULL, /* dnd_sigview */
 NULL, /* sst_vpaned */
 0, /* fetchlow */
@@ -2383,12 +2372,12 @@ void reload_into_new_context_2(void)
    gtk_widget_show(GLOBALS->expanderwindow);
    if(GLOBALS->dnd_sigview)
         {
-	dnd_setup(GLOBALS->dnd_sigview, GLOBALS->signalarea, 0);
+	dnd_setup(GLOBALS->dnd_sigview, FALSE);
 	}
 
    if(GLOBALS->sig_view_search)
 	{
-	dnd_setup(GLOBALS->sig_view_search, GLOBALS->signalarea, 0);
+	dnd_setup(GLOBALS->sig_view_search, TRUE);
 	}
  }
  if(GLOBALS->window_treesearch_gtk2_c_12)

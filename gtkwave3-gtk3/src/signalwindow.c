@@ -76,18 +76,6 @@ if(GLOBALS->splash_fix_win_title)
 	wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname, GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED: WAVE_SET_TITLE_NONE, 0);
 	}
 
-#ifdef MAC_INTEGRATION
-if(GLOBALS->dnd_helper_quartz)
-        {
-        char *dhq = g_malloc(strlen(GLOBALS->dnd_helper_quartz)+1);
-        strcpy(dhq, GLOBALS->dnd_helper_quartz);
-        free_2(GLOBALS->dnd_helper_quartz);
-        GLOBALS->dnd_helper_quartz = NULL;
-        DND_helper_quartz(dhq);
-        g_free(dhq);
-        }
-#endif
-
 if(process_finder_names_queued())
 	{
 	if(GLOBALS->pFileChoose)
@@ -139,15 +127,6 @@ if((!GLOBALS->signalarea) || (!gtk_widget_get_window(GLOBALS->signalarea)))
 	return(TRUE);
 	}
 
-if(GLOBALS->dnd_cursor_timer)
-	{
-	GLOBALS->dnd_cursor_timer++;
-	if(GLOBALS->dnd_cursor_timer == 50)
-		{
-		GLOBALS->dnd_cursor_timer = 0;
-	        //gw_signal_list_reconfigure(GW_SIGNAL_LIST(GLOBALS->signalarea));
-		}
-	}
 
 if(GLOBALS->mouseover_counter < 0) return(TRUE); /* mouseover is up in wave window so don't bother */
 

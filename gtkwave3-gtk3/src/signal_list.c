@@ -37,6 +37,9 @@ typedef struct
     // Index of the drop position highlight or -1 if no drop position is shown
     int highlight_position;
 
+    // Selected action.
+    GdkDragAction action;
+
     // TRUE if the cursor is inside the autoscroll area in the top and bottom of the list
     gboolean in_scroll_area_top;
     gboolean in_scroll_area_bottom;
@@ -335,24 +338,6 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
         cairo_rel_line_to(cr, allocation.width, 0);
         cairo_stroke(cr);
     }
-
-    /* TODO: Add support for dropping external traces/files
-    int i;
-
-    int which = -1;
-    int ylin = ((which + 2) * GLOBALS->fontheight) - 2;
-
-    for (i = 0; i<GLOBALS->signal_fill_width - 1; i += 16) {
-        cairo_set_source_rgba(cr, GLOBALS->rgb_gc_black.r, GLOBALS->rgb_gc_black.g, GLOBALS->rgb_gc_black.b, GLOBALS->rgb_gc_black.a);
-        cairo_move_to(cr, i + 0.5, ylin + 0.5);
-        cairo_line_to(cr, i + 7 + 0.5, ylin + 0.5);
-        cairo_stroke(cr);
-
-        cairo_set_source_rgba(cr, GLOBALS->rgb_gc_white.r, GLOBALS->rgb_gc_white.g, GLOBALS->rgb_gc_white.b, GLOBALS->rgb_gc_white.a);
-        cairo_move_to(cr, i + 8 + 0.5, ylin + 0.5);
-        cairo_line_to(cr, i + 15 + 0.5, ylin + 0.5);
-        cairo_stroke(cr);
-    }*/
 
     set_GLOBALS(g_old);
 
@@ -857,9 +842,18 @@ static gboolean drag_motion(GtkWidget* widget, GdkDragContext* context, gint x, 
 {
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
 
-    GdkDragAction action = GDK_ACTION_COPY;
+    GdkAtom target = gtk_drag_dest_find_target(widget, context, NULL);
+    if (target == GDK_NONE) {
+        gdk_drag_status(context, 0, time);
+
+        signal_list->drop.highlight_position = -1;
+        gtk_widget_queue_draw(widget);
+
+        return GDK_EVENT_STOP;
+    }
 
     // Default to move if a trace is dragged inside the signal list and control isn't pressed
+    GdkDragAction action = GDK_ACTION_COPY;
     GtkWidget *source_widget = gtk_drag_get_source_widget(context);
     if (widget == source_widget && (gdk_drag_context_get_actions(context) & GDK_ACTION_MOVE)) {
         action = GDK_ACTION_MOVE;
@@ -896,7 +890,7 @@ static gboolean drag_motion(GtkWidget* widget, GdkDragContext* context, gint x, 
         signal_list->drop.scroll_timeout_source = g_timeout_add(100, G_SOURCE_FUNC(scroll_timeout), signal_list);
     }
 
-    return TRUE;
+    return GDK_EVENT_STOP;
 }
 
 static void drag_leave(GtkWidget* widget, GdkDragContext* context, guint time)
@@ -914,19 +908,26 @@ static gboolean drag_drop(GtkWidget* widget, GdkDragContext* context, gint x, gi
 
     GdkAtom target = gtk_drag_dest_find_target(widget, context, NULL);
     if (target != GDK_NONE) {
-        GdkDragAction action = gdk_drag_context_get_selected_action(context);
+        signal_list->drop.action = gdk_drag_context_get_selected_action(context);
 
         // recalculate the drop position (the highlight position has been cleared by drag_leave)
-        int drop_position = y_to_drop_position(y);
-        if (drop_position == 0) {
-            if (GLOBALS->tree_dnd_begin == TREE_TO_VIEW_DRAG_ACTIVE) {
-                action_callback(SST_ACTION_PREPEND);
-            } else if (GLOBALS->tree_dnd_begin == SEARCH_TO_VIEW_DRAG_ACTIVE) {
-                if (GLOBALS->window_search_c_7 != NULL) {
-                    search_insert_callback(GLOBALS->window_search_c_7, 1 /* is prepend */);
-                }
-            } else {
-                if (action == GDK_ACTION_COPY) {
+        signal_list->drop.highlight_position = y_to_drop_position(y);
+        gtk_drag_get_data(widget, context, target, time);
+    } else {
+        fprintf(stderr, "GTKWAVE | No valid DnD target found\n");
+    }
+
+    return TRUE;
+}
+
+static void drag_data_received(GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *data, guint info, guint time)
+{
+    GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
+
+    switch (info) {
+        case WAVE_DRAG_INFO_SIGNAL_LIST:
+            if (signal_list->drop.highlight_position == 0) {
+                if (signal_list->drop.action == GDK_ACTION_COPY) {
                     char *tcl = emit_gtkwave_savefile_formatted_entries_in_tcl_list(GLOBALS->traces.first, TRUE);
                     ClearTraces();
                     process_tcl_list(tcl, FALSE);
@@ -935,25 +936,9 @@ static gboolean drag_drop(GtkWidget* widget, GdkDragContext* context, gint x, gi
 
                 CutBuffer();
                 PrependBuffer();
-            }
-        } else {
-            Trptr t = gw_signal_list_get_trace(signal_list, drop_position - 1);
-
-            if (GLOBALS->tree_dnd_begin == TREE_TO_VIEW_DRAG_ACTIVE) {
-                ClearTraces();
-                if (t != NULL) {
-                    t->flags |= TR_HIGHLIGHT;
-                }
-                action_callback(SST_ACTION_INSERT);
-            } else if (GLOBALS->tree_dnd_begin == SEARCH_TO_VIEW_DRAG_ACTIVE) {
-                ClearTraces();
-                if (t != NULL) {
-                    t->flags |= TR_HIGHLIGHT;
-                }
-                if (GLOBALS->window_search_c_7 != NULL) {
-                    search_insert_callback(GLOBALS->window_search_c_7, 0 /* is insert */);
-                }
             } else {
+                Trptr t = gw_signal_list_get_trace(signal_list, signal_list->drop.highlight_position - 1);
+
                 // Search upward for the first non selected trace.
                 // CutBuffer would otherwise remove the trace that determines the
                 // paste position if traces were dropped on any selected trace.
@@ -962,7 +947,7 @@ static gboolean drag_drop(GtkWidget* widget, GdkDragContext* context, gint x, gi
                 }
 
                 if (t != NULL) {
-                    if (action == GDK_ACTION_MOVE) {
+                    if (signal_list->drop.action == GDK_ACTION_MOVE) {
                         CutBuffer();
 
                         t->flags |= TR_HIGHLIGHT;
@@ -974,19 +959,69 @@ static gboolean drag_drop(GtkWidget* widget, GdkDragContext* context, gint x, gi
                         t->flags |= TR_HIGHLIGHT;
 
                         process_tcl_list(tcl, FALSE);
-		                free_2(tcl);
+                        free_2(tcl);
                     }
                 }
             }
-        }
-    }
+            break;
 
-    GLOBALS->tree_dnd_begin = VIEW_DRAG_INACTIVE;
+        case WAVE_DRAG_INFO_TCL:
+            if (gtk_selection_data_get_length(data) > 0) {
+                const char *tcl = gtk_selection_data_get_data(data);
+
+                ClearTraces();
+
+                Trptr t;
+                gboolean prepend;
+                if (signal_list->drop.highlight_position > 0) {
+                    t = gw_signal_list_get_trace(signal_list, signal_list->drop.highlight_position - 1);
+                    prepend = FALSE;
+                } else {
+                    t = GLOBALS->traces.first;
+                    prepend = TRUE;
+                }
+
+                if (t != NULL) {
+                    t->flags |= TR_HIGHLIGHT;
+                }
+
+                process_tcl_list(tcl, prepend);
+            }
+
+            gtk_drag_finish(context, TRUE, FALSE, time);
+            break;
+
+        default:
+            fprintf(stderr, "GTKWAVE | Invalid DnD info\n");
+            break;
+    }
 
     drop_reset(&signal_list->drop);
     redraw_signals_and_waves();
+}
 
-    return TRUE;
+static void drag_data_get(GtkWidget *widget, GdkDragContext *context, GtkSelectionData *data, guint info, guint time)
+{
+    switch (info) {
+        case WAVE_DRAG_INFO_SIGNAL_LIST:
+            // Data isn't required for widget internal dragging.
+            break;
+
+        case WAVE_DRAG_INFO_TCL:
+            {
+                char *tcl = emit_gtkwave_savefile_formatted_entries_in_tcl_list(GLOBALS->traces.first, TRUE);
+                if (tcl != NULL) {
+                    gtk_selection_data_set(data, GDK_SELECTION_TYPE_STRING, 8, tcl, strlen(tcl));
+                    free_2(tcl);
+                }
+            }
+            break;
+
+        default:
+            fprintf(stderr, "GTKWAVE | Invalid DnD info\n");
+            break;
+    }
+
 }
 
 static gboolean motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
@@ -995,16 +1030,18 @@ static gboolean motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
 
     if (signal_list->drag.pending) {
         if (gtk_drag_check_threshold(widget, signal_list->drag.start_x, signal_list->drag.start_y, event->x, event->y)) {
-            GtkTargetEntry targets[3];
-            targets[0].target = WAVE_DRAG_TAR_NAME_0;
-            targets[0].flags = 0;
-            targets[0].info = WAVE_DRAG_TAR_INFO_0;
-            targets[1].target = WAVE_DRAG_TAR_NAME_1;
-            targets[1].flags = 0;
-            targets[1].info = WAVE_DRAG_TAR_INFO_1;
-            targets[2].target = WAVE_DRAG_TAR_NAME_2;
-            targets[2].flags = 0;
-            targets[2].info = WAVE_DRAG_TAR_INFO_2;
+            GtkTargetEntry targets[] = {
+                {
+                    .target = WAVE_DRAG_TARGET_SIGNAL_LIST,
+                    .flags = GTK_TARGET_SAME_APP,
+                    .info = WAVE_DRAG_INFO_SIGNAL_LIST,
+                },
+                {
+                    .target = WAVE_DRAG_TARGET_TCL,
+                    .flags = 0,
+                    .info = WAVE_DRAG_INFO_TCL,
+                },
+            };
 
             GtkTargetList *target_list = gtk_target_list_new(targets, G_N_ELEMENTS(targets));
 
@@ -1063,6 +1100,8 @@ static void gw_signal_list_class_init(GwSignalListClass *klass)
     widget_class->drag_motion = drag_motion;
     widget_class->drag_leave = drag_leave;
     widget_class->drag_drop = drag_drop;
+    widget_class->drag_data_received = drag_data_received;
+    widget_class->drag_data_get = drag_data_get;
 }
 
 static void gw_signal_list_init(GwSignalList *signal_list)
@@ -1082,22 +1121,26 @@ static void gw_signal_list_init(GwSignalList *signal_list)
 
     gtk_widget_set_can_focus(widget, TRUE);
 
-    GtkTargetEntry targets[3];
-    targets[0].target = WAVE_DRAG_TAR_NAME_0;
-    targets[0].flags = 0;
-    targets[0].info = WAVE_DRAG_TAR_INFO_0;
-    targets[1].target = WAVE_DRAG_TAR_NAME_1;
-    targets[1].flags = 0;
-    targets[1].info = WAVE_DRAG_TAR_INFO_1;
-    targets[2].target = WAVE_DRAG_TAR_NAME_2;
-    targets[2].flags = 0;
-    targets[2].info = WAVE_DRAG_TAR_INFO_2;
+    GtkTargetEntry targets[] = {
+        {
+            .target = WAVE_DRAG_TARGET_SIGNAL_LIST,
+            .flags = GTK_TARGET_SAME_WIDGET,
+            .info = WAVE_DRAG_INFO_SIGNAL_LIST,
+        },
+        {
+            .target = WAVE_DRAG_TARGET_TCL,
+            .flags = 0,
+            .info = WAVE_DRAG_INFO_TCL,
+        },
+    };
 
     gtk_drag_dest_set(widget, 0, targets, G_N_ELEMENTS(targets), GDK_ACTION_MOVE);
 
 #if GTK_CHECK_VERSION(3, 0, 0)
     signal_list->hadjustment = gtk_adjustment_new(0, 0, 0, 0, 0, 0);
     signal_list->vadjustment = gtk_adjustment_new(0, 0, 0, 0, 0, 0);
+    g_object_ref(signal_list->hadjustment);
+    g_object_ref(signal_list->vadjustment);
 #else
     signal_list->hadjustment = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
     signal_list->vadjustment = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));

@@ -837,7 +837,6 @@ int old_signal_fill_height; /* from signalwindow.c 403 */
 int right_align_active; /* from signalwindow.c */
 int fontheight; /* from signalwindow.c 404 */
 char dnd_state; /* from signalwindow.c 405 */
-unsigned int dnd_cursor_timer; /* from signalwindow.c */
 GtkWidget *hscroll_signalwindow_c_1; /* from signalwindow.c 406 */
 unsigned int cachedhiflag_signalwindow_c_1; /* from signalwindow.c 408 */
 int cachedwhich_signalwindow_c_1; /* from signalwindow.c 409 */
@@ -845,12 +844,9 @@ struct TraceEnt *cachedtrace; /* from signalwindow.c 410 */
 struct TraceEnt *shift_click_trace; /* from signalwindow.c 411 */
 int trtarget_signalwindow_c_1; /* from signalwindow.c 412 */
 Trptr starting_unshifted_trace; /* from signalwindow.c */
-unsigned char standard_trace_dnd_degate; /* from signalwindow.c */
 unsigned char use_standard_trace_select; /* from signalwindow.c */
 unsigned char use_standard_clicking; /* from signalwindow.c */
 unsigned char std_collapse_pressed; /* from signalwindow.c */
-unsigned char std_dnd_tgt_on_signalarea; /* from signalwindow.c */
-unsigned char std_dnd_tgt_on_wavearea; /* from signalwindow.c */
 gint keypress_handler_id; /* from signalwindow.c */
 gint cached_mouseover_x; /* from signalwindow.c */
 gint cached_mouseover_y; /* from signalwindow.c */
@@ -1009,13 +1005,8 @@ void (*cleanup_treesearch_gtk1_c)(void); /* ...end of manual adds */
 /*
  * treesearch_gtk2.c
  */
-#ifdef MAC_INTEGRATION
-char *dnd_helper_quartz;
-#endif
 struct string_chain_t *treeopen_chain_head; /* from bitvec.c */
 struct string_chain_t *treeopen_chain_curr; /* from bitvec.c */
-char tree_dnd_begin; /* from treesearch_gtk2.c */
-char tree_dnd_requested; /* from treesearch_gtk2.c */
 char do_dynamic_treefilter; /* from treesearch_gtk2.c */
 GtkWidget *treesearch_gtk2_window_vbox; /* from treesearch_gtk2.c */
 char *selected_hierarchy_name; /* from treesearch_gtk2.c */
@@ -1043,8 +1034,6 @@ GtkWidget *window_treesearch_gtk2_c_12; /* from treesearch_gtk2.c 495 */
 void (*cleanup_treesearch_gtk2_c_8)(void); /* from treesearch_gtk2.c 498 */
 int pre_import_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 499 */
 Traces tcache_treesearch_gtk2_c_2; /* from treesearch_gtk2.c 500 */
-unsigned char dnd_tgt_on_signalarea_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 501 */
-unsigned char dnd_tgt_on_wavearea_treesearch_gtk2_c_1; /* from treesearch_gtk2.c */
 GtkWidget *dnd_sigview; /* from treesearch_gtk2.c */
 GtkPaned *sst_vpaned; /* from treesearch_gtk2.c */
 int fetchlow;

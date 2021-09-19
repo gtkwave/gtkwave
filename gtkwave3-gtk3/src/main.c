@@ -633,6 +633,35 @@ return(G_LOG_WRITER_HANDLED);
 #endif
 
 
+static void window_setup_dnd(GtkWidget *window)
+{
+GtkTargetEntry targets[1];
+
+targets[0].target = "text/uri-list";
+targets[0].flags = 0;
+targets[0].info = 0;
+
+gtk_drag_dest_set(window, GTK_DEST_DEFAULT_ALL, targets, G_N_ELEMENTS(targets), GDK_ACTION_COPY);
+}
+
+static void window_drag_data_received(GtkWidget* widget, GdkDragContext* context,
+	gint x, gint y, GtkSelectionData* selection_data, guint info, guint time_)
+{
+if (gtk_selection_data_get_length(selection_data) > 0)
+	{
+	const gchar *uris = gtk_selection_data_get_data(selection_data);
+
+	gchar *uris_copy = g_strndup(uris, gtk_selection_data_get_length(selection_data));
+
+	if (process_url_list(uris_copy) != 0)
+		{
+		redraw_signals_and_waves();
+		}
+
+	g_free(uris_copy);
+	}
+}
+
 int main(int argc, char *argv[])
 {
 return(main_2(0, argc, argv));
@@ -2074,6 +2103,9 @@ if(!GLOBALS->socket_xid)
 
 	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "delete_event", 	/* formerly was "destroy" */G_CALLBACK(file_quit_cmd_callback), "WM destroy");
 
+	window_setup_dnd(GLOBALS->mainwindow);
+	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "drag-data-received", G_CALLBACK(window_drag_data_received), NULL);
+
 	gtk_widget_show(GLOBALS->mainwindow);
 	}
 #ifdef WAVE_USE_XID
@@ -2652,11 +2684,7 @@ gtk_widget_show(panedwindow);
 
 if(GLOBALS->dnd_sigview)
 	{
-	dnd_setup(GLOBALS->dnd_sigview, GLOBALS->signalarea, 1);
-	}
-	else
-	{
-	dnd_setup(NULL, GLOBALS->signalarea, 1);
+	dnd_setup(GLOBALS->dnd_sigview, FALSE);
 	}
 
 if((!GLOBALS->hide_sst)&&(GLOBALS->loaded_file_type != MISSING_FILE))
