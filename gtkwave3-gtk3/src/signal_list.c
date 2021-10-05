@@ -230,7 +230,8 @@ static void render_signals(GwSignalList *signal_list)
 
     Trptr t = gw_signal_list_get_trace(signal_list, 0);
     if (t) {
-        for (int i = 0; i < num_traces_displayable && t; i++) {
+        int i;
+        for (i = 0; i < num_traces_displayable && t; i++) {
             render_signal(cr, t, width, text_dx);
 
             cairo_translate(cr, 0, GLOBALS->fontheight);
@@ -910,8 +911,6 @@ static gboolean drag_drop(GtkWidget* widget, GdkDragContext* context, gint x, gi
     if (target != GDK_NONE) {
         signal_list->drop.action = gdk_drag_context_get_selected_action(context);
 
-        // recalculate the drop position (the highlight position has been cleared by drag_leave)
-        signal_list->drop.highlight_position = y_to_drop_position(y);
         gtk_drag_get_data(widget, context, target, time);
     } else {
         fprintf(stderr, "GTKWAVE | No valid DnD target found\n");
@@ -924,9 +923,12 @@ static void drag_data_received(GtkWidget *widget, GdkDragContext *context, gint 
 {
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
 
+    // recalculate the drop position (the highlight position has been cleared by drag_leave)
+    int drop_position = y_to_drop_position(y);
+
     switch (info) {
         case WAVE_DRAG_INFO_SIGNAL_LIST:
-            if (signal_list->drop.highlight_position == 0) {
+            if (drop_position == 0) {
                 if (signal_list->drop.action == GDK_ACTION_COPY) {
                     char *tcl = emit_gtkwave_savefile_formatted_entries_in_tcl_list(GLOBALS->traces.first, TRUE);
                     ClearTraces();
@@ -937,7 +939,7 @@ static void drag_data_received(GtkWidget *widget, GdkDragContext *context, gint 
                 CutBuffer();
                 PrependBuffer();
             } else {
-                Trptr t = gw_signal_list_get_trace(signal_list, signal_list->drop.highlight_position - 1);
+                Trptr t = gw_signal_list_get_trace(signal_list, drop_position - 1);
 
                 // Search upward for the first non selected trace.
                 // CutBuffer would otherwise remove the trace that determines the
@@ -973,8 +975,8 @@ static void drag_data_received(GtkWidget *widget, GdkDragContext *context, gint 
 
                 Trptr t;
                 gboolean prepend;
-                if (signal_list->drop.highlight_position > 0) {
-                    t = gw_signal_list_get_trace(signal_list, signal_list->drop.highlight_position - 1);
+                if (drop_position > 0) {
+                    t = gw_signal_list_get_trace(signal_list, drop_position - 1);
                     prepend = FALSE;
                 } else {
                     t = GLOBALS->traces.first;
@@ -1011,7 +1013,8 @@ static void drag_data_get(GtkWidget *widget, GdkDragContext *context, GtkSelecti
             {
                 char *tcl = emit_gtkwave_savefile_formatted_entries_in_tcl_list(GLOBALS->traces.first, TRUE);
                 if (tcl != NULL) {
-                    gtk_selection_data_set(data, GDK_SELECTION_TYPE_STRING, 8, tcl, strlen(tcl));
+                    GdkAtom type = gdk_atom_intern_static_string(WAVE_DRAG_TARGET_TCL);
+                    gtk_selection_data_set(data, type, 8, tcl, strlen(tcl));
                     free_2(tcl);
                 }
             }
@@ -1021,7 +1024,6 @@ static void drag_data_get(GtkWidget *widget, GdkDragContext *context, GtkSelecti
             fprintf(stderr, "GTKWAVE | Invalid DnD info\n");
             break;
     }
-
 }
 
 static gboolean motion_notify_event(GtkWidget* widget, GdkEventMotion* event)

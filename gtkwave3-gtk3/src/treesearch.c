@@ -1770,6 +1770,12 @@ static void DNDBeginCB(
 (void)widget;
 (void)data;
 
+#if GTK_CHECK_VERSION(3, 2, 0)
+// Reset the hotspot to make sure the icon is shown at the correct position in
+// wayland.
+gdk_drag_context_set_hotspot(dc, 0, 0);
+#endif
+
 // GtkTreeView sets the drag icon to an image of the dragged row, which can
 // hide a large part of the drag destination. By overriding the icon to the
 // default the destination highlight in the signal list is more visible.
