@@ -291,9 +291,7 @@ if(GLOBALS->dirty_markerbox_c_1)
 		GLOBALS->marker_names[i] = GLOBALS->shadow_marker_names[i];
 		GLOBALS->shadow_marker_names[i] = NULL;
 		}
-        MaxSignalLength();
-        signalarea_configure_event(GLOBALS->signalarea, NULL);
-        wavearea_configure_event(GLOBALS->wavearea, NULL);
+        redraw_signals_and_waves();
 	}
 
   wave_gtk_grab_remove(GLOBALS->window_markerbox_c_4);

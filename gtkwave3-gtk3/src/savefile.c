@@ -869,9 +869,7 @@ int read_save_helper(char *wname, char **dumpfile, char **savefile, off_t *dumps
 		EnsureGroupsMatch();
 
 		GLOBALS->signalwindow_width_dirty=1;
-		MaxSignalLength();
-		signalarea_configure_event(GLOBALS->signalarea, NULL);
-		wavearea_configure_event(GLOBALS->wavearea, NULL);
+		redraw_signals_and_waves();
 
 #ifdef MAC_INTEGRATION
 		if(GLOBALS->num_notebook_pages > 1)

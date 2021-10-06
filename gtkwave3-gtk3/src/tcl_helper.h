@@ -82,7 +82,7 @@ typedef struct llist_s {
 
 int process_url_file(char *s);
 int process_url_list(char *s);
-int process_tcl_list(char *s, gboolean track_mouse_y);
+int process_tcl_list(const char *s, gboolean prepend);
 char *add_dnd_from_searchbox(void);
 char *add_dnd_from_signal_window(void);
 char *add_traces_from_signal_window(gboolean is_from_tcl_command);

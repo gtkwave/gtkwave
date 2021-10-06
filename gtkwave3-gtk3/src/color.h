@@ -80,6 +80,7 @@ wave_rgb_t gc_dash_wavewindow_c_1;
 void XXX_set_alternate_gcs(wave_rgb_t ctx, wave_rgb_t ctx_fill);
 wave_rgb_t XXX_alloc_color(int tuple);
 
+void wave_rgb_set_source(wave_rgb_t *color, cairo_t *context);
 
 #endif
 

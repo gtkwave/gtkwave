@@ -410,6 +410,7 @@ void menu_remove_marked(gpointer null_data, guint callback_action, GtkWidget *wi
 void menu_lxt_clk_compress(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_help(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_version(gpointer null_data, guint callback_action, GtkWidget *widget);
+void menu_expand(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_toggle_group(gpointer null_data, guint callback_action, GtkWidget *widget);
 
 gtkwave_mlist_t *retrieve_menu_items_array(int *num_items);

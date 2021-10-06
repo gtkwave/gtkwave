@@ -117,17 +117,6 @@ for(j=0;j<GLOBALS->num_notebook_pages;j++)
 
 int traverse_vector_nodes(Trptr t);
 
-static void regen_display(void)
-{
-if(GLOBALS->signalarea && GLOBALS->wavearea)
-	{
-	GLOBALS->signalwindow_width_dirty=1;
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
-	}
-}
-
 
 /*
  * this is likely obsolete
@@ -142,7 +131,8 @@ if(GLOBALS->ttrans_filter[which])
 
 	if(regen)
 	        {
-		regen_display();
+		GLOBALS->signalwindow_width_dirty=1;
+		redraw_signals_and_waves();
 	        }
 	}
 }
@@ -326,7 +316,8 @@ if(GLOBALS->traces.first)
 
 if(found)
 	{
-	regen_display();
+	GLOBALS->signalwindow_width_dirty=1;
+	redraw_signals_and_waves();
 	}
 
 return(found);
@@ -883,7 +874,8 @@ ex:     			buf[n] = 0;
 			               		if(GLOBALS->hier_max_level)
 			               			t->name = hier_extract(t->name, GLOBALS->hier_max_level);
 
-					regen_display();
+					GLOBALS->signalwindow_width_dirty=1;
+					redraw_signals_and_waves();
 					}
 				}
 				else

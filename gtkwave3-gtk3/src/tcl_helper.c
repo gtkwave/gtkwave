@@ -29,6 +29,7 @@
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_np.h"
+#include "signal_list.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -644,89 +645,6 @@ char* zMergeTclList(int argc, const char** argv) {
 
 
 /* ----------------------------------------------------------------------------
- * determine_trace_from_y - finds trace under the marker
- *
- * Results:
- *      Returns Trptr which corresponds to the mouse pointer y position.
- * ----------------------------------------------------------------------------
- */
-
-static Trptr determine_trace_from_y(void)
-{
-Trptr t;
-int trwhich, trtarget;
-GdkModifierType state;
-gdouble x, y;
-gint xi, yi;
-
-
-if(GLOBALS->dnd_tgt_on_signalarea_treesearch_gtk2_c_1)
-	{
-	WAVE_GDK_GET_POINTER(gtk_widget_get_window(GLOBALS->signalarea), &x, &y, &xi, &yi, &state);
-	WAVE_GDK_GET_POINTER_COPY;
-
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
-
-	if((x<0)||(y<0)||(x>=allocation.width)||(y>=allocation.height)) return(NULL);
-	}
-else
-if(GLOBALS->dnd_tgt_on_wavearea_treesearch_gtk2_c_1)
-	{
-	WAVE_GDK_GET_POINTER(gtk_widget_get_window(GLOBALS->wavearea), &x, &y, &xi, &yi, &state);
-	WAVE_GDK_GET_POINTER_COPY;
-
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(GLOBALS->wavearea, &allocation);
-
-
-	if((x<0)||(y<0)||(x>=allocation.width)||(y>=allocation.height)) return(NULL);
-	}
-else
-	{
-	return(NULL);
-	}
-
-if((t=GLOBALS->traces.first))
-        {
-        while(t)
-                {
-                t->flags&=~TR_HIGHLIGHT;
-                t=t->t_next;
-                }
-        signalarea_configure_event(GLOBALS->signalarea, NULL);
-        wavearea_configure_event(GLOBALS->wavearea, NULL);
-	}
-
-trtarget = ((int)y / (int)GLOBALS->fontheight) - 2;
-if(trtarget < 0)
-	{
-	return(NULL);
-	}
-	else
-	{
-	t=GLOBALS->topmost_trace;
-	}
-
-trwhich=0;
-while(t)
-	{
-        if((trwhich<trtarget)&&(GiveNextTrace(t)))
-        	{
-                trwhich++;
-                t=GiveNextTrace(t);
-                }
-                else
-                {
-                break;
-                }
-	}
-
-return(t);
-}
-
-
-/* ----------------------------------------------------------------------------
  * check_gtkwave_directive_from_tcl_list - parses tcl list for any gtkwave
  * directives
  *
@@ -964,7 +882,7 @@ GLOBALS->default_flags = default_flags;
 }
 
 
-int process_tcl_list(char *sl, gboolean track_mouse_y)
+int process_tcl_list(const char *sl, gboolean prepend)
 {
 char *s_new = NULL;
 char *this_regex = "\\(\\[.*\\]\\)*$";
@@ -1052,15 +970,6 @@ for(ii=0;ii<c;ii++)
 							                if(GLOBALS->is_lx2)
 										{
 										lx2_import_masked();
-										}
-
-									if(track_mouse_y)
-										{
-										t = determine_trace_from_y();
-										if(t)
-											{
-											t->flags |=  TR_HIGHLIGHT;
-											}
 										}
 
 									memcpy(&GLOBALS->tcache_treesearch_gtk2_c_2,&GLOBALS->traces,sizeof(Traces));
@@ -1252,15 +1161,6 @@ if(GLOBALS->is_lx2)
 	lx2_import_masked();
 	}
 
-if(track_mouse_y)
-	{
-	t = determine_trace_from_y();
-	if(t)
-		{
-		t->flags |=  TR_HIGHLIGHT;
-		}
-	}
-
 memcpy(&GLOBALS->tcache_treesearch_gtk2_c_2,&GLOBALS->traces,sizeof(Traces));
 GLOBALS->traces.total=0;
 GLOBALS->traces.first=GLOBALS->traces.last=NULL;
@@ -1364,7 +1264,7 @@ GLOBALS->traces.first=GLOBALS->tcache_treesearch_gtk2_c_2.first;
 GLOBALS->traces.last=GLOBALS->tcache_treesearch_gtk2_c_2.last;
 GLOBALS->traces.total=GLOBALS->tcache_treesearch_gtk2_c_2.total;
 
-if((t) || (!track_mouse_y))
+if((t) || (!prepend))
 	{
 	PasteBuffer();
 	}
@@ -1376,14 +1276,6 @@ if((t) || (!track_mouse_y))
 GLOBALS->traces.buffercount=GLOBALS->tcache_treesearch_gtk2_c_2.buffercount;
 GLOBALS->traces.buffer=GLOBALS->tcache_treesearch_gtk2_c_2.buffer;
 GLOBALS->traces.bufferlast=GLOBALS->tcache_treesearch_gtk2_c_2.bufferlast;
-
-if(track_mouse_y)
-	{
-	if(t)
-		{
-		t->flags &= ~TR_HIGHLIGHT;
-		}
-	}
 
 cleanup:
 for(ii=0;ii<c;ii++)

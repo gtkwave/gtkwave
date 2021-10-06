@@ -181,14 +181,6 @@ for(i=0;i<FILE_FILTER_MAX+1;i++)
 	}
 }
 
-static void regen_display(void)
-{
-GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
-}
-
 
 static void remove_file_filter_2(xl_Tree *t)
 {
@@ -209,7 +201,8 @@ if(GLOBALS->xl_file_filter[which])
 
 if(regen)
         {
-	regen_display();
+	GLOBALS->signalwindow_width_dirty=1;
+	redraw_signals_and_waves();
         }
 }
 
@@ -324,7 +317,8 @@ if(GLOBALS->traces.first)
 
 if(found)
 	{
-	regen_display();
+	GLOBALS->signalwindow_width_dirty=1;
+	redraw_signals_and_waves();
 	}
 
 return(found);

@@ -32,6 +32,7 @@
 #include "debug.h"
 #include "strace.h"
 #include "print.h"
+#include "signal_list.h"
 
 
 /**********************************************
@@ -576,7 +577,7 @@ ps_MaxSignalLength (void)
   Trptr t;
   int len = 0, maxlen = 0, numchars = 0;
   int vlen = 0;
-  int i, trwhich, trtarget, num_traces_displayable;
+  int i, num_traces_displayable;
   GtkAdjustment *sadj;
   char buf[2048];
   bvptr bv;
@@ -586,29 +587,8 @@ ps_MaxSignalLength (void)
   GLOBALS->ps_nummaxchars_print_c_1 = 7;	/* allows a good spacing if 60 pixel default
 						 * is used */
 
-  sadj = GTK_ADJUSTMENT (GLOBALS->wave_vslider);
-  trtarget = (int) (gtk_adjustment_get_value(sadj));
-
-  t = GLOBALS->traces.first;
-  trwhich = 0;
-  while (t)
-    {
-      if ((trwhich < trtarget) && (GiveNextTrace (t)))
-	{
-	  trwhich++;
-	  t = GiveNextTrace (t);
-	}
-      else
-	{
-	  break;
-	}
-    }
-
-  GtkAllocation allocation;
-  gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
-
-  num_traces_displayable =
-    allocation.height / GLOBALS->fontheight;
+  t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
+  num_traces_displayable = gw_signal_list_get_num_traces_displayable(GW_SIGNAL_LIST(GLOBALS->signalarea));
 
   for (i = 0; (i < num_traces_displayable) && (t); i++)
     {
@@ -3034,13 +3014,9 @@ pr_draw_vptr_trace (pr_context * prc, Trptr t, vptr v, int which)
 static void
 pr_rendertraces (pr_context * prc)
 {
-  if (!GLOBALS->topmost_trace)
+  Trptr t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
+  if (t)
     {
-      GLOBALS->topmost_trace = GLOBALS->traces.first;
-    }
-  if (GLOBALS->topmost_trace)
-    {
-      Trptr t = GLOBALS->topmost_trace;
       Trptr tback = t;
       hptr h;
       vptr v;
@@ -3320,7 +3296,10 @@ pr_RenderSigs (pr_context * prc, int trtarget)
 	}
     }
 
+#if 0
+  TODO: Check
   GLOBALS->topmost_trace = t;
+#endif
   if (t)
     {
       for (i = 0; (i < num_traces_displayable) && (t); i++)
@@ -3356,8 +3335,10 @@ print_image (pr_context * prc)
 
   pr_signal_init (prc);
 
+#if 0
   sadj = GTK_ADJUSTMENT (GLOBALS->wave_vslider);
   trtarget = (int) (gtk_adjustment_get_value(sadj));
+  #endif
   pr_RenderSigs (prc, trtarget);
 
   pr_trailer (prc);
