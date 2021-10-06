@@ -2724,7 +2724,7 @@ if(!mainwindow_already_built)
 #if GTK_CHECK_VERSION(3,0,0)
 	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), top_table, 0, 16, 0, 1,
 	                      	GTK_FILL | GTK_EXPAND,
-	                      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
+	                      	0, 0, 0);
 #else
 	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), GLOBALS->force_toolbars?toolhandle:top_table, 0, 16, 0, 1,
 	                      	GTK_FILL | GTK_EXPAND,
