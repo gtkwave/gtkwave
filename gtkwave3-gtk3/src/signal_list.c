@@ -18,6 +18,11 @@
 #define GDK_BUTTON_SECONDARY 3
 #endif
 
+/* workaround for old versions of glib such as in centos7 */
+#if !defined(G_SOURCE_FUNC)
+#define G_SOURCE_FUNC(f) ((GSourceFunc) (void (*)(void)) (f))
+#endif
+
 // Variables related to dragging from the signal list
 typedef struct
 {
