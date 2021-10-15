@@ -459,7 +459,7 @@ static void select_range(Trptr a, Trptr b)
 static gboolean button_press_event(GtkWidget *widget, GdkEventButton *event)
 {
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
-    gboolean full_redraw = FALSE;
+    gboolean full_redraw = GLOBALS->highlight_wavewindow; // force redraw for this because signal updates cause wavewindow updates when active
 
     gtk_widget_grab_focus(widget);
 
