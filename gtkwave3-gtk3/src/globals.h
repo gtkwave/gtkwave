@@ -923,6 +923,7 @@ char *previous_braced_tcl_string;
  * tcl_helper.c
  */
 char in_tcl_callback;
+char tcl_menu_toggle_item;
 
 
 /*
