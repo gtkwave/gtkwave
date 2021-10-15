@@ -2662,6 +2662,7 @@ gtkwave_mlist_t *ife = (gtkwave_mlist_t *)clientData;
 int i;
 struct wave_script_args *old_wave_script_args = GLOBALS->wave_script_args; /* stackable args */
 char fexit = GLOBALS->enable_fast_exit;
+int old_toggle_item;
 
 if(GLOBALS->in_tcl_callback) /* don't allow callbacks to call menu functions (yet) */
 	{
@@ -2732,14 +2733,19 @@ if(objc > 1)
 		GLOBALS->wave_script_args->payload[0] = 0;
 		}
 
+	old_toggle_item = GLOBALS->tcl_menu_toggle_item;
+	GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
 	ife->callback();
+	GLOBALS->tcl_menu_toggle_item = old_toggle_item;
 	gtkwave_main_iteration();
 
 	GLOBALS->wave_script_args = NULL;
 	}
 	else
 	{
+	GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
 	ife->callback();
+	GLOBALS->tcl_menu_toggle_item =	old_toggle_item;
 	gtkwave_main_iteration();
 	}
 
