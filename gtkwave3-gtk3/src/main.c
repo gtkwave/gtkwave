@@ -72,6 +72,7 @@
 #include "translate.h"
 #include "ptranslate.h"
 #include "ttranslate.h"
+#include "signal_list.h"
 
 #include "tcl_helper.h"
 #if defined(HAVE_LIBTCL)
@@ -156,9 +157,7 @@ if(GLOBALS->second_page_created)
 	{
 	wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname, GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED: WAVE_SET_TITLE_NONE, 0);
 
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 
 }
@@ -633,6 +632,35 @@ return(G_LOG_WRITER_HANDLED);
 }
 #endif
 
+
+static void window_setup_dnd(GtkWidget *window)
+{
+GtkTargetEntry targets[1];
+
+targets[0].target = "text/uri-list";
+targets[0].flags = 0;
+targets[0].info = 0;
+
+gtk_drag_dest_set(window, GTK_DEST_DEFAULT_ALL, targets, G_N_ELEMENTS(targets), GDK_ACTION_COPY);
+}
+
+static void window_drag_data_received(GtkWidget* widget, GdkDragContext* context,
+	gint x, gint y, GtkSelectionData* selection_data, guint info, guint time_)
+{
+if (gtk_selection_data_get_length(selection_data) > 0)
+	{
+	const gchar *uris = gtk_selection_data_get_data(selection_data);
+
+	gchar *uris_copy = g_strndup(uris, gtk_selection_data_get_length(selection_data));
+
+	if (process_url_list(uris_copy) != 0)
+		{
+		redraw_signals_and_waves();
+		}
+
+	g_free(uris_copy);
+	}
+}
 
 int main(int argc, char *argv[])
 {
@@ -2075,6 +2103,9 @@ if(!GLOBALS->socket_xid)
 
 	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "delete_event", 	/* formerly was "destroy" */G_CALLBACK(file_quit_cmd_callback), "WM destroy");
 
+	window_setup_dnd(GLOBALS->mainwindow);
+	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "drag-data-received", G_CALLBACK(window_drag_data_received), NULL);
+
 	gtk_widget_show(GLOBALS->mainwindow);
 	}
 #ifdef WAVE_USE_XID
@@ -2573,10 +2604,14 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 	}
 
 
-GLOBALS->wavewindow = create_wavewindow();
 load_all_fonts(); /* must be done before create_signalwindow() */
-gtk_widget_show(GLOBALS->wavewindow);
 GLOBALS->signalwindow = create_signalwindow();
+
+/* must be created after the signalwindow because it uses the signal_list vadjustment */
+GLOBALS->wavewindow = create_wavewindow();
+gtk_widget_show(GLOBALS->wavewindow);
+
+redraw_signals_and_waves();
 
 if(GLOBALS->do_resize_signals)
                 {
@@ -2649,14 +2684,8 @@ gtk_widget_show(panedwindow);
 
 if(GLOBALS->dnd_sigview)
 	{
-	dnd_setup(GLOBALS->dnd_sigview, GLOBALS->signalarea, 1);
+	dnd_setup(GLOBALS->dnd_sigview, FALSE);
 	}
-	else
-	{
-	dnd_setup(NULL, GLOBALS->signalarea, 1);
-	}
-/* dnd_setup(GLOBALS->signalarea, GLOBALS->signalarea); */
-dnd_setup(GLOBALS->signalarea, GLOBALS->wavearea, 1);
 
 if((!GLOBALS->hide_sst)&&(GLOBALS->loaded_file_type != MISSING_FILE))
 	{
@@ -2695,7 +2724,7 @@ if(!mainwindow_already_built)
 #if GTK_CHECK_VERSION(3,0,0)
 	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), top_table, 0, 16, 0, 1,
 	                      	GTK_FILL | GTK_EXPAND,
-	                      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
+	                      	0, 0, 0);
 #else
 	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), GLOBALS->force_toolbars?toolhandle:top_table, 0, 16, 0, 1,
 	                      	GTK_FILL | GTK_EXPAND,
@@ -2708,9 +2737,7 @@ if(!mainwindow_already_built)
         	for(dri=0;dri<2;dri++)
         	        {
         	        GLOBALS->signalwindow_width_dirty=1;
-        	        MaxSignalLength();
-        	        signalarea_configure_event(GLOBALS->signalarea, NULL);
-        	        wavearea_configure_event(GLOBALS->wavearea, NULL);
+        	        redraw_signals_and_waves();
         	        }
 		}
 	}

@@ -41,6 +41,7 @@
 #include "vlist.h"
 #include "vzt.h"
 #include "wavealloca.h"
+#include "signal_list.h"
 
 #include "lxt2_read.h"
 #include "vzt_read.h"
@@ -106,7 +107,7 @@ NULL, /* ae2_time_xlate */
 TR_RJUSTIFY, /* default_flags 5 */
 0, /* default_fpshift */
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0}, /* tims 6 */
-{0, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0}, /* traces 9 */
+{0, 0, NULL, NULL, NULL, NULL, 0, 0}, /* traces 9 */
 0, /* hier_max_level 8 */
 0, /* hier_max_level_shadow */
 0, /* timestart_from_savefile */
@@ -799,11 +800,6 @@ NULL, /* sig_view_search */
  */
 NULL, /* signalarea 369 */
 NULL, /* signalfont 370 */
-NULL, /* surface_signalpixmap */
-NULL, /* cr_signalpixmap */
-#if defined(WAVE_ALLOW_QUARTZ_FLUSH_WORKAROUND) || defined(WAVE_ALLOW_GTK3_VSLIDER_WORKAROUND)
-0, /* force_hide_show */
-#endif
 0, /* max_signal_name_pixel_width 372 */
 0, /* signal_pixmap_width 373 */
 0, /* signal_fill_width 374 */
@@ -812,40 +808,22 @@ NULL, /* cr_signalpixmap */
 1, /* right_align_active */
 1, /* fontheight 376 */
 0, /* dnd_state 377 */
-0, /* dnd_cursor_timer */
 NULL, /* hscroll_signalwindow_c_1 378 */
-NULL, /* signal_hslider 379 */
 0, /* cachedhiflag_signalwindow_c_1 380 */
 -1, /* cachedwhich_signalwindow_c_1 381 */
 NULL, /* cachedtrace 382 */
 NULL, /* shift_click_trace 383 */
 0, /* trtarget_signalwindow_c_1 384 */
 NULL, /* starting_unshifted_trace */
-0, /* standard_trace_dnd_degate */
 0, /* use_standard_trace_select */
 1, /* use_standard_clicking */
 0, /* std_collapse_pressed */
-0, /* std_dnd_tgt_on_signalarea */
-0, /* std_dnd_tgt_on_wavearea */
-0, /* signalarea_has_focus */
-NULL, /* signalarea_event_box */
 0, /* keypress_handler_id */
 0, /* cached_mouseover_x */
 0, /* cached_mouseover_y */
 0, /* mouseover_counter */
 0, /* button2_debounce_flag */
 0, /* dragzoom_threshold */
-
-#ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_WAVE_VSLIDER
-0.0, /* wave_vslider_page_size */
-0.0, /* wave_vslider_page_increment */
-0.0, /* wave_vslider_step_increment */
-0.0, /* wave_vslider_lower */
-0.0, /* wave_vslider_upper */
-0.0, /* wave_vslider_value */
-0, /* wave_vslider_valid */
-#endif
-
 
 /*
  * simplereq.c
@@ -1005,13 +983,8 @@ NULL, /* void (*cleanup_treesearch_gtk1_c)(); */
 /*
  * treesearch_gtk2.c
  */
-#ifdef MAC_INTEGRATION
-NULL, /* dnd_helper_quartz */
-#endif
 NULL, /* treeopen_chain_head */
 NULL, /* treeopen_chain_curr */
-0, /* tree_dnd_begin */
-0, /* tree_dnd_requested */
 1, /* do_dynamic_treefilter */
 NULL, /* treesearch_gtk2_window_vbox */
 NULL, /* selected_hierarchy_name */
@@ -1038,9 +1011,7 @@ NULL, /* afl_treesearch_gtk2_c_1 464 */
 NULL, /* window_treesearch_gtk2_c_12 465 */
 NULL, /* cleanup_treesearch_gtk2_c_8 468 */
 0, /* pre_import_treesearch_gtk2_c_1 469 */
-{0,0,NULL,NULL,NULL,NULL,0,NULL,NULL,0}, /* tcache_treesearch_gtk2_c_2 470 */
-0, /* dnd_tgt_on_signalarea_treesearch_gtk2_c_1 471 */
-0, /* dnd_tgt_on_wavearea_treesearch_gtk2_c_1 */
+{0,0,NULL,NULL,NULL,NULL,0,0}, /* tcache_treesearch_gtk2_c_2 470 */
 NULL, /* dnd_sigview */
 NULL, /* sst_vpaned */
 0, /* fetchlow */
@@ -1282,7 +1253,6 @@ NULL, /* blackout_regions 606 */
 1.0, /* pxns 611 */
 1.0, /* nspx */
 2.0, /* zoombase 612 */
-NULL, /* topmost_trace 613 */
 1, /* waveheight 614 */
 0, /* wavecrosspiece */
 1, /* wavewidth 615 */
@@ -1292,7 +1262,6 @@ NULL, /* wavearea 618 */
 NULL, /* vscroll_wavewindow_c_1 619 */
 NULL, /* hscroll_wavewindow_c_2 620 */
 NULL, /* wave_vslider2 622 */
-NULL, /* wave_vslider 622 */
 NULL, /* wave_hslider */
 {0}, /* named_markers 623 */
 -1, /* named_marker_lock_idx */
@@ -1684,15 +1653,12 @@ void reload_into_new_context_2(void)
  /* Default colors, X contexts, pixmaps, drawables, etc from signalwindow.c and wavewindow.c */
  new_globals->possibly_use_rc_defaults = GLOBALS->possibly_use_rc_defaults;
 
- new_globals->signalarea_event_box = GLOBALS->signalarea_event_box;
  new_globals->keypress_handler_id = GLOBALS->keypress_handler_id;
  new_globals->signalarea = GLOBALS->signalarea;
  new_globals->wavearea = GLOBALS->wavearea;
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
  new_globals->wavearea_gesture_swipe = GLOBALS->wavearea_gesture_swipe;
 #endif
- new_globals->surface_signalpixmap = GLOBALS->surface_signalpixmap;
- new_globals->cr_signalpixmap = GLOBALS->cr_signalpixmap;
  new_globals->wave_splash_pixbuf = GLOBALS->wave_splash_pixbuf;
  new_globals->hscroll_signalwindow_c_1 = GLOBALS->hscroll_signalwindow_c_1; /* only was used for obsolete XXX_resize_sstpane_y_hack_for_gtk3() */
 
@@ -1717,8 +1683,6 @@ void reload_into_new_context_2(void)
  new_globals->sstpane = GLOBALS->sstpane;
  new_globals->sst_vpaned = GLOBALS->sst_vpaned;
  new_globals->expanderwindow = GLOBALS->expanderwindow;
- new_globals->signal_hslider = GLOBALS->signal_hslider;
- new_globals->wave_vslider = GLOBALS->wave_vslider;
  new_globals->wave_hslider = GLOBALS->wave_hslider;
  new_globals->hscroll_wavewindow_c_2 = GLOBALS->hscroll_wavewindow_c_2;
  new_globals->max_or_marker_label_currenttime_c_1 = GLOBALS->max_or_marker_label_currenttime_c_1;
@@ -2408,12 +2372,12 @@ void reload_into_new_context_2(void)
    gtk_widget_show(GLOBALS->expanderwindow);
    if(GLOBALS->dnd_sigview)
         {
-	dnd_setup(GLOBALS->dnd_sigview, GLOBALS->signalarea, 0);
+	dnd_setup(GLOBALS->dnd_sigview, FALSE);
 	}
 
    if(GLOBALS->sig_view_search)
 	{
-	dnd_setup(GLOBALS->sig_view_search, GLOBALS->signalarea, 0);
+	dnd_setup(GLOBALS->sig_view_search, TRUE);
 	}
  }
  if(GLOBALS->window_treesearch_gtk2_c_12)
@@ -2437,9 +2401,7 @@ void reload_into_new_context_2(void)
 
  /* again doing this here (read_save_helper does it) seems to be necessary in order to keep display in sync */
  GLOBALS->signalwindow_width_dirty=1;
- MaxSignalLength();
- signalarea_configure_event(GLOBALS->signalarea, NULL);
- wavearea_configure_event(GLOBALS->wavearea, NULL);
+ redraw_signals_and_waves();
 
  /* unlink temp */
  unlink(reload_tmpfilename);

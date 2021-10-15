@@ -1031,9 +1031,6 @@ Trptr PasteBuffer(void)
       tinsertnext->t_prev=GLOBALS->traces.bufferlast;
     }
 
-  GLOBALS->traces.scroll_top = GLOBALS->traces.buffer;
-  GLOBALS->traces.scroll_bottom = GLOBALS->traces.bufferlast;
-
   if(GLOBALS->traces.first)
     {
       t = GLOBALS->traces.first;

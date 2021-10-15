@@ -98,16 +98,6 @@ for(j=0;j<GLOBALS->num_notebook_pages;j++)
 	}
 }
 
-
-static void regen_display(void)
-{
-GLOBALS->signalwindow_width_dirty=1;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
-}
-
-
 /*
  * this is likely obsolete
  */
@@ -229,7 +219,8 @@ if(GLOBALS->traces.first)
 
 if(found)
 	{
-	regen_display();
+        GLOBALS->signalwindow_width_dirty=1;
+        redraw_signals_and_waves();
 	}
 
 return(found);

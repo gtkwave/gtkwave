@@ -23,12 +23,11 @@
 #include "hierpack.h"
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
+#include "signal_list.h"
 
 WAVE_NODEVARTYPE_STR
 WAVE_NODEVARDIR_STR
 WAVE_NODEVARDATATYPE_STR
-
-enum { VIEW_DRAG_INACTIVE, TREE_TO_VIEW_DRAG_ACTIVE, SEARCH_TO_VIEW_DRAG_ACTIVE };
 
 /* Treesearch is a pop-up window used to select signals.
    It is composed of two main areas:
@@ -1098,7 +1097,7 @@ sig_selection_foreach_preload_lx2
 }
 
 
-static void
+void
 action_callback(enum sst_cb_action action)
 {
   if(action == SST_ACTION_NONE) return; /* only used for double-click in signals pane of SST */
@@ -1129,11 +1128,9 @@ action_callback(enum sst_cb_action action)
 
   if(action == SST_ACTION_APPEND)
 	{
-	GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
+	gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
 	}
-  MaxSignalLength();
-  signalarea_configure_event(GLOBALS->signalarea, NULL);
-  wavearea_configure_event(GLOBALS->wavearea, NULL);
+  redraw_signals_and_waves(); 
 }
 
 static void insert_callback(GtkWidget *widget, GtkWidget *nothing)
@@ -1428,7 +1425,7 @@ do_tooltips:
       }
 
     GLOBALS->dnd_sigview = sig_view;
-    dnd_setup(GLOBALS->dnd_sigview, GLOBALS->signalarea, 0);
+    dnd_setup(GLOBALS->dnd_sigview, FALSE);
 
     sig_frame = gtk_frame_new (NULL);
     gtk_container_set_border_width (GTK_CONTAINER (sig_frame), 3);
@@ -1607,7 +1604,6 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     fill_sig_store ();
 
     sig_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (GLOBALS->sig_store_treesearch_gtk2_c_1));
-    gtkwave_signal_connect(XXX_GTK_OBJECT(sig_view), "button_press_event",G_CALLBACK(hier_top_button_press_event_std), NULL);
 
     /* The view now holds a reference.  We can get rid of our own reference */
     g_object_unref (G_OBJECT (GLOBALS->sig_store_treesearch_gtk2_c_1));
@@ -1758,7 +1754,6 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     return vbox;
 }
 
-
 /****************************************************************
  **
  ** dnd
@@ -1772,53 +1767,24 @@ static void DNDBeginCB(
 	GtkWidget *widget, GdkDragContext *dc, gpointer data
 )
 {
+(void)widget;
 (void)data;
 
-        if((widget == NULL) || (dc == NULL))
-		return;
+#if GTK_CHECK_VERSION(3, 2, 0)
+// Reset the hotspot to make sure the icon is shown at the correct position in
+// wayland.
+gdk_drag_context_set_hotspot(dc, 0, 0);
+#endif
 
-	/* Put any needed drag begin setup code here. */
-	if(!GLOBALS->dnd_state)
-		{
-		if(widget == GLOBALS->sig_view_search)
-			{
-			GLOBALS->tree_dnd_begin = SEARCH_TO_VIEW_DRAG_ACTIVE;
-			}
-			else
-			{
-			GLOBALS->tree_dnd_begin = TREE_TO_VIEW_DRAG_ACTIVE;
-			}
-		}
+// GtkTreeView sets the drag icon to an image of the dragged row, which can
+// hide a large part of the drag destination. By overriding the icon to the
+// default the destination highlight in the signal list is more visible.
+gtk_drag_set_icon_default(dc);
+
+GLOBALS->dnd_state = 1;
 }
 
-/*
- *	DND "drag_failed" handler, this is called when a drag and drop has
- *      failed (e.g., by pressing ESC).
- */
-static gboolean DNDFailedCB(
-        GtkWidget *widget, GdkDragContext *context, GtkDragResult result)
-{
-(void)widget;
-(void)context;
-(void)result;
-
-GLOBALS->dnd_state = 0;
-GLOBALS->tree_dnd_begin = VIEW_DRAG_INACTIVE;
-GLOBALS->tree_dnd_requested = 0;
-
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
-
-return(FALSE);
-}
-
-/*
- *      DND "drag_end" handler, this is called when a drag and drop has
- *	completed. So this function is the last one to be called in
- *	any given DND operation.
- */
-static void DNDEndCB_2(
+static void DNDEndCB(
 	GtkWidget *widget, GdkDragContext *dc, gpointer data
 )
 {
@@ -1826,228 +1792,9 @@ static void DNDEndCB_2(
 (void)dc;
 (void)data;
 
-Trptr t;
-int trwhich, trtarget;
-GdkModifierType state;
-gdouble x, y;
-gint xi, yi;
+GLOBALS->dnd_state = 0;
 
-/* Put any needed drag end cleanup code here. */
-
-if(GLOBALS->dnd_tgt_on_signalarea_treesearch_gtk2_c_1)
-	{
-	WAVE_GDK_GET_POINTER(gtk_widget_get_window(GLOBALS->signalarea), &x, &y, &xi, &yi, &state);
-	WAVE_GDK_GET_POINTER_COPY;
-
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
-
-	if((x<0)||(y<0)||(x>=allocation.width)||(y>=allocation.height)) return;
-	}
-else
-if(GLOBALS->dnd_tgt_on_wavearea_treesearch_gtk2_c_1)
-	{
-	WAVE_GDK_GET_POINTER(gtk_widget_get_window(GLOBALS->wavearea), &x, &y, &xi, &yi, &state);
-	WAVE_GDK_GET_POINTER_COPY;
-
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(GLOBALS->wavearea, &allocation);
-
-
-	if((x<0)||(y<0)||(x>=allocation.width)||(y>=allocation.height)) return;
-	}
-else
-	{
-	return;
-	}
-
-
-if((t=GLOBALS->traces.first))
-        {
-        while(t)
-                {
-                t->flags&=~TR_HIGHLIGHT;
-                t=t->t_next;
-                }
-        signalarea_configure_event(GLOBALS->signalarea, NULL);
-        wavearea_configure_event(GLOBALS->wavearea, NULL);
-	}
-
-trtarget = ((int)y / (int)GLOBALS->fontheight) - 2;
-if(trtarget < 0)
-	{
-	Trptr tp = GLOBALS->topmost_trace ? GivePrevTrace(GLOBALS->topmost_trace): NULL;
-	trtarget = 0;
-
-	if(tp)
-		{
-		t = tp;
-		}
-		else
-		{
-		if(GLOBALS->tree_dnd_begin == SEARCH_TO_VIEW_DRAG_ACTIVE)
-			{
-			if(GLOBALS->window_search_c_7)
-				{
-				search_insert_callback(GLOBALS->window_search_c_7, 1 /* is prepend */);
-				}
-			}
-			else
-			{
-			action_callback(SST_ACTION_PREPEND);  /* prepend in this widget only ever used by this function call */
-			}
-		goto dnd_import_fini;
-		}
-	}
-	else
-	{
-	t=GLOBALS->topmost_trace;
-	}
-
-trwhich=0;
-while(t)
-	{
-        if((trwhich<trtarget)&&(GiveNextTrace(t)))
-        	{
-                trwhich++;
-                t=GiveNextTrace(t);
-                }
-                else
-                {
-                break;
-                }
-	}
-
-if(t)
-	{
-	t->flags |= TR_HIGHLIGHT;
-	}
-
-if(GLOBALS->tree_dnd_begin == SEARCH_TO_VIEW_DRAG_ACTIVE)
-	{
-	if(GLOBALS->window_search_c_7)
-		{
-		search_insert_callback(GLOBALS->window_search_c_7, 0 /* is insert */);
-		}
-	}
-	else
-	{
-	action_callback (SST_ACTION_INSERT);
-	}
-
-if(t)
-	{
-	t->flags &= ~TR_HIGHLIGHT;
-	}
-
-dnd_import_fini:
-
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
-}
-
-
-static void DNDEndCB(
-	GtkWidget *widget, GdkDragContext *dc, gpointer data
-)
-{
-if((widget == NULL) || (dc == NULL))
-	{
-	GLOBALS->tree_dnd_begin = VIEW_DRAG_INACTIVE;
-	return;
-	}
-
-if(GLOBALS->tree_dnd_begin == VIEW_DRAG_INACTIVE)
-	{
-	return; /* to keep cut and paste in signalwindow from conflicting */
-	}
-
-if(GLOBALS->tree_dnd_requested)
-	{
-	GLOBALS->tree_dnd_requested = 0;
-
-	if(GLOBALS->is_lx2 == LXT2_IS_VLIST)
-		{
-		set_window_busy(NULL);
-		}
-	DNDEndCB_2(widget, dc, data);
-	if(GLOBALS->is_lx2 == LXT2_IS_VLIST)
-		{
-		set_window_idle(NULL);
-		}
-	}
-
-GLOBALS->tree_dnd_begin = VIEW_DRAG_INACTIVE;
-}
-
-
-
-/*
- *	DND "drag_motion" handler, this is called whenever the
- *	pointer is dragging over the target widget.
- */
-static gboolean DNDDragMotionCB(
-        GtkWidget *widget, GdkDragContext *dc,
-        gint x, gint y, guint t,
-        gpointer data
-)
-{
-(void)x; 
-(void)y;
-(void)data;
-
-	gboolean same_widget;
-	GdkDragAction suggested_action;
-	GtkWidget *src_widget, *tar_widget;
-        if((widget == NULL) || (dc == NULL))
-		{
-                gdk_drag_status(dc, 0, t);
-                return(FALSE);
-		}
-
-	/* Get source widget and target widget. */
-	src_widget = gtk_drag_get_source_widget(dc);
-	tar_widget = widget;
-
-	/* Note if source widget is the same as the target. */
-	same_widget = (src_widget == tar_widget) ? TRUE : FALSE;
-
-	GLOBALS->dnd_tgt_on_signalarea_treesearch_gtk2_c_1 = (tar_widget == GLOBALS->signalarea);
-	GLOBALS->dnd_tgt_on_wavearea_treesearch_gtk2_c_1 = (tar_widget == GLOBALS->wavearea);
-
-	/* If this is the same widget, our suggested action should be
-	 * move.  For all other case we assume copy.
-	 */
-	if(same_widget)
-		suggested_action = GDK_ACTION_MOVE;
-	else
-		suggested_action = GDK_ACTION_COPY;
-
-	/* Respond with default drag action (status). First we check
-	 * the dc's list of actions. If the list only contains
-	 * move, copy, or link then we select just that, otherwise we
-	 * return with our default suggested action.
-	 * If no valid actions are listed then we respond with 0.
-	 */
-
-        /* Only move? */
-        if(gdk_drag_context_get_actions(dc) == GDK_ACTION_MOVE)
-            gdk_drag_status(dc, GDK_ACTION_MOVE, t);
-        /* Only copy? */
-        else if(gdk_drag_context_get_actions(dc) == GDK_ACTION_COPY)
-            gdk_drag_status(dc, GDK_ACTION_COPY, t);
-        /* Only link? */
-        else if(gdk_drag_context_get_actions(dc) == GDK_ACTION_LINK)
-            gdk_drag_status(dc, GDK_ACTION_LINK, t);
-        /* Other action, check if listed in our actions list? */
-        else if(gdk_drag_context_get_actions(dc) & suggested_action)
-            gdk_drag_status(dc, suggested_action, t);
-        /* All else respond with 0. */
-        else
-            gdk_drag_status(dc, 0, t);
-
-	return(FALSE);
+redraw_signals_and_waves();
 }
 
 /*
@@ -2057,7 +1804,7 @@ static gboolean DNDDragMotionCB(
  *	responsable for setting up the dynamic data exchange buffer
  *	(DDE as sometimes it is called) and sending it out.
  */
-static void DNDDataRequestCB(
+static void DNDDataRequestCBTree(
 	GtkWidget *widget, GdkDragContext *dc,
 	GtkSelectionData *selection_data, guint info, guint t,
 	gpointer data
@@ -2069,261 +1816,71 @@ static void DNDDataRequestCB(
 (void)data;
 
 int upd = 0;
-GLOBALS->tree_dnd_requested = 1;  /* indicate that a request for data occurred... */
 
-if(widget == GLOBALS->sig_view_search)	/* from search */
+char *text = add_dnd_from_tree_window();
+if(text)
 	{
-	char *text = add_dnd_from_searchbox();
-	if(text)
-		{
-		gtk_selection_data_set(selection_data,GDK_SELECTION_TYPE_STRING, 8, (guchar*)text, strlen(text));
-		free_2(text);
-		}
+	gtk_selection_data_set(selection_data,GDK_SELECTION_TYPE_STRING, 8, (guchar*)text, strlen(text));
+	free_2(text);
 	upd = 1;
 	}
-else if(widget == GLOBALS->signalarea)
+if(upd)
 	{
-	char *text = add_dnd_from_signal_window();
-	if(text)
-		{
-		char *text2 = emit_gtkwave_savefile_formatted_entries_in_tcl_list(GLOBALS->traces.first, TRUE);
-		if(text2)
-			{
-			int textlen = strlen(text);
-			int text2len = strlen(text2);
-			char *pnt = calloc_2(1, textlen + text2len + 1);
-
-			memcpy(pnt, text, textlen);
-			memcpy(pnt + textlen, text2, text2len);
-
-			free_2(text2);
-			free_2(text);
-			text = pnt;
-			}
-
-		gtk_selection_data_set(selection_data,GDK_SELECTION_TYPE_STRING, 8, (guchar*)text, strlen(text));
-		free_2(text);
-		}
-	upd = 1;
+	redraw_signals_and_waves();
 	}
-else if(widget == GLOBALS->dnd_sigview)
+}
+
+
+static void DNDDataRequestCBSearch(
+	GtkWidget *widget, GdkDragContext *dc,
+	GtkSelectionData *selection_data, guint info, guint t,
+	gpointer data
+)
+{
+
+int upd = 0;
+
+char *text = add_dnd_from_searchbox();
+if(text)
 	{
-	char *text = add_dnd_from_tree_window();
-	if(text)
-		{
-		gtk_selection_data_set(selection_data,GDK_SELECTION_TYPE_STRING, 8, (guchar*)text, strlen(text));
-		free_2(text);
-		}
+	gtk_selection_data_set(selection_data,GDK_SELECTION_TYPE_STRING, 8, (guchar*)text, strlen(text));
+	free_2(text);
 	upd = 1;
 	}
 
 if(upd)
 	{
-	MaxSignalLength();
-	signalarea_configure_event(GLOBALS->signalarea, NULL);
-	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	redraw_signals_and_waves();
 	}
 }
-
-/*
- *      DND "drag_data_received" handler. When DNDDataRequestCB()
- *	calls gtk_selection_data_set() to send out the data, this function
- *	receives it and is responsible for handling it.
- *
- *	This is also the only DND callback function where the given
- *	inputs may reflect those of the drop target so we need to check
- *	if this is the same structure or not.
- */
-static void DNDDataReceivedCB(
-	GtkWidget *widget, GdkDragContext *dc,
-	gint x, gint y, GtkSelectionData *selection_data,
-	guint info, guint t, gpointer data) {
-(void)x;
-(void)y;
-(void)t;
-
-    gboolean same;
-    GtkWidget *source_widget;
-
-    if((widget == NULL) || (data == NULL) || (dc == NULL)) return;
-
-    /* Important, check if we actually got data.  Sometimes errors
-     * occure and selection_data will be NULL.
-     */
-    if(selection_data == NULL)     return;
-    if(gtk_selection_data_get_length(selection_data) < 0) return;
-
-    /* Source and target widgets are the same? */
-    source_widget = gtk_drag_get_source_widget(dc);
-    same = (source_widget == widget) ? TRUE : FALSE;
-    if(same)
-	{
-	/* unused */
-	}
-
-    if(source_widget)
-    if((source_widget == GLOBALS->sig_view_search) || /* from search */
-       (source_widget == GLOBALS->signalarea) ||
-       (source_widget == GLOBALS->dnd_sigview))
-		{
-		/* use internal mechanism instead of passing names around... */
-		return;
-		}
-
-    GLOBALS->dnd_state = 0;
-    GLOBALS->tree_dnd_requested = 0;
-
-    /* Now check if the data format type is one that we support
-     * (remember, data format type, not data type).
-     *
-     * We check this by testing if info matches one of the info
-     * values that we have defined.
-     *
-     * Note that we can also iterate through the atoms in:
-     *	GList *glist = dc->targets;
-     *
-     *	while(glist != NULL)
-     *	{
-     *	    gchar *name = gdk_atom_name((GdkAtom)glist->data);
-     *	     * strcmp the name to see if it matches
-     *	     * one that we support
-     *	     *
-     *	    glist = glist->next;
-     *	}
-     */
-    if((info == WAVE_DRAG_TAR_INFO_0) ||
-       (info == WAVE_DRAG_TAR_INFO_1) ||
-       (info == WAVE_DRAG_TAR_INFO_2))
-    {
-    /* printf("XXX %08x '%s'\n", selection_data->data, selection_data->data); */
-#ifndef MAC_INTEGRATION
-    DND_helper_quartz((char *)gtk_selection_data_get_data(selection_data));
-#else
-    if(!GLOBALS->dnd_helper_quartz)
-        {
-        GLOBALS->dnd_helper_quartz = strdup_2((const char *)gtk_selection_data_get_data(selection_data));
-        }
-#endif
-    }
-}
-
-
-void DND_helper_quartz(char *data)
-{
-int num_found;
-
-if(!GLOBALS->splash_is_loading)
-	{
-	if(!GLOBALS->pFileChoose)
-		{
-		if(!(num_found = process_url_list(data)))
-		        {
-		        num_found = process_tcl_list(data, TRUE);
-		        }
-
-		if(num_found)
-		        {
-		        MaxSignalLength();
-		        signalarea_configure_event(GLOBALS->signalarea, NULL);
-		        wavearea_configure_event(GLOBALS->wavearea, NULL);
-		        }
-		}
-		else
-		{
-	        MaxSignalLength();
-	        signalarea_configure_event(GLOBALS->signalarea, NULL);
-	        wavearea_configure_event(GLOBALS->wavearea, NULL);
-		}
-	}
-}
-
-
-/*
- *	DND "drag_data_delete" handler, this function is called when
- *	the data on the source `should' be deleted (ie if the DND was
- *	a move).
- */
-static void DNDDataDeleteCB(
-	GtkWidget *widget, GdkDragContext *dc, gpointer data
-)
-{
-(void)widget;
-(void)dc;
-(void)data;
-
-/* nothing */
-}
-
 
 /***********************/
 
 
-void dnd_setup(GtkWidget *src, GtkWidget *w, int enable_receive)
+void dnd_setup(GtkWidget *src, gboolean search)
 {
-	GtkWidget *win = w;
-	GtkTargetEntry target_entry[3];
+	GtkTargetEntry target_entry[1];
 
-	/* Realize the clist widget and make sure it has a window,
-	 * this will be for DND setup.
+	/* Set up the list of data format types that our DND
+	 * callbacks will accept.
 	 */
-        if(gtk_widget_get_has_window(w))
-	{
-		/* DND: Set up the clist as a potential DND destination.
-		 * First we set up target_entry which is a sequence of of
-		 * structure which specify the kinds (which we define) of
-		 * drops accepted on this widget.
-		 */
+	target_entry[0].target = WAVE_DRAG_TARGET_TCL;
+	target_entry[0].flags = 0;
+	target_entry[0].info = WAVE_DRAG_INFO_TCL;
 
-		/* Set up the list of data format types that our DND
-		 * callbacks will accept.
-		 */
-		target_entry[0].target = WAVE_DRAG_TAR_NAME_0;
-		target_entry[0].flags = 0;
-		target_entry[0].info = WAVE_DRAG_TAR_INFO_0;
-                target_entry[1].target = WAVE_DRAG_TAR_NAME_1;
-                target_entry[1].flags = 0;
-                target_entry[1].info = WAVE_DRAG_TAR_INFO_1;
-                target_entry[2].target = WAVE_DRAG_TAR_NAME_2;
-                target_entry[2].flags = 0;
-                target_entry[2].info = WAVE_DRAG_TAR_INFO_2;
+	gtk_tree_view_enable_model_drag_source(GTK_TREE_VIEW(src), GDK_BUTTON1_MASK,
+		target_entry, G_N_ELEMENTS(target_entry), GDK_ACTION_COPY);
 
-		/* Set the drag destination for this widget, using the
-		 * above target entry types, accept move's and coppies'.
-		 */
-		gtk_drag_dest_set(
-			w,
-			GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT |
-			GTK_DEST_DEFAULT_DROP,
-			target_entry,
-			sizeof(target_entry) / sizeof(GtkTargetEntry),
-			GDK_ACTION_MOVE | GDK_ACTION_COPY
-		);
-		gtkwave_signal_connect(XXX_GTK_OBJECT(w), "drag_motion", G_CALLBACK(DNDDragMotionCB), win);
+	// connect signal after the default handler to override the default icon
+	g_signal_connect_after(src, "drag_begin", G_CALLBACK(DNDBeginCB), NULL);
 
-		/* Set the drag source for this widget, allowing the user
-		 * to drag items off of this clist.
-		 */
-		if(src)
-			{
-			gtk_drag_source_set(
-				src,
-				GDK_BUTTON1_MASK | GDK_BUTTON2_MASK,
-	                        target_entry,
-	                        sizeof(target_entry) / sizeof(GtkTargetEntry),
-				GDK_ACTION_MOVE | GDK_ACTION_COPY
-			);
-			/* Set DND signals on clist. */
-			gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_begin", G_CALLBACK(DNDBeginCB), win);
-	                gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_end", G_CALLBACK(DNDEndCB), win);
-	                gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_data_get", G_CALLBACK(DNDDataRequestCB), win);
-	                gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_data_delete", G_CALLBACK(DNDDataDeleteCB), win);
-
-			gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_failed", G_CALLBACK(DNDFailedCB), win);
-			}
-
-
-                if(enable_receive) gtkwave_signal_connect(XXX_GTK_OBJECT(w),   "drag_data_received", G_CALLBACK(DNDDataReceivedCB), win);
+	if (search) {
+		gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_data_get", G_CALLBACK(DNDDataRequestCBSearch), NULL);
+	} else {
+		gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_data_get", G_CALLBACK(DNDDataRequestCBTree), NULL);
 	}
+
+	g_signal_connect(src, "drag_end", G_CALLBACK(DNDEndCB), NULL);
 }
 
 /***************************************************************************/
@@ -2419,10 +1976,8 @@ for(i=GLOBALS->fetchlow;i<=GLOBALS->fetchhigh;i++)
 
 set_window_idle(widget);
 
-GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
+redraw_signals_and_waves();
 }
 
 
@@ -2535,9 +2090,7 @@ GLOBALS->traces.buffercount=tcache.buffercount;
 GLOBALS->traces.buffer=tcache.buffer;
 GLOBALS->traces.bufferlast=tcache.bufferlast;
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 
@@ -2696,9 +2249,7 @@ if(tp)
         }
 }
 
-MaxSignalLength();
-signalarea_configure_event(GLOBALS->signalarea, NULL);
-wavearea_configure_event(GLOBALS->wavearea, NULL);
+redraw_signals_and_waves();
 }
 
 

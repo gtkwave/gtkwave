@@ -19,6 +19,7 @@
 #include "strace.h"
 #include "debug.h"
 #include "main.h"
+#include "signal_list.h"
 
 #if !defined _ISOC99_SOURCE
 #define _ISOC99_SOURCE 1
@@ -333,7 +334,7 @@ if(y<0) y=0;
 y/=GLOBALS->fontheight;		    /* y now indicates the trace in question */
 if(y>num_traces_displayable) y=num_traces_displayable;
 
-t=GLOBALS->topmost_trace;
+t=gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
 for(i=0;i<y;i++)
 	{
 	if(!t) goto bot;
@@ -780,6 +781,7 @@ if((GLOBALS->cr_wavepixmap_wavewindow_c_1)&&(GLOBALS->wavewidth>1))
                 {
                 XXX_gdk_draw_rectangle(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->rgb_gc.gc_back_wavewindow_c_1, TRUE, 0, 0,GLOBALS->wavewidth, GLOBALS->waveheight);
                 rendertimebar();
+		gtk_widget_queue_draw(GLOBALS->wavewindow);
                 }
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
 	if(gesture_in_zoom) gesture_in_zoom--;
@@ -791,87 +793,30 @@ if((GLOBALS->cr_wavepixmap_wavewindow_c_1)&&(GLOBALS->wavewidth>1))
 static
 #endif
 void
-service_vslider(GtkWidget *text, gpointer data)
+service_vslider(GtkAdjustment *sadj, gpointer data)
 {
-(void)text;
-(void)data;
+	(void)data;
 
-GtkAdjustment *sadj, *hadj;
-int trtarget;
-int xsrc;
+	sync_marker();
 
-if(GLOBALS->cr_signalpixmap)
+	if (GLOBALS->cr_wavepixmap_wavewindow_c_1)
 	{
-	hadj=GTK_ADJUSTMENT(GLOBALS->signal_hslider);
-	sadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
-	xsrc=(gint)gtk_adjustment_get_value(hadj);
+	      	XXX_gdk_draw_rectangle(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->rgb_gc.gc_back_wavewindow_c_1, TRUE, 0, 0,GLOBALS->wavewidth, GLOBALS->waveheight);
 
-	trtarget=(int)(gtk_adjustment_get_value(sadj));
-	DEBUG(printf("Wave VSlider Moved to %d\n",trtarget));
+		/* if(GLOBALS->display_grid) */ rendertimes();
 
-	GtkAllocation allocation;
-	gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
-
-	cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc.gc_ltgray.r, GLOBALS->rgb_gc.gc_ltgray.g, GLOBALS->rgb_gc.gc_ltgray.b, GLOBALS->rgb_gc.gc_ltgray.a);
-	cairo_rectangle (GLOBALS->cr_signalpixmap, 0, 0,
-                        GLOBALS->signal_fill_width, allocation.height);
-	cairo_fill (GLOBALS->cr_signalpixmap); 
-
-		sync_marker();
-		RenderSigs(trtarget,(GLOBALS->old_wvalue==gtk_adjustment_get_value(sadj))?0:1);
+		rendertraces();
+	}
 
 	GLOBALS->old_wvalue=gtk_adjustment_get_value(sadj);
 
-		draw_named_markers();
-
-		if(GLOBALS->signalarea_has_focus)
-			{
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-			GdkDrawingContext *gdc;
-#endif
-			cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(GLOBALS->signalarea)), &gdc);
-			cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
-			cairo_clip (cr);
-
-            signalwindow_paint(cr);
-			draw_signalarea_focus(cr);
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-			gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
-#else
-			cairo_destroy (cr);
-#endif
-			}
-			else
-			{
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-			GdkDrawingContext *gdc;
-#endif
-			cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(GLOBALS->signalarea)), &gdc);
-			cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
-			cairo_clip (cr);
-
-            signalwindow_paint(cr);
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-                        gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
-#else
-                        cairo_destroy (cr);
-#endif
-			}
-
-		draw_marker();
-	}
+	draw_named_markers();
+	draw_marker();
 }
 
 void button_press_release_common(void)
 {
 MaxSignalLength();
-
-GtkAllocation allocation;
-gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
-
-cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc.gc_ltgray.r, GLOBALS->rgb_gc.gc_ltgray.g, GLOBALS->rgb_gc.gc_ltgray.b, GLOBALS->rgb_gc.gc_ltgray.a);
-cairo_rectangle (GLOBALS->cr_signalpixmap, 0, 0, GLOBALS->signal_fill_width, allocation.height);
-cairo_fill (GLOBALS->cr_signalpixmap); 
 
 {
 char signalwindow_width_dirty = GLOBALS->signalwindow_width_dirty;
@@ -882,43 +827,7 @@ if(!signalwindow_width_dirty && GLOBALS->signalwindow_width_dirty)
 	}
 }
 
-RenderSigs((int)(gtk_adjustment_get_value(GTK_ADJUSTMENT(GLOBALS->wave_vslider))),0);
-
-if(GLOBALS->signalarea_has_focus)
-	{
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-	GdkDrawingContext *gdc;
-#endif
-	cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(GLOBALS->signalarea)), &gdc);
-	cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
-	cairo_clip (cr);
-
-    signalwindow_paint(cr);
-
-	draw_signalarea_focus(cr);
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-	gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
-#else
-	cairo_destroy (cr);
-#endif
-	}
-	else
-	{
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-        GdkDrawingContext *gdc;
-#endif
-	cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(GLOBALS->signalarea)), &gdc);
-	cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
-	cairo_clip (cr);
-
-    signalwindow_paint(cr);
-
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-        gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->signalarea), gdc);
-#else
-        cairo_destroy (cr);
-#endif
-	}
+gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 }
 
 static void button_motion_common(gint xin, gint yin, int pressrel, int is_button_2)
@@ -1139,7 +1048,7 @@ do
 
 ...commented out to reduce on visual noise */
 
-            		signalarea_configure_event( GLOBALS->signalarea, NULL );
+            		gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
             		wavearea_configure_event( GLOBALS->wavearea, NULL );
           		}
 		}
@@ -1159,6 +1068,8 @@ return(TRUE);
 
 static void alternate_y_scroll(int delta)
 {
+	printf("WARNING: alternalte_y_scroll disabled\n");
+#if 0
 GtkAdjustment *wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
 int value = (int)gtk_adjustment_get_value(wadj);
 int target = value + delta;
@@ -1177,6 +1088,7 @@ gtk_adjustment_set_value(wadj, target);
 
 g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "changed"); /* force bar update */
 g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "value_changed"); /* force text update */
+#endif
 }
 
 
@@ -1601,9 +1513,7 @@ if((event->button)&&(event->button==GLOBALS->in_button_press_wavewindow_c_1))
 	  	if( warp )
 	  		{
             		GLOBALS->signalwindow_width_dirty = 1;
-            		MaxSignalLength(  );
-            		signalarea_configure_event( GLOBALS->signalarea, NULL );
-            		wavearea_configure_event( GLOBALS->wavearea, NULL );
+			    redraw_signals_and_waves();
           		}
 		}
 
@@ -1626,7 +1536,7 @@ GLOBALS->tims.timecache=0;
 
 if(GLOBALS->prev_markertime == LLDescriptor(-1))
 	{
-	signalarea_configure_event( GLOBALS->signalarea, NULL );
+	gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 	}
 
 return(TRUE);
@@ -2605,9 +2515,8 @@ gtk_widget_set_can_focus(GTK_WIDGET(GLOBALS->wavearea), TRUE);
 
 XXX_gtk_table_attach (XXX_GTK_TABLE (table), GLOBALS->wavearea, 0, 9, 0, 9,GTK_FILL | GTK_EXPAND,GTK_FILL | GTK_EXPAND, 3, 2);
 
-GLOBALS->wave_vslider=gtk_adjustment_new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-vadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wave_vslider), "value_changed",G_CALLBACK(service_vslider), NULL);
+vadj=gw_signal_list_get_vadjustment(GW_SIGNAL_LIST(GLOBALS->signalarea));
+gtkwave_signal_connect(XXX_GTK_OBJECT(vadj), "value_changed",G_CALLBACK(service_vslider), NULL);
 GLOBALS->vscroll_wavewindow_c_1=XXX_gtk_vscrollbar_new(vadj);
 /* GTK_WIDGET_SET_FLAGS(GLOBALS->vscroll_wavewindow_c_1, GTK_CAN_FOCUS); */
 gtk_widget_show(GLOBALS->vscroll_wavewindow_c_1);
@@ -2679,82 +2588,6 @@ return(frame);
 
 /**********************************************/
 
-void RenderSigs(int trtarget, int update_waves)
-{
-Trptr t;
-int i, trwhich;
-int num_traces_displayable;
-GtkAdjustment *hadj;
-int xsrc;
-
-hadj=GTK_ADJUSTMENT(GLOBALS->signal_hslider);
-xsrc=(gint)gtk_adjustment_get_value(hadj);
-
-GtkAllocation allocation;
-gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
-
-num_traces_displayable=allocation.height/(GLOBALS->fontheight);
-num_traces_displayable--;   /* for the time trace that is always there */
-
-if(!GLOBALS->use_dark)
-	{
-	cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc.gc_mdgray.r, GLOBALS->rgb_gc.gc_mdgray.g, GLOBALS->rgb_gc.gc_mdgray.b, GLOBALS->rgb_gc.gc_mdgray.a);
-	cairo_rectangle (GLOBALS->cr_signalpixmap, 0, -1, GLOBALS->signal_fill_width, GLOBALS->fontheight);
-	cairo_fill (GLOBALS->cr_signalpixmap);
-	}
-
-cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc_white.r, GLOBALS->rgb_gc_white.g, GLOBALS->rgb_gc_white.b, GLOBALS->rgb_gc_white.a);
-cairo_move_to (GLOBALS->cr_signalpixmap, WAVE_CAIRO_050_OFFSET, GLOBALS->fontheight-1+WAVE_CAIRO_050_OFFSET);
-cairo_line_to (GLOBALS->cr_signalpixmap, GLOBALS->signal_fill_width-1+WAVE_CAIRO_050_OFFSET, GLOBALS->fontheight-1+WAVE_CAIRO_050_OFFSET);
-cairo_stroke (GLOBALS->cr_signalpixmap);
-
-if(!GLOBALS->use_dark)
-	{
-	XXX_font_engine_draw_string(GLOBALS->cr_signalpixmap, GLOBALS->signalfont, &(GLOBALS->rgb_gc_black),
-		3+xsrc+WAVE_CAIRO_050_OFFSET, GLOBALS->fontheight-4+WAVE_CAIRO_050_OFFSET, "Time");
-	}
-
-t=GLOBALS->traces.first;
-trwhich=0;
-while(t)
-        {
-        if((trwhich<trtarget)&&(GiveNextTrace(t)))
-                {
-		trwhich++;
-                t=GiveNextTrace(t);
-                }
-                else
-                {
-                break;
-                }
-        }
-
-GLOBALS->topmost_trace=t;
-if(t)
-        {
-        for(i=0;(i<num_traces_displayable)&&(t);i++)
-                {
-		RenderSig(t, i, 0);
-                t=GiveNextTrace(t);
-                }
-        }
-
-if(GLOBALS->signalarea_has_focus)
-	{
-	cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc_black.r, GLOBALS->rgb_gc_black.g, GLOBALS->rgb_gc_black.b, GLOBALS->rgb_gc_black.a);
-	cairo_rectangle (GLOBALS->cr_signalpixmap, 0, 0, GLOBALS->signal_fill_width-1, allocation.height-1);
-	cairo_stroke (GLOBALS->cr_signalpixmap);
-	}
-
-if((GLOBALS->cr_wavepixmap_wavewindow_c_1)&&(update_waves))
-	{
-        XXX_gdk_draw_rectangle(GLOBALS->cr_wavepixmap_wavewindow_c_1, GLOBALS->rgb_gc.gc_back_wavewindow_c_1, TRUE, 0, 0,GLOBALS->wavewidth, GLOBALS->waveheight);
-
-	/* if(GLOBALS->display_grid) */ rendertimes();
-
-	rendertraces();
-	}
-}
 
 
 void populateBuffer (Trptr t, char *altname, char* buf)
@@ -2835,136 +2668,6 @@ void populateBuffer (Trptr t, char *altname, char* buf)
 if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) gtk_widget_queue_draw(GLOBALS->signalarea);
 #endif
 }
-
-/***************************************************************************/
-
-int RenderSig(Trptr t, int i, int dobackground)
-{
-  int texty, liney;
-  int retval;
-  char buf[2048];
-  wave_rgb_t clr_comment;
-  wave_rgb_t clr_group;
-  wave_rgb_t clr_shadowed;
-  wave_rgb_t clr_signal;
-  wave_rgb_t bg_color;
-  wave_rgb_t text_color;
-  unsigned left_justify;
-  char *subname = NULL;
-  bvptr bv = NULL;
-
-  buf[0] = 0;
-
-  if(t->flags & (TR_BLANK|TR_ANALOG_BLANK_STRETCH))  /* seek to real xact trace if present... */
-        {
-        Trptr tscan = t;
-        int bcnt = 0;
-        while((tscan) && (tscan = GivePrevTrace(tscan)))
-                {
-                if(!(tscan->flags & (TR_BLANK|TR_ANALOG_BLANK_STRETCH)))
-                        {
-                        if(tscan->flags & TR_TTRANSLATED)
-                                {
-                                break; /* found it */
-                                }
-                                else
-                                {
-                                tscan = NULL;
-                                }
-                        }
-                        else
-                        {
-                        bcnt++; /* bcnt is number of blank traces */
-                        }
-                }
-
-        if((tscan)&&(tscan->vector))
-                {
-                bv = tscan->n.vec;
-                do
-                        {
-                        bv = bv->transaction_chain; /* correlate to blank trace */
-                        } while(bv && (bcnt--));
-                if(bv)
-                        {
-                        subname = bv->bvname;
-                        if(GLOBALS->hier_max_level)
-                                subname = hier_extract(subname, GLOBALS->hier_max_level);
-                        }
-                }
-        }
-
-  populateBuffer(t, subname, buf);
-
-  clr_comment  = GLOBALS->rgb_gc.gc_brkred;
-  clr_group    = GLOBALS->rgb_gc.gc_gmstrd;
-  clr_shadowed = GLOBALS->rgb_gc.gc_ltblue;
-  clr_signal   = GLOBALS->rgb_gc.gc_dkblue;
-
-  UpdateSigValue(t); /* in case it's stale on nonprop */
-
-  liney=((i+2)*GLOBALS->fontheight)-2;
-  texty=liney-(GLOBALS->signalfont->descent);
-
-  retval=liney-GLOBALS->fontheight+1;
-
-  left_justify = ((IsGroupBegin(t) || IsGroupEnd(t)) && !HasWave(t))|| GLOBALS->left_justify_sigs;
-
-  if (IsSelected(t))
-    {
-      bg_color = (!HasWave(t))
-	? ((IsGroupBegin(t) || IsGroupEnd(t)) ? clr_group : clr_comment)
-	: ((IsShadowed(t)) ? clr_shadowed : clr_signal);
-      text_color = GLOBALS->rgb_gc_white;
-    }
-  else
-    {
-      bg_color = (dobackground==2) ?  GLOBALS->rgb_gc.gc_normal : GLOBALS->rgb_gc.gc_ltgray;
-      if(HasWave(t))
-	{ text_color = GLOBALS->rgb_gc_black; }
-      else
-	{ text_color = (IsGroupBegin(t) || IsGroupEnd(t)) ? clr_group : clr_comment; }
-    }
-
-  if (dobackground || IsSelected(t))
-    {
-	cairo_set_source_rgba (GLOBALS->cr_signalpixmap, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
-	cairo_rectangle (GLOBALS->cr_signalpixmap, 0, retval,
-                         GLOBALS->signal_fill_width, GLOBALS->fontheight-1);
-	cairo_fill (GLOBALS->cr_signalpixmap);
-    }
-
-
-  cairo_set_source_rgba (GLOBALS->cr_signalpixmap, GLOBALS->rgb_gc_white.r, GLOBALS->rgb_gc_white.g, GLOBALS->rgb_gc_white.b, GLOBALS->rgb_gc_white.a);
-  cairo_move_to (GLOBALS->cr_signalpixmap, WAVE_CAIRO_050_OFFSET, liney+WAVE_CAIRO_050_OFFSET);
-  cairo_line_to (GLOBALS->cr_signalpixmap, GLOBALS->signal_fill_width-1+WAVE_CAIRO_050_OFFSET, liney+WAVE_CAIRO_050_OFFSET);
-  cairo_stroke (GLOBALS->cr_signalpixmap);
-
-  if((t->name)||(subname))
-    {
-      XXX_font_engine_draw_string(GLOBALS->cr_signalpixmap,
-			      GLOBALS->signalfont,
-			      &text_color,
-			      (left_justify?3:3+GLOBALS->max_signal_name_pixel_width-
-			      font_engine_string_measure(GLOBALS->signalfont, buf))+WAVE_CAIRO_050_OFFSET,
-			      texty+WAVE_CAIRO_050_OFFSET,
-			      buf);
-    }
-
-  if (HasWave(t) || bv)
-    {
-      if((t->asciivalue)&&(!(t->flags&TR_EXCLUDE)))
-	XXX_font_engine_draw_string(GLOBALS->cr_signalpixmap,
-				GLOBALS->signalfont,
-				&text_color,
-				GLOBALS->max_signal_name_pixel_width+6+WAVE_CAIRO_050_OFFSET,
-				texty+WAVE_CAIRO_050_OFFSET,
-				t->asciivalue);
-    }
-
-  return(retval);
-}
-
 
 /***************************************************************************/
 
@@ -3792,14 +3495,9 @@ static void rendertraces(void)
 {
 struct wave_rgbmaster_t gc_sav;
 
-if(!GLOBALS->topmost_trace)
+Trptr t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
+if(t)
 	{
-	GLOBALS->topmost_trace=GLOBALS->traces.first;
-	}
-
-if(GLOBALS->topmost_trace)
-	{
-	Trptr t = GLOBALS->topmost_trace;
 	Trptr tback = t;
 	hptr h;
 	vptr v;

@@ -170,8 +170,7 @@ if (gtk_text_buffer_get_selection_bounds (gtk_text_view_get_buffer(GTK_TEXT_VIEW
                                        GLOBALS->tims.lmbcache = -1;
                                        update_markertime(GLOBALS->tims.marker = tm);
                                        center_op();
-                                       signalarea_configure_event(GLOBALS->signalarea, NULL);
-                                       wavearea_configure_event(GLOBALS->wavearea, NULL);
+                                       redraw_signals_and_waves();
                                        update_markertime(GLOBALS->tims.marker = tm); /* centering problem in GTK2 */
                                        }
                                }

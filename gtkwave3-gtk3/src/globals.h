@@ -829,11 +829,6 @@ GtkWidget *sig_view_search;
  */
 GtkWidget *signalarea; /* from signalwindow.c 396 */
 struct font_engine_font_t *signalfont; /* from signalwindow.c 397 */
-cairo_surface_t *surface_signalpixmap;
-cairo_t *cr_signalpixmap;
-#if defined(WAVE_ALLOW_QUARTZ_FLUSH_WORKAROUND) || defined(WAVE_ALLOW_GTK3_VSLIDER_WORKAROUND)
-char force_hide_show;
-#endif
 int max_signal_name_pixel_width; /* from signalwindow.c 399 */
 int signal_pixmap_width; /* from signalwindow.c 400 */
 int signal_fill_width; /* from signalwindow.c 401 */
@@ -842,40 +837,22 @@ int old_signal_fill_height; /* from signalwindow.c 403 */
 int right_align_active; /* from signalwindow.c */
 int fontheight; /* from signalwindow.c 404 */
 char dnd_state; /* from signalwindow.c 405 */
-unsigned int dnd_cursor_timer; /* from signalwindow.c */
 GtkWidget *hscroll_signalwindow_c_1; /* from signalwindow.c 406 */
-gpointer signal_hslider; /* from signalwindow.c 407 */
 unsigned int cachedhiflag_signalwindow_c_1; /* from signalwindow.c 408 */
 int cachedwhich_signalwindow_c_1; /* from signalwindow.c 409 */
 struct TraceEnt *cachedtrace; /* from signalwindow.c 410 */
 struct TraceEnt *shift_click_trace; /* from signalwindow.c 411 */
 int trtarget_signalwindow_c_1; /* from signalwindow.c 412 */
 Trptr starting_unshifted_trace; /* from signalwindow.c */
-unsigned char standard_trace_dnd_degate; /* from signalwindow.c */
 unsigned char use_standard_trace_select; /* from signalwindow.c */
 unsigned char use_standard_clicking; /* from signalwindow.c */
 unsigned char std_collapse_pressed; /* from signalwindow.c */
-unsigned char std_dnd_tgt_on_signalarea; /* from signalwindow.c */
-unsigned char std_dnd_tgt_on_wavearea; /* from signalwindow.c */
-unsigned char signalarea_has_focus; /* from signalwindow.c */
-GtkWidget *signalarea_event_box; /* from signalwindow.c */
 gint keypress_handler_id; /* from signalwindow.c */
 gint cached_mouseover_x; /* from signalwindow.c */
 gint cached_mouseover_y; /* from signalwindow.c */
 gint mouseover_counter; /* from signalwindow.c */
 unsigned button2_debounce_flag : 1;
 int dragzoom_threshold;
-
-#ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_WAVE_VSLIDER
-gfloat wave_vslider_page_size;
-gfloat wave_vslider_page_increment;
-gfloat wave_vslider_step_increment;
-gfloat wave_vslider_lower;
-gfloat wave_vslider_upper;
-gfloat wave_vslider_value;
-unsigned wave_vslider_valid : 1;
-#endif
-
 
 /*
  * simplereq.c
@@ -1028,13 +1005,8 @@ void (*cleanup_treesearch_gtk1_c)(void); /* ...end of manual adds */
 /*
  * treesearch_gtk2.c
  */
-#ifdef MAC_INTEGRATION
-char *dnd_helper_quartz;
-#endif
 struct string_chain_t *treeopen_chain_head; /* from bitvec.c */
 struct string_chain_t *treeopen_chain_curr; /* from bitvec.c */
-char tree_dnd_begin; /* from treesearch_gtk2.c */
-char tree_dnd_requested; /* from treesearch_gtk2.c */
 char do_dynamic_treefilter; /* from treesearch_gtk2.c */
 GtkWidget *treesearch_gtk2_window_vbox; /* from treesearch_gtk2.c */
 char *selected_hierarchy_name; /* from treesearch_gtk2.c */
@@ -1062,8 +1034,6 @@ GtkWidget *window_treesearch_gtk2_c_12; /* from treesearch_gtk2.c 495 */
 void (*cleanup_treesearch_gtk2_c_8)(void); /* from treesearch_gtk2.c 498 */
 int pre_import_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 499 */
 Traces tcache_treesearch_gtk2_c_2; /* from treesearch_gtk2.c 500 */
-unsigned char dnd_tgt_on_signalarea_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 501 */
-unsigned char dnd_tgt_on_wavearea_treesearch_gtk2_c_1; /* from treesearch_gtk2.c */
 GtkWidget *dnd_sigview; /* from treesearch_gtk2.c */
 GtkPaned *sst_vpaned; /* from treesearch_gtk2.c */
 int fetchlow;
@@ -1305,7 +1275,6 @@ TimeType prevtim_wavewindow_c_1; /* from wavewindow.c 667 */
 double pxns; /* from wavewindow.c 668 */
 double nspx; /* from wavewindow.c 669 */
 double zoombase; /* from wavewindow.c 670 */
-struct TraceEnt *topmost_trace; /* from wavewindow.c 671 */
 int waveheight; /* from wavewindow.c 672 */
 int wavecrosspiece; /* from wavewindow.c 673 */
 int wavewidth; /* from wavewindow.c 674 */
@@ -1315,7 +1284,6 @@ GtkWidget *wavearea; /* from wavewindow.c 677 */
 GtkWidget *vscroll_wavewindow_c_1; /* from wavewindow.c 678 */
 GtkWidget *hscroll_wavewindow_c_2; /* from wavewindow.c 679 */
 gpointer wave_vslider2; /* from wavewindow.c 681 */
-gpointer wave_vslider; /* from wavewindow.c 681 */
 gpointer wave_hslider; /* from wavewindow.c 682 */
 TimeType named_markers[WAVE_NUM_NAMED_MARKERS]; /* from wavewindow.c 683 */
 int named_marker_lock_idx; /* from menu.c */
