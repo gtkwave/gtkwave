@@ -9,7 +9,7 @@ Analog support is Copyright (C) 2005-2022 Thomas Sailer.
 External DnD support is Copyright (C) 2008-2022 Concept Engineering GmbH.
 FastLZ is Copyright (C) 2005-2022 Ariya Hidayat.
 LZ4 is Copyright (C) 2011-2022 Yann Collet.
-GUI rewrite and modernization is Copyright (C) 2021-2022 Ralf Fuerst.
+GUI rewrite and modernization is Copyright (C) 2021-2022 Ralf Fuest.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
