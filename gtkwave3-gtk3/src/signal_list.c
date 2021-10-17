@@ -753,7 +753,7 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event)
                 } else {
                     set_cursor(signal_list, GLOBALS->traces.first);
                 }
-                break;
+                return GDK_EVENT_STOP;
 
             // Shift + Down: Move cursor down one trace
             case GDK_KEY_Down:
@@ -766,7 +766,7 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event)
                 } else {
                     set_cursor(signal_list, GLOBALS->traces.first);
                 }
-                break;
+                return GDK_EVENT_STOP;
         }
     } else if (state == GW_CONTROL_MASK) {
         switch (event->keyval) {
@@ -776,7 +776,7 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event)
 
                 signal_list->dirty = TRUE;
                 gtk_widget_queue_draw(widget);
-                break;
+                return GDK_EVENT_STOP;
         }
     } else if (state == (GDK_SHIFT_MASK | GW_CONTROL_MASK)) {
         switch (event->keyval) {
@@ -786,7 +786,7 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event)
 
                 signal_list->dirty = TRUE;
                 gtk_widget_queue_draw(widget);
-                break;
+                return GDK_EVENT_STOP;
         }
     } else if (!state) {
         switch (event->keyval) {
@@ -794,41 +794,41 @@ static gboolean key_press_event(GtkWidget* widget, GdkEventKey* event)
             case GDK_KEY_Left:
             case GDK_KEY_KP_Left:
                 service_left_edge(NULL, NULL);
-                break;
+                return GDK_EVENT_STOP;
 
             // Right: Find next edge to the right
             case GDK_KEY_Right:
             case GDK_KEY_KP_Right:
                 service_right_edge(NULL, NULL);
-                break;
+                return GDK_EVENT_STOP;
 
             // Up: Scroll up by one trace
             case GDK_KEY_Up:
             case GDK_KEY_KP_Up:
                 scroll_up(signal_list, FALSE);
-                break;
+                return GDK_EVENT_STOP;
 
             // Down: Scroll down by one trace
             case GDK_KEY_Down:
             case GDK_KEY_KP_Down:
                 scroll_down(signal_list, FALSE);
-                break;
+                return GDK_EVENT_STOP;
 
             // Page Up: Scroll up by one page
             case GDK_KEY_Page_Up:
             case GDK_KEY_KP_Page_Up:
                 scroll_up(signal_list, TRUE);
-                break;
+                return GDK_EVENT_STOP;
 
             // Page Down: Scroll down by one page
             case GDK_KEY_Page_Down:
             case GDK_KEY_KP_Page_Down:
                 scroll_down(signal_list, TRUE);
-                break;
+                return GDK_EVENT_STOP;
         }
     }
 
-    return GDK_EVENT_STOP;
+    return GDK_EVENT_PROPAGATE;
 }
 
 static int y_to_drop_position(int y)
