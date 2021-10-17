@@ -662,6 +662,25 @@ if (gtk_selection_data_get_length(selection_data) > 0)
 	}
 }
 
+static gboolean window_key_press_event(GtkWidget *widget, GdkEventKey *event)
+{
+GtkWindow *window = GTK_WINDOW(widget);
+gboolean handled = FALSE;
+
+if (!handled)
+	handled = gtk_window_propagate_key_event(window, event);
+
+if (!handled)
+	handled = gtk_window_activate_key(window, event);
+
+if (!handled) {
+	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(g_type_class_peek(GTK_TYPE_WIDGET));
+	handled = widget_class->key_press_event(widget, event);
+}
+
+return TRUE;
+}
+
 int main(int argc, char *argv[])
 {
 return(main_2(0, argc, argv));
@@ -2105,6 +2124,8 @@ if(!GLOBALS->socket_xid)
 
 	window_setup_dnd(GLOBALS->mainwindow);
 	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "drag-data-received", G_CALLBACK(window_drag_data_received), NULL);
+
+	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "key-press-event", G_CALLBACK(window_key_press_event), NULL);
 
 	gtk_widget_show(GLOBALS->mainwindow);
 	}
