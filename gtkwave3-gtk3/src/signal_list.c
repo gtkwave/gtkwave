@@ -574,8 +574,12 @@ static gboolean button_release_event(GtkWidget *widget, GdkEventButton *event)
 
         Trptr t = get_trace_for_y(signal_list, (int)event->y);
         if (t != NULL) {
-            ClearTraces();
-            t->flags |= TR_HIGHLIGHT;
+            if (event->state & GW_CONTROL_MASK) {
+                t->flags ^= TR_HIGHLIGHT;
+            } else {
+                ClearTraces();
+                t->flags |= TR_HIGHLIGHT;
+            }
 
             signal_list->cursor = t;
 
