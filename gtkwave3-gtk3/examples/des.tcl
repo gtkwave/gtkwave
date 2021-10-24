@@ -51,3 +51,42 @@ gtkwave::/Time/Zoom/Zoom_Full
 gtkwave::/File/Print_To_File PS {Letter (8.5" x 11")} Full $dumpname.ps
 gtkwave::/File/Quit
 
+
+# notes on toggle menu items:
+# without an argument these toggle, otherwise with an argument it sets the value to 1 or 0
+# gtkwave::/Edit/Color_Format/Keep_xz_Colors
+# gtkwave::/Search/Autocoalesce
+# gtkwave::/Search/Autocoalesce_Reversal
+# gtkwave::/Search/Autoname_Bundles
+# gtkwave::/Search/Search_Hierarchy_Grouping
+# gtkwave::/Markers/Alternate_Wheel_Mode
+# gtkwave::/Markers/Wave_Scrolling
+# gtkwave::/View/Fullscreen
+# gtkwave::/View/Show_Toolbar
+# gtkwave::/View/Show_Grid
+# gtkwave::/View/Show_Wave_Highlight
+# gtkwave::/View/Show_Filled_High_Values
+# gtkwave::/View/Leading_Zero_Removal
+# gtkwave::/View/Show_Mouseover
+# gtkwave::/View/Mouseover_Copies_To_Clipboard
+# gtkwave::/View/Show_Base_Symbols
+# gtkwave::/View/Standard_Trace_Select
+# gtkwave::/View/Dynamic_Resize
+# gtkwave::/View/Center_Zooms
+# gtkwave::/View/Constant_Marker_Update
+# gtkwave::/View/Draw_Roundcapped_Vectors
+# gtkwave::/View/Zoom_Pow10_Snap
+# gtkwave::/View/Partial_VCD_Dynamic_Zoom_Full
+# gtkwave::/View/Partial_VCD_Dynamic_Zoom_To_End
+# gtkwave::/View/Full_Precision
+# gtkwave::/View/LXT_Clock_Compress_to_Z
+
+# these can only set to the one selected
+# gtkwave::/View/Scale_To_Time_Dimension/None
+# gtkwave::/View/Scale_To_Time_Dimension/sec
+# gtkwave::/View/Scale_To_Time_Dimension/ms
+# gtkwave::/View/Scale_To_Time_Dimension/us
+# gtkwave::/View/Scale_To_Time_Dimension/ns
+# gtkwave::/View/Scale_To_Time_Dimension/ps
+# gtkwave::/View/Scale_To_Time_Dimension/fs
+

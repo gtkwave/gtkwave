@@ -1825,4 +1825,5 @@
 		Updated show-change widget.
 		Fix xml2stems when begin blocks are in functions.
 		Skip over decimal point in timescale in viewer.
-3.4.0	15oct21	Merge in major GUI widget refactoring.
+3.4.0	23oct21	Merge in major GUI widget refactoring.
+		Fixes for toggle menu item access under Tcl.
