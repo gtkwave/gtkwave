@@ -1,34 +1,17 @@
-# GTKwave
+# GTKWave
 
 ## Installation
 
-1) Type `./configure`
-2) `make`
-3) `make install` (as root)
+2) If you compile a GIT version: Type `./autogen.sh`
+2) Type `./configure --enable-gtk3` (or `./configure` for GTK+ 2)
+3) `make`
+4) `make install` (as root)
 
 Make sure you copy the `.gtkwaverc` file to your home directory or to your
 VCD project directory.  It contains the prefs for a good configuration
 that most people find ergonomic.  It is not strictly necessary however.
 
-[Note: for mingw builds with gtk+-1, you might need a fake gtk-config file like 
-the following..]
-
-```sh
-#!/bin/sh
-
-if [ "$1" == "--libs" ]
-        then
-        echo -L/home/bybell/libs -lgck -lgdk-1.3 -lgimp-1.2 -lgimpi -lgimpui-1.2 -lglib-1.3 -lgmodule-1.3 -lgnu-intl -lgobject-1.3 -lgthread-1.3 -lgtk-1.3 -liconv-1.3 -ljpeg -llibgplugin_a -llibgplugin_b -lpng -lpthread32 -ltiff-lzw -ltiff-nolzw -ltiff
-        fi
-
-if [ "$1" == "--cflags" ]
-        then
-        echo " -mms-bitfields -I/home/bybell/src/glib -I/home/bybell/src/gtk+/gtk -I/home/bybell/src/gtk+/gdk -I/home/bybell/src/gtk+ " 
-fi
-```
-
-
-[Note2: for mingw with gtk+-2, you don't need to do anything except have
+[Note: for mingw with gtk+-2, you don't need to do anything except have
 pkg-config in your PATH however the following note is from Thomas Uhle.]
 
 Important to know is to compile with `CFLAGS=-mms-bitfields` in Windows in order to link correctly
