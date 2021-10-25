@@ -1131,6 +1131,7 @@ void read_rc_file(char *override_rc)
 FILE *handle = NULL;
 int i;
 int num_rcitems = sizeof(rcitems)/sizeof(struct rc_entry);
+gboolean good_override = FALSE;
 
 for(i=0;i<(num_rcitems-1);i++)
 	{
@@ -1148,6 +1149,19 @@ if((override_rc)&&((handle=fopen(override_rc,"rb"))))
 	{
 	/* good, we have a handle */
 	wave_gconf_client_set_string("/current/rcfile", override_rc);
+	good_override = TRUE;
+	}
+	else
+	{
+	if(override_rc)
+		{
+		fprintf(stderr, "GTKWAVE | rcfile '%s' not found, attempting defaults.\n", override_rc);
+		}
+	}
+
+if(good_override)
+	{
+	/* nothing, have file handle */
 	}
 else
 #if !defined __MINGW32__
