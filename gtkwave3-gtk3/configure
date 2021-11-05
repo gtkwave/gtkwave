@@ -3875,11 +3875,11 @@ $as_echo "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 		if test "$TCL_MAJOR_VERSION" -lt "8" ; then
-			 as_fn_error $? "Upgrade to at least Tcl version 8.4." "$LINENO" 5
+			 as_fn_error $? "Upgrade to at least Tcl version 8.5." "$LINENO" 5
 		else
 			if test "$TCL_MAJOR_VERSION" -eq "8" ; then
-				if test "$TCL_MINOR_VERSION" -lt "4" ; then
-					 as_fn_error $? "Upgrade to at least Tcl version 8.4." "$LINENO" 5
+				if test "$TCL_MINOR_VERSION" -lt "5" ; then
+					 as_fn_error $? "Upgrade to at least Tcl version 8.5." "$LINENO" 5
 				fi
 			fi
 		fi

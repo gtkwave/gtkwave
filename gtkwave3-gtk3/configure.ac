@@ -154,11 +154,11 @@ if test "X$ETCL" = "Xyes" ; then
 		AC_SUBST(TCL_MINOR_VERSION)
 
 		if test "$TCL_MAJOR_VERSION" -lt "8" ; then
-			 AC_MSG_ERROR([Upgrade to at least Tcl version 8.4.])
+			 AC_MSG_ERROR([Upgrade to at least Tcl version 8.5.])
 		else
 			if test "$TCL_MAJOR_VERSION" -eq "8" ; then
-				if test "$TCL_MINOR_VERSION" -lt "4" ; then
-					 AC_MSG_ERROR([Upgrade to at least Tcl version 8.4.])
+				if test "$TCL_MINOR_VERSION" -lt "5" ; then
+					 AC_MSG_ERROR([Upgrade to at least Tcl version 8.5.])
 				fi
 			fi
 		fi
