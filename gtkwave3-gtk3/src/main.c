@@ -135,6 +135,7 @@ GLOBALS->sst_dbl_action_type = g_old->sst_dbl_action_type;
 GLOBALS->use_gestures = g_old->use_gestures;
 GLOBALS->use_dark = g_old->use_dark;
 GLOBALS->save_on_exit = g_old->save_on_exit;
+GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
 #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 GLOBALS->header_bar = g_old->header_bar;
@@ -944,6 +945,7 @@ if(!GLOBALS)
 	GLOBALS->use_gestures = old_g->use_gestures;
 	GLOBALS->use_dark = old_g->use_dark;
 	GLOBALS->save_on_exit = old_g->save_on_exit;
+	GLOBALS->dbl_mant_dig_override = old_g->dbl_mant_dig_override;
 
 	GLOBALS->cr_line_width = old_g->cr_line_width;
 	GLOBALS->cairo_050_offset = old_g->cairo_050_offset;
@@ -1918,6 +1920,16 @@ GLOBALS->tims.first=GLOBALS->tims.start=GLOBALS->tims.laststart=GLOBALS->min_tim
 GLOBALS->tims.zoom=GLOBALS->tims.prevzoom=0;	/* 1 pixel/ns default */
 GLOBALS->tims.marker=GLOBALS->tims.lmbcache=-1;	/* uninitialized at first */
 GLOBALS->tims.baseline=-1;		/* middle button toggle marker */
+
+if(GLOBALS->max_time >> DBL_MANT_DIG)
+	{
+	fprintf(stderr, "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n", DBL_MANT_DIG);
+	if(!GLOBALS->dbl_mant_dig_override)
+		{
+		fprintf(stderr, "GTKWAVE | Exiting, use dbl_mant_dig_override rc var set to 1 to disable.\n");
+		exit(255);
+		}
+	}
 
 if((wname)||(vcd_save_handle_cached)||(is_smartsave))
 	{

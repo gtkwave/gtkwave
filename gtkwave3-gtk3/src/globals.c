@@ -587,6 +587,7 @@ NULL, /* expanderwindow 205 */
 0, /* disable_menus 225 */
 NULL, /* ftext_main_main_c_1 226 */
 1, /* use_toolbutton_interface */
+0, /* dbl_mant_dig_override */
 
 /*
  * markerbox.c
@@ -1874,6 +1875,7 @@ void reload_into_new_context_2(void)
  new_globals->use_gestures = GLOBALS->use_gestures;
  new_globals->use_dark = GLOBALS->use_dark;
  new_globals->save_on_exit = GLOBALS->save_on_exit;
+ new_globals->dbl_mant_dig_override = GLOBALS->dbl_mant_dig_override;
 
  strcpy2_into_new_context(new_globals, &new_globals->argvlist, &GLOBALS->argvlist);
  strcpy2_into_new_context(new_globals, &new_globals->editor_name, &GLOBALS->editor_name);
@@ -2817,6 +2819,7 @@ switch(type)
 							GLOBALS->use_gestures = g_old->use_gestures;
 							GLOBALS->use_dark = g_old->use_dark;
 							GLOBALS->save_on_exit = g_old->save_on_exit;
+							GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
 							gtk_notebook_set_current_page(GTK_NOTEBOOK(GLOBALS->notebook), GLOBALS->this_context_page);
 							}

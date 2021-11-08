@@ -145,6 +145,13 @@ GLOBALS->cursor_snap=(val<=0)?0:val;
 return(0);
 }
 
+int f_dbl_mant_dig_override(char *str)
+{
+DEBUG(printf("f_dbl_mant_dig_override(\"%s\")\n",str));
+GLOBALS->dbl_mant_dig_override=atoi_64(str)?1:0;
+return(0);
+}
+
 int f_disable_ae2_alias(char *str)
 {
 DEBUG(printf("f_disable_ae2_alias(\"%s\")\n",str));
@@ -932,6 +939,7 @@ static struct rc_entry rcitems[]=
 { "context_tabposition", f_context_tabposition },
 { "convert_to_reals", f_convert_to_reals },
 { "cursor_snap", f_cursor_snap },
+{ "dbl_mant_dig_override", f_dbl_mant_dig_override },
 { "disable_ae2_alias", f_disable_ae2_alias },
 { "disable_auto_comphier", f_disable_auto_comphier },
 { "disable_empty_gui", f_disable_empty_gui },
