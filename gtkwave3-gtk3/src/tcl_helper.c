@@ -3018,6 +3018,8 @@ void make_tcl_interpreter(char *argv[])
 
   strcpy(commandName, "gtkwave::");
 
+  Tcl_Namespace *namespace = Tcl_CreateNamespace(GLOBALS->interp, "gtkwave", NULL, NULL);
+
   ife = retrieve_menu_items_array(&num_menu_items);
   for(i=0;i<num_menu_items;i++)
     {
@@ -3045,6 +3047,8 @@ void make_tcl_interpreter(char *argv[])
       Tcl_CreateObjCommand(GLOBALS->interp, commandName,
                 (Tcl_ObjCmdProc *)gtkwave_commands[i].func,
 			   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+      Tcl_Export(GLOBALS->interp, namespace, gtkwave_commands[i].cmdstr, 0);
     }
 
   declare_tclcb_variables(GLOBALS->interp);
