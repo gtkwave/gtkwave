@@ -243,7 +243,7 @@ if(hMapFile != NULL)
 				si.cb = sizeof(si);
 
 				rc = CreateProcess(
-					arglist[0],
+					NULL, /* arglist[0] */
 					mylist,
 					NULL,
 					NULL,
@@ -315,7 +315,7 @@ if(hMapFile != NULL)
 				si.cb = sizeof(si);
 
 				rc = CreateProcess(
-					arglist[0],
+					NULL, /* arglist[0] */
 					mylist,
 					NULL,
 					NULL,
