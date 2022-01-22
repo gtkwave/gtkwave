@@ -1755,3 +1755,4 @@
 3.3.111 01sep21	Fix in fstapi for read start limit time.
 		Fix xml2stems when begin blocks are in functions.
 		Skip over decimal point in timescale in viewer.
+3.4.0	22jan22 VCD reader fixes for unnamed Icarus begin blocks.
