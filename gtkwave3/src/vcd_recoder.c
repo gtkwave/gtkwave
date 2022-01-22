@@ -932,10 +932,10 @@ for(GLOBALS->yytext_vcd_recoder_c_3[len++]=ch;;GLOBALS->yytext_vcd_recoder_c_3[l
 	if(ch<=' ') break;
 	}
 GLOBALS->yytext_vcd_recoder_c_3[len]=0;	/* terminator */
+GLOBALS->yylen_vcd_recoder_c_3=len;
 
 if(is_string)
 	{
-	GLOBALS->yylen_vcd_recoder_c_3=len;
 	return(T_STRING);
 	}
 
@@ -1525,7 +1525,7 @@ for(;;)
 					}
 				}
 			T_GET;
-			if(tok==T_STRING)
+			if (tok != T_END && tok != T_EOF)
 				{
 				struct slist *s;
 				s=(struct slist *)calloc_2(1,sizeof(struct slist));
