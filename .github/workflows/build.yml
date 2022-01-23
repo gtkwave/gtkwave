@@ -46,8 +46,10 @@ jobs:
         tries=0
         # Try building three times due to the arbitrary 'Bad address' error
         while [ $tries -lt 3 ]; do
-          makepkg-mingw --noconfirm --noprogressbar -sCLfc && break || tries=$((tries+1))
+          makepkg-mingw --noconfirm --noprogressbar -sCLfc && exit 0
+          tries=$((tries+1))
         done
+        exit 1
 
     - name: Install and create standalone package
       working-directory: ./MSYS2/gtk${{ matrix.gtk }}
