@@ -38,6 +38,7 @@ jobs:
           base-devel
           git
           mingw-w64-${{ matrix.target.arch }}-toolchain
+          mingw-w64-${{ matrix.target.arch }}-autotools
         msystem: ${{ matrix.target.msys2 }}
 
     - name: Build package
