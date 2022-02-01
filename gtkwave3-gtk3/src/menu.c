@@ -4995,7 +4995,7 @@ if      ((!len) || (GLOBALS->filesel_writesave[len-1] == '/')
 	}
 }
 
-/* Add escape sequences to tcl strings ('[' and ']' should be escaped) */
+/* Add escape sequences to tcl strings ('[', ']' and ' ' should be escaped) */
 char* escape_tcl_str(const char* s)
 {
     char* buff;
@@ -5008,7 +5008,7 @@ char* escape_tcl_str(const char* s)
 
     for(int i = 0; s[i]; i++)
     {
-        if((buff_size - len) < 3)
+        if((buff_size - len) < 4)
         {
             char* buff_new = realloc(buff, buff_size * 2);
             if(buff_new == NULL)
@@ -5024,11 +5024,19 @@ char* escape_tcl_str(const char* s)
         }
         if(s[i] == '[' || s[i] == ']')
         {
-            buff[len] = '\\';
-            len++;
+            buff[len++] = '\\';
         }
-        buff[len] = s[i];
-        len++;
+        else if(s[i] == ' ')
+        {
+            /*
+             * Spaces should be escaped with double '\\' to avoid
+             * words separated by spaces been treated as different
+             * items in a list
+             */
+            buff[len++] = '\\';
+            buff[len++] = '\\';
+        }
+        buff[len++] = s[i];
     }
     buff[len] = 0;
     return buff;
