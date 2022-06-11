@@ -40,6 +40,10 @@ cc.has_header('getopt.h', required: true)
 config.set('HAVE_INTTYPES_H', 1)
 config.set('HAVE_GETOPT_H', 1)
 
+if cc.has_function('realpath')
+    config.set('HAVE_REALPATH', 1)
+endif
+
 configure_file(
     configuration: config,
     output: 'config.h',
