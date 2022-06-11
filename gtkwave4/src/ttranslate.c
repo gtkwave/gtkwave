@@ -57,7 +57,7 @@ static void args_entry_callback(GtkWidget *widget, GtkWidget *entry)
 {
 (void)widget;
 
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 
 entry_text=gtk_entry_get_text(GTK_ENTRY(entry));
 entry_text = entry_text ? entry_text : "";

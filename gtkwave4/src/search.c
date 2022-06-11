@@ -76,7 +76,7 @@ static void enter_callback_e(GtkWidget *widget, GtkWidget *nothing)
 (void)widget;
 (void)nothing;
 
-  G_CONST_RETURN gchar *entry_text;
+  const gchar *entry_text;
   int len;
   char *vname="<Vector>";
   entry_text = gtk_entry_get_text(GTK_ENTRY(GLOBALS->entry_a_search_c_1));
@@ -733,7 +733,7 @@ GLOBALS->is_append_running_search_c_1=0;
 
 void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
 {
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 char *entry_suffixed;
 int i;
 char *s, *tmp2;

@@ -244,7 +244,7 @@ GLOBALS->strace_ctx->mark_idx_end=which;
 
 static void enter_callback(GtkWidget *widget, gpointer strace_tmp)
 {
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 struct strace *s;
 int i, len;
 

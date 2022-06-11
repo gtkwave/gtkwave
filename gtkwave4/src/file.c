@@ -477,7 +477,7 @@ wave_gtk_grab_add(pFileChoose);
 if((gtk_dialog_run(GTK_DIALOG (pFileChoose)) == GTK_RESPONSE_ACCEPT) &&
 		(GLOBALS == old_globals) && (GLOBALS->fileselbox_text))
 	{
-	G_CONST_RETURN char *allocbuf;
+	const char *allocbuf;
 	int alloclen;
 
 	allocbuf = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (pFileChoose));

@@ -237,7 +237,7 @@ static void enter_callback_e(GtkWidget *widget, GtkWidget *nothing)
 (void)widget;
 (void)nothing;
 
-  G_CONST_RETURN gchar *entry_text;
+  const gchar *entry_text;
   int len;
   entry_text = gtk_entry_get_text(GTK_ENTRY(GLOBALS->entry_hiersearch_c_2));
   entry_text = entry_text ? entry_text : "";

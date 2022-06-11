@@ -95,7 +95,7 @@ return(len);
 
 static void str_change_callback(GtkWidget *entry, gpointer which)
 {
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 int i;
 uint32_t hashmask =  WAVE_NUM_NAMED_MARKERS;
 hashmask |= hashmask >> 1;   
@@ -129,7 +129,7 @@ if(entry_text && strlen(entry_text))
 
 static void str_enter_callback(GtkWidget *entry, gpointer which)
 {
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 int i;
 uint32_t hashmask =  WAVE_NUM_NAMED_MARKERS;
 hashmask |= hashmask >> 1;   
@@ -171,7 +171,7 @@ static void change_callback(GtkWidget *widget, gpointer which)
 
 GtkWidget *entry;
 TimeType temp;
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 char buf[49];
 int i;
 int ent_idx;
@@ -226,7 +226,7 @@ static void enter_callback(GtkWidget *widget, gpointer which)
 GtkWidget *entry;
 /* TimeType *modify; */ /* scan-build */
 TimeType temp;
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 char buf[49];
 int i;
 int ent_idx;
