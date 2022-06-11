@@ -275,7 +275,6 @@ create_signalwindow(void)
 {
 GtkWidget *table;
 GtkWidget *frame;
-char do_focusing = 0;
 
 table = XXX_gtk_table_new(10, 10, FALSE);
 

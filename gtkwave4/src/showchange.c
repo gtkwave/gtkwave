@@ -31,7 +31,7 @@ static const LabeledUint64 ATTRIBUTES[] = {
     { "Exclude", TR_EXCLUDE },
     { "Popcnt", TR_POPCNT },
     { "Find First One", TR_FFO },
-    {}
+    { 0 }
 };
 
 static const LabeledUint64 BASES[] = {
@@ -44,7 +44,7 @@ static const LabeledUint64 BASES[] = {
     { "Real", TR_REAL },
     { "Time", TR_TIME | TR_DEC },
     { "Enum", TR_ENUM | TR_BIN },
-    {}
+    { 0 }
 };
 
 static const LabeledInt64 COLORS[] = {
@@ -57,7 +57,7 @@ static const LabeledInt64 COLORS[] = {
     { "Indigo", WAVE_COLOR_INDIGO },
     { "Violet", WAVE_COLOR_VIOLET },
     // { "Cycle", WAVE_COLOR_CYCLE },
-    {}
+    { 0 }
 };
 
 static const LabeledUint64 ANALOG_FORMATS[] = {
@@ -65,13 +65,13 @@ static const LabeledUint64 ANALOG_FORMATS[] = {
     { "Step", TR_ANALOG_STEP },
     { "Interpolated", TR_ANALOG_INTERPOLATED },
     { "Interpolated Annotated", TR_ANALOG_INTERPOLATED | TR_ANALOG_STEP },
-    {}
+    { 0 }
 };
 
 static const LabeledUint64 ANALOG_RESIZING[] = {
     { "Screen Data", 0 },
     { "All Data", TR_ANALOG_FULLSCALE },
-    {}
+    { 0 }
 };
 
 enum {
@@ -244,6 +244,8 @@ static void add_labeled_widget(GtkWidget *table, const gchar *text, GtkWidget *w
 
 void showchange(char *title, Trptr t, GCallback func)
 {
+    (void)title;
+
     TraceFlagsType old_flags = t->flags;
     unsigned int old_color = t->t_color;
 
@@ -323,7 +325,7 @@ void showchange(char *title, Trptr t, GCallback func)
 
         uint64_t base;
         if (combo_box_get_active_value(base_combo_box, &base)) {
-            new_flags = new_flags & ~TR_NUMMASK | base;
+            new_flags = (new_flags & ~TR_NUMMASK) | base;
         }
 
         int64_t color;
@@ -333,12 +335,12 @@ void showchange(char *title, Trptr t, GCallback func)
 
         uint64_t analog_format;
         if (combo_box_get_active_value(analog_format_combo_box, &analog_format)) {
-            new_flags = new_flags & ~TR_ANALOGMASK | analog_format;
+            new_flags = (new_flags & ~TR_ANALOGMASK) | analog_format;
         }
 
         uint64_t analog_resizing;
         if (combo_box_get_active_value(analog_resizing_combo_box, &analog_resizing)) {
-            new_flags = new_flags & ~TR_ANALOG_FULLSCALE | analog_resizing;
+            new_flags = (new_flags & ~TR_ANALOG_FULLSCALE) | analog_resizing;
         }
 
         int i = 0;

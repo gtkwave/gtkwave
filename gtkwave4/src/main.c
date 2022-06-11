@@ -648,9 +648,16 @@ gtk_drag_dest_set(window, GTK_DEST_DEFAULT_ALL, targets, G_N_ELEMENTS(targets), 
 static void window_drag_data_received(GtkWidget* widget, GdkDragContext* context,
 	gint x, gint y, GtkSelectionData* selection_data, guint info, guint time_)
 {
+(void)widget;
+(void)context;
+(void)x;
+(void)y;
+(void)info;
+(void)time_;
+
 if (gtk_selection_data_get_length(selection_data) > 0)
 	{
-	const gchar *uris = gtk_selection_data_get_data(selection_data);
+	const gchar *uris = (const gchar*)gtk_selection_data_get_data(selection_data);
 
 	gchar *uris_copy = g_strndup(uris, gtk_selection_data_get_length(selection_data));
 

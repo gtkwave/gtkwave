@@ -1545,7 +1545,6 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     GtkWidget *button1, *button2, *button4;
     GtkWidget *sig_frame;
     GtkWidget *vbox, *vpan, *filter_hbox;
-    GtkWidget *filter_label;
     GtkWidget *sig_view;
 
     GLOBALS->is_active_treesearch_gtk2_c_6=1;
@@ -1810,6 +1809,7 @@ static void DNDDataRequestCBTree(
 	gpointer data
 )
 {
+(void)widget;
 (void)dc;
 (void)info;
 (void)t;
@@ -1837,6 +1837,11 @@ static void DNDDataRequestCBSearch(
 	gpointer data
 )
 {
+(void)widget;
+(void)dc;
+(void)info;
+(void)t;
+(void)data;
 
 int upd = 0;
 

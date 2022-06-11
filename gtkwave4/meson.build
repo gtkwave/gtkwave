@@ -7,6 +7,7 @@ project(
         'buildtype=debugoptimized',
         'warning_level=3',
         'c_std=gnu99',
+        'cpp_std=gnu+11',
     ],
 )
 
