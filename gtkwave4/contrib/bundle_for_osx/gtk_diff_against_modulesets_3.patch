@@ -1,0 +1,60 @@
+--- gtk+/gdk/quartz/gdkevents-quartz.c	2014-02-10 09:30:41.000000000 -0600
++++ gtk+664894/gdk/quartz/gdkevents-quartz.c	2014-02-10 09:40:34.000000000 -0600
+@@ -381,7 +381,7 @@ get_event_mask_from_ns_event (NSEvent *n
+   return 0;
+ }
+ 
+-static void
++static int
+ get_window_point_from_screen_point (GdkWindow *window,
+                                     NSPoint    screen_point,
+                                     gint      *x,
+@@ -390,14 +390,29 @@ get_window_point_from_screen_point (GdkW
+   NSPoint point;
+   NSWindow *nswindow;
+   GdkWindowObject *private;
++  GdkWindowImplQuartz *gwiq;
+ 
+   private = (GdkWindowObject *)window;
+-  nswindow = ((GdkWindowImplQuartz *)private->impl)->toplevel;
+-
+-  point = [nswindow convertScreenToBase:screen_point];
++  if(private)
++	{
++	gwiq = (GdkWindowImplQuartz *)private->impl;
++	if(gwiq)
++		{
++		nswindow = gwiq->toplevel;
++
++		if(nswindow)
++			{
++		 	point = [nswindow convertScreenToBase:screen_point];
++
++		  	*x = point.x;
++		  	*y = private->height - point.y;
++
++			return(1);
++			}
++		}
++	}
+ 
+-  *x = point.x;
+-  *y = private->height - point.y;
++return(0);
+ }
+ 
+ static GdkWindow *
+@@ -592,7 +607,12 @@ find_toplevel_under_pointer (GdkDisplay 
+ 
+   toplevel = display->pointer_info.toplevel_under_pointer;
+   if (toplevel && WINDOW_IS_TOPLEVEL (toplevel))
+-    get_window_point_from_screen_point (toplevel, screen_point, x, y);
++	{
++    	if(!get_window_point_from_screen_point (toplevel, screen_point, x, y))
++		{
++		toplevel = NULL;
++		}
++	}
+ 
+   return toplevel;
+ }

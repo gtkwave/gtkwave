@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schemalist>
+ 
+   <schema path="/com/geda/gtkwave/" id="com.geda.gtkwave">
+ 
+     <key name='open' type='s'>
+       <default>""</default>
+       <summary>Open File</summary>
+       <description>
+	Opens file for a given RPC ID.  Example: gsettings set com.geda.gtkwave open 0,/pub/systema_packed.fst
+       </description>
+     </key>
+
+     <key name='quit' type='s'>
+       <default>""</default>
+       <summary>Quit</summary>
+       <description>
+	Quits viewer for a given RPC ID and return code.  Example: gsettings set com.geda.gtkwave quit 0,255
+       </description>
+     </key>
+
+     <key name='writesave' type='s'>
+       <default>""</default>
+       <summary>Write Save File</summary>
+       <description>
+	Writes save file.  Example: gsettings set com.geda.gtkwave writesave 0,/tmp/this.gtkw
+	gsettings set com.geda.gtkwave writesave 0,+
+       </description>
+     </key>
+
+     <key name='reload' type='s'>
+       <default>""</default>
+       <summary>Reloads</summary>
+       <description>
+	Reloads file for a given RPC ID.  Example: gsettings set com.geda.gtkwave reload 0
+       </description>
+     </key>
+
+     <key name='zoom-full' type='s'>
+       <default>""</default>
+       <summary>Zoom Full</summary>
+       <description>
+	Zoom Full for a given RPC ID.  Example: gsettings set com.geda.gtkwave zoom-full 0
+       </description>
+     </key>
+
+     <key name='move-to-time' type='s'>
+       <default>""</default>
+       <summary>Move To Time</summary>
+       <description>
+	Moves to a given time for a given RPC ID.  Example: gsettings set com.geda.gtkwave move-to-time 0,123ns
+	gsettings set com.geda.gtkwave move-to-time 0,A
+       </description>
+     </key>
+
+     <key name='zoom-size' type='s'>
+       <default>""</default>
+       <summary>Zoom Size</summary>
+       <description>
+	Sets zoom size for a given RPC ID.  Example: gsettings set com.geda.gtkwave zoom-size 0,-4.6
+       </description>
+     </key>
+
+     <key name='dumpfile' type='s'>
+       <default>""</default>
+       <summary>Dumpfile name</summary>
+       <description>
+	Indicates current dumpfile name.
+       </description>
+     </key>
+
+     <key name='savefile' type='s'>
+       <default>""</default>
+       <summary>Savefile name</summary>
+       <description>
+	Indicates current savefile name.
+       </description>
+     </key>
+
+     <key name='rcfile' type='s'>
+       <default>""</default>
+       <summary>rcfile name</summary>
+       <description>
+	Indicates current rcfile name.
+       </description>
+     </key>
+
+     <key name='pwd' type='s'>
+       <default>""</default>
+       <summary>pwd</summary>
+       <description>
+	Indicates pwd.
+       </description>
+     </key>
+
+     <key name='optimized-vcd' type='s'>
+       <default>"0"</default>
+       <summary>Optimized VCD usage.</summary>
+       <description>
+	Value indicates VCD file is optimized.
+       </description>
+     </key>
+
+     <key name='imagegrab' type='s'>
+       <default>""</default>
+       <summary>Image grab</summary>
+       <description>
+	Indicates image grab filename.
+       </description>
+     </key>
+ 
+   </schema>
+ 
+</schemalist>

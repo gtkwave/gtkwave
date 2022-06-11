@@ -1,0 +1,46 @@
+.TH "LXT2MINER" "1" "3.2.1" "Anthony Bybell" "Dumpfile Data Mining"
+.SH "NAME"
+.LP 
+lxt2miner \- Data mining of LXT2 files
+.SH "SYNTAX"
+.LP 
+lxt2miner [\fIoption\fP]... [\fILXT2FILE\fP]
+.SH "DESCRIPTION"
+.LP 
+Mines LXT2 files for specific data values and generates gtkwave save files to stdout for future reload.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-d,\-\-dumpfile\fR <\fIfilename\fP>
+Specify LXT2 input dumpfile.
+.TP 
+\fB\-m,\-\-match\fR <\fIvalue\fP>
+Specifies "bitwise" match data (binary, real, string)
+.TP 
+\fB\-x,\-\-hex\fR <\fIvalue\fP>
+Specifies hexadecimal match data that will automatically be converted to binary for searches
+.TP 
+\fB\-n,\-\-namesonly\fR
+Indicates that only facnames should be printed in a gtkwave savefile compatible format.  By doing this, the file can be used to
+specify which traces are to be imported into gtkwave.
+.TP 
+\fB\-c,\-\-comprehensive\fR
+Indicates that results are not to stop after the first match.  This can be used to extract all the matching values in the trace.
+.TP 
+\fB\-h,\-\-help\fR
+Show help screen.
+.SH "EXAMPLES"
+.LP 
+lxt2miner dumpfile.lxt2 \-\-hex 20470000 \-n
+.TP 
+This attempts to match the hex value 20470000 across all facilities and when the value is encountered, the facname only is printed to stdout in order to generate a gtkwave compatible save file.
+.SH "LIMITATIONS"
+\fIlxt2miner\fP only prints the first time a value is encountered for a specific net.  This is done in order to 
+cut down on the size of output files and to aid in following data such as addresses through a simulation model.
+.LP
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIvztminer\fP(1) \fIvzt2vcd\fP(1) \fIlxt2vcd\fP(1) \fIvcd2lxt2\fP(1) \fIgtkwave\fP(1)

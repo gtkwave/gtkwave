@@ -1,0 +1,8 @@
+LZMA has been replaced with XZ. VZT files created using
+the old LZMA compression (-z 2) are no longer compatible
+with new XZ file format.  In order to read them, convert
+them to VCD using a version of gtkwave earlier than
+3.3.0.
+
+23dec09
+-ajb
