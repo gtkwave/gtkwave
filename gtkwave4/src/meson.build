@@ -98,6 +98,7 @@ executable(
         libgwlzma_dep,
         libm_dep,
         cocoa_dep,
+        tcl_dep,
     ],
     include_directories: config_inc,
     install: true,

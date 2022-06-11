@@ -1,0 +1,2 @@
+option('tcl', type: 'feature', value: 'auto', description: 'enable TCL support')
+option('gtk_version', type: 'combo', choices: ['gtk3', 'gtk4'], value: 'gtk3', description: 'GTK version')
