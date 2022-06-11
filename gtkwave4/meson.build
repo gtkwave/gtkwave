@@ -1,0 +1,59 @@
+project(
+    'gtkwave',
+    'c', 'cpp',
+    version: '4.0.0-alpha.0',
+    meson_version: '>=0.62',
+    default_options: [
+        'buildtype=debugoptimized',
+        'warning_level=3',
+        'c_std=gnu99',
+    ],
+)
+
+fs = import('fs')
+gnome = import('gnome')
+
+cc = meson.get_compiler('c')
+
+### Paths
+
+datadir = join_paths(get_option('prefix'), get_option('datadir'))
+#icondir = join_paths(datadir, 'icons')
+
+### Dependencies
+
+gtk_dep = dependency('gtk+-3.0', version: '>=3.24')
+bzip2_dep = dependency('bzip2', version: '>=1.0')
+zlib_dep = dependency('zlib', version: '>=1.2')
+libm_dep = cc.find_library('m', required: false)
+
+### config.h generation
+
+config = configuration_data()
+config.set_quoted('PACKAGE_VERSION', meson.project_version())
+config.set_quoted('PACKAGE_BUGREPORT', 'bybell@rocketmail.com')
+
+# inttypes.h and getopt.h are required for a successful build
+cc.has_header('inttypes.h', required: true)
+cc.has_header('getopt.h', required: true)
+
+config.set('HAVE_INTTYPES_H', 1)
+config.set('HAVE_GETOPT_H', 1)
+
+configure_file(
+    configuration: config,
+    output: 'config.h',
+)
+
+config_inc = include_directories('.')
+
+### Post installation
+
+gnome.post_install(update_desktop_database: true)
+
+### Subdirectories
+
+subdir('src')
+subdir('man')
+subdir('share')
+subdir('contrib')
