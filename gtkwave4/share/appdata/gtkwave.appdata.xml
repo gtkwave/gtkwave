@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014 Tony Bybell <bybell@rocketmail.com> -->
+<application>
+<id type="desktop">gtkwave.desktop</id>
+<metadata_license>CC0-1.0</metadata_license>
+<summary>Electronic waveform viewer for viewing simulation results</summary>
+<description>
+<p>
+GTKWave is a fully featured GTK+ based waveform viewer which reads FST, LXT, LXT2, VZT, and GHW files as well as standard Verilog VCD/EVCD files and allows their viewing.
+</p>
+<p>
+The viewer supports both post-mortem viewing of VCD files and interactive viewing of VCD data.  Tcl scripting and callback capability allow for remote control by other applications.
+</p>
+</description>
+<url type="homepage">http://gtkwave.sourceforge.net/</url>
+<screenshots>
+<screenshot type="default">http://gtkwave.sourceforge.net/gtkwave-appdata.png</screenshot>
+</screenshots>
+<updatecontact>bybell@rocketmail.com</updatecontact>
+</application>

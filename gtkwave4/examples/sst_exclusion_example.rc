@@ -1,0 +1,63 @@
+//
+// Uncomment any of the scope types by removing the pound
+// symbol to remove that specific hierarchy type from the
+// SST window
+//
+// Point to this specific file by using the -5/--sstexclude
+// gtkwave command line argument.
+//
+[hiertype]                 
+// VCD scope types
+# VCD_ST_MODULE
+# VCD_ST_TASK
+# VCD_ST_FUNCTION
+# VCD_ST_BEGIN
+# VCD_ST_FORK
+# VCD_ST_GENERATE
+# VCD_ST_STRUCT
+# VCD_ST_UNION
+# VCD_ST_CLASS
+# VCD_ST_INTERFACE
+# VCD_ST_PACKAGE
+# VCD_ST_PROGRAM
+
+// GHW VHDL scope types
+# VHDL_ST_DESIGN
+# VHDL_ST_BLOCK
+# VHDL_ST_GENIF
+# VHDL_ST_GENFOR
+# VHDL_ST_INSTANCE
+# VHDL_ST_PACKAGE
+
+// GHW VHDL signal types (still as part of scope in GHW)
+# VHDL_ST_SIGNAL
+# VHDL_ST_PORTIN
+# VHDL_ST_PORTOUT
+# VHDL_ST_PORTINOUT
+# VHDL_ST_BUFFER
+# VHDL_ST_LINKAGE
+
+// FSDB VHDL scope types: FSDB also reuses/defines GHW's VHDL_ST_BLOCK, VHDL_ST_GENFOR, VHDL_ST_GENIF
+// FST reuses VHDL_ST_PACKAGE
+# VHDL_ST_ARCHITECTURE
+# VHDL_ST_FUNCTION
+# VHDL_ST_PROCEDURE
+# VHDL_ST_RECORD
+# VHDL_ST_PROCESS
+# VHDL_ST_GENERATE
+
+
+//
+// Add your own component type names here (e.g., fill_buffer in the
+// case	of an instantiation such as: fill_buffer FB0())
+// each on its separate line underneath the [compname] tag
+//
+[compname]
+
+
+//
+// Add your own instantiation names here (e.g., FB0, FB1 in the
+// case of an instantiation such as: fill_buffer FB0())
+// each on its separate line underneath the [instname] tag
+//
+[instname]

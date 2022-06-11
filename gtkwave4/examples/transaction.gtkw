@@ -1,0 +1,50 @@
+[*]
+[*] GTKWave Analyzer v3.3.32 (w)1999-2012 BSI
+[*] Sun Feb 12 03:53:14 2012
+[*]
+[dumpfile] "/home/bybell/gtkwave/gtkwave3/examples/transaction.fst"
+[dumpfile_mtime] "Fri Feb  4 20:50:48 2011"
+[dumpfile_size] 2912
+[savefile] "/home/bybell/gtkwave/gtkwave3/examples/transaction.gtkw"
+[timestart] 196429
+[size] 1024 744
+[pos] -1 -1
+*-10.463677 -1 196608 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[markername] AStart
+[sst_width] 223
+[signals_width] 133
+[sst_expanded] 1
+[sst_vpaned_height] 158
+@90022
+[color] 6
+top.val[7:0]
+@20000
+-
+-
+-
+-
+-
+-
+@200
+-ARGS="0"
+@10000022
+[transaction_args] "0"
+^<1 /home/bybell/gtkwave/gtkwave3/examples/transaction
+top.val[7:0]
+@200
+-
+-
+-
+-
+-ARGS="1"
+@10000022
+[transaction_args] "1"
+^<1 /home/bybell/gtkwave/gtkwave3/examples/transaction
+top.val[7:0]
+@200
+-
+-
+-
+-
+[pattern_trace] 1
+[pattern_trace] 0

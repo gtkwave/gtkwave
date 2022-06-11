@@ -1,0 +1,1836 @@
+3.0.0	01may06	Initial release after promotion from 1.3.86 in order to reduce
+		confusion with 2.x series.
+		Added user's manual pdf file to distribution in doc/.
+		Added vertex and rtlbrowse for sourcecode annotation.
+3.0.1	09may06	Automatically add extensions to save filenames in gtkwave.
+		Cygwin compile fixes.  Add Cygwin functionality for fork()
+		related ops that do in fact work properly.
+3.0.2   09may06 More fixes for full function (except pthreads) in Cygwin.
+		Requires usage of Cygserver if rtlbrowse is to work.
+		Fixed fonts for Cygwin to improve readability.
+		The Courier font is very bad looking and blitter mangled under
+		cygwin.
+3.0.3	29may06	Changed yylineno references in vlex.l in rtlbrowse to
+		my_yylineno as newer versions of flex automatically define
+		this and cause duplicate symbols.
+		Saw there were still problems with courier on debian.  Also
+		check for misc-fixed on non-cygwin systems just in case.
+3.0.4	30may06 Added busy watch (hourglass) for long ops that lock the GUI.
+		Fixed replace function in treesearch_gtk2 so it doesn't
+		simply replace with the last signal.  (Iterator shouldn't
+		be used the way it was.)
+3.0.5	08jun06 Reworked tree structure code to handle new tree layout
+		such that strings are embedded at the end of struct.  This
+		reduces memory usage overall.
+		Added in implicit hierarchy split on pipe character in
+		symbol names as these only really happen in netlists that
+		have escaped identifiers.
+		For vzt and lxt2 loaders added block allocation of symbols
+		and nodes during init in order to allow denser memory
+		allocation as the bookkeeping overhead between allocations
+		internal to malloc() is unnecessary as the number of
+		elements is known at the outset.  Also removed hashing in
+		aet2, lxt, lxt2, vzt as sym[hv] is unused on sorted facs.
+		Removed unnecessary strlen() calls after sprintf() in the
+		dumpfile loaders as the string length is known from the rc
+		of sprintf.
+		Fixed T_SCOPE rule in vcd.c as dotted hierarchies would
+		throw off the parser as hierarchies themselves are
+		(in practice) never really escaped.
+		In tree.c, treenamefix() would recurse more than necessary
+		such that some dotted hierarchies would cause an order of
+		n squared recursion and as such never complete running
+		due to the size of the hierarchy.
+		Found non _2 versions of memory allocate/free being used
+		in various non-library places.
+		Fixed signal aliasing problems in GHW traces that have
+		memories or aliased signals in ghw.c.
+		Added handling for e8 datatypes and arrays in ghwlib.c
+		and ghw.c.
+		Updated ghwlib.c and main.c in order to handle gzip or
+		bzip2 compressed files.  Extension can be .ghw, .ghw.gz,
+		or .ghw.bz2 and the file will be handled properly.  Note
+		that as the matchword is consulted, just .ghw can be used
+		to specify a gzip or bzip2 file implicitly.
+		Added ghwdump and ghwdump.1 to the distribution (from ghdl)
+		as it is helpful for debugging ghw file failures.
+3.0.6	14jul06	Added "Real" option for data type display as passing around
+		real numbers in Verilog across modules needs to be done
+		with $realtobits and $bitstoreal.
+		Added scripting command flag --script in order to allow
+		autosetup of things that are outside of config file control.
+		This also allows doing things such as automated print jobs.
+		Added --nowm to remove window manager control on most
+		windows the viewer brings up.
+		Added --xid to allow turning the viewer into a plug-in for
+		calling by foreign applications.  This will allow integration
+		of the viewer into a single window for example, with IDEs.
+		Added --nomenus to remove menus for the case when used in
+		conjunction with --xid and it is desired to create an
+		embedded wave viewer applet that cannot initiate file I/O
+		on its own.  Note that earlier versions of GTK+ cannot
+		handle menu events properly from a GtkPlug.
+		Fixed problem with dead memory allocations for GtkColor
+		structs in color.c as found by Valgrind.
+		Moved .odt version of the user's guide into doc/ rather than
+		the pdf version as this is a sourcecode distribution so the
+		original word processor document should be there.  The .pdf
+		will still be up on the homepage on the website.
+		Added example script (for use with the -S option) in the
+		examples/ directory that prints some waves then exits.
+		Found problem with directive-based string embedding in older
+		gcc compiler versions.
+		GTK+-1.2 doesn't handle GtkPlug.
+3.0.7   17jul06 Added support for dualview of waveforms using GtkPlug and
+		shared memory IPC through use of the "twinwave" front end.
+		Updated documentation to add a section on twinwave.
+3.0.8	04aug06	Modified order of flags in twinwave as appending flags
+		does not work when longopt isn't used.
+		Subscripted GtkItemFactoryEntry menu_items for AIX compile.
+		More AIX fixes such as conditional alloca.h usage and
+		not including getopt.h.
+		Removed unused "bus" element from struct fac.
+		Added interactive loading of vcd files with the routines in
+		vcd_partial.c.  Added shmidcat to the distribition to test
+		this new interactive loading functionality.
+		Added real_parameter vartype (Riviera Aldec 2006.6) in all
+		vcd loaders.
+3.0.9	10aug06	Fixing compiler warnings across various systems.
+		Minor speedup in sigcmp() in bitvec.c for EOS detection.
+		Fix in vcd_partial.c loader that crashed on interactive
+		loads when blank traces are present in the save file.
+3.0.10	13aug06	Found inadvertant 64/32 bit conversion in regex.c that was
+		from not including "debug.h" header file.
+		Missing headers for gcc-3.2.x and earlier dealing with
+		select().
+		Converted fgetmalloc() to use vlists in order to cut
+		down on the backflips and traversal required for the old
+		one character per struct method.
+		Added VCD recoder that stores the VCD in memory using a
+		new recoding scheme rather than histents.  HistEnt structs
+		are created as needed.  The old VCD loader is still used for
+		--interactive, or if --legacy is used at the command line.
+		Added dynamic zlib compression support to VCD recoder and
+		vlist_compression_depth rc variable.  -1 disables, 0-9
+		mirror zlib compression depths.
+3.0.11	12sep06	Updated documentation to include section on VCD recoding
+		strategy and LXT (version 1) file format.
+		Removed unnecessary mallocs and functions in vcd_recoder.c.
+		Cleanup of all warnings with gcc -pedantic in gcc3
+		excluding long long integer constant and string constant
+		length warnings.
+		Disabled splash screen when loading VCD from stdin.
+		Cygwin compile fixes (3.0.10 broke the compile).
+3.0.12	19sep06	Updated production rule in verilog.g to handle compiling
+		parameterized components in opensparc without dying.
+		Integrated a lot of compatibility fixes from Peter O'Gorman.
+		Actually use config.h for better compatibility now.
+		Check for endianness in vzt read/write if XDRs not available
+		rather than assuming windows will byte reverse.
+		Fixed single time read in vzt_read.c as it wasn't working
+		properly in rtlbrowse.
+		Added -f (insert args from file) option to vertex.
+3.0.13	06oct06	Updated odt file documentation to make chapter-like page
+		breaks.
+		Updated lxt2vcd and vzt2vcd to emit proper VCD headers for
+		other tools that expect them.
+		Added attempt_vecmatch() in bitvec.c to match vectors based
+		on numbers inside nets in order to match on vectors inside
+		of flattened netlist latches (e.g., top.xyz[0:7]_Z).
+		Fixed regex compare on illegal regexs that caused viewer
+		crash (e.g., when comparing on a single left bracket or
+		any other illegal regex).
+3.0.14	17oct06	Fixed vztminer and lxt2miner so not specifying -n actually
+		works.  Updated manpages and UM for those executables to
+		fix description errors.
+		Now can snap cursor to named markers--this was overlooked.
+		Changed recoder scheme for single bits slightly in order
+		to pack 2 more bits in for 0/1 transitions.  This implies
+		that 0..31 timesteps can be encoded in 1 byte for the
+		common case.
+3.0.15	27oct06	Added getopt_long from GNU project.
+		Fixed broken compile under GTK1 for rtlbrowse makefile.
+		Now can recoalesce bitblasted vectors in rtlbrowse.
+		Updated finalize in vcd recoder to add fake 'x' vch for
+		non-aliased facilities.  Normally all facs are initialized,
+		but noticed that libvcddump doesn't do this.
+3.0.16	13nov06	Patches to remove some compile warnings under Cygwin.
+		Changed maxdata linker flag for AIX to allow 3.25GB of
+		data segment area for AIX5.3.
+		Changed unsigned integer splay comparisons in vzt_write.c
+		for a slight speedup.
+		Updated configure patch scripts to patch over a "LEX = :"
+		glitch for AIX5.3 and also to use gcc in AIX for the pccts
+		compile because of xlc incompatibilities with it.
+		Fixed bug in draw_hptr_trace_vector_analog() that would
+		cause crashes on pure real vectors when zoomed out fully.
+		Added dynamic tooltips on current marker values for both
+		the left and middle mouse buttons (not tested for Win32
+		yet so disabled there).
+		Added preliminary support for changing menu accelerators
+		through the rc file with an "accel" statement.
+3.0.17	27nov06	Fix in vcd recoder for SystemC which doesn't emit time
+		zero in the initial dumpvars.  (would be needed anyway for
+		dumpers that for some reason don't as the 1st value
+		change collapses into the second)
+3.0.18  28nov06	Fix in vcd saver for when units are in seconds: keeps
+		timescale of "ss" being used instead of just "s".
+		Locale problem in printing of floating point numbers fixed
+		by setting up a local fixer routine in config.h for
+		availability across all executables.
+		Fix in all vcd loaders to handle "port" (along with other
+		keywords) that appear in non-keyword parts of the $VAR
+		declaration sequence.
+		Fixed long standing LXT bug with integer datatype on
+		trivial LXT files.  (Overflow in lt_buf decoder buffer.)
+3.0.19	21dec06	More locale fixing with LC_ALL.
+		Added user patches from NIIBE Yutaka to remove requirement
+		for the GTK_ENABLE_BROKEN flag in GTK2 compilation.
+3.0.20	21jan07	Fixed string/real handling in VCD recoder as it did not
+		properly add the right-hand side endcaps which would
+		crash pattern search.
+		Made vcd recoder more robust to be able to handle 'b'
+		value changes for string data as well as wires with
+		's' type data (for FlashSim).
+		Updated strace.c to allow forward/backward on strings and
+		reals.
+3.0.21	02feb07	Added support for in/out/inout evcd ports generated by
+		dumpports in ModelSim.
+		Fixed problem with hierarchy being out of order as
+		treegraft needed to be followed by treesort.  This mostly
+		impacted recursive hierarchy imports by only allowing
+		two signals to import rather than all of them.  Also there
+		was an inconsistency with the signal ordering with VCD vs
+		the database formats because of this.
+3.0.22	19feb07	Bumped up hash size from 65519 to 500009 entries for VCD
+		parsers.
+		Bumped up max VCDID fastindex size to 8M entries.
+		Now use gperf for verilog datatypes for some speedup in
+		gtkwave vcd loaders.
+		create_sorted_table() changed to deallocate long names in
+		vcd converters as the names are no longer needed once the
+		writer has them.
+		Fixed GTK1 makefile in src/ as twinwave had pkg-config
+		for GTK2.
+		Stray getopt.h include in v2l_analyzer_lxt2.h needed to
+		be #ifdef'ed with HAVE_GETOPT_H for Solaris.
+		XDR library -lnsl explicitly listed for Solaris.
+		PATH_MAX set if not defined in verilog.g for Vertex.
+		Regenerated configure for setenv()/unsetenv() presence
+		which impacts Solaris (use putenv() instead).
+		Regenerated configure to handle auto detect of -lnsl,
+		-lrpc, and -lpthread.
+		Added -c to file install in top-level makefile (Solaris).
+		Use _LARGEFILE_SOURCE value from configure with linux
+		rather than assuming it is always 1 with linux.
+		Fix to preproc.c in vertex as it was attempting to parse
+		directories.  This works ok under linux with EOF but causes
+		problems under AIX.
+3.0.23	19mar07	Added corresponding va_end() for all va_start().
+		Added optional frequency display between markers, also added
+		rc variable of use_frequency_display and menu options to
+		support this.
+		Placed mainbox for marker text label widgets inside an event
+		box as this seems to fix the centering problems with GTK2.
+3.0.24	02apr07	Fixed makefile generation so 32bit AIX will use >256MB in
+		src/helpers.
+		Updated vzt2vcd and lxt2vcd so it handles the zero index of
+		bitblasted vectors (from ncsim).
+		Updated vzt reader so it can re-coalesce bitblasted vectors
+		provided the dumped bits are adjacent/in order.
+		Minor bugfixes to vztminer and lxt2miner with respect to
+		dumpon/dumpoff (don't emit $dumpon/$dumpoff strings as
+		that code was leftover from the vzt2vcd).
+		Updated manpages for vzt2vcd, lxt2vcd, and vztminer.
+		On concatenated vector loads ('#'/':' in savefile), attempts
+		to do a load of a monolithic vector on fail.  This is
+		somewhat related to the re-coalesce vectors feature above.
+		Implemented reverse of this for monolithic vectors into
+		the '#' bitstrand variants.
+3.0.25	10apr07	System Verilog with MTI fix for VCD declarations of form
+		$var reg 64 >w #implicit-var###VarElem:ram_di[0.0] [63:0] $end
+		...debussy implicitly escapes the varname during loading so
+		gtkwave does it too now for all VCD loaders.
+		More System Verilog with MTI fixes: VCD (parameter) vars of
+		length zero are representative of reals with MTI: they don't
+		use real_parameter like Riviera does.
+		Updated vcd_saver.c to handle saving these implicit-var
+		facilities correctly.  Likewise updated lxt-write.c,
+		lxt2_write.c, and vzt_write.c to handle correct bracket
+		stripping for the [0.0] semantics.
+		Modified dynamic resize routine so large escaped names don't
+		cause issues with the signal window crowding out the
+		wave window.
+3.0.26	18apr07	Fixed various compiler warnings discovered from looking at
+		Fedora Core compile logs and later compiling against
+		Centos/RHEL5.
+		Commented out GTK_CAN_FOCUS for scollbars in wavewindow
+		as it was causing rendering problems with newer versions
+		of GTK.
+3.0.27	27apr07	Renamed vertex to vermin to avoid name clashes with
+		existing 3D "vertex" package on debian systems.
+		Reverted back to using Open Office 2 Beta rather than
+		Open Office 2 as it was causing .odt docs corruption.
+3.0.28	30apr07	Changed anonymous union in struct Node as it is a
+		gcc extension.
+		Fixed some vcd parser memory leaks found by Valgrind.
+		Moved errno check in vcd parser as it seems that
+		the GTK event loop called in splash_sync() calls it
+		on gnome 2.18 for some reason (reported by Gentoo
+		gtkwave package maintainer).
+3.0.29	27may07	Added viewer support for arrays (currently AE2 only).
+		Integrated (standard) ./configure scheme thanks to
+		Dan McMahill
+		Added strdup_2 to debug.c for memory tracking (found
+		stray strdup() instances in ghw.c).
+3.0.30	24jul07	Removed variable declaration in menu.h that tcc
+		complained about (should have been an extern).
+		Updated configure.ac to use AC_SYS_LARGEFILE for
+		> 2GB file compatibility with older linux systems.
+		(This was accidentally left out in 3.0.29.)
+		Added ignore_savefile_pos and ignore_savefile_size
+		rc variables.  (Requested by Edward Ash.)
+		Added ability to specify trace background color in
+		filter processes by prefixing the return string with
+		?color? as in "?CadetBlue?xor r0,r0,r0".  The colors
+		used must already be specified in the rgb.c file.
+		Removed check for c++ compiler presence in the
+		autoconf.
+		Fixed LIBBZ_CFLAGS in .am files that really should
+		be LIBBZ2_CFLAGS.
+3.1.0	25aug07	Moved to a global context variable management scheme
+		for future code expansion.  Reload waveform function
+		added which uses context management.  Update user
+		manual to include references to reload capability.
+3.1.1	20sep07	Fixed crash in hierarchy search reload.  (Wrong
+		pointer type introduced from code cleanup.)  Adding
+		start of tabbed browsing support.  Put in window
+		select focus switching between tabs (e.g., on
+		search windows).  Added locking in main iteration
+		loop to detect unexpected context switches and
+		fix/report them (wrong operation if it occurs).
+3.1.2	24dec07	Compiler warning cleanups from Sun compile logs.
+		Added named parameter support to vermin parser.
+		Added check for gperf back into configure.ac.
+		Added vlist_spill rc variable to control new
+		feature of spilling vlists to a tempfile on disk.
+		Fixed vcd loader status bar on files > 2GB.
+		Removed non-growable vlists and also finalize
+		aliases in order to be compatible with spill.
+		Changed vlist allocation scheme to allocate only
+		half as much per-block, then the rest when the
+		half-way point is reached.  This reduces memory
+		wastage to an average of 12.5% rather than 25%
+		on uncompressed blocks.
+		Added code to pre-process data in vlists through
+		an LZ-based compressor.  The can cut down on
+		memory usage ever further.  This can be enabled
+		with the vlist_prepack rc variable.
+		Added --giga option to turn on vlist_spill and
+		vlist_prepack from the command line.
+3.1.3	13jan08	Added dynamic keypress detection in the Pattern Search
+		Requester so users do not need to press enter for search
+		strings.  Likewise, added the rc variable sst_dynamic_filter
+		to enable the same type behavior for the signal name filter in
+		the GTK2 signal search tree.
+		Fixed bug where filtered signal names did not reappear on
+		reload.
+		Updated user manual as necessary.
+		Added "edge" left/right buttons for handy single signal edge
+		detection due to user requests.
+		Fixed long-standing backward edge seek bug in pattern search.
+		(It would miss the preceeding edge if the marker isn't already
+		on one.)
+		Added use_standard_clicking rc variable in order to enable
+		"normal GTK" shift/click semantics in the signal window.
+		Collapse/uncollapse is now shift-ctrl when
+		use_standard_clicking is active.
+		Added prelim dnd for use_standard_clicking mode.
+		use_standard_clicking disabled in GTK-1.2 as there are dnd
+		issues.
+		Recalculate signal width on reload as sometimes it was missed.
+		Added input focus capability to signalwindow.
+		Moving menu options to standard GTK accelerator keys.
+		Added Ctrl-A/Shift-Ctrl-A handler to the treeview so it acts
+		like the signal window.
+		Added left/right scrolling hotkeys in signal window.
+		Added use_toolbutton_interface environment variable which
+		enables new user interface at the top of screen.
+		More modifications to handle globals swapping in multi-tab
+		mode.
+		Update configure.ac to handle library order problem with
+		cygwin in rtlbrowse.
+		Added scrollwheel support in signal window when focused and
+		standard clicking is active.
+		Added "Use Color" and "Use Black and White" (for screendumps)
+		View menu options from user requests.
+		Fixed help window so it is not editable.  Also do an implicit
+		click-to-front for window managers that automatically move
+		windows to front when their insides (not decorations) are
+		clicked on.
+3.1.4	30jan08	Added fix for how dnd gets killed after reload on new
+		versions of GTK (e.g., 2.10.14).
+		Added dirty_kick in MaxSignalLength that forces usize if
+		width is dirty.
+		For interpolated analog traces, fixed interpolation at
+		end of line so it doesn't cause endpoint to go offscreen.
+		Experimenting with track-and-hold fixing.
+		Integrated spice3f5 poly interpolation routines, but are
+		currently unused.
+		Now allow both interpolated+step simultaneously for analog.
+		Integrating signal window popup menu code.
+		Fixed rendering bugs in coalesced vectors displayed as analog.
+		Added resizing options that are windowed to either the screen
+		or across all trace data.
+		Added enter=OK as a default file chooser response.
+		Added DND and standard clicking to GTK1 compiles.
+3.1.5	14feb08	Fixed bug in rtlbrowse that causes lxt2 dumps not to be value
+		annotated.  (signal match worked for bitblasted nets only)
+		Updated rtlbrowse so that it can update dynamically with the
+		marker position.
+		Added anti-aliased font rendering code.
+		Added use_pango_fonts rc variable.
+		Updated edge buttons so they can handle multiply selected
+		signals.
+		Logfile(s) now update on waveform reload.
+		MinGW compile fixes.  MinGW crash on reload fixed.
+3.1.6	27feb08	Added additional #ifdefs that disable Pango on GTK versions
+		less than 2.8.0.
+		Added support for optional sideband .aetinfo files when
+		using .aet files.  Update interface to rtlbrowse to
+		translate time value back to original aet ones.
+		Improved x vs X (z vs Z, etc) handling at signal boundaries.
+		Changed color scheme where red marks X data similar to how
+		it marks U for VHDL.
+		Fixed longstanding bug in linear lxts that only occurs if
+		integers are present in the lxt dump (length is failed to
+		be promoted to 32 during re-chaining).
+		Fixed shift-clicking when use_standard_clicking is active
+		such that shift-clicks past the last trace when the
+		signalwindow isn't fully populated count as a shift-click
+		on the last trace.
+3.1.7	23mar08	Updated file.c to remove potential file chooser crash in
+		the case of a missing save file at the command line followed
+		by "write save file as".
+		Fixed problem in black and white mode where process filter
+		could possible cause colors to be displayed when ?color?
+		value escaping is used.
+		Fixed problem where primary marker was listed as 0 sec on
+		init instead of -- if not set initially from a save file.
+3.1.8	06apr08	Added Range Fill option in the data format menu so
+		that vectors like address[31:2] will display as a human
+		expects to read them.  Fill in can be zeros or ones.
+		Added trace flags display at right hand side of signal name
+		in mouseover popup window.
+		Added more visual feedback in signal D&D window in order
+		for users to determine more easily where a drop will insert.
+		Reduced visual noise on D&D by not updating screen after a
+		cut if a paste also occurs.
+		Fixed problem where primary marker was filtered through
+		time_trunc() on initialization.  Removed other time_trunc()
+		calls causing similar problems as necessary.
+3.1.9	20apr08	Added missing init_filetrans_data() to reload function.
+		Updated manfiles to get them in line with Debian lintian.
+3.1.10	14may08	Added missing adjustment of t->shift in mouseover.c in
+		order to allow the mouseover on shifted traces to display
+		properly.
+		Fixed problem with edgebutton going back two edges on a
+		combined vector.  (Cut and paste typo from strace.c.)
+		Added support for DND from regex search window to the
+		signal/waveareas.
+3.1.11	18jun08	Compile fix for tla2vcd in MinGW.
+		Added #ifdef for HAVE_BZERO for MinGW.
+		Compiler warning fixes.
+		Added time = -1 endcaps in LXT2+VZT+AET loaders.
+3.1.12	14jul08 Compiler warning fixes.
+		Fixed crash in vcd recoder for b vs 01xz mixups in
+		malformed VCD files.
+		Fixed abort on VCD load for malformed size vs
+		[msi:lsi] syntax.  NC does this on arrays of wires.
+		Fix to vlist reader with --giga enabled in order to
+		handle reads which go off the end of the file.
+		(Possible due to how only the amount used in a block
+		is actually written to the file in order to save
+		space, so the vlist blocks can be overlapping yet
+		usable.)
+3.1.13	20aug08	Adding compressed hierarchy handling in order to
+		reduce memory usage on large bitblasted models.
+		This is currently only enabled for the VCD recoder,
+		LXT, LXT2, and VZT loaders.
+		Fixed some buffer overflows in vectorization code
+		(and when vectorization is enabled) in vzt_read.c.
+		Modification to autoconf handling for rpc.h.
+		Fix for DnD to directly under an expanded comment
+		trace.
+		Make step_increment equal to 1/10 page_increment
+		for the horizontal scroller in the wavewindow.
+		Added sticky click semantics for clicks in signal
+		window.  To do this in the treesearch_gtk2 file
+		will require some additional future work with
+		view_selection_func() and/or signal handling and
+		trapping.
+3.2.0	16feb09	Fix for strings ('s' type) in recoder.
+		Added timestart command to savefiles which indicates
+		what the leftmost position should be on reload.
+		Added support for as/zs small timescales as well as
+		0.1/0.01/0.001 multipliers which simvision can emit.
+		Adding signal name DnD support from external apps.
+		Force open tree nodes on initial .sav file read.
+		Yet more new warning (-Wall) cleanups.
+		Fixed ExtractNodeSingleBit for vectors which do not
+		have a zero in either the msb or lsb (e.g., [1:9]).
+		Added support for dragging files into the viewer
+		(i.e., dumpfile, savefile, stems file)
+		Added DnD of signal names from RTLBrowse source code
+		windows	directly into gtkwave.
+		GTK1 compiler compatibility fixes.
+		Improved search performance from rtlbrowse initiated
+		DnD searches.
+		Fixed wave_locale.h for MinGW.
+		Fixed longstanding bug with blackout regions
+		rendering.
+		Integrating embedded Tcl interpreter.
+		Fixed bug with unformat time when base time is in
+		seconds.
+		Added tcl example in examples/ directory.
+		Updated -f argument file handling in vermin.
+		Updated tcl_helper code so that signalwindow drags of bit-
+		blasted vectors are properly re-coalesced for client code
+		for the drag.
+		Updated task definition in vermin so that identifiers with
+		dots in them can be used as task enable names.
+		Fixed problem in vermin preprocessor where defines in 0x0d0a
+		terminated lines would insert the carriage return into the
+		sourcecode.
+		Added synthesis pragmas which mirror synopsys ones to vermin.
+		Used gtk_window_set_default_size instead of gtk_widget_set_usize
+		in rtlbrowse in order to allow window to shrink appropriately.
+		Made size_tag values smaller in logfile.c in gtkwave/rtlbrowse.
+		Allow dragging from rtlbrowse window without needing to high-
+		light signals first.  This allows single signal drags.
+		GCC-4.1.3 with -O3 flag fix for x86_64 on xchgb instruction
+		assembler intrinsic.
+		Use gtk_window_set_transient_for() on simplereq windows.
+		Starting to update environment for rtlbrowse into a single
+		integrated window.
+		Adjust xthickness/ythickness in toolbars to make images
+		take up less space.
+		Preliminary support for text searching in rtlbrowse.
+		Added rtlbrowse case (in)sensitive searching both directions.
+		Fix re-entrancy on file names for file.c file requester in
+		gtkwave.
+		Add --with-tcl to configure script via tcl.m4 macro.
+		Cut down on visual noise during reload.
+		Added fix using TCL_INCLUDE_SPEC to get to compile under
+		Ubuntu.
+		Fixed lost num_cpus variable that wasn't passing through reload.
+		Added Cut/Copy/Paste functionality that allows multiple pastes
+		rather than destroying the cut buffer on paste.  Cut buffer
+		contents will survive after a reload operation.
+		Removed translate filter process from mingw32 menu as it
+		is disabled in the compile by #ifdef'ing in empty functions.
+		Updated shmidcat so it restarts properly when VCD is being
+		looked at while sim is running and gtkwave gets ahead of
+		the generated VCD.
+		Fix crash on invalid node for force tree open during load.
+		Added Partial VCD Dynamic Zoom and related zoom_dynamic
+		rc variables.
+		Added prelim support for export to TimingAnalyzer file format.
+		Added mouseover support in signal window which shows full
+		facility name.
+		Added dynamic update on strings for marker values which keeps
+		user from having to press enter explicitly for each one.
+		Now allow support for named markers using optional user names
+		rather than just 'A'-'Z' labels.
+		Added countdown timer to remove dnd cursor if it is onscreen
+		longer than 5 seconds.
+		Added support for setting optional user names for named markers
+		via Tcl scripts.
+		Added prelim auto-scrolling code for trace adds/copies.
+		Added support for Tcl repscripts.
+		Removed warnings found when compiling with -Wshadow.
+		Fix for stack crash in treesort() on dumpfiles with an
+		extremely large number of signals (e.g., 5 million).
+		Compile fixes for rtlbrowse in older versions of GTK2.
+		Remove stray tempfiles created by --giga writer under MinGW.
+		Removed stray file descriptor from lxt on reload.
+		Fixed repeat error problem in lxt.c introduced by -Wshadow fix.
+		Added prelim version of scale_to_time_dimension rc variable and
+		appropriate menu options.
+		Beginning to update user manual to reflect new 3.2 features.
+		Added Partial VCD Dynamic Zoom To End and related
+		zoom_dynamic_end rc variables.
+		More mingw compile fixes: the whole tarball compiles now.
+		Use old file chooser (for now) in mingw as the new one seems
+		not to be re-sizeable.
+		Added "copy traces" to toolbar in gtkwave as copy function now
+		exists.
+		Added check for "server" in env var CYGWIN before printing
+		warning about using shared memory.
+		Added vpi client lxt/lxt2/vzt writers in contrib/vpi, but these
+		currently are not built.
+		Compatibility fix for gcc 3.x.
+		Added extload capability which grabs data via popen().  This
+		allows adding loaders for unsupported formats via data mining.
+		Added Tcl command setBaselineMarker.
+		Extload hardening on reload.
+		Added extload filetype to DnD.
+		Fixed window close when tabs active so it would update the
+		titlebar, times, etc., to the current tab.
+3.2.1	09apr09 Add more information for users if gtk can't initialize on MacOS.
+		Added possibility for vlist.c to write out the spill file in a
+		machine independent fashion.
+		Added --fastload option to gtkwave.
+		Fixed autoconf so Tcl works in cygwin.
+		Updated cygwin "Bad system call" warning text to include more
+		possible fixes.
+		Fixed warning message in strace.c ("Named Marker xx not in use")
+		which spanned multiple lines because of multiple status_text()
+		calls.
+		Fixed STATUS_ACCESS_VIOLATION in cygwin for both vztminer and
+		lxt2miner and added the --comprehensive option in each.  Also
+		added behavior that no search string specified matches all
+		value changes across all nets.
+		Updated documentation description for collapsible groups to
+		indicate that shift-control is required, not control
+		(as previously).
+		Adjusted brightnesses for mdgray and dkgray so collapsed
+		traces are visible on some monitors.
+		Fixed dkgray->mdgray for "Time" background as brightnesses
+		have changes.
+		Made AN_NORMAL/AN_REVERSE const declarations also static in
+		order to avoid unnecessary stack pushing.
+		Fixing reloader crashes in vcd_build_symbols().
+		Adding experimental support for bringing up gtkwave without a
+		trace like "every other" GUI app.  This is currently disabled
+		pending more testing.
+		Sort filename lists from DnD in order to allow both a
+		dumpfile and a savefile to be dragged into the viewer and
+		processed in a logical order (i.e., the dumpfile before
+		the save file.)
+		Added disable_empty_gui rc file variable.
+		Working with ergonomic features of empty gui handling.
+		Fixed & to && in if() comparison in lxt_write.c
+		Added support for PDF output via ps2pdf.
+		Added support in VZT file format for LZMA compression.
+		Fixed calling to install_keypress_handler() as it only needs
+		to be done once.
+		Add menu blackouts on empty gui.
+3.2.2	02aug09	Changed some instances of exit() in main.c to vcd_exit() in
+		order to keep failed loads in tabs from killing the whole
+		session.
+		Update VCD ID generation in VCD writers to use XL-style
+		identifier sequencing.
+		Fix MinGW printf format strings for helper apps.
+		Ported shmidcat and partial VCD loader function to MinGW.
+		Added twinwave support in MinGW.  This currently has some
+		problems with D&D as well as window decorations being
+		present due to various system incompatibilities.
+		Added rtlbrowse support in MinGW.
+		Fixed rtlbrowse on reload, now allows to respawn.
+		Fixed rtlbrowse in cygwin as kill() does not work the same
+		as posix kill.
+		Added clearing of t->minmax_valid in dataformat() in case
+		sign bit changes for analog vectors when TR_ANALOG_FULLSCALE
+		is in use.  This allows dynamically changing from/to "signed
+		decimal" and other modes and removes any y-scale artifacts
+		from having stale minmax data.
+		For rtlbrowse kill, step through all contexts in atexit()
+		handler.  More exit fixes for rtlbrowse killing.
+		Warning fixes for printf format strings in lxt2/vzt/ghw.
+		Updated VCD parser to handle names like "a[1] [3:0]".
+		Added VCDNAM_ESCAPE cases in lxt, lxt2, and vzt loaders.
+		Updated VCD writers so they put spaces before bracketed
+		signal ranges.
+		Added extra message for help requester if file type is
+		MISSING_FILE in order to direct users what to do.
+		Fixed segfault caused by improper search/replace and
+		malloc length in renderopt.c for ps2pdf.
+		Beginning to integrate FST file format support.
+		Optimize rtlbrowse somewhat by not redoing fac finding
+		every time the cursor moves.
+		Beginning to integrate FST into rtlbrowse.
+		Added vcd2fst and fst2vcd helper utils.
+		Added option to FST to allow monolithic post-compress for
+		much smaller file sizes.
+		Documentation updates.
+		Added capability in GHW reader for negative indices on
+		bitstrands.
+		Added variable type support to VCD + impulse arrows for
+		depicting events on VCD (other formats will migrate in the
+		future).
+		Added vartype info (if avail in trace, now FST+VCD).
+		Added module type info (if avail, now FST+VCD+GHW only) by
+		decorating the hierarchy tree info appropriately.
+		Changed build_tree_from_name() to perform move to front for
+		hier names in order to work better with decorated trees.
+		Add EVCD support to vcd2fst, fst2vcd, and FST loader.
+		Fix longstanding bug in vcd parsers where evcd did not
+		parse correctly if standard VCD IDs were used.
+		Fixed "f" value in EVCD files so it converts to z, not x.
+		Convert capitalization usage on hex values to match that
+		of verilog.  (i.e., x = all bits are x, X means some but
+		not all bits are x.)
+		Change magic number 3 to AN_1 in vtype2().  This was skipped
+		by an earlier sourcecode conversion.
+		Change file requester handling so old names are copied
+		to the new tab and the directory used on an unspecified
+		entry is derived from the loaded file name directory.
+		Added type information to mouseover in signal window.
+		Added --enable-fatlines ./configure flag which enables gtkwave
+		to render lines in "Fisher Price" (aka Simvision) double-
+		width style.
+		Added evcd2vcd to the distribution.
+3.2.3	03sep09 Set iconify icon for gtkwave with gtk_window_set_icon().
+		Ensure -d flag survives across reloads/new tab.
+		Added LIBZ_CFLAGS to helpers/fst AM_CFLAGS for MinGW.
+		Added gtk_window_set_resizable for pWindowMain in file.c
+		as some distros need this.
+		Changed some strace.c globals to "signed char" to remove
+		warnings under AIX compiles.
+		AIX ./configure fixes.
+		Added malform_eof_fix() to recoder and regular VCD loader.
+		Fix to attempt_vecmatch_2 when no suffix encountered.
+3.3.0	25dec09	Modified unformat_time() so it can also handle floating-
+		point exponential format.
+		Integration of a large amount of group handling sourcecode
+		from Don Baltus / Bluespec, Inc.
+		Re-integrated original Simpod repscript handling.
+		Reworked force open tree node and moved to
+		tcl_support_commands.c.
+		Renamed liblzma to libgwlzma for now: liblzma is present
+		on some systems and causing conflicts.
+		Fix for tk library issue on Cygwin.  (Use TK_BUILD_LIB_SPEC
+		if TK_LIB_SPEC is a null string.)
+		Added --enable-stubify ./configure option to make Tcl/Tk
+		library usage be completely dynamic.
+		Generate anonymous name for groups to prevent crashes when
+		group name is unspecified.
+		Added EnsureGroupsMatch() on various parsewavline() code
+		sections to enforce legitimate group formations.
+		Applied gtk+-1.2 compile fixes as compile was getting out
+		of sync as it hadn't been tested recently.
+		Allow more events in GuiDoEvent() to prevent hangs.
+		Made --wish and --vcd mutually exclusive as they both require
+		input on stdin.
+		Enabled gc caching on linux to help with rendering extremely
+		dense traces.
+		Removed memcpy() ops in baseconvert.c and changed them into
+		pointer copies as the copied string is never modified.
+		Resequenced enum WV_MenuItems in menu.h which lost ordering
+		from Bluespec menu item adds.
+		Added gray code conversion ops.
+		Added FST detection to gtkwave::getDumpType.
+		Added missing context change variables in context_swapper().
+		Added gtkwave::setTabActive and gtkwave::getNumTabs
+		MinGW tcl compile fixes.
+		Cygwin fix for optimized vcd -o option.
+		Disabled reload on optimized vcd from stdin.
+		Removed --wish when building under MinGW and when specifying
+		--enable-stubify for configure (for now, the fail is with
+		TkMainEx).
+		Removed tempfile generation for Tcl script execution; now
+		use alloca based scheme.  Also removed old-style "script"
+		file support as it is obsolete: all scripts are Tcl scripts
+		now.
+		Integrated user-provided rework of rgb.c.
+		Removed local lzma library and now use system xz if
+		available. Old VZT files using -z 2 are no longer readable
+		but can be converted using vzt2vcd from an old version of
+		gtkwave.
+		Various warnings fixes.
+3.3.1	03jan10	Fixed Makefile.am files to allow builds into different
+		directories than the current one.
+		GHW crash fixes.
+		In fstapi.c now use tmpfile() to generate tempfiles in
+		order to speed up operation on networked filesystems.
+		Fixed problem in fstapi.c with conflict between off_t
+		and unsigned longs on some 32-bit systems which cause a
+		"tsec uncompress" failure on reads.
+		Fixed missing dependencies in various Makefile.am files.
+3.3.2	05jan10	Emergency fix for ghw.c as it was missing a close comment
+		causing problems with iterative generate.
+3.3.3	18feb10	Fix for Pattern Search where end marker time was not used
+		for dropping down a marker: for clock counts this would
+		mean that the clock count was off by one.
+		Added locking/unlocking of named markers against the
+		primary marker with 1/2/0 keys.
+		Fixed broken "make distclean".
+		Added patch for move to time against named markers.
+		Added a secondary pattern search function.
+		Added sanity checking on WAVE_NUM_STRACE_WINDOWS.
+		Added fix for broken bsearch_facs() when characters like
+		"$" are in a facname and it matches a hierarchy boundary.
+		Removed tla2vcd from distribution because of incompatibility
+		with some TLA700 traces.
+		Removed obsolete helper executables.
+		Activated preliminary line clipping for analog rendering as
+		line clipping in GTK does not always work for extreme
+		value ranges.
+		Hang in gtkwave on backtracking time fix (usually caused by
+		truncated files).
+		Replaced Tcl_GetStringResult() in tcl_np.c with Tcl_GetVar()
+		on Tk init fail.
+		Added AC_CHECK_LIB([dl], [dlopen]) (Fedora requirement).
+		Added --disable-xz (requested by Gentoo).
+		Added extern "C" { } bookends to headers for C++.
+3.3.4	07mar10	Change slope calculation "m" in clipping.c to all doubles
+		in order to avoid integer overflow errors.
+		Change main resync loop name from gtkwave_gtk_main_iteration
+		to gtkwave_main_iteration.  (Start of separation of GUI code
+		from functional code.)
+		More fixes to analog clipping: yt0/yt1 were reversed, also
+		added analog_redraw_skip_count env var.
+		Added support for "realtime" VCD variable.
+		GTK1 compile compatibility fixes for pattern trace.
+		Removed "Reduce Single Bit Vectors" menu option.
+		Added defensive re-link of t_prev on prepend and cut ops.
+		Fix for analog stretch traces when analog trace was
+		expanded and then collapsed.
+		Fix to LZMA_write_compress to detect xz compression failures.
+3.3.5	19mar10	Fix for usage of deallocated next pointer in the
+		force_open_tree_nodes loop (spotted using an alternate
+		allocator).
+		Added optional preliminary Judy array support.
+		Fixed compiler warnings.
+		Fixed toggle max hier so it toggles back and forth between
+		the most previously set hierarchy depth.
+		Added ".lxt2" to list of suffixes allowed by gtkwave.
+		Remove name field from struct fac.
+		Added missing hierarchy boundary sort for FST in order to
+		allow compatibility with compressed names (-C flag).
+		Removed resolve_lxt_alias_to field from struct fac.
+		Removed lxt-only lastchange field from struct fac.
+		Removed unused h field in struct symbol.
+		Removed nextinaet field if unused, recoded to symchain when
+		used.
+		Fixed && used in logical operation for generating ExtNode.
+		Removed ExtNode, made inline with Node.
+		Deallocate symbol hash table after no longer needed.
+		Only allocate hash when necessary.
+		Added marker vs maxtime marker conflict check in
+		kick_partial_vcd() to ensure signal window values reflect data
+		value rather than x when maxtime scrolls over the marker time
+		and makes the marker visible.
+		More Judy array adds for VCD.
+		Removed sym->selected member and replaced with 1-bit Judy array
+		if enabled.
+3.3.6	01may10	Added RealToBits menu options for displaying real numbers as
+		binary values.
+		Added missing break statements to terminate cases in
+		bits2vector().
+		Fixed cut and paste error on FILE_FILTER_MAX versus
+		PROC_FILTER_MAX.
+		Reduced FILE_FILTER_MAX from 1024 down to 128.
+		Added preliminary transaction filter support.
+		Added transaction parser in examples/ directory.
+		Updated time warp handling.
+		Updated print routine to use populateBuffer().
+		Added raise to front when filename selected in filter dialogs
+		as this helps with some window managers.
+		Remove color for translated/transaction traces in black and
+		white mode.
+		Copy gc_grid_wavewindow_c_1 from gccache on reload as this was
+		accidentally overwritten with gc_grid2_wavewindow_c_1 without
+		adding back gc_grid_wavewindow_c_1.
+		Added fstWriterSetTimescaleFromString() to fstapi.c which
+		allows usage of strings such as "1ns" for the timescale.
+		Incorporated FST writer optimizations.
+		Incorporated some fixes suggested by cppcheck.
+3.3.7	03jun10	Made enable_fast_exit rc variable default to yes.
+		Compiler warning fix in lxt_write.c/fstapi.c for Open Solaris.
+		Added fstWriterGetDumpSizeLimitReached() to fstapi.c.
+		Fixes to Tcl string handling.
+		Applied user-supplied fixes for null pointer crashes in
+		rtlbrowse.
+		Moved gtk_grab_add() after gtk_widget_show() in order to work
+		with newer versions of GTK.
+		Use PRId64/PRId32 in lxt2_read.h and vzt_read.h to remove
+		printf format warnings.
+		Fixed "format not a string literal and no format arguments"
+		warnings.
+		Added missing HAVE_INTTYPES_H in compile note for
+		transaction.c.
+		Disable autocoalesce if Icarus Verilog is detected.
+		Added units forward scan in logfile.c.
+3.3.8	25jun10	Added failure check on tempfile create in fstReaderInit().
+		Added strace_repeat_count and appropriate menu option.
+		Removed the "/File/Quit/Don't Quit" menu item if fast exit is
+		enabled.
+		Added dnd of signals from gtkwave into rtlbrowse: now the
+		appropriate verilog code sections automatically are
+		imported.
+		More warnings cleanups.
+3.3.9	06jul10	Changed accelerator for Quit to conform to Gnome standard
+		menus guidelines.
+		Update local libz and libbz2 to current versions.
+		Moved version string out to version.h to keep from having
+		the CVS data updating in currenttime.h.
+		Fix crash that can occur in RemoveTrace.
+		Header file cleanups.
+		Fixed actual result of crash in RemoveTrace: defensive
+		re-linking in PasteBuffer didn't always relink the back
+		pointers properly.
+3.3.10	16jul10	Fix in vermin Makefile.am for parallel build failures involving
+		shred.c depending on tokens.h.
+		Added missing dependencies in various Makefile.am files.
+		Fix for free to non-malloc'd address problem in main.c and
+		menu.c due to context changing in Tcl scripts when
+		gtkwave::/File/Open_New_Tab is invoked.
+		Updated vcd2fst so it is compatible with VerilatedVcd writer.
+		Read hierarchy reconstruction hardening for fstapi.c.
+		Check return code for hierarchy generation in fst2vcd.c.
+		Updated example to reflect Quit name change.
+		Updated repscript_timer so it prints stack trace.
+		Use setvbuf (as with MinGW) for fstapi.c to fix for OS X.
+3.3.11	17aug10	Added tcl functions gtkwave::installFileFilter,
+		gtkwave::installProcFilter, gtkwave::installTransFilter,
+		gtkwave::setCurrentTranslateFile,
+		gtkwave::setCurrentTranslateProc,
+		gtkwave::setCurrentTranslateTransProc, and
+		gtkwave::setCurrentTranslateEnums to give Tcl access to these
+		features.
+		Add write combining in fstWriterEmitValueChange to speed
+		up execution on Cygwin.
+		Nested `ifdef fix for Vermin.
+		Fix for free to non-malloc'd address problem in repscripts
+		due to context changing in Tcl scripts when reload occurs.
+		Added gtkwavetcl_setvar() for starting to build a framework
+		to support Tcl variable change callbacks.  This can be used
+		to closely monitor how a user manipulates the gtkwave GUI.
+		Fix for 0 millisecond Tcl timer causing 100% CPU usage.
+		Added CVS versus ModelSim compatibility fixes for Bluespec
+		savefiles.
+		Fix for atoi_64 when value is zero followed by a legitimate
+		nonzero value after some garbage non-numerics.
+3.3.12	29aug10	Compile fix for --disable-tcl or systems which do not have
+		Tcl installed.
+		Added support for process filters in MinGW.
+		Added support for transaction filters in MinGW.
+		Added support for Open New Window to MinGW.
+3.3.13	23sep10	Reduce memory footprint of VectorEnt on 32-bit architecture
+		by struct reordering.
+		Added warnings for options that are non-functional for some
+		configurations.  (They are not disabled in order to allow
+		compatibility across systems.)
+		Fixed dangling fnam malloc in fst.c.
+		Reduced temporary memory usage during file init for lxt2,
+		vzt, and fst files by using F_NAME_MODULUS wrap on f_name.
+		Sparse vs non-sparse array crash fix for ae2 loader.
+		Suppress decorated treebuild for fst when compressed facs
+		are being used: this was causing duplicate tree entries.
+		Fixed renderhash problems in print.c caused by disparity
+		in eqns used in wavewindow vs print.c (need realx, not
+		just x).
+		Upgrade local libbz2 to 1.0.6 for uncompress security fix.
+		Added experimental dynamic SST building code which speeds
+		up initialization time for trees with extremely large number
+		of scopes.
+3.3.14	26oct10	Fixed force_open_tree_node() for dynamic SST trees when
+		unbuilt nodes are encountered during traversal.
+		Allow VCD files where start = end time.
+		Compiler warning fixes.
+		Added preliminary RPC mechanism to gtkwave.
+		Added --disable-inline-asm ./configure flag.
+		Added initial_signal_window_width rc var.
+3.3.15	10nov10	Added check in fstapi.c for corner case where
+		fstWriterEmitSectionHeader could make a file unusable if.hier
+		is not present.
+		Added more checks in fstapi reader to prevent crashes on
+		malformed files.
+		Add config.h #include to the fstapi.c code.
+		Add detection in vcd2fst for Verilog XL-style VCD identifiers
+		to speed up reading VCD files from those simulators.
+		Speedup in fst writer by ensuring checkpoint is not written
+		to for every fstWriterEmitValueChange call.
+		The --optimize flag now uses fst instead of lxt2 as its
+		default file format use vcd2lxt2 directly if old behavior
+		(e.g., converting flat signal names to hierarchies) is
+		desired.
+3.3.16	24nov10	Remove unused JError variables and replace with PJE0 macro.
+		Added experimental dynamic alias detection in fst writer if
+		Judy arrays are detected.  (Judy not required for reading.)
+		Added Jenkins hash routine to enable dynamic alias detection
+		for when Judy not available.
+3.3.17	28nov10	Added sanity check in dynamic alias reconstruct routine in
+		FST reader and also fixed bug where alias reconstruction in
+		current blocks doesn't overwrite previous, old block data.
+3.3.18	24dec10	Added extra allocation in fstWriterEmitValueChange in case
+		users modify the FST_BREAK_ADD_SIZE to a very small value.
+		Fixed in lxt.c that --disable-inline-asm did not propagate
+		into its compile.
+		Fixed x86_64 assembler =q vs =Q problem in lxt.c.
+		Preliminary support for variable length records in FST files.
+		Added fstUtilityBinToEsc and fstUtilityEscToBin for
+		conversion of binary data to C-style strings.
+		Now allow escaped strings in VCD files to encode a richer
+		set of data for non-standard "s" VCD records.
+		To comply with fst2vcd, vcd readers now handle "string"
+		variable type keyword.
+		Scaled back multipler from 95 to 94 for VCD ID processing
+		as !..~ is a distance of 94.
+		Add detection for Verilog XL-style VCD identifiers in all
+		vcd loaders in gtkwave in order to aid in indexing.
+		Added --enable-struct-pack configure flag.
+		More warnings fixes.
+		Fix mif_draw_string so it does not emit escaped character
+		codes.
+		Added gtkwave_server to distro but it is not currently in
+		automake as it is not ready for use.
+3.3.19	03feb11	Added more NULL pointer checking to vcd2fst to prevent
+		crashes on malformed files.
+		Rewrote support for compressed signal handling.  Currently this
+		is for FST only.
+		Modified shmidcat to exit on EOF.
+		Added sys_fst.c VPI source for NC Verilog and XL.
+		Added component typename dumping into sys_fst.c so that NC can
+		dump component names.
+		Added component type names in gtk2 tree.  Currently the FST
+		loader is the only one that will populate this field.
+		For 64-bit architectures, doubles are stored in HistEnt fields
+		directly to conserve on memory usage.
+		Fixed top/bottom pane resizing bug after reload in SST window.
+		Fixed crashes in hierarchy search widget for GHW where
+		standard, textio, std_logic_1164, etc. were selectable.
+		Fixed reload scroll position for bottom TreeView in SST window.
+3.3.20	21feb11	Fixed uninitialized mat variable in compress_facility().
+		Added --slider-zoom option to gtkwave to enable experimental
+		horizontal slider zoom feature (GTK2).
+		Fix vcd2fst so it can handle 0 length VCD event variables in
+		their declarations (MTI).
+3.3.21	28apr11	Fixed crash in LXT2 reader on malformed files.
+		Fixed reload crash when -o flag used on non-VCD files.
+3.3.22	03jun11	Optimize tree build so it can handle large amounts of
+		component instantiations (netlists) without undue slowdown.
+		Added gcc -Wformat and -Wformat-security related fixes.
+		Update hier_decompress_flagged so it can also decompress into
+		its own static buffer in order to speed up temporary usage
+		cases.
+		Fix FST reader iterator to work better with --begin flag.
+		Fixed missing facname decompression for FST files on
+		single trace import (backup case that should never happen).
+		Added support for user-specified timescale ruler using the
+		ruler_origin and ruler_step rc variables.
+		Added "/View/Define Time Ruler Marks" menu option.
+		Removed indirect file support as is unneeded for 64-bit.
+		Removed obsolete CVS modification log comments.
+		Handle vcd saver case of dot at end of signal name.
+3.3.23	01jul11	Fixed ItemFactory callbacks as their argument lists did
+		not reflect the correct callback argument type/order
+		for callback_type=1.  This is a longstanding hidden
+		bug.  (Would prevent pattern search from working on
+		64-bit big-endian architectures.)
+		Fixed broken "replace" signal option.
+3.3.24	03aug11	Improve the searching for the TCL libraries (when using
+		stubs).
+		Fixed bug where Tcl_GetString was substituted with
+		brace removal preprocessing when unnecessary (would break
+		addSignalsFromList, etc.)
+3.3.25	15sep11	Replaced calloc_2 with histent_calloc in loaders where
+		applicable.
+		Updated tcl.m4 so /usr/lib64 can be automatically used.
+		Fixed TR_ANALOG_STEP line clipping problem.
+		Checked in fix for modelsim signal bit nets that are
+		defined as [0] as some tools emit signals without the
+		[0] and it causes savefile compatibility problems.
+		Add visible filter pattern in fileselbox() as well as
+		selectable "*" pattern overrides.
+		Added custom filters to GtkFileChooser dialogue.
+		Fix in lxt2_read.c/.h for negative msb/lsb indices.
+		Fix in vzt_read.c/.h for negative msb/lsb indices.
+3.3.26	25sep11	Mac OSX fixes: removed restrictions for twinwave on OSX,
+		OSX compile fixes for Tcl detection, printf warning
+		fixes (xcode gcc uses stricter warnings).
+		More generic warning fixes from recent feature adds.
+3.3.27	20oct11	Fixes of suspicious NULL pointer warnings from scan-build.
+		Fixed inline function linker errors when using Clang.
+		Optimization of more [1] cases found in analyzer.h when
+		-DWAVE_USE_STRUCT_PACKING is active.
+		In process_url_list() use g_malloc/g_free as context can
+		or will change when files are loaded.
+		Added fix for DnD crash when Quartz is the GDK back-end
+		on Mac OSX.  Enable fix with --enable-quartz in configure.
+		Fixed fstWriterFlushContext() such that invocations
+		outside the fstapi are synced with time changes.
+		Modify main window size for twinwave on Quartz: GtkPlug
+		window does not fit into GtkSocket as with X11.
+3.3.28	11nov11	Use larger more readable Apple fonts for Quartz.
+		Added support for colorful traces using the
+		/Edit/Color Format/... menu options.
+		Fixed rendertimes bug where times did not always display
+		when grid is turned off.
+		Added keep_xz_colors gtkwaverc variable.
+3.3.29	31dec11	<< short descriptions >>
+		Added OSX integration when compiled against gtk-osx.
+		Added mime types and icons for file types and desktop menus.
+		Changed .sav (deprecated but not removed) to .gtkw, with
+		.gtkw itself being able to bring up the original dumpfile.
+		Numerous bug fixes.
+		Preliminary GConf support supporting session ID-based restore.
+		Preliminary GConf support to emulate OSX "open"
+		functionality such that dumpfiles/savefiles can be targeted
+		to an open gtkwave viewer / session ID.
+		<< long descriptions >>
+		Fixed size of declaration of render_mutex_renderopt_c_1 as it
+		was one element too short.
+		Added transition code for shifting away from using
+		GtkItemFactoryEntry (also will help with OSX menubar
+		integration which expects menu shells).
+		Added support for native Quartz menu bars.
+		Removed --enable-quartz as it is auto detected now if
+		PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration) is
+		true and GDK is compiled against Quartz.
+		Fixed pointer crashes on NULL returned on gtk_entry_get_text()
+		on OSX/Quartz.
+		Recommended usage for Quartz is now jhbuild with
+		gtk-mac-integration, not MacPorts.
+		Added mac bundle info in contrib/bundle_for_osx.
+		Added gtkwave_argv0_cached as Open New Window does not work if
+		"gtkwave" is not in path or is something like gtkwave-bin as
+		in an OSX bundle.
+		Detect context swapping in file chooser from DnD to prevent
+		possible crashes.
+		Block DnD while file chooser is active.
+		Migrate OSX to OSX key accelerators.
+		Fix for tcl code opening the root node.
+		Fix time warp cmd->control mapping for OSX.
+		Fix for time warped traces not rendering properly when
+		x-coordinate overdraw is detected.
+		Added WAVE_ALLOW_QUARTZ_FLUSH_WORKAROUND temporarily which
+		needs to be set at compile time which gates redraw.
+		Add GLOBALS->force_hide_show to force redraws in OSX.
+		Added osx_timer() which controls forced redraw.
+		Abort GHW read when nbr_el<0: indicates malformed file from
+		variable/signal construct of form (7 to 0) rather than downto.
+		Crash fix for non-string len zero facilities in vcd2fst.
+		Fixed overflow in draw_hptr_trace_vector_analog().
+		Added rtlbrowse and vcd2fst binary path finding code to OSX.
+		Changed ps2pdf to pstopdf on Mac.
+		Fixed broken wave_script_args.
+		Reverted to 3.3.26 code in menu_func() as the renderbox
+		requester did not work from TCL anymore.
+		Catch NSApplicationOpenFile so files can be opened from Finder.
+		Added --chdir command line option to support open for OSX so
+		that gtkwave can be run at the command line directly from its
+		installed gtkwave.app.
+		Fix window resizing / repositioning to work in OSX: block once
+		viewer is on second tab, however.
+		Added sst_width, sst_vpaned_height, sst_expanded, and
+		signals_width tags into save file to allow pane size and
+		expander settings to be saved to the save file.
+		Add ignore_savefile_pane_pos .gtkwaverc variable.
+		Added dumpfile tag to save files.  OSX Finder uses these to
+		find the original dumpfile.  This can be done from the command
+		line also by specifying --save but not specifying a dump file.
+		Added .gtkw as a new save file extension.  When either .sav
+		or .gtkw is encountered, the rest of a tab's session adaptively
+		follows in expecting it as the save file suffix.
+		Added [savefile] tag to save files.  The intended use is to
+		allow reconstruction of relative paths between dump and save
+		file.
+		Fixed --autosavename to use .gtkw as a suffix rather than the
+		.sav suffix.
+		Reworked wave_info and wave_alert icons.  wave_info now
+		matches gtkwave.icns.
+		Renamed .sav examples to .gtkw.
+		Added relative path comparisons for --save so when dumpfiles
+		and savefiles move in tandem, a successful load can be
+		attempted.
+		Added [dumpfile_mtime] and [dumpfile_size] tags to save file.
+		Can now specify just an augmented save file at the command
+		line and gtkwave will load both the dump file and the save file:
+		this makes launching from desktops easier on Linux.
+		Added mime types, desktops, and icons in share/ for gnome.
+		Added percentage progress during load for most file types
+		in window title bar when splash screen not active.
+		Preliminary add of interfacing with GConf via the
+		/com.geda.gtkwave directory for keys in GConf.
+		Memory overrun fix to symbol.c for Bluespec add from 3.3.11.
+		Added --restore command line option to gtkwave.
+3.3.30 17jan12	Updated ./configure to add --disable-mime-update flag.
+		Fix --optimize for --restore.
+		Add [optimize_vcd] savefile tag.
+		Disable analog during mutually incompatible mode selection
+		(binary, filters, etc).
+		Added F/P/T flags to mouseover for the filters.
+		Fix problem where ungrab doesn't occur if button pressed +
+		simultaneous reload accelerator key occurs.
+		Fix combine direction in transaction filter to down.
+		Fix vector analog render/print routine to use skipcnt.
+		Fixed transaction filter to cache hptr node if converted
+		(i.e., do not place bitblasted in save file if avoidable).
+		Fixed min/max of cached autoscaling sizing when number of
+		extension traces changes.
+3.3.31 30jan12	Added support for native file requesters in OSX Quartz.
+		Added support for native alert dialogs in OSX Quartz.
+		Clang warning fixes.
+		Added missing config.guess and config.sub.
+		Allow drag of .gtkw (when viewer still does not have a file
+		loaded) to load the corresponding dump file.
+		Fix MinGW compiles broken from recent changes.
+		Documentation updates.
+		Fixed broken ifdef in signalwindow.c that degated savefile
+		loading .gtkw dump+save properly if not gconf2 or Mac.
+3.3.32 13feb12	Turn off loader messages when Tcl is executing a command.
+		Added gtk_print_unix_dialog support for printing to
+		real printers by using the "UNIX" type.
+		Automatically kill splash screen on reload/new tab.
+		Added transaction_args savefile tag and support for passing
+		args to transaction filters via the args $comment.
+		Added string value of \000 which renders as high-z.
+		Integrated alt_wheel_mode code provided by Tom Browne.
+		Fixes for some rc file variables to keep them from getting
+		clobbered on 2nd tab opening.
+		Warning fixes when compiled on Ubuntu.
+3.3.33 27feb12	Scan-build fix in vcd_recoder.c.
+		Added $timezero tag to VCD files which allows offsetting all
+		the values in a trace to provide ability for negative time
+		values.  Currently only VCD, LXT, LXT2, VZT, and FST support
+		this.
+		Fix for timescale 10s and 100s.
+3.3.34 12mar12	Fix for marker time deltas when $timezero is used.
+		Reduced size of alert requester icons to 64x64 pixels.
+3.3.35 04apr12	Polarity fix for vcd_preserve_glitches in rcfile.  Default
+		is no/off. Use yes in the rcfile to enable (e.g., for
+		viewing interpolated analog waveforms).
+		Added vcd_preserve_glitches support to FST as --optimize
+		uses FST.
+		Added vcd_preserve_glitches_real (for VCD/FST) rcfile
+		variable that turns off deglitching only for real signals.
+		This removes the need for #define TRACK_AND_HOLD_FIX and
+		prevents the case where interpolation of an analog waveform
+		is deformed as significant data points were removed by the
+		VCD or FST loader.
+		Fix for do_initial_zoom_fit when file requester used.
+		Changed contact address for bug reports.
+		Enable mouseover for MinGW.
+		Added fstWriterSetParallelMode().
+3.3.36	04may12	Fixed destructive string convert in fstUtilityBinToEsc().
+		Added support for 01xzhuwl- in fst.c callback interface,
+		vcd2fst.c, and lxt.c.
+		Added adaptive buffer resizing in FST writer for Linux
+		and Mac OSX.
+		Fix for realpath() 2nd argument NULL on Leopard.
+		Fix for doubles stored in HistEnt fields in ghw
+		introduced in 3.3.19.
+3.3.37	10jun12	Added patch for savefile.c that corrects an issue in which the
+		parser for process filter lines assumed the associated id
+		number was always a single digit.
+		Added patch to bitvec.c catches one more case when locating
+		bitblasted signals in vcd files created by modelsim.
+		Fix that kills stray pipeio_create() processes on
+		pipeio_destroy().
+		Additions to extload to handle hier types, component types,
+		and signal types.
+		Added support for extload files as input filetype in vcd2fst.
+		Added -o for extload files to convert to FST.
+3.3.38	10jul12	Upgrading vermin parser to handle some > 1995 constructs.
+		Propagate -o option into "Open New Window" menu option.
+		Change invert function so it does not incorrectly expand into
+		the whole nybble when it is < 4 bits. That is, inverting the
+		two bit quantity 10 now displays as 0x1, not 0xD.
+		Added fstminer.
+		MinGW warnings fixes.
+		Fixed relative pathnames for gtkw save files in MinGW.
+		Fix fstapi reader so it does not leave stray hier tmpfiles
+		around in MinGW if reader is never closed.
+		Changed twinwave for MinGW so that it does not target two
+		panes in a single window.  Something is apparently now
+		broken in the GtkSocket/GtkPlug implementation for Win32.
+3.3.39	08aug12	Fixed relative pathnames when generated in MinGW and used
+		back on Linux.
+		Added --output filename option to fst2vcd, vzt2vcd, and
+		lxt2vcd.
+		Fix crash on OSX if gtk_widget_set_sensitive is called on
+		a separator.
+		Fixed OSX version so it looks for .gtkwaverc in the home
+		directory and if not found, probes the resource bundle for
+		Contents/Resources/examples/gtkwaverc (no dot in the name).
+		Added GTKWave User's Guide option to help menu on OSX.
+		Added + vs ++ separators for twinwave.
+		Dynamic resize fixes.
+3.3.40	10sep12	Fixed y-size of splash screen on MinGW with newest version
+		of GTK2 (as it could be verified on that version).
+		Fixed off-by-one buffer string allocation write overflow
+		in calloc_2() call in maketraces().
+3.3.41	30sep12	Fix for gtkwave::addSignalsFromList when encountering
+		signals of form a.b.MyBus[7:0] and a.b.MyBus[15:8] such
+		that brackets aren't stripped.
+		Added experimental highlight_wavewindow rc variable which
+		allows signals also to be highlighted in the wave window
+		using the value for color_grid.
+		Added use_standard_trace_select rc variable and related
+		menu option.
+3.3.42	28nov12	Fix to prevent missing group openings from keeping other
+		signals in the viewer that follow from displaying.
+		Adding more support for newer constructs in Vermin.
+		Added scrollwheel support to rtlbrowse code windows.
+		Added fseeko() return checking in fstapi.c to prevent
+		errors with dynamically updated files.
+3.3.43	26jan13	Fix for rtlbrowse for gtk_adjustment_get_page_increment and
+		gtk_adjustment_get_step_increment introduced in 2.14.
+		Added VPD support via vpd2vcd.  To use, specify -o
+		at the command line.  (e.g., gtkwave -o test.vpd)
+		Added autodetect for LXT, LXT2, VZT, FST regardless of the
+		filename suffix.
+		Crash fix for gtkwave::getDisplayedSignals, specifically
+		removing the extra free_2() in WAVE_OE_ME.
+		Added conditional compile for stat() being available.
+3.3.44	16feb13	gdk_draw_layout assertion `GDK_IS_DRAWABLE (drawable)'
+		assertion fix.
+3.3.45	28feb13	Fix for VCDNAM_ESCAPE character in treesearch window.  This
+		sometimes occurs for structure identifiers.
+3.3.46	29apr13	Upgraded to autoconf 2.69.
+		Fixed as of yet undetected hdr_incomplete bug when running off
+		end of FST file.  (e.g., while file is being written)
+		Fixed problem with is_gtkw_save_file getting wiped out on
+		reload.
+		Updated Mac bundle info to reflect new autoconf filenames.
+3.3.47	14may13	Fix for crash in 64-bit mode with array accesses in
+		deprecated loader.
+		Partial VCD loader fix for small files.
+		Added preliminary do-nothing generate support in vermin.
+		Fixed minmax_valid for partial VCD loader: affects scaling
+		on floating-point traces.
+3.3.48	04aug13	Fixed infinite loop hang on various helpers executables
+		when extra arguments are specified.
+		Delete changed marker name if it exists when marker is removed.
+		Added "Open Hierarchy" option that will expand the SST and
+		select the hierarchy for a given signal selected in the
+		Signals window.
+		Added preliminary support for FsdbReader.
+		FSDB fix for generate created hierarchies.
+		FSDB fix for new debug info output style to be parsed.
+		Added generate as scope type to VCD/FST/FSDB.
+		Preliminary add for module port direction for FSDB and FST.
+		Display signal direction column in SST if not all signals are
+		declared as FST_VD_IMPLICIT.
+		Fixed GTK warning when hide_sst is enabled and SST is opened
+		then closed.
+		Added extraction of in/out/inout from FSDB into FST with
+		vcd2fst helper executable.  (It also converts FSDB to FST.)
+		Added support for SV structures, unions, classes, packages,
+		programs, and interfaces.
+		Updated signal parsing in FST/FSDB to handle NC declarations
+		for arrays in VCD.  (i.e., bitranges are missing)  Use vcd2fst
+		or the -o option to read NC VCD files with arrays properly.
+		Preliminary support for SV datatypes of bit, logic, int,
+		shortint, longint, byte, enum, and shortreal in VCD and FST.
+		Added sparse array datatype to FST (currently unused by
+		gtkwave).
+		Added support for attribute begin/end in FST.  (Currently
+		unused by gtkwave.)  This allows embedding of various data
+		inside the structure tree.
+		Added autoraise on entry window on keystrokes or periodically
+		when it exists.
+		Added ability to store $comment in FST files via the attribute
+		mechanism (FST_AT_MISC/FST_MT_COMMENT).
+3.3.49	11sep13	Fix crashed caused by X11 protocol limitation for pixmap size.
+		Potential buffer overflow fix in vcd2fst.
+		Added ability to store environment variable information in
+		FST files (FST_MT_ENVVAR).
+		Fixed bad enum for FST_PT_MAX.
+		Added contrib/fst_jni directory to distribution.
+		Fixed broken "make dist" variants.
+		Added buffer and linkage data directions (future expansion
+		for VHDL) in FST and gtkwave.
+		Removed requirement for fsdbdebug in path when FsdbReader
+		is present.
+		Fixed ordering of static FSDB libraries for when dynamic ones
+		are not present.
+		Added direction filters to SST name filter search.  That is,
+		adding +I+, +O+, +IO+, +B+, or +L+ before the regular
+		expression adds additional filtering criteria.  Direction
+		filters are case-insensitive.
+		Relax FSDB loader to allow VHDL and mixed-language files.
+		Added VHDL hierarchy types to FST, internal VCD loaders and
+		also vcdfst/fst2vcd.
+		Added in VHDL to FST (which will also allow other languages):
+		gtkwave can process these types (e.g., signal + std_ulogic),
+		but there are currently no simulators supporting them.  These
+		are written by using fstWriterCreateVar2().
+3.3.50	15oct13	Limit number of rows that can be displayed in mouseover in
+		order to prevent potential X11 crashes on extremely wide
+		signals.
+		Added "/File/Grab To File" PNG image grab menu option.
+		Added missing $dumpvars emission in fst2vcd.
+		Added missing atto and zepto time prefix parsing in vcd2fst.
+		Added VHDL package type to FST.
+		Added red box around 'U' vector values for VHDL similar to
+		'X' for Verilog.
+		Used FST "attribute name" for variable types if specified.
+		CRLF fix for save file reading on LF-only systems.
+		Fix Valgrind hit in fst.c that was causing crashes on OSX.
+		Added fstWriterSetFiletype() and fstReaderGetFiletype()
+		to provide sim language hint to gtkwave for language-
+		appropriate formatting of various data.
+		Added fstWriterSetSourceStem() so writers can embed source
+		stems in the FST file.  Specify before the appropriate
+		hierarchy or variable declaration.
+		Added gtkwave_bin_launcher.sh script to set up environment
+		variables on OSX for running the bin/ directory files from
+		a terminal rather than as an app invocation.
+3.3.51	27oct13	MAINTAINERS: Please add gedit to the list of dependencies
+		for gtkwave in order to enable new function that Icarus
+		Verilog dumps into FST files.
+		Fix "/File/Grab To File" on OSX with an OSX patch as the
+		_gdk_quartz_image_copy_to_image() function in the GTK
+		toolkit for Quartz is broken.
+		Updated examples/gtkwaverc accel options to reflect the
+		current state of the gtkwave main window main menu.
+		Added "Open Source Definition" and "Open Source Instantiation"
+		options that invoke .gtkwaverc variable "editor" (or
+		$GTKWAVE_EDITOR or gedit or open -t [OSX]) on sourcecode when
+		source stems are present in the dumpfile (currently FST only).
+		Fixed timezero in vcd2fst as it was only parsing unsigned
+		numbers.
+		Fixed Open Hierarchy crash on blank signals.
+3.3.52	11nov13	Added LZ4 as compression type for FST.  When enabled with
+		--fourpack in vcd2fst, this compresses both signal data
+		and the hierarchy using LZ4.
+		Added WLF support via wlf2vcd.  To use, specify -o
+		at the command line.  (e.g., gtkwave -o test.wlf)
+		Changed left/right arrow function in signal/wave windows to
+		find next transition of selected signal(s).
+		Re-enabled DnD scroll beyond top/bottom of Signals pane.
+		Added debounce for baseline (middle) mouse button.
+		Another partial VCD loader fix.
+		Now use libcomdlg32 file requesters on MinGW.
+		Added --extensions flag to fstvcd to enable emission of
+		FST extensions/attributes to VCD files.  This is to keep FST
+		attributes from making VCD files unparseable with other tools.
+		Fix in FsdbReader interface for version 1.x files.
+		Many warnings fixes found from gcc -Wextra flag.
+		Fixed thread-unsafe static allocations in fstapi.c.
+3.3.53	15dec13	Made LZ4 the default compression routine selected for vcd2fst.
+		Fixes to EVCD parsing in vcd2fst and evcd2vcd.
+		Automatically invoke --optimize if VPD or WLF is detected;
+		invoke on FSDB if FsdbReader is missing.
+		Standardized export feature to write vcd using lower case
+		for non 0/1 values.
+		Added perror() on errno-related exits in vcd loaders.
+		Added experimental wlf2vcd in contrib.  It is not currently
+		compiled or used.
+		Corrected non-functional typos in documentation.
+3.3.54	02jan14	Added LZ4 double compression on hierarchy tree for FST when
+		hierarchy size exceeds 4MB.
+		Fix to regular expression filtering when +I+ form expressions
+		are encountered in the SST.  Previously, the wrong value of
+		regex match was used on 32-bit architectures due to the
+		stack layout.
+		Removed --disable-inline-asm ./configure flag as inline
+		assembly has been removed because it is generating incorrectly
+		in some cases on x86_64.
+3.3.55	06feb14	Fixed problem with FST_DYNAMIC_ALIAS_DISABLE enabled when
+		Judy arrays are not present.
+		FST writer performance tweaks for traces with millions of
+		signal declarations.
+		Keep FSDB_VT_STREAM (FSDB transaction type) traces from
+		attempting to be read (for now) as they aren't yet processed.
+		Added more space efficient FST dynamic alias encoding.
+		Tempfile creation fix for Windows.  Using tmpnam() is not
+		enough and fails depending on user permissions.
+		Make vcd2fst use FastLZ instead of LZ4 as a default compression
+		type if an EVCD file is being processed as it (re-)compresses
+		much better.  Using -4/-F/-Z still gives expected results.
+		Changed double printf formatting for FSDB to "%.16g" to match
+		VCD formatting.
+		Added very fast I/O write capability to fst2vcd.
+		Added support for FSDB_BYTES_PER_BIT_2B (EVCD) in FSDB loader.
+		Added experimental fsdb2vcd in contrib.  It is not currently
+		compiled or used.
+		Fix to treesearch to remove duplicate signal names because of
+		faulty dumpers.
+		Repscript fix for if -R starts without a dumpfile name.
+3.3.56	12feb14	Added another crash fix patch for GTK-OSX.
+		Fix to regex search to remove duplicate signal names because of
+		faulty dumpers.
+		Fix to configure.ac for MSYS not adding -lcomdlg32 when Tcl
+		is disabled.
+		Valgrind fix on deallocated context: old GLOBALS pointer could
+		be examined in set_GLOBALS_x().
+		Minor cleanup in treesearch_gtk2.c: removed redundant show
+		widget invocation.
+		Added missing compressBound() for compress2() dest mallocs.
+3.3.57	13feb14	Fix for Electric Fence crash in vlist_freeze().
+		Updated LZ4 for version r113.
+3.3.58	16mar14	Added /Data Format/Popcnt function for ones counting.
+		Warnings fixes from new Clang 3.4 scan-build.
+		Updated VCD ID generation in various helpers to use a faster,
+		equivalent algorithm.
+		Change [1] at end of struct to C99 [] notation with appropriate
+		allocation size modification.
+		System_profiler speed fix for OSX.
+3.3.59	26apr14	Use Duff's Device for 8 byte -> 1 byte binary value compression
+		algorithm in FST writer.
+		Warnings fixes from cppcheck.
+		Moved MinGW for FST to using different windows tempfile
+		generation instead of tmpfile().
+		Removed fflush() in FST for MinGW in places that can cause
+		crashes with read only files.
+		Updated man page for gtkwave.1 indicating that XID is in hex.
+		Allow decimal conversions on popcnt filtered vectors that are
+		greater than 64 bits (they will never overflow).
+3.3.60	14may14	Fix MinGW tmpfile_open() patch from previous release as it
+		was using the wrong filename.
+		Harden fsdb reader against xtags that move backward in time.
+3.3.61	27jun14	Parameterized number of named markers, so that
+		--enable-manymarkers at configure time allows up to 702
+		named markers instead of 26 (disabled by default).
+		Updated LZ4 for version r118.
+		Fixed broken VCD/TIM export in Windows (broken by new file
+		requester).
+3.3.62	29aug14	Added zoom_full, zoom_size, and move_to_time to the dbus
+		interface (dbus enabled by --with-gconf).
+		Updated LZ4 to version r120 (r121 files are the same).
+		Compiler warnings fixes for gtk+-1.2 (-Wall -Wshadow -Wextra).
+3.3.63	06nov14	Updated LZ4 for version r123.
+		Added fine horiz scrolling in wavewindow (when using the wheel
+		on a mouse) if shift pressed.
+		Timescale fix for Verilator where it emits 0ps as a timescale.
+		Added sample gtkwave.appdata.xml file in share/appdata.
+3.3.64	25nov14	Fix to FileChooser to prevent requester from blocking on asking
+		for a directory if a dumpfile is loaded without some amount of
+		absolute/relative pathname.
+		Updated LZ4 for version r124.
+		Fix for x-windows OSX compiles.
+3.3.65	01apr15	Added --, -I-, etc. option to port filtering in SST.  Using
+		-- for example filters all non-ports from search results.
+		Updated LZ4 for version r126.
+		Minor warnings fixes.
+		Moved TCL_LDADD/TK_LDADD before	FSDB_LDADD to avoid stale
+		Tcl library version conflicts.
+		Removed appending [31:0] to vcd loaded integer names.
+		Reduced recursion depth in GHW signal loader to prevent
+		stack overflow crashes.
+		Added support for synthetic clocks in FST file.
+		Update timetrace marking so it runs quicker for large traces.
+3.3.66	05jul15	Faster fsdb initialization.
+		Fix vcd recoder loader crash for malformed vcd if signal is
+		declared as bits and a real valued change is encountered for
+		the value change.
+		Fixed crash in vcd2vzt for vcd files with no value changes
+		(likely a malformed vcd).
+		Added fsdbReaderResetSignalList() to prevent signals from
+		loading over and over when unnecessary.
+		Compile fixes for renamed functions and defines in gtk osx.
+3.3.67	24sep15	Updated LZ4 for version r131.
+		Fixed right justify ascii datatype display.
+3.3.68	18nov15	Update copyright date.
+		Added named markers capability to From: and To: time value
+		input boxes.
+		Added support for fixed point binary numbers for both signed
+		and unsigned decimal display types.
+3.3.69	03feb16	Added missing EXTLOAD_CFLAGS declarations in configure.ac for
+		FSDB detection when only .a files are present (necessary for
+		Ubuntu).
+		Fixed valgrind warning in fst.c for dead memory allocation.
+		Fixed signed fixed point binary number shift for negative
+		numbers.
+		Added ghw patch for missing enum crash in ghw files.
+3.3.70	14feb16	Various warnings fixes from new version of scan-build.
+		Crash fix in Windows for transaction traces (broken since
+		VCD/TIM export in 3.3.61).
+3.3.71	06apr16	Printf format warnings fixes in lxt2_write.c.
+		Added SVG gtkwave icon in
+		share/icons/hicolor/scalable/apps/gtkwave.svg directory.
+		Make gtkwave interpret values as double precision FP for
+		plotting when BitsToReal is enabled. Also keeps analog mode
+		enabled when selecting numerical formats (which allows
+		enabling/disabling BitsToReal without going out of analog
+		mode). Disabling analog mode can be done using the
+		existing Analog->Off menu option.
+		Fix broken non-canonical bit ordering (IBM) single bit
+		extraction in process_tcl_list().
+		Fixed gtkwave::gtkwave::addSignalsFromList so it can handle
+		subset and forward/reverse extractions on signals.
+		Remove FST_WRITER_PARALLEL from MinGW CFLAGS as some recent
+		versions of MinGW have issues with struct timespec when
+		pthread.h is included.
+		Added /Edit/Delete to destroy traces without affecting the
+		existing cut buffer.
+3.3.72	13apr16	Revert to old gtkwave.appdata.xml as the new one is causing
+		problems with appstream-util validation.
+3.3.73	11jun16	Added dragzoom_threshold rc variable to accommodate input
+		devices that have a noisy 3rd mouse button.
+		Fix emission of all filter names so they are emitted in
+		canonical fashion so as to avoid growing strings of ../ in
+		savefiles.
+3.3.74	27jul16	Fix for when a signal name is used as a hierarchy name at the
+		same level of scope.  (Affects fsdb.)
+		Added --rcvar command line option to insert rc variable changes
+		individually without needing to point to a configuration file.
+		Change to combine traces down/up routines to handle 2D vector
+		name generation.
+		Allow FSDB files to contain ".gz" and ".bz2" suffixes as the
+		libnffr loader can handle those.
+		If a variable is declared in the dumpfile as an integer, then
+		it is imported to the waveform display as an integer instead of
+		a hex value. This works for dump file formats that show the
+		datatype in the SST window.
+		Added code that should prevent the primary marker from
+		disappearing unexpectedly as well as dynamic resizing being
+		stuck in the unset marker width.
+3.3.75	02aug16	Fix crash when -S and -W are used in tandem.
+3.3.76	13aug16	Fix for --disable-tcl in ./configure caused by 3.3.75 fix.
+		Crash fix in fstapi.c on read value at time accessing of
+		FST files that use new dynamic aliases, FastLZ, or LZ4.  This
+		primarily affects rtlbrowse.
+3.3.77	03oct16	Updated documentation to include an appendix on FST
+		implementation details.
+		Removed '!A || (A && B)' is equivalent to '!A || B' redundant
+		condition checks where found in source.
+		Added hier_ignore_escapes rc variable.
+		Dynamic resizing tweaks for when it is turned off.
+		Added HUWL-? value types to signal_change_list() to keep GHW
+		files from crashing Tcl scripts.
+3.3.78	26oct16	Fixed crash when using multiple pattern searches.
+3.3.79	31dec16	Disable accelerator keys in twinwave single window mode to
+		avoid focus conflicts.
+		Fixes for -fstrict-aliasing and other recent warnings.
+		Added fill_waveform rc variable and corresponding menu option
+		(/View/Show Filled High Values) to allow filling in the lower
+		portion of high values for increased visibility.
+3.3.80	17mar17	Added "/View/Mouseover Copies To Clipboard" menu option to
+		allow copying values into the clipboard so they can be pasted
+		into text editors, etc.
+3.3.81	09jun17	Added max_fsdb_trees environment variable.
+		Fixed -C option so it is persistent across new tabs.
+		Integrated updated GHW reader code.
+3.3.82	02jul17	Get sys_fst working with VCS VPI.
+		Added string concatenations for vectors.
+		Added asserts to ghwlib.c to make scan-view clean.
+3.3.83	04aug17	Preserve search type for regex search across reloads or
+		close/reopens of regex search widget.
+		Update local libz to current version.
+3.3.84	03sep17	Updated FSDB reader with experimental FST tree build
+		routines for faster init.
+		Removed warnings found when compiling with -Wshadow.
+		Automatically enable --comphier for FST/FSDB/AE2 if facility
+		count reaches 500000.  This is to reduce memory consumption
+		for traces with very many signals.  Added disable_auto_comphier
+		to override this behavior.
+		Fix null pointer sent to gtk_clipboard_set_text() for
+		mouseover to clipboard cut ops.
+3.3.85	06sep17	Fix integer type in GHW loader so integer value changes are
+		not stored as a string. This then allows bitwise manipulations
+		of integers.
+3.3.86	03oct17	Added recurse import function (found before only in the hier
+		search) into the SST.
+		Removed obsolete bundle functionality from SST as recurse
+		import more accurately imports recursively.
+		Made entrybox taller (using -1) as recent versions of
+		gnome have taller window titlebars and the widget was not
+		tall enough.
+3.3.87	28dec17	Added missing prototype for ghw_read_sm_hdr in ghwlib.h.
+		Made intptr_t changes vs long during casting for win64.
+		Warnings fixes.
+		Added use_fat_lines rc variable (which replaces the old
+		--enable-fatlines configure line option for the gtk1/2
+		version of gtkwave).  This allows dynamic line width
+		adjustment at runtime instead of compile time.
+		Re-enable twinwave for Win32/64.
+		Added missing gtkwave_bin_launcher.sh in contrib/bundle_for_osx
+		Makefile.am.
+3.3.88	20feb18	Added --sstexclude command line option to prune unwanted
+		clutter from the SST window.
+		Updated "/View/Mouseover Copies To Clipboard" menu option to
+		copying signal names into the clipboard so they can be pasted
+		into text editors, etc.
+		Fixed Write Save File to handle getting confused by initial
+		cancel then retry.
+		Updated	v2k input/output declarations to handle	unpacked arrays.
+		Fix for	pattern	marks that could overshoot the left marker.
+3.3.89	17mar18	Added support for 32-bit conversions in BitsToReal.
+		Crash fix for pattern search with reals using LXT, LXT2, VZT.
+3.3.90  08may18 For Cut Traces, fix up scroll position if there are traces
+		above the current row being cut.
+		Bits to real crash fix for very large floats.
+		Fixed gray code conversions that were incomplete for right
+		justified vectors such that the vector length is not a
+		multiple of the radix size (4 for hex, 3 for oct).
+		Warray-bounds warning fix for 32-bit conversions in BitsToReal.
+3.3.91  29may18 Added support for GSettings for when GConf is removed from
+		distributions such as Debian and Ubuntu.
+		Performance fix for large number of groups (remove useless
+		recursion required for transaction traces).
+3.3.92  05jul18 Harden FST loader for missing .hier files (if applicable).
+		GTK3 "How does the code know the size to allocate?" warning fix.
+		Fix scrolling on help window by adding scroll to end mark.
+		Fix scrolling on status	window when use_toolbutton_interface
+		rc var is set to FALSE by adding scroll to end mark.
+		GTK3: Fix status window so it does not grow in the y direction.
+		Ifdef out code for --slider-zoom as it does not function with
+		GTK toolkit versions > 1.x series.
+		Ifdef out code for force_toolbars as it does not function with
+		GTK toolkit versions > 2.x series.
+		Removed and replaced all GTK3 deprecated API.
+		Installed g_log_set_writer_func handler to suppress numerous
+		GTK3 warnings.
+		Updated BUILT_SOURCES for vermin.
+		extern yy_size_t yyleng fix in rtlbrowse.
+3.3.93	03aug18	Add missing XXX_gdk_pointer_ungrab() prototype for GTK3.
+		Fix missing signal/wave window updates in Wayland.
+		Fix mouseover initial position in Wayland.  Movement is
+		not yet supported in Wayland for floating mouseover window.
+		Crash fix for twinwave with Wayland (no GtkSocket/Plug).
+		Added sst_dbl_action_type rc variable which controls side-
+		effect of double-clicking in SST signals pane.
+		Added preliminary support for gestures in wave window
+		(currently disabled by default with rc variable use_gestures).
+		Added GtkGestureSwipe for kinetic scrolling in waves window.
+		Added GtkGestureLongPress for baseline marker set/clear.
+		Added GtkGestureDrag to restore normal left cursor drag.
+		Added GtkGestureZoom for zoom/pinch in waves window.
+		Warnings cleanups.
+		Double-click during gestures active deletes primary marker.
+		Use gtk_gesture_single_set_button() to allow re-enabling
+		dragzoom and middle mouse button clicking if use_gestures
+		is enabled.
+		Added xml2stems Verilator XML to rtlbrowse stems converter
+		to distribution.  Eventually vermin will be removed.
+		Added missing realpath() in udp	emission in vermin.
+3.3.94	03sep18	Applied ghwlib.c patch for dealing with	null ranges.
+		Fixed typo on gtk_gesture_zoom_new() being disconnected.
+		Slowed down ctrl-scroll for better use on systems where
+		touchpad/screen gestures convert to scroll events.
+		Button press while swipe is slowing down now zeroes out the
+		swipe velocity, causing the scrolling to stop.
+		Added second chance algorithm for find_dumpfile() in case
+		it fails.
+3.3.95	07oct18	Fixed GtkGestureZoom to work better on touchscreens.
+		More touchscreen tweaks: provide visual feedback on pinch
+		and zoom.
+		Fix for progress bar on splash screen in Wayland.
+		Add filtering to zoom and drag to prevent floods of events
+		before the next draw.
+		Added fflush on stdout for help text as fix for possible
+		stdout problem with mingw/msys shells.
+		Added warning that "Touch DnD not yet supported on Wayland"
+		when it is attempted on Wayland touchscreens.  (X11 is ok.)
+		Added preliminary support for Time datatype.
+		MinGW compile fix on X11 Window usage.
+		Added gesture_filter_cnt to fix spurious mouse events on X11
+		touch.
+		Warnings fixes for Verilator integration.
+		Fixed install_proc_filter usage for Tcl invocation.
+		Change integer type to "integer" in SST	to differentiate it
+		from sv ints.
+		Premiminary support for	enum tables embedded in	FST files.
+3.3.96  16nov18 Changed to standardized zoom in/out/full hotkeys.
+		Changed swipe to use realtime clock for better positioning
+		when frame rate is variable due to differing rendering
+		speed along the trace.
+		Added time backtracking	warning	(for partial mode) to lxt2vcd.
+		VCD time backtracking fix (not for interactive mode).
+		Added experimental header bar support for GTK3.
+		Added show/hide toolbar buttons to header bar.
+		Added drag_failed handling (can press ESC) to DnD operations.
+		Move reload failure message to header bar for GTK3.
+		Prevent missing file in savefile from causing savefile to be
+		read as VCD by mistake.
+		Changed to Dinotrace-like 0s/1s rendering for bit vectors so
+		values can be discerned without seeing the full value text.
+		Removed unneeded pango_layout_get_extents() inside call for
+		font_engine_draw_string().
+		Changed bsearch_trunc() to run in constant time when monospace
+		fonts are in use.
+		Added missing GDK_SCROLL_MASK to signal area (need for gtk3).
+		Added default "maybe" option for use_gestures rc variable such
+		that it converts to yes if a touchscreen is detected.
+		Added F11 fullscreen mode toggle.
+		Added F10 to enable main menu.
+		Added F9 toolbar visibility toggle.
+3.3.97	23nov18	Added fullscreen button to header bar.
+		Added gtk-application-prefer-dark-theme support.
+		Need to set menu_wlist entry NULL on gtk_widget_destroy().
+		Fix on vtype()/vtype2() to detect 'x' and make the coloration
+		red on newly-displayed traces.  (Bug new from Dinotrace-like
+		rendering in 3.3.96.)
+3.3.98	15dec18	Removed pccts and vermin.  Use xml2stems instead.
+		Fix gtk_header_bar_set_subtitle() assertion in twinwave.
+		Fix visibility of time_mainbox in twinwave (related to header
+		bar implementation).
+3.3.99  09feb19 Added visible single bit glitches as a yellow dot (if enabled
+		with --rcvar 'vcd_preserve_glitches on').
+		Added filter to prevent redundant redraws during swipes.
+		Disabled rendundant redraw filter during zooms.
+		Fixed print routine broken by bsearch_trunc() optimization in
+		version 3.3.96.
+3.3.100	20mar19	GTK3 crash fix for twinwave when change window title is called.
+		FSDB fix for variable declarations of array of reals.
+		Added Real, Time, Enum, and Popcnt flags to Edit/Show-Change.
+		Ensure Show-Change regenerates analog traces.
+		Added braces inside Tcl source command to allow spaces in
+		filenames for Tcl scripts.
+3.3.101	08may19	Added gtkwave::getFacDir, gtkwave::getFacVtype, and
+		gtkwave::getFacDtype Tcl accessor functions that function
+		similar to gtkwave::getFacName.
+		Pair $end with $dumpvars in VCD writers.
+		Make %.16g printing in baseconvert.c more resistant to power
+		of 10 roundoff errors.
+		Remove register keyword where applicable as is deprecated.
+		Added --saveonexit gtkwave command line	option.
+3.3.102	21sep19	Remove redundant TREE_VHDL_ST_PACKAGE from SST exclude.
+		Added addCommentTracesFromList tcl command from user patch.
+		Harden savefile loader for missing group start on vectors.
+		Preliminary VHDL support for wlf2vcd.
+		Add missing return value checks on mmap() in FST writer.
+3.3.103	03nov19 Fix MAP_FAILED missing for MinGW.
+		Fix to make the coloration red on 'u' traces.  (Bug from
+		Dinotrace-like rendering in 3.3.96.)
+		Typo fix on missing group start on vectors.
+3.3.104 24jan20 Added support for loading .vf files (provided FSDB reader
+		libraries are enabled).
+		Added support for dumping variable types in vcd	saveer,	not
+		just using "wire" for non-reals/strings.
+		Fix for uninitialized values at time 0 for FST, FSDB loaders.
+3.3.105 01jul20 Fix bad (void) of is_closing in fstDestroyMmaps when using
+		Cygwin or MinGW.
+		Fix left shift overflow in cvt_fpsdec().
+		Add in missing file/translate/process filter for reals.
+		Fix for bitvec merging in GHW so integers arrays can be viewed.
+		Added Shift-Up/Down highlight with scroll in order to assist
+		with left/right arrow based transition movement.
+		Fix Show Wave Highlight so it is not dependent on Show Grid.
+		Fix negative MSBs on VCD loaders for vectors.
+		Fix getpwuid() null pointer exception.
+		Add missing recursion case to treenamefix().
+		Fix lock/unlock misuse of pthread mutexes across threads.
+		Examine	env var	$HOME for home dir on geteuid failure.
+		Fix blurring on use_fat_lines rc variable usage.
+3.3.106	31jul20	Fix Shift-Up/Down highlight to traverse inside groups.
+		Resync ghwlib to handled unbounded arrays.
+3.3.107 30sep20 Fix left shift overflow in cvt_fpsudec for fixed point.
+		Added Find First One trace type options.
+		Fixed bug in Show-Change All Highlighted.
+3.3.108	30dec20	Fix VZT writer crash when dumpoff is invoked before first
+		timestep.
+		Fix convert_ffo() that scanned in wrong direction.
+		Fix use	after free in fstapi.c.
+3.3.109 10apr21	gtk_ctree_node_moveto bugfix in SST.
+		MSVC compiler fix for fstapi.
+		Update xml2stems and rtlbrowse to support generate.
+3.3.110 22may21 Removed ghwdump and ghwdump.1 from the distribution (now 
+		provided with GHDL).
+		Fix for when WAVE_GTK3_GESTURE_ZOOM_USES_GTK_PHASE_CAPTURE
+		is disabled.
+		Integrated blank window fixes from Fedora Core.
+		Minor scan-build fixes.
+3.3.111	01sep21	Rendering fix for filled rectangles and line caps in Cairo.
+		Fix in fstapi for read start limit time.
+		Use GtkSearchEntry in SST.
+		Convert entrybox to use dialog box.
+		Entrybox: use default response instead of signal handler.
+		Updated show-change widget.
+		Fix xml2stems when begin blocks are in functions.
+		Skip over decimal point in timescale in viewer.
+3.4.0	02feb22	Merge in major GUI widget refactoring.
+		Fixes for toggle menu item access under Tcl.
+		Adds support for "namespace import gtkwave::*" in Tcl.
+		Added dbl_mant_dig_overrides rc environment variable.
+		Path fix for twinwave on Windows.
+		Compiler fix for __GTK_SOCKET_H__ availability.
+		VCD reader fixes for unnamed Icarus begin blocks.
+		Add OpenBSD and FreeBSD OSs for unbuffered FST I/O.
+		CPU usage fix for Wayland.

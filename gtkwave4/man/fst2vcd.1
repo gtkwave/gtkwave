@@ -1,0 +1,38 @@
+.TH "FST2VCD" "1" "3.3.52" "Anthony Bybell" "Filetype Conversion"
+.SH "NAME"
+.LP 
+fst2vcd \- Converts FST files to VCD
+.SH "SYNTAX"
+.LP 
+fst2vcd [\fIoption\fP]... [\fIFSTFILE\fP]
+.SH "DESCRIPTION"
+.LP 
+Converts FST files to VCD files.  If an output filename is not specified, the VCD is emitted to stdout.
+
+.SH "OPTIONS"
+.LP
+.TP
+\fB\-f,\-\-fstname\fR <\fIfilename\fP>
+Specify FST input filename.
+.TP
+\fB\-o,\-\-output\fR <\fIfilename\fP>
+Specify optional VCD output filename.
+.TP
+\fB\-e,\-\-extensions\Fr
+Emit FST extensions to VCD.  Enabling this may create VCD files unreadable by other tools.  This is generally intended to be used as a debugging tool when developing FST writer interfaces to simulators.
+.TP
+\fB\-h,\-\-help\fR
+Display help then exit.
+
+.SH "EXAMPLES"
+.LP 
+To run this program the standard way type:
+.TP 
+fst2vcd filename.fst
+The VCD conversion is emitted to stdout.
+.SH "AUTHORS"
+.LP 
+Anthony Bybell <bybell@rocketmail.com>
+.SH "SEE ALSO"
+.LP 
+\fIvcd2fst\fP(1) \fIgtkwave\fP(1)
