@@ -276,7 +276,7 @@ create_signalwindow(void)
 GtkWidget *table;
 GtkWidget *frame;
 
-table = XXX_gtk_table_new(10, 10, FALSE);
+table = gtk_grid_new();
 
 GLOBALS->signalarea = gw_signal_list_new();
 

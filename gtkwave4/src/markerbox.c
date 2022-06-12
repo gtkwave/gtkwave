@@ -353,7 +353,7 @@ void markerbox(char *title, GCallback func)
     vbox_g = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_show (vbox_g);
 
-    table = XXX_gtk_table_new (256, 1, FALSE);
+    table = gtk_grid_new ();
     gtk_widget_show (table);
 
     XXX_gtk_table_attach (XXX_GTK_TABLE (table), vbox, 0, 1, 0, 255,

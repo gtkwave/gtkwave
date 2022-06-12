@@ -43,20 +43,6 @@ gdk_seat_ungrab(seat);
 
 
 #ifdef WAVE_ALLOW_GTK3_GRID
-GtkWidget *
-XXX_gtk_table_new (guint rows,
-               guint columns,
-               gboolean homogeneous)
-{
-(void) rows;
-(void) columns;
-
-GtkWidget *grid = gtk_grid_new ();
-gtk_grid_set_row_homogeneous (GTK_GRID(grid), homogeneous);
-gtk_grid_set_column_homogeneous (GTK_GRID(grid), homogeneous);
-
-return(grid);
-}
 
 void
 XXX_gtk_table_attach (GtkGrid *table,
