@@ -40,8 +40,6 @@ static int use_embedded = 0;
 #endif
 static int twinwayland = 0;
 
-#define XXX_GTK_OBJECT(x) x
-
 static int plug_removed(GtkWidget *widget, gpointer data)
 {
 (void)widget;
@@ -142,7 +140,7 @@ gtk_widget_set_size_request(GTK_WIDGET(mainwindow), 400,32); /* quartz doesn't r
 #endif
 gtk_widget_show(mainwindow);
 
-g_signal_connect(XXX_GTK_OBJECT(mainwindow), "destroy", G_CALLBACK(quit_callback), "WM destroy");
+g_signal_connect(mainwindow, "destroy", G_CALLBACK(quit_callback), "WM destroy");
 
 #ifndef __MINGW32__
 #ifdef GDK_WINDOWING_WAYLAND
@@ -163,7 +161,7 @@ if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
 
 #ifdef __GTK_SOCKET_H__
 if(!twinwayland)
-g_signal_connect(XXX_GTK_OBJECT(xsocket[0]), "plug-removed", G_CALLBACK(plug_removed), NULL);
+g_signal_connect(xsocket[0], "plug-removed", G_CALLBACK(plug_removed), NULL);
 #endif
 
 #if GTK_CHECK_VERSION(3,0,0)
@@ -188,7 +186,7 @@ gtk_box_pack_start (GTK_BOX (main_vbox), vpan, TRUE, TRUE, 1);
 if(!twinwayland)
 	{
 	gtk_paned_pack1 (GTK_PANED (vpan), xsocket[0], TRUE, FALSE);
-	g_signal_connect(XXX_GTK_OBJECT(xsocket[1]), "plug-removed", G_CALLBACK(plug_removed), NULL);
+	g_signal_connect(xsocket[1], "plug-removed", G_CALLBACK(plug_removed), NULL);
 	gtk_paned_pack2 (GTK_PANED (vpan), xsocket[1], TRUE, FALSE);
 	}
 #endif

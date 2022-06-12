@@ -434,7 +434,7 @@ void ttrans_searchbox(char *title)
     install_focus_cb(GLOBALS->window_ttranslate_c_5, ((char *)&GLOBALS->window_ttranslate_c_5) - ((char *)GLOBALS));
 
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_ttranslate_c_5), title);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_ttranslate_c_5), "delete_event",(GCallback) destroy_callback, NULL);
+    gtkwave_signal_connect(GLOBALS->window_ttranslate_c_5, "delete_event",(GCallback) destroy_callback, NULL);
 
     table = gtk_grid_new ();
     gtk_widget_show (table);
@@ -505,7 +505,7 @@ void ttrans_searchbox(char *title)
 
     button6 = gtk_button_new_with_label (" Add Trans Filter to List ");
     gtk_container_set_border_width (GTK_CONTAINER (button6), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button6), "clicked",G_CALLBACK(add_filter_callback),XXX_GTK_OBJECT (GLOBALS->window_ttranslate_c_5));
+    gtkwave_signal_connect_object (button6, "clicked",G_CALLBACK(add_filter_callback),GLOBALS->window_ttranslate_c_5);
     gtk_widget_show (button6);
     gtk_tooltips_set_tip_2(button6,
 		"Bring up a file requester to add a transaction process filter to the filter select window.");
@@ -542,8 +542,8 @@ void ttrans_searchbox(char *title)
 	entry=X_gtk_entry_new_with_max_length(1025);
 
 	gtk_entry_set_text(GTK_ENTRY(entry), GLOBALS->ttranslate_args ? GLOBALS->ttranslate_args : "");
-	g_signal_connect (XXX_GTK_OBJECT (entry), "activate",G_CALLBACK (args_entry_callback), entry);
-	g_signal_connect (XXX_GTK_OBJECT (entry), "changed",G_CALLBACK (args_entry_callback), entry);
+	g_signal_connect (entry, "activate",G_CALLBACK (args_entry_callback), entry);
+	g_signal_connect (entry, "changed",G_CALLBACK (args_entry_callback), entry);
 	hbox0=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_box_pack_start(GTK_BOX(hbox0), label, FALSE, FALSE, 0);
 	gtk_widget_show(label);
@@ -568,7 +568,7 @@ void ttrans_searchbox(char *title)
 
     button1 = gtk_button_new_with_label (" OK ");
     gtk_container_set_border_width (GTK_CONTAINER (button1), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button1), "clicked",G_CALLBACK(ok_callback),XXX_GTK_OBJECT (GLOBALS->window_ttranslate_c_5));
+    gtkwave_signal_connect_object (button1, "clicked",G_CALLBACK(ok_callback),GLOBALS->window_ttranslate_c_5);
     gtk_widget_show (button1);
     gtk_tooltips_set_tip_2(button1,
 		"Add selected signals to end of the display on the main window.");
@@ -581,7 +581,7 @@ void ttrans_searchbox(char *title)
 
     button5 = gtk_button_new_with_label (" Cancel ");
     gtk_container_set_border_width (GTK_CONTAINER (button5), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button5), "clicked",G_CALLBACK(destroy_callback),XXX_GTK_OBJECT (GLOBALS->window_ttranslate_c_5));
+    gtkwave_signal_connect_object (button5, "clicked",G_CALLBACK(destroy_callback),GLOBALS->window_ttranslate_c_5);
     gtk_tooltips_set_tip_2(button5,
 		"Do nothing and return to the main window.");
     gtk_widget_show (button5);

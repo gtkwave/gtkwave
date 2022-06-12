@@ -987,8 +987,8 @@ if(objc == 2)
         calczoom(GLOBALS->tims.zoom);
         fix_wavehadj();
 
-        g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-        g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+        g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+        g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 
 	gtkwave_main_iteration();
 	}
@@ -1129,8 +1129,8 @@ if(objc == 2)
 
 /* 	wadj->value = target; */
 
-/*         g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "changed"); /\* force bar update *\/ */
-/*         g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "value_changed"); /\* force text update *\/ */
+/*         g_signal_emit_by_name (wadj, "changed"); /\* force bar update *\/ */
+/*         g_signal_emit_by_name (wadj, "value_changed"); /\* force text update *\/ */
 /*	gtkwave_main_iteration(); */
 	}
         else

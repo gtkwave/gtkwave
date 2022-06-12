@@ -153,7 +153,7 @@ void treebox(char *title, GCallback func, GtkWidget *old_window)
     /* create a new modal window */
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW (window), title);
-    g_signal_connect(XXX_GTK_OBJECT (window), "delete_event",
+    g_signal_connect(window, "delete_event",
                        (GCallback) destroy_callback, NULL);
     set_winsize(window, 640, 600);
 

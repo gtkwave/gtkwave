@@ -93,7 +93,7 @@ void simplereqbox(char *title, int width, char *default_text,
     gtk_window_set_transient_for(GTK_WINDOW(GLOBALS->window_simplereq_c_9), GTK_WINDOW(GLOBALS->mainwindow));
     gtk_widget_set_size_request( GTK_WIDGET (GLOBALS->window_simplereq_c_9), width, 200 - 64); /* 200 is for 128 px icon */
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_simplereq_c_9), title);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_simplereq_c_9), "delete_event",(GCallback) destroy_callback, NULL);
+    gtkwave_signal_connect(GLOBALS->window_simplereq_c_9, "delete_event",(GCallback) destroy_callback, NULL);
     gtk_window_set_resizable(GTK_WINDOW(GLOBALS->window_simplereq_c_9), FALSE);
 
     vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
@@ -137,7 +137,7 @@ void simplereqbox(char *title, int width, char *default_text,
 
     button1 = gtk_button_new_with_label (oktext);
     gtk_widget_set_size_request(button1, 100, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (button1), "clicked", G_CALLBACK(ok_callback), NULL);
+    gtkwave_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), NULL);
     gtk_widget_show (button1);
 #if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
@@ -145,13 +145,13 @@ void simplereqbox(char *title, int width, char *default_text,
     gtk_container_add (GTK_CONTAINER (hbox), button1);
 #endif
     gtk_widget_set_can_default (button1, TRUE);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button1), "realize", (GCallback) gtk_widget_grab_default, XXX_GTK_OBJECT (button1));
+    gtkwave_signal_connect_object (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
     if(canceltext)
 	{
     	button2 = gtk_button_new_with_label (canceltext);
     	gtk_widget_set_size_request(button2, 100, -1);
-    	gtkwave_signal_connect(XXX_GTK_OBJECT (button2), "clicked", G_CALLBACK(destroy_callback), NULL);
+    	gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
     	gtk_widget_set_can_default (button2, TRUE);
     	gtk_widget_show (button2);
 #if GTK_CHECK_VERSION(3,0,0)

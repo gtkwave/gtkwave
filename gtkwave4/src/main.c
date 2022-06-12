@@ -322,9 +322,9 @@ if(!GLOBALS->disable_menus)
 			gtk_header_bar_set_decoration_layout(GTK_HEADER_BAR(GLOBALS->header_bar), ":minimize,maximize,close");
 			gtk_widget_show(GLOBALS->header_bar);
 	
-			g_signal_connect (XXX_GTK_OBJECT (pan_up), "released", G_CALLBACK(service_pan_up), NULL);
-			g_signal_connect (XXX_GTK_OBJECT (pan_dn), "released", G_CALLBACK(service_pan_dn), NULL);
-			g_signal_connect (XXX_GTK_OBJECT (fs),     "released", G_CALLBACK(service_fullscreen), NULL);
+			g_signal_connect (pan_up, "released", G_CALLBACK(service_pan_up), NULL);
+			g_signal_connect (pan_dn, "released", G_CALLBACK(service_pan_dn), NULL);
+			g_signal_connect (fs,     "released", G_CALLBACK(service_fullscreen), NULL);
 			}
 		}
 		else
@@ -2139,12 +2139,12 @@ if(!GLOBALS->socket_xid)
 		gtk_window_set_default_size(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->initial_window_x, GLOBALS->initial_window_y);
 		}
 
-	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "delete_event", 	/* formerly was "destroy" */G_CALLBACK(file_quit_cmd_callback), "WM destroy");
+	g_signal_connect(GLOBALS->mainwindow, "delete_event", 	/* formerly was "destroy" */G_CALLBACK(file_quit_cmd_callback), "WM destroy");
 
 	window_setup_dnd(GLOBALS->mainwindow);
-	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "drag-data-received", G_CALLBACK(window_drag_data_received), NULL);
+	g_signal_connect(GLOBALS->mainwindow, "drag-data-received", G_CALLBACK(window_drag_data_received), NULL);
 
-	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "key-press-event", G_CALLBACK(window_key_press_event), NULL);
+	g_signal_connect(GLOBALS->mainwindow, "key-press-event", G_CALLBACK(window_key_press_event), NULL);
 
 	gtk_widget_show(GLOBALS->mainwindow);
 	}
@@ -2154,7 +2154,7 @@ if(!GLOBALS->socket_xid)
         GLOBALS->mainwindow = gtk_plug_new(GLOBALS->socket_xid);
         gtk_widget_show(GLOBALS->mainwindow);
 
-        g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "destroy",   /* formerly was "destroy" */G_CALLBACK(plug_destroy),"Plug destroy");
+        g_signal_connect(GLOBALS->mainwindow, "destroy",   /* formerly was "destroy" */G_CALLBACK(plug_destroy),"Plug destroy");
 	}
 #endif
 }
@@ -2628,7 +2628,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 			                        GTK_FILL | GTK_EXPAND,
 			                        GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
 
-			g_signal_connect_swapped (XXX_GTK_OBJECT (b1), "clicked", G_CALLBACK(menu_reload_waveform_marshal), XXX_GTK_OBJECT (table2));
+			g_signal_connect_swapped (b1, "clicked", G_CALLBACK(menu_reload_waveform_marshal), table2);
 			gtk_tooltips_set_tip_2(b1, "Reload waveform");
 			gtk_widget_show(b1);
 			gtk_container_add (GTK_CONTAINER (frame), table2);
@@ -2801,7 +2801,7 @@ if(!GLOBALS->notebook)
 	gtk_widget_show(GLOBALS->notebook);
 	gtk_notebook_set_show_tabs(GTK_NOTEBOOK(GLOBALS->notebook), 0); /* hide for first time until next tabs */
 	gtk_notebook_set_show_border(GTK_NOTEBOOK(GLOBALS->notebook), 0); /* hide for first time until next tabs */
-	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->notebook), "switch-page", G_CALLBACK(switch_page), NULL);
+	g_signal_connect(GLOBALS->notebook, "switch-page", G_CALLBACK(switch_page), NULL);
 	}
 	else
 	{

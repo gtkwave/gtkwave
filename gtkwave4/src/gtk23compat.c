@@ -94,7 +94,7 @@ XXX_gtk_toolbar_insert_stock (GtkToolbar *toolbar,
                       button,
                       position);
 
-  g_signal_connect(XXX_GTK_OBJECT(button), "clicked", G_CALLBACK(callback), user_data);
+  g_signal_connect(button, "clicked", G_CALLBACK(callback), user_data);
   return(GTK_WIDGET(button));
 }
 
