@@ -306,7 +306,7 @@ void logbox(char *title, int width, char *default_text)
 
     g_signal_connect(XXX_GTK_OBJECT (window), "delete_event", (GCallback) destroy_callback, window);
 
-    vbox = XXX_gtk_vbox_new (FALSE, 0);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (window), vbox);
     gtk_widget_show (vbox);
 
@@ -326,7 +326,7 @@ void logbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
     gtk_widget_show (hbox);
 

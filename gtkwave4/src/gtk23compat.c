@@ -86,23 +86,6 @@ XXX_gtk_hseparator_new (void)
 return(gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
 }
 
-GtkWidget *
-XXX_gtk_hbox_new(gboolean homogeneous, gint spacing)
-{
-GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, spacing);
-gtk_box_set_homogeneous (GTK_BOX(hbox), homogeneous);
-
-return(hbox);
-}
-
-GtkWidget *
-XXX_gtk_vbox_new(gboolean homogeneous, gint spacing)
-{
-GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, spacing);
-gtk_box_set_homogeneous (GTK_BOX(vbox), homogeneous);
-
-return(vbox);
-}
 #endif
 
 

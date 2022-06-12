@@ -1312,7 +1312,7 @@ void treebox(char *title, GCallback func, GtkWidget *old_window)
 
 do_tooltips:
 
-    GLOBALS->treesearch_gtk2_window_vbox = vbox = XXX_gtk_vbox_new (FALSE, 1);
+    GLOBALS->treesearch_gtk2_window_vbox = vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
     gtk_widget_show (vbox);
 
     vpan = XXX_gtk_vpaned_new (0);
@@ -1445,7 +1445,7 @@ do_tooltips:
 
 
     /* Filter.  */
-    filter_hbox = XXX_gtk_hbox_new (FALSE, 1);
+    filter_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_show (filter_hbox);
 
     filter_label = gtk_label_new ("Filter:");
@@ -1489,7 +1489,7 @@ do_tooltips:
     gtk_box_pack_start (GTK_BOX (vbox), frameh, FALSE, FALSE, 1);
 
 
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_show (hbox);
 
     button1 = gtk_button_new_with_label ("Append");
@@ -1552,7 +1552,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 
     /* create a new modal window */
 
-    vbox = XXX_gtk_vbox_new (FALSE, 1);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
     gtk_widget_show (vbox);
 
     vpan = XXX_gtk_vpaned_new (0); /* GLOBALS->sst_vpaned is to be used to clone position over during reload */
@@ -1687,7 +1687,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 
 
     /* Filter.  */
-    filter_hbox = XXX_gtk_hbox_new (FALSE, 1);
+    filter_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_container_set_border_width (GTK_CONTAINER (filter_hbox), 2);
     gtk_widget_show (filter_hbox);
 
@@ -1721,7 +1721,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     gtk_box_pack_start (GTK_BOX (vbox), filter_hbox, FALSE, FALSE, 1);
 
     /* Buttons.  */
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_show (hbox);
 
     button1 = gtk_button_new_with_label ("Append");

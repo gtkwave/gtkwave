@@ -409,7 +409,7 @@ label_ent=X_gtk_entry_new_with_max_length(40);
 
 gtk_entry_set_text(GTK_ENTRY(label_ent), GLOBALS->pFileChooseFilterName ? GLOBALS->pFileChooseFilterName : "*");
 g_signal_connect (XXX_GTK_OBJECT (label_ent), "changed",G_CALLBACK (press_callback), pFileChoose);
-box=XXX_gtk_hbox_new(FALSE, 0);
+box=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);
 gtk_widget_show(label);
 gtk_box_pack_start(GTK_BOX(box), label_ent, FALSE, FALSE, 0);
