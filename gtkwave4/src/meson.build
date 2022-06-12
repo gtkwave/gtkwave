@@ -15,7 +15,6 @@ gtkwave_sources = [
     'color.c',
     'currenttime.c',
     'debug.c',
-    'discardbuttons.c',
     'edgebuttons.c',
     'entry.c',
     'extload.c',
