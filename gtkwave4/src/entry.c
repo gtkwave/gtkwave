@@ -43,11 +43,7 @@ void entrybox(char *title, int width, char *dflt_text, char *comment, int maxch,
 	    return;
 	}
 
-#if GTK_CHECK_VERSION(3,12,0)
     flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_USE_HEADER_BAR;
-#else
-    flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
-#endif
 
     dialog = gtk_dialog_new_with_buttons(
         title,
@@ -67,10 +63,7 @@ void entrybox(char *title, int width, char *dflt_text, char *comment, int maxch,
 
     if (comment != NULL) {
         GtkWidget *label = gtk_label_new (comment);
-#if GTK_CHECK_VERSION(3,16,0)
         gtk_label_set_xalign (GTK_LABEL(label), 0.0);
-#endif
-        gtk_box_pack_start (GTK_BOX(content), label, FALSE, FALSE, 0);
     }
 
     entry = gtk_entry_new ();

@@ -10,14 +10,6 @@
 #define GW_CONTROL_MASK GDK_CONTROL_MASK
 #endif
 
-#if !GTK_CHECK_VERSION(3,4,0)
-#include <gdk/gdkkeysyms.h>
-#define GDK_EVENT_PROPAGATE  FALSE
-#define GDK_EVENT_STOP       TRUE
-#define GDK_BUTTON_PRIMARY   1
-#define GDK_BUTTON_SECONDARY 3
-#endif
-
 /* workaround for old versions of glib such as in centos7 */
 #if !defined(G_SOURCE_FUNC)
 #define G_SOURCE_FUNC(f) ((GSourceFunc) (void (*)(void)) (f))
@@ -127,13 +119,7 @@ int gw_signal_list_get_num_traces_displayable(GwSignalList *signal_list)
 {
     g_return_val_if_fail(GW_IS_SIGNAL_LIST(signal_list), 0);
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     int height = gtk_widget_get_allocated_height(GTK_WIDGET(signal_list));
-#else
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(GTK_WIDGET(signal_list), &allocation);
-    int height = allocation.height;
-#endif
 
     /* minus one for the time trace that is always there */
     return height / GLOBALS->fontheight - 1;
@@ -224,13 +210,7 @@ static void render_signals(GwSignalList *signal_list)
     cairo_paint(cr);
 
     int num_traces_displayable = gw_signal_list_get_num_traces_displayable(signal_list);
-#if GTK_CHECK_VERSION(3, 0, 0)
     int width = gtk_widget_get_allocated_width(GTK_WIDGET(signal_list));
-#else
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(GTK_WIDGET(signal_list), &allocation);
-    int width = allocation.width;
-#endif
     int text_dx = -gtk_adjustment_get_value(signal_list->hadjustment);
 
     Trptr t = gw_signal_list_get_trace(signal_list, 0);
@@ -273,13 +253,7 @@ static gint configure_event(GtkWidget *widget, GdkEventConfigure *event)
 }
 
 static void update_hadjustment(GwSignalList *signal_list) {
-#if GTK_CHECK_VERSION(3, 0, 0)
     gdouble width = (gdouble)gtk_widget_get_allocated_width(GTK_WIDGET(signal_list));
-#else
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(GTK_WIDGET(signal_list), &allocation);
-    gdouble width = (gdouble)allocation.width;
-#endif
 
     gdouble lower = 0.0;
     gdouble upper = MAX(GLOBALS->signal_pixmap_width, 1.0);
@@ -351,20 +325,6 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
 
     return GDK_EVENT_STOP;
 }
-
-#if !GTK_CHECK_VERSION(3, 0, 0)
-static gboolean expose_event(GtkWidget *widget, GdkEventExpose *event) {
-    cairo_t* cr = gdk_cairo_create(gtk_widget_get_window(widget));
-    gdk_cairo_region (cr, event->region);
-    cairo_clip (cr);
-
-    draw(widget, cr);
-
-    cairo_destroy (cr);
-
-    return GDK_EVENT_STOP;
-}
-#endif
 
 // Return the nth trace from the top.
 Trptr gw_signal_list_get_trace(GwSignalList *signal_list, guint index)
@@ -465,11 +425,7 @@ static gboolean button_press_event(GtkWidget *widget, GdkEventButton *event)
 
     gtk_widget_grab_focus(widget);
 
-#if GTK_CHECK_VERSION(3, 4,0)
     if (gdk_event_triggers_context_menu((GdkEvent *)event)) {
-#else
-    if (event->button == GDK_BUTTON_SECONDARY) {
-#endif
         Trptr t = get_trace_for_y(signal_list, (int)event->y);
         if (t != NULL) {
             if (IsSelected(t)) {
@@ -881,13 +837,7 @@ static gboolean drag_motion(GtkWidget* widget, GdkDragContext* context, gint x, 
         gtk_widget_queue_draw(widget);
     }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     int height = gtk_widget_get_allocated_height(widget);
-#else
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(widget, &allocation);
-    int height = allocation.height;
-#endif
     signal_list->drop.in_scroll_area_top = FALSE;
     signal_list->drop.in_scroll_area_bottom = FALSE;
 
@@ -1072,17 +1022,10 @@ static gboolean motion_notify_event(GtkWidget* widget, GdkEventMotion* event)
 
             GtkTargetList *target_list = gtk_target_list_new(targets, G_N_ELEMENTS(targets));
 
-#if GTK_CHECK_VERSION(3, 10, 0)
             gtk_drag_begin_with_coordinates(
                 widget, target_list, GDK_ACTION_MOVE | GDK_ACTION_COPY, GDK_BUTTON_PRIMARY,
                 (GdkEvent *)event, signal_list->drag.start_x, signal_list->drag.start_y
             );
-#else
-            gtk_drag_begin(
-                widget, target_list, GDK_ACTION_MOVE, GDK_BUTTON_PRIMARY,
-                (GdkEvent *)event
-            );
-#endif
 
             gtk_target_list_unref(target_list);
 
@@ -1113,12 +1056,8 @@ static void gw_signal_list_class_init(GwSignalListClass *klass)
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     widget_class->configure_event = configure_event;
-#if GTK_CHECK_VERSION(3, 0, 0)
     widget_class->draw = draw;
     widget_class->destroy = destroy;
-#else
-    widget_class->expose_event = expose_event;
-#endif
     widget_class->button_press_event = button_press_event;
     widget_class->button_release_event = button_release_event;
     widget_class->motion_notify_event = motion_notify_event;
@@ -1163,15 +1102,10 @@ static void gw_signal_list_init(GwSignalList *signal_list)
 
     gtk_drag_dest_set(widget, 0, targets, G_N_ELEMENTS(targets), GDK_ACTION_MOVE);
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     signal_list->hadjustment = gtk_adjustment_new(0, 0, 0, 0, 0, 0);
     signal_list->vadjustment = gtk_adjustment_new(0, 0, 0, 0, 0, 0);
     g_object_ref(signal_list->hadjustment);
     g_object_ref(signal_list->vadjustment);
-#else
-    signal_list->hadjustment = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
-    signal_list->vadjustment = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
-#endif
     g_signal_connect_swapped(signal_list->hadjustment, "value-changed",
         G_CALLBACK(gw_signal_list_force_redraw), signal_list);
     g_signal_connect_swapped(signal_list->vadjustment, "value-changed",

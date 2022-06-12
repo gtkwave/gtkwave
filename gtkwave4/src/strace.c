@@ -346,11 +346,7 @@ static void update_mark_count_label(void)
 if(GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1)
     {
     char mark_count_buf[64];
-#if GTK_CHECK_VERSION(3,0,0)
     sprintf (mark_count_buf, "Beg/End Marks: %d", GLOBALS->strace_ctx->timearray_size);
-#else
-    sprintf (mark_count_buf, "Mark Count: %d", GLOBALS->strace_ctx->timearray_size);
-#endif
     gtk_label_set_text (GTK_LABEL(GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1), mark_count_buf);
     }
 }
@@ -437,11 +433,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
                                       GTK_POLICY_AUTOMATIC);
     gtk_widget_show(scrolled_win);
     gtk_container_add (GTK_CONTAINER (frame), scrolled_win);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (vbox), frame);
-#endif
 
     for(t=GLOBALS->traces.first;t;t=t->t_next)
     {
@@ -498,18 +490,11 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtk_box_pack_start (GTK_BOX (vbox_g), small_hbox, FALSE, FALSE, 0);
     }
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_container_add(GTK_CONTAINER(scrolled_win), vbox_g); /* removes gtk3 deprecated warning */
-#else
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_win), vbox_g);
-#endif
 
     do		/* add GUI elements for displaying mark count and mark count start/end */
 	{
 	unsigned int idx;
-#if !GTK_CHECK_VERSION(3,0,0)
-	GtkWidget *ptr_mark_label;
-#endif
 	GtkWidget *mark_count_hbox_start,  *mark_count_hbox_end;
 	GtkWidget *count_vbox_left, *count_vbox_right, *count_vbox, *count_hbox;
 
@@ -537,12 +522,6 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 	gtk_box_set_homogeneous (GTK_BOX(mark_count_hbox_start), TRUE);
 	gtk_widget_show (mark_count_hbox_start);
 	gtk_box_pack_start (GTK_BOX(count_vbox),mark_count_hbox_start,FALSE,FALSE,0);
-#if GTK_CHECK_VERSION(3,0,0)
-#else
-	ptr_mark_label=gtk_label_new ("Marking Begins at:");
-	gtk_widget_show (ptr_mark_label);
-	gtk_box_pack_start (GTK_BOX (mark_count_hbox_start),ptr_mark_label,TRUE,FALSE,0);
-#endif
 	combo_box = gtk_combo_box_text_new ();
 	for(idx=0; idx<sizeof(item_mark_start_strings)/sizeof(struct item_mark_string); ++idx)
 		{
@@ -561,12 +540,6 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 	gtk_box_set_homogeneous (GTK_BOX(mark_count_hbox_end), TRUE);
 	gtk_widget_show (mark_count_hbox_end);
 	gtk_box_pack_start (GTK_BOX(count_vbox),mark_count_hbox_end,FALSE,FALSE,0);
-#if GTK_CHECK_VERSION(3,0,0)
-#else
-	ptr_mark_label=gtk_label_new ("Marking Stops at:");
-	gtk_widget_show (ptr_mark_label);
-	gtk_box_pack_start (GTK_BOX (mark_count_hbox_end),ptr_mark_label,TRUE,FALSE,0);
-#endif
 	combo_box = gtk_combo_box_text_new ();
 	for(idx=0; idx<sizeof(item_mark_end_strings)/sizeof(struct item_mark_string); ++idx)
 		{
@@ -596,11 +569,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button1, "clicked", G_CALLBACK(forwards_callback), NULL);
     WV_STRACE_CURWIN(button1);
     gtk_widget_show (button1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1);
-#endif
     gtk_widget_set_can_default (button1, TRUE);
     gtkwave_signal_connect_object (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
@@ -609,11 +578,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button1a, "clicked", G_CALLBACK(backwards_callback), NULL);
     WV_STRACE_CURWIN(button1a);
     gtk_widget_show (button1a);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1a, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1a);
-#endif
     gtk_widget_set_can_default (button1a, TRUE);
 
     button1b = gtk_button_new_with_label ("Mark");
@@ -621,11 +586,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button1b, "clicked", G_CALLBACK(mark_callback), NULL);
     WV_STRACE_CURWIN(button1b);
     gtk_widget_show (button1b);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1b, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1b);
-#endif
     gtk_widget_set_can_default (button1b, TRUE);
 
     button1c = gtk_button_new_with_label ("Clear");
@@ -633,11 +594,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button1c, "clicked", G_CALLBACK(clear_callback), NULL);
     WV_STRACE_CURWIN(button1c);
     gtk_widget_show (button1c);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1c, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1c);
-#endif
     gtk_widget_set_can_default (button1c, TRUE);
 
     button2 = gtk_button_new_with_label ("Exit");
@@ -645,11 +602,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
     WV_STRACE_CURWIN(button2);
     gtk_widget_show (button2);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button2, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button2);
-#endif
     gtk_widget_set_can_default (button2, TRUE);
 
     gtk_widget_show(GLOBALS->strace_ctx->window_strace_c_10);

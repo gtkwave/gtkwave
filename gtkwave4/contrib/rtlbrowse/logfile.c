@@ -17,15 +17,9 @@
 #include "jrb.h"
 #include "wavelink.h"
 
-#if GTK_CHECK_VERSION(3,0,0)
 #define XXX_GTK_STOCK_GO_BACK "go-previous"
 #define XXX_GTK_STOCK_GO_FORWARD "go-next"
 #define XXX_GTK_STOCK_CLOSE "window-close"
-#else
-#define XXX_GTK_STOCK_GO_BACK GTK_STOCK_GO_BACK
-#define XXX_GTK_STOCK_GO_FORWARD GTK_STOCK_GO_FORWARD
-#define XXX_GTK_STOCK_CLOSE GTK_STOCK_CLOSE
-#endif
 
 extern ds_Tree *flattened_mod_list_root;
 extern struct gtkwave_annotate_ipc_t *anno_ctx;
@@ -136,7 +130,6 @@ selected_text_via_tab = NULL;
 return(FALSE);
 }
 
-#if GTK_CHECK_VERSION(3,0,0)
 static gint draw_event(GtkWidget *widget, cairo_t *cr, gpointer      user_data)
 {
 (void) cr;
@@ -144,7 +137,6 @@ static gint draw_event(GtkWidget *widget, cairo_t *cr, gpointer      user_data)
 
 return(expose_event_local(widget, NULL));
 }
-#endif
 
 
 GtkWidget *
@@ -159,14 +151,10 @@ XXX_gtk_toolbar_insert_stock (GtkToolbar *toolbar,
   (void) tooltip_private_text;
   GtkToolItem *button;
 
-#if GTK_CHECK_VERSION(3,0,0)
   GtkWidget *icon_widget = gtk_image_new_from_icon_name(stock_id, GTK_ICON_SIZE_BUTTON);
 
   gtk_widget_show(icon_widget);
   button = gtk_tool_button_new(icon_widget, NULL);
-#else
-  button = gtk_tool_button_new_from_stock (stock_id);
-#endif
   gtk_tool_item_set_tooltip_text (button, tooltip_text);
   gtk_toolbar_insert (GTK_TOOLBAR (toolbar),
                       button,
@@ -544,28 +532,15 @@ void create_toolbar(GtkWidget *table)
     GtkWidget *find_entry;
     GtkWidget *tb;
     GtkWidget *stock;
-#if !GTK_CHECK_VERSION(3,0,0)
-    GtkStyle  *style;
-#endif
     GtkWidget *hbox;
     int tb_pos = 0;
-#if GTK_CHECK_VERSION(3,0,0)
     hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_box_set_homogeneous (GTK_BOX(hbox), FALSE);
-#else
-    hbox = gtk_hbox_new (FALSE, 1);
-#endif
     gtk_widget_show (hbox);
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_grid_attach (GTK_GRID (table), hbox, 0, 255, 255, 1);
     gtk_widget_set_hexpand (GTK_WIDGET (hbox), TRUE);
     gtk_widget_set_vexpand (GTK_WIDGET (hbox), FALSE); /* otherwise the bottom part stretches */
-#else
-    gtk_table_attach (GTK_TABLE (table), hbox, 0, 1, 255, 256,
-                        GTK_FILL | GTK_EXPAND,
-                        GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-#endif
 
     find_label = gtk_label_new ("Find:");
     gtk_widget_show (find_label);
@@ -579,11 +554,6 @@ void create_toolbar(GtkWidget *table)
     gtk_box_pack_start (GTK_BOX (hbox), find_entry, FALSE, FALSE, 0);
 
     tb = gtk_toolbar_new();
-#if !GTK_CHECK_VERSION(3,0,0)
-    style = gtk_widget_get_style(tb);
-    style->xthickness = style->ythickness = 0;
-    gtk_widget_set_style (tb, style);
-#endif
     gtk_widget_show (tb);
 
     gtk_toolbar_set_style(GTK_TOOLBAR(tb), GTK_TOOLBAR_ICONS);
@@ -595,11 +565,6 @@ void create_toolbar(GtkWidget *table)
                                                  NULL,
                                                  tb_pos++);
 
-#if !GTK_CHECK_VERSION(3,0,0)
-    style = gtk_widget_get_style(stock);
-    style->xthickness = style->ythickness = 0;
-    gtk_widget_set_style (stock, style);
-#endif
     gtk_widget_show(stock);
 
     stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -610,11 +575,6 @@ void create_toolbar(GtkWidget *table)
                                                  NULL,
                                                  tb_pos); /* scan-build: removed ++ on tb_pos as never read */
 
-#if !GTK_CHECK_VERSION(3,0,0)
-    style = gtk_widget_get_style(stock);
-    style->xthickness = style->ythickness = 0;
-    gtk_widget_set_style (stock, style);
-#endif
     gtk_widget_show(stock);
 
     gtk_box_pack_start (GTK_BOX (hbox), tb, FALSE, FALSE, 0);
@@ -1565,18 +1525,10 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
 	GtkWidget *tbox;
 	GtkWidget *l1;
 	GtkWidget *image;
-#if !GTK_CHECK_VERSION(3,0,0)
-	GtkRcStyle *rcstyle;
-#endif
 
-#if GTK_CHECK_VERSION(3,0,0)
 	window = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 	tbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
         gtk_box_set_homogeneous (GTK_BOX(tbox), FALSE);
-#else
-	window = gtk_hpaned_new();
-	tbox = gtk_hbox_new(FALSE, 0);
-#endif
 	l1 = gtk_label_new(title);
 
 	/* code from gedit... */
@@ -1585,27 +1537,12 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
         gtk_button_set_relief (GTK_BUTTON (close_button),
                                GTK_RELIEF_NONE);
         /* don't allow focus on the close button */
-#if GTK_CHECK_VERSION(3,0,0)
 	gtk_widget_set_focus_on_click (GTK_WIDGET (close_button), FALSE);
-#else
-        gtk_button_set_focus_on_click (GTK_BUTTON (close_button), FALSE);
-#endif
 
         /* make it as small as possible */
-#if !GTK_CHECK_VERSION(3,0,0)
-        rcstyle = gtk_rc_style_new ();
-        rcstyle->xthickness = rcstyle->ythickness = 0;
-        gtk_widget_modify_style (close_button, rcstyle);
-        g_object_unref(rcstyle); /* was gtk_rc_style_unref (rcstyle) */
-#endif
 
-#if GTK_CHECK_VERSION(3,0,0)
         image = gtk_image_new_from_icon_name (XXX_GTK_STOCK_CLOSE, 
                                           GTK_ICON_SIZE_MENU);
-#else
-        image = gtk_image_new_from_stock (XXX_GTK_STOCK_CLOSE, 
-                                          GTK_ICON_SIZE_MENU);
-#endif
         gtk_container_add (GTK_CONTAINER (close_button), image);
 	/* ...code from gedit */
 
@@ -1625,12 +1562,8 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
 	                        G_CALLBACK (destroy_via_closebutton_release), NULL); /* this will destroy the tab by destroying the parent container */
 	}
 
-#if GTK_CHECK_VERSION(3,0,0)
     vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
     gtk_box_set_homogeneous (GTK_BOX(vbox), FALSE);
-#else
-    vbox = gtk_vbox_new (FALSE, 1);
-#endif
     gtk_container_add (GTK_CONTAINER (window), vbox);
     gtk_widget_show (vbox);
 
@@ -1638,11 +1571,7 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
     gtk_widget_show (label);
 
-#if GTK_CHECK_VERSION(3,0,0)
     separator = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
-#else
-    separator = gtk_hseparator_new ();
-#endif
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
@@ -1652,20 +1581,12 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
 
     g_signal_connect(text, "button_press_event",G_CALLBACK(button_press_event), NULL);
 
-#if GTK_CHECK_VERSION(3,0,0)
     separator = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
-#else
-    separator = gtk_hseparator_new ();
-#endif
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
-#if GTK_CHECK_VERSION(3,0,0)
     hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_box_set_homogeneous (GTK_BOX(hbox), FALSE);
-#else
-    hbox = gtk_hbox_new (FALSE, 1);
-#endif
 
     gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
     gtk_widget_show (hbox);
@@ -1676,22 +1597,14 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     ctx->width = width;
     ctx->title = strdup(title);
 
-#if GTK_CHECK_VERSION(3,0,0)
     g_signal_connect(window, "draw", G_CALLBACK(draw_event), NULL);
-#else
-    g_signal_connect(window, "expose_event",G_CALLBACK(expose_event_local), NULL);
-#endif
     button1 = gtk_button_new_with_label (display_mode ? "View Design Unit Only": "View Full File");
     gtk_widget_set_size_request(button1, 100, -1);
     g_signal_connect(button1, "clicked",
                                G_CALLBACK(ok_callback),
                                ctx);
     gtk_widget_show (button1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1);
-#endif
     gtk_widget_set_can_default (button1, TRUE);
     g_signal_connect_swapped (button1,
                                 "realize",

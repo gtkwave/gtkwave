@@ -1318,9 +1318,7 @@ do_tooltips:
     vpan = XXX_gtk_vpaned_new (0);
     gtk_widget_show (vpan);
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_widget_set_vexpand(vpan, TRUE);   
-#endif
 
     gtk_box_pack_start (GTK_BOX (vbox), vpan, TRUE, TRUE, 1);
 
@@ -1565,9 +1563,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     gtk_widget_show (vpan);
     gtk_box_pack_start (GTK_BOX (vbox), vpan, TRUE, TRUE, 1);
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_widget_set_vexpand(vpan, TRUE); /* needed for gtk3, otherwise box does not grow vertically */
-#endif
 
     /* Hierarchy.  */
     GLOBALS->gtk2_tree_frame = gtk_frame_new (NULL);
@@ -1691,11 +1687,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     gtk_container_set_border_width (GTK_CONTAINER (filter_hbox), 2);
     gtk_widget_show (filter_hbox);
 
-#if GTK_CHECK_VERSION(3,0,0)
     GLOBALS->filter_entry = gtk_search_entry_new ();
-#else
-    GLOBALS->filter_entry = gtk_entry_new ();
-#endif
     if(GLOBALS->filter_str_treesearch_gtk2_c_1) { gtk_entry_set_text(GTK_ENTRY(GLOBALS->filter_entry), GLOBALS->filter_str_treesearch_gtk2_c_1); }
     gtk_widget_show (GLOBALS->filter_entry);
 
@@ -1769,11 +1761,9 @@ static void DNDBeginCB(
 (void)widget;
 (void)data;
 
-#if GTK_CHECK_VERSION(3, 2, 0)
 // Reset the hotspot to make sure the icon is shown at the correct position in
 // wayland.
 gdk_drag_context_set_hotspot(dc, 0, 0);
-#endif
 
 // GtkTreeView sets the drag icon to an image of the dragged row, which can
 // hide a large part of the drag destination. By overriding the icon to the

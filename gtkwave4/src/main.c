@@ -736,9 +736,6 @@ GtkWidget *entry;
 GtkWidget *timebox;
 GtkWidget *panedwindow;
 GtkWidget *dummy1, *dummy2;
-#if !GTK_CHECK_VERSION(3,0,0)
-GtkWidget *toolhandle=NULL;
-#endif
 int tcl_interpreter_needs_making = 0;
 struct Global *old_g = NULL;
 
@@ -1192,11 +1189,7 @@ while (1)
 
 #ifdef WAVE_USE_XID
                 case 'X':
-#if GTK_CHECK_VERSION(3,0,0)
-                        sscanf(optarg, "%lx", &GLOBALS->socket_xid);
-#else
-			sscanf(optarg, "%x", &GLOBALS->socket_xid);
-#endif
+					sscanf(optarg, "%lx", &GLOBALS->socket_xid);
 			splash_disable_rc_override = 1;
                         break;
 #endif
@@ -2120,12 +2113,10 @@ if(!mainwindow_already_built)
 if(!GLOBALS->socket_xid)
 #endif
         {
-#if GTK_CHECK_VERSION(3,0,0)
 	if(GLOBALS->use_dark)
 		{
 		g_object_set(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", TRUE, NULL);
 		}
-#endif
 
 	GLOBALS->mainwindow = gtk_window_new(GLOBALS->disable_window_manager ? GTK_WINDOW_POPUP : GTK_WINDOW_TOPLEVEL);
 	wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname, GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED: WAVE_SET_TITLE_NONE, 0);
@@ -2168,9 +2159,6 @@ if(GLOBALS->use_toolbutton_interface)
 	{
 	GtkWidget *tb;
 	GtkWidget *stock;
-#if !GTK_CHECK_VERSION(3,0,0)
-	GtkStyle *style;
-#endif
 	int tb_pos;
 
 	if(!mainwindow_already_built)
@@ -2209,16 +2197,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 }
 #endif
 
-#if !GTK_CHECK_VERSION(3,0,0)
-			if(GLOBALS->force_toolbars)
-				{
-				toolhandle=gtk_handle_box_new();
-				gtk_widget_show(toolhandle);
-				gtk_container_add(GTK_CONTAINER(toolhandle), menubar);
-				gtk_box_pack_start(GTK_BOX(main_vbox), toolhandle, FALSE, TRUE, 0);
-				}
-				else
-#endif
 				{
 #ifndef WAVE_ALLOW_GTK3_HEADER_BAR
 				gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, TRUE, 0);
@@ -2233,15 +2211,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 
 		gtk_toolbar_set_style(GTK_TOOLBAR(tb), GTK_TOOLBAR_ICONS);
 		tb_pos = 0;
-
-#if !GTK_CHECK_VERSION(3,0,0)
-		if(GLOBALS->force_toolbars)
-			{
-			toolhandle=gtk_handle_box_new();
-			gtk_widget_show(toolhandle);
-			gtk_container_add(GTK_CONTAINER(toolhandle), top_table);
-			}
-#endif
 
 #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 		GLOBALS->main_popup_menu_button = stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2261,11 +2230,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(menu_cut_traces),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2275,11 +2239,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(menu_copy_traces),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2289,11 +2248,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(menu_paste_traces),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
@@ -2305,11 +2259,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_zoom_fit),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2319,11 +2268,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_zoom_in),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2333,11 +2277,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_zoom_out),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2347,11 +2286,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_zoom_undo),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2361,11 +2295,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_zoom_left),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2375,11 +2304,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_zoom_right),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
@@ -2391,11 +2315,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_left_edge),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
@@ -2405,11 +2324,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(service_right_edge),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-		style = gtk_widget_get_style(stock);
-		style->xthickness = style->ythickness = 0;
-		gtk_widget_set_style (stock, style);
-#endif
 		gtk_widget_show(stock);
 
 		XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
@@ -2433,11 +2347,6 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 						 G_CALLBACK(menu_reload_waveform_marshal),
 						 NULL,
 						 tb_pos++);
-#if !GTK_CHECK_VERSION(3,0,0)
-			style = gtk_widget_get_style(stock);
-			style->xthickness = style->ythickness = 0;
-			gtk_widget_set_style (stock, style);
-#endif
 			gtk_widget_show(stock);
 
 			XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
@@ -2502,32 +2411,12 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 }
 #endif
 
-#if !GTK_CHECK_VERSION(3,0,0)
-			if(GLOBALS->force_toolbars)
-				{
-				toolhandle=gtk_handle_box_new();
-				gtk_widget_show(toolhandle);
-				gtk_container_add(GTK_CONTAINER(toolhandle), menubar);
-				gtk_box_pack_start(GTK_BOX(main_vbox), toolhandle, FALSE, TRUE, 0);
-				}
-				else
-#endif
 				{
 				gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, TRUE, 0);
 				}
 			}
 
 		top_table = gtk_grid_new ();
-
-#if !GTK_CHECK_VERSION(3,0,0)
-		if(GLOBALS->force_toolbars)
-			{
-			toolhandle=gtk_handle_box_new();
-			gtk_widget_show(toolhandle);
-			gtk_container_add(GTK_CONTAINER(toolhandle), top_table);
-			}
-#endif
-
 		whole_table = gtk_grid_new ();
 
 		text1 = create_text ();
@@ -2761,15 +2650,9 @@ if(!mainwindow_already_built)
 	GLOBALS->top_table = top_table;
 #endif
 
-#if GTK_CHECK_VERSION(3,0,0)
 	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), top_table, 0, 16, 0, 1,
 	                      	GTK_FILL | GTK_EXPAND,
 	                      	0, 0, 0);
-#else
-	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), GLOBALS->force_toolbars?toolhandle:top_table, 0, 16, 0, 1,
-	                      	GTK_FILL | GTK_EXPAND,
-	                      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
-#endif
 
 	if(!GLOBALS->do_resize_signals)
 		{
@@ -2851,11 +2734,7 @@ XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), GLOBALS->notebook, 0, 16, 1, 
                       	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 gtk_widget_show(whole_table);
 
-#if GTK_CHECK_VERSION(3,0,0)
 gtk_box_pack_end(GTK_BOX(main_vbox), whole_table, TRUE, TRUE, 0); /* prevents shrinkage of signal/waves windows if no waves loaded */
-#else
-gtk_container_add (GTK_CONTAINER (main_vbox), whole_table);
-#endif
 
 if(GLOBALS->tims.marker != -1)
 	{
