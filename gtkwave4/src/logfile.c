@@ -314,7 +314,7 @@ void logbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
     gtk_widget_show (label);
 
-    separator = XXX_gtk_hseparator_new ();
+    separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
@@ -322,7 +322,7 @@ void logbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), ctext, TRUE, TRUE, 0);
     gtk_widget_show (ctext);
 
-    separator = XXX_gtk_hseparator_new ();
+    separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 

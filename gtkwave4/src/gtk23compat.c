@@ -80,12 +80,6 @@ gtk_widget_set_vexpand(child, (yoptions & (GTK_EXPAND | GTK_FILL)) != 0);
 }
 #endif
 
-GtkWidget *
-XXX_gtk_hseparator_new (void)
-{
-return(gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
-}
-
 #endif
 
 

@@ -384,7 +384,7 @@ void markerbox(char *title, GCallback func)
 
     if(i)
 	{
-    	separator = XXX_gtk_hseparator_new ();
+    	separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
         gtk_widget_show (separator);
         gtk_box_pack_start (GTK_BOX (vbox_g), separator, TRUE, TRUE, 0);
 	}
