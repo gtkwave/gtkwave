@@ -408,8 +408,8 @@ label=gtk_label_new("Custom Filter:");
 label_ent=X_gtk_entry_new_with_max_length(40);
 
 gtk_entry_set_text(GTK_ENTRY(label_ent), GLOBALS->pFileChooseFilterName ? GLOBALS->pFileChooseFilterName : "*");
-g_signal_connect (XXX_GTK_OBJECT (label_ent), "changed",G_CALLBACK (press_callback), pFileChoose);
-box=XXX_gtk_hbox_new(FALSE, 0);
+g_signal_connect (label_ent, "changed",G_CALLBACK (press_callback), pFileChoose);
+box=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);
 gtk_widget_show(label);
 gtk_box_pack_start(GTK_BOX(box), label_ent, FALSE, FALSE, 0);
@@ -460,7 +460,7 @@ if(GLOBALS->pFileChooseFilterName)
 
 gtk_dialog_set_default_response(GTK_DIALOG(pFileChoose), GTK_RESPONSE_ACCEPT);
 
-/* gtk_object_set_data(XXX_GTK_OBJECT(pFileChoose), "FileChooseWindow", pFileChoose); */
+/* gtk_object_set_data(pFileChoose, "FileChooseWindow", pFileChoose); */
 gtk_container_set_border_width(GTK_CONTAINER(pFileChoose), 10);
 gtk_window_set_position(GTK_WINDOW(pFileChoose), GTK_WIN_POS_CENTER);
 gtk_window_set_modal(GTK_WINDOW(pFileChoose), TRUE);

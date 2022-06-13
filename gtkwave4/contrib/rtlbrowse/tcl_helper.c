@@ -853,9 +853,9 @@ void setup_dnd(GtkWidget *wid)
                 GDK_ACTION_COPY
                 );
 
-        g_signal_connect(XXX_GTK_OBJECT(wid), "drag_data_received", G_CALLBACK(DNDDataReceivedCB), GTK_WIDGET(wid));
-        g_signal_connect(XXX_GTK_OBJECT(wid), "drag_motion", G_CALLBACK(DNDDragMotionCB), GTK_WIDGET(wid));
-        g_signal_connect(XXX_GTK_OBJECT(wid), "drag_begin", G_CALLBACK(DNDBeginCB), GTK_WIDGET(wid));
-        g_signal_connect(XXX_GTK_OBJECT(wid), "drag_end", G_CALLBACK(DNDEndCB), GTK_WIDGET(wid));
+        g_signal_connect(wid, "drag_data_received", G_CALLBACK(DNDDataReceivedCB), GTK_WIDGET(wid));
+        g_signal_connect(wid, "drag_motion", G_CALLBACK(DNDDragMotionCB), GTK_WIDGET(wid));
+        g_signal_connect(wid, "drag_begin", G_CALLBACK(DNDBeginCB), GTK_WIDGET(wid));
+        g_signal_connect(wid, "drag_end", G_CALLBACK(DNDEndCB), GTK_WIDGET(wid));
 }
 

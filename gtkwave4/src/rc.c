@@ -321,12 +321,10 @@ int f_force_toolbars(char *str)
 DEBUG(printf("f_force_toolbars(\"%s\")\n",str));
 GLOBALS->force_toolbars=atoi_64(str)?1:0;
 
-#if GTK_CHECK_VERSION(3,0,0)
 if(GLOBALS->force_toolbars)
 	{
 	fprintf(stderr, "GTKWAVE | force_toolbars rcvar option does not work with this version of GTK, ignoring!\n");
 	}
-#endif
 
 return(0);
 }

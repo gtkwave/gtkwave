@@ -153,22 +153,14 @@ void treebox(char *title, GCallback func, GtkWidget *old_window)
     /* create a new modal window */
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW (window), title);
-    g_signal_connect(XXX_GTK_OBJECT (window), "delete_event",
+    g_signal_connect(window, "delete_event",
                        (GCallback) destroy_callback, NULL);
     set_winsize(window, 640, 600);
 
-#if GTK_CHECK_VERSION(3,0,0)
     table = gtk_grid_new ();
-#else
-    table = gtk_table_new (256, 1, FALSE);
-#endif
     gtk_widget_show (table);
 
-#if GTK_CHECK_VERSION(3,0,0)
     frame2 = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-#else
-    frame2 = gtk_hpaned_new();
-#endif
     gtk_widget_show(frame2);
 
     notebook = gtk_notebook_new();
@@ -181,15 +173,9 @@ void treebox(char *title, GCallback func, GtkWidget *old_window)
     gtk_widget_show(notebook);
     gtk_paned_pack2(GTK_PANED(frame2), notebook, TRUE, TRUE);
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_grid_attach (GTK_GRID (table), frame2, 0, 0, 1, 255);
     gtk_widget_set_hexpand (GTK_WIDGET (frame2), TRUE);
     gtk_widget_set_vexpand (GTK_WIDGET (frame2), TRUE);
-#else
-    gtk_table_attach (GTK_TABLE (table), frame2, 0, 1, 0, 255,
-                        GTK_FILL | GTK_EXPAND,
-                        GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-#endif
 
     bwmaketree();
     selectedtree=NULL;

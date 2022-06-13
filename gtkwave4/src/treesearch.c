@@ -1308,19 +1308,17 @@ void treebox(char *title, GCallback func, GtkWidget *old_window)
     install_focus_cb(GLOBALS->window_treesearch_gtk2_c_12, ((char *)&GLOBALS->window_treesearch_gtk2_c_12) - ((char *)GLOBALS));
 
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_treesearch_gtk2_c_12), title);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_treesearch_gtk2_c_12), "delete_event",(GCallback) destroy_callback, NULL);
+    gtkwave_signal_connect(GLOBALS->window_treesearch_gtk2_c_12, "delete_event",(GCallback) destroy_callback, NULL);
 
 do_tooltips:
 
-    GLOBALS->treesearch_gtk2_window_vbox = vbox = XXX_gtk_vbox_new (FALSE, 1);
+    GLOBALS->treesearch_gtk2_window_vbox = vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
     gtk_widget_show (vbox);
 
     vpan = XXX_gtk_vpaned_new (0);
     gtk_widget_show (vpan);
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_widget_set_vexpand(vpan, TRUE);   
-#endif
 
     gtk_box_pack_start (GTK_BOX (vbox), vpan, TRUE, TRUE, 1);
 
@@ -1337,8 +1335,8 @@ do_tooltips:
     gtk_tree_selection_set_select_function (gtk_tree_view_get_selection(GTK_TREE_VIEW(GLOBALS->treeview_main)),
                                                 XXX_view_selection_func, NULL, NULL);
     gtk_tree_selection_set_mode (gtk_tree_view_get_selection(GTK_TREE_VIEW(GLOBALS->treeview_main)), GTK_SELECTION_SINGLE);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (GLOBALS->treeview_main), "row-expanded", G_CALLBACK(XXX_tree_expand_callback), NULL);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (GLOBALS->treeview_main), "row-collapsed", G_CALLBACK(XXX_tree_collapse_callback), NULL);
+    gtkwave_signal_connect_object (GLOBALS->treeview_main, "row-expanded", G_CALLBACK(XXX_tree_expand_callback), NULL);
+    gtkwave_signal_connect_object (GLOBALS->treeview_main, "row-collapsed", G_CALLBACK(XXX_tree_collapse_callback), NULL);
 
     scrolled_win = gtk_scrolled_window_new (NULL, NULL);
     gtk_widget_set_size_request( GTK_WIDGET (scrolled_win), -1, 50);
@@ -1348,7 +1346,7 @@ do_tooltips:
     gtk_widget_show(scrolled_win);
     gtk_container_add (GTK_CONTAINER (scrolled_win), GTK_WIDGET (GLOBALS->treeview_main));
     gtk_container_add (GTK_CONTAINER (GLOBALS->gtk2_tree_frame), scrolled_win);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->gtk2_tree_frame), "button_press_event",G_CALLBACK(hier_top_button_press_event_std), NULL);
+    gtkwave_signal_connect(GLOBALS->gtk2_tree_frame, "button_press_event",G_CALLBACK(hier_top_button_press_event_std), NULL);
 
 
     /* Signal names.  */
@@ -1358,7 +1356,7 @@ do_tooltips:
     fill_sig_store ();
 
     sig_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (GLOBALS->sig_store_treesearch_gtk2_c_1));
-    gtkwave_signal_connect(XXX_GTK_OBJECT(sig_view), "button_press_event",G_CALLBACK(hier_top_button_press_event_std), NULL);
+    gtkwave_signal_connect(sig_view, "button_press_event",G_CALLBACK(hier_top_button_press_event_std), NULL);
 
     /* The view now holds a reference.  We can get rid of our own reference */
     g_object_unref (G_OBJECT (GLOBALS->sig_store_treesearch_gtk2_c_1));
@@ -1421,7 +1419,7 @@ do_tooltips:
         gtk_tree_selection_set_select_function (GLOBALS->sig_selection_treesearch_gtk2_c_1,
                                                 view_selection_func, NULL, NULL);
 
-	gtkwave_signal_connect(XXX_GTK_OBJECT(sig_view), "button_press_event",G_CALLBACK(button_press_event_std), NULL);
+	gtkwave_signal_connect(sig_view, "button_press_event",G_CALLBACK(button_press_event_std), NULL);
       }
 
     GLOBALS->dnd_sigview = sig_view;
@@ -1445,7 +1443,7 @@ do_tooltips:
 
 
     /* Filter.  */
-    filter_hbox = XXX_gtk_hbox_new (FALSE, 1);
+    filter_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_show (filter_hbox);
 
     filter_label = gtk_label_new ("Filter:");
@@ -1460,14 +1458,14 @@ do_tooltips:
 
     gtk_widget_show (GLOBALS->filter_entry);
 
-    gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->filter_entry), "activate", G_CALLBACK(press_callback), NULL);
+    gtkwave_signal_connect(GLOBALS->filter_entry, "activate", G_CALLBACK(press_callback), NULL);
     if(!GLOBALS->do_dynamic_treefilter)
 	{
-    	gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->filter_entry), "key_press_event", (GCallback) filter_edit_cb, NULL);
+    	gtkwave_signal_connect(GLOBALS->filter_entry, "key_press_event", (GCallback) filter_edit_cb, NULL);
 	}
 	else
 	{
-    	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->filter_entry), "changed", G_CALLBACK(press_callback), NULL);
+    	gtkwave_signal_connect(GLOBALS->filter_entry, "changed", G_CALLBACK(press_callback), NULL);
 	}
 
     gtk_tooltips_set_tip_2(GLOBALS->filter_entry,
@@ -1489,12 +1487,12 @@ do_tooltips:
     gtk_box_pack_start (GTK_BOX (vbox), frameh, FALSE, FALSE, 1);
 
 
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_show (hbox);
 
     button1 = gtk_button_new_with_label ("Append");
     gtk_container_set_border_width (GTK_CONTAINER (button1), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button1), "clicked",G_CALLBACK(ok_callback),XXX_GTK_OBJECT (GLOBALS->window_treesearch_gtk2_c_12));
+    gtkwave_signal_connect_object (button1, "clicked",G_CALLBACK(ok_callback),GLOBALS->window_treesearch_gtk2_c_12);
     gtk_widget_show (button1);
     gtk_tooltips_set_tip_2(button1,
 		"Add selected signal hierarchy to end of the display on the main window.");
@@ -1503,7 +1501,7 @@ do_tooltips:
 
     button2 = gtk_button_new_with_label (" Insert ");
     gtk_container_set_border_width (GTK_CONTAINER (button2), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button2), "clicked",G_CALLBACK(insert_callback),XXX_GTK_OBJECT (GLOBALS->window_treesearch_gtk2_c_12));
+    gtkwave_signal_connect_object (button2, "clicked",G_CALLBACK(insert_callback),GLOBALS->window_treesearch_gtk2_c_12);
     gtk_widget_show (button2);
     gtk_tooltips_set_tip_2(button2,
 		"Add selected signal hierarchy after last highlighted signal on the main window.");
@@ -1511,7 +1509,7 @@ do_tooltips:
 
     button4 = gtk_button_new_with_label (" Replace ");
     gtk_container_set_border_width (GTK_CONTAINER (button4), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button4), "clicked",G_CALLBACK(replace_callback),XXX_GTK_OBJECT (GLOBALS->window_treesearch_gtk2_c_12));
+    gtkwave_signal_connect_object (button4, "clicked",G_CALLBACK(replace_callback),GLOBALS->window_treesearch_gtk2_c_12);
     gtk_widget_show (button4);
     gtk_tooltips_set_tip_2(button4,
 		"Replace highlighted signals on the main window with signals selected above.");
@@ -1519,7 +1517,7 @@ do_tooltips:
 
     button5 = gtk_button_new_with_label (" Exit ");
     gtk_container_set_border_width (GTK_CONTAINER (button5), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button5), "clicked",G_CALLBACK(destroy_callback),XXX_GTK_OBJECT (GLOBALS->window_treesearch_gtk2_c_12));
+    gtkwave_signal_connect_object (button5, "clicked",G_CALLBACK(destroy_callback),GLOBALS->window_treesearch_gtk2_c_12);
     gtk_tooltips_set_tip_2(button5,
 		"Do nothing and return to the main window.");
     gtk_widget_show (button5);
@@ -1552,7 +1550,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 
     /* create a new modal window */
 
-    vbox = XXX_gtk_vbox_new (FALSE, 1);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
     gtk_widget_show (vbox);
 
     vpan = XXX_gtk_vpaned_new (0); /* GLOBALS->sst_vpaned is to be used to clone position over during reload */
@@ -1565,9 +1563,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     gtk_widget_show (vpan);
     gtk_box_pack_start (GTK_BOX (vbox), vpan, TRUE, TRUE, 1);
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_widget_set_vexpand(vpan, TRUE); /* needed for gtk3, otherwise box does not grow vertically */
-#endif
 
     /* Hierarchy.  */
     GLOBALS->gtk2_tree_frame = gtk_frame_new (NULL);
@@ -1581,8 +1577,8 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     gtk_tree_selection_set_select_function (gtk_tree_view_get_selection(GTK_TREE_VIEW(GLOBALS->treeview_main)),
                                                 XXX_view_selection_func, NULL, NULL);
     gtk_tree_selection_set_mode (gtk_tree_view_get_selection(GTK_TREE_VIEW(GLOBALS->treeview_main)), GTK_SELECTION_SINGLE);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (GLOBALS->treeview_main), "row-expanded", G_CALLBACK(XXX_tree_expand_callback), NULL);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (GLOBALS->treeview_main), "row-collapsed", G_CALLBACK(XXX_tree_collapse_callback), NULL);
+    gtkwave_signal_connect_object (GLOBALS->treeview_main, "row-expanded", G_CALLBACK(XXX_tree_expand_callback), NULL);
+    gtkwave_signal_connect_object (GLOBALS->treeview_main, "row-collapsed", G_CALLBACK(XXX_tree_collapse_callback), NULL);
 
     scrolled_win = gtk_scrolled_window_new (NULL, NULL);
     gtk_widget_set_size_request( GTK_WIDGET (scrolled_win), -1, 50);
@@ -1591,7 +1587,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
                                       GTK_POLICY_AUTOMATIC);
     gtk_widget_show(scrolled_win);
     gtk_container_add (GTK_CONTAINER (scrolled_win), GTK_WIDGET (GLOBALS->treeview_main));
-    gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->treeview_main), "button_press_event",G_CALLBACK(hier_top_button_press_event_std), NULL);
+    gtkwave_signal_connect(GLOBALS->treeview_main, "button_press_event",G_CALLBACK(hier_top_button_press_event_std), NULL);
 
     gtk_container_add (GTK_CONTAINER (GLOBALS->gtk2_tree_frame), scrolled_win);
 
@@ -1664,7 +1660,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
         gtk_tree_selection_set_select_function (GLOBALS->sig_selection_treesearch_gtk2_c_1,
                                                 view_selection_func, NULL, NULL);
 
-	gtkwave_signal_connect(XXX_GTK_OBJECT(sig_view), "button_press_event",G_CALLBACK(button_press_event_std), NULL);
+	gtkwave_signal_connect(sig_view, "button_press_event",G_CALLBACK(button_press_event_std), NULL);
       }
 
     GLOBALS->dnd_sigview = sig_view;
@@ -1687,26 +1683,22 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 
 
     /* Filter.  */
-    filter_hbox = XXX_gtk_hbox_new (FALSE, 1);
+    filter_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_container_set_border_width (GTK_CONTAINER (filter_hbox), 2);
     gtk_widget_show (filter_hbox);
 
-#if GTK_CHECK_VERSION(3,0,0)
     GLOBALS->filter_entry = gtk_search_entry_new ();
-#else
-    GLOBALS->filter_entry = gtk_entry_new ();
-#endif
     if(GLOBALS->filter_str_treesearch_gtk2_c_1) { gtk_entry_set_text(GTK_ENTRY(GLOBALS->filter_entry), GLOBALS->filter_str_treesearch_gtk2_c_1); }
     gtk_widget_show (GLOBALS->filter_entry);
 
-    gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->filter_entry), "activate", G_CALLBACK(press_callback), NULL);
+    gtkwave_signal_connect(GLOBALS->filter_entry, "activate", G_CALLBACK(press_callback), NULL);
     if(!GLOBALS->do_dynamic_treefilter)
 	{
-    	gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->filter_entry), "key_press_event", (GCallback) filter_edit_cb, NULL);
+    	gtkwave_signal_connect(GLOBALS->filter_entry, "key_press_event", (GCallback) filter_edit_cb, NULL);
 	}
 	else
 	{
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->filter_entry), "changed", G_CALLBACK(press_callback), NULL);
+	gtkwave_signal_connect(GLOBALS->filter_entry, "changed", G_CALLBACK(press_callback), NULL);
 	}
 
     gtk_tooltips_set_tip_2(GLOBALS->filter_entry,
@@ -1721,12 +1713,12 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     gtk_box_pack_start (GTK_BOX (vbox), filter_hbox, FALSE, FALSE, 1);
 
     /* Buttons.  */
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_show (hbox);
 
     button1 = gtk_button_new_with_label ("Append");
     gtk_container_set_border_width (GTK_CONTAINER (button1), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button1), "clicked", G_CALLBACK(ok_callback), XXX_GTK_OBJECT (GLOBALS->gtk2_tree_frame));
+    gtkwave_signal_connect_object (button1, "clicked", G_CALLBACK(ok_callback), GLOBALS->gtk2_tree_frame);
     gtk_widget_show (button1);
     gtk_tooltips_set_tip_2(button1,
 		"Add selected signal hierarchy to end of the display on the main window.");
@@ -1735,7 +1727,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 
     button2 = gtk_button_new_with_label (" Insert ");
     gtk_container_set_border_width (GTK_CONTAINER (button2), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button2), "clicked", G_CALLBACK(insert_callback), XXX_GTK_OBJECT (GLOBALS->gtk2_tree_frame));
+    gtkwave_signal_connect_object (button2, "clicked", G_CALLBACK(insert_callback), GLOBALS->gtk2_tree_frame);
     gtk_widget_show (button2);
     gtk_tooltips_set_tip_2(button2,
 		"Add selected signal hierarchy after last highlighted signal on the main window.");
@@ -1743,7 +1735,7 @@ GtkWidget* treeboxframe(char *title, GCallback func)
 
     button4 = gtk_button_new_with_label (" Replace ");
     gtk_container_set_border_width (GTK_CONTAINER (button4), 3);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button4), "clicked", G_CALLBACK(replace_callback), XXX_GTK_OBJECT (GLOBALS->gtk2_tree_frame));
+    gtkwave_signal_connect_object (button4, "clicked", G_CALLBACK(replace_callback), GLOBALS->gtk2_tree_frame);
     gtk_widget_show (button4);
     gtk_tooltips_set_tip_2(button4,
 		"Replace highlighted signals on the main window with signals selected above.");
@@ -1769,11 +1761,9 @@ static void DNDBeginCB(
 (void)widget;
 (void)data;
 
-#if GTK_CHECK_VERSION(3, 2, 0)
 // Reset the hotspot to make sure the icon is shown at the correct position in
 // wayland.
 gdk_drag_context_set_hotspot(dc, 0, 0);
-#endif
 
 // GtkTreeView sets the drag icon to an image of the dragged row, which can
 // hide a large part of the drag destination. By overriding the icon to the
@@ -1880,9 +1870,9 @@ void dnd_setup(GtkWidget *src, gboolean search)
 	g_signal_connect_after(src, "drag_begin", G_CALLBACK(DNDBeginCB), NULL);
 
 	if (search) {
-		gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_data_get", G_CALLBACK(DNDDataRequestCBSearch), NULL);
+		gtkwave_signal_connect(src, "drag_data_get", G_CALLBACK(DNDDataRequestCBSearch), NULL);
 	} else {
-		gtkwave_signal_connect(XXX_GTK_OBJECT(src), "drag_data_get", G_CALLBACK(DNDDataRequestCBTree), NULL);
+		gtkwave_signal_connect(src, "drag_data_get", G_CALLBACK(DNDDataRequestCBTree), NULL);
 	}
 
 	g_signal_connect(src, "drag_end", G_CALLBACK(DNDEndCB), NULL);

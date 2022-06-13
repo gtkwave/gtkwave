@@ -88,7 +88,7 @@ gtk_container_set_border_width (GTK_CONTAINER (scrolled_window), 5);
 gtk_widget_show(scrolled_window);
 
 /* Add a handler to put a message in the text widget when it is realized */
-gtkwave_signal_connect (XXX_GTK_OBJECT (GLOBALS->text_help_c_1), "realize", G_CALLBACK (help_realize_text), NULL);
+gtkwave_signal_connect (GLOBALS->text_help_c_1, "realize", G_CALLBACK (help_realize_text), NULL);
 
 gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(GLOBALS->text_help_c_1), GTK_WRAP_WORD);
 return(scrolled_window);
@@ -127,9 +127,9 @@ void helpbox(char *title, int width, char *default_text)
 
     gtk_widget_set_size_request( GTK_WIDGET (GLOBALS->window_help_c_2), width, 400);
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_help_c_2), title);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_help_c_2), "delete_event",(GCallback) ok_callback, NULL);
+    gtkwave_signal_connect(GLOBALS->window_help_c_2, "delete_event",(GCallback) ok_callback, NULL);
 
-    vbox = XXX_gtk_vbox_new (FALSE, 0);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (GLOBALS->window_help_c_2), vbox);
     gtk_widget_show (vbox);
 
@@ -137,7 +137,7 @@ void helpbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
     gtk_widget_show (label);
 
-    separator = XXX_gtk_hseparator_new ();
+    separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
@@ -145,25 +145,21 @@ void helpbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), ctext, TRUE, TRUE, 0);
     gtk_widget_show (ctext);
 
-    separator = XXX_gtk_hseparator_new ();
+    separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
     gtk_widget_show (hbox);
 
     button1 = gtk_button_new_with_label ("Close Help");
     gtk_widget_set_size_request(button1, 100, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (button1), "clicked", G_CALLBACK(ok_callback), NULL);
+    gtkwave_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), NULL);
     gtk_widget_show (button1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_end(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1);
-#endif
     gtk_widget_set_can_default (button1, TRUE);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button1), "realize", (GCallback) gtk_widget_grab_default, XXX_GTK_OBJECT (button1));
+    gtkwave_signal_connect_object (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
     gtk_widget_show(GLOBALS->window_help_c_2);
 }

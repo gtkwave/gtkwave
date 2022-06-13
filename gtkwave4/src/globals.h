@@ -18,9 +18,6 @@
 #include <io.h>
 #endif
 
-#define XXX_GTK_OBJECT(x) x
-#define XXX_GTK_OBJECT_GET_CLASS GTK_OBJECT_GET_CLASS
-
 #define XXX_GDK_DRAWABLE(x) x
 
 

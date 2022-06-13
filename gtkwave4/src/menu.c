@@ -1614,8 +1614,8 @@ if(GLOBALS->helpbox_is_active)
 			{
 			fix_wavehadj();
 	
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 	
 			update_maxmarker_labels();
 			}
@@ -1741,8 +1741,8 @@ if(GLOBALS->helpbox_is_active)
 			calczoom(GLOBALS->tims.zoom);
 			fix_wavehadj();
 	
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 			}
 		}
 	}
@@ -4733,8 +4733,6 @@ entrybox("Regexp Highlight",300,GLOBALS->regexp_string_menu_c_1,NULL,128,G_CALLB
 
 /**/
 
-#if GTK_CHECK_VERSION(3,0,0)
-
 void
 menu_write_screengrab_cleanup(GtkWidget *widget, gpointer data)
 {
@@ -4794,64 +4792,6 @@ if(!succ)
 	}
 }
 
-#else
-
-void
-menu_write_screengrab_cleanup(GtkWidget *widget, gpointer data)
-{
-(void)widget;
-(void)data;
-
-GdkWindow *gw;
-gint w, h;
-GdkColormap *cm;
-GdkPixbuf *dest = NULL;
-GdkPixbuf *dest2;
-GError *err = NULL;
-gboolean succ = FALSE;
-
-if(!GLOBALS->filesel_ok)
-	{
-	return;
-	}
-
-gw = gtk_widget_get_window(GTK_WIDGET(GLOBALS->mainwindow));
-if(gw)
-	{
-	gdk_drawable_get_size(gw, &w, &h);
-	cm = gdk_drawable_get_colormap(gw);
-	if(cm)
-		{
-		dest = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
-		if(dest)
-			{
-			dest2 = gdk_pixbuf_get_from_drawable(dest, gw, cm, 0, 0, 0, 0, w, h);
-			if(dest2)
-				{
-				succ = gdk_pixbuf_save (dest2, *GLOBALS->fileselbox_text, "png", &err, NULL);
-				}
-			}
-		}
-	}
-
-if(dest)
-	{
-	g_object_unref(dest);
-	}
-
-if(!succ)
-	{
-        fprintf(stderr, "Error opening imagegrab file '%s' for writing.\n",*GLOBALS->fileselbox_text);
-	perror("Why");
-	errno=0;
-	}
-	else
-	{
-	wave_gconf_client_set_string("/current/imagegrab", GLOBALS->filesel_imagegrab);
-	}
-}
-
-#endif
 
 void
 menu_write_screengrab_as(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -5467,8 +5407,8 @@ if(GLOBALS->entrybox_text)
 	calczoom(GLOBALS->tims.zoom);
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 
 	free_2(GLOBALS->entrybox_text);
 	GLOBALS->entrybox_text=NULL;
@@ -5525,8 +5465,8 @@ if(GLOBALS->entrybox_text)
 	calczoom(GLOBALS->tims.zoom);
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 
 	free_2(GLOBALS->entrybox_text);
 	GLOBALS->entrybox_text=NULL;
@@ -7536,8 +7476,8 @@ if(GLOBALS->helpbox_is_active)
 	
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Fullscreen\n"));
 		}
@@ -7591,8 +7531,8 @@ if(GLOBALS->helpbox_is_active)
 	
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Toolbar\n"));
 		}
@@ -7625,8 +7565,8 @@ if(GLOBALS->helpbox_is_active)
 		GLOBALS->display_grid = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]));
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Grid\n"));
 		}
@@ -7660,8 +7600,8 @@ if(GLOBALS->helpbox_is_active)
 		GLOBALS->highlight_wavewindow = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]));
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Wave Highlight\n"));
 		}
@@ -7695,8 +7635,8 @@ if(GLOBALS->helpbox_is_active)
 		GLOBALS->fill_waveform = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]));
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Filled High Values\n"));
 		}
@@ -8522,11 +8462,6 @@ void do_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
 (void)my_widget;
 
   GtkWidget *menu;
-#if !GTK_CHECK_VERSION(3,0,0)
-  int button;
-  int event_time;
-#endif
-
   if(!GLOBALS->signal_popup_menu)
     {
     int nmenu_items = sizeof(popmenu_items) / sizeof(popmenu_items[0]);
@@ -8552,27 +8487,7 @@ void do_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
     menu = GLOBALS->signal_popup_menu;
     }
 
-  if (event)
-    {
-#if !GTK_CHECK_VERSION(3,0,0)
-      button = event->button;
-      event_time = event->time;
-#endif
-    }
-  else
-    {
-#if !GTK_CHECK_VERSION(3,0,0)
-      button = 0;
-      event_time = gtk_get_current_event_time ();
-#endif
-    }
-
-#if GTK_CHECK_VERSION(3,0,0)
   gtk_menu_popup_at_pointer (GTK_MENU (menu), NULL);
-#else
-  gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL,
-                  button, event_time);
-#endif
 }
 
 /***************************/
@@ -8597,10 +8512,6 @@ void do_sst_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
 (void)my_widget;
 
   GtkWidget *menu;
-#if !GTK_CHECK_VERSION(3,0,0)
-  int button, event_time;
-#endif
-
   if(!GLOBALS->sst_signal_popup_menu)
     {
     int nmenu_items = sizeof(sst_popmenu_items) / sizeof(sst_popmenu_items[0]);
@@ -8625,27 +8536,7 @@ void do_sst_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
     menu = GLOBALS->sst_signal_popup_menu;
     }
 
-  if (event)
-    {
-#if !GTK_CHECK_VERSION(3,0,0)
-      button = event->button;
-      event_time = event->time;
-#endif
-    }
-  else
-    {
-#if !GTK_CHECK_VERSION(3,0,0)
-      button = 0;
-      event_time = gtk_get_current_event_time ();
-#endif
-    }
-
-#if GTK_CHECK_VERSION(3,0,0)
   gtk_menu_popup_at_pointer (GTK_MENU (menu), NULL);
-#else
-  gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL,
-                  button, event_time);
-#endif
 }
 
 
@@ -9120,11 +9011,6 @@ void do_popup_main_menu (GtkWidget *my_widget, GdkEventButton *event)
 (void)my_widget;
 
   GtkWidget *menu;
-#if !GTK_CHECK_VERSION(3,0,0)
-  int button;
-  int event_time;
-#endif
-
   if(!GLOBALS->main_popup_menu)
     {
     GLOBALS->main_popup_menu = menu = alt_menu_top(GLOBALS->mainwindow);
@@ -9134,22 +9020,6 @@ void do_popup_main_menu (GtkWidget *my_widget, GdkEventButton *event)
     menu = GLOBALS->main_popup_menu;
     }
 
-  if (event)
-    {
-#if !GTK_CHECK_VERSION(3,0,0)
-      button = event->button;
-      event_time = event->time;
-#endif
-    }
-  else
-    {
-#if !GTK_CHECK_VERSION(3,0,0)
-      button = 0;
-      event_time = gtk_get_current_event_time ();
-#endif
-    }
-
-#if GTK_CHECK_VERSION(3,0,0)
 if(GLOBALS->main_popup_menu_button)
 	{
 	gtk_menu_popup_at_widget (GTK_MENU (menu), GLOBALS->main_popup_menu_button, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
@@ -9158,9 +9028,5 @@ if(GLOBALS->main_popup_menu_button)
 	{
 	gtk_menu_popup_at_pointer (GTK_MENU (menu), NULL);
 	}
-#else
-  gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL,
-                  button, event_time);
-#endif
 }
 #endif

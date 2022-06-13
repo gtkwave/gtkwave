@@ -31,9 +31,7 @@ gtk_adjustment_set_page_size(hadj, gtk_adjustment_get_page_increment(hadj));
 gtk_adjustment_set_step_increment (hadj, pageinc / 10.0);
 if(gtk_adjustment_get_step_increment (hadj) < 1.0) gtk_adjustment_set_step_increment (hadj, 1.0);
 
-#if GTK_CHECK_VERSION(3,0,0)
 gtk_adjustment_set_value(hadj, GLOBALS->tims.start); /* work around GTK3 clamping code */
-#endif
 
 if(gtk_adjustment_get_page_size(hadj) >= (gtk_adjustment_get_upper(hadj)-gtk_adjustment_get_lower(hadj))) gtk_adjustment_set_value(hadj, gtk_adjustment_get_lower(hadj));
 if(gtk_adjustment_get_value(hadj)+gtk_adjustment_get_page_size(hadj)>gtk_adjustment_get_upper(hadj))
@@ -143,8 +141,8 @@ if(GLOBALS->do_zoom_center)
 
 fix_wavehadj();
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 DEBUG(printf("Zoombuttons out\n"));
 }
@@ -203,8 +201,8 @@ if(GLOBALS->tims.zoom<0)		/* otherwise it's ridiculous and can cause */
 
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 	DEBUG(printf("Zoombuttons in\n"));
 	}
@@ -235,8 +233,8 @@ GLOBALS->tims.timecache=0;
 calczoom(GLOBALS->tims.zoom);
 fix_wavehadj();
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 DEBUG(printf("Zoombuttons Undo\n"));
 }
@@ -281,8 +279,8 @@ if((GLOBALS->tims.baseline>=0)&&(GLOBALS->tims.marker>=0))
 
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 	}
 
 DEBUG(printf("Zoombuttons Fit\n"));
@@ -319,8 +317,8 @@ GLOBALS->tims.zoom=estimated;
 
 fix_wavehadj();
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 DEBUG(printf("Zoombuttons Full\n"));
 }
@@ -387,118 +385,9 @@ if((time2>time1)&&(dragzoom_ok))	/* ensure at least 1 tick and dragzoom_threshol
 
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 	DEBUG(printf("Drag Zoom\n"));
 	}
 }
-
-/* Create actual buttons */
-GtkWidget *
-create_zoom_buttons (void)
-{
-GtkWidget *table;
-GtkWidget *table2;
-GtkWidget *frame;
-GtkWidget *main_vbox;
-GtkWidget *b1;
-GtkWidget *b2;
-GtkWidget *b3;
-GtkWidget *b4;
-GtkWidget *b5;
-GtkWidget *b6;
-GtkWidget *pixmapzout, *pixmapzin, *pixmapzfit, *pixmapzundo;
-GtkWidget *pixmapzleft, *pixmapzright;
-
-pixmapzin=gtk_image_new_from_pixbuf(GLOBALS->zoomin_pixbuf);
-gtk_widget_show(pixmapzin);
-pixmapzout=gtk_image_new_from_pixbuf(GLOBALS->zoomout_pixbuf);
-gtk_widget_show(pixmapzout);
-pixmapzfit=gtk_image_new_from_pixbuf(GLOBALS->zoomfit_pixbuf);
-gtk_widget_show(pixmapzfit);
-pixmapzundo=gtk_image_new_from_pixbuf(GLOBALS->zoomundo_pixbuf);
-gtk_widget_show(pixmapzundo);
-
-pixmapzleft=gtk_image_new_from_pixbuf(GLOBALS->zoom_larrow_pixbuf);
-gtk_widget_show(pixmapzleft);
-pixmapzright=gtk_image_new_from_pixbuf(GLOBALS->zoom_rarrow_pixbuf);
-gtk_widget_show(pixmapzright);
-
-
-/* Create a table to hold the text widget and scrollbars */
-table = XXX_gtk_table_new (1, 1, FALSE);
-
-main_vbox = XXX_gtk_vbox_new (FALSE, 1);
-gtk_container_set_border_width (GTK_CONTAINER (main_vbox), 1);
-gtk_container_add (GTK_CONTAINER (table), main_vbox);
-
-frame = gtk_frame_new ("Zoom ");
-gtk_box_pack_start (GTK_BOX (main_vbox), frame, TRUE, TRUE, 0);
-gtk_widget_show (frame);
-gtk_widget_show (main_vbox);
-
-table2 = XXX_gtk_table_new (2, 3, FALSE);
-
-b1 = gtk_button_new();
-gtk_container_add(GTK_CONTAINER(b1), pixmapzin);
-XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b1, 0, 1, 0, 1,
-		      	GTK_FILL | GTK_EXPAND,
-		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b1), "clicked", G_CALLBACK(service_zoom_out), XXX_GTK_OBJECT (table2));
-gtk_tooltips_set_tip_2(b1, "Zoom Out");
-gtk_widget_show(b1);
-
-b2 = gtk_button_new();
-gtk_container_add(GTK_CONTAINER(b2), pixmapzout);
-XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b2, 0, 1, 1, 2,
-		      	GTK_FILL | GTK_EXPAND,
-		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b2), "clicked", G_CALLBACK(service_zoom_in), XXX_GTK_OBJECT (table2));
-gtk_tooltips_set_tip_2(b2, "Zoom In");
-gtk_widget_show(b2);
-
-b3 = gtk_button_new();
-gtk_container_add(GTK_CONTAINER(b3), pixmapzfit);
-XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b3, 1, 2, 0, 1,
-		      	GTK_FILL | GTK_EXPAND,
-		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b3), "clicked", G_CALLBACK(service_zoom_fit), XXX_GTK_OBJECT (table2));
-gtk_tooltips_set_tip_2(b3, "Zoom Best Fit");
-gtk_widget_show(b3);
-
-b4 = gtk_button_new();
-gtk_container_add(GTK_CONTAINER(b4), pixmapzundo);
-XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b4, 1, 2, 1, 2,
-		      	GTK_FILL | GTK_EXPAND,
-		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b4), "clicked", G_CALLBACK(service_zoom_undo), XXX_GTK_OBJECT (table2));
-gtk_tooltips_set_tip_2(b4, "Undo Last Zoom");
-gtk_widget_show(b4);
-
-b5 = gtk_button_new();
-gtk_container_add(GTK_CONTAINER(b5), pixmapzleft);
-XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b5, 2, 3, 0, 1,
-		      	GTK_FILL | GTK_EXPAND,
-		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b5), "clicked", G_CALLBACK(service_zoom_left), XXX_GTK_OBJECT (table2));
-gtk_tooltips_set_tip_2(b5, "Zoom To Start");
-gtk_widget_show(b5);
-
-b6 = gtk_button_new();
-gtk_container_add(GTK_CONTAINER(b6), pixmapzright);
-XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b6, 2, 3, 1, 2,
-		      	GTK_FILL | GTK_EXPAND,
-		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b6), "clicked", G_CALLBACK(service_zoom_right), XXX_GTK_OBJECT (table2));
-gtk_tooltips_set_tip_2(b6, "Zoom To End");
-gtk_widget_show(b6);
-
-
-gtk_container_add (GTK_CONTAINER (frame), table2);
-
-gtk_widget_show(table2);
-
-return table;
-}
-

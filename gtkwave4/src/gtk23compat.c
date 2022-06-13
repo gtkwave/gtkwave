@@ -43,20 +43,6 @@ gdk_seat_ungrab(seat);
 
 
 #ifdef WAVE_ALLOW_GTK3_GRID
-GtkWidget *
-XXX_gtk_table_new (guint rows,
-               guint columns,
-               gboolean homogeneous)
-{
-(void) rows;
-(void) columns;
-
-GtkWidget *grid = gtk_grid_new ();
-gtk_grid_set_row_homogeneous (GTK_GRID(grid), homogeneous);
-gtk_grid_set_column_homogeneous (GTK_GRID(grid), homogeneous);
-
-return(grid);
-}
 
 void
 XXX_gtk_table_attach (GtkGrid *table,
@@ -80,29 +66,6 @@ gtk_widget_set_vexpand(child, (yoptions & (GTK_EXPAND | GTK_FILL)) != 0);
 }
 #endif
 
-GtkWidget *
-XXX_gtk_hseparator_new (void)
-{
-return(gtk_separator_new(GTK_ORIENTATION_HORIZONTAL));
-}
-
-GtkWidget *
-XXX_gtk_hbox_new(gboolean homogeneous, gint spacing)
-{
-GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, spacing);
-gtk_box_set_homogeneous (GTK_BOX(hbox), homogeneous);
-
-return(hbox);
-}
-
-GtkWidget *
-XXX_gtk_vbox_new(gboolean homogeneous, gint spacing)
-{
-GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, spacing);
-gtk_box_set_homogeneous (GTK_BOX(vbox), homogeneous);
-
-return(vbox);
-}
 #endif
 
 
@@ -131,7 +94,7 @@ XXX_gtk_toolbar_insert_stock (GtkToolbar *toolbar,
                       button,
                       position);
 
-  g_signal_connect(XXX_GTK_OBJECT(button), "clicked", G_CALLBACK(callback), user_data);
+  g_signal_connect(button, "clicked", G_CALLBACK(callback), user_data);
   return(GTK_WIDGET(button));
 }
 

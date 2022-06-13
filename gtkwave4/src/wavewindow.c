@@ -65,15 +65,11 @@ if(GLOBALS->dual_ctx && !GLOBALS->dual_race_lock)
 }
 
 /******************************************************************/
-#if GTK_CHECK_VERSION(3,0,0)
 static int gesture_filter_set = 0; /* to prevent floods of gesture events before next draw */
 static int gesture_filter_cnt = 0; /* to prevent floods of gesture events before next draw */
 static int gesture_in_zoom = 0; /* for suppression of filtering of redraws: indicates zoom state change, service_hslider() decrements this */
-#endif
 
 #ifdef WAVE_ALLOW_SLIDER_ZOOM
-#if GTK_CHECK_VERSION(3,0,0)
-
 static void (*draw_slider_p)    (GtkStyle               *style,
                                  cairo_t                *cr,
                                  GtkStateType            state_type,
@@ -110,47 +106,6 @@ if((GLOBALS)&&(widget == GLOBALS->hscroll_wavewindow_c_2))
 
 draw_slider_p(style, cr, state_type, shadow_type, widget, detail, x, y, width, height, orientation);
 }
-#else
-static void (*draw_slider_p)    (GtkStyle               *style,
-                                 GdkWindow              *window,
-                                 GtkStateType            state_type,
-                                 GtkShadowType           shadow_type,
-                                 GdkRectangle           *area,
-                                 GtkWidget              *widget,
-                                 const gchar            *detail,
-                                 gint                    x,
-                                 gint                    y,
-                                 gint                    width,
-                                 gint                    height,
-                                 GtkOrientation          orientation) = NULL; /* This is intended to be global...only needed once per toolkit */
-
-
-static void draw_slider         (GtkStyle               *style,
-                                 GdkWindow              *window,
-                                 GtkStateType            state_type,
-                                 GtkShadowType           shadow_type,
-                                 GdkRectangle           *area,
-                                 GtkWidget              *widget,
-                                 const gchar            *detail,
-                                 gint                    x,
-                                 gint                    y,
-                                 gint                    width,
-                                 gint                    height,
-                                 GtkOrientation          orientation)
-{
-if((GLOBALS)&&(widget == GLOBALS->hscroll_wavewindow_c_2))
-        {
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(widget, &allocation);
-        GLOBALS->str_wid_x = x - allocation.x;
-        GLOBALS->str_wid_width = width;
-        GLOBALS->str_wid_bigw = allocation.width;
-        GLOBALS->str_wid_height = height;
-        }
-
-draw_slider_p(style, window, state_type, shadow_type, area, widget, detail, x, y, width, height, orientation);
-}
-#endif
 
 static gint slider_bpr(GtkWidget *widget, GdkEventButton *event)
 {
@@ -934,8 +889,8 @@ do
 				if(GLOBALS->tims.start<GLOBALS->tims.first) GLOBALS->tims.start=GLOBALS->tims.first;
 				gtk_adjustment_set_value(GTK_ADJUSTMENT(GLOBALS->wave_hslider),GLOBALS->tims.marker=time_trunc(GLOBALS->tims.timecache=GLOBALS->tims.start));
 
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 				scrolled=1;
 				}
 			x=0;
@@ -967,8 +922,8 @@ do
 
 				gtk_adjustment_set_value(GTK_ADJUSTMENT(GLOBALS->wave_hslider),GLOBALS->tims.timecache=GLOBALS->tims.start);
 
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 				scrolled=1;
 				}
 			x=GLOBALS->wavewidth-1;
@@ -1088,8 +1043,8 @@ if(target < 0) target = 0;
 
 gtk_adjustment_set_value(wadj, target);
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "changed"); /* force bar update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "value_changed"); /* force text update */
+g_signal_emit_by_name (wadj, "changed"); /* force bar update */
+g_signal_emit_by_name (wadj, "value_changed"); /* force text update */
 #endif
 }
 
@@ -1203,8 +1158,8 @@ void alt_zoom_out(GtkWidget *text, gpointer data)
 
   fix_wavehadj();
 
-  g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-  g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+  g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+  g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
   DEBUG(printf("Alternate Zoom out\n"));
 }
@@ -1265,8 +1220,8 @@ void alt_zoom_in(GtkWidget *text, gpointer data)
 
     fix_wavehadj();
 
-    g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-    g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+    g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+    g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
     DEBUG(printf("Alternate zoom in\n"));
   }
@@ -1714,13 +1669,11 @@ if(!GLOBALS->made_sgc_contexts_wavewindow_c_1)
 	{
 	gboolean dark = GLOBALS->use_dark;
 
-#if GTK_CHECK_VERSION(3,0,0)
 	if(!dark)
 		{
 		g_object_get(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", &dark, NULL);
 		GLOBALS->use_dark = dark;
 		}
-#endif
 
 	GLOBALS->rgb_gc_white = dark ? XXX_alloc_color(GLOBALS->color_black) : XXX_alloc_color(GLOBALS->color_white);
 	GLOBALS->rgb_gc_black = dark ? XXX_alloc_color(GLOBALS->color_white) : XXX_alloc_color(GLOBALS->color_black);
@@ -1842,8 +1795,8 @@ if(GLOBALS->timestart_from_savefile_valid)
 		GtkAdjustment *hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
 		gtk_adjustment_set_value(hadj, (gdouble)(GLOBALS->timestart_from_savefile));
 		fix_wavehadj();
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
+		g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
+		g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
 
 		}
 	GLOBALS->timestart_from_savefile_valid--; /* for previous gtk toolkit versions could set this directly to zero */
@@ -1855,8 +1808,8 @@ if(GLOBALS->wavewidth>1)
 		{
 		calczoom(GLOBALS->tims.zoom);
 		fix_wavehadj();
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
+		g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
+		g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
 		}
 		else
 		{
@@ -1936,7 +1889,6 @@ return(rc);
 }
 
 
-#if GTK_CHECK_VERSION(3,0,0)
 static gint draw_event(GtkWidget *widget, cairo_t *cr, gpointer      user_data)
 {
 (void) widget;
@@ -1959,46 +1911,6 @@ if(gesture_filter_set) gesture_filter_set = 0;
 
 return(rc);
 }
-#else
-static gint expose_event(GtkWidget *widget, GdkEventExpose *event)
-{
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-GdkDrawingContext *gdc;
-#endif
-cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(widget)), &gdc);
-gdk_cairo_region (cr, event->region);
-cairo_clip (cr);
-
-wavewindow_paint(cr);
-
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-gdk_window_end_draw_frame(gtk_widget_get_window(widget), gdc);
-#else
-cairo_destroy (cr);
-#endif
-
-draw_marker();
-
-return(FALSE);
-}
-
-static gint expose_event_local(GtkWidget *widget, GdkEventExpose *event)
-{
-gint rc;
-gint page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(GLOBALS->notebook));
-/* struct Global *g_old = GLOBALS; */
-
-set_GLOBALS((*GLOBALS->contexts)[page_num]);
-
-rc = expose_event(widget, event);
-
-/* seems to cause a conflict flipping back so don't! */
-/* set_GLOBALS(g_old); */
-
-return(rc);
-}
-#endif
-
 
 #ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_WAVE_VSLIDER
 static gboolean wave_vslider_gtc(GtkWidget *widget,
@@ -2019,9 +1931,9 @@ if(GLOBALS && GLOBALS->wave_vslider_valid && GLOBALS->wave_vslider && GLOBALS->s
 
 	GLOBALS->wave_vslider_valid = 0;
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "changed");	/* force bar update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "value_changed"); /* force text update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (hadj), "changed");	/* force bar update */
+	g_signal_emit_by_name (wadj, "changed");	/* force bar update */
+	g_signal_emit_by_name (wadj, "value_changed"); /* force text update */
+	g_signal_emit_by_name (hadj, "changed");	/* force bar update */
 	}
 
 return(G_SOURCE_CONTINUE);
@@ -2183,8 +2095,8 @@ if((lzb != 0.0) && (scale > 0.0))
 	
 			fix_wavehadj();
 	
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 			}
 #else
 			{
@@ -2225,8 +2137,8 @@ GLOBALS->tims.baseline = -1;
 GLOBALS->tims.lmbcache = -1;
 GLOBALS->in_button_press_wavewindow_c_1 = 0;
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 gesture_in_zoom = 1;
 
@@ -2423,7 +2335,7 @@ GtkWidget *table;
 GtkWidget *frame;
 GtkAdjustment *hadj, *vadj;
 
-table = XXX_gtk_table_new(10, 10, FALSE);
+table = gtk_grid_new();
 
 #ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_DEPRECATED_API
 /* this removes the warning generated from XXX_gtk_table_attach() on GLOBALS->vscroll_wavewindow_c_1 below */
@@ -2445,12 +2357,8 @@ gtk_widget_set_events(GLOBALS->wavearea,
 #endif
                 );
 
-g_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea), "configure_event",G_CALLBACK(wavearea_configure_event_local), NULL);
-#if GTK_CHECK_VERSION(3,0,0)
-g_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea), "draw",G_CALLBACK(draw_event), NULL);
-#else
-g_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea), "expose_event",G_CALLBACK(expose_event_local), NULL);
-#endif
+g_signal_connect(GLOBALS->wavearea, "configure_event",G_CALLBACK(wavearea_configure_event_local), NULL);
+g_signal_connect(GLOBALS->wavearea, "draw",G_CALLBACK(draw_event), NULL);
 
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
 if(GLOBALS->use_gestures < 0) /* <0 means "maybe (if available, enable)" */
@@ -2476,53 +2384,53 @@ GtkGesture *gs;
 
 GLOBALS->wavearea_gesture_initial_zoom = GLOBALS->tims.zoom;
 gs =  gtk_gesture_zoom_new(GLOBALS->wavearea);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "begin", G_CALLBACK(wavearea_zoom_begin_event), gs);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "end", G_CALLBACK(wavearea_zoom_end_event), gs);
+gtkwave_signal_connect(gs, "begin", G_CALLBACK(wavearea_zoom_begin_event), gs);
+gtkwave_signal_connect(gs, "end", G_CALLBACK(wavearea_zoom_end_event), gs);
 #ifdef WAVE_GTK3_GESTURE_ZOOM_USES_GTK_PHASE_CAPTURE
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "update", G_CALLBACK(wavearea_zoom_update_event), gs);
+gtkwave_signal_connect(gs, "update", G_CALLBACK(wavearea_zoom_update_event), gs);
 gtk_event_controller_set_propagation_phase (GTK_EVENT_CONTROLLER(gs), GTK_PHASE_CAPTURE);
 #else
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "scale-changed", G_CALLBACK(wavearea_zoom_scale_changed_event), gs);
+gtkwave_signal_connect(gs, "scale-changed", G_CALLBACK(wavearea_zoom_scale_changed_event), gs);
 #endif
 
 gs = gtk_gesture_multi_press_new (GLOBALS->wavearea);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "pressed", G_CALLBACK(wavearea_pressed_event), NULL);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "released", G_CALLBACK(wavearea_released_event), NULL);
+gtkwave_signal_connect(gs, "pressed", G_CALLBACK(wavearea_pressed_event), NULL);
+gtkwave_signal_connect(gs, "released", G_CALLBACK(wavearea_released_event), NULL);
 #ifdef WAVE_ALLOW_GTK3_GESTURE_MIDDLE_RIGHT_BUTTON
 gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gs), 0);
 #endif
 
 gs = gtk_gesture_long_press_new (GLOBALS->wavearea);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "pressed", G_CALLBACK(wavearea_long_pressed_event), NULL);
+gtkwave_signal_connect(gs, "pressed", G_CALLBACK(wavearea_long_pressed_event), NULL);
 
 gs = gtk_gesture_drag_new (GLOBALS->wavearea);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "drag_begin", G_CALLBACK(wavearea_drag_begin_event), NULL);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "drag_update", G_CALLBACK(wavearea_drag_update_event), NULL);
-gtkwave_signal_connect(XXX_GTK_OBJECT(gs), "drag_end", G_CALLBACK(wavearea_drag_end_event), NULL);
+gtkwave_signal_connect(gs, "drag_begin", G_CALLBACK(wavearea_drag_begin_event), NULL);
+gtkwave_signal_connect(gs, "drag_update", G_CALLBACK(wavearea_drag_update_event), NULL);
+gtkwave_signal_connect(gs, "drag_end", G_CALLBACK(wavearea_drag_end_event), NULL);
 #ifdef WAVE_ALLOW_GTK3_GESTURE_MIDDLE_RIGHT_BUTTON
 gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(gs), 0);
 #endif
 
 GLOBALS->wavearea_gesture_swipe = gtk_gesture_swipe_new (GLOBALS->wavearea);
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea_gesture_swipe), "swipe", G_CALLBACK(wavearea_swipe_event), GLOBALS);
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea_gesture_swipe), "update", G_CALLBACK(wavearea_swipe_update_event), GLOBALS);
+gtkwave_signal_connect(GLOBALS->wavearea_gesture_swipe, "swipe", G_CALLBACK(wavearea_swipe_event), GLOBALS);
+gtkwave_signal_connect(GLOBALS->wavearea_gesture_swipe, "update", G_CALLBACK(wavearea_swipe_update_event), GLOBALS);
 gtk_widget_add_tick_callback (GTK_WIDGET(GLOBALS->wavearea), wavearea_swipe_tick, NULL, NULL);
 }
 else
 #endif
 {
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea), "motion_notify_event",G_CALLBACK(motion_notify_event), NULL);
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea), "button_press_event",G_CALLBACK(button_press_event), NULL);
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea), "button_release_event",G_CALLBACK(button_release_event), NULL);
+gtkwave_signal_connect(GLOBALS->wavearea, "motion_notify_event",G_CALLBACK(motion_notify_event), NULL);
+gtkwave_signal_connect(GLOBALS->wavearea, "button_press_event",G_CALLBACK(button_press_event), NULL);
+gtkwave_signal_connect(GLOBALS->wavearea, "button_release_event",G_CALLBACK(button_release_event), NULL);
 }
 
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wavearea), "scroll_event",G_CALLBACK(scroll_event), NULL);
+gtkwave_signal_connect(GLOBALS->wavearea, "scroll_event",G_CALLBACK(scroll_event), NULL);
 gtk_widget_set_can_focus(GTK_WIDGET(GLOBALS->wavearea), TRUE);
 
 XXX_gtk_table_attach (XXX_GTK_TABLE (table), GLOBALS->wavearea, 0, 9, 0, 9,GTK_FILL | GTK_EXPAND,GTK_FILL | GTK_EXPAND, 3, 2);
 
 vadj=gw_signal_list_get_vadjustment(GW_SIGNAL_LIST(GLOBALS->signalarea));
-gtkwave_signal_connect(XXX_GTK_OBJECT(vadj), "value_changed",G_CALLBACK(service_vslider), NULL);
+gtkwave_signal_connect(vadj, "value_changed",G_CALLBACK(service_vslider), NULL);
 GLOBALS->vscroll_wavewindow_c_1=XXX_gtk_vscrollbar_new(vadj);
 /* GTK_WIDGET_SET_FLAGS(GLOBALS->vscroll_wavewindow_c_1, GTK_CAN_FOCUS); */
 gtk_widget_show(GLOBALS->vscroll_wavewindow_c_1);
@@ -2546,7 +2454,7 @@ XXX_gtk_table_attach (XXX_GTK_TABLE (table), GLOBALS->vscroll_wavewindow_c_1, 9,
 #endif
 GLOBALS->wave_hslider=gtk_adjustment_new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 hadj=GTK_ADJUSTMENT(GLOBALS->wave_hslider);
-gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->wave_hslider), "value_changed",G_CALLBACK(service_hslider), NULL);
+gtkwave_signal_connect(GLOBALS->wave_hslider, "value_changed",G_CALLBACK(service_hslider), NULL);
 GLOBALS->hscroll_wavewindow_c_2=XXX_gtk_hscrollbar_new(hadj);
 /* GTK_WIDGET_SET_FLAGS(GLOBALS->hscroll_wavewindow_c_2, GTK_CAN_FOCUS); */
 gtk_widget_show(GLOBALS->hscroll_wavewindow_c_2);
@@ -2567,9 +2475,9 @@ if(GLOBALS->enable_slider_zoom)
 	g_value_init(&gvalue, G_TYPE_INT);
 	gtk_widget_style_get_property(GLOBALS->hscroll_wavewindow_c_2, "min-slider-length", &gvalue);
 
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->hscroll_wavewindow_c_2), "button_press_event",G_CALLBACK(slider_bpr), NULL);
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->hscroll_wavewindow_c_2), "button_release_event",G_CALLBACK(slider_brr), NULL);
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->hscroll_wavewindow_c_2), "motion_notify_event",G_CALLBACK(slider_mnr), NULL);
+	gtkwave_signal_connect(GLOBALS->hscroll_wavewindow_c_2, "button_press_event",G_CALLBACK(slider_bpr), NULL);
+	gtkwave_signal_connect(GLOBALS->hscroll_wavewindow_c_2, "button_release_event",G_CALLBACK(slider_brr), NULL);
+	gtkwave_signal_connect(GLOBALS->hscroll_wavewindow_c_2, "motion_notify_event",G_CALLBACK(slider_mnr), NULL);
 	}
 #endif
 

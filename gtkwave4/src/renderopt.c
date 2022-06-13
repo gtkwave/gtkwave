@@ -450,14 +450,15 @@ void renderbox(char *title)
 
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_renderopt_c_6), title);
     gtk_widget_set_size_request( GTK_WIDGET (GLOBALS->window_renderopt_c_6), 420, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_renderopt_c_6), "delete_event",(GCallback) destroy_callback, NULL);
+    gtkwave_signal_connect(GLOBALS->window_renderopt_c_6, "delete_event",(GCallback) destroy_callback, NULL);
     gtk_window_set_resizable(GTK_WINDOW(GLOBALS->window_renderopt_c_6), FALSE);
 
-    vbox = XXX_gtk_vbox_new (FALSE, 0);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (GLOBALS->window_renderopt_c_6), vbox);
     gtk_widget_show (vbox);
 
-    small_hbox = XXX_gtk_hbox_new (TRUE, 0);
+    small_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+	gtk_box_set_homogeneous (GTK_BOX(small_hbox), TRUE);
     gtk_widget_show (small_hbox);
 
 GtkWidget *combo_box = gtk_combo_box_text_new ();
@@ -517,22 +518,23 @@ GtkWidget *combo_box = gtk_combo_box_text_new ();
 	gtk_box_pack_start (GTK_BOX (small_hbox), combo_box, TRUE, FALSE, 0);
         g_signal_connect (combo_box, "changed", G_CALLBACK (rendertype_clicked), NULL);
 
-    hbox = XXX_gtk_hbox_new (TRUE, 0);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+	gtk_box_set_homogeneous (GTK_BOX(hbox), TRUE);
     gtk_widget_show (hbox);
 
     gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 
     button1 = gtk_button_new_with_label ("Select Output File");
     gtk_widget_set_size_request(button1, 100, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (button1), "clicked", G_CALLBACK(ok_callback), NULL);
+    gtkwave_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), NULL);
     gtk_widget_show (button1);
     gtk_container_add (GTK_CONTAINER (hbox), button1);
     gtk_widget_set_can_default (button1, TRUE);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button1), "realize", (GCallback) gtk_widget_grab_default, XXX_GTK_OBJECT (button1));
+    gtkwave_signal_connect_object (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
     button2 = gtk_button_new_with_label ("Exit");
     gtk_widget_set_size_request(button2, 100, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (button2), "clicked", G_CALLBACK(destroy_callback), NULL);
+    gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
     gtk_widget_set_can_default (button2, TRUE);
     gtk_widget_show (button2);
     gtk_container_add (GTK_CONTAINER (hbox), button2);

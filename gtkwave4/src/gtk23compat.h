@@ -72,18 +72,10 @@
 
 #if GTK_CHECK_VERSION(3,0,0)
 
-#define XXX_GTK_TREE_VIEW GTK_SCROLLABLE
-#define XXX_gtk_tree_view_get_vadjustment gtk_scrollable_get_vadjustment
-#define XXX_gtk_tree_view_get_hadjustment gtk_scrollable_get_hadjustment
-#define XXX_gtk_tree_view_set_vadjustment gtk_scrollable_set_vadjustment
-#define XXX_gtk_tree_view_set_hadjustment gtk_scrollable_set_hadjustment
 #define XXX_GTK_TEXT_VIEW GTK_SCROLLABLE
 #define XXX_gtk_text_view_get_vadjustment gtk_scrollable_get_vadjustment
-GtkWidget *XXX_gtk_hbox_new (gboolean homogeneous, gint spacing);
-GtkWidget *XXX_gtk_vbox_new (gboolean homogeneous, gint spacing);
 #define XXX_gtk_hpaned_new(a) gtk_paned_new(GTK_ORIENTATION_HORIZONTAL)
 #define XXX_gtk_vpaned_new(a) gtk_paned_new(GTK_ORIENTATION_VERTICAL)
-GtkWidget *XXX_gtk_hseparator_new (void);
 #define XXX_gtk_hscrollbar_new(a) gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, a)
 #define XXX_gtk_vscrollbar_new(a) gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, a)
 #define XXX_GTK_STOCK_CANCEL "_Cancel"
@@ -104,18 +96,10 @@ GtkWidget *XXX_gtk_hseparator_new (void);
 
 #else
 
-#define XXX_GTK_TREE_VIEW GTK_TREE_VIEW
-#define XXX_gtk_tree_view_get_vadjustment gtk_tree_view_get_vadjustment
-#define XXX_gtk_tree_view_get_hadjustment gtk_tree_view_get_hadjustment
-#define XXX_gtk_tree_view_set_vadjustment gtk_tree_view_set_vadjustment
-#define XXX_gtk_tree_view_set_hadjustment gtk_tree_view_set_hadjustment
 #define XXX_GTK_TEXT_VIEW GTK_TEXT_VIEW
 #define XXX_gtk_text_view_get_vadjustment gtk_text_view_get_vadjustment
-#define XXX_gtk_hbox_new(a, b) gtk_hbox_new((a), (b))
-#define XXX_gtk_vbox_new(a, b) gtk_vbox_new((a), (b))
 #define XXX_gtk_hpaned_new(a) gtk_hpaned_new()
 #define XXX_gtk_vpaned_new(a) gtk_vpaned_new()
-#define XXX_gtk_hseparator_new gtk_hseparator_new
 #define XXX_gtk_hscrollbar_new(a) gtk_hscrollbar_new(a)
 #define XXX_gtk_vscrollbar_new(a) gtk_vscrollbar_new(a)
 #define XXX_GTK_STOCK_CANCEL GTK_STOCK_CANCEL
@@ -138,9 +122,6 @@ GtkWidget *XXX_gtk_hseparator_new (void);
 
 
 #ifdef WAVE_ALLOW_GTK3_GRID
-GtkWidget *XXX_gtk_table_new (guint rows,
-               guint columns,
-               gboolean homogeneous);
 void XXX_gtk_table_attach (GtkGrid *table,
                   GtkWidget *child,
                   guint left_attach,
@@ -153,7 +134,6 @@ void XXX_gtk_table_attach (GtkGrid *table,
                   guint ypadding);
 #define XXX_GTK_TABLE GTK_GRID
 #else
-#define XXX_gtk_table_new gtk_table_new
 #define XXX_gtk_table_attach gtk_table_attach
 #define XXX_GTK_TABLE GTK_TABLE
 #endif

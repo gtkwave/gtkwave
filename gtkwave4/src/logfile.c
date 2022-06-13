@@ -94,8 +94,8 @@ gtk_adjustment_set_value(GTK_ADJUSTMENT(GLOBALS->wave_hslider), GLOBALS->tims.ti
 
 fix_wavehadj();
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 }
 
 
@@ -212,9 +212,9 @@ gtk_container_set_border_width (GTK_CONTAINER (scrolled_window), 5);
 gtk_widget_show(scrolled_window);
 
 /* Add a handler to put a message in the text widget when it is realized */
-g_signal_connect (XXX_GTK_OBJECT (text), "realize", G_CALLBACK (log_realize_text), NULL);
+g_signal_connect (text, "realize", G_CALLBACK (log_realize_text), NULL);
 
-g_signal_connect(XXX_GTK_OBJECT(text), "button_release_event", G_CALLBACK(button_release_event), NULL);
+g_signal_connect(text, "button_release_event", G_CALLBACK(button_release_event), NULL);
 
 gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_CHAR);
 return(scrolled_window);
@@ -304,9 +304,9 @@ void logbox(char *title, int width, char *default_text)
 	}
     gtk_window_set_title(GTK_WINDOW (window), title);
 
-    g_signal_connect(XXX_GTK_OBJECT (window), "delete_event", (GCallback) destroy_callback, window);
+    g_signal_connect(window, "delete_event", (GCallback) destroy_callback, window);
 
-    vbox = XXX_gtk_vbox_new (FALSE, 0);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (window), vbox);
     gtk_widget_show (vbox);
 
@@ -314,7 +314,7 @@ void logbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
     gtk_widget_show (label);
 
-    separator = XXX_gtk_hseparator_new ();
+    separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
@@ -322,25 +322,21 @@ void logbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), ctext, TRUE, TRUE, 0);
     gtk_widget_show (ctext);
 
-    separator = XXX_gtk_hseparator_new ();
+    separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
     gtk_widget_show (hbox);
 
     button1 = gtk_button_new_with_label ("Close Logfile");
     gtk_widget_set_size_request(button1, 100, -1);
-    g_signal_connect(XXX_GTK_OBJECT (button1), "clicked", G_CALLBACK(ok_callback), window);
+    g_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), window);
     gtk_widget_show (button1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1);
-#endif
     gtk_widget_set_can_default (button1, TRUE);
-    g_signal_connect_swapped (XXX_GTK_OBJECT (button1), "realize", (GCallback) gtk_widget_grab_default, XXX_GTK_OBJECT (button1));
+    g_signal_connect_swapped (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
     gtk_widget_show(window);
 

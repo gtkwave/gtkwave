@@ -671,7 +671,6 @@ GLOBALS->wave_splash_pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **)wave_
 }
 
 
-#if GTK_CHECK_VERSION(3,0,0)
 static gint draw_event(GtkWidget *widget, cairo_t *cr, gpointer      user_data)
 {
 (void) widget;
@@ -687,28 +686,6 @@ cairo_fill(cr);
 
 return(FALSE);
 }
-#else
-static gint expose_event(GtkWidget *widget, GdkEventExpose *event)
-{
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-GdkDrawingContext *gdc;
-#endif
-cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(widget)), &gdc);
-gdk_cairo_region (cr, event->region);
-cairo_clip (cr);
-
-gdk_cairo_set_source_pixbuf (cr, GLOBALS->wave_splash_pixbuf, 0.0, 0.0);
-cairo_paint (cr);
-
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-gdk_window_end_draw_frame(gtk_widget_get_window(widget), gdc);
-#else
-cairo_destroy (cr);
-#endif
-
-return(FALSE);
-}
-#endif
 
 gint splash_button_press_event(GtkWidget *widget, GdkEventExpose *event)
 {
@@ -772,11 +749,7 @@ if((!GLOBALS->splash_disable)&&(!GLOBALS->splash_splash_c_1))
 	GLOBALS->gt_splash_c_1 = g_timer_new();
 
 #if defined __MINGW32__
-#if GTK_CHECK_VERSION(3,0,0)
         GLOBALS->splash_splash_c_1 = gtk_window_new(GTK_WINDOW_TOPLEVEL); /* workaround for black bar missing on gtk3 on win32/64 */
-#else
-        GLOBALS->splash_splash_c_1 = gtk_window_new(GTK_WINDOW_POPUP);
-#endif
 #else
         GLOBALS->splash_splash_c_1 = gtk_window_new(GTK_WINDOW_POPUP);
 #endif
@@ -797,7 +770,7 @@ if((!GLOBALS->splash_disable)&&(!GLOBALS->splash_splash_c_1))
 
         make_splash_pixmaps(GLOBALS->splash_splash_c_1);
 
-        splash_table = XXX_gtk_table_new(10, 10, FALSE);
+        splash_table = gtk_grid_new();
         GLOBALS->darea_splash_c_1 = gtk_drawing_area_new();
         gtk_widget_show(GLOBALS->darea_splash_c_1);
 	gtk_widget_set_events(GLOBALS->darea_splash_c_1, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK);
@@ -806,12 +779,8 @@ if((!GLOBALS->splash_disable)&&(!GLOBALS->splash_splash_c_1))
 
         gtk_widget_show(splash_table);
         gtk_container_add(GTK_CONTAINER(GLOBALS->splash_splash_c_1), splash_table);
-#if GTK_CHECK_VERSION(3,0,0)
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->darea_splash_c_1), "draw",G_CALLBACK(draw_event), NULL);
-#else
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->darea_splash_c_1), "expose_event",G_CALLBACK(expose_event), NULL);
-#endif
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->darea_splash_c_1), "button_press_event",G_CALLBACK(splash_button_press_event), NULL);
+	gtkwave_signal_connect(GLOBALS->darea_splash_c_1, "draw",G_CALLBACK(draw_event), NULL);
+	gtkwave_signal_connect(GLOBALS->darea_splash_c_1, "button_press_event",G_CALLBACK(splash_button_press_event), NULL);
 
 	gtk_events_pending_gtk_main_iteration();
 
@@ -858,9 +827,7 @@ if(GLOBALS->splash_splash_c_1)
 	if((current)&&(total))
 		{
 #if defined __MINGW32__
-#if GTK_CHECK_VERSION(3,0,0)
 		gdk_window_raise(gtk_widget_get_window(GLOBALS->splash_splash_c_1));
-#endif
 #endif
 		cur_bar_x = WAVE_SPLASH_X * ((float)current / (float)total);
 

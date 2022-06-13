@@ -40,8 +40,8 @@ DEBUG(printf("Timeentry Configure Event\n"));
 
 calczoom(GLOBALS->tims.zoom);
 fix_wavehadj();
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 }
 
 
@@ -139,8 +139,8 @@ GLOBALS->from_entry=X_gtk_entry_new_with_max_length(40);
 reformat_time(fromstr, GLOBALS->min_time + GLOBALS->global_time_offset, GLOBALS->time_dimension);
 
 gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry),fromstr);
-g_signal_connect (XXX_GTK_OBJECT (GLOBALS->from_entry), "activate",G_CALLBACK (from_entry_callback), GLOBALS->from_entry);
-box=XXX_gtk_hbox_new(FALSE, 0);
+g_signal_connect (GLOBALS->from_entry, "activate",G_CALLBACK (from_entry_callback), GLOBALS->from_entry);
+box=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 gtk_box_pack_start(GTK_BOX(box), label, TRUE, TRUE, 0);
 gtk_widget_show(label);
 gtk_box_pack_start(GTK_BOX(box), GLOBALS->from_entry, TRUE, TRUE, 0);
@@ -155,8 +155,8 @@ GLOBALS->to_entry=X_gtk_entry_new_with_max_length(40);
 reformat_time(tostr, GLOBALS->max_time + GLOBALS->global_time_offset, GLOBALS->time_dimension);
 
 gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry),tostr);
-g_signal_connect (XXX_GTK_OBJECT (GLOBALS->to_entry), "activate",G_CALLBACK (to_entry_callback), GLOBALS->to_entry);
-box2=XXX_gtk_hbox_new(FALSE, 0);
+g_signal_connect (GLOBALS->to_entry, "activate",G_CALLBACK (to_entry_callback), GLOBALS->to_entry);
+box2=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 gtk_box_pack_start(GTK_BOX(box2), label2, TRUE, TRUE, 0);
 gtk_widget_show(label2);
 gtk_box_pack_start(GTK_BOX(box2), GLOBALS->to_entry, TRUE, TRUE, 0);
@@ -166,11 +166,11 @@ gtk_widget_show(GLOBALS->to_entry);
 
 if(!GLOBALS->use_toolbutton_interface)
 	{
-	mainbox=XXX_gtk_vbox_new(FALSE, 0);
+	mainbox=gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	}
 	else
 	{
-	mainbox=XXX_gtk_hbox_new(FALSE, 0);
+	mainbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	}
 
 gtk_box_pack_start(GTK_BOX(mainbox), box, TRUE, FALSE, 1);
