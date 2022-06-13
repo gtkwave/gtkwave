@@ -28,6 +28,7 @@
 #include "hierpack.h"
 #include "tcl_helper.h"
 #include "signal_list.h"
+#include "marker_dialog.h"
 #include <cocoa_misc.h>
 #include <assert.h>
 
@@ -3995,11 +3996,6 @@ renderbox("Print Formatting Options");
 }
 
 /**/
-void menu_markerbox_callback(GtkWidget *widget, gpointer data)
-{
-(void)widget;
-(void)data;
-}
 
 void menu_markerbox(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
@@ -4019,7 +4015,7 @@ if(GLOBALS->helpbox_is_active)
         return;
         }
 
-markerbox("Markers", G_CALLBACK(menu_markerbox_callback));
+gw_show_marker_dialog();
 }
 
 

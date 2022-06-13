@@ -56,7 +56,6 @@ void exponent_to_time_scale(signed char scale);
 #include "help.h"
 #include "interp.h"
 #include "logfile.h"
-#include "markerbox.h"
 #include "menu.h"
 #include "mouseover.h"
 #include "mouseover_sigs.h"

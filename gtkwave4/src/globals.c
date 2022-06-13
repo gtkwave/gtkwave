@@ -592,13 +592,7 @@ NULL, /* ftext_main_main_c_1 226 */
 /*
  * markerbox.c
  */
-NULL, /* window_markerbox_c_4 231 */
-{0}, /* entries_markerbox_c_1 232 */
-NULL, /* cleanup_markerbox_c_4 233 */
-0, /* dirty_markerbox_c_1 234 */
-{0}, /* shadow_markers_markerbox_c_1 235 */
 {NULL}, /* marker_names */
-{NULL}, /* shadow_marker_names */
 
 
 /*
@@ -2104,7 +2098,6 @@ void reload_into_new_context_2(void)
 
  /* windows which in theory should never destroy as they will have grab focus which means reload will not be called */
  widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1);	/* hiersearch.c */
- widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4);		/* markerbox.c */
  widget_ungrab_destroy(&GLOBALS->window1_search_c_2);		/* search.c */
  widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9);		/* simplereq.c */
  widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk1_c);	/* treesearch_gtk1.c */
@@ -2671,7 +2664,6 @@ void free_and_destroy_page_context(void)
 
  /* windows which in theory should never destroy as they will have grab focus which means reload will not be called */
  widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1);	/* hiersearch.c */
- widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4);		/* markerbox.c */
  widget_ungrab_destroy(&GLOBALS->window1_search_c_2);		/* search.c */
  widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9);		/* simplereq.c */
  widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk1_c);	/* treesearch_gtk1.c */
