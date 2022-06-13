@@ -40,7 +40,7 @@ gtkwave_sources = [
     'lx2.c',
     'lxt.c',
     'main.c',
-    'markerbox.c',
+    'marker_dialog.c',
     'menu.c',
     'mouseover.c',
     'mouseover_sigs.c',
