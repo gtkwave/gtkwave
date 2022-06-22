@@ -610,7 +610,10 @@ if test "X$GTK3" = "Xyes" ; then
         PKG_CHECK_MODULES(GTK, gtk+-3.0 >= 3.0.0)
         GTK_VER=`$PKG_CONFIG gtk+-3.0 --modversion`
 
-        _gdk_tgt=`$PKG_CONFIG --variable=target gdk-3.0`
+        # gdk-3.0 may have multiple targets e.g. "broadway quartz"
+        _gdk_tgts=`$PKG_CONFIG --variable=targets gdk-3.0`
+        for _gdk_tgt in $_gdk_tgts;
+        do
         if test "x$_gdk_tgt" = xquartz; then
            PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration >= 3.0.0)
            AC_SUBST(GTK_MAC_LIBS)
@@ -625,6 +628,7 @@ if test "X$GTK3" = "Xyes" ; then
            COCOA_GTK_LDFLAGS="-framework Cocoa -framework ApplicationServices"
            AC_SUBST(COCOA_GTK_LDFLAGS)
         fi
+        done
 
         if test x$with_gconf = xyes; then
           PKG_CHECK_MODULES(GCONF, gconf-2.0 >= 2.0)
