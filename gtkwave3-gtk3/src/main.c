@@ -2144,10 +2144,15 @@ if(!GLOBALS->socket_xid)
 #ifdef WAVE_USE_XID
 	else
 	{
+#ifdef GDK_WINDOWING_X11
         GLOBALS->mainwindow = gtk_plug_new(GLOBALS->socket_xid);
         gtk_widget_show(GLOBALS->mainwindow);
 
         g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "destroy",   /* formerly was "destroy" */G_CALLBACK(plug_destroy),"Plug destroy");
+#else
+	fprintf(stderr, "GTKWAVE | GtkPlug widget is unavailable\n");
+	exit(1);
+#endif
 	}
 #endif
 }
