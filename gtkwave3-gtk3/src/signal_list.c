@@ -843,7 +843,7 @@ static int y_to_drop_position(int y)
 
     // Limit position to the total number of traces.
     // Dropping an item on the empty space after the last appends the item at the end of the list.
-    position = CLAMP(position, 0, GLOBALS->traces.total);
+    position = CLAMP(position, 0, GLOBALS->traces.visible);
 
     return position;
 }
