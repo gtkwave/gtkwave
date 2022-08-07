@@ -6,6 +6,7 @@
   <project_license>GPL-2.0-only</project_license>
   <name>GTKWave</name>
   <developer_name>Tony Bybell</developer_name>
+  <update_contact>bybell@rocketmail.com</update_contact>
   <summary>Electronic waveform viewer for viewing simulation results</summary>
   <description>
     <p>
