@@ -146,7 +146,7 @@ static struct fstHier *extractNextVar(void *xc, int *msb, int *lsb, char **nam, 
 {
 struct fstHier *h;
 const char *pnts;
-char *pnt, *pntd, *lb_last = NULL, *col_last = NULL; /* *rb_last = NULL; */ /* scan-build : unused */
+char *pnt, *pntd, *lb_last = NULL, *col_last = NULL, *rb_last = NULL;
 int acc;
 char *s;
 unsigned char ttype;
@@ -217,15 +217,23 @@ while((h = fstReaderIterateHier(xc)))
 				{
 				if(*pnts != ' ')
 					{
-					if(*pnts == '[') { lb_last = pntd; col_last = NULL; }
-					else if(*pnts == ':') { col_last = pntd; }
-					/* else if(*pnts == ']') { rb_last = pntd; } */ /* scan-build : unused */
+					if(*pnts == '[') { lb_last = pntd; col_last = NULL; rb_last = NULL; }
+					else if(*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL) { col_last = pntd; }
+					else if(*pnts == ']' && lb_last != NULL && rb_last == NULL) { rb_last = pntd; }
+					else if(lb_last != NULL && rb_last == NULL && (isdigit((int)(unsigned char)*pnts) || (*pnts == '-'))) { }
+					else { lb_last = NULL; col_last = NULL; rb_last = NULL; }
 
 					*(pntd++) = *pnts;
 					}
 				pnts++;
 				}
 			*pntd = 0; *namlen = pntd - s;
+
+			if(!rb_last)
+				{
+				col_last = NULL;
+				lb_last = NULL;
+				}
 
 			if(!lb_last)
 				{
