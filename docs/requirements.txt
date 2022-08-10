@@ -1,0 +1,4 @@
+sphinx
+sphinx_design
+myst_parser
+furo
