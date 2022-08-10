@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg height="128px" viewBox="0 0 128 128" width="128px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="8.0000015" x2="120.0000015" y1="115.999977" y2="115.999977">
+        <stop offset="0" stop-color="#241f31"/>
+        <stop offset="0.0357143" stop-color="#77767b"/>
+        <stop offset="0.0707733" stop-color="#5e5c64"/>
+        <stop offset="0.928571" stop-color="#5e5c64"/>
+        <stop offset="0.964286" stop-color="#77767b"/>
+        <stop offset="1" stop-color="#241f31"/>
+    </linearGradient>
+    <filter id="b" height="100%" width="100%" x="0%" y="0%">
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
+    </filter>
+    <mask id="c">
+        <g filter="url(#b)">
+            <rect fill-opacity="0.05" height="128" width="128"/>
+        </g>
+    </mask>
+    <radialGradient id="d" cx="63.999996" cy="194.190475" gradientTransform="matrix(-4.136364 -0.00000125 -0.00000027 1.390909 -26.772701 157.365448)" gradientUnits="userSpaceOnUse" r="44">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset="1" stop-color="#ffffff" stop-opacity="0.094118"/>
+    </radialGradient>
+    <clipPath id="e">
+        <rect height="152" width="192"/>
+    </clipPath>
+    <path d="m 16 40 h 96 c 4.417969 0 8 3.582031 8 8 v 60 c 0 4.417969 -3.582031 8 -8 8 h -96 c -4.417969 0 -8 -3.582031 -8 -8 v -60 c 0 -4.417969 3.582031 -8 8 -8 z m 0 0" fill="url(#a)"/>
+    <path d="m 16 28 h 96 c 4.417969 0 8 3.582031 8 8 v 68 c 0 4.417969 -3.582031 8 -8 8 h -96 c -4.417969 0 -8 -3.582031 -8 -8 v -68 c 0 -4.417969 3.582031 -8 8 -8 z m 0 0" fill="#77767b"/>
+    <path d="m 16 32 h 96 c 2.210938 0 4 1.789062 4 4 v 68 c 0 2.210938 -1.789062 4 -4 4 h -96 c -2.210938 0 -4 -1.789062 -4 -4 v -68 c 0 -2.210938 1.789062 -4 4 -4 z m 0 0" fill="#241f31"/>
+    <g clip-path="url(#e)" mask="url(#c)" transform="matrix(1 0 0 1 -8 -16)">
+        <path d="m 24 120 h 84 v -68 h -84 z m 0 0" fill="url(#d)"/>
+    </g>
+    <g fill="none" stroke="#57e389" stroke-width="4">
+        <path d="m 12 98 h 22 v -20 h 28 v 20 h 54"/>
+        <path d="m 12 62 h 16 l 12 -20 h 48 l 12 20 h 16"/>
+        <path d="m 12 42 h 16 l 12 20 h 48 l 12 -20 h 16"/>
+    </g>
+</svg>
