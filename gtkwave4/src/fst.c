@@ -1528,7 +1528,7 @@ else	/* string */
 		{
 		if((!strcmp(l2e->histent_curr->v.h_vector, (const char *)value)) && (!GLOBALS->vcd_preserve_glitches))
 			{
-			free(s);
+			free_2(s);
 			return;
 			}
 		}
