@@ -681,7 +681,7 @@ struct stat buf;
 int rc = G_FT_UNKNOWN;
 
 #ifdef EXTLOAD_SUFFIX
-if(suffix_check(GLOBALS->loaded_file_name, "."EXTLOAD_SUFFIX))
+if(suffix_check(GLOBALS->loaded_file_name, "."EXTLOAD_SUFFIX) || suffix_check(GLOBALS->loaded_file_name, ".vf"))
 	{
 	return(rc);
 	}
