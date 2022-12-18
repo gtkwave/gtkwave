@@ -10,8 +10,11 @@ else
     EXEC=exec
 fi
 
-name=$(basename $0)
-bundle="$(cd `dirname $0`; cd ../..; pwd)"
+name="`basename $0`"
+tmp="`pwd`/$0"
+tmp=`dirname "$tmp"`
+tmp=`dirname "$tmp"`
+bundle=`dirname "$tmp"`
 bundle_contents="$bundle"/Contents
 bundle_res="$bundle_contents"/Resources
 bundle_lib="$bundle_res"/lib

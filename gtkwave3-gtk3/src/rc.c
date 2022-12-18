@@ -145,13 +145,6 @@ GLOBALS->cursor_snap=(val<=0)?0:val;
 return(0);
 }
 
-int f_dbl_mant_dig_override(char *str)
-{
-DEBUG(printf("f_dbl_mant_dig_override(\"%s\")\n",str));
-GLOBALS->dbl_mant_dig_override=atoi_64(str)?1:0;
-return(0);
-}
-
 int f_disable_ae2_alias(char *str)
 {
 DEBUG(printf("f_disable_ae2_alias(\"%s\")\n",str));
@@ -939,7 +932,6 @@ static struct rc_entry rcitems[]=
 { "context_tabposition", f_context_tabposition },
 { "convert_to_reals", f_convert_to_reals },
 { "cursor_snap", f_cursor_snap },
-{ "dbl_mant_dig_override", f_dbl_mant_dig_override },
 { "disable_ae2_alias", f_disable_ae2_alias },
 { "disable_auto_comphier", f_disable_auto_comphier },
 { "disable_empty_gui", f_disable_empty_gui },
@@ -1139,7 +1131,6 @@ void read_rc_file(char *override_rc)
 FILE *handle = NULL;
 int i;
 int num_rcitems = sizeof(rcitems)/sizeof(struct rc_entry);
-gboolean good_override = FALSE;
 
 for(i=0;i<(num_rcitems-1);i++)
 	{
@@ -1157,19 +1148,6 @@ if((override_rc)&&((handle=fopen(override_rc,"rb"))))
 	{
 	/* good, we have a handle */
 	wave_gconf_client_set_string("/current/rcfile", override_rc);
-	good_override = TRUE;
-	}
-	else
-	{
-	if(override_rc)
-		{
-		fprintf(stderr, "GTKWAVE | rcfile '%s' not found, attempting defaults.\n", override_rc);
-		}
-	}
-
-if(good_override)
-	{
-	/* nothing, have file handle */
 	}
 else
 #if !defined __MINGW32__

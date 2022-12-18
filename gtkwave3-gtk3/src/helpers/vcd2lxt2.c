@@ -438,10 +438,10 @@ for(yytext[len++]=ch;;yytext[len++]=ch)
 	if(ch<=' ') break;
 	}
 yytext[len]=0;	/* terminator */
-yylen=len;
 
 if(is_string)
 	{
+	yylen=len;
 	return(T_STRING);
 	}
 
@@ -1081,7 +1081,7 @@ for(;;)
 		case T_SCOPE:
 			T_GET;
 			T_GET;
-			if (tok!= T_END && tok != T_EOF)
+			if(tok==T_STRING)
 				{
 				struct slist *s;
 				s=(struct slist *)calloc_2(1,sizeof(struct slist));

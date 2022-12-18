@@ -308,7 +308,9 @@ if(GLOBALS->strace_ctx->shadow_straces)
 strace_maketimetrace(1);
 cache_actual_pattern_mark_traces();
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 static void clear_callback(GtkWidget *widget, GtkWidget *nothing)
@@ -324,7 +326,9 @@ if(GLOBALS->strace_ctx->shadow_straces)
 	}
 strace_maketimetrace(0);
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 static void destroy_callback(GtkWidget *widget, GtkWidget *nothing)
@@ -1068,7 +1072,9 @@ if(is_last_iteration)
 		gtk_adjustment_set_value(GTK_ADJUSTMENT(GLOBALS->wave_hslider), GLOBALS->tims.timecache=GLOBALS->tims.start);
 		}
 
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 

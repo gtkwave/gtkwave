@@ -29,7 +29,6 @@
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_np.h"
-#include "signal_list.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -645,6 +644,89 @@ char* zMergeTclList(int argc, const char** argv) {
 
 
 /* ----------------------------------------------------------------------------
+ * determine_trace_from_y - finds trace under the marker
+ *
+ * Results:
+ *      Returns Trptr which corresponds to the mouse pointer y position.
+ * ----------------------------------------------------------------------------
+ */
+
+static Trptr determine_trace_from_y(void)
+{
+Trptr t;
+int trwhich, trtarget;
+GdkModifierType state;
+gdouble x, y;
+gint xi, yi;
+
+
+if(GLOBALS->dnd_tgt_on_signalarea_treesearch_gtk2_c_1)
+	{
+	WAVE_GDK_GET_POINTER(gtk_widget_get_window(GLOBALS->signalarea), &x, &y, &xi, &yi, &state);
+	WAVE_GDK_GET_POINTER_COPY;
+
+        GtkAllocation allocation;
+        gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
+
+	if((x<0)||(y<0)||(x>=allocation.width)||(y>=allocation.height)) return(NULL);
+	}
+else
+if(GLOBALS->dnd_tgt_on_wavearea_treesearch_gtk2_c_1)
+	{
+	WAVE_GDK_GET_POINTER(gtk_widget_get_window(GLOBALS->wavearea), &x, &y, &xi, &yi, &state);
+	WAVE_GDK_GET_POINTER_COPY;
+
+        GtkAllocation allocation;
+        gtk_widget_get_allocation(GLOBALS->wavearea, &allocation);
+
+
+	if((x<0)||(y<0)||(x>=allocation.width)||(y>=allocation.height)) return(NULL);
+	}
+else
+	{
+	return(NULL);
+	}
+
+if((t=GLOBALS->traces.first))
+        {
+        while(t)
+                {
+                t->flags&=~TR_HIGHLIGHT;
+                t=t->t_next;
+                }
+        signalarea_configure_event(GLOBALS->signalarea, NULL);
+        wavearea_configure_event(GLOBALS->wavearea, NULL);
+	}
+
+trtarget = ((int)y / (int)GLOBALS->fontheight) - 2;
+if(trtarget < 0)
+	{
+	return(NULL);
+	}
+	else
+	{
+	t=GLOBALS->topmost_trace;
+	}
+
+trwhich=0;
+while(t)
+	{
+        if((trwhich<trtarget)&&(GiveNextTrace(t)))
+        	{
+                trwhich++;
+                t=GiveNextTrace(t);
+                }
+                else
+                {
+                break;
+                }
+	}
+
+return(t);
+}
+
+
+/* ----------------------------------------------------------------------------
  * check_gtkwave_directive_from_tcl_list - parses tcl list for any gtkwave
  * directives
  *
@@ -882,7 +964,7 @@ GLOBALS->default_flags = default_flags;
 }
 
 
-int process_tcl_list(const char *sl, gboolean prepend)
+int process_tcl_list(char *sl, gboolean track_mouse_y)
 {
 char *s_new = NULL;
 char *this_regex = "\\(\\[.*\\]\\)*$";
@@ -970,6 +1052,15 @@ for(ii=0;ii<c;ii++)
 							                if(GLOBALS->is_lx2)
 										{
 										lx2_import_masked();
+										}
+
+									if(track_mouse_y)
+										{
+										t = determine_trace_from_y();
+										if(t)
+											{
+											t->flags |=  TR_HIGHLIGHT;
+											}
 										}
 
 									memcpy(&GLOBALS->tcache_treesearch_gtk2_c_2,&GLOBALS->traces,sizeof(Traces));
@@ -1161,6 +1252,15 @@ if(GLOBALS->is_lx2)
 	lx2_import_masked();
 	}
 
+if(track_mouse_y)
+	{
+	t = determine_trace_from_y();
+	if(t)
+		{
+		t->flags |=  TR_HIGHLIGHT;
+		}
+	}
+
 memcpy(&GLOBALS->tcache_treesearch_gtk2_c_2,&GLOBALS->traces,sizeof(Traces));
 GLOBALS->traces.total=0;
 GLOBALS->traces.first=GLOBALS->traces.last=NULL;
@@ -1264,7 +1364,7 @@ GLOBALS->traces.first=GLOBALS->tcache_treesearch_gtk2_c_2.first;
 GLOBALS->traces.last=GLOBALS->tcache_treesearch_gtk2_c_2.last;
 GLOBALS->traces.total=GLOBALS->tcache_treesearch_gtk2_c_2.total;
 
-if((t) || (!prepend))
+if((t) || (!track_mouse_y))
 	{
 	PasteBuffer();
 	}
@@ -1276,6 +1376,14 @@ if((t) || (!prepend))
 GLOBALS->traces.buffercount=GLOBALS->tcache_treesearch_gtk2_c_2.buffercount;
 GLOBALS->traces.buffer=GLOBALS->tcache_treesearch_gtk2_c_2.buffer;
 GLOBALS->traces.bufferlast=GLOBALS->tcache_treesearch_gtk2_c_2.bufferlast;
+
+if(track_mouse_y)
+	{
+	if(t)
+		{
+		t->flags &= ~TR_HIGHLIGHT;
+		}
+	}
 
 cleanup:
 for(ii=0;ii<c;ii++)
@@ -2662,7 +2770,6 @@ gtkwave_mlist_t *ife = (gtkwave_mlist_t *)clientData;
 int i;
 struct wave_script_args *old_wave_script_args = GLOBALS->wave_script_args; /* stackable args */
 char fexit = GLOBALS->enable_fast_exit;
-int old_toggle_item;
 
 if(GLOBALS->in_tcl_callback) /* don't allow callbacks to call menu functions (yet) */
 	{
@@ -2733,19 +2840,14 @@ if(objc > 1)
 		GLOBALS->wave_script_args->payload[0] = 0;
 		}
 
-	old_toggle_item = GLOBALS->tcl_menu_toggle_item;
-	GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
 	ife->callback();
-	GLOBALS->tcl_menu_toggle_item = old_toggle_item;
 	gtkwave_main_iteration();
 
 	GLOBALS->wave_script_args = NULL;
 	}
 	else
 	{
-	GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
 	ife->callback();
-	GLOBALS->tcl_menu_toggle_item =	old_toggle_item;
 	gtkwave_main_iteration();
 	}
 
@@ -2824,8 +2926,6 @@ int  gtkwaveInterpreterInit(Tcl_Interp *interp) {
 
   strcpy(commandName, "gtkwave::");
 
-  Tcl_Namespace *namespace = Tcl_CreateNamespace(interp, "gtkwave", NULL, NULL);
-
   ife = retrieve_menu_items_array(&num_menu_items);
   for(i=0;i<num_menu_items;i++)
     {
@@ -2853,8 +2953,6 @@ int  gtkwaveInterpreterInit(Tcl_Interp *interp) {
       Tcl_CreateObjCommand(interp, commandName,
 			   (Tcl_ObjCmdProc *)gtkwave_commands[i].func,
 			   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-      Tcl_Export(interp, namespace, gtkwave_commands[i].cmdstr, 0);
     }
 
   declare_tclcb_variables(interp) ;
@@ -3018,8 +3116,6 @@ void make_tcl_interpreter(char *argv[])
 
   strcpy(commandName, "gtkwave::");
 
-  Tcl_Namespace *namespace = Tcl_CreateNamespace(GLOBALS->interp, "gtkwave", NULL, NULL);
-
   ife = retrieve_menu_items_array(&num_menu_items);
   for(i=0;i<num_menu_items;i++)
     {
@@ -3047,8 +3143,6 @@ void make_tcl_interpreter(char *argv[])
       Tcl_CreateObjCommand(GLOBALS->interp, commandName,
                 (Tcl_ObjCmdProc *)gtkwave_commands[i].func,
 			   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-      Tcl_Export(GLOBALS->interp, namespace, gtkwave_commands[i].cmdstr, 0);
     }
 
   declare_tclcb_variables(GLOBALS->interp);

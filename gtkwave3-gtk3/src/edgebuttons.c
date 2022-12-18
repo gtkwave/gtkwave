@@ -490,7 +490,9 @@ if(is_last_iteration)
 		gtk_adjustment_set_value(GTK_ADJUSTMENT(GLOBALS->wave_hslider), GLOBALS->tims.timecache=GLOBALS->tims.start);
 		}
 
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 

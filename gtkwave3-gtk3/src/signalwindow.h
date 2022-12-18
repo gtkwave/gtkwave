@@ -11,20 +11,22 @@
 #define WAVE_SIGNALWINDOW_H
 
 /* for dnd */
-#define WAVE_DRAG_TARGET_SIGNAL_LIST  "GTKWAVE_TRACE_SIGNAL_LIST"
-#define WAVE_DRAG_TARGET_TCL          "GTKWAVE_TRACE_TCL"
+#define WAVE_DRAG_TAR_NAME_0         "text/plain"
+#define WAVE_DRAG_TAR_INFO_0         0
 
-enum {
-    WAVE_DRAG_INFO_SIGNAL_LIST = 0,
-    WAVE_DRAG_INFO_TCL = 1,
-};
+#define WAVE_DRAG_TAR_NAME_1         "text/uri-list"         /* not url-list */
+#define WAVE_DRAG_TAR_INFO_1         1
+
+#define WAVE_DRAG_TAR_NAME_2         "STRING"
+#define WAVE_DRAG_TAR_INFO_2         2
+
 
 void draw_signalarea_focus(cairo_t *cr);
+gint signalarea_configure_event(GtkWidget *widget, GdkEventConfigure *event);
 void dnd_error(void);
 gint install_keypress_handler(void);
 void remove_keypress_handler(gint id);
-
-void redraw_signals_and_waves(void);
+void signalwindow_paint(cairo_t* cr);
 
 #endif
 

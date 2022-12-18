@@ -60,7 +60,3 @@ if(!GLOBALS->keep_xz_colors)
 	}
 }
 
-void wave_rgb_set_source(wave_rgb_t *color, cairo_t *cr)
-{
-cairo_set_source_rgba(cr, color->r, color->g, color->b, color->a);
-}

@@ -27,7 +27,6 @@
 #include "lx2.h"
 #include "hierpack.h"
 #include "tcl_helper.h"
-#include "signal_list.h"
 #include <cocoa_misc.h>
 #include <assert.h>
 
@@ -204,7 +203,9 @@ if((GLOBALS->tims.baseline>=0) && (GLOBALS->tims.marker>=0))
 	}
 
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
@@ -262,7 +263,9 @@ GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
 
 update_markertime(GLOBALS->tims.marker);
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 static void lock_marker_right(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -318,7 +321,9 @@ GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
 update_markertime(GLOBALS->tims.marker);
 
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
@@ -341,7 +346,9 @@ if(GLOBALS->helpbox_is_active)
 GLOBALS->named_marker_lock_idx = -1;
 
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
@@ -361,19 +368,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+	if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
 		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEX]), TRUE);
-		}
-	else
-		{
-		if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
-			{
-			GLOBALS->scale_to_time_dimension = 0;
-			set_scale_to_time_dimension_toggles();
-			redraw_signals_and_waves();
-			}
+		GLOBALS->scale_to_time_dimension = 0;
+		set_scale_to_time_dimension_toggles();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -392,19 +392,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+	if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
 		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALES]), TRUE);
-		}
-	else
-		{
-		if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
-			{
-			GLOBALS->scale_to_time_dimension = 's';
-			set_scale_to_time_dimension_toggles();
-			redraw_signals_and_waves();
-			}
+		GLOBALS->scale_to_time_dimension = 's';
+		set_scale_to_time_dimension_toggles();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -423,19 +416,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+	if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
 		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEM]), TRUE);
-		}
-	else
-		{
-		if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
-			{
-			GLOBALS->scale_to_time_dimension = 'm';
-			set_scale_to_time_dimension_toggles();
-			redraw_signals_and_waves();
-			}
+		GLOBALS->scale_to_time_dimension = 'm';
+		set_scale_to_time_dimension_toggles();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -454,19 +440,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+	if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
 		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEU]), TRUE);
-		}
-	else
-		{
-		if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
-			{
-			GLOBALS->scale_to_time_dimension = 'u';
-			set_scale_to_time_dimension_toggles();
-			redraw_signals_and_waves();
-			}
+		GLOBALS->scale_to_time_dimension = 'u';
+		set_scale_to_time_dimension_toggles();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -485,19 +464,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+	if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
 		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEN]), TRUE);
-		}
-	else
-		{
-		if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
-			{
-			GLOBALS->scale_to_time_dimension = 'n';
-			set_scale_to_time_dimension_toggles();
-			redraw_signals_and_waves();
-			}
+		GLOBALS->scale_to_time_dimension = 'n';
+		set_scale_to_time_dimension_toggles();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -516,19 +488,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+	if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
 		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEP]), TRUE);
-		}
-	else
-		{
-		if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
-			{
-			GLOBALS->scale_to_time_dimension = 'p';
-			set_scale_to_time_dimension_toggles();
-			redraw_signals_and_waves();
-			}
+		GLOBALS->scale_to_time_dimension = 'p';
+		set_scale_to_time_dimension_toggles();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -547,19 +512,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+	if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
 		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEF]), TRUE);
-		}
-	else
-		{
-		if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
-			{
-			GLOBALS->scale_to_time_dimension = 'f';
-			set_scale_to_time_dimension_toggles();
-			redraw_signals_and_waves();
-			}
+		GLOBALS->scale_to_time_dimension = 'f';
+		set_scale_to_time_dimension_toggles();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -933,7 +891,9 @@ while(t)
 if(found)
 	{
 	GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 
@@ -970,7 +930,9 @@ while(t)
 if(found)
 	{
 	GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 
@@ -1020,7 +982,9 @@ if(GLOBALS->entrybox_text)
 	}
 
 	GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 void menu_warp_traces(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -1091,23 +1055,15 @@ void menu_altwheel(gpointer null_data, guint callback_action, GtkWidget *widget)
   }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HSWM]), GLOBALS->alt_wheel_mode = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->alt_wheel_mode));
-                }
-	else
-		{
-	        GLOBALS->alt_wheel_mode = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HSWM]));
-	        if(GLOBALS->alt_wheel_mode)
-	        	{
-	          	status_text("Alternate Wheel Mode On.\n");
-	        	}
-	        else
-	        	{
-	          	status_text("Alternate Wheel Mode Off.\n");
-	        	}
-		}
+        GLOBALS->alt_wheel_mode = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HSWM]));
+        if(GLOBALS->alt_wheel_mode)
+        {
+          status_text("Alternate Wheel Mode On.\n");
+        }
+        else
+        {
+          status_text("Alternate Wheel Mode Off.\n");
+        }
 	}
 }
 
@@ -1132,23 +1088,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->wave_scrolling = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_MWSON]));
+        if(GLOBALS->wave_scrolling)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_MWSON]), GLOBALS->wave_scrolling = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->wave_scrolling));
+                status_text("Wave Scrolling On.\n");
                 }
-	else
-		{
-	        GLOBALS->wave_scrolling = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_MWSON]));
-	        if(GLOBALS->wave_scrolling)
-	                {
-	                status_text("Wave Scrolling On.\n");
-	                }
-	                else
-	                {
-	                status_text("Wave Scrolling Off.\n");
-	                }
-		}
+                else
+                {
+                status_text("Wave Scrolling Off.\n");
+                }
 	}
 }
 
@@ -1174,19 +1122,14 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-		{
-		GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]), GLOBALS->keep_xz_colors = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->keep_xz_colors));
-		}
-		else
-		{
-		GLOBALS->keep_xz_colors = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]));
-		}
+	GLOBALS->keep_xz_colors = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]));
 	}
 
+
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 /**/
@@ -1209,24 +1152,17 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-		{
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]), GLOBALS->autocoalesce = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->autocoalesce));
-		}
-		else
-		{
-	        GLOBALS->autocoalesce = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]));
-	        if(GLOBALS->autocoalesce)
-	                {
-	                status_text("Autocoalesce On.\n");
-	                }
-	                else
-	                {
-	                status_text("Autocoalesce Off.\n");
-	                }
-		}
+        GLOBALS->autocoalesce = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]));
+        if(GLOBALS->autocoalesce)
+                {
+                status_text("Autocoalesce On.\n");
+                }
+                else
+                {
+                status_text("Autocoalesce Off.\n");
+                }
 	}
+
 }
 
 void menu_autocoalesce_reversal(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -1246,23 +1182,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+       	GLOBALS->autocoalesce_reversal = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOLR]));
+        if(GLOBALS->autocoalesce_reversal)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOLR]), GLOBALS->autocoalesce_reversal = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->autocoalesce_reversal));
+                status_text("Autocoalesce Rvs On.\n");
                 }
-        else
-		{
-	       	GLOBALS->autocoalesce_reversal = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOLR]));
-	        if(GLOBALS->autocoalesce_reversal)
-	                {
-	                status_text("Autocoalesce Rvs On.\n");
-	                }
-	                else
-	                {
-	                status_text("Autocoalesce Rvs Off.\n");
-	                }
-		}
+                else
+                {
+                status_text("Autocoalesce Rvs Off.\n");
+                }
 	}
 
 }
@@ -1293,24 +1221,17 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->autoname_bundles = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]));
+        if(GLOBALS->autoname_bundles)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]), GLOBALS->autoname_bundles = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->autoname_bundles));
+                status_text("Autoname On.\n");
                 }
-	else
-		{
-	        GLOBALS->autoname_bundles = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]));
-	        if(GLOBALS->autoname_bundles)
-	                {
-	                status_text("Autoname On.\n");
-	                }
-	                else
-	                {
-	                status_text("Autoname Off.\n");
-	                }
-		}
+                else
+                {
+                status_text("Autoname Off.\n");
+                }
 	}
+
 }
 
 
@@ -1335,23 +1256,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->hier_grouping = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HTGP]));
+        if(GLOBALS->hier_grouping)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HTGP]), GLOBALS->hier_grouping = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->hier_grouping));
+                status_text("Hier Grouping On.\n");
                 }
-	else
-		{
-	        GLOBALS->hier_grouping = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HTGP]));
-	        if(GLOBALS->hier_grouping)
-	                {
-	                status_text("Hier Grouping On.\n");
-	                }
-	                else
-	                {
-	                status_text("Hier Grouping Off.\n");
-	                }
-		}
+                else
+                {
+                status_text("Hier Grouping Off.\n");
+                }
 	}
 
 }
@@ -1425,7 +1338,9 @@ void set_hier_cleanup(GtkWidget *widget, gpointer data, int level)
     }
 
   GLOBALS->signalwindow_width_dirty=1;
-  redraw_signals_and_waves();
+  MaxSignalLength();
+  signalarea_configure_event(GLOBALS->signalarea, NULL);
+  wavearea_configure_event(GLOBALS->wavearea, NULL);
   sprintf(update_string, "Trace Hier Max Depth is now: %d\n", GLOBALS->hier_max_level);
   status_text(update_string);
 
@@ -1512,25 +1427,23 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+      GLOBALS->use_roundcaps = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDRV]));
+        if(GLOBALS->use_roundcaps)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDRV]), GLOBALS->use_roundcaps = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->use_roundcaps));
+                status_text("Using roundcaps.\n");
                 }
-	else
-		{
-	        GLOBALS->use_roundcaps = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDRV]));
-	        if(GLOBALS->use_roundcaps)
-	                {
-	                status_text("Using roundcaps.\n");
-	                }
-	                else
-	                {
-	                status_text("Using flatcaps.\n");
-	                }
-		redraw_signals_and_waves();
-		}
+                else
+                {
+                status_text("Using flatcaps.\n");
+                }
+        if(GLOBALS->signalarea && GLOBALS->wavearea)
+                {
+                MaxSignalLength();
+                signalarea_configure_event(GLOBALS->signalarea, NULL);
+                wavearea_configure_event(GLOBALS->wavearea, NULL);
+                }
 	}
+
 }
 
 /**/
@@ -1551,26 +1464,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->lxt_clock_compress_to_z = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]));
+        if(!GLOBALS->lxt_clock_compress_to_z)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		if(menu_wlist[WV_MENU_LXTCC2Z])
-			{
-	                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]), GLOBALS->lxt_clock_compress_to_z = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->lxt_clock_compress_to_z));
-			}
+                status_text("LXT CC2Z Off.\n");
                 }
-	else
-		{
-	        GLOBALS->lxt_clock_compress_to_z = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]));
-	        if(!GLOBALS->lxt_clock_compress_to_z)
-	                {
-	                status_text("LXT CC2Z Off.\n");
-	                }
-	                else
-	                {
-	                status_text("LXT CC2Z On.\n");
-	                }
-		}
+                else
+                {
+                status_text("LXT CC2Z On.\n");
+                }
 	}
 
 }
@@ -1591,34 +1493,26 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->use_full_precision = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]));
+        if(!GLOBALS->use_full_precision)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]), GLOBALS->use_full_precision = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->use_full_precision));
+                status_text("Full Prec Off.\n");
                 }
-	else
+                else
+                {
+                status_text("Full Prec On.\n");
+                }
+
+	calczoom(GLOBALS->tims.zoom);
+
+	if(GLOBALS->wave_hslider)
 		{
-	        GLOBALS->use_full_precision = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]));
-	        if(!GLOBALS->use_full_precision)
-	                {
-	                status_text("Full Prec Off.\n");
-	                }
-	                else
-	                {
-	                status_text("Full Prec On.\n");
-	                }
-	
-		calczoom(GLOBALS->tims.zoom);
-	
-		if(GLOBALS->wave_hslider)
-			{
-			fix_wavehadj();
-	
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
-	
-			update_maxmarker_labels();
-			}
+		fix_wavehadj();
+
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+
+		update_maxmarker_labels();
 		}
 	}
 
@@ -1654,7 +1548,9 @@ if(GLOBALS->helpbox_is_active)
 		strace_maketimetrace(0);
 		}
 
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 /**/
@@ -1675,7 +1571,9 @@ if(GLOBALS->helpbox_is_active)
 	{
 	force_normal_gcs();
 
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 /**/
@@ -1697,7 +1595,9 @@ if(GLOBALS->helpbox_is_active)
 	{
 	force_screengrab_gcs();
 
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 /**/
@@ -1719,31 +1619,23 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+       GLOBALS->zoom_pow10_snap = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]));
+        if(!GLOBALS->zoom_pow10_snap)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]), GLOBALS->zoom_pow10_snap = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->zoom_pow10_snap));
+                status_text("Pow10 Snap Off.\n");
                 }
-	else
+                else
+                {
+                status_text("Pow10 Snap On.\n");
+                }
+
+	if(GLOBALS->wave_hslider)
 		{
-	        GLOBALS->zoom_pow10_snap = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]));
-	        if(!GLOBALS->zoom_pow10_snap)
-	                {
-	                status_text("Pow10 Snap Off.\n");
-	                }
-	                else
-	                {
-	                status_text("Pow10 Snap On.\n");
-	                }
-	
-		if(GLOBALS->wave_hslider)
-			{
-			calczoom(GLOBALS->tims.zoom);
-			fix_wavehadj();
-	
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
-			}
+		calczoom(GLOBALS->tims.zoom);
+		fix_wavehadj();
+
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
 		}
 	}
 
@@ -1766,26 +1658,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->zoom_dyn = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]));
+        if(!GLOBALS->zoom_dyn)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		if(menu_wlist[WV_MENU_VZDYN]) /* not always available */
-			{
-	                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]), GLOBALS->zoom_dyn = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->zoom_dyn));
-			}
-		}
-	else
-		{
-	        GLOBALS->zoom_dyn = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]));
-	        if(!GLOBALS->zoom_dyn)
-	                {
-	                status_text("Dynamic Zoom Full Off.\n");
-	                }
-	                else
-	                {
-	                status_text("Dynamic Zoom Full On.\n");
-	                }
-		}
+                status_text("Dynamic Zoom Full Off.\n");
+                }
+                else
+                {
+                status_text("Dynamic Zoom Full On.\n");
+                }
 	}
 
 }
@@ -1807,26 +1688,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->zoom_dyne = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]));
+        if(!GLOBALS->zoom_dyne)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-		if(menu_wlist[WV_MENU_VZDYNE]) /* not always available */
-			{
-	                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]), GLOBALS->zoom_dyne = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->zoom_dyne));
-			}
-		}
-	else
-		{
-	        GLOBALS->zoom_dyne = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]));
-	        if(!GLOBALS->zoom_dyne)
-	                {
-	                status_text("Dynamic Zoom To End Off.\n");
-	                }
-	                else
-	                {
-	                status_text("Dynamic Zoom To End On.\n");
-	                }
-		}
+                status_text("Dynamic Zoom To End Off.\n");
+                }
+                else
+                {
+                status_text("Dynamic Zoom To End On.\n");
+                }
 	}
 
 }
@@ -1850,7 +1720,7 @@ if(GLOBALS->helpbox_is_active)
 	status_text("Left Justification.\n");
 	GLOBALS->left_justify_sigs=~0;
 	MaxSignalLength();
-	gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
 	}
 }
 
@@ -1873,7 +1743,7 @@ if(GLOBALS->helpbox_is_active)
 	status_text("Right Justification.\n");
 	GLOBALS->left_justify_sigs=0;
 	MaxSignalLength();
-	gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
 	}
 }
 
@@ -1900,23 +1770,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->constant_marker_update = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCMU]));
+        if(GLOBALS->constant_marker_update)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCMU]), GLOBALS->constant_marker_update = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->constant_marker_update));
+                status_text("Constant marker update enabled.\n");
                 }
-	else
-		{
-	        GLOBALS->constant_marker_update = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCMU]));
-	        if(GLOBALS->constant_marker_update)
-	                {
-	                status_text("Constant marker update enabled.\n");
-	                }
-	                else
-	                {
-	                status_text("Constant marker update disabled.\n");
-	                }
-		}
+                else
+                {
+                status_text("Constant marker update disabled.\n");
+                }
 	}
 
 }
@@ -1939,23 +1801,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->use_standard_trace_select = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ESTS]));
+        if(GLOBALS->use_standard_trace_select)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ESTS]), GLOBALS->use_standard_trace_select = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->use_standard_trace_select));
+                status_text("Standard Trace Select enabled.\n");
                 }
-	else
-		{
-     	   	GLOBALS->use_standard_trace_select = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ESTS]));
-	        if(GLOBALS->use_standard_trace_select)
-	                {
-	                status_text("Standard Trace Select enabled.\n");
-	                }
-	                else
-	                {
-	                status_text("Standard Trace Select disabled.\n");
-	                }
-		}
+                else
+                {
+                status_text("Standard Trace Select disabled.\n");
+                }
 	}
 
 }
@@ -1979,32 +1833,26 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
+        GLOBALS->do_resize_signals = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDR]));
+        if(GLOBALS->do_resize_signals)
                 {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDR]), GLOBALS->do_resize_signals = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->do_resize_signals));
+                status_text("Resizing enabled.\n");
                 }
-	else
-		{
-	        GLOBALS->do_resize_signals = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDR]));
-	        if(GLOBALS->do_resize_signals)
-	                {
-	                status_text("Resizing enabled.\n");
-	                }
-	                else
-	                {
-	                status_text("Resizing disabled.\n");
-	                }
-	
-	        if(GLOBALS->signalarea && GLOBALS->wavearea)
-	                {
-			for(i=0;i<2;i++)
-				{
-		                GLOBALS->signalwindow_width_dirty=1;
-		                redraw_signals_and_waves();
-				}
-	                }
-		}
+                else
+                {
+                status_text("Resizing disabled.\n");
+                }
+
+        if(GLOBALS->signalarea && GLOBALS->wavearea)
+                {
+		for(i=0;i<2;i++)
+			{
+	                GLOBALS->signalwindow_width_dirty=1;
+	                MaxSignalLength();
+	                signalarea_configure_event(GLOBALS->signalarea, NULL);
+	                wavearea_configure_event(GLOBALS->wavearea, NULL);
+			}
+                }
 	}
 
 }
@@ -2252,7 +2100,9 @@ update_basetime(GLOBALS->tims.baseline);
 
 gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname);
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 void menu_quit_close(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -2332,7 +2182,9 @@ menu_open_group(GtkWidget *widget, gpointer data)
    {
      OpenTrace(t);
      GLOBALS->signalwindow_width_dirty=1;
-     redraw_signals_and_waves();
+     MaxSignalLength();
+     signalarea_configure_event(GLOBALS->signalarea, NULL);
+     wavearea_configure_event(GLOBALS->wavearea, NULL);
    }
  else
    {
@@ -2370,7 +2222,9 @@ menu_close_group(GtkWidget *widget, gpointer data)
 
      CloseTrace(t);
      GLOBALS->signalwindow_width_dirty=1;
-     redraw_signals_and_waves();
+     MaxSignalLength();
+     signalarea_configure_event(GLOBALS->signalarea, NULL);
+     wavearea_configure_event(GLOBALS->wavearea, NULL);
    }
  else
    {
@@ -2489,7 +2343,9 @@ create_group_cleanup(GtkWidget *widget, gpointer data)
     	else
 	{
       	GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+      	MaxSignalLength();
+      	signalarea_configure_event(GLOBALS->signalarea, NULL);
+      	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 
@@ -2661,6 +2517,8 @@ menu_expand(gpointer null_data, guint callback_action, GtkWidget *widget)
 
   Trptr t, t_next;
   int dirty=0;
+  int j;
+  GtkAdjustment *wadj;
 
   if(GLOBALS->helpbox_is_active)
     {
@@ -2736,8 +2594,17 @@ menu_expand(gpointer null_data, guint callback_action, GtkWidget *widget)
 	  t=t->t_next;
 	}
 
+      j = GetTraceNumber(t);
+      wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
+      if (j < gtk_adjustment_get_value(wadj))
+	{
+	  SetTraceScrollbarRowValue(j, 0);
+	}
+
       GLOBALS->signalwindow_width_dirty=1;
-      redraw_signals_and_waves();
+      MaxSignalLength();
+      signalarea_configure_event(GLOBALS->signalarea, NULL);
+      wavearea_configure_event(GLOBALS->wavearea, NULL);
     }
   else
     {
@@ -2862,7 +2729,9 @@ static void rename_cleanup(GtkWidget *widget, gpointer data)
 	}
 
       GLOBALS->signalwindow_width_dirty=1;
-      redraw_signals_and_waves();
+      MaxSignalLength();
+      signalarea_configure_event(GLOBALS->signalarea, NULL);
+      wavearea_configure_event(GLOBALS->wavearea, NULL);
     }
 }
 
@@ -3523,7 +3392,9 @@ menu_combine_down(gpointer null_data, guint callback_action, GtkWidget *widget)
       create_group("unused_0", t);
 
       GLOBALS->signalwindow_width_dirty=1;
-      redraw_signals_and_waves();
+      MaxSignalLength();
+      signalarea_configure_event(GLOBALS->signalarea, NULL);
+      wavearea_configure_event(GLOBALS->wavearea, NULL);
 
       menu_rename(widget, null_data);
     }
@@ -3575,7 +3446,9 @@ menu_combine_up(gpointer null_data, guint callback_action, GtkWidget *widget)
       create_group("unused_1", t);
 
       GLOBALS->signalwindow_width_dirty=1;
-      redraw_signals_and_waves();
+      MaxSignalLength();
+      signalarea_configure_event(GLOBALS->signalarea, NULL);
+      wavearea_configure_event(GLOBALS->wavearea, NULL);
 
       menu_rename(widget, null_data);
     }
@@ -4045,7 +3918,9 @@ if(GLOBALS->helpbox_is_active)
     GLOBALS->tims.baseline = GLOBALS->tims.marker;
     update_basetime(GLOBALS->tims.baseline);
     GLOBALS->signalwindow_width_dirty=1;
-    redraw_signals_and_waves();
+    MaxSignalLength();
+    signalarea_configure_event(GLOBALS->signalarea, NULL);
+    wavearea_configure_event(GLOBALS->wavearea, NULL);
   }
 }
 
@@ -4085,7 +3960,9 @@ if(GLOBALS->tims.marker!=-1)
 
 	update_markertime(GLOBALS->tims.marker=-1);
 	GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 
@@ -4128,7 +4005,8 @@ for(i=0;i<WAVE_NUM_NAMED_MARKERS;i++)
 
 if(dirty)
 	{
-	redraw_signals_and_waves();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 /**/
@@ -4159,7 +4037,8 @@ if(GLOBALS->tims.marker!=-1)
 		if(GLOBALS->named_markers[i]==GLOBALS->tims.marker)
 			{
 			GLOBALS->named_markers[i]=-1;
-			redraw_signals_and_waves();
+			signalarea_configure_event(GLOBALS->signalarea, NULL);
+			wavearea_configure_event(GLOBALS->wavearea, NULL);
 
 			if(GLOBALS->marker_names[i])
 				{
@@ -4223,7 +4102,8 @@ if(GLOBALS->tims.marker!=-1)
 		if(GLOBALS->named_markers[i]==-1)
 			{
 			GLOBALS->named_markers[i]=GLOBALS->tims.marker;
-			redraw_signals_and_waves();
+			signalarea_configure_event(GLOBALS->signalarea, NULL);
+			wavearea_configure_event(GLOBALS->wavearea, NULL);
 			return;
 			}
 		}
@@ -4235,7 +4115,9 @@ void menu_treesearch_cleanup(GtkWidget *widget, gpointer data)
 (void)widget;
 (void)data;
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 DEBUG(printf("menu_treesearch_cleanup()\n"));
 }
 
@@ -4290,7 +4172,9 @@ if(t)
 	}
 
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 DEBUG(printf("menu_showchangeall_cleanup()\n"));
 }
 
@@ -4338,7 +4222,9 @@ menu_showchange_cleanup(GtkWidget *widget, gpointer data)
 (void)data;
 
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 DEBUG(printf("menu_showchange_cleanup()\n"));
 }
 
@@ -4447,7 +4333,9 @@ void menu_remove_aliases(gpointer null_data, guint callback_action, GtkWidget *w
   if(dirty)
     {
       GLOBALS->signalwindow_width_dirty=1;
-      redraw_signals_and_waves();
+      MaxSignalLength();
+      signalarea_configure_event(GLOBALS->signalarea, NULL);
+      wavearea_configure_event(GLOBALS->wavearea, NULL);
       DEBUG(printf("menu_remove_aliases()\n"));
     }
   if (none_selected)
@@ -4498,7 +4386,9 @@ static void alias_cleanup(GtkWidget *widget, gpointer data)
 	}
 
       GLOBALS->signalwindow_width_dirty=1;
-      redraw_signals_and_waves();
+      MaxSignalLength();
+      signalarea_configure_event(GLOBALS->signalarea, NULL);
+      wavearea_configure_event(GLOBALS->wavearea, NULL);
     }
 }
 
@@ -4566,7 +4456,9 @@ void menu_hiersearch_cleanup(GtkWidget *widget, gpointer data)
 (void)widget;
 (void)data;
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 DEBUG(printf("menu_hiersearch_cleanup()\n"));
 }
 
@@ -4596,7 +4488,9 @@ void menu_signalsearch_cleanup(GtkWidget *widget, gpointer data)
 (void)widget;
 (void)data;
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 DEBUG(printf("menu_signalsearch_cleanup()\n"));
 }
 
@@ -4664,7 +4558,8 @@ if(GLOBALS->entrybox_text)
 
 	if(dirty)
 		{
-		redraw_signals_and_waves();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -5204,7 +5099,8 @@ if(GLOBALS->dnd_state) { dnd_error(); return; } /* don't mess with sigs when dnd
 DEBUG(printf("Insert Blank Trace\n"));
 
 InsertBlankTrace(NULL, 0);
-redraw_signals_and_waves();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 void
@@ -5230,7 +5126,8 @@ if(GLOBALS->dnd_state) { dnd_error(); return; } /* don't mess with sigs when dnd
 DEBUG(printf("Insert Analog Blank Trace\n"));
 
 InsertBlankTrace(NULL, TR_ANALOG_BLANK_STRETCH);
-redraw_signals_and_waves();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 /**/
 static void
@@ -5242,7 +5139,9 @@ comment_trace_cleanup(GtkWidget *widget, gpointer data)
 InsertBlankTrace(GLOBALS->entrybox_text, 0);
 if(GLOBALS->entrybox_text) { free_2(GLOBALS->entrybox_text); GLOBALS->entrybox_text=NULL; }
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 void
@@ -5598,7 +5497,9 @@ static void colorformat(int color)
       if(fix)
         {
           GLOBALS->signalwindow_width_dirty=1;
-          redraw_signals_and_waves();
+          MaxSignalLength();
+          signalarea_configure_event(GLOBALS->signalarea, NULL);
+          wavearea_configure_event(GLOBALS->wavearea, NULL);
         }
     }
 }
@@ -6076,7 +5977,9 @@ if((t=GLOBALS->traces.first))
 	if(fix)
 		{
 		GLOBALS->signalwindow_width_dirty=1;
-          	redraw_signals_and_waves();
+		MaxSignalLength();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 
 	}
@@ -6228,7 +6131,9 @@ static void dataformat(TraceFlagsType mask, TraceFlagsType patch)
       if(fix)
 	{
 	  GLOBALS->signalwindow_width_dirty=1;
-	  redraw_signals_and_waves();
+	  MaxSignalLength();
+	  signalarea_configure_event(GLOBALS->signalarea, NULL);
+	  wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
     }
 }
@@ -6735,13 +6640,17 @@ menu_dataformat_fpshift_specify_cleanup(GtkWidget *widget, gpointer data)
       if(fix)
 	{
 	  GLOBALS->signalwindow_width_dirty=1;
-	  redraw_signals_and_waves();
+	  MaxSignalLength();
+	  signalarea_configure_event(GLOBALS->signalarea, NULL);
+	  wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
     }
 
 if(GLOBALS->entrybox_text) { free_2(GLOBALS->entrybox_text); GLOBALS->entrybox_text=NULL; }
 GLOBALS->signalwindow_width_dirty=1;
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
@@ -7110,7 +7019,8 @@ if((t=GLOBALS->traces.first))
 		t->flags|=TR_HIGHLIGHT;
 		t=t->t_next;
 		}
-	redraw_signals_and_waves();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 
@@ -7140,7 +7050,8 @@ if((t=GLOBALS->traces.first))
 		t->flags&=(~TR_HIGHLIGHT);
 		t=t->t_next;
 		}
-	redraw_signals_and_waves();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 }
 
@@ -7165,7 +7076,8 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_LEX))
 		{
-		redraw_signals_and_waves();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -7191,7 +7103,8 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_NORM))
 		{
-		redraw_signals_and_waves();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -7217,7 +7130,8 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_INS))
 		{
-		redraw_signals_and_waves();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -7243,7 +7157,8 @@ if(GLOBALS->traces.first)
 	{
 	if(TracesReorder(TR_SORT_RVS))
 		{
-		redraw_signals_and_waves();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 }
@@ -7272,6 +7187,32 @@ if(GLOBALS->dnd_state) { dnd_error(); return; } /* don't mess with sigs when dnd
 
 DEBUG(printf("Cut Traces\n"));
 
+/* fix up if there are traces above the	current	row being cut */
+if(GLOBALS->wave_vslider)
+        {
+        GtkAdjustment *wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
+        int value = (int)gtk_adjustment_get_value(wadj);
+
+        Trptr t = GLOBALS->traces.first;
+        int cnt = 0;
+        int high = 0;
+
+        while(t)
+                {
+                if(cnt >= value) break;
+
+                if(t->flags & TR_HIGHLIGHT)
+                        {
+                        high++;
+                        }
+
+                t = GiveNextTrace(t);
+                cnt++;
+                }
+
+        if(value - high > 0) { gtk_adjustment_set_value(wadj, value - high); }
+        }
+
 cutbuffer = CutBuffer();
 if(cutbuffer)
 	{
@@ -7282,7 +7223,9 @@ if(cutbuffer)
 	GLOBALS->cutcopylist = emit_gtkwave_savefile_formatted_entries_in_tcl_list(cutbuffer, FALSE);
 	/* printf("Cutlist: '%s'\n", GLOBALS->cutcopylist); */
 
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 	else
 	{
@@ -7316,7 +7259,9 @@ DEBUG(printf("Delete Traces\n"));
 num_cut = DeleteBuffer();
 if(num_cut)
 	{
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 	else
 	{
@@ -7402,7 +7347,9 @@ DEBUG(printf("Paste Traces\n"));
 if(PasteBuffer())
 	{
 	GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 	else
 	{
@@ -7412,7 +7359,9 @@ if(PasteBuffer())
 		/* printf("Pastelist: %d '%s'\n", num_traces, GLOBALS->cutcopylist); */
 
 	        GLOBALS->signalwindow_width_dirty=1;
-		redraw_signals_and_waves();
+	        MaxSignalLength();
+	        signalarea_configure_event(GLOBALS->signalarea, NULL);
+	        wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
 	}
 
@@ -7439,16 +7388,8 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCZ]), GLOBALS->do_zoom_center = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->do_zoom_center));
-                }
-	else
-		{
-	        GLOBALS->do_zoom_center = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCZ]));
-		DEBUG(printf("Center Zooms\n"));
-		}
+        GLOBALS->do_zoom_center = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCZ]));
+	DEBUG(printf("Center Zooms\n"));
 	}
 
 }
@@ -7473,18 +7414,12 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]), GLOBALS->show_base = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->show_base));
-                }
-	else
-		{
-		GLOBALS->show_base = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]));
-		GLOBALS->signalwindow_width_dirty=1;
-		redraw_signals_and_waves();
-		DEBUG(printf("Show Base Symbols\n"));
-		}
+	GLOBALS->show_base = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]));
+	GLOBALS->signalwindow_width_dirty=1;
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
+	DEBUG(printf("Show Base Symbols\n"));
 	}
 
 }
@@ -7505,42 +7440,34 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]), GLOBALS->fullscreen = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->fullscreen));
-                }
-	else
+	GLOBALS->fullscreen = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]));
+	if(GLOBALS->fullscreen)
 		{
-		GLOBALS->fullscreen = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]));
-		if(GLOBALS->fullscreen)
-			{
-			gtk_window_fullscreen (GTK_WINDOW(GLOBALS->mainwindow));
+		gtk_window_fullscreen (GTK_WINDOW(GLOBALS->mainwindow));
 #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-			if(!GLOBALS->socket_xid)
-				{
-				gtk_widget_show(GLOBALS->time_mainbox);
-				}
-#endif
-			}
-			else
+		if(!GLOBALS->socket_xid)
 			{
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-			if(!GLOBALS->socket_xid)
-				{
-				gtk_widget_hide(GLOBALS->time_mainbox);
-				}
+			gtk_widget_show(GLOBALS->time_mainbox);
+			}
 #endif
-			gtk_window_unfullscreen (GTK_WINDOW(GLOBALS->mainwindow));
-			}
-	
-		if(GLOBALS->wave_hslider)
-			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
-			}
-		DEBUG(printf("Fullscreen\n"));
 		}
+		else
+		{
+#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+		if(!GLOBALS->socket_xid)
+			{
+			gtk_widget_hide(GLOBALS->time_mainbox);
+			}
+#endif
+		gtk_window_unfullscreen (GTK_WINDOW(GLOBALS->mainwindow));
+		}
+
+	if(GLOBALS->wave_hslider)
+		{
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+		}
+	DEBUG(printf("Fullscreen\n"));
 	}
 
 }
@@ -7572,30 +7499,22 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TOOLBAR]), GLOBALS->show_toolbar = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->show_toolbar));
-                }
-	else
+	GLOBALS->show_toolbar = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TOOLBAR]));
+	if(GLOBALS->show_toolbar)
 		{
-		GLOBALS->show_toolbar = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TOOLBAR]));
-		if(GLOBALS->show_toolbar)
-			{
-			if(GLOBALS->top_table) gtk_widget_show(GLOBALS->top_table);
-			}
-			else
-			{
-			if(GLOBALS->top_table) gtk_widget_hide(GLOBALS->top_table);
-			}
-	
-		if(GLOBALS->wave_hslider)
-			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
-			}
-		DEBUG(printf("Show Toolbar\n"));
+		if(GLOBALS->top_table) gtk_widget_show(GLOBALS->top_table);
 		}
+		else
+		{
+		if(GLOBALS->top_table) gtk_widget_hide(GLOBALS->top_table);
+		}
+
+	if(GLOBALS->wave_hslider)
+		{
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+		}
+	DEBUG(printf("Show Toolbar\n"));
 	}
 }
 #endif
@@ -7615,21 +7534,13 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]), GLOBALS->display_grid = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->display_grid));
-                }
-	else
+	GLOBALS->display_grid = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]));
+	if(GLOBALS->wave_hslider)
 		{
-		GLOBALS->display_grid = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]));
-		if(GLOBALS->wave_hslider)
-			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
-			}
-		DEBUG(printf("Show Grid\n"));
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+	DEBUG(printf("Show Grid\n"));
 	}
 
 }
@@ -7650,21 +7561,13 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]), GLOBALS->highlight_wavewindow = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->highlight_wavewindow));
-                }
-	else
+	GLOBALS->highlight_wavewindow = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]));
+	if(GLOBALS->wave_hslider)
 		{
-		GLOBALS->highlight_wavewindow = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]));
-		if(GLOBALS->wave_hslider)
-			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
-			}
-		DEBUG(printf("Show Wave Highlight\n"));
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+	DEBUG(printf("Show Wave Highlight\n"));
 	}
 
 }
@@ -7685,21 +7588,13 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]), GLOBALS->fill_waveform = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->fill_waveform));
-                }
-	else
+	GLOBALS->fill_waveform = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]));
+	if(GLOBALS->wave_hslider)
 		{
-		GLOBALS->fill_waveform = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]));
-		if(GLOBALS->wave_hslider)
-			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
-			}
-		DEBUG(printf("Show Filled High Values\n"));
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
+		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
 		}
+	DEBUG(printf("Show Filled High Values\n"));
 	}
 
 }
@@ -7720,21 +7615,15 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]), GLOBALS->lz_removal = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->lz_removal));
-                }
-	else
+	GLOBALS->lz_removal = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]));
+	if(GLOBALS->signalarea && GLOBALS->wavearea)
 		{
-		GLOBALS->lz_removal = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]));
-		if(GLOBALS->signalarea && GLOBALS->wavearea)
-			{
-			GLOBALS->signalwindow_width_dirty=1;
-			redraw_signals_and_waves();
-			}
-		DEBUG(printf("Leading Zero Removal\n"));
+		GLOBALS->signalwindow_width_dirty=1;
+		MaxSignalLength();
+		signalarea_configure_event(GLOBALS->signalarea, NULL);
+		wavearea_configure_event(GLOBALS->wavearea, NULL);
 		}
+	DEBUG(printf("Leading Zero Removal\n"));
 	}
 
 }
@@ -7781,18 +7670,11 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]), !(GLOBALS->disable_mouseover = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? FALSE : TRUE) : (!GLOBALS->disable_mouseover)));
-                }
-        else
-		{
-		GLOBALS->disable_mouseover = !gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]));
-		DEBUG(printf("Show Mouseover\n"));
-		}
+	GLOBALS->disable_mouseover=(GLOBALS->disable_mouseover)?0:~0;
+	DEBUG(printf("Show Mouseover\n"));
 	}
 
+GLOBALS->disable_mouseover = !gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]));
 }
 
 /**/
@@ -7811,17 +7693,11 @@ if(GLOBALS->helpbox_is_active)
         }
 	else
 	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMC]), GLOBALS->clipboard_mouseover = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->clipboard_mouseover));
-                }
-		else
-		{
-		GLOBALS->clipboard_mouseover = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMC]));
-		DEBUG(printf("Mouseover Copies To Clipboard\n"));
-		}
+	GLOBALS->clipboard_mouseover=(GLOBALS->clipboard_mouseover)?0:~0;
+	DEBUG(printf("Mouseover Copies To Clipboard\n"));
 	}
+
+GLOBALS->clipboard_mouseover = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMC]));
 }
 /**/
 
@@ -7978,8 +7854,13 @@ static gtkwave_mlist_t menu_items[] =
     WAVE_GTKIFE("/Edit/Highlight Regexp", "<Alt>R", menu_regexp_highlight, WV_MENU_EHR, "<Item>"),
     WAVE_GTKIFE("/Edit/UnHighlight Regexp", "<Shift><Alt>R", menu_regexp_unhighlight, WV_MENU_EUHR, "<Item>"),
 
+#ifdef MAC_INTEGRATION
     WAVE_GTKIFE("/Edit/Highlight All", NULL, menu_dataformat_highlight_all, WV_MENU_EHA, "<Item>"),
     WAVE_GTKIFE("/Edit/UnHighlight All", NULL, menu_dataformat_unhighlight_all, WV_MENU_EUHA, "<Item>"),
+#else
+    WAVE_GTKIFE("/Edit/Highlight All", "<Control>A", menu_dataformat_highlight_all, WV_MENU_EHA, "<Item>"),
+    WAVE_GTKIFE("/Edit/UnHighlight All", "<Shift><Control>A", menu_dataformat_unhighlight_all, WV_MENU_EUHA, "<Item>"),
+#endif
 
     WAVE_GTKIFE("/Edit/<separator>", NULL, NULL, WV_MENU_SEP6B, "<Separator>"),
     WAVE_GTKIFE("/Edit/Sort/Alphabetize All", NULL, menu_alphabetize, WV_MENU_ALPHA, "<Item>"),
@@ -8654,9 +8535,14 @@ void SetTraceScrollbarRowValue(int row, unsigned location)
 {
   if(row >= 0)
     {
+      GtkAdjustment *wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
       int target = row;
 
-      int num_traces_displayable=gw_signal_list_get_num_traces_displayable(GW_SIGNAL_LIST(GLOBALS->signalarea));
+      GtkAllocation allocation;
+      gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
+
+      int num_traces_displayable=(allocation.height)/(GLOBALS->fontheight);
+      num_traces_displayable--;   /* for the time trace that is always there */
 
       /* center */
       if (location == 1) {
@@ -8668,8 +8554,14 @@ void SetTraceScrollbarRowValue(int row, unsigned location)
 	target = target - num_traces_displayable;
       }
 
-	  gw_signal_list_scroll(GW_SIGNAL_LIST(GLOBALS->signalarea), target);
+      if(target > GLOBALS->traces.visible - num_traces_displayable) target = GLOBALS->traces.visible - num_traces_displayable;
 
+      if(target < 0) target = 0;
+
+      gtk_adjustment_set_value(wadj, target);
+
+      g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "changed"); /* force bar update */
+      g_signal_emit_by_name (XXX_GTK_OBJECT (wadj), "value_changed"); /* force text update */
       gtkwave_main_iteration();
 
     }

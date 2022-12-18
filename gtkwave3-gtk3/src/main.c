@@ -72,7 +72,6 @@
 #include "translate.h"
 #include "ptranslate.h"
 #include "ttranslate.h"
-#include "signal_list.h"
 
 #include "tcl_helper.h"
 #if defined(HAVE_LIBTCL)
@@ -135,7 +134,6 @@ GLOBALS->sst_dbl_action_type = g_old->sst_dbl_action_type;
 GLOBALS->use_gestures = g_old->use_gestures;
 GLOBALS->use_dark = g_old->use_dark;
 GLOBALS->save_on_exit = g_old->save_on_exit;
-GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
 #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 GLOBALS->header_bar = g_old->header_bar;
@@ -158,7 +156,9 @@ if(GLOBALS->second_page_created)
 	{
 	wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname, GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED: WAVE_SET_TITLE_NONE, 0);
 
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 	}
 
 }
@@ -634,54 +634,6 @@ return(G_LOG_WRITER_HANDLED);
 #endif
 
 
-static void window_setup_dnd(GtkWidget *window)
-{
-GtkTargetEntry targets[1];
-
-targets[0].target = "text/uri-list";
-targets[0].flags = 0;
-targets[0].info = 0;
-
-gtk_drag_dest_set(window, GTK_DEST_DEFAULT_ALL, targets, G_N_ELEMENTS(targets), GDK_ACTION_COPY);
-}
-
-static void window_drag_data_received(GtkWidget* widget, GdkDragContext* context,
-	gint x, gint y, GtkSelectionData* selection_data, guint info, guint time_)
-{
-if (gtk_selection_data_get_length(selection_data) > 0)
-	{
-	const gchar *uris = gtk_selection_data_get_data(selection_data);
-
-	gchar *uris_copy = g_strndup(uris, gtk_selection_data_get_length(selection_data));
-
-	if (process_url_list(uris_copy) != 0)
-		{
-		redraw_signals_and_waves();
-		}
-
-	g_free(uris_copy);
-	}
-}
-
-static gboolean window_key_press_event(GtkWidget *widget, GdkEventKey *event)
-{
-GtkWindow *window = GTK_WINDOW(widget);
-gboolean handled = FALSE;
-
-if (!handled)
-	handled = gtk_window_propagate_key_event(window, event);
-
-if (!handled)
-	handled = gtk_window_activate_key(window, event);
-
-if (!handled) {
-	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(g_type_class_peek(GTK_TYPE_WIDGET));
-	handled = widget_class->key_press_event(widget, event);
-}
-
-return TRUE;
-}
-
 int main(int argc, char *argv[])
 {
 return(main_2(0, argc, argv));
@@ -945,7 +897,6 @@ if(!GLOBALS)
 	GLOBALS->use_gestures = old_g->use_gestures;
 	GLOBALS->use_dark = old_g->use_dark;
 	GLOBALS->save_on_exit = old_g->save_on_exit;
-	GLOBALS->dbl_mant_dig_override = old_g->dbl_mant_dig_override;
 
 	GLOBALS->cr_line_width = old_g->cr_line_width;
 	GLOBALS->cairo_050_offset = old_g->cairo_050_offset;
@@ -1921,16 +1872,6 @@ GLOBALS->tims.zoom=GLOBALS->tims.prevzoom=0;	/* 1 pixel/ns default */
 GLOBALS->tims.marker=GLOBALS->tims.lmbcache=-1;	/* uninitialized at first */
 GLOBALS->tims.baseline=-1;		/* middle button toggle marker */
 
-if(GLOBALS->max_time >> DBL_MANT_DIG)
-	{
-	fprintf(stderr, "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n", DBL_MANT_DIG);
-	if(!GLOBALS->dbl_mant_dig_override)
-		{
-		fprintf(stderr, "GTKWAVE | Exiting, use dbl_mant_dig_override rc var set to 1 to disable.\n");
-		exit(255);
-		}
-	}
-
 if((wname)||(vcd_save_handle_cached)||(is_smartsave))
 	{
 	int wave_is_compressed;
@@ -2133,11 +2074,6 @@ if(!GLOBALS->socket_xid)
 		}
 
 	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "delete_event", 	/* formerly was "destroy" */G_CALLBACK(file_quit_cmd_callback), "WM destroy");
-
-	window_setup_dnd(GLOBALS->mainwindow);
-	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "drag-data-received", G_CALLBACK(window_drag_data_received), NULL);
-
-	g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mainwindow), "key-press-event", G_CALLBACK(window_key_press_event), NULL);
 
 	gtk_widget_show(GLOBALS->mainwindow);
 	}
@@ -2637,14 +2573,10 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 	}
 
 
-load_all_fonts(); /* must be done before create_signalwindow() */
-GLOBALS->signalwindow = create_signalwindow();
-
-/* must be created after the signalwindow because it uses the signal_list vadjustment */
 GLOBALS->wavewindow = create_wavewindow();
+load_all_fonts(); /* must be done before create_signalwindow() */
 gtk_widget_show(GLOBALS->wavewindow);
-
-redraw_signals_and_waves();
+GLOBALS->signalwindow = create_signalwindow();
 
 if(GLOBALS->do_resize_signals)
                 {
@@ -2717,8 +2649,14 @@ gtk_widget_show(panedwindow);
 
 if(GLOBALS->dnd_sigview)
 	{
-	dnd_setup(GLOBALS->dnd_sigview, FALSE);
+	dnd_setup(GLOBALS->dnd_sigview, GLOBALS->signalarea, 1);
 	}
+	else
+	{
+	dnd_setup(NULL, GLOBALS->signalarea, 1);
+	}
+/* dnd_setup(GLOBALS->signalarea, GLOBALS->signalarea); */
+dnd_setup(GLOBALS->signalarea, GLOBALS->wavearea, 1);
 
 if((!GLOBALS->hide_sst)&&(GLOBALS->loaded_file_type != MISSING_FILE))
 	{
@@ -2757,7 +2695,7 @@ if(!mainwindow_already_built)
 #if GTK_CHECK_VERSION(3,0,0)
 	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), top_table, 0, 16, 0, 1,
 	                      	GTK_FILL | GTK_EXPAND,
-	                      	0, 0, 0);
+	                      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 #else
 	XXX_gtk_table_attach (XXX_GTK_TABLE (whole_table), GLOBALS->force_toolbars?toolhandle:top_table, 0, 16, 0, 1,
 	                      	GTK_FILL | GTK_EXPAND,
@@ -2770,7 +2708,9 @@ if(!mainwindow_already_built)
         	for(dri=0;dri<2;dri++)
         	        {
         	        GLOBALS->signalwindow_width_dirty=1;
-        	        redraw_signals_and_waves();
+        	        MaxSignalLength();
+        	        signalarea_configure_event(GLOBALS->signalarea, NULL);
+        	        wavearea_configure_event(GLOBALS->wavearea, NULL);
         	        }
 		}
 	}

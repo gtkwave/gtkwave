@@ -217,7 +217,7 @@ if(!GLOBALS->facs_are_sorted)
 		}
 #else
 	hv=hash(s);
-	if(!(GLOBALS->sym_hash) || !(temp=GLOBALS->sym_hash[hv])) return(NULL); /* no hash entry, add here wanted to add */
+	if(!(temp=GLOBALS->sym_hash[hv])) return(NULL); /* no hash entry, add here wanted to add */
 
 	while(temp)
 	        {

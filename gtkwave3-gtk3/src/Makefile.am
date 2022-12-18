@@ -30,7 +30,7 @@ AM_CXXFLAGS=	$(AM_CFLAGS)
 gtkwave_SOURCES= \
 	fsdb_wrapper_api.cc fsdb_wrapper_api.h \
 	baseconvert.h wavewindow.h zoombuttons.h fetchbuttons.h timeentry.h shiftbuttons.h pagebuttons.h edgebuttons.h \
-	signalwindow.h signal_list.h entry.h file.h status.h search.h showchange.h treesearch.h hiersearch.h renderopt.h markerbox.h \
+	signalwindow.h entry.h file.h status.h search.h showchange.h treesearch.h hiersearch.h renderopt.h markerbox.h \
 	simplereq.h help.h logfile.h vcd_partial.h mouseover.h mouseover_sigs.h interp.h \
 	globals.c globals.h ae2.c ae2.h analyzer.c analyzer.h baseconvert.c bitvec.c \
 	bsearch.c bsearch.h busy.c busy.h \
@@ -45,7 +45,7 @@ gtkwave_SOURCES= \
 	mouseover_sigs.c pagebuttons.c pipeio.c pipeio.h pixmaps.c pixmaps.h print.c print.h \
 	ptranslate.c ptranslate.h rc.c rc.h \
 	regex.c regex_wave.h renderopt.c rgb.c savefile.c savefile.h search.c shiftbuttons.c showchange.c \
-	signalwindow.c signal_list.c simplereq.c splash.c status.c strace.c strace.h symbol.c symbol.h tcl_callbacks.h \
+	signalwindow.c simplereq.c splash.c status.c strace.c strace.h symbol.c symbol.h tcl_callbacks.h \
         tcl_commands.c tcl_helper.c tcl_helper.h tcl_np.c tcl_np.h tcl_support_commands.c tcl_support_commands.h \
 	timeentry.c translate.c translate.h tree.c tree.h treesearch.c tree_component.c tree_component.h \
 	ttranslate.c ttranslate.h vcd.c vcd.h vcd_keywords.c \

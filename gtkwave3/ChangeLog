@@ -1755,5 +1755,8 @@
 3.3.111 01sep21	Fix in fstapi for read start limit time.
 		Fix xml2stems when begin blocks are in functions.
 		Skip over decimal point in timescale in viewer.
-3.4.0	25jan22 VCD reader fixes for unnamed Icarus begin blocks.
-		Add OpenBSD and FreeBSD	OSs for unbuffered FST I/O.
+3.3.112	04oct22 Bugfix-only release.
+		VCD reader fixes for unnamed Icarus begin blocks.
+		String data type crash fix in fst.c.
+3.3.113	04oct22	Dummy release to keep in sync with gtk3 version.
+3.3.114	23nov22	Buffer overflow fixes in FST reader.

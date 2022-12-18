@@ -29,7 +29,6 @@
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
-#include "signal_list.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -769,7 +768,9 @@ if(objc == 3)
 			{
 			GLOBALS->tims.marker = value;
 		        GLOBALS->signalwindow_width_dirty=1;
-		        redraw_signals_and_waves();
+		        MaxSignalLength();
+		        signalarea_configure_event(GLOBALS->signalarea, NULL);
+		        wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
 
 			if(t->asciivalue)
@@ -784,7 +785,9 @@ if(objc == 3)
 				GLOBALS->tims.marker = oldmarker;
 				update_markertime(GLOBALS->tims.marker);
 			        GLOBALS->signalwindow_width_dirty=1;
-		        	redraw_signals_and_waves();
+			        MaxSignalLength();
+			        signalarea_configure_event(GLOBALS->signalarea, NULL);
+			        wavearea_configure_event(GLOBALS->wavearea, NULL);
 				gtkwave_main_iteration();
 
 				return(TCL_OK);
@@ -793,7 +796,9 @@ if(objc == 3)
 			GLOBALS->tims.marker = oldmarker;
 			update_markertime(GLOBALS->tims.marker);
 		        GLOBALS->signalwindow_width_dirty=1;
-		        redraw_signals_and_waves();
+		        MaxSignalLength();
+		        signalarea_configure_event(GLOBALS->signalarea, NULL);
+		        wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
 			}
 		}
@@ -848,7 +853,7 @@ return(TCL_OK);
 
 static int gtkwavetcl_getTraceScrollbarRowValue(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
 {
-GtkAdjustment *wadj = gw_signal_list_get_vadjustment(GW_SIGNAL_LIST(GLOBALS->signalarea));
+GtkAdjustment *wadj=GTK_ADJUSTMENT(GLOBALS->wave_vslider);
 int value = (int)gtk_adjustment_get_value(wadj);
 
 return(gtkwavetcl_printInteger(clientData, interp, objc, objv, value));
@@ -874,7 +879,9 @@ if(objc == 2)
 
         update_markertime(GLOBALS->tims.marker);
         GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+        MaxSignalLength();
+        signalarea_configure_event(GLOBALS->signalarea, NULL);
+        wavearea_configure_event(GLOBALS->wavearea, NULL);
 
 	gtkwave_main_iteration();
 	}
@@ -905,7 +912,9 @@ if(objc == 2)
 
         update_markertime(GLOBALS->tims.marker);
         GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+        MaxSignalLength();
+        signalarea_configure_event(GLOBALS->signalarea, NULL);
+        wavearea_configure_event(GLOBALS->wavearea, NULL);
 
 	gtkwave_main_iteration();
 	}
@@ -953,7 +962,8 @@ if(objc == 2)
 	        time_update();
 	        }
 
-	redraw_signals_and_waves();
+        signalarea_configure_event(GLOBALS->signalarea, NULL);
+        wavearea_configure_event(GLOBALS->wavearea, NULL);
 	gtkwave_main_iteration();
 	}
         else
@@ -1022,7 +1032,9 @@ if(objc == 3)
 	GLOBALS->tims.marker = oldmarker;
 
         GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+        MaxSignalLength();
+        signalarea_configure_event(GLOBALS->signalarea, NULL);
+        wavearea_configure_event(GLOBALS->wavearea, NULL);
 
 	gtkwave_main_iteration();
 	}
@@ -1042,8 +1054,8 @@ if(objc == 2)
         TimeType val = atoi_64(s);
 	GLOBALS->left_justify_sigs = (val != LLDescriptor(0)) ? ~0 : 0;
 
-	MaxSignalLength();
-        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+        MaxSignalLength();
+        signalarea_configure_event(GLOBALS->signalarea, NULL);
 
 	gtkwave_main_iteration();
 	}
@@ -1163,7 +1175,9 @@ if(objc==2)
 		}
 
 	GLOBALS->signalwindow_width_dirty=1;
-	redraw_signals_and_waves();
+	MaxSignalLength();
+	signalarea_configure_event(GLOBALS->signalarea, NULL);
+	wavearea_configure_event(GLOBALS->wavearea, NULL);
 
 	sprintf(reportString, "%d", l);
 
@@ -1212,7 +1226,9 @@ if(objc==2)
 			}
 		if(num_found)
         		{
-        		redraw_signals_and_waves();
+        		MaxSignalLength();
+        		signalarea_configure_event(GLOBALS->signalarea, NULL);
+        		wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
         		}
                 }
@@ -1244,7 +1260,9 @@ if(objc==2)
 		num_found = process_tcl_list(s, FALSE);
 		if(num_found)
         		{
-        		redraw_signals_and_waves();
+        		MaxSignalLength();
+        		signalarea_configure_event(GLOBALS->signalarea, NULL);
+        		wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
         		}
                 }
@@ -1333,7 +1351,9 @@ if(objc==2)
 
 		if(num_found)
         		{
-			redraw_signals_and_waves();
+        		MaxSignalLength();
+        		signalarea_configure_event(GLOBALS->signalarea, NULL);
+        		wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
         		}
                 }
@@ -1418,7 +1438,9 @@ if(objc==2)
 
 		if(num_found)
         		{
-        		redraw_signals_and_waves();
+        		MaxSignalLength();
+        		signalarea_configure_event(GLOBALS->signalarea, NULL);
+        		wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
         		}
                 }
@@ -1482,7 +1504,9 @@ if(objc==2)
 
 		if(num_found)
         		{
-        		redraw_signals_and_waves();
+        		MaxSignalLength();
+        		signalarea_configure_event(GLOBALS->signalarea, NULL);
+        		wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
         		}
                 }
@@ -1546,7 +1570,9 @@ if(objc==2)
 
 		if(num_found)
         		{
-        		redraw_signals_and_waves();
+        		MaxSignalLength();
+        		signalarea_configure_event(GLOBALS->signalarea, NULL);
+        		wavearea_configure_event(GLOBALS->wavearea, NULL);
 			gtkwave_main_iteration();
         		}
                 }
@@ -1590,7 +1616,7 @@ if(objc == 3)
 					{
 					t->flags &= (~TR_HIGHLIGHT);
 					}
-	        		gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+	        		signalarea_configure_event(GLOBALS->signalarea, NULL);
 				gtkwave_main_iteration();
 				break;
 				}
@@ -1643,7 +1669,7 @@ if(objc == 3)
 
 		if(mat)
 			{
-        		gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+        		signalarea_configure_event(GLOBALS->signalarea, NULL);
 			gtkwave_main_iteration();
 			}
 
@@ -2079,8 +2105,8 @@ if(objc == 2)
         	unsigned int tabnum = atoi(s);
 		rc = switch_to_tab_number(tabnum);
 
-		MaxSignalLength();
-        	gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+        	MaxSignalLength();
+        	signalarea_configure_event(GLOBALS->signalarea, NULL);
 
         	gtkwave_main_iteration();
 		}

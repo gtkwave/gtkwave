@@ -34,7 +34,6 @@
 #include "globals.h"
 #include "vcd.h"
 #include "hierpack.h"
-#include "signal_list.h"
 
 #if !defined __MINGW32__
 #include <sys/time.h>
@@ -2643,8 +2642,8 @@ if(GLOBALS->partial_vcd)
 			service_zoom_full(NULL, NULL);
 
 		        GLOBALS->signalwindow_width_dirty=1;
-			MaxSignalLength();
-		        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+		        MaxSignalLength();
+		        signalarea_configure_event(GLOBALS->signalarea, NULL);
 			}
 		else if ((GLOBALS->zoom_dyne) && (!GLOBALS->helpbox_is_active))
 			{
@@ -2652,17 +2651,19 @@ if(GLOBALS->partial_vcd)
 			service_zoom_right(NULL, NULL);
 
 		        GLOBALS->signalwindow_width_dirty=1;
-			MaxSignalLength();
-		        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+		        MaxSignalLength();
+		        signalarea_configure_event(GLOBALS->signalarea, NULL);
 			}
 		else if ((old_maxtime_marker_conflict) && (!GLOBALS->helpbox_is_active))
 			{
 			GLOBALS->signalwindow_width_dirty=1;
-			redraw_signals_and_waves();
+			MaxSignalLength();
+			signalarea_configure_event(GLOBALS->signalarea, NULL);
+		        wavearea_configure_event(GLOBALS->wavearea, NULL);
 			}
 			else
 			{
-		        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
+		        signalarea_configure_event(GLOBALS->signalarea, NULL);
 		        wavearea_configure_event(GLOBALS->wavearea, NULL);
 			}
 

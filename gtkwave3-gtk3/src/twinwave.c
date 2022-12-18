@@ -19,7 +19,7 @@
 #include <gtk/gtkx.h>
 #endif
 #if GTK_CHECK_VERSION(3,22,26)
-#if !defined(MAC_INTEGRATION) && defined(GDK_WINDOWING_WAYLAND)
+#if !defined(MAC_INTEGRATION)
 #include <gdk/gdkwayland.h>
 #endif
 #endif
@@ -33,11 +33,7 @@
 
 #include "debug.h"
 
-#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 static int use_embedded = 1;
-#else
-static int use_embedded = 0;
-#endif
 static int twinwayland = 0;
 
 #define XXX_GTK_OBJECT(x) x
@@ -122,13 +118,8 @@ for(i=0;i<argc;i++)
 if(split_point < 0)
 	{
 	printf("Usage:\n------\n%s arglist1 separator arglist2\n\n"
-#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 		"The '+' between argument lists splits and creates one window.\n"
 		"The '++' between argument lists splits and creates two windows.\n"
-#else
-		"The '+' or '++' between argument lists splits and creates two windows.\n"
-		"Single window operation is not available on this platform.\n"
-#endif
 		"\n", argv[0]);
 	exit(255);
 	}
@@ -152,19 +143,15 @@ if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
 	use_embedded = 0;
 	}
 #endif
-#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 	{
 	xsocket[0] = gtk_socket_new ();
 	xsocket[1] = gtk_socket_new ();
 	gtk_widget_show (xsocket[0]);
 	gtk_widget_show (xsocket[1]);
 	}
-#endif
 
-#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 if(!twinwayland)
 g_signal_connect(XXX_GTK_OBJECT(xsocket[0]), "plug-removed", G_CALLBACK(plug_removed), NULL);
-#endif
 
 #if GTK_CHECK_VERSION(3,0,0)
 main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -184,14 +171,12 @@ vpan = gtk_vpaned_new ();
 gtk_widget_show (vpan);
 gtk_box_pack_start (GTK_BOX (main_vbox), vpan, TRUE, TRUE, 1);
 
-#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 if(!twinwayland)
 	{
 	gtk_paned_pack1 (GTK_PANED (vpan), xsocket[0], TRUE, FALSE);
 	g_signal_connect(XXX_GTK_OBJECT(xsocket[1]), "plug-removed", G_CALLBACK(plug_removed), NULL);
 	gtk_paned_pack2 (GTK_PANED (vpan), xsocket[1], TRUE, FALSE);
 	}
-#endif
 #endif
 
 #ifdef __MINGW32__
@@ -223,7 +208,7 @@ if(hMapFile != NULL)
 				memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 
 				sprintf(buf, "0+%08X", shmid);
-#if defined(MINGW_USE_XID) && defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
+#ifdef MINGW_USE_XID
 				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
 #else
 				sprintf(buf2, "%x", 0);
@@ -258,7 +243,7 @@ if(hMapFile != NULL)
 				si.cb = sizeof(si);
 
 				rc = CreateProcess(
-					NULL, /* arglist[0] */
+					arglist[0],
 					mylist,
 					NULL,
 					NULL,
@@ -294,7 +279,7 @@ if(hMapFile != NULL)
 				memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 
 				sprintf(buf, "1+%08X", shmid);
-#if defined(MINGW_USE_XID) && defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
+#ifdef MINGW_USE_XID
 				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
 #else
 				sprintf(buf2, "%x", 0);
@@ -330,7 +315,7 @@ if(hMapFile != NULL)
 				si.cb = sizeof(si);
 
 				rc = CreateProcess(
-					NULL, /* arglist[0] */
+					arglist[0],
 					mylist,
 					NULL,
 					NULL,
@@ -444,12 +429,10 @@ if(shmid >=0)
 				sprintf(buf, "0+%08X", shmid);
 				if(use_embedded)
 					{
-#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 #ifdef MAC_INTEGRATION
 					sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
 #else
 					sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
-#endif
 #endif
 					}
 					else
@@ -484,12 +467,10 @@ if(shmid >=0)
 			sprintf(buf, "1+%08X", shmid);
 			if(use_embedded)
 				{
-#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 #ifdef MAC_INTEGRATION
 				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
 #else
 				sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
-#endif
 #endif
 				}
 				else

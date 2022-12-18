@@ -23,7 +23,6 @@
 #include "vcd.h"
 #include "busy.h"
 #include "debug.h"
-#include "signal_list.h"
 
 
 enum { NAME_COLUMN, PTR_COLUMN, N_COLUMNS };
@@ -499,8 +498,10 @@ for(i=GLOBALS->fetchlow;i<=GLOBALS->fetchhigh;i++)
 
 set_window_idle(widget);
 
-gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
-redraw_signals_and_waves();
+GLOBALS->traces.scroll_top = GLOBALS->traces.scroll_bottom = GLOBALS->traces.last;
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
@@ -618,7 +619,9 @@ GLOBALS->traces.buffercount=tcache.buffercount;
 GLOBALS->traces.buffer=tcache.buffer;
 GLOBALS->traces.bufferlast=tcache.bufferlast;
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
@@ -782,7 +785,9 @@ if(tp)
         }
 }
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
@@ -827,7 +832,9 @@ if(GLOBALS->entrybox_text_local_hiersearch_c_1)
         fetchvex(GLOBALS->h_selectedtree_hiersearch_c_1, GLOBALS->bundle_direction_hiersearch_c_1);
         }
 
-redraw_signals_and_waves();
+MaxSignalLength();
+signalarea_configure_event(GLOBALS->signalarea, NULL);
+wavearea_configure_event(GLOBALS->wavearea, NULL);
 }
 
 
