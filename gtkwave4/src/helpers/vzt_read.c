@@ -171,19 +171,19 @@ return((m1<<24)|(m2<<16)|(m3<<8)|m4);
 }
 
 
-static vztint32_t vzt_rd_get_v32(char **mmx)
+static vztint32_t vzt_rd_get_v32(unsigned char **mmx)
 {
-signed char *c;
-signed char *beg;
+unsigned char *c;
+unsigned char *beg;
 vztint32_t val;
-signed char **mm = (signed char **)mmx;
+unsigned char **mm = mmx;
 
 c = *mm;
 beg = c;
 
-if(*c>=0)
+if(!(*c & 0x80))
 	{
-	while(*c>=0) c++;
+	while(!(*c & 0x80)) c++;
 	*mm = c+1;
 
 	val = (vztint32_t)(*c&0x7f);
@@ -202,19 +202,19 @@ if(*c>=0)
 return(val);
 }
 
-static vztint64_t vzt_rd_get_v64(char **mmx)
+static vztint64_t vzt_rd_get_v64(unsigned char **mmx)
 {
-signed char *c;
-signed char *beg;
+unsigned char *c;
+unsigned char *beg;
 vztint64_t val;
-signed char **mm = (signed char **)mmx;
+unsigned char **mm = mmx;
 
 c = *mm;
 beg = c;
 
-if(*c>=0)
+if(!(*c & 0x80))
 	{
-	while(*c>=0) c++;
+	while(!(*c & 0x80)) c++;
 	*mm = c+1;
 
 	val = (vztint64_t)(*c&0x7f);
@@ -314,7 +314,7 @@ vztint64_t *times=NULL;
 vztint32_t *change_dict=NULL;
 vztint32_t *val_dict=NULL;
 unsigned int num_time_ticks, num_sections, num_dict_entries;
-char *pnt = b->mem;
+unsigned char *pnt = b->mem;
 vztint32_t i, j, m, num_dict_words;
 /* vztint32_t *block_end = (vztint32_t *)(pnt + b->uncompressed_siz); */
 vztint32_t *val_tmp;
