@@ -1832,3 +1832,4 @@
 		High CPU utilization when nothing is happening.
 3.3.114	23nov22	Buffer overflow fixes in FST reader.
 3.3.115	28jan23 Fix VZT reader with -fstrict-aliasing.
+		Fix use_multi_state condition in vzt_write.c.
