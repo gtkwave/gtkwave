@@ -1259,7 +1259,9 @@ if(!lt->timegranule)
 		struct vzt_wr_symbol *s = lt->sorted_facs[j];
 		for(i=0;i<s->len;i++)
 			{
-			lt->use_multi_state |= s->chgx[i];
+			if (s->chgx[i] != 0) {
+				lt->use_multi_state = 1;
+			}
 			t = vzt_wr_dsvzt_splay(s->chgx[i], t);
 			if(!vzt_wr_dsvzt_success)
 				{
@@ -1308,7 +1310,9 @@ if(!lt->timegranule)
 		for(i=0;i<s->len;i++)
 			{
 			t = s->prevx[i]->child;
-			lt->use_multi_state |= s->chgx[i];
+			if (s->chgx[i] != 0) {
+				lt->use_multi_state = 1;
+			}
 			t = vzt_wr_dsvzt_splay(s->chgx[i], t);
 			if(!vzt_wr_dsvzt_success)
 				{
