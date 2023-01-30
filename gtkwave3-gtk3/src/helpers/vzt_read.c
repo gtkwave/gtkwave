@@ -782,7 +782,7 @@ do_vch:				if(!(lt->flags[idx] & (VZT_RD_SYM_F_DOUBLE|VZT_RD_SYM_F_STRING)))
 					else
 						{
 						unsigned int spnt=vzt_rd_make_sindex(pnt);
-						char *msg = ((!i)&(!b->prev)) ? "UNDEF" : b->sindex[spnt];
+						char *msg = ((!i)&&(b->prev)) ? "UNDEF" : b->sindex[spnt];
 						lt->value_change_callback(&lt, &b->times[i], &idx, &msg);
 						}
 					}
@@ -857,7 +857,7 @@ do_vch_0:		if(!(lt->flags[idx] & (VZT_RD_SYM_F_DOUBLE|VZT_RD_SYM_F_STRING)))
 				else
 					{
 					unsigned int spnt=vzt_rd_make_sindex(pnt);
-					char *msg = ((!i)&(!b->prev)) ? "UNDEF" : b->sindex[spnt];
+					char *msg = ((!i)&&(b->prev)) ? "UNDEF" : b->sindex[spnt];
 					lt->value_change_callback(&lt, &b->times[i], &idx, &msg);
 					}
 				}
@@ -908,7 +908,7 @@ for(i = 1; i < b->num_time_ticks; i++)
 				else
 					{
 					unsigned int spnt=vzt_rd_make_sindex(pnt);
-					char *msg = ((!i)&(!b->prev)) ? "UNDEF" : b->sindex[spnt];
+					char *msg = ((!i)&&(b->prev)) ? "UNDEF" : b->sindex[spnt];
 					lt->value_change_callback(&lt, &b->times[i], &idx, &msg);
 					}
 				}
