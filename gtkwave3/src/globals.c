@@ -50,7 +50,7 @@
 #include "fsdb_wrapper_api.h"
 
 #ifdef __MINGW32__
-#define sleep(x) Sleep(x)
+#define sleep(x) Sleep(x * 1000)
 #endif
 
 #if !defined __MINGW32__ && !defined _MSC_VER

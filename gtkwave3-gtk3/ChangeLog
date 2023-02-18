@@ -1831,6 +1831,7 @@
 3.3.113	04oct22	Bugfix-only release.
 		High CPU utilization when nothing is happening.
 3.3.114	23nov22	Buffer overflow fixes in FST reader.
-3.3.115	28jan23 Fix VZT reader with -fstrict-aliasing.
+3.3.115	18feb23 Fix VZT reader with -fstrict-aliasing.
 		Fix use_multi_state condition in vzt_write.c.
 		Fix for UNDEF vs strings at start of a vzt file.
+		Fix sleep() time scaling redefine for mingw.
