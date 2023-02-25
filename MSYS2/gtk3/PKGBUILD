@@ -15,6 +15,7 @@ depends=(
 makedepends=(
   'perlxml'
   'intltool'
+  "${MINGW_PACKAGE_PREFIX}-ntldd"
 )
 
 prepare() {
@@ -37,6 +38,10 @@ build() {
     --enable-gtk3
 
   make
+
+  # This is a diagnostic output to help with packaging the necessary DLLs
+  find "$srcdir/gtkwave3-gtk3" -iname "*.exe" -print -exec ldd {} \;
+  find "$srcdir/gtkwave3-gtk3" -iname "*.exe" -print -exec ntldd {} \;
 }
 
 package() {

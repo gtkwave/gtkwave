@@ -6,7 +6,7 @@ libcairo-2.dll
 libcairo-gobject-2.dll
 libdatrie-1.dll
 libexpat-1.dll
-libffi-7.dll
+libffi-8.dll
 libfontconfig-1.dll
 libfreetype-6.dll
 libfribidi-0.dll
@@ -25,7 +25,7 @@ libpango-1.0-0.dll
 libpangocairo-1.0-0.dll
 libpangoft2-1.0-0.dll
 libpangowin32-1.0-0.dll
-libpcre-1.dll
+libpcre2-8-0.dll
 libpixman-1-0.dll
 libpng16-16.dll
 libstdc++-6.dll
