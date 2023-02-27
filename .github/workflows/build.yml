@@ -61,7 +61,7 @@ jobs:
         mv mingw-*gtkwave*.pkg.tar.zst ../../
         ../standalone_pkg.sh
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: |
           mingw-*gtkwave*.pkg.tar.zst
