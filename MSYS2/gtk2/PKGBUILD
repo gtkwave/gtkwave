@@ -15,6 +15,7 @@ depends=(
 makedepends=(
   'perlxml'
   'intltool'
+  "${MINGW_PACKAGE_PREFIX}-ntldd"
 )
 
 prepare() {
@@ -36,6 +37,10 @@ build() {
     --disable-mime-update
 
   make
+
+  # This is a diagnostic output to help with packaging the necessary DLLs
+  find "$srcdir/gtkwave3" -iname "*.exe" -print -exec ldd {} \;
+  find "$srcdir/gtkwave3" -iname "*.exe" -print -exec ntldd {} \;
 }
 
 package() {
