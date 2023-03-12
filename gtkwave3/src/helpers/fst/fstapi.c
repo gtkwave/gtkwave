@@ -131,7 +131,7 @@ void **JenkinsIns(void *base_i, const unsigned char *mem, uint32_t length, uint3
 #define FST_GZIO_LEN                    (32768)
 #define FST_HDR_FOURPACK_DUO_SIZE       (4*1024*1024)
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_AIX)
+#if defined(__i386__) || defined(__x86_64__) || defined(_AIX) || defined(__aarch64__)
 #define FST_DO_MISALIGNED_OPS
 #endif
 
