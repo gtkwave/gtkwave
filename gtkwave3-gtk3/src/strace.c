@@ -210,16 +210,14 @@ static void enter_callback(GtkWidget *widget, gpointer strace_tmp)
         return;
     }
 
-    gtk_editable_select_region(GTK_EDITABLE(widget),
-                               0,
-                               gtk_entry_get_text_length(GTK_ENTRY(widget)));
-
-    strcpy((s->string = (char *)malloc_2(len + 1)), entry_text);
+	s->string = malloc_2(len + 1);
+    strcpy(s->string, entry_text);
     for (i = 0; i < len; i++) {
         char ch;
         ch = s->string[i];
-        if ((ch >= 'a') && (ch <= 'z'))
+        if (ch >= 'a' && ch <= 'z') {
             s->string[i] = ch - ('a' - 'A');
+		}
     }
 }
 
