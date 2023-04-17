@@ -1838,3 +1838,5 @@
 		Use MapViewOfFileEx for mmap on Windows (fstapi).
 		Define FST_DO_MISALIGNED_OPS on AArch64 (fstapi).
 		Fixed attrbegin short length problem.
+3.3.116	17apr23	Fix manpage/odt for vcd2fst command switch documentation for
+		zlibpack.
