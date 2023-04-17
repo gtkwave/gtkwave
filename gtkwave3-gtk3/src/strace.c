@@ -35,70 +35,6 @@ static char *stype[WAVE_STYPE_COUNT] = {"Don't Care",
                                         "Falling Edge",
                                         "Any Edge"};
 
-// clang-format off
-
-static struct item_mark_string item_mark_start_strings[] = {
-    {"Start of Time", 0},
-	{"Named Marker A", 0},
-	{"Named Marker B", 0},
-	{"Named Marker C", 0},
-    {"Named Marker D", 0},
-	{"Named Marker E", 0},
-	{"Named Marker F", 0},
-	{"Named Marker G", 0},
-    {"Named Marker H", 0},
-	{"Named Marker I", 0},
-	{"Named Marker J", 0},
-	{"Named Marker K", 0},
-    {"Named Marker L", 0},
-	{"Named Marker M", 0},
-	{"Named Marker N", 0},
-	{"Named Marker O", 0},
-    {"Named Marker P", 0},
-	{"Named Marker Q", 0},
-	{"Named Marker R", 0},
-	{"Named Marker S", 0},
-    {"Named Marker T", 0},
-	{"Named Marker U", 0},
-	{"Named Marker V", 0},
-	{"Named Marker W", 0},
-    {"Named Marker X", 0},
-	{"Named Marker Y", 0},
-	{"Named Marker Z", 0},
-};
-
-static struct item_mark_string item_mark_end_strings[] = {
-    {"End of Time", 0},
-	{"Named Marker A", 0},
-	{"Named Marker B", 0},
-	{"Named Marker C", 0},
-    {"Named Marker D", 0},
-	{"Named Marker E", 0},
-	{"Named Marker F", 0},
-	{"Named Marker G", 0},
-    {"Named Marker H", 0},
-	{"Named Marker I", 0},
-	{"Named Marker J", 0},
-	{"Named Marker K", 0},
-    {"Named Marker L", 0},
-	{"Named Marker M", 0},
-	{"Named Marker N", 0},
-	{"Named Marker O", 0},
-    {"Named Marker P", 0},
-	{"Named Marker Q", 0},
-	{"Named Marker R", 0},
-	{"Named Marker S", 0},
-    {"Named Marker T", 0},
-	{"Named Marker U", 0},
-	{"Named Marker V", 0},
-	{"Named Marker W", 0},
-    {"Named Marker X", 0},
-	{"Named Marker Y", 0},
-	{"Named Marker Z", 0},
-};
-
-// clang-format on
-
 /*
  * naive nonoptimized case insensitive strstr
  */
@@ -372,6 +308,27 @@ static void update_mark_count_label(void)
                        mark_count_buf);
 }
 
+static GtkWidget *build_marker_combo_box(gboolean is_end)
+{
+    char c;
+    GtkWidget *combo_box;
+
+    combo_box = gtk_combo_box_text_new();
+    if (is_end) {
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box), "End of Time");
+    } else {
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box), "Start of Time");
+    }
+
+    for (c = 'A'; c <= 'Z'; c++) {
+        gchar *text = g_strdup_printf("Named Marker %c", c);
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box), text);
+        g_free(text);
+    }
+
+    return combo_box;
+}
+
 void tracesearchbox(const char *title, GCallback func, gpointer data)
 {
     GtkWidget *entry;
@@ -560,13 +517,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         gtk_widget_show(ptr_mark_label);
         gtk_box_pack_start(GTK_BOX(mark_count_hbox_start), ptr_mark_label, TRUE, FALSE, 0);
 #endif
-        combo_box = gtk_combo_box_text_new();
-        for (idx = 0; idx < sizeof(item_mark_start_strings) / sizeof(struct item_mark_string);
-             ++idx) {
-            item_mark_start_strings[idx].idx = idx;
-            gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box),
-                                           item_mark_start_strings[idx].str);
-        }
+        combo_box = build_marker_combo_box(FALSE);
 
         gtk_widget_show(combo_box);
         WV_STRACE_CURWIN(combo_box);
@@ -584,13 +535,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         gtk_widget_show(ptr_mark_label);
         gtk_box_pack_start(GTK_BOX(mark_count_hbox_end), ptr_mark_label, TRUE, FALSE, 0);
 #endif
-        combo_box = gtk_combo_box_text_new();
-        for (idx = 0; idx < sizeof(item_mark_end_strings) / sizeof(struct item_mark_string);
-             ++idx) {
-            item_mark_end_strings[idx].idx = idx;
-            gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box),
-                                           item_mark_end_strings[idx].str);
-        }
+        combo_box = build_marker_combo_box(TRUE);
 
         gtk_widget_show(combo_box);
         WV_STRACE_CURWIN(combo_box);
@@ -1390,7 +1335,7 @@ TimeType strace_timetrace(TimeType basetime, int notfirst)
             DEBUG(printf("\tPass: %d, Name: %s\n", s->search_result, s->trace->name));
             if (s->search_result) {
                 passcount++;
-			}
+            }
             s = s->next;
         }
 
@@ -1451,26 +1396,30 @@ void strace_maketimetrace(int mode)
     }
 
     if (GLOBALS->strace_ctx->mark_idx_start > 0) {
-        if (GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_start - 1] >= 0)
+        if (GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_start - 1] >= 0) {
             basetime = GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_start - 1];
-        else {
-            char notused[129];
-            sprintf(notused,
-                    "%s not in use.\n",
-                    item_mark_start_strings[(unsigned int)GLOBALS->strace_ctx->mark_idx_start].str);
-            status_text(notused);
+        } else {
+            char buf[16];
+            char *text;
+
+            make_bijective_marker_id_string(buf, GLOBALS->strace_ctx->mark_idx_start - 1);
+            text = g_strdup_printf("Named Marker %s not in use.\n", buf);
+            status_text(text);
+            g_free(text);
         }
     }
 
     if (GLOBALS->strace_ctx->mark_idx_end > 0) {
-        if (GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_end - 1] >= 0)
+        if (GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_end - 1] >= 0) {
             endtime = GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_end - 1];
-        else {
-            char notused[129];
-            sprintf(notused,
-                    "%s not in use.\n",
-                    item_mark_end_strings[(unsigned int)GLOBALS->strace_ctx->mark_idx_end].str);
-            status_text(notused);
+        } else {
+            char buf[16];
+            char *text;
+
+            make_bijective_marker_id_string(buf, GLOBALS->strace_ctx->mark_idx_end - 1);
+            text = g_strdup_printf("Named Marker %s not in use.\n", buf);
+            status_text(text);
+            g_free(text);
         }
     }
 
