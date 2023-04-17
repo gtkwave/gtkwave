@@ -67,12 +67,6 @@ struct mprintf_buff_t *next;
 char *str;
 };
 
-struct item_mark_string {
-   char *str;
-   unsigned char idx;
-};
-
-
 /* for being able to handle multiple strace sessions at once, context is moved here */
 struct strace_ctx_t
 {
