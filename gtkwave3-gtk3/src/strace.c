@@ -210,14 +210,14 @@ static void enter_callback(GtkWidget *widget, gpointer strace_tmp)
         return;
     }
 
-	s->string = malloc_2(len + 1);
+    s->string = malloc_2(len + 1);
     strcpy(s->string, entry_text);
     for (i = 0; i < len; i++) {
         char ch;
         ch = s->string[i];
         if (ch >= 'a' && ch <= 'z') {
             s->string[i] = ch - ('a' - 'A');
-		}
+        }
     }
 }
 
@@ -297,11 +297,7 @@ static void update_mark_count_label(void)
         return;
     }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
-    sprintf(mark_count_buf, "Beg/End Marks: %d", GLOBALS->strace_ctx->timearray_size);
-#else
-    sprintf(mark_count_buf, "Mark Count: %d", GLOBALS->strace_ctx->timearray_size);
-#endif
+    sprintf(mark_count_buf, "%d", GLOBALS->strace_ctx->timearray_size);
     gtk_label_set_text(GTK_LABEL(GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1),
                        mark_count_buf);
 }
@@ -333,6 +329,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     GtkWidget *vbox, *hbox, *small_hbox, *vbox_g, *label;
     GtkWidget *button1, *button1a, *button1b, *button1c, *button2, *scrolled_win, *frame,
         *separator;
+    GtkSizeGroup *label_group;
     Trptr t;
     int i;
     int numtraces;
@@ -373,23 +370,28 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
                            NULL);
     WV_STRACE_CURWIN(GLOBALS->strace_ctx->window_strace_c_10);
 
-    vbox = XXX_gtk_vbox_new(FALSE, 0);
+    vbox = XXX_gtk_vbox_new(FALSE, 12);
     gtk_container_add(GTK_CONTAINER(GLOBALS->strace_ctx->window_strace_c_10), vbox);
+#if GTK_CHECK_VERSION(3, 0, 0)
+    gtk_container_set_border_width(GTK_CONTAINER(GLOBALS->strace_ctx->window_strace_c_10), 12);
+#endif
     gtk_widget_show(vbox);
 
     vbox_g = XXX_gtk_vbox_new(FALSE, 0);
     gtk_widget_show(vbox_g);
 
     frame = gtk_frame_new(NULL);
-    gtk_container_set_border_width(GTK_CONTAINER(frame), 3);
     gtk_widget_show(frame);
 
-    small_hbox = XXX_gtk_hbox_new(TRUE, 0);
+    small_hbox = XXX_gtk_hbox_new(FALSE, 0);
     gtk_widget_show(small_hbox);
 
     label = gtk_label_new("Logical Operation");
+#if GTK_CHECK_VERSION(3, 0, 0)
+    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+#endif
     gtk_widget_show(label);
-    gtk_box_pack_start(GTK_BOX(small_hbox), label, TRUE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(small_hbox), label, TRUE, TRUE, 0);
 
     GtkWidget *combo_box = gtk_combo_box_text_new();
 
@@ -404,7 +406,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     WV_STRACE_CURWIN(combo_box);
     g_signal_connect(combo_box, "changed", G_CALLBACK(logical_clicked), NULL);
 
-    gtk_box_pack_start(GTK_BOX(small_hbox), combo_box, TRUE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(small_hbox), combo_box, FALSE, FALSE, 0);
     gtk_widget_show(combo_box);
 
     gtk_box_pack_start(GTK_BOX(vbox), small_hbox, FALSE, FALSE, 0);
@@ -430,6 +432,12 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
             continue;
         }
 
+        if (numtraces > 0) {
+            separator = XXX_gtk_hseparator_new();
+            gtk_widget_show(separator);
+            gtk_box_pack_start(GTK_BOX(vbox_g), separator, FALSE, FALSE, 0);
+        }
+
         numtraces++;
         if (numtraces == 500) {
             status_text("Limiting waveform display search to 500 traces.\n");
@@ -441,17 +449,20 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         GLOBALS->strace_ctx->straces = s;
         s->trace = t;
 
-        if (t != GLOBALS->traces.first) {
-            separator = XXX_gtk_hseparator_new();
-            gtk_widget_show(separator);
-            gtk_box_pack_start(GTK_BOX(vbox_g), separator, FALSE, FALSE, 0);
-        }
-
-        small_hbox = XXX_gtk_hbox_new(TRUE, 0);
+        small_hbox = XXX_gtk_hbox_new(FALSE, 6);
         gtk_widget_show(small_hbox);
+#if GTK_CHECK_VERSION(3, 0, 0)
+        gtk_container_set_border_width(GTK_CONTAINER(small_hbox), 6);
+#endif
 
         label = gtk_label_new(t->name);
         gtk_widget_show(label);
+#if GTK_CHECK_VERSION(3, 0, 0)
+        gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+        gtk_widget_set_margin_top(label, 6);
+        gtk_widget_set_margin_start(label, 6);
+        gtk_widget_set_margin_end(label, 6);
+#endif
         gtk_box_pack_start(GTK_BOX(vbox_g), label, FALSE, FALSE, 0);
 
         combo_box = gtk_combo_box_text_new();
@@ -463,14 +474,14 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         gtk_combo_box_set_active(GTK_COMBO_BOX(combo_box), 0);
         g_signal_connect(combo_box, "changed", G_CALLBACK(stype_clicked), s);
         gtk_widget_show(combo_box);
-        gtk_box_pack_start(GTK_BOX(small_hbox), combo_box, TRUE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(small_hbox), combo_box, FALSE, TRUE, 0);
 
         entry = X_gtk_entry_new_with_max_length(257); /* %+256ch */
         gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "activate", G_CALLBACK(enter_callback), s);
         gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "changed", G_CALLBACK(enter_callback), s);
         WV_STRACE_CURWIN(entry);
 
-        gtk_box_pack_start(GTK_BOX(small_hbox), entry, TRUE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(small_hbox), entry, TRUE, TRUE, 0);
         gtk_widget_show(entry);
         gtk_box_pack_start(GTK_BOX(vbox_g), small_hbox, FALSE, FALSE, 0);
     }
@@ -481,78 +492,63 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_win), vbox_g);
 #endif
 
+    label_group = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
+
     do /* add GUI elements for displaying mark count and mark count start/end */
     {
-        unsigned int idx;
-#if !GTK_CHECK_VERSION(3, 0, 0)
-        GtkWidget *ptr_mark_label;
-#endif
-        GtkWidget *mark_count_hbox_start, *mark_count_hbox_end;
-        GtkWidget *count_vbox_left, *count_vbox_right, *count_vbox, *count_hbox;
+        GtkWidget *time_range_hbox;
 
-        count_hbox = XXX_gtk_hbox_new(TRUE, 0);
-        gtk_widget_show(count_hbox);
-        gtk_box_pack_start(GTK_BOX(vbox), count_hbox, FALSE, FALSE, 0);
+        time_range_hbox = XXX_gtk_hbox_new(FALSE, 12);
 
-        /* add a vertical box to display the mark count GUI elements */
-        count_vbox_left = XXX_gtk_vbox_new(TRUE, 0);
-        gtk_widget_show(count_vbox_left);
-        gtk_box_pack_start(GTK_BOX(count_hbox), count_vbox_left, FALSE, FALSE, 0);
-        count_vbox = XXX_gtk_vbox_new(TRUE, 0);
-        gtk_widget_show(count_vbox);
-        gtk_box_pack_start(GTK_BOX(count_hbox), count_vbox, FALSE, FALSE, 0);
-        count_vbox_right = XXX_gtk_vbox_new(TRUE, 0);
-        gtk_widget_show(count_vbox_right);
-        gtk_box_pack_start(GTK_BOX(count_hbox), count_vbox_right, FALSE, FALSE, 0);
-
-        /* add mark start GUI element */
-        mark_count_hbox_start = XXX_gtk_hbox_new(TRUE, 0);
-        gtk_widget_show(mark_count_hbox_start);
-        gtk_box_pack_start(GTK_BOX(count_vbox), mark_count_hbox_start, FALSE, FALSE, 0);
+        label = gtk_label_new("Time range");
 #if GTK_CHECK_VERSION(3, 0, 0)
-#else
-        ptr_mark_label = gtk_label_new("Marking Begins at:");
-        gtk_widget_show(ptr_mark_label);
-        gtk_box_pack_start(GTK_BOX(mark_count_hbox_start), ptr_mark_label, TRUE, FALSE, 0);
+        gtk_label_set_xalign(GTK_LABEL(label), 0.0);
 #endif
-        combo_box = build_marker_combo_box(FALSE);
+        gtk_box_pack_start(GTK_BOX(time_range_hbox), label, TRUE, TRUE, 0);
+        gtk_size_group_add_widget(label_group, label);
 
-        gtk_widget_show(combo_box);
+        combo_box = build_marker_combo_box(FALSE);
         WV_STRACE_CURWIN(combo_box);
         g_signal_connect(combo_box, "changed", G_CALLBACK(start_clicked), NULL);
         gtk_combo_box_set_active(GTK_COMBO_BOX(combo_box), GLOBALS->strace_ctx->mark_idx_start);
-        gtk_box_pack_start(GTK_BOX(mark_count_hbox_start), combo_box, TRUE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(time_range_hbox), combo_box, FALSE, FALSE, 0);
 
-        /* add mark end GUI element */
-        mark_count_hbox_end = XXX_gtk_hbox_new(TRUE, 0);
-        gtk_widget_show(mark_count_hbox_end);
-        gtk_box_pack_start(GTK_BOX(count_vbox), mark_count_hbox_end, FALSE, FALSE, 0);
-#if GTK_CHECK_VERSION(3, 0, 0)
-#else
-        ptr_mark_label = gtk_label_new("Marking Stops at:");
-        gtk_widget_show(ptr_mark_label);
-        gtk_box_pack_start(GTK_BOX(mark_count_hbox_end), ptr_mark_label, TRUE, FALSE, 0);
-#endif
         combo_box = build_marker_combo_box(TRUE);
-
-        gtk_widget_show(combo_box);
         WV_STRACE_CURWIN(combo_box);
         g_signal_connect(combo_box, "changed", G_CALLBACK(end_clicked), NULL);
         gtk_combo_box_set_active(GTK_COMBO_BOX(combo_box), GLOBALS->strace_ctx->mark_idx_end);
-        gtk_box_pack_start(GTK_BOX(mark_count_hbox_end), combo_box, TRUE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(time_range_hbox), combo_box, FALSE, FALSE, 0);
 
-        /* add mark count GUI element */
-        GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1 = gtk_label_new("");
-        gtk_widget_show(GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1);
-        gtk_box_pack_start(GTK_BOX(count_vbox),
-                           GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1,
-                           TRUE,
-                           FALSE,
-                           0);
-        update_mark_count_label();
+        gtk_widget_show_all(time_range_hbox);
+
+        gtk_box_pack_start(GTK_BOX(vbox), time_range_hbox, FALSE, FALSE, 0);
     } while (0);
 
-    hbox = XXX_gtk_hbox_new(FALSE, 1);
+    /* add mark count GUI element */
+    hbox = XXX_gtk_hbox_new(FALSE, 12);
+
+    label = gtk_label_new("Beg/End Marks");
+#if GTK_CHECK_VERSION(3, 0, 0)
+    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+#endif
+    gtk_size_group_add_widget(label_group, label);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+
+    GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1 = gtk_label_new("");
+#if GTK_CHECK_VERSION(3, 0, 0)
+    gtk_label_set_xalign(GTK_LABEL(GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1), 0.0);
+#endif
+    gtk_box_pack_start(GTK_BOX(hbox),
+                       GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1,
+                       TRUE,
+                       TRUE,
+                       0);
+    update_mark_count_label();
+
+    gtk_widget_show_all(hbox);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+    hbox = XXX_gtk_hbox_new(FALSE, 6);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
     gtk_widget_show(hbox);
 
