@@ -1936,6 +1936,86 @@ if(objc == 2)
 return(TCL_OK);
 }
 
+static int gtkwavetcl_setTraceFlagsFromName(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
+{
+	if(objc == 3)
+	{
+		char *s = get_Tcl_string(objv[1]);
+		char *sflags = get_Tcl_string(objv[2]);
+		uint64_t flags;
+		Trptr t = GLOBALS->traces.first;
+
+		sscanf(sflags, "%" TRACEFLAGSPRIuFMT, &flags);
+
+		while(t)
+		{
+			if(!(t->flags&(TR_BLANK|TR_ANALOG_BLANK_STRETCH)))
+			{
+				char *name = extractFullTraceName(t);
+				if(!strcmp(name, s))
+				{
+					free_2(name);
+					break;
+				}
+				free_2(name);
+			}
+			t = t-> t_next;
+		}
+
+		if(t)
+		{
+			t->flags = flags;
+			redraw_signals_and_waves();
+			gtkwave_main_iteration();
+			return(TCL_OK);
+		}
+	}
+	else
+	{
+		return(gtkwavetcl_badNumArgs(clientData, interp, objc, objv, 1));
+	}
+
+	return(TCL_OK);
+}
+
+static int gtkwavetcl_setTraceFixedPointShiftFromName(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
+{
+	if(objc == 3)
+	{
+		char *s = get_Tcl_string(objv[1]);
+		char *sfp_shift = get_Tcl_string(objv[2]);
+		int fp_shift = atoi(sfp_shift);
+		Trptr t = GLOBALS->traces.first;
+
+		while(t)
+		{
+			if(!(t->flags&(TR_BLANK|TR_ANALOG_BLANK_STRETCH)))
+			{
+				char *name = extractFullTraceName(t);
+				if(!strcmp(name, s))
+				{
+					free_2(name);
+					break;
+				}
+				free_2(name);
+			}
+			t = t-> t_next;
+		}
+
+		if(t)
+		{
+			t->t_fpdecshift = fp_shift;
+			return(TCL_OK);
+		}
+	}
+	else
+	{
+		return(gtkwavetcl_badNumArgs(clientData, interp, objc, objv, 1));
+	}
+
+	return(TCL_OK);
+}
+
 static int gtkwavetcl_loadFile(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
 {
   if(objc == 2)
@@ -2270,6 +2350,8 @@ tcl_cmdstruct gtkwave_commands[] =
 	{"getTotalNumTraces",  			gtkwavetcl_getTotalNumTraces},
 	{"getTraceFlagsFromIndex", 		gtkwavetcl_getTraceFlagsFromIndex},
 	{"getTraceFlagsFromName",		gtkwavetcl_getTraceFlagsFromName},
+	{"setTraceFlagsFromName",		gtkwavetcl_setTraceFlagsFromName},
+	{"setTraceFixedPointShiftFromName",		gtkwavetcl_setTraceFixedPointShiftFromName},
 	{"getTraceNameFromIndex", 		gtkwavetcl_getTraceNameFromIndex},
 	{"getTraceScrollbarRowValue", 		gtkwavetcl_getTraceScrollbarRowValue},
 	{"getTraceValueAtMarkerFromIndex", 	gtkwavetcl_getTraceValueAtMarkerFromIndex},

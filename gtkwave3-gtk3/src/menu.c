@@ -5105,6 +5105,7 @@ menu_save_signal_list_tcl_action(GtkWidget *widget, gpointer data)
                 if(sig_name != NULL)
                 {
                     fprintf(sig_file, "gtkwave::addSignalsFromList \"%s\"\n", sig_name);
+                    fprintf(sig_file, "gtkwave::setTraceFlagsFromName \"%s\" %" TRACEFLAGSPRIuFMT "\n", sig_name, t->flags);
                     free(sig_name);
                 }
             }
