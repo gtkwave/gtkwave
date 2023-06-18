@@ -4,6 +4,7 @@ on:
   push:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
 
@@ -29,7 +30,7 @@ jobs:
     - run: git config --global core.autocrlf input
       shell: bash
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: msys2/setup-msys2@v2
       with:
@@ -60,7 +61,7 @@ jobs:
         mv mingw-*gtkwave*.pkg.tar.zst ../../
         ../standalone_pkg.sh
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: |
           mingw-*gtkwave*.pkg.tar.zst
@@ -72,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v2
-    - uses: eine/tip@master
+    - uses: pyTooling/Actions/releaser@r0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: 'nightly'
