@@ -326,7 +326,7 @@ while( aux[s] )
 	buf[d++]=aux[s++];
 	if(--c==0 && aux[s] )
 		{
-		buf[d++]=',';
+		buf[d++]=' ';
 		c=3;
 		}
 	}
