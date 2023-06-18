@@ -326,7 +326,9 @@ while( aux[s] )
 	buf[d++]=aux[s++];
 	if(--c==0 && aux[s] )
 		{
-		buf[d++]=' ';
+		buf[d++] = '\xE2'; // UTF-8 for thin space
+		buf[d++] = '\x80';
+		buf[d++] = '\x89';
 		c=3;
 		}
 	}
