@@ -21,7 +21,6 @@ static char *marker_label_text ="Marker Time";
 static char *maxtime_label_text_hpos="Max";
 static char *marker_label_text_hpos ="Marker";
 
-
 #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 static void update_labels_to_header_bar(void)
 {
@@ -29,7 +28,7 @@ if(GLOBALS->header_bar)
 	{
 	char buf[1024];
 
-	sprintf(buf, "%s" ": " "%s" "  |  " "%s" ": " "%s",     
+	sprintf(buf, "%s" ": " "%s" "  |  " "%s" ": " "%s",
 	        gtk_label_get_text(GTK_LABEL(GLOBALS->max_or_marker_label_currenttime_c_1)),
 	        gtk_label_get_text(GTK_LABEL(GLOBALS->maxtimewid_currenttime_c_1)),
 	        gtk_label_get_text(GTK_LABEL(GLOBALS->base_or_curtime_label_currenttime_c_1)),
@@ -315,6 +314,25 @@ if(i)
 	}
 }
 
+void thousands_sep( char *buf, TimeType v )
+{
+char aux[64];
+int s=0,d=0,c;
+sprintf(aux,TTFormat,v);
+c=strlen(aux)%3;
+if( c==0 ) c=3;
+while( aux[s] )
+	{
+	buf[d++]=aux[s++];
+	if(--c==0 && aux[s] )
+		{
+		buf[d++]=',';
+		c=3;
+		}
+	}
+buf[d]=0;
+}
+
 void reformat_time(char *buf, TimeType val, char dim)
 {
 char *pnt;
@@ -372,7 +390,6 @@ if(GLOBALS->scale_to_time_dimension)
 				}
 
 			gval *= mypow;
-
 			if(GLOBALS->scale_to_time_dimension == 's')
 				{
 				sprintf(buf, "%.9g sec", gval);
@@ -386,14 +403,16 @@ if(GLOBALS->scale_to_time_dimension)
 			}
 		}
 	}
+char separated[128];
+thousands_sep( separated, val );
 
 if((i)&&(time_prefix)) /* scan-build on time_prefix, should not be necessary however */
 	{
-	sprintf(buf, TTFormat" %cs", val, time_prefix[i]);
+	sprintf(buf, "%s %cs", separated, time_prefix[i]);
 	}
 	else
 	{
-	sprintf(buf, TTFormat" sec", val);
+	sprintf(buf, "%s sec", separated);
 	}
 }
 
