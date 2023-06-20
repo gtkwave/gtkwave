@@ -209,7 +209,37 @@ static void render_signal(cairo_t *cr, Trptr t, int width, int text_dx) {
     if (HasWave(t) || bv) {
         if (t->asciivalue && !(t->flags & TR_EXCLUDE)) {
             int text_x = GLOBALS->max_signal_name_pixel_width + 6 + text_dx;
-            XXX_font_engine_draw_string(cr, GLOBALS->signalfont, &text_color, text_x, text_y, t->asciivalue);
+
+            char* text_no_color = t->asciivalue;
+
+            int has_color = 0;
+            // Look for the first character after the = sign
+            if(*(t->asciivalue + 1) == '?') {
+                // Look for the trailing ?
+                char *srch_for_color = strchr(t->asciivalue+2, '?');
+                // If we found ?
+                if(srch_for_color) {
+                    // Try to see if this is a valid color
+                    *srch_for_color = '\0';
+                    wave_rgb_t cb = XXX_get_gc_from_name(t->asciivalue+2);
+                    if(cb.a != 0.0) { // Found a replacement
+                        // srch_for_color will now point to the end of the color. Set that as
+                        // our actual pointer
+                        text_no_color = srch_for_color;
+                        has_color = 1;
+                    }
+                    *srch_for_color = '?';
+               }
+            }
+
+            // If we had a color, the first character of the printed string
+            // will be '?' rather than '='. Store the original first character,
+            // replace it, draw the string then restore it to its original form
+            char first_char = *text_no_color;
+            *text_no_color = '=';
+
+            XXX_font_engine_draw_string(cr, GLOBALS->signalfont, &text_color, text_x, text_y, text_no_color);
+            *text_no_color = first_char;
         }
     }
 }
