@@ -1505,6 +1505,14 @@ if(!setjmp(*(GLOBALS->vcd_jmp_buf)))			/* loader exception handling */
 return(load_was_success);
 }
 
+static void sleep2(int seconds) {
+	int i;
+
+	for (i = 0; i < seconds * 100; i++) {
+		gtkwave_main_iteration();
+		g_usleep(10000);
+	}
+}
 
 /*
  * reload from old into the new context
@@ -2311,7 +2319,7 @@ void reload_into_new_context_2(void)
 			printf("GTKWAVE | Reload failure, reattempt in %d second%s...\n", reload_fail_delay, (reload_fail_delay==1) ? "" : "s");
 			fflush(stdout);
 			}
-		sleep(reload_fail_delay);
+		sleep2(reload_fail_delay);
 		switch(reload_fail_delay)
 			{
 			case 1: reload_fail_delay = 2; break;
