@@ -7415,6 +7415,9 @@ if(GLOBALS->helpbox_is_active)
 	else
 	{
 	GLOBALS->show_base = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]));
+	if (!GLOBALS->signalarea || !GLOBALS->wavewindow) {
+                return;
+        	}
 	GLOBALS->signalwindow_width_dirty=1;
 	MaxSignalLength();
 	signalarea_configure_event(GLOBALS->signalarea, NULL);
