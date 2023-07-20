@@ -4994,7 +4994,149 @@ if      ((!len) || (GLOBALS->filesel_writesave[len-1] == '/')
                 }
 	}
 }
-/**/
+
+/* Add escape sequences to tcl strings ('[', ']' and ' ' should be escaped) */
+char* escape_tcl_str(const char* s)
+{
+    char* buff;
+    int buff_size = 256;
+    int len = 0;
+
+    if(!s) return NULL;
+
+    buff = calloc(1, buff_size);
+
+    for(int i = 0; s[i]; i++)
+    {
+        if((buff_size - len) < 4)
+        {
+            char* buff_new = realloc(buff, buff_size * 2);
+            if(buff_new == NULL)
+            {
+                free(buff);
+                return NULL;
+            }
+            else
+            {
+                buff = buff_new;
+                buff_size *= 2;
+            }
+        }
+        if(s[i] == '[' || s[i] == ']')
+        {
+            buff[len++] = '\\';
+        }
+        else if(s[i] == ' ')
+        {
+            /*
+             * Spaces should be escaped with double '\\' to avoid
+             * words separated by spaces been treated as different
+             * items in a list
+             */
+            buff[len++] = '\\';
+            buff[len++] = '\\';
+        }
+        buff[len++] = s[i];
+    }
+    buff[len] = 0;
+    return buff;
+}
+
+void
+menu_save_signal_list_tcl_action(GtkWidget *widget, gpointer data)
+{
+    (void)widget;
+    (void)data;
+
+    FILE *sig_file;
+    int len;
+
+    if(!GLOBALS->filesel_ok)
+    {
+        return;
+    }
+
+    len = strlen(*GLOBALS->fileselbox_text);
+    if((!len) || ((*GLOBALS->fileselbox_text)[len-1] == '/')
+#if !defined __MINGW32__ && !defined _MSC_VER
+       || ((*GLOBALS->fileselbox_text)[len-1] == '\\')
+#endif
+        )
+    {
+        GLOBALS->save_success_menu_c_1 = 2;
+        return;
+    }
+
+    if(!(sig_file=fopen(*GLOBALS->fileselbox_text,"wb")))
+    {
+        fprintf(stderr, "Error opening save file '%s' for writing.\n",*GLOBALS->fileselbox_text);
+        perror("Why");
+        errno=0;
+    }
+    else
+    {
+        for(Trptr t = GLOBALS->traces.first; t; t = t->t_next)
+        {
+            if(t->flags & TR_BLANK)
+            {
+                if(t->name)
+                {
+                    char* comment = escape_tcl_str(t->name);
+                    if(comment != NULL)
+                    {
+                        fprintf(sig_file, "gtkwave::addCommentTracesFromList \"%s\"\n", comment);
+                        free(comment);
+                    }
+                }
+            }
+            else if(t->flags & TR_EXCLUDE);
+            else if(t->flags & TR_ANALOG_BLANK_STRETCH);
+            else
+            {
+                char* sig_name = NULL;
+                if(t->vector)
+                {
+                    sig_name = escape_tcl_str(t->n.nd->head.v.h_vector);
+                }
+                else
+                {
+                    sig_name = escape_tcl_str(t->n.nd->nname);
+                }
+                if(sig_name != NULL)
+                {
+                    fprintf(sig_file, "gtkwave::addSignalsFromList \"%s\"\n", sig_name);
+                    fprintf(sig_file, "gtkwave::setTraceFlagsFromName \"%s\" %" TRACEFLAGSPRIuFMT "\n", sig_name, t->flags);
+                    free(sig_name);
+                }
+            }
+        }
+        GLOBALS->save_success_menu_c_1 = 1;
+        fclose(sig_file);
+    }
+
+}
+
+void
+menu_save_signal_list_tcl(gpointer null_data, guint callback_action, GtkWidget *widget)
+{
+(void)null_data;
+(void)callback_action;
+(void)widget;
+
+if(GLOBALS->helpbox_is_active)
+	{
+	help_text_bold("\n\nSave current visible signal list to Tcl script");
+	help_text(
+		" will open a file requester that will ask for the name"
+		" of a Tcl save file. The Tcl script will contain commands"
+		" for recreating the current signal view list."
+	);
+	return;
+	}
+
+fileselbox("Write Save File",&GLOBALS->filesel_writesave,G_CALLBACK(menu_save_signal_list_tcl_action), G_CALLBACK(NULL), "*.tcl", 1);
+}
+
 
 void
 menu_read_save_cleanup(GtkWidget *widget, gpointer data)
@@ -7869,6 +8011,9 @@ static gtkwave_mlist_t menu_items[] =
     WAVE_GTKIFE("/File/Read Tcl Script File", NULL, menu_read_script_file, WV_MENU_TCLSCR, "<Item>"),
     WAVE_GTKIFE("/File/<separator>", NULL, NULL, WV_MENU_TCLSEP, "<Separator>"),
 #endif
+
+    WAVE_GTKIFE("/File/Save Signal List to Tcl Script", NULL, menu_save_signal_list_tcl, WV_MENU_SAVSIG, "<Item>"),
+    WAVE_GTKIFE("/File/<separator>", NULL, NULL, WV_MENU_SAVSIGSEP, "<Separator>"),
 
     WAVE_GTKIFE("/File/Quit", "<Control>Q", menu_quit, WV_MENU_FQY, "<Item>"),
 
