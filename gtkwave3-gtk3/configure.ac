@@ -606,7 +606,7 @@ AC_SUBST(LIBJUDY_CFLAGS)
 # ------------- GTK -------------------
 if test "X$GTK3" = "Xyes" ; then
 
-	AC_PATH_PROG(PKG_CONFIG, [pkg-config], [notfound])
+	PKG_PROG_PKG_CONFIG()
         PKG_CHECK_MODULES(GTK, gtk+-3.0 >= 3.0.0)
         GTK_VER=`$PKG_CONFIG gtk+-3.0 --modversion`
 
@@ -646,7 +646,7 @@ if test "X$GTK3" = "Xyes" ; then
 
 else
 
-	AC_PATH_PROG(PKG_CONFIG, [pkg-config], [notfound])
+	PKG_PROG_PKG_CONFIG()
 	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.24.9)
 	GTK_VER=`$PKG_CONFIG gtk+-2.0 --modversion`
 
