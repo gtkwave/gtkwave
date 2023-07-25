@@ -1825,12 +1825,21 @@
 		Updated show-change widget.
 		Fix xml2stems when begin blocks are in functions.
 		Skip over decimal point in timescale in viewer.
-3.4.0	02feb22	Merge in major GUI widget refactoring.
-		Fixes for toggle menu item access under Tcl.
-		Adds support for "namespace import gtkwave::*" in Tcl.
-		Added dbl_mant_dig_overrides rc environment variable.
-		Path fix for twinwave on Windows.
-		Compiler fix for __GTK_SOCKET_H__ availability.
+3.3.112	04oct22 Bugfix-only release.
 		VCD reader fixes for unnamed Icarus begin blocks.
-		Add OpenBSD and FreeBSD OSs for unbuffered FST I/O.
-		CPU usage fix for Wayland.
+		String data type crash fix in fst.c.
+3.3.113	04oct22	Bugfix-only release.
+		High CPU utilization when nothing is happening.
+3.3.114	23nov22	Buffer overflow fixes in FST reader.
+3.3.115	28mar23 Fix VZT reader with -fstrict-aliasing.
+		Fix use_multi_state condition in vzt_write.c.
+		Fix for UNDEF vs strings at start of a vzt file.
+		Fix sleep() time scaling redefine for mingw.
+		Use MapViewOfFileEx for mmap on Windows (fstapi).
+		Define FST_DO_MISALIGNED_OPS on AArch64 (fstapi).
+		Fixed attrbegin short length problem.
+3.3.116	25jun23	Fix manpage/odt for vcd2fst command switch documentation for
+		zlibpack.
+		Add GDK_WINDOWING_WAYLAND check for gdkwayland.h header usage.
+		Changed	sprintf	to snprintf in fstapi.c.
+		Fix init crash on show_base_symbols enabled.
