@@ -2423,7 +2423,7 @@ GtkWidget *table;
 GtkWidget *frame;
 GtkAdjustment *hadj, *vadj;
 
-table = XXX_gtk_table_new(10, 10, FALSE);
+table = gtk_grid_new();
 
 #ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_DEPRECATED_API
 /* this removes the warning generated from XXX_gtk_table_attach() on GLOBALS->vscroll_wavewindow_c_1 below */

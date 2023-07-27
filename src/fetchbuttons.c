@@ -180,7 +180,7 @@ pixmapwid2=gtk_image_new_from_pixbuf(GLOBALS->rarrow_pixbuf);
 gtk_widget_show(pixmapwid2);
 
 /* Create a table to hold the text widget and scrollbars */
-table = XXX_gtk_table_new (1, 1, FALSE);
+table = gtk_grid_new ();
 
 main_vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
 gtk_container_set_border_width (GTK_CONTAINER (main_vbox), 1);
@@ -192,7 +192,7 @@ gtk_box_pack_start (GTK_BOX (main_vbox), frame, TRUE, TRUE, 0);
 gtk_widget_show (frame);
 gtk_widget_show (main_vbox);
 
-table2 = XXX_gtk_table_new (2, 1, FALSE);
+table2 = gtk_grid_new ();
 
 b1 = gtk_button_new();
 gtk_container_add(GTK_CONTAINER(b1), pixmapwid1);

@@ -337,7 +337,7 @@ void ptrans_searchbox(char *title)
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_ptranslate_c_5), title);
     gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_ptranslate_c_5), "delete_event",(GCallback) destroy_callback, NULL);
 
-    table = XXX_gtk_table_new (256, 1, FALSE);
+    table = gtk_grid_new ();
     gtk_widget_show (table);
 
     vbox1 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);

@@ -2224,7 +2224,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 				}
 			}
 
-		whole_table = XXX_gtk_table_new (256, 16, FALSE);
+		whole_table = gtk_grid_new ();
 
 		tb = gtk_toolbar_new();
 		top_table = tb;		/* export this as our top widget rather than a table */
@@ -2515,7 +2515,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 				}
 			}
 
-		top_table = XXX_gtk_table_new (1, 284, FALSE);
+		top_table = gtk_grid_new ();
 
 #if !GTK_CHECK_VERSION(3,0,0)
 		if(GLOBALS->force_toolbars)
@@ -2526,7 +2526,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 			}
 #endif
 
-		whole_table = XXX_gtk_table_new (256, 16, FALSE);
+		whole_table = gtk_grid_new ();
 
 		text1 = create_text ();
 		XXX_gtk_table_attach (XXX_GTK_TABLE (top_table), text1, 0, 141, 0, 1,
@@ -2606,7 +2606,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 
 			gtk_widget_show(r_pixbuf);
 
-			table = XXX_gtk_table_new (1, 1, FALSE);
+			table = gtk_grid_new ();
 
 			main_vbox1 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
 			gtk_container_set_border_width (GTK_CONTAINER (main_vbox1), 1);
@@ -2618,7 +2618,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 			gtk_widget_show (frame);
 			gtk_widget_show (main_vbox1);
 
-			table2 = XXX_gtk_table_new (2, 1, FALSE);
+			table2 = gtk_grid_new ();
 
 			b1 = gtk_button_new();
 			gtk_container_add(GTK_CONTAINER(b1), r_pixbuf);
