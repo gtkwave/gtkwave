@@ -196,33 +196,6 @@ STUBIFY=no
 
 AC_MSG_RESULT([$STUBIFY])
 
-
-AC_MSG_CHECKING([if gtk2 or gtk3 should be used])
-
-GTK3=no
-AC_ARG_ENABLE([gtk3],
-[  --enable-gtk3           Causes the GTK+ frontend to be built with gtk3 
-                          instead of gtk2.],
-[
-if test "X$enable_gtk3" = "Xno" ; then
-	GTK3=no
-else
-	GTK3=yes
-fi
-],
-[
-GTK3=no
-])
-
-if test "X$GTK3" = "Xyes" ; then
-	AC_MSG_RESULT([gtk3])
-	CPPFLAGS="$CPPFLAGS"
-else
-	AC_MSG_RESULT([gtk2])
-	CPPFLAGS="$CPPFLAGS"
-fi
-
-
 # check for massive amounts of named markers enabled
 AC_MSG_CHECKING([if manymarkers should be used])
 
@@ -603,83 +576,45 @@ AC_SUBST(LIBJUDY_LDADD)
 AC_SUBST(LIBJUDY_CFLAGS)
 
 # ------------- GTK -------------------
-if test "X$GTK3" = "Xyes" ; then
 
-	AC_PATH_PROG(PKG_CONFIG, [pkg-config], [notfound])
-        PKG_CHECK_MODULES(GTK, gtk+-3.0 >= 3.0.0)
-        GTK_VER=`$PKG_CONFIG gtk+-3.0 --modversion`
+AC_PATH_PROG(PKG_CONFIG, [pkg-config], [notfound])
+	PKG_CHECK_MODULES(GTK, gtk+-3.0 >= 3.24.0)
+	GTK_VER=`$PKG_CONFIG gtk+-3.0 --modversion`
 
-        # gdk-3.0 may have multiple targets e.g. "broadway quartz"
-        _gdk_tgts=`$PKG_CONFIG --variable=targets gdk-3.0`
-        for _gdk_tgt in $_gdk_tgts;
-        do
-        if test "x$_gdk_tgt" = xquartz; then
-           PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration >= 3.0.0)
-           AC_SUBST(GTK_MAC_LIBS)
-           AC_SUBST(GTK_MAC_CFLAGS)
-
-           COCOA_GTK_CFLAGS="-xobjective-c -DWAVE_COCOA_GTK"
-           AC_SUBST(COCOA_GTK_CFLAGS)
-
-           COCOA_GTK_LDADD="-lobjc"
-           AC_SUBST(COCOA_GTK_LDADD)
-
-           COCOA_GTK_LDFLAGS="-framework Cocoa -framework ApplicationServices"
-           AC_SUBST(COCOA_GTK_LDFLAGS)
-        fi
-        done
-
-        if test x$with_gconf = xyes; then
-          PKG_CHECK_MODULES(GCONF, gconf-2.0 >= 2.0)
-          GCONF_CFLAGS="-DWAVE_HAVE_GCONF $GCONF_CFLAGS"
-          AC_SUBST(GCONF_CFLAGS)
-          AC_SUBST(GCONF_LIBS)
-        fi
-
-        PKG_CHECK_MODULES(GTK_UNIX_PRINT,gtk+-unix-print-3.0, GUP_F="yes", GUP_F="no")
-        if test "x$GUP_F" = xyes; then
-                GTK_UNIX_PRINT_CFLAGS="${GTK_UNIX_PRINT_CFLAGS} -DWAVE_GTK_UNIX_PRINT"
-        fi
-	AC_SUBST(GTK_UNIX_PRINT_LIBS)
-        AC_SUBST(GTK_UNIX_PRINT_CFLAGS)
-
-else
-
-	AC_PATH_PROG(PKG_CONFIG, [pkg-config], [notfound])
-	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.24.9)
-	GTK_VER=`$PKG_CONFIG gtk+-2.0 --modversion`
-
-	_gdk_tgt=`$PKG_CONFIG --variable=target gdk-2.0`
+	# gdk-3.0 may have multiple targets e.g. "broadway quartz"
+	_gdk_tgts=`$PKG_CONFIG --variable=targets gdk-3.0`
+	for _gdk_tgt in $_gdk_tgts;
+	do
 	if test "x$_gdk_tgt" = xquartz; then
-	   PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration >= 2.0.0)
-	   AC_SUBST(GTK_MAC_LIBS)
-	   AC_SUBST(GTK_MAC_CFLAGS)
+		PKG_CHECK_MODULES(GTK_MAC, gtk-mac-integration >= 3.0.0)
+		AC_SUBST(GTK_MAC_LIBS)
+		AC_SUBST(GTK_MAC_CFLAGS)
 
-	   COCOA_GTK_CFLAGS="-xobjective-c -DWAVE_COCOA_GTK"
-	   AC_SUBST(COCOA_GTK_CFLAGS)
+		COCOA_GTK_CFLAGS="-xobjective-c -DWAVE_COCOA_GTK"
+		AC_SUBST(COCOA_GTK_CFLAGS)
 
-	   COCOA_GTK_LDADD="-lobjc"
-	   AC_SUBST(COCOA_GTK_LDADD)
+		COCOA_GTK_LDADD="-lobjc"
+		AC_SUBST(COCOA_GTK_LDADD)
 
-	   COCOA_GTK_LDFLAGS="-framework Cocoa -framework ApplicationServices"
-	   AC_SUBST(COCOA_GTK_LDFLAGS)
+		COCOA_GTK_LDFLAGS="-framework Cocoa -framework ApplicationServices"
+		AC_SUBST(COCOA_GTK_LDFLAGS)
 	fi
+	done
 
 	if test x$with_gconf = xyes; then
-          PKG_CHECK_MODULES(GCONF, gconf-2.0 >= 2.0)
-	  GCONF_CFLAGS="-DWAVE_HAVE_GCONF $GCONF_CFLAGS"
-  	  AC_SUBST(GCONF_CFLAGS)
-	  AC_SUBST(GCONF_LIBS)
+		PKG_CHECK_MODULES(GCONF, gconf-2.0 >= 2.0)
+		GCONF_CFLAGS="-DWAVE_HAVE_GCONF $GCONF_CFLAGS"
+		AC_SUBST(GCONF_CFLAGS)
+		AC_SUBST(GCONF_LIBS)
 	fi
 
-	PKG_CHECK_MODULES(GTK_UNIX_PRINT,gtk+-unix-print-2.0, GUP_F="yes", GUP_F="no")
+	PKG_CHECK_MODULES(GTK_UNIX_PRINT,gtk+-unix-print-3.0, GUP_F="yes", GUP_F="no")
 	if test "x$GUP_F" = xyes; then
-		GTK_UNIX_PRINT_CFLAGS="${GTK_UNIX_PRINT_CFLAGS} -DWAVE_GTK_UNIX_PRINT"
+			GTK_UNIX_PRINT_CFLAGS="${GTK_UNIX_PRINT_CFLAGS} -DWAVE_GTK_UNIX_PRINT"
 	fi
-        AC_SUBST(GTK_UNIX_PRINT_LIBS)
-        AC_SUBST(GTK_UNIX_PRINT_CFLAGS)
+AC_SUBST(GTK_UNIX_PRINT_LIBS)
+	AC_SUBST(GTK_UNIX_PRINT_CFLAGS)
 
-fi 
 
 # Checks for header files.
 AC_FUNC_ALLOCA
