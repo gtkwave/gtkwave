@@ -129,7 +129,7 @@ void helpbox(char *title, int width, char *default_text)
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_help_c_2), title);
     gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_help_c_2), "delete_event",(GCallback) ok_callback, NULL);
 
-    vbox = XXX_gtk_vbox_new (FALSE, 0);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (GLOBALS->window_help_c_2), vbox);
     gtk_widget_show (vbox);
 
@@ -149,7 +149,7 @@ void helpbox(char *title, int width, char *default_text)
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
     gtk_widget_show (hbox);
 

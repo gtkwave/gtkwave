@@ -2173,7 +2173,7 @@ if(GLOBALS->use_toolbutton_interface)
 
 	if(!mainwindow_already_built)
 		{
-		main_vbox = XXX_gtk_vbox_new(FALSE, 5);
+		main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 		gtk_container_set_border_width(GTK_CONTAINER(main_vbox), 1);
 		gtk_container_add(GTK_CONTAINER(GLOBALS->mainwindow), main_vbox);
 		gtk_widget_show(main_vbox);
@@ -2472,7 +2472,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 	{
 	if(!mainwindow_already_built)
 		{
-		main_vbox = XXX_gtk_vbox_new(FALSE, 5);
+		main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 		gtk_container_set_border_width(GTK_CONTAINER(main_vbox), 1);
 		gtk_container_add(GTK_CONTAINER(GLOBALS->mainwindow), main_vbox);
 		gtk_widget_show(main_vbox);
@@ -2608,7 +2608,7 @@ g_signal_connect(theApp, "NSApplicationBlockTermination", G_CALLBACK(deal_with_t
 
 			table = XXX_gtk_table_new (1, 1, FALSE);
 
-			main_vbox1 = XXX_gtk_vbox_new (FALSE, 1);
+			main_vbox1 = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
 			gtk_container_set_border_width (GTK_CONTAINER (main_vbox1), 1);
 			gtk_container_add (GTK_CONTAINER (table), main_vbox1);
 

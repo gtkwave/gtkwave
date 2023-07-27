@@ -710,11 +710,11 @@ if(GLOBALS->tims.baseline<0)
 
 if(!GLOBALS->use_toolbutton_interface)
 	{
-	mainbox=XXX_gtk_vbox_new(FALSE, 0);
+	mainbox=gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	}
 	else
 	{
-	mainbox=XXX_gtk_hbox_new(FALSE, 0);
+	mainbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	}
 
 #ifdef WAVE_ALLOW_GTK3_HEADER_BAR

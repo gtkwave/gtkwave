@@ -80,8 +80,6 @@
 #define XXX_gtk_tree_view_set_hadjustment gtk_scrollable_set_hadjustment
 #define XXX_GTK_TEXT_VIEW GTK_SCROLLABLE
 #define XXX_gtk_text_view_get_vadjustment gtk_scrollable_get_vadjustment
-GtkWidget *XXX_gtk_hbox_new (gboolean homogeneous, gint spacing);
-GtkWidget *XXX_gtk_vbox_new (gboolean homogeneous, gint spacing);
 #define XXX_gtk_hpaned_new(a) gtk_paned_new(GTK_ORIENTATION_HORIZONTAL)
 #define XXX_gtk_vpaned_new(a) gtk_paned_new(GTK_ORIENTATION_VERTICAL)
 GtkWidget *XXX_gtk_hseparator_new (void);
@@ -112,8 +110,6 @@ GtkWidget *XXX_gtk_hseparator_new (void);
 #define XXX_gtk_tree_view_set_hadjustment gtk_tree_view_set_hadjustment
 #define XXX_GTK_TEXT_VIEW GTK_TEXT_VIEW
 #define XXX_gtk_text_view_get_vadjustment gtk_text_view_get_vadjustment
-#define XXX_gtk_hbox_new(a, b) gtk_hbox_new((a), (b))
-#define XXX_gtk_vbox_new(a, b) gtk_vbox_new((a), (b))
 #define XXX_gtk_hpaned_new(a) gtk_hpaned_new()
 #define XXX_gtk_vpaned_new(a) gtk_vpaned_new()
 #define XXX_gtk_hseparator_new gtk_hseparator_new
