@@ -25,12 +25,6 @@ char *name;
 int main_2(int opt_vcd, int argc, char *argv[]);
 
 GtkWidget *create_text(void);
-GtkWidget *create_zoom_buttons(void);
-GtkWidget *create_page_buttons(void);
-GtkWidget *create_fetch_buttons(void);
-GtkWidget *create_discard_buttons(void);
-GtkWidget *create_edge_buttons(void);
-GtkWidget *create_shift_buttons(void);
 GtkWidget *create_entry_box(void);
 GtkWidget *create_time_box(void);
 GtkWidget *create_wavewindow(void);

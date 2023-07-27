@@ -35,7 +35,7 @@ gtkwave_SOURCES= \
 	globals.c globals.h ae2.c ae2.h analyzer.c analyzer.h baseconvert.c bitvec.c \
 	bsearch.c bsearch.h busy.c busy.h \
 	clipping.c clipping.h color.c color.h currenttime.c currenttime.h \
-	debug.c debug.h discardbuttons.c edgebuttons.c \
+	debug.c debug.h edgebuttons.c \
 	entry.c extload.c extload.h fetchbuttons.c fgetdynamic.c fgetdynamic.h file.c fonts.c fonts.h fst.c fst.h \
 	gconf.c gconf.h getopt.c \
 	getopt1.c ghw.c ghw.h libghw.c libghw.h gnu-getopt.h gnu_regex.h gtk23compat.c gtk23compat.h \
