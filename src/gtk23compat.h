@@ -73,11 +73,6 @@
 
 #if GTK_CHECK_VERSION(3,0,0)
 
-#define XXX_GTK_TREE_VIEW GTK_SCROLLABLE
-#define XXX_gtk_tree_view_get_vadjustment gtk_scrollable_get_vadjustment
-#define XXX_gtk_tree_view_get_hadjustment gtk_scrollable_get_hadjustment
-#define XXX_gtk_tree_view_set_vadjustment gtk_scrollable_set_vadjustment
-#define XXX_gtk_tree_view_set_hadjustment gtk_scrollable_set_hadjustment
 #define XXX_GTK_TEXT_VIEW GTK_SCROLLABLE
 #define XXX_gtk_text_view_get_vadjustment gtk_scrollable_get_vadjustment
 #define XXX_gtk_hpaned_new(a) gtk_paned_new(GTK_ORIENTATION_HORIZONTAL)
@@ -102,11 +97,6 @@
 
 #else
 
-#define XXX_GTK_TREE_VIEW GTK_TREE_VIEW
-#define XXX_gtk_tree_view_get_vadjustment gtk_tree_view_get_vadjustment
-#define XXX_gtk_tree_view_get_hadjustment gtk_tree_view_get_hadjustment
-#define XXX_gtk_tree_view_set_vadjustment gtk_tree_view_set_vadjustment
-#define XXX_gtk_tree_view_set_hadjustment gtk_tree_view_set_hadjustment
 #define XXX_GTK_TEXT_VIEW GTK_TEXT_VIEW
 #define XXX_gtk_text_view_get_vadjustment gtk_text_view_get_vadjustment
 #define XXX_gtk_hpaned_new(a) gtk_hpaned_new()
