@@ -31,9 +31,7 @@ gtk_adjustment_set_page_size(hadj, gtk_adjustment_get_page_increment(hadj));
 gtk_adjustment_set_step_increment (hadj, pageinc / 10.0);
 if(gtk_adjustment_get_step_increment (hadj) < 1.0) gtk_adjustment_set_step_increment (hadj, 1.0);
 
-#if GTK_CHECK_VERSION(3,0,0)
 gtk_adjustment_set_value(hadj, GLOBALS->tims.start); /* work around GTK3 clamping code */
-#endif
 
 if(gtk_adjustment_get_page_size(hadj) >= (gtk_adjustment_get_upper(hadj)-gtk_adjustment_get_lower(hadj))) gtk_adjustment_set_value(hadj, gtk_adjustment_get_lower(hadj));
 if(gtk_adjustment_get_value(hadj)+gtk_adjustment_get_page_size(hadj)>gtk_adjustment_get_upper(hadj))

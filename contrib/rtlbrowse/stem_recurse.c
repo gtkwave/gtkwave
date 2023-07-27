@@ -512,7 +512,6 @@ va_end(ap);
 /**********************************************************/
 /**********************************************************/
 
-#if GTK_CHECK_VERSION(3,0,0)
 static GLogWriterOutput
 gtkwave_glib_log_handler (GLogLevelFlags log_level,
                    const GLogField *fields,
@@ -542,7 +541,6 @@ abort();
 
 return(G_LOG_WRITER_HANDLED);
 }
-#endif
 
 
 int main(int argc, char **argv)
@@ -557,9 +555,7 @@ if(!gtk_init_check(&argc, &argv))
         exit(255);
         }
 
-#if GTK_CHECK_VERSION(3,0,0)
 g_log_set_writer_func (gtkwave_glib_log_handler, NULL, NULL);
-#endif
 
 #ifdef WAVE_CRASH_ON_GTK_WARNING
         g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL|G_LOG_LEVEL_WARNING);

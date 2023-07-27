@@ -334,11 +334,7 @@ void logbox(char *title, int width, char *default_text)
     gtk_widget_set_size_request(button1, 100, -1);
     g_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), window);
     gtk_widget_show (button1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1);
-#endif
     gtk_widget_set_can_default (button1, TRUE);
     g_signal_connect_swapped (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 

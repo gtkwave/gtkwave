@@ -101,11 +101,7 @@ void simplereqbox(char *title, int width, char *default_text,
     gtk_widget_show (vbox);
 
     label=gtk_label_new(default_text);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start (GTK_BOX (vbox), label, TRUE, TRUE, 0);
-#else
-    gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
-#endif
     gtk_widget_show (label);
 
     if(is_alert)
@@ -117,33 +113,21 @@ void simplereqbox(char *title, int width, char *default_text,
 	pixmapwid1=gtk_image_new_from_pixbuf(GLOBALS->wave_info_pixbuf);
 	}
     gtk_widget_show(pixmapwid1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(vbox), pixmapwid1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (vbox), pixmapwid1);
-#endif
 
     separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
     hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, TRUE, 0);
-#else
-    gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
-#endif
     gtk_widget_show (hbox);
 
     button1 = gtk_button_new_with_label (oktext);
     gtk_widget_set_size_request(button1, 100, -1);
     gtkwave_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), NULL);
     gtk_widget_show (button1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1);
-#endif
     gtk_widget_set_can_default (button1, TRUE);
     gtkwave_signal_connect_object (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
@@ -152,13 +136,9 @@ void simplereqbox(char *title, int width, char *default_text,
     	button2 = gtk_button_new_with_label (canceltext);
     	gtk_widget_set_size_request(button2, 100, -1);
 	gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
-    	gtk_widget_set_can_default (button2, TRUE);
-    	gtk_widget_show (button2);
-#if GTK_CHECK_VERSION(3,0,0)
+	gtk_widget_set_can_default (button2, TRUE);
+	gtk_widget_show (button2);
         gtk_box_pack_end(GTK_BOX(hbox), button2, TRUE, TRUE, 0);
-#else
-    	gtk_container_add (GTK_CONTAINER (hbox), button2);
-#endif
 	}
 
     gtk_widget_show(GLOBALS->window_simplereq_c_9);

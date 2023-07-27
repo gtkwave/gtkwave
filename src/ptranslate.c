@@ -432,11 +432,7 @@ void ptrans_searchbox(char *title)
     gtk_tooltips_set_tip_2(button1,
 		"Add selected signals to end of the display on the main window.");
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_box_pack_start (GTK_BOX (hbox), button1, TRUE, FALSE, 0);
-#endif
 
     button5 = gtk_button_new_with_label (" Cancel ");
     gtk_container_set_border_width (GTK_CONTAINER (button5), 3);
@@ -444,11 +440,7 @@ void ptrans_searchbox(char *title)
     gtk_tooltips_set_tip_2(button5,
 		"Do nothing and return to the main window.");
     gtk_widget_show (button5);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button5, TRUE, TRUE, 0);
-#else
-    gtk_box_pack_start (GTK_BOX (hbox), button5, TRUE, FALSE, 0);
-#endif
 
     gtk_container_add (GTK_CONTAINER (frameh), hbox);
     gtk_container_add (GTK_CONTAINER (GLOBALS->window_ptranslate_c_5), table);

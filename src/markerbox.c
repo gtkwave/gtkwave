@@ -372,11 +372,7 @@ void markerbox(char *title, GCallback func)
     gtk_widget_show(scrolled_win);
     gtk_container_add (GTK_CONTAINER (frame), scrolled_win);
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (vbox), frame);
-#endif
 
     for(i=0;i<WAVE_NUM_NAMED_MARKERS;i++)
     {
@@ -427,11 +423,7 @@ void markerbox(char *title, GCallback func)
     gtk_box_pack_start (GTK_BOX (vbox_g), hbox, TRUE, TRUE, 0);
     }
 
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_container_add(GTK_CONTAINER(scrolled_win), vbox_g); /* GTK3: removes deprecated warning */
-#else
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_win), vbox_g);
-#endif
 
     hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_widget_show (hbox);
@@ -444,11 +436,7 @@ void markerbox(char *title, GCallback func)
     gtk_widget_set_size_request(button1, 100, -1);
     gtkwave_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), NULL);
     gtk_widget_show (button1);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button1);
-#endif
     gtk_widget_set_can_default (button1, TRUE);
     gtkwave_signal_connect_object (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
@@ -458,11 +446,7 @@ void markerbox(char *title, GCallback func)
     gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
     gtk_widget_set_can_default (button2, TRUE);
     gtk_widget_show (button2);
-#if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_end(GTK_BOX(hbox), button2, TRUE, TRUE, 0);
-#else
-    gtk_container_add (GTK_CONTAINER (hbox), button2);
-#endif
 
     gtk_container_add (GTK_CONTAINER (GLOBALS->window_markerbox_c_4), table); /* need this table to keep ok/cancel buttons from stretching! */
     gtk_widget_show(GLOBALS->window_markerbox_c_4);
