@@ -199,7 +199,7 @@ gtk_container_add(GTK_CONTAINER(b1), pixmapwid1);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b1, 0, 1, 0, 1,
 			GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b1), "clicked", G_CALLBACK(fetch_left), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b1, "clicked", G_CALLBACK(fetch_left), table2);
 gtk_tooltips_set_tip_2(b1, "Decrease 'From' Time");
 gtk_widget_show(b1);
 
@@ -208,7 +208,7 @@ gtk_container_add(GTK_CONTAINER(b2), pixmapwid2);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b2, 0, 1, 1, 2,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b2), "clicked", G_CALLBACK(fetch_right), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b2, "clicked", G_CALLBACK(fetch_right), table2);
 gtk_tooltips_set_tip_2(b2, "Increase 'To' Time");
 gtk_widget_show(b2);
 

@@ -1614,8 +1614,8 @@ if(GLOBALS->helpbox_is_active)
 			{
 			fix_wavehadj();
 	
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 	
 			update_maxmarker_labels();
 			}
@@ -1741,8 +1741,8 @@ if(GLOBALS->helpbox_is_active)
 			calczoom(GLOBALS->tims.zoom);
 			fix_wavehadj();
 	
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 			}
 		}
 	}
@@ -5467,8 +5467,8 @@ if(GLOBALS->entrybox_text)
 	calczoom(GLOBALS->tims.zoom);
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 
 	free_2(GLOBALS->entrybox_text);
 	GLOBALS->entrybox_text=NULL;
@@ -5525,8 +5525,8 @@ if(GLOBALS->entrybox_text)
 	calczoom(GLOBALS->tims.zoom);
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed");
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
 
 	free_2(GLOBALS->entrybox_text);
 	GLOBALS->entrybox_text=NULL;
@@ -7536,8 +7536,8 @@ if(GLOBALS->helpbox_is_active)
 	
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Fullscreen\n"));
 		}
@@ -7591,8 +7591,8 @@ if(GLOBALS->helpbox_is_active)
 	
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Toolbar\n"));
 		}
@@ -7625,8 +7625,8 @@ if(GLOBALS->helpbox_is_active)
 		GLOBALS->display_grid = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]));
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Grid\n"));
 		}
@@ -7660,8 +7660,8 @@ if(GLOBALS->helpbox_is_active)
 		GLOBALS->highlight_wavewindow = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]));
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Wave Highlight\n"));
 		}
@@ -7695,8 +7695,8 @@ if(GLOBALS->helpbox_is_active)
 		GLOBALS->fill_waveform = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]));
 		if(GLOBALS->wave_hslider)
 			{
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)),"value_changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
+			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
 			}
 		DEBUG(printf("Show Filled High Values\n"));
 		}

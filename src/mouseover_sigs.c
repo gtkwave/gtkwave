@@ -335,9 +335,9 @@ XXX_gdk_draw_rectangle(GLOBALS->cr_mo_pixmap_mouseover_c_1, GLOBALS->rgb_mo_dk_g
                 GLOBALS->mo_width_mouseover_c_1-2, GLOBALS->mo_height_mouseover_c_1-2);
 
 #if GTK_CHECK_VERSION(3,0,0)
-g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mo_area_mouseover_c_1), "draw",G_CALLBACK(draw_event), NULL);
+g_signal_connect(GLOBALS->mo_area_mouseover_c_1, "draw",G_CALLBACK(draw_event), NULL);
 #else
-g_signal_connect(XXX_GTK_OBJECT(GLOBALS->mo_area_mouseover_c_1), "expose_event",G_CALLBACK(expose_event), NULL);
+g_signal_connect(GLOBALS->mo_area_mouseover_c_1, "expose_event",G_CALLBACK(expose_event), NULL);
 #endif
 }
 

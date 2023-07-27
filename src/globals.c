@@ -2429,8 +2429,8 @@ void reload_into_new_context_2(void)
 		gtk_adjustment_set_value(vadj, tree_vadj_value);
 		gtk_scrollable_set_vadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main), vadj);
 
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "changed");
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "value_changed");
+		g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "changed");
+		g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "value_changed");
 		}
 	}
 
@@ -2443,8 +2443,8 @@ void reload_into_new_context_2(void)
 		gtk_adjustment_set_value(hadj, tree_hadj_value);
 		gtk_scrollable_set_hadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main), hadj);
 
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(hadj)), "changed");
-		g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(hadj)), "value_changed");
+		g_signal_emit_by_name (GTK_ADJUSTMENT(hadj), "changed");
+		g_signal_emit_by_name (GTK_ADJUSTMENT(hadj), "value_changed");
 		}
 	}
 
@@ -2464,7 +2464,7 @@ void reload_into_new_context_2(void)
 	/* gtk_widget_set_size_request(GLOBALS->gtk2_tree_frame, -1, tree_frame_y); */
 	}
 
- if(GLOBALS->filter_entry) { g_signal_emit_by_name (XXX_GTK_OBJECT (GLOBALS->filter_entry), "activate"); }
+ if(GLOBALS->filter_entry) { g_signal_emit_by_name (GLOBALS->filter_entry, "activate"); }
  }
 
  /* part 2 of search (which needs to be done after the new dumpfile is loaded) */
@@ -2561,8 +2561,8 @@ void reload_into_new_context_2(void)
 				gtk_adjustment_set_value(vadj, treeview_vadj_value);
 				gtk_scrollable_set_vadjustment(GTK_SCROLLABLE(GLOBALS->dnd_sigview), vadj);
 
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "changed");
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "value_changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "value_changed");
 				}
 			}
 
@@ -2575,8 +2575,8 @@ void reload_into_new_context_2(void)
 				gtk_adjustment_set_value(hadj, treeview_hadj_value);
 				gtk_scrollable_set_hadjustment(GTK_SCROLLABLE(GLOBALS->dnd_sigview), hadj);
 
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(hadj)), "changed");
-				g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(hadj)), "value_changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(hadj), "changed");
+				g_signal_emit_by_name (GTK_ADJUSTMENT(hadj), "value_changed");
 				}
 			}
 		}
