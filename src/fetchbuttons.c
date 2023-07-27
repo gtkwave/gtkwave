@@ -182,7 +182,7 @@ gtk_widget_show(pixmapwid2);
 /* Create a table to hold the text widget and scrollbars */
 table = XXX_gtk_table_new (1, 1, FALSE);
 
-main_vbox = XXX_gtk_vbox_new (FALSE, 1);
+main_vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
 gtk_container_set_border_width (GTK_CONTAINER (main_vbox), 1);
 gtk_container_add (GTK_CONTAINER (table), main_vbox);
 

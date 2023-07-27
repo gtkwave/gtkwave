@@ -370,20 +370,20 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
                            NULL);
     WV_STRACE_CURWIN(GLOBALS->strace_ctx->window_strace_c_10);
 
-    vbox = XXX_gtk_vbox_new(FALSE, 12);
+    vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_container_add(GTK_CONTAINER(GLOBALS->strace_ctx->window_strace_c_10), vbox);
 #if GTK_CHECK_VERSION(3, 0, 0)
     gtk_container_set_border_width(GTK_CONTAINER(GLOBALS->strace_ctx->window_strace_c_10), 12);
 #endif
     gtk_widget_show(vbox);
 
-    vbox_g = XXX_gtk_vbox_new(FALSE, 0);
+    vbox_g = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_show(vbox_g);
 
     frame = gtk_frame_new(NULL);
     gtk_widget_show(frame);
 
-    small_hbox = XXX_gtk_hbox_new(FALSE, 0);
+    small_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_show(small_hbox);
 
     label = gtk_label_new("Logical Operation");
@@ -449,7 +449,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         GLOBALS->strace_ctx->straces = s;
         s->trace = t;
 
-        small_hbox = XXX_gtk_hbox_new(FALSE, 6);
+        small_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
         gtk_widget_show(small_hbox);
 #if GTK_CHECK_VERSION(3, 0, 0)
         gtk_container_set_border_width(GTK_CONTAINER(small_hbox), 6);
@@ -498,7 +498,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     {
         GtkWidget *time_range_hbox;
 
-        time_range_hbox = XXX_gtk_hbox_new(FALSE, 12);
+        time_range_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
 
         label = gtk_label_new("Time range");
 #if GTK_CHECK_VERSION(3, 0, 0)
@@ -525,7 +525,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     } while (0);
 
     /* add mark count GUI element */
-    hbox = XXX_gtk_hbox_new(FALSE, 12);
+    hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
 
     label = gtk_label_new("Beg/End Marks");
 #if GTK_CHECK_VERSION(3, 0, 0)
@@ -548,7 +548,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtk_widget_show_all(hbox);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    hbox = XXX_gtk_hbox_new(FALSE, 6);
+    hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
     gtk_widget_show(hbox);
 

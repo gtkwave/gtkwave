@@ -96,7 +96,7 @@ void simplereqbox(char *title, int width, char *default_text,
     gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_simplereq_c_9), "delete_event",(GCallback) destroy_callback, NULL);
     gtk_window_set_resizable(GTK_WINDOW(GLOBALS->window_simplereq_c_9), FALSE);
 
-    vbox = XXX_gtk_vbox_new (FALSE, 0);
+    vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add (GTK_CONTAINER (GLOBALS->window_simplereq_c_9), vbox);
     gtk_widget_show (vbox);
 
@@ -127,7 +127,7 @@ void simplereqbox(char *title, int width, char *default_text,
     gtk_box_pack_start (GTK_BOX (vbox), separator, FALSE, TRUE, 0);
     gtk_widget_show (separator);
 
-    hbox = XXX_gtk_hbox_new (FALSE, 1);
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
 #if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, TRUE, 0);
 #else
