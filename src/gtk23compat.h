@@ -82,7 +82,6 @@
 #define XXX_gtk_text_view_get_vadjustment gtk_scrollable_get_vadjustment
 #define XXX_gtk_hpaned_new(a) gtk_paned_new(GTK_ORIENTATION_HORIZONTAL)
 #define XXX_gtk_vpaned_new(a) gtk_paned_new(GTK_ORIENTATION_VERTICAL)
-GtkWidget *XXX_gtk_hseparator_new (void);
 #define XXX_gtk_hscrollbar_new(a) gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, a)
 #define XXX_gtk_vscrollbar_new(a) gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, a)
 #define XXX_GTK_STOCK_CANCEL "_Cancel"
@@ -112,7 +111,6 @@ GtkWidget *XXX_gtk_hseparator_new (void);
 #define XXX_gtk_text_view_get_vadjustment gtk_text_view_get_vadjustment
 #define XXX_gtk_hpaned_new(a) gtk_hpaned_new()
 #define XXX_gtk_vpaned_new(a) gtk_vpaned_new()
-#define XXX_gtk_hseparator_new gtk_hseparator_new
 #define XXX_gtk_hscrollbar_new(a) gtk_hscrollbar_new(a)
 #define XXX_gtk_vscrollbar_new(a) gtk_vscrollbar_new(a)
 #define XXX_GTK_STOCK_CANCEL GTK_STOCK_CANCEL
