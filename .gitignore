@@ -3,6 +3,8 @@
 /config.h
 /contrib/rtlbrowse/definehash.c
 /src/vcd_keywords.c
+/compile_commands.json
+/.cache/
 
 # Binaries
 /src/gtkwave

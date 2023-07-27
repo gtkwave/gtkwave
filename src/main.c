@@ -655,6 +655,47 @@ static gboolean window_key_press_event(GtkWidget *widget, GdkEventKey *event)
     return TRUE;
 }
 
+static GtkWidget *XXX_gtk_toolbar_insert_stock(GtkToolbar *toolbar,
+                                               const gchar *stock_id,
+                                               const char *tooltip_text,
+                                               const char *tooltip_private_text,
+                                               GCallback callback,
+                                               gpointer user_data,
+                                               gint position)
+{
+    (void)tooltip_private_text;
+
+    GtkToolItem *button;
+    GtkWidget *icon_widget = gtk_image_new_from_icon_name(stock_id, GTK_ICON_SIZE_BUTTON);
+
+    gtk_widget_show(icon_widget);
+    button = gtk_tool_button_new(icon_widget, NULL);
+    gtk_tool_item_set_tooltip_text(button, tooltip_text);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), button, position);
+
+    g_signal_connect(button, "clicked", G_CALLBACK(callback), user_data);
+    return (GTK_WIDGET(button));
+}
+
+static void XXX_gtk_toolbar_insert_space(GtkToolbar *toolbar, gint position)
+{
+    GtkToolItem *button;
+
+    button = gtk_separator_tool_item_new();
+    gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(button), TRUE);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), button, position);
+}
+
+static void XXX_gtk_toolbar_insert_widget(GtkToolbar *toolbar, GtkWidget *widget, gint position)
+{
+    GtkToolItem *ti = gtk_tool_item_new();
+
+    gtk_container_add(GTK_CONTAINER(ti), widget);
+    gtk_widget_show(GTK_WIDGET(ti));
+
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), ti, position);
+}
+
 int main(int argc, char *argv[])
 {
     return (main_2(0, argc, argv));
@@ -2241,7 +2282,7 @@ savefile_bail:
 
             entry = create_entry_box();
             gtk_widget_show(entry);
-            XXX_gtk_toolbar_insert_widget(GTK_TOOLBAR(tb), entry, NULL, NULL, tb_pos++);
+            XXX_gtk_toolbar_insert_widget(GTK_TOOLBAR(tb), entry, tb_pos++);
 
             XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
 
@@ -2262,8 +2303,6 @@ savefile_bail:
             gtk_widget_show(timebox);
             XXX_gtk_toolbar_insert_widget(GTK_TOOLBAR(tb),
                                           timebox,
-                                          NULL,
-                                          NULL,
                                           tb_pos /* ++ */); /* scan-build */
 
             GLOBALS->missing_file_toolbar = tb;
@@ -2285,8 +2324,7 @@ savefile_bail:
             }
         } /* of ...if(mainwindow_already_built) */
     } else {
-        fprintf(stderr,
-                "GTKWAVE | The non toolbutton interface is no longer supported.\n");
+        fprintf(stderr, "GTKWAVE | The non toolbutton interface is no longer supported.\n");
         exit(255);
     }
 
@@ -2323,7 +2361,7 @@ savefile_bail:
     gtk_widget_show(GLOBALS->signalwindow);
 
     if ((!GLOBALS->hide_sst) && (GLOBALS->loaded_file_type != MISSING_FILE)) {
-        GLOBALS->toppanedwindow = XXX_gtk_hpaned_new(0);
+        GLOBALS->toppanedwindow = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
         GLOBALS->sstpane = treeboxframe("SST", G_CALLBACK(mkmenu_treesearch_cleanup));
 
         GLOBALS->expanderwindow = gtk_expander_new_with_mnemonic("_SST");
@@ -2338,7 +2376,7 @@ savefile_bail:
         gtk_widget_show(GLOBALS->expanderwindow);
     }
 
-    GLOBALS->panedwindow = panedwindow = XXX_gtk_hpaned_new(0);
+    GLOBALS->panedwindow = panedwindow = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     if (GLOBALS->panedwindow_size_cache) {
         gtk_paned_set_position(GTK_PANED(GLOBALS->panedwindow), GLOBALS->panedwindow_size_cache);
         GLOBALS->panedwindow_size_cache = 0;
@@ -2391,16 +2429,8 @@ savefile_bail:
         GLOBALS->top_table = top_table;
 #endif
 
-        XXX_gtk_table_attach(XXX_GTK_TABLE(whole_table),
-                             top_table,
-                             0,
-                             16,
-                             0,
-                             1,
-                             GTK_FILL | GTK_EXPAND,
-                             0,
-                             0,
-                             0);
+        gtk_grid_attach(GTK_GRID(whole_table), top_table, 0, 0, 16, 1);
+        gtk_widget_set_hexpand(GLOBALS->top_table, TRUE);
 
         if (!GLOBALS->do_resize_signals) {
             int dri;
@@ -2415,15 +2445,15 @@ savefile_bail:
         GLOBALS->num_notebook_pages = 1;
         GLOBALS->this_context_page = 0;
         GLOBALS->contexts = calloc(1, sizeof(struct Global **));
-            /* calloc is deliberate! */ /* scan-build */
+        /* calloc is deliberate! */ /* scan-build */
         *GLOBALS->contexts = calloc(1, sizeof(struct Global *));
-            /* calloc is deliberate! */ /* scan-build */
+        /* calloc is deliberate! */ /* scan-build */
         (*GLOBALS->contexts)[0] = GLOBALS;
 
         GLOBALS->dead_context = calloc(1, sizeof(struct Global **));
-            /* calloc is deliberate! */ /* scan-build */
+        /* calloc is deliberate! */ /* scan-build */
         *GLOBALS->dead_context = calloc(1, sizeof(struct Global *));
-            /* calloc is deliberate! */ /* scan-build */
+        /* calloc is deliberate! */ /* scan-build */
         *(GLOBALS->dead_context)[0] = NULL;
 
         GLOBALS->notebook = gtk_notebook_new();
@@ -2445,7 +2475,7 @@ savefile_bail:
                                                      flipper id for side tabs */
         *GLOBALS->contexts =
             realloc(*GLOBALS->contexts, GLOBALS->num_notebook_pages * sizeof(struct Global *));
-            /* realloc is deliberate! */ /* scan-build */
+        /* realloc is deliberate! */ /* scan-build */
         (*GLOBALS->contexts)[GLOBALS->this_context_page] = GLOBALS;
 
         for (ix = 0; ix < GLOBALS->num_notebook_pages; ix++) {
@@ -2481,16 +2511,10 @@ savefile_bail:
         return (0);
     }
 
-    XXX_gtk_table_attach(XXX_GTK_TABLE(whole_table),
-                         GLOBALS->notebook,
-                         0,
-                         16,
-                         1,
-                         256,
-                         GTK_FILL | GTK_EXPAND,
-                         GTK_FILL | GTK_EXPAND | GTK_SHRINK,
-                         0,
-                         0);
+    gtk_grid_attach(GTK_GRID(whole_table), GLOBALS->notebook, 0, 1, 16, 255);
+    gtk_widget_set_hexpand(GLOBALS->notebook, TRUE);
+    gtk_widget_set_vexpand(GLOBALS->notebook, TRUE);
+
     gtk_widget_show(whole_table);
 
     gtk_box_pack_end(GTK_BOX(main_vbox),

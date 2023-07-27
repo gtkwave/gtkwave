@@ -49,7 +49,7 @@ void from_entry_callback(GtkWidget *widget, GtkWidget *entry)
 {
 (void)widget;
 
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 TimeType newlo;
 char fromstr[40];
 
@@ -89,7 +89,7 @@ void to_entry_callback(GtkWidget *widget, GtkWidget *entry)
 {
 (void)widget;
 
-G_CONST_RETURN gchar *entry_text;
+const gchar *entry_text;
 TimeType newhi;
 char tostr[40];
 
