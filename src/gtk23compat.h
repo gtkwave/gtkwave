@@ -133,9 +133,6 @@
 
 
 #ifdef WAVE_ALLOW_GTK3_GRID
-GtkWidget *XXX_gtk_table_new (guint rows,
-               guint columns,
-               gboolean homogeneous);
 void XXX_gtk_table_attach (GtkGrid *table,
                   GtkWidget *child,
                   guint left_attach,
@@ -148,7 +145,6 @@ void XXX_gtk_table_attach (GtkGrid *table,
                   guint ypadding);
 #define XXX_GTK_TABLE GTK_GRID
 #else
-#define XXX_gtk_table_new gtk_table_new
 #define XXX_gtk_table_attach gtk_table_attach
 #define XXX_GTK_TABLE GTK_TABLE
 #endif

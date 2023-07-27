@@ -797,7 +797,7 @@ if((!GLOBALS->splash_disable)&&(!GLOBALS->splash_splash_c_1))
 
         make_splash_pixmaps(GLOBALS->splash_splash_c_1);
 
-        splash_table = XXX_gtk_table_new(10, 10, FALSE);
+        splash_table = gtk_grid_new();
         GLOBALS->darea_splash_c_1 = gtk_drawing_area_new();
         gtk_widget_show(GLOBALS->darea_splash_c_1);
 	gtk_widget_set_events(GLOBALS->darea_splash_c_1, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK);
