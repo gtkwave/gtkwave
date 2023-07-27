@@ -1,6 +1,8 @@
 *.o
 *.a
 /config.h
+/contrib/rtlbrowse/definehash.c
+/src/vcd_keywords.c
 
 # Binaries
 /src/gtkwave

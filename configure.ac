@@ -1,11 +1,11 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(gtkwave-gtk3, 3.4.0, bybell@rocketmail.com)
+AC_PREREQ([2.69])
+AC_INIT([gtkwave-gtk3],[3.4.0],[bybell@rocketmail.com])
 AC_CONFIG_SRCDIR([src/vcd.c])
-AM_INIT_AUTOMAKE
-AC_CONFIG_HEADER([config.h])
+AM_INIT_AUTOMAKE([1.14 subdir-objects])
+AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE
 
 # ------------- GSETTINGS -------------------
@@ -414,9 +414,8 @@ AC_PROG_CXX
 AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_MAKE_SET
-AC_PROG_LEX
+AC_PROG_LEX(noyywrap)
 AC_PROG_RANLIB
-AM_PROG_CC_C_O
 
 #
 # for "Open Hierarchy Source"
@@ -485,7 +484,7 @@ AC_CHECK_LIB([pthread], [main])
 need_libz=no
 LIBZ_LDADD=
 LIBZ_CFLAGS=
-        AC_TRY_COMPILE([#include <zlib.h>], [gzdopen(0,"rb");],, [need_libz=yes])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <zlib.h>]], [[gzdopen(0,"rb");]])],[],[need_libz=yes])
 	if test "$need_libz" = "yes" ; then
 		AC_MSG_ERROR([
 No system libz headers could be found.  Make sure your system has a
@@ -502,7 +501,7 @@ libz installed])
 need_libbz2=no
 LIBBZ2_LDADD=
 LIBBZ2_CFLAGS=
-        AC_TRY_COMPILE([#include <bzlib.h>], [BZ2_bzdopen(0,"rb");],, [need_libbz2=yes])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <bzlib.h>]], [[BZ2_bzdopen(0,"rb");]])],[],[need_libbz2=yes])
 	if test "$need_libbz2" = "yes" ; then
 		AC_MSG_ERROR([
 No system libbz2 headers could be found.  Make sure your system has a
@@ -539,7 +538,7 @@ LIBXZ_LDADD=
 LIBXZ_CFLAGS=
 if test "X$EXZ" == "Xyes"; then
 	have_liblzma=no
-	AC_TRY_COMPILE([#include <lzma.h>], [lzma_end(NULL);],, [have_liblzma=yes])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <lzma.h>]], [[lzma_end(NULL);]])],[],[have_liblzma=yes])
 	AC_CHECK_LIB([lzma], [lzma_end], [LIBLZMA_LDADD=-llzma] , [have_liblzma=yes])
 	if test "$have_liblzma" = "yes" ; then
 		AC_MSG_ERROR([LZMA support for VZT is enabled, but xz could not be found.
@@ -591,7 +590,7 @@ LIBJUDY_LDADD=
 LIBJUDY_CFLAGS=
 if test "X$EJUDY" == "Xyes"; then
 	have_libjudy=no
-	AC_TRY_COMPILE([#include <Judy.h>], [ JudySLIns (NULL, NULL, NULL);],, [have_libjudy=yes])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <Judy.h>]], [[ JudySLIns (NULL, NULL, NULL);]])],[],[have_libjudy=yes])
 	AC_CHECK_LIB([Judy], [JudySLIns], [LIBJUDY_LDADD=-lJudy] , [have_libjudy=yes])
 	if test "$have_libjudy" = "yes" ; then
 		AC_MSG_ERROR([Judy support is enabled, but could not be found.
@@ -685,7 +684,9 @@ fi
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_DIRENT
-AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([fcntl.h inttypes.h libintl.h limits.h malloc.h stddef.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h wchar.h wctype.h getopt.h])
 
@@ -724,7 +725,6 @@ AC_C_INLINE
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_HEADER_TIME
 AC_STRUCT_TM
 AC_CHECK_TYPES([ptrdiff_t])
 AC_SYS_LARGEFILE
@@ -738,7 +738,6 @@ AC_FUNC_FSEEKO
 AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_SELECT_ARGTYPES
-AC_FUNC_SETVBUF_REVERSED
 AC_FUNC_STAT
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
