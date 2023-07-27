@@ -65,15 +65,11 @@ if(GLOBALS->dual_ctx && !GLOBALS->dual_race_lock)
 }
 
 /******************************************************************/
-#if GTK_CHECK_VERSION(3,0,0)
 static int gesture_filter_set = 0; /* to prevent floods of gesture events before next draw */
 static int gesture_filter_cnt = 0; /* to prevent floods of gesture events before next draw */
 static int gesture_in_zoom = 0; /* for suppression of filtering of redraws: indicates zoom state change, service_hslider() decrements this */
-#endif
 
 #ifdef WAVE_ALLOW_SLIDER_ZOOM
-#if GTK_CHECK_VERSION(3,0,0)
-
 static void (*draw_slider_p)    (GtkStyle               *style,
                                  cairo_t                *cr,
                                  GtkStateType            state_type,
@@ -110,47 +106,6 @@ if((GLOBALS)&&(widget == GLOBALS->hscroll_wavewindow_c_2))
 
 draw_slider_p(style, cr, state_type, shadow_type, widget, detail, x, y, width, height, orientation);
 }
-#else
-static void (*draw_slider_p)    (GtkStyle               *style,
-                                 GdkWindow              *window,
-                                 GtkStateType            state_type,
-                                 GtkShadowType           shadow_type,
-                                 GdkRectangle           *area,
-                                 GtkWidget              *widget,
-                                 const gchar            *detail,
-                                 gint                    x,
-                                 gint                    y,
-                                 gint                    width,
-                                 gint                    height,
-                                 GtkOrientation          orientation) = NULL; /* This is intended to be global...only needed once per toolkit */
-
-
-static void draw_slider         (GtkStyle               *style,
-                                 GdkWindow              *window,
-                                 GtkStateType            state_type,
-                                 GtkShadowType           shadow_type,
-                                 GdkRectangle           *area,
-                                 GtkWidget              *widget,
-                                 const gchar            *detail,
-                                 gint                    x,
-                                 gint                    y,
-                                 gint                    width,
-                                 gint                    height,
-                                 GtkOrientation          orientation)
-{
-if((GLOBALS)&&(widget == GLOBALS->hscroll_wavewindow_c_2))
-        {
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(widget, &allocation);
-        GLOBALS->str_wid_x = x - allocation.x;
-        GLOBALS->str_wid_width = width;
-        GLOBALS->str_wid_bigw = allocation.width;
-        GLOBALS->str_wid_height = height;
-        }
-
-draw_slider_p(style, window, state_type, shadow_type, area, widget, detail, x, y, width, height, orientation);
-}
-#endif
 
 static gint slider_bpr(GtkWidget *widget, GdkEventButton *event)
 {
@@ -1714,13 +1669,11 @@ if(!GLOBALS->made_sgc_contexts_wavewindow_c_1)
 	{
 	gboolean dark = GLOBALS->use_dark;
 
-#if GTK_CHECK_VERSION(3,0,0)
 	if(!dark)
 		{
 		g_object_get(gtk_settings_get_default(), "gtk-application-prefer-dark-theme", &dark, NULL);
 		GLOBALS->use_dark = dark;
 		}
-#endif
 
 	GLOBALS->rgb_gc_white = dark ? XXX_alloc_color(GLOBALS->color_black) : XXX_alloc_color(GLOBALS->color_white);
 	GLOBALS->rgb_gc_black = dark ? XXX_alloc_color(GLOBALS->color_white) : XXX_alloc_color(GLOBALS->color_black);
@@ -1936,7 +1889,6 @@ return(rc);
 }
 
 
-#if GTK_CHECK_VERSION(3,0,0)
 static gint draw_event(GtkWidget *widget, cairo_t *cr, gpointer      user_data)
 {
 (void) widget;
@@ -1959,46 +1911,6 @@ if(gesture_filter_set) gesture_filter_set = 0;
 
 return(rc);
 }
-#else
-static gint expose_event(GtkWidget *widget, GdkEventExpose *event)
-{
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-GdkDrawingContext *gdc;
-#endif
-cairo_t* cr = XXX_gdk_cairo_create (XXX_GDK_DRAWABLE (gtk_widget_get_window(widget)), &gdc);
-gdk_cairo_region (cr, event->region);
-cairo_clip (cr);
-
-wavewindow_paint(cr);
-
-#ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-gdk_window_end_draw_frame(gtk_widget_get_window(widget), gdc);
-#else
-cairo_destroy (cr);
-#endif
-
-draw_marker();
-
-return(FALSE);
-}
-
-static gint expose_event_local(GtkWidget *widget, GdkEventExpose *event)
-{
-gint rc;
-gint page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(GLOBALS->notebook));
-/* struct Global *g_old = GLOBALS; */
-
-set_GLOBALS((*GLOBALS->contexts)[page_num]);
-
-rc = expose_event(widget, event);
-
-/* seems to cause a conflict flipping back so don't! */
-/* set_GLOBALS(g_old); */
-
-return(rc);
-}
-#endif
-
 
 #ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_WAVE_VSLIDER
 static gboolean wave_vslider_gtc(GtkWidget *widget,
@@ -2446,11 +2358,7 @@ gtk_widget_set_events(GLOBALS->wavearea,
                 );
 
 g_signal_connect(GLOBALS->wavearea, "configure_event",G_CALLBACK(wavearea_configure_event_local), NULL);
-#if GTK_CHECK_VERSION(3,0,0)
 g_signal_connect(GLOBALS->wavearea, "draw",G_CALLBACK(draw_event), NULL);
-#else
-g_signal_connect(GLOBALS->wavearea, "expose_event",G_CALLBACK(expose_event_local), NULL);
-#endif
 
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
 if(GLOBALS->use_gestures < 0) /* <0 means "maybe (if available, enable)" */

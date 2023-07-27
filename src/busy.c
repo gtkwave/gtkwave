@@ -121,11 +121,7 @@ if(GLOBALS->partial_vcd)
 
 void init_busy(void)
 {
-#if GTK_CHECK_VERSION(3,0,0)
 GLOBALS->busycursor_busy_c_1 = gdk_cursor_new_for_display(gdk_display_get_default(), GDK_WATCH);
-#else
-GLOBALS->busycursor_busy_c_1 = gdk_cursor_new(GDK_WATCH);
-#endif
 
 gdk_event_handler_set((GdkEventFunc)GuiDoEvent, NULL, NULL);
 }

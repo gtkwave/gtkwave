@@ -372,9 +372,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_container_add(GTK_CONTAINER(GLOBALS->strace_ctx->window_strace_c_10), vbox);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_container_set_border_width(GTK_CONTAINER(GLOBALS->strace_ctx->window_strace_c_10), 12);
-#endif
     gtk_widget_show(vbox);
 
     vbox_g = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -387,9 +385,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtk_widget_show(small_hbox);
 
     label = gtk_label_new("Logical Operation");
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_label_set_xalign(GTK_LABEL(label), 0.0);
-#endif
     gtk_widget_show(label);
     gtk_box_pack_start(GTK_BOX(small_hbox), label, TRUE, TRUE, 0);
 
@@ -418,11 +414,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
                                    GTK_POLICY_AUTOMATIC);
     gtk_widget_show(scrolled_win);
     gtk_container_add(GTK_CONTAINER(frame), scrolled_win);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_box_pack_start(GTK_BOX(vbox), frame, TRUE, TRUE, 0);
-#else
-    gtk_container_add(GTK_CONTAINER(vbox), frame);
-#endif
 
     for (t = GLOBALS->traces.first; t; t = t->t_next) {
         struct strace *s;
@@ -451,18 +443,14 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 
         small_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
         gtk_widget_show(small_hbox);
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_container_set_border_width(GTK_CONTAINER(small_hbox), 6);
-#endif
 
         label = gtk_label_new(t->name);
         gtk_widget_show(label);
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_label_set_xalign(GTK_LABEL(label), 0.0);
         gtk_widget_set_margin_top(label, 6);
         gtk_widget_set_margin_start(label, 6);
         gtk_widget_set_margin_end(label, 6);
-#endif
         gtk_box_pack_start(GTK_BOX(vbox_g), label, FALSE, FALSE, 0);
 
         combo_box = gtk_combo_box_text_new();
@@ -486,11 +474,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         gtk_box_pack_start(GTK_BOX(vbox_g), small_hbox, FALSE, FALSE, 0);
     }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_container_add(GTK_CONTAINER(scrolled_win), vbox_g); /* removes gtk3 deprecated warning */
-#else
-    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scrolled_win), vbox_g);
-#endif
 
     label_group = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
 
@@ -501,9 +485,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         time_range_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
 
         label = gtk_label_new("Time range");
-#if GTK_CHECK_VERSION(3, 0, 0)
         gtk_label_set_xalign(GTK_LABEL(label), 0.0);
-#endif
         gtk_box_pack_start(GTK_BOX(time_range_hbox), label, TRUE, TRUE, 0);
         gtk_size_group_add_widget(label_group, label);
 
@@ -528,16 +510,12 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
 
     label = gtk_label_new("Beg/End Marks");
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_label_set_xalign(GTK_LABEL(label), 0.0);
-#endif
     gtk_size_group_add_widget(label_group, label);
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 
     GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1 = gtk_label_new("");
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_label_set_xalign(GTK_LABEL(GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1), 0.0);
-#endif
     gtk_box_pack_start(GTK_BOX(hbox),
                        GLOBALS->strace_ctx->ptr_mark_count_label_strace_c_1,
                        TRUE,
@@ -557,11 +535,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button1, "clicked", G_CALLBACK(forwards_callback), NULL);
     WV_STRACE_CURWIN(button1);
     gtk_widget_show(button1);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
-#else
-    gtk_container_add(GTK_CONTAINER(hbox), button1);
-#endif
     gtk_widget_set_can_default(button1, TRUE);
     gtkwave_signal_connect_object(button1,
                                   "realize",
@@ -576,11 +550,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
                            NULL);
     WV_STRACE_CURWIN(button1a);
     gtk_widget_show(button1a);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_box_pack_start(GTK_BOX(hbox), button1a, TRUE, TRUE, 0);
-#else
-    gtk_container_add(GTK_CONTAINER(hbox), button1a);
-#endif
     gtk_widget_set_can_default(button1a, TRUE);
 
     button1b = gtk_button_new_with_label("Mark");
@@ -588,11 +558,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button1b, "clicked", G_CALLBACK(mark_callback), NULL);
     WV_STRACE_CURWIN(button1b);
     gtk_widget_show(button1b);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_box_pack_start(GTK_BOX(hbox), button1b, TRUE, TRUE, 0);
-#else
-    gtk_container_add(GTK_CONTAINER(hbox), button1b);
-#endif
     gtk_widget_set_can_default(button1b, TRUE);
 
     button1c = gtk_button_new_with_label("Clear");
@@ -600,11 +566,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button1c, "clicked", G_CALLBACK(clear_callback), NULL);
     WV_STRACE_CURWIN(button1c);
     gtk_widget_show(button1c);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_box_pack_start(GTK_BOX(hbox), button1c, TRUE, TRUE, 0);
-#else
-    gtk_container_add(GTK_CONTAINER(hbox), button1c);
-#endif
     gtk_widget_set_can_default(button1c, TRUE);
 
     button2 = gtk_button_new_with_label("Exit");
@@ -612,11 +574,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
     WV_STRACE_CURWIN(button2);
     gtk_widget_show(button2);
-#if GTK_CHECK_VERSION(3, 0, 0)
     gtk_box_pack_start(GTK_BOX(hbox), button2, TRUE, TRUE, 0);
-#else
-    gtk_container_add(GTK_CONTAINER(hbox), button2);
-#endif
     gtk_widget_set_can_default(button2, TRUE);
 
     gtk_widget_show(GLOBALS->strace_ctx->window_strace_c_10);
