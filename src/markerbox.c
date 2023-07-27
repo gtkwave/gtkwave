@@ -345,7 +345,7 @@ void markerbox(char *title, GCallback func)
     install_focus_cb(GLOBALS->window_markerbox_c_4, ((char *)&GLOBALS->window_markerbox_c_4) - ((char *)GLOBALS));
 
     gtk_window_set_title(GTK_WINDOW (GLOBALS->window_markerbox_c_4), title);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (GLOBALS->window_markerbox_c_4), "delete_event",(GCallback) destroy_callback, NULL);
+    gtkwave_signal_connect(GLOBALS->window_markerbox_c_4, "delete_event",(GCallback) destroy_callback, NULL);
 
     vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_show (vbox);
@@ -399,8 +399,8 @@ void markerbox(char *title, GCallback func)
     gtk_widget_show (hbox);
 
     GLOBALS->entries_markerbox_c_1[i]=entry = X_gtk_entry_new_with_max_length (48);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "activate", G_CALLBACK(enter_callback), (void *)((intptr_t) i));
-    gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "changed", G_CALLBACK(change_callback), (void *)((intptr_t) i));
+    gtkwave_signal_connect(entry, "activate", G_CALLBACK(enter_callback), (void *)((intptr_t) i));
+    gtkwave_signal_connect(entry, "changed", G_CALLBACK(change_callback), (void *)((intptr_t) i));
     if(GLOBALS->shadow_markers_markerbox_c_1[i]==-1)
 	{
 	sprintf(buf,"<None>");
@@ -418,8 +418,8 @@ void markerbox(char *title, GCallback func)
     entry = X_gtk_entry_new_with_max_length (48);
     if(GLOBALS->shadow_marker_names[i]) gtk_entry_set_text (GTK_ENTRY (entry), GLOBALS->shadow_marker_names[i]);
     gtk_widget_show (entry);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "activate", G_CALLBACK(str_enter_callback), (void *)((intptr_t) i));
-    gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "changed", G_CALLBACK(str_change_callback), (void *)((intptr_t) i));
+    gtkwave_signal_connect(entry, "activate", G_CALLBACK(str_enter_callback), (void *)((intptr_t) i));
+    gtkwave_signal_connect(entry, "changed", G_CALLBACK(str_change_callback), (void *)((intptr_t) i));
 
     gtk_box_pack_start (GTK_BOX (hbox), entry, TRUE, TRUE, 0);
 
@@ -442,7 +442,7 @@ void markerbox(char *title, GCallback func)
 
     button1 = gtk_button_new_with_label ("OK");
     gtk_widget_set_size_request(button1, 100, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (button1), "clicked", G_CALLBACK(ok_callback), NULL);
+    gtkwave_signal_connect(button1, "clicked", G_CALLBACK(ok_callback), NULL);
     gtk_widget_show (button1);
 #if GTK_CHECK_VERSION(3,0,0)
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
@@ -450,12 +450,12 @@ void markerbox(char *title, GCallback func)
     gtk_container_add (GTK_CONTAINER (hbox), button1);
 #endif
     gtk_widget_set_can_default (button1, TRUE);
-    gtkwave_signal_connect_object (XXX_GTK_OBJECT (button1), "realize", (GCallback) gtk_widget_grab_default, XXX_GTK_OBJECT (button1));
+    gtkwave_signal_connect_object (button1, "realize", (GCallback) gtk_widget_grab_default, button1);
 
 
     button2 = gtk_button_new_with_label ("Cancel");
     gtk_widget_set_size_request(button2, 100, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT (button2), "clicked", G_CALLBACK(destroy_callback), NULL);
+    gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
     gtk_widget_set_can_default (button2, TRUE);
     gtk_widget_show (button2);
 #if GTK_CHECK_VERSION(3,0,0)

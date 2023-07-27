@@ -364,7 +364,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 
     gtk_window_set_title(GTK_WINDOW(GLOBALS->strace_ctx->window_strace_c_10), title);
     gtk_widget_set_size_request(GTK_WIDGET(GLOBALS->strace_ctx->window_strace_c_10), 420, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->strace_ctx->window_strace_c_10),
+    gtkwave_signal_connect(GLOBALS->strace_ctx->window_strace_c_10,
                            "delete_event",
                            (GCallback)destroy_callback,
                            NULL);
@@ -477,8 +477,8 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         gtk_box_pack_start(GTK_BOX(small_hbox), combo_box, FALSE, TRUE, 0);
 
         entry = X_gtk_entry_new_with_max_length(257); /* %+256ch */
-        gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "activate", G_CALLBACK(enter_callback), s);
-        gtkwave_signal_connect(XXX_GTK_OBJECT(entry), "changed", G_CALLBACK(enter_callback), s);
+        gtkwave_signal_connect(entry, "activate", G_CALLBACK(enter_callback), s);
+        gtkwave_signal_connect(entry, "changed", G_CALLBACK(enter_callback), s);
         WV_STRACE_CURWIN(entry);
 
         gtk_box_pack_start(GTK_BOX(small_hbox), entry, TRUE, TRUE, 0);
@@ -554,7 +554,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 
     button1 = gtk_button_new_with_label("Fwd");
     gtk_widget_set_size_request(button1, 75, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(button1), "clicked", G_CALLBACK(forwards_callback), NULL);
+    gtkwave_signal_connect(button1, "clicked", G_CALLBACK(forwards_callback), NULL);
     WV_STRACE_CURWIN(button1);
     gtk_widget_show(button1);
 #if GTK_CHECK_VERSION(3, 0, 0)
@@ -563,14 +563,14 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtk_container_add(GTK_CONTAINER(hbox), button1);
 #endif
     gtk_widget_set_can_default(button1, TRUE);
-    gtkwave_signal_connect_object(XXX_GTK_OBJECT(button1),
+    gtkwave_signal_connect_object(button1,
                                   "realize",
                                   (GCallback)gtk_widget_grab_default,
-                                  XXX_GTK_OBJECT(button1));
+                                  button1);
 
     button1a = gtk_button_new_with_label("Bkwd");
     gtk_widget_set_size_request(button1a, 75, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(button1a),
+    gtkwave_signal_connect(button1a,
                            "clicked",
                            G_CALLBACK(backwards_callback),
                            NULL);
@@ -585,7 +585,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 
     button1b = gtk_button_new_with_label("Mark");
     gtk_widget_set_size_request(button1b, 75, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(button1b), "clicked", G_CALLBACK(mark_callback), NULL);
+    gtkwave_signal_connect(button1b, "clicked", G_CALLBACK(mark_callback), NULL);
     WV_STRACE_CURWIN(button1b);
     gtk_widget_show(button1b);
 #if GTK_CHECK_VERSION(3, 0, 0)
@@ -597,7 +597,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 
     button1c = gtk_button_new_with_label("Clear");
     gtk_widget_set_size_request(button1c, 75, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(button1c), "clicked", G_CALLBACK(clear_callback), NULL);
+    gtkwave_signal_connect(button1c, "clicked", G_CALLBACK(clear_callback), NULL);
     WV_STRACE_CURWIN(button1c);
     gtk_widget_show(button1c);
 #if GTK_CHECK_VERSION(3, 0, 0)
@@ -609,7 +609,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 
     button2 = gtk_button_new_with_label("Exit");
     gtk_widget_set_size_request(button2, 75, -1);
-    gtkwave_signal_connect(XXX_GTK_OBJECT(button2), "clicked", G_CALLBACK(destroy_callback), NULL);
+    gtkwave_signal_connect(button2, "clicked", G_CALLBACK(destroy_callback), NULL);
     WV_STRACE_CURWIN(button2);
     gtk_widget_show(button2);
 #if GTK_CHECK_VERSION(3, 0, 0)

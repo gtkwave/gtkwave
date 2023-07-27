@@ -172,7 +172,7 @@ XXX_gtk_toolbar_insert_stock (GtkToolbar *toolbar,
                       button,
                       position);
 
-  g_signal_connect(XXX_GTK_OBJECT(button), "clicked", G_CALLBACK(callback), user_data);
+  g_signal_connect(button, "clicked", G_CALLBACK(callback), user_data);
   return(GTK_WIDGET(button));
 }
 
@@ -574,8 +574,8 @@ void create_toolbar(GtkWidget *table)
     find_entry = gtk_entry_new ();
     gtk_widget_show (find_entry);
 
-    g_signal_connect(XXX_GTK_OBJECT(find_entry), "changed", G_CALLBACK(press_callback), NULL);
-    g_signal_connect(XXX_GTK_OBJECT (find_entry), "key_press_event", (GCallback) find_edit_cb, NULL);
+    g_signal_connect(find_entry, "changed", G_CALLBACK(press_callback), NULL);
+    g_signal_connect(find_entry, "key_press_event", (GCallback) find_edit_cb, NULL);
     gtk_box_pack_start (GTK_BOX (hbox), find_entry, FALSE, FALSE, 0);
 
     tb = gtk_toolbar_new();
@@ -621,7 +621,7 @@ void create_toolbar(GtkWidget *table)
 
     matchcase_checkbutton = gtk_check_button_new_with_label("Match case");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(matchcase_checkbutton), matchcase_active);
-    g_signal_connect (XXX_GTK_OBJECT (matchcase_checkbutton), "toggled", G_CALLBACK(toggle_callback), NULL);
+    g_signal_connect (matchcase_checkbutton, "toggled", G_CALLBACK(toggle_callback), NULL);
     gtk_widget_show(matchcase_checkbutton);
     gtk_box_pack_start (GTK_BOX (hbox), matchcase_checkbutton, FALSE, FALSE, 0);
     }
@@ -1266,8 +1266,8 @@ scroll_event( GtkWidget * widget, GdkEventScroll * event, gpointer text)
 	gtk_adjustment_set_value(vadj, gtk_adjustment_get_value(vadj) - s_val);
 	if(gtk_adjustment_get_value(vadj) < gtk_adjustment_get_lower(vadj)) gtk_adjustment_set_value(vadj, gtk_adjustment_get_lower(vadj));
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "changed");
-        g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "value_changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "changed");
+        g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "value_changed");
 
       break;
 
@@ -1275,8 +1275,8 @@ scroll_event( GtkWidget * widget, GdkEventScroll * event, gpointer text)
 	gtk_adjustment_set_value(vadj, gtk_adjustment_get_value(vadj) + s_val);
 	if(gtk_adjustment_get_value(vadj) > gtk_adjustment_get_upper(vadj) - p_val) gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj) - p_val);
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "changed");
-        g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(vadj)), "value_changed");
+	g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "changed");
+        g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "value_changed");
 
     default:
       break;
@@ -1327,13 +1327,13 @@ gtk_container_set_border_width (GTK_CONTAINER (scrolled_window), 5);
 gtk_widget_show(scrolled_window);
 
 /* Add a handler to put a message in the text widget when it is realized */
-g_signal_connect (XXX_GTK_OBJECT (text), "realize",
+g_signal_connect (text, "realize",
                         G_CALLBACK (log_realize_text), NULL);
 
-g_signal_connect(XXX_GTK_OBJECT(text), "button_release_event",
+g_signal_connect(text, "button_release_event",
                        G_CALLBACK(button_release_event), NULL);
 
-g_signal_connect (XXX_GTK_OBJECT (text), "scroll_event",G_CALLBACK(scroll_event), text);
+g_signal_connect (text, "scroll_event",G_CALLBACK(scroll_event), text);
 gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_CHAR);
 return(scrolled_window);
 }
@@ -1418,8 +1418,8 @@ while(t)
 			set_insert_position(t);
 
 			gtk_adjustment_set_value(vadj, vvalue);
-			g_signal_emit_by_name (XXX_GTK_OBJECT (vadj), "changed");
-			g_signal_emit_by_name (XXX_GTK_OBJECT (vadj), "value_changed");
+			g_signal_emit_by_name (vadj, "changed");
+			g_signal_emit_by_name (vadj, "value_changed");
 			}
 		}
 	t = t->next;
@@ -1621,7 +1621,7 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
         pagenum =
 		gtk_notebook_append_page_menu  (GTK_NOTEBOOK(notebook), window, tbox, gtk_label_new(title));
 
-	g_signal_connect (XXX_GTK_OBJECT (close_button), "button_release_event",
+	g_signal_connect (close_button, "button_release_event",
 	                        G_CALLBACK (destroy_via_closebutton_release), NULL); /* this will destroy the tab by destroying the parent container */
 	}
 
@@ -1650,7 +1650,7 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     gtk_box_pack_start (GTK_BOX (vbox), ctext, TRUE, TRUE, 0);
     gtk_widget_show (ctext);
 
-    g_signal_connect(XXX_GTK_OBJECT(text), "button_press_event",G_CALLBACK(button_press_event), NULL);
+    g_signal_connect(text, "button_press_event",G_CALLBACK(button_press_event), NULL);
 
 #if GTK_CHECK_VERSION(3,0,0)
     separator = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
@@ -1677,13 +1677,13 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     ctx->title = strdup(title);
 
 #if GTK_CHECK_VERSION(3,0,0)
-    g_signal_connect(XXX_GTK_OBJECT(window), "draw", G_CALLBACK(draw_event), NULL);
+    g_signal_connect(window, "draw", G_CALLBACK(draw_event), NULL);
 #else
-    g_signal_connect(XXX_GTK_OBJECT(window), "expose_event",G_CALLBACK(expose_event_local), NULL);
+    g_signal_connect(window, "expose_event",G_CALLBACK(expose_event_local), NULL);
 #endif
     button1 = gtk_button_new_with_label (display_mode ? "View Design Unit Only": "View Full File");
     gtk_widget_set_size_request(button1, 100, -1);
-    g_signal_connect(XXX_GTK_OBJECT (button1), "clicked",
+    g_signal_connect(button1, "clicked",
                                G_CALLBACK(ok_callback),
                                ctx);
     gtk_widget_show (button1);
@@ -1693,10 +1693,10 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     gtk_container_add (GTK_CONTAINER (hbox), button1);
 #endif
     gtk_widget_set_can_default (button1, TRUE);
-    g_signal_connect_swapped (XXX_GTK_OBJECT (button1),
+    g_signal_connect_swapped (button1,
                                 "realize",
                              (GCallback) gtk_widget_grab_default,
-                             XXX_GTK_OBJECT (button1));
+                             button1);
 
 
     gtk_widget_show(window);
@@ -1727,10 +1727,10 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
                 sizeof(target_entry) / sizeof(GtkTargetEntry),
                 GDK_ACTION_COPY | GDK_ACTION_MOVE
                 );
-        g_signal_connect(XXX_GTK_OBJECT(src), "drag_begin", G_CALLBACK(DNDBeginCB), ctx);
-        g_signal_connect(XXX_GTK_OBJECT(src), "drag_end", G_CALLBACK(DNDEndCB), ctx);
-        g_signal_connect(XXX_GTK_OBJECT(src), "drag_data_get", G_CALLBACK(DNDDataRequestCB), ctx);
-        g_signal_connect(XXX_GTK_OBJECT(src), "drag_data_delete", G_CALLBACK(DNDDataDeleteCB), ctx);
+        g_signal_connect(src, "drag_begin", G_CALLBACK(DNDBeginCB), ctx);
+        g_signal_connect(src, "drag_end", G_CALLBACK(DNDEndCB), ctx);
+        g_signal_connect(src, "drag_data_get", G_CALLBACK(DNDDataRequestCB), ctx);
+        g_signal_connect(src, "drag_data_delete", G_CALLBACK(DNDDataDeleteCB), ctx);
         }
 
     if(notebook)

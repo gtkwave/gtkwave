@@ -807,11 +807,11 @@ if((!GLOBALS->splash_disable)&&(!GLOBALS->splash_splash_c_1))
         gtk_widget_show(splash_table);
         gtk_container_add(GTK_CONTAINER(GLOBALS->splash_splash_c_1), splash_table);
 #if GTK_CHECK_VERSION(3,0,0)
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->darea_splash_c_1), "draw",G_CALLBACK(draw_event), NULL);
+	gtkwave_signal_connect(GLOBALS->darea_splash_c_1, "draw",G_CALLBACK(draw_event), NULL);
 #else
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->darea_splash_c_1), "expose_event",G_CALLBACK(expose_event), NULL);
+	gtkwave_signal_connect(GLOBALS->darea_splash_c_1, "expose_event",G_CALLBACK(expose_event), NULL);
 #endif
-	gtkwave_signal_connect(XXX_GTK_OBJECT(GLOBALS->darea_splash_c_1), "button_press_event",G_CALLBACK(splash_button_press_event), NULL);
+	gtkwave_signal_connect(GLOBALS->darea_splash_c_1, "button_press_event",G_CALLBACK(splash_button_press_event), NULL);
 
 	gtk_events_pending_gtk_main_iteration();
 

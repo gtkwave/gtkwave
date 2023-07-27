@@ -145,7 +145,7 @@ gtk_widget_set_size_request(GTK_WIDGET(GLOBALS->text_status_c_2), 100, 50);
 gtk_widget_show (GLOBALS->text_status_c_2);
 
 /* Add a handler to put a message in the text widget when it is realized */
-g_signal_connect (XXX_GTK_OBJECT (GLOBALS->text_status_c_2), "realize", G_CALLBACK (realize_text), NULL);
+g_signal_connect (GLOBALS->text_status_c_2, "realize", G_CALLBACK (realize_text), NULL);
 
 gtk_tooltips_set_tip_2(GLOBALS->text_status_c_2, "Status Window");
 return(sw);

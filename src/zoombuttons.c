@@ -143,8 +143,8 @@ if(GLOBALS->do_zoom_center)
 
 fix_wavehadj();
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 DEBUG(printf("Zoombuttons out\n"));
 }
@@ -203,8 +203,8 @@ if(GLOBALS->tims.zoom<0)		/* otherwise it's ridiculous and can cause */
 
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 	DEBUG(printf("Zoombuttons in\n"));
 	}
@@ -235,8 +235,8 @@ GLOBALS->tims.timecache=0;
 calczoom(GLOBALS->tims.zoom);
 fix_wavehadj();
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 DEBUG(printf("Zoombuttons Undo\n"));
 }
@@ -281,8 +281,8 @@ if((GLOBALS->tims.baseline>=0)&&(GLOBALS->tims.marker>=0))
 
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 	}
 
 DEBUG(printf("Zoombuttons Fit\n"));
@@ -319,8 +319,8 @@ GLOBALS->tims.zoom=estimated;
 
 fix_wavehadj();
 
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 DEBUG(printf("Zoombuttons Full\n"));
 }
@@ -387,8 +387,8 @@ if((time2>time1)&&(dragzoom_ok))	/* ensure at least 1 tick and dragzoom_threshol
 
 	fix_wavehadj();
 
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "changed"); /* force zoom update */
-	g_signal_emit_by_name (XXX_GTK_OBJECT (GTK_ADJUSTMENT(GLOBALS->wave_hslider)), "value_changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
+	g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 
 	DEBUG(printf("Drag Zoom\n"));
 	}
@@ -445,7 +445,7 @@ gtk_container_add(GTK_CONTAINER(b1), pixmapzin);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b1, 0, 1, 0, 1,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b1), "clicked", G_CALLBACK(service_zoom_out), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b1, "clicked", G_CALLBACK(service_zoom_out), table2);
 gtk_tooltips_set_tip_2(b1, "Zoom Out");
 gtk_widget_show(b1);
 
@@ -454,7 +454,7 @@ gtk_container_add(GTK_CONTAINER(b2), pixmapzout);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b2, 0, 1, 1, 2,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b2), "clicked", G_CALLBACK(service_zoom_in), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b2, "clicked", G_CALLBACK(service_zoom_in), table2);
 gtk_tooltips_set_tip_2(b2, "Zoom In");
 gtk_widget_show(b2);
 
@@ -463,7 +463,7 @@ gtk_container_add(GTK_CONTAINER(b3), pixmapzfit);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b3, 1, 2, 0, 1,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b3), "clicked", G_CALLBACK(service_zoom_fit), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b3, "clicked", G_CALLBACK(service_zoom_fit), table2);
 gtk_tooltips_set_tip_2(b3, "Zoom Best Fit");
 gtk_widget_show(b3);
 
@@ -472,7 +472,7 @@ gtk_container_add(GTK_CONTAINER(b4), pixmapzundo);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b4, 1, 2, 1, 2,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b4), "clicked", G_CALLBACK(service_zoom_undo), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b4, "clicked", G_CALLBACK(service_zoom_undo), table2);
 gtk_tooltips_set_tip_2(b4, "Undo Last Zoom");
 gtk_widget_show(b4);
 
@@ -481,7 +481,7 @@ gtk_container_add(GTK_CONTAINER(b5), pixmapzleft);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b5, 2, 3, 0, 1,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b5), "clicked", G_CALLBACK(service_zoom_left), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b5, "clicked", G_CALLBACK(service_zoom_left), table2);
 gtk_tooltips_set_tip_2(b5, "Zoom To Start");
 gtk_widget_show(b5);
 
@@ -490,7 +490,7 @@ gtk_container_add(GTK_CONTAINER(b6), pixmapzright);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b6, 2, 3, 1, 2,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b6), "clicked", G_CALLBACK(service_zoom_right), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b6, "clicked", G_CALLBACK(service_zoom_right), table2);
 gtk_tooltips_set_tip_2(b6, "Zoom To End");
 gtk_widget_show(b6);
 

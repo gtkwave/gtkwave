@@ -586,7 +586,7 @@ gtk_container_add(GTK_CONTAINER(b1), pixmapwid1);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b1, 0, 1, 0, 1,
 			GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b1), "clicked", G_CALLBACK(service_left_edge), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b1, "clicked", G_CALLBACK(service_left_edge), table2);
 gtk_tooltips_set_tip_2(b1, "Find next transition of highlighted trace scanning left");
 gtk_widget_show(b1);
 
@@ -595,7 +595,7 @@ gtk_container_add(GTK_CONTAINER(b2), pixmapwid2);
 XXX_gtk_table_attach (XXX_GTK_TABLE (table2), b2, 0, 1, 1, 2,
 		      	GTK_FILL | GTK_EXPAND,
 		      	GTK_FILL | GTK_EXPAND | GTK_SHRINK, 1, 1);
-g_signal_connect_swapped (XXX_GTK_OBJECT (b2), "clicked", G_CALLBACK(service_right_edge), XXX_GTK_OBJECT (table2));
+g_signal_connect_swapped (b2, "clicked", G_CALLBACK(service_right_edge), table2);
 gtk_tooltips_set_tip_2(b2, "Find next transition of highlighted trace scanning right");
 gtk_widget_show(b2);
 
