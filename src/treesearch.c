@@ -1315,7 +1315,7 @@ do_tooltips:
     GLOBALS->treesearch_gtk2_window_vbox = vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
     gtk_widget_show (vbox);
 
-    vpan = XXX_gtk_vpaned_new (0);
+    vpan = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_widget_show (vpan);
 
     gtk_widget_set_vexpand(vpan, TRUE);   
@@ -1554,7 +1554,8 @@ GtkWidget* treeboxframe(char *title, GCallback func)
     vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
     gtk_widget_show (vbox);
 
-    vpan = XXX_gtk_vpaned_new (0); /* GLOBALS->sst_vpaned is to be used to clone position over during reload */
+    vpan = gtk_paned_new(GTK_ORIENTATION_VERTICAL); /* GLOBALS->sst_vpaned is to be used to clone
+                                                       position over during reload */
     GLOBALS->sst_vpaned = (GtkPaned *)vpan;
     if(GLOBALS->vpanedwindow_size_cache)
 	{
