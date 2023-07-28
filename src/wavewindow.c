@@ -48,7 +48,7 @@ static const GdkEventMask m_bmask[4] = {0,
 
 void wavewindow_paint(cairo_t *cr)
 {
-    int scale_factor = XXX_gtk_widget_get_scale_factor(GLOBALS->signalarea);
+    int scale_factor = gtk_widget_get_scale_factor(GLOBALS->signalarea);
     cairo_matrix_t prev_matrix;
     cairo_get_matrix(cr, &prev_matrix);
     cairo_scale(cr, 1.0 / scale_factor, 1.0 / scale_factor);
@@ -1657,7 +1657,7 @@ gint wavearea_configure_event(GtkWidget *widget, GdkEventConfigure *event)
     GtkAllocation allocation;
     gtk_widget_get_allocation(widget, &allocation);
 
-    int scale_factor = XXX_gtk_widget_get_scale_factor(widget);
+    int scale_factor = gtk_widget_get_scale_factor(widget);
 
     DEBUG(printf("WaveWin Configure Event h: %d, w: %d\n", allocation.height, allocation.width));
 

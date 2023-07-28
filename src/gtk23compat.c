@@ -43,15 +43,3 @@ gdk_seat_ungrab(seat);
 
 
 #endif
-
-
-gint XXX_gtk_widget_get_scale_factor (GtkWidget *widget)
-{
-#if GTK_CHECK_VERSION(3,0,0)
-gint rc = widget ? gtk_widget_get_scale_factor(widget) : 1;
-return(rc);
-#else
-return(1);
-#endif
-}
-
