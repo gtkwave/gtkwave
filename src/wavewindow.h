@@ -20,7 +20,6 @@ void calczoom(double z0);
 void make_sigarea_gcs(GtkWidget *widget);
 void force_screengrab_gcs(void);
 void force_normal_gcs(void);
-gint wavearea_configure_event(GtkWidget *widget, GdkEventConfigure *event);
 
 void XXX_gdk_draw_line(cairo_t *cr, wave_rgb_t gc, gint _x1, gint _y1, gint _x2, gint _y2);
 void XXX_gdk_draw_rectangle(cairo_t *cr, wave_rgb_t gc, gboolean filled, gint _x1, gint _y1, gint _w, gint _h);

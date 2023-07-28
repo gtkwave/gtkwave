@@ -16,6 +16,7 @@
 #include "symbol.h"
 #include "debug.h"
 #include "signal_list.h"
+#include "wave_view.h"
 
 /* GDK_KEY_equal defined from gtk2 2.22 onwards. */
 #ifndef GDK_KEY_equal
@@ -284,5 +285,5 @@ void redraw_signals_and_waves(void)
 
     MaxSignalLength();
     gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
-    wavearea_configure_event(GLOBALS->wavearea, NULL);
+	gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
 }
