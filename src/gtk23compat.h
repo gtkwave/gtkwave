@@ -92,7 +92,4 @@ cairo_t *XXX_gdk_cairo_create (GdkWindow *window, GdkDrawingContext **gdc);
 #define XXX_gdk_cairo_create(a, b) gdk_cairo_create(a)
 #endif
 
-gint 
-XXX_gtk_widget_get_scale_factor (GtkWidget *widget);
-
 #endif
