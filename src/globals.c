@@ -1221,8 +1221,6 @@ NULL, /* mvlfacs_vzt_c_3 587 */
 #ifdef WAVE_ALLOW_SLIDER_ZOOM
 0, /* enable_slider_zoom */
 #endif
-0, /* m1x_wavewindow_c_1 589 */
-0, /* m2x_wavewindow_c_1 */
 0, /* black_and_white */
 1, /* signalwindow_width_dirty 590 */
 1, /* enable_ghost_marker 591 */
@@ -1284,8 +1282,6 @@ NULL, /* wave_hslider */
 0, /* fill_waveform */
 0, /* lz_removal */
 
-NULL, /* surface_wavepixmap_wavewindow_c_1 */
-NULL, /* cr_wavepixmap_wavewindow_c_1 */
 {0.0,0.0,0.0,0.0}, /* rgb_gc_white */
 {0.0,0.0,0.0,0.0}, /* rgb_gc_black */
 RGB_WAVE_RAINBOW_INITIALIZER, /* rgb_gc_rainbow */
@@ -1669,8 +1665,6 @@ void reload_into_new_context_2(void)
  new_globals->made_sgc_contexts_wavewindow_c_1 = GLOBALS->made_sgc_contexts_wavewindow_c_1;
  new_globals->made_gc_contexts_wavewindow_c_1 = GLOBALS->made_gc_contexts_wavewindow_c_1;
 
- new_globals->surface_wavepixmap_wavewindow_c_1 = GLOBALS->surface_wavepixmap_wavewindow_c_1;
- new_globals->cr_wavepixmap_wavewindow_c_1 = GLOBALS->cr_wavepixmap_wavewindow_c_1;
  new_globals->rgb_gc_white = GLOBALS->rgb_gc_white;
  new_globals->rgb_gc_black = GLOBALS->rgb_gc_black;
  memcpy(&new_globals->rgb_gc, &GLOBALS->rgb_gc, sizeof(struct wave_rgbmaster_t));

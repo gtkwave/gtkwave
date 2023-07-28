@@ -35,6 +35,7 @@
 #include "vcd.h"
 #include "hierpack.h"
 #include "signal_list.h"
+#include "wave_view.h"
 
 #if !defined __MINGW32__
 #include <sys/time.h>
@@ -2663,7 +2664,7 @@ if(GLOBALS->partial_vcd)
 			else
 			{
 		        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
-		        wavearea_configure_event(GLOBALS->wavearea, NULL);
+				gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
 			}
 
 		update_maxmarker_labels();

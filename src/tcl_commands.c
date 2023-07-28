@@ -30,6 +30,7 @@
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
 #include "signal_list.h"
+#include "wave_view.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -1096,7 +1097,7 @@ if((objc == 3)||(objc == 4))
 			GLOBALS->marker_names[which] = strdup_2(u);
 			}
 
-	        wavearea_configure_event(GLOBALS->wavearea, NULL);
+			gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
 		gtkwave_main_iteration();
                 }
 	}

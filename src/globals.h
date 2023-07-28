@@ -1240,8 +1240,6 @@ char use_scrollwheel_as_y; /* from wavewindow.c */
 #ifdef WAVE_ALLOW_SLIDER_ZOOM
 char enable_slider_zoom; /* from wavewindow.c */
 #endif
-int m1x_wavewindow_c_1; /* from wavewindow.c 642 */
-int m2x_wavewindow_c_1; /* from wavewindow.c 643 */
 char black_and_white; /* from wavewindow.c */
 char signalwindow_width_dirty; /* from wavewindow.c 644 */
 char enable_ghost_marker; /* from wavewindow.c 645 */
@@ -1303,8 +1301,6 @@ TimeType ruler_step;
 char fill_waveform;
 char lz_removal;
 
-cairo_surface_t *surface_wavepixmap_wavewindow_c_1;
-cairo_t *cr_wavepixmap_wavewindow_c_1;
 wave_rgb_t rgb_gc_white;
 wave_rgb_t rgb_gc_black;
 wave_rgb_t rgb_gc_rainbow[2*WAVE_NUM_RAINBOW];

@@ -12,6 +12,7 @@
 #include <gtk/gtk.h>
 #include "currenttime.h"
 #include "symbol.h"
+#include "wave_view.h"
 
 static char *time_prefix=WAVE_SI_UNITS;
 
@@ -615,7 +616,7 @@ if(GLOBALS->named_marker_lock_idx>-1)
 		if(GLOBALS->named_markers[ent_idx] != GLOBALS->tims.marker)
 			{
 			GLOBALS->named_markers[ent_idx] = GLOBALS->tims.marker;
-			wavearea_configure_event(GLOBALS->wavearea, NULL);
+			gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
 			}
 		}
 	}
