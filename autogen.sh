@@ -21,8 +21,6 @@ echo "Running automake..."
 automake -a -c --foreign || exit 1
 echo "Done with automake"
 
-echo "builtin(include,./tcl.m4)" >>aclocal.m4
-
 echo "Running autoconf..."
 autoconf || exit 1
 echo "Done with autoconf"
