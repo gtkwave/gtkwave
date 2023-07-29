@@ -1281,6 +1281,7 @@ NULL, /* wave_hslider */
 0, /* ruler_step */
 0, /* fill_waveform */
 0, /* lz_removal */
+FALSE, /* lz_removal */
 
 {0.0,0.0,0.0,0.0}, /* rgb_gc_white */
 {0.0,0.0,0.0,0.0}, /* rgb_gc_black */

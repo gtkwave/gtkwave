@@ -159,6 +159,13 @@ GLOBALS->disable_ae2_alias=atoi_64(str)?1:0;
 return(0);
 }
 
+int f_disable_antialiasing(char *str)
+{
+DEBUG(printf("f_disable_antialiasing(\"%s\")\n",str));
+GLOBALS->disable_antialiasing=atoi_64(str)?TRUE:FALSE;
+return(0);
+}
+
 int f_disable_auto_comphier(char *str)
 {
 DEBUG(printf("f_disable_auto_comphier(\"%s\")\n",str));
@@ -939,6 +946,7 @@ static struct rc_entry rcitems[]=
 { "cursor_snap", f_cursor_snap },
 { "dbl_mant_dig_override", f_dbl_mant_dig_override },
 { "disable_ae2_alias", f_disable_ae2_alias },
+{ "disable_antialiasing", f_disable_antialiasing },
 { "disable_auto_comphier", f_disable_auto_comphier },
 { "disable_empty_gui", f_disable_empty_gui },
 { "disable_mouseover", f_disable_mouseover },

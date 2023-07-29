@@ -196,6 +196,17 @@ void XXX_gdk_draw_line(cairo_t *cr, wave_rgb_t gc, gint _x1, gint _y1, gint _x2,
     cairo_stroke(cr);
 }
 
+void XXX_gdk_set_color(cairo_t *cr, wave_rgb_t gc)
+{
+    cairo_set_source_rgba(cr, gc.r, gc.g, gc.b, gc.a);
+}
+
+void XXX_gdk_draw_line2(cairo_t *cr, gint _x1, gint _y1, gint _x2, gint _y2)
+{
+    cairo_move_to(cr, _x1 + WAVE_CAIRO_050_OFFSET, _y1 + WAVE_CAIRO_050_OFFSET);
+    cairo_line_to(cr, _x2 + WAVE_CAIRO_050_OFFSET, _y2 + WAVE_CAIRO_050_OFFSET);
+}
+
 void XXX_gdk_draw_rectangle(cairo_t *cr,
                             wave_rgb_t gc,
                             gboolean filled,
