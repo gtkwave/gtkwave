@@ -1300,6 +1300,7 @@ TimeType ruler_origin;
 TimeType ruler_step;
 char fill_waveform;
 char lz_removal;
+gboolean disable_antialiasing;
 
 wave_rgb_t rgb_gc_white;
 wave_rgb_t rgb_gc_black;

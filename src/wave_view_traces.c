@@ -1,8 +1,10 @@
 #include <config.h>
 #include <gtk/gtk.h>
+#include "cairo.h"
 #include "wave_view_traces.h"
 #include "globals.h"
 #include "signal_list.h"
+#include "wavewindow.h"
 
 static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw, int kill_grid);
 static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which);
@@ -1168,25 +1170,40 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
             if (GLOBALS->use_roundcaps) {
                 if (type == AN_Z) {
                     if (lasttype != -1) {
-                        XXX_gdk_draw_line(cr, gltype, _x0 - 1, _y0, _x0, yu);
-                        if (lasttype != AN_0)
-                            XXX_gdk_draw_line(cr, gltype, _x0, yu, _x0 - 1, _y1);
+                        XXX_gdk_set_color(cr, gltype);
+                        XXX_gdk_draw_line2(cr, _x0 - 1, _y0, _x0, yu);
+                        if (lasttype != AN_0) {
+                            XXX_gdk_draw_line2(cr, _x0, yu, _x0 - 1, _y1);
+                        }
+                        cairo_stroke(cr);
                     }
                 } else if (lasttype == AN_Z) {
-                    XXX_gdk_draw_line(cr, gtype, _x0 + 1, _y0, _x0, yu);
-                    if (type != AN_0)
-                        XXX_gdk_draw_line(cr, gtype, _x0, yu, _x0 + 1, _y1);
+                    XXX_gdk_set_color(cr, gtype);
+                    XXX_gdk_draw_line2(cr, _x0 + 1, _y0, _x0, yu);
+                    if (type != AN_0) {
+                        XXX_gdk_draw_line2(cr, _x0, yu, _x0 + 1, _y1);
+                    }
+                    cairo_stroke(cr);
                 } else {
                     if (lasttype != type) {
-                        XXX_gdk_draw_line(cr, gltype, _x0 - 1, _y0, _x0, yu);
-                        if (lasttype != AN_0)
-                            XXX_gdk_draw_line(cr, gltype, _x0, yu, _x0 - 1, _y1);
-                        XXX_gdk_draw_line(cr, gtype, _x0 + 1, _y0, _x0, yu);
-                        if (type != AN_0)
-                            XXX_gdk_draw_line(cr, gtype, _x0, yu, _x0 + 1, _y1);
+                        XXX_gdk_set_color(cr, gltype);
+                        XXX_gdk_draw_line2(cr, _x0 - 1, _y0, _x0, yu);
+                        if (lasttype != AN_0) {
+                            XXX_gdk_draw_line2(cr, _x0, yu, _x0 - 1, _y1);
+                        }
+                        cairo_stroke(cr);
+
+                        XXX_gdk_set_color(cr, gtype);
+                        XXX_gdk_draw_line2(cr, _x0 + 1, _y0, _x0, yu);
+                        if (type != AN_0) {
+                            XXX_gdk_draw_line2(cr, _x0, yu, _x0 + 1, _y1);
+                        }
+                        cairo_stroke(cr);
                     } else {
-                        XXX_gdk_draw_line(cr, gtype, _x0 - 2, _y0, _x0 + 2, _y1);
-                        XXX_gdk_draw_line(cr, gtype, _x0 + 2, _y0, _x0 - 2, _y1);
+                        XXX_gdk_set_color(cr, gtype);
+                        XXX_gdk_draw_line2(cr, _x0 - 2, _y0, _x0 + 2, _y1);
+                        XXX_gdk_draw_line2(cr, _x0 + 2, _y0, _x0 - 2, _y1);
+                        cairo_stroke(cr);
                     }
                 }
             } else {
@@ -1213,19 +1230,21 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                     c = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
                 }
 
+                XXX_gdk_set_color(cr, c);
                 if (GLOBALS->use_roundcaps) {
-                    XXX_gdk_draw_line(cr, c, _x0 + 2, _y0, _x1 - 2, _y0);
+                    XXX_gdk_draw_line2(cr, _x0 + 2, _y0, _x1 - 2, _y0);
                     if (type != AN_0)
-                        XXX_gdk_draw_line(cr, c, _x0 + 2, _y1, _x1 - 2, _y1);
+                        XXX_gdk_draw_line2(cr, _x0 + 2, _y1, _x1 - 2, _y1);
                     if (type == AN_1)
-                        XXX_gdk_draw_line(cr, c, _x0 + 2, _y1 + 1, _x1 - 2, _y1 + 1);
+                        XXX_gdk_draw_line2(cr, _x0 + 2, _y1 + 1, _x1 - 2, _y1 + 1);
                 } else {
-                    XXX_gdk_draw_line(cr, c, _x0, _y0, _x1, _y0);
+                    XXX_gdk_draw_line2(cr, _x0, _y0, _x1, _y0);
                     if (type != AN_0)
-                        XXX_gdk_draw_line(cr, c, _x0, _y1, _x1, _y1);
+                        XXX_gdk_draw_line2(cr, _x0, _y1, _x1, _y1);
                     if (type == AN_1)
-                        XXX_gdk_draw_line(cr, c, _x0, _y1 + 1, _x1, _y1 + 1);
+                        XXX_gdk_draw_line2(cr, _x0, _y1 + 1, _x1, _y1 + 1);
                 }
+                cairo_stroke(cr);
 
                 if (_x0 < 0)
                     _x0 = 0; /* fixup left margin */

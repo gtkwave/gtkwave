@@ -470,6 +470,8 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
     set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
     if (self->dirty) {
+        // GTimer *timer = g_timer_new();
+
         GLOBALS->tims.end = GLOBALS->tims.start + GLOBALS->nspx * GLOBALS->wavewidth;
 
         cairo_t *traces_cr = cairo_create(self->traces_surface);
@@ -482,9 +484,16 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         cairo_set_line_width(traces_cr, GLOBALS->cr_line_width);
         cairo_set_line_cap(traces_cr, CAIRO_LINE_CAP_SQUARE);
 
+        if (GLOBALS->disable_antialiasing) {
+            cairo_set_antialias(traces_cr, CAIRO_ANTIALIAS_NONE);
+        }
         rendertraces(traces_cr);
 
         cairo_destroy(traces_cr);
+
+        // gdouble time = g_timer_elapsed(timer, NULL);
+        // g_printerr("Draw: %f\n", time);
+        // g_timer_destroy(timer);
 
         self->dirty = FALSE;
     }
@@ -530,10 +539,12 @@ static void gw_wave_view_size_allocate(GtkWidget *widget, GtkAllocation *allocat
 
     g_clear_pointer(&self->traces_surface, cairo_surface_destroy);
 
-    self->traces_surface = gdk_window_create_similar_surface(gtk_widget_get_window(widget),
-                                                             CAIRO_CONTENT_COLOR_ALPHA,
-                                                             allocation->width,
-                                                             allocation->height);
+    self->traces_surface =
+        gdk_window_create_similar_image_surface(gtk_widget_get_window(widget),
+                                                CAIRO_FORMAT_ARGB32,
+                                                allocation->width,
+                                                allocation->height,
+                                                gtk_widget_get_scale_factor(widget));
 
     self->dirty = TRUE;
 }
