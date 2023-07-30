@@ -470,7 +470,7 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
     set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
     if (self->dirty) {
-        // GTimer *timer = g_timer_new();
+        GTimer *timer = g_timer_new();
 
         GLOBALS->tims.end = GLOBALS->tims.start + GLOBALS->nspx * GLOBALS->wavewidth;
 
@@ -491,9 +491,9 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
 
         cairo_destroy(traces_cr);
 
-        // gdouble time = g_timer_elapsed(timer, NULL);
-        // g_printerr("Draw: %f\n", time);
-        // g_timer_destroy(timer);
+        gdouble time = g_timer_elapsed(timer, NULL);
+        g_printerr("Draw: %f\n", time);
+        g_timer_destroy(timer);
 
         self->dirty = FALSE;
     }
