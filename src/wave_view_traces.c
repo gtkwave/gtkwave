@@ -6,6 +6,104 @@
 #include "signal_list.h"
 #include "wavewindow.h"
 
+typedef enum
+{
+    LINE_COLOR_X,
+    LINE_COLOR_U,
+    LINE_COLOR_W,
+    LINE_COLOR_DASH,
+    LINE_COLOR_TRANS,
+    LINE_COLOR_0,
+    LINE_COLOR_LOW,
+    LINE_COLOR_MID,
+    LINE_COLOR_1,
+    LINE_COLOR_HIGH,
+    LINE_COLOR_VBOX,
+    LINE_COLOR_VTRANS,
+    N_LINE_COLORS,
+} LineColor;
+
+typedef struct
+{
+    gint x1;
+    gint y1;
+    gint x2;
+    gint y2;
+} Line;
+
+typedef struct
+{
+    wave_rgb_t colors[N_LINE_COLORS];
+    GArray *lines[N_LINE_COLORS];
+} LineBuffer;
+
+static LineBuffer *line_buffer_new()
+{
+    LineBuffer *self = g_new0(LineBuffer, 1);
+    self->colors[LINE_COLOR_X] = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+    self->colors[LINE_COLOR_U] = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+    self->colors[LINE_COLOR_W] = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
+    self->colors[LINE_COLOR_DASH] = GLOBALS->rgb_gc.gc_dash_wavewindow_c_1;
+    self->colors[LINE_COLOR_TRANS] = GLOBALS->rgb_gc.gc_trans_wavewindow_c_1;
+    self->colors[LINE_COLOR_0] = GLOBALS->rgb_gc.gc_0_wavewindow_c_1;
+    self->colors[LINE_COLOR_LOW] = GLOBALS->rgb_gc.gc_low_wavewindow_c_1;
+    self->colors[LINE_COLOR_MID] = GLOBALS->rgb_gc.gc_mid_wavewindow_c_1;
+    self->colors[LINE_COLOR_1] = GLOBALS->rgb_gc.gc_1_wavewindow_c_1;
+    self->colors[LINE_COLOR_HIGH] = GLOBALS->rgb_gc.gc_high_wavewindow_c_1;
+    self->colors[LINE_COLOR_VBOX] = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+    self->colors[LINE_COLOR_VTRANS] = GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1;
+
+    for (gint i = 0; i < N_LINE_COLORS; i++) {
+        self->lines[i] = g_array_new(FALSE, FALSE, sizeof(Line));
+    }
+
+    return self;
+}
+
+static void line_buffer_free(LineBuffer *self)
+{
+    for (gint i = 0; i < N_LINE_COLORS; i++) {
+        g_array_free(self->lines[i], TRUE);
+    }
+    g_free(self);
+}
+
+static void line_buffer_add(LineBuffer *self, LineColor color, gint x1, gint y1, gint x2, gint y2)
+{
+    Line line = (Line){
+        .x1 = x1,
+        .y1 = y1,
+        .x2 = x2,
+        .y2 = y2,
+    };
+    g_array_append_val(self->lines[color], line);
+}
+
+static void line_buffer_draw(LineBuffer *self, cairo_t *cr)
+{
+    gdouble offset = GLOBALS->cairo_050_offset;
+
+    for (gint i = 0; i < N_LINE_COLORS; i++) {
+        wave_rgb_t *color = &self->colors[i];
+        GArray *lines = self->lines[i];
+
+        if (lines->len == 0) {
+            continue;
+        }
+
+        cairo_set_source_rgba(cr, color->r, color->g, color->b, color->a);
+
+        for (guint j = 0; j < lines->len; j++) {
+            Line *line = &g_array_index(lines, Line, j);
+
+            cairo_move_to(cr, line->x1 + offset, line->y1 + offset);
+            cairo_line_to(cr, line->x2 + offset, line->y2 + offset);
+        }
+
+        cairo_stroke(cr);
+    }
+}
+
 static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw, int kill_grid);
 static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which);
 static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which);
@@ -169,10 +267,13 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
     TimeType tim, h2tim;
     hptr h2, h3;
     char hval, h2val, invert;
-    wave_rgb_t c;
+    LineColor c;
+    LineColor gcxl;
     wave_rgb_t gcx, gcxf;
     char identifier_str[2];
     int is_event = t && t->n.nd && (t->n.nd->vartype == ND_VCD_EVENT);
+
+    LineBuffer *lines = line_buffer_new();
 
     GLOBALS->tims.start -= GLOBALS->shift_timebase;
     GLOBALS->tims.end -= GLOBALS->shift_timebase;
@@ -216,22 +317,21 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
         if (h->v.h_val != AN_Z) {
             switch (h->v.h_val) {
                 case AN_X:
-                    c = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    c = LINE_COLOR_X;
                     break;
                 case AN_U:
-                    c = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+                    c = LINE_COLOR_U;
                     break;
                 case AN_W:
-                    c = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
+                    c = LINE_COLOR_W;
                     break;
                 case AN_DASH:
-                    c = GLOBALS->rgb_gc.gc_dash_wavewindow_c_1;
+                    c = LINE_COLOR_DASH;
                     break;
                 default:
-                    c = (h->v.h_val == AN_X) ? GLOBALS->rgb_gc.gc_x_wavewindow_c_1
-                                             : GLOBALS->rgb_gc.gc_trans_wavewindow_c_1;
+                    c = (h->v.h_val == AN_X) ? LINE_COLOR_X : LINE_COLOR_TRANS;
             }
-            XXX_gdk_draw_line(cr, c, 0, _y0, 0, _y1);
+            line_buffer_add(lines, c, 0, _y0, 0, _y1);
         }
 
     if (dodraw && t)
@@ -268,24 +368,9 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
             if (_x0 != _x1) {
                 if (is_event) {
                     if (h->time >= GLOBALS->tims.first) {
-                        XXX_gdk_draw_line(cr,
-                                          GLOBALS->rgb_gc.gc_w_wavewindow_c_1,
-                                          _x0,
-                                          _y0,
-                                          _x0,
-                                          _y1);
-                        XXX_gdk_draw_line(cr,
-                                          GLOBALS->rgb_gc.gc_w_wavewindow_c_1,
-                                          _x0,
-                                          _y1,
-                                          _x0 + 2,
-                                          _y1 + 2);
-                        XXX_gdk_draw_line(cr,
-                                          GLOBALS->rgb_gc.gc_w_wavewindow_c_1,
-                                          _x0,
-                                          _y1,
-                                          _x0 - 2,
-                                          _y1 + 2);
+                        line_buffer_add(lines, LINE_COLOR_W, _x0, _y0, _x0, _y1);
+                        line_buffer_add(lines, LINE_COLOR_W, _x0, _y1, _x0 + 2, _y1 + 2);
+                        line_buffer_add(lines, LINE_COLOR_W, _x0, _y1, _x0 - 2, _y1 + 2);
                     }
                     h = h->next;
                     continue;
@@ -296,20 +381,19 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
 
                 switch (h2val) {
                     case AN_X:
-                        c = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                        c = LINE_COLOR_X;
                         break;
                     case AN_U:
-                        c = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+                        c = LINE_COLOR_U;
                         break;
                     case AN_W:
-                        c = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
+                        c = LINE_COLOR_W;
                         break;
                     case AN_DASH:
-                        c = GLOBALS->rgb_gc.gc_dash_wavewindow_c_1;
+                        c = LINE_COLOR_DASH;
                         break;
                     default:
-                        c = (hval == AN_X) ? GLOBALS->rgb_gc.gc_x_wavewindow_c_1
-                                           : GLOBALS->rgb_gc.gc_trans_wavewindow_c_1;
+                        c = (hval == AN_X) ? LINE_COLOR_X : LINE_COLOR_TRANS;
                 }
 
                 switch (hval) {
@@ -332,13 +416,12 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                                                    _x1 - _x0,
                                                    _y1 - _y0 + 1);
                         }
-                        XXX_gdk_draw_line(cr,
-                                          (hval == AN_0) ? GLOBALS->rgb_gc.gc_0_wavewindow_c_1
-                                                         : GLOBALS->rgb_gc.gc_low_wavewindow_c_1,
-                                          _x0,
-                                          _y0,
-                                          _x1,
-                                          _y0);
+                        line_buffer_add(lines,
+                                        (hval == AN_0) ? LINE_COLOR_0 : LINE_COLOR_LOW,
+                                        _x0,
+                                        _y0,
+                                        _x1,
+                                        _y0);
 
                         if (h2tim <= GLOBALS->tims.end)
                             switch (h2val) {
@@ -347,10 +430,10 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                                     break;
 
                                 case AN_Z:
-                                    XXX_gdk_draw_line(cr, c, _x1, _y0, _x1, yu);
+                                    line_buffer_add(lines, c, _x1, _y0, _x1, yu);
                                     break;
                                 default:
-                                    XXX_gdk_draw_line(cr, c, _x1, _y0, _x1, _y1);
+                                    line_buffer_add(lines, c, _x1, _y0, _x1, _y1);
                                     break;
                             }
                         break;
@@ -363,22 +446,26 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                         identifier_str[1] = 0;
                         switch (hval) {
                             case AN_X:
-                                c = gcx = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                                c = LINE_COLOR_X;
+                                gcx = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
                                 gcxf = GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1;
                                 identifier_str[0] = 0;
                                 break;
                             case AN_W:
-                                c = gcx = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
+                                c = LINE_COLOR_W;
+                                gcx = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
                                 gcxf = GLOBALS->rgb_gc.gc_wfill_wavewindow_c_1;
                                 identifier_str[0] = 'W';
                                 break;
                             case AN_U:
-                                c = gcx = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+                                c = LINE_COLOR_U;
+                                gcx = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
                                 gcxf = GLOBALS->rgb_gc.gc_ufill_wavewindow_c_1;
                                 identifier_str[0] = 'U';
                                 break;
                             default:
-                                c = gcx = GLOBALS->rgb_gc.gc_dash_wavewindow_c_1;
+                                c = LINE_COLOR_DASH;
+                                gcx = GLOBALS->rgb_gc.gc_dash_wavewindow_c_1;
                                 gcxf = GLOBALS->rgb_gc.gc_dashfill_wavewindow_c_1;
                                 identifier_str[0] = '-';
                                 break;
@@ -422,31 +509,26 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                             }
                         }
 
-                        XXX_gdk_draw_line(cr, gcx, _x0, _y0, _x1, _y0);
-                        XXX_gdk_draw_line(cr, gcx, _x0, _y1, _x1, _y1);
+                        line_buffer_add(lines, c, _x0, _y0, _x1, _y0);
+                        line_buffer_add(lines, c, _x0, _y1, _x1, _y1);
                         if (h2tim <= GLOBALS->tims.end)
-                            XXX_gdk_draw_line(cr, c, _x1, _y0, _x1, _y1);
+                            line_buffer_add(lines, c, _x1, _y0, _x1, _y1);
                         break;
 
                     case AN_Z: /* Z */
-                        XXX_gdk_draw_line(cr,
-                                          GLOBALS->rgb_gc.gc_mid_wavewindow_c_1,
-                                          _x0,
-                                          yu,
-                                          _x1,
-                                          yu);
+                        line_buffer_add(lines, LINE_COLOR_MID, _x0, yu, _x1, yu);
                         if (h2tim <= GLOBALS->tims.end)
                             switch (h2val) {
                                 case AN_0:
                                 case AN_L:
-                                    XXX_gdk_draw_line(cr, c, _x1, yu, _x1, _y0);
+                                    line_buffer_add(lines, c, _x1, yu, _x1, _y0);
                                     break;
                                 case AN_1:
                                 case AN_H:
-                                    XXX_gdk_draw_line(cr, c, _x1, yu, _x1, _y1);
+                                    line_buffer_add(lines, c, _x1, yu, _x1, _y1);
                                     break;
                                 default:
-                                    XXX_gdk_draw_line(cr, c, _x1, _y0, _x1, _y1);
+                                    line_buffer_add(lines, c, _x1, _y0, _x1, _y1);
                                     break;
                             }
                         break;
@@ -470,13 +552,12 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                                                    _x1 - _x0,
                                                    _y0 - _y1 + 1);
                         }
-                        XXX_gdk_draw_line(cr,
-                                          (hval == AN_1) ? GLOBALS->rgb_gc.gc_1_wavewindow_c_1
-                                                         : GLOBALS->rgb_gc.gc_high_wavewindow_c_1,
-                                          _x0,
-                                          _y1,
-                                          _x1,
-                                          _y1);
+                        line_buffer_add(lines,
+                                        (hval == AN_1) ? LINE_COLOR_1 : LINE_COLOR_HIGH,
+                                        _x0,
+                                        _y1,
+                                        _x1,
+                                        _y1);
                         if (h2tim <= GLOBALS->tims.end)
                             switch (h2val) {
                                 case AN_1:
@@ -485,13 +566,13 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
 
                                 case AN_0:
                                 case AN_L:
-                                    XXX_gdk_draw_line(cr, c, _x1, _y1, _x1, _y0);
+                                    line_buffer_add(lines, c, _x1, _y1, _x1, _y0);
                                     break;
                                 case AN_Z:
-                                    XXX_gdk_draw_line(cr, c, _x1, _y1, _x1, yu);
+                                    line_buffer_add(lines, c, _x1, _y1, _x1, yu);
                                     break;
                                 default:
-                                    XXX_gdk_draw_line(cr, c, _x1, _y0, _x1, _y1);
+                                    line_buffer_add(lines, c, _x1, _y0, _x1, _y1);
                                     break;
                             }
                         break;
@@ -501,26 +582,11 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                 }
             } else {
                 if (!is_event) {
-                    XXX_gdk_draw_line(cr,
-                                      GLOBALS->rgb_gc.gc_trans_wavewindow_c_1,
-                                      _x1,
-                                      _y0,
-                                      _x1,
-                                      _y1);
+                    line_buffer_add(lines, LINE_COLOR_TRANS, _x1, _y0, _x1, _y1);
                 } else {
-                    XXX_gdk_draw_line(cr, GLOBALS->rgb_gc.gc_w_wavewindow_c_1, _x1, _y0, _x1, _y1);
-                    XXX_gdk_draw_line(cr,
-                                      GLOBALS->rgb_gc.gc_w_wavewindow_c_1,
-                                      _x0,
-                                      _y1,
-                                      _x0 + 2,
-                                      _y1 + 2);
-                    XXX_gdk_draw_line(cr,
-                                      GLOBALS->rgb_gc.gc_w_wavewindow_c_1,
-                                      _x0,
-                                      _y1,
-                                      _x0 - 2,
-                                      _y1 + 2);
+                    line_buffer_add(lines, LINE_COLOR_W, _x1, _y0, _x1, _y1);
+                    line_buffer_add(lines, LINE_COLOR_W, _x0, _y1, _x0 + 2, _y1 + 2);
+                    line_buffer_add(lines, LINE_COLOR_W, _x0, _y1, _x0 - 2, _y1 + 2);
                 }
                 newtime = (((gdouble)(_x1 + WAVE_OPT_SKIP)) * GLOBALS->nspx) +
                           GLOBALS->tims.start /*+GLOBALS->shift_timebase*/; /* skip to next pixel */
@@ -543,6 +609,9 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
 
             h = h->next;
         }
+
+    line_buffer_draw(lines, cr);
+    line_buffer_free(lines);
 
     GLOBALS->tims.start += GLOBALS->shift_timebase;
     GLOBALS->tims.end += GLOBALS->shift_timebase;
@@ -1010,7 +1079,8 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
     char *ascii = NULL;
     int type;
     int lasttype = -1;
-    wave_rgb_t c;
+
+    LineBuffer *lines = line_buffer_new();
 
     GLOBALS->tims.start -= GLOBALS->shift_timebase;
     GLOBALS->tims.end -= GLOBALS->shift_timebase;
@@ -1142,109 +1212,94 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
         }
         /* type = (!(h->flags&(HIST_REAL|HIST_STRING))) ? vtype(t,h->v.h_vector) : AN_COUNT; */
         if (_x0 > -1) {
-            wave_rgb_t gltype, gtype;
+            LineColor gltype;
+            LineColor gtype;
 
             switch (lasttype) {
                 case AN_X:
-                    gltype = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    gltype = LINE_COLOR_X;
                     break;
                 case AN_U:
-                    gltype = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+                    gltype = LINE_COLOR_U;
                     break;
                 default:
-                    gltype = GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1;
+                    gltype = LINE_COLOR_VTRANS;
                     break;
             }
             switch (type) {
                 case AN_X:
-                    gtype = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    gtype = LINE_COLOR_X;
                     break;
                 case AN_U:
-                    gtype = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+                    gtype = LINE_COLOR_U;
                     break;
                 default:
-                    gtype = GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1;
+                    gtype = LINE_COLOR_VTRANS;
                     break;
             }
 
             if (GLOBALS->use_roundcaps) {
                 if (type == AN_Z) {
                     if (lasttype != -1) {
-                        XXX_gdk_set_color(cr, gltype);
-                        XXX_gdk_draw_line2(cr, _x0 - 1, _y0, _x0, yu);
+                        line_buffer_add(lines, gltype, _x0 - 1, _y0, _x0, yu);
                         if (lasttype != AN_0) {
-                            XXX_gdk_draw_line2(cr, _x0, yu, _x0 - 1, _y1);
+                            line_buffer_add(lines, gltype, _x0, yu, _x0 - 1, _y1);
                         }
-                        cairo_stroke(cr);
                     }
                 } else if (lasttype == AN_Z) {
-                    XXX_gdk_set_color(cr, gtype);
-                    XXX_gdk_draw_line2(cr, _x0 + 1, _y0, _x0, yu);
+                    line_buffer_add(lines, gtype, _x0 + 1, _y0, _x0, yu);
                     if (type != AN_0) {
-                        XXX_gdk_draw_line2(cr, _x0, yu, _x0 + 1, _y1);
+                        line_buffer_add(lines, gtype, _x0, yu, _x0 + 1, _y1);
                     }
-                    cairo_stroke(cr);
                 } else {
                     if (lasttype != type) {
-                        XXX_gdk_set_color(cr, gltype);
-                        XXX_gdk_draw_line2(cr, _x0 - 1, _y0, _x0, yu);
+                        line_buffer_add(lines, gltype, _x0 - 1, _y0, _x0, yu);
                         if (lasttype != AN_0) {
-                            XXX_gdk_draw_line2(cr, _x0, yu, _x0 - 1, _y1);
+                            line_buffer_add(lines, gltype, _x0, yu, _x0 - 1, _y1);
                         }
-                        cairo_stroke(cr);
 
-                        XXX_gdk_set_color(cr, gtype);
-                        XXX_gdk_draw_line2(cr, _x0 + 1, _y0, _x0, yu);
+                        line_buffer_add(lines, gtype, _x0 + 1, _y0, _x0, yu);
                         if (type != AN_0) {
-                            XXX_gdk_draw_line2(cr, _x0, yu, _x0 + 1, _y1);
+                            line_buffer_add(lines, gtype, _x0, yu, _x0 + 1, _y1);
                         }
-                        cairo_stroke(cr);
                     } else {
-                        XXX_gdk_set_color(cr, gtype);
-                        XXX_gdk_draw_line2(cr, _x0 - 2, _y0, _x0 + 2, _y1);
-                        XXX_gdk_draw_line2(cr, _x0 + 2, _y0, _x0 - 2, _y1);
-                        cairo_stroke(cr);
+                        line_buffer_add(lines, gtype, _x0 - 2, _y0, _x0 + 2, _y1);
+                        line_buffer_add(lines, gtype, _x0 + 2, _y0, _x0 - 2, _y1);
                     }
                 }
             } else {
-                XXX_gdk_draw_line(cr, gtype, _x0, _y0, _x0, _y1);
+                line_buffer_add(lines, gtype, _x0, _y0, _x0, _y1);
             }
         }
 
         if (_x0 != _x1) {
             if (type == AN_Z) {
                 if (GLOBALS->use_roundcaps) {
-                    XXX_gdk_draw_line(cr,
-                                      GLOBALS->rgb_gc.gc_mid_wavewindow_c_1,
-                                      _x0 + 1,
-                                      yu,
-                                      _x1 - 1,
-                                      yu);
+                    line_buffer_add(lines, LINE_COLOR_MID, _x0 + 1, yu, _x1 - 1, yu);
                 } else {
-                    XXX_gdk_draw_line(cr, GLOBALS->rgb_gc.gc_mid_wavewindow_c_1, _x0, yu, _x1, yu);
+                    line_buffer_add(lines, LINE_COLOR_MID, _x0, yu, _x1, yu);
                 }
             } else {
+                LineColor c;
                 if ((type != AN_X) && (type != AN_U)) {
-                    c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                    c = LINE_COLOR_VBOX;
                 } else {
-                    c = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    c = LINE_COLOR_X;
                 }
 
-                XXX_gdk_set_color(cr, c);
                 if (GLOBALS->use_roundcaps) {
-                    XXX_gdk_draw_line2(cr, _x0 + 2, _y0, _x1 - 2, _y0);
+                    line_buffer_add(lines, c, _x0 + 2, _y0, _x1 - 2, _y0);
                     if (type != AN_0)
-                        XXX_gdk_draw_line2(cr, _x0 + 2, _y1, _x1 - 2, _y1);
+                        line_buffer_add(lines, c, _x0 + 2, _y1, _x1 - 2, _y1);
                     if (type == AN_1)
-                        XXX_gdk_draw_line2(cr, _x0 + 2, _y1 + 1, _x1 - 2, _y1 + 1);
+                        line_buffer_add(lines, c, _x0 + 2, _y1 + 1, _x1 - 2, _y1 + 1);
                 } else {
-                    XXX_gdk_draw_line2(cr, _x0, _y0, _x1, _y0);
+                    line_buffer_add(lines, c, _x0, _y0, _x1, _y0);
                     if (type != AN_0)
-                        XXX_gdk_draw_line2(cr, _x0, _y1, _x1, _y1);
+                        line_buffer_add(lines, c, _x0, _y1, _x1, _y1);
                     if (type == AN_1)
-                        XXX_gdk_draw_line2(cr, _x0, _y1 + 1, _x1, _y1 + 1);
+                        line_buffer_add(lines, c, _x0, _y1 + 1, _x1, _y1 + 1);
                 }
-                cairo_stroke(cr);
 
                 if (_x0 < 0)
                     _x0 = 0; /* fixup left margin */
@@ -1383,6 +1438,9 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
         h = h->next;
         lasttype = type;
     }
+
+    line_buffer_draw(lines, cr);
+    line_buffer_free(lines);
 
     GLOBALS->color_active_in_filter = 0;
 
