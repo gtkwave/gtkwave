@@ -1244,6 +1244,14 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                             cairo_line_to(cr, _x1 - 2 + offset, _y1 + offset);
                             cairo_line_to(cr, _x0 + 2 + offset, _y1 + offset);
                             cairo_close_path(cr);
+
+                            if (type == AN_0) {
+                                cairo_move_to(cr, _x0 + 2 + offset, _y0 - 1 + offset);
+                                cairo_line_to(cr, _x1 - 2 + offset, _y0 - 1 + offset);
+                            } else if (type == AN_1) {
+                                cairo_move_to(cr, _x0 + 2 + offset, _y1 + 1 + offset);
+                                cairo_line_to(cr, _x1 - 2 + offset, _y1 + 1 + offset);
+                            }
                         } else {
                             gdouble middle = (_x0 + _x1) / 2.0;
                             cairo_move_to(cr, middle + offset, _y0 + offset);
@@ -1254,13 +1262,20 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                             cairo_line_to(cr, _x1 + offset, yu + offset);
                             cairo_line_to(cr, middle + offset, _y1 + offset);
                         }
-
                     } else {
                         cairo_move_to(cr, _x0 + offset, _y0 + offset);
                         cairo_line_to(cr, _x1 + offset, _y0 + offset);
                         cairo_line_to(cr, _x1 + offset, _y1 + offset);
                         cairo_line_to(cr, _x0 + offset, _y1 + offset);
                         cairo_close_path(cr);
+
+                        if (type == AN_0) {
+                            cairo_move_to(cr, _x0 + offset, _y0 - 1 + offset);
+                            cairo_line_to(cr, _x1 + offset, _y0 - 1 + offset);
+                        } else if (type == AN_1) {
+                            cairo_move_to(cr, _x0 + offset, _y1 + 1 + offset);
+                            cairo_line_to(cr, _x1 + offset, _y1 + 1 + offset);
+                        }
                     }
                 }
 
