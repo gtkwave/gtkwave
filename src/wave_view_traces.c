@@ -1080,8 +1080,6 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
     int type;
     int lasttype = -1;
 
-    LineBuffer *lines = line_buffer_new();
-
     GLOBALS->tims.start -= GLOBALS->shift_timebase;
     GLOBALS->tims.end -= GLOBALS->shift_timebase;
 
@@ -1211,95 +1209,62 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
             }
         }
         /* type = (!(h->flags&(HIST_REAL|HIST_STRING))) ? vtype(t,h->v.h_vector) : AN_COUNT; */
-        if (_x0 > -1) {
-            LineColor gltype;
-            LineColor gtype;
-
-            switch (lasttype) {
-                case AN_X:
-                    gltype = LINE_COLOR_X;
-                    break;
-                case AN_U:
-                    gltype = LINE_COLOR_U;
-                    break;
-                default:
-                    gltype = LINE_COLOR_VTRANS;
-                    break;
-            }
-            switch (type) {
-                case AN_X:
-                    gtype = LINE_COLOR_X;
-                    break;
-                case AN_U:
-                    gtype = LINE_COLOR_U;
-                    break;
-                default:
-                    gtype = LINE_COLOR_VTRANS;
-                    break;
-            }
-
-            if (GLOBALS->use_roundcaps) {
-                if (type == AN_Z) {
-                    if (lasttype != -1) {
-                        line_buffer_add(lines, gltype, _x0 - 1, _y0, _x0, yu);
-                        if (lasttype != AN_0) {
-                            line_buffer_add(lines, gltype, _x0, yu, _x0 - 1, _y1);
-                        }
-                    }
-                } else if (lasttype == AN_Z) {
-                    line_buffer_add(lines, gtype, _x0 + 1, _y0, _x0, yu);
-                    if (type != AN_0) {
-                        line_buffer_add(lines, gtype, _x0, yu, _x0 + 1, _y1);
-                    }
-                } else {
-                    if (lasttype != type) {
-                        line_buffer_add(lines, gltype, _x0 - 1, _y0, _x0, yu);
-                        if (lasttype != AN_0) {
-                            line_buffer_add(lines, gltype, _x0, yu, _x0 - 1, _y1);
-                        }
-
-                        line_buffer_add(lines, gtype, _x0 + 1, _y0, _x0, yu);
-                        if (type != AN_0) {
-                            line_buffer_add(lines, gtype, _x0, yu, _x0 + 1, _y1);
-                        }
-                    } else {
-                        line_buffer_add(lines, gtype, _x0 - 2, _y0, _x0 + 2, _y1);
-                        line_buffer_add(lines, gtype, _x0 + 2, _y0, _x0 - 2, _y1);
-                    }
-                }
-            } else {
-                line_buffer_add(lines, gtype, _x0, _y0, _x0, _y1);
-            }
-        }
 
         if (_x0 != _x1) {
             if (type == AN_Z) {
-                if (GLOBALS->use_roundcaps) {
-                    line_buffer_add(lines, LINE_COLOR_MID, _x0 + 1, yu, _x1 - 1, yu);
-                } else {
-                    line_buffer_add(lines, LINE_COLOR_MID, _x0, yu, _x1, yu);
-                }
-            } else {
-                LineColor c;
-                if ((type != AN_X) && (type != AN_U)) {
-                    c = LINE_COLOR_VBOX;
-                } else {
-                    c = LINE_COLOR_X;
-                }
+                gdouble offset = GLOBALS->cairo_050_offset;
+                XXX_gdk_set_color(cr, GLOBALS->rgb_gc.gc_mid_wavewindow_c_1);
 
                 if (GLOBALS->use_roundcaps) {
-                    line_buffer_add(lines, c, _x0 + 2, _y0, _x1 - 2, _y0);
-                    if (type != AN_0)
-                        line_buffer_add(lines, c, _x0 + 2, _y1, _x1 - 2, _y1);
-                    if (type == AN_1)
-                        line_buffer_add(lines, c, _x0 + 2, _y1 + 1, _x1 - 2, _y1 + 1);
+                    cairo_move_to(cr, _x0 + 1 + offset, yu + offset);
+                    cairo_line_to(cr, _x1 - 1 + offset, yu + offset);
                 } else {
-                    line_buffer_add(lines, c, _x0, _y0, _x1, _y0);
-                    if (type != AN_0)
-                        line_buffer_add(lines, c, _x0, _y1, _x1, _y1);
-                    if (type == AN_1)
-                        line_buffer_add(lines, c, _x0, _y1 + 1, _x1, _y1 + 1);
+                    cairo_move_to(cr, _x0 + offset, yu + offset);
+                    cairo_line_to(cr, _x1 + offset, yu + offset);
                 }
+                cairo_stroke(cr);
+            } else {
+                if ((type != AN_X) && (type != AN_U)) {
+                    XXX_gdk_set_color(cr, GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1);
+                } else {
+                    XXX_gdk_set_color(cr, GLOBALS->rgb_gc.gc_x_wavewindow_c_1);
+                }
+
+                gdouble offset = GLOBALS->cairo_050_offset;
+                if (_x1 - _x0 == 1) {
+                    cairo_move_to(cr, _x0 + offset, _y0 + offset);
+                    cairo_line_to(cr, _x0 + offset, _y1 + offset);
+                } else {
+                    if (GLOBALS->use_roundcaps) {
+                        if (_x1 - _x0 > 4) {
+                            cairo_move_to(cr, _x0 + offset, yu + offset);
+                            cairo_line_to(cr, _x0 + 2 + offset, _y0 + offset);
+                            cairo_line_to(cr, _x1 - 2 + offset, _y0 + offset);
+                            cairo_line_to(cr, _x1 + offset, yu + offset);
+                            cairo_line_to(cr, _x1 - 2 + offset, _y1 + offset);
+                            cairo_line_to(cr, _x0 + 2 + offset, _y1 + offset);
+                            cairo_close_path(cr);
+                        } else {
+                            gdouble middle = (_x0 + _x1) / 2.0;
+                            cairo_move_to(cr, middle + offset, _y0 + offset);
+                            cairo_line_to(cr, _x0 + offset, yu + offset);
+                            cairo_line_to(cr, middle + offset, _y1 + offset);
+
+                            cairo_move_to(cr, middle + offset, _y0 + offset);
+                            cairo_line_to(cr, _x1 + offset, yu + offset);
+                            cairo_line_to(cr, middle + offset, _y1 + offset);
+                        }
+
+                    } else {
+                        cairo_move_to(cr, _x0 + offset, _y0 + offset);
+                        cairo_line_to(cr, _x1 + offset, _y0 + offset);
+                        cairo_line_to(cr, _x1 + offset, _y1 + offset);
+                        cairo_line_to(cr, _x0 + offset, _y1 + offset);
+                        cairo_close_path(cr);
+                    }
+                }
+
+                cairo_stroke(cr);
 
                 if (_x0 < 0)
                     _x0 = 0; /* fixup left margin */
@@ -1438,9 +1403,6 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
         h = h->next;
         lasttype = type;
     }
-
-    line_buffer_draw(lines, cr);
-    line_buffer_free(lines);
 
     GLOBALS->color_active_in_filter = 0;
 
