@@ -2050,8 +2050,7 @@ savefile_bail:
         int tb_pos;
 
         if (!mainwindow_already_built) {
-            main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-            gtk_container_set_border_width(GTK_CONTAINER(main_vbox), 1);
+            main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
             gtk_container_add(GTK_CONTAINER(GLOBALS->mainwindow), main_vbox);
             gtk_widget_show(main_vbox);
 
