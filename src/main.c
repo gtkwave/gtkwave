@@ -8,6 +8,7 @@
  */
 
 /* AIX may need this for alloca to work */
+#include "gtk23compat.h"
 #if defined _AIX
 #pragma alloca
 #endif
@@ -655,45 +656,107 @@ static gboolean window_key_press_event(GtkWidget *widget, GdkEventKey *event)
     return TRUE;
 }
 
-static GtkWidget *XXX_gtk_toolbar_insert_stock(GtkToolbar *toolbar,
-                                               const gchar *stock_id,
-                                               const char *tooltip_text,
-                                               const char *tooltip_private_text,
-                                               GCallback callback,
-                                               gpointer user_data,
-                                               gint position)
+static GtkWidget *toolbar_append_button(GtkWidget *toolbar,
+                                        const gchar *stock_id,
+                                        const char *tooltip_text,
+                                        GCallback callback,
+                                        gpointer user_data)
 {
-    (void)tooltip_private_text;
-
-    GtkToolItem *button;
     GtkWidget *icon_widget = gtk_image_new_from_icon_name(stock_id, GTK_ICON_SIZE_BUTTON);
-
-    gtk_widget_show(icon_widget);
-    button = gtk_tool_button_new(icon_widget, NULL);
+    GtkToolItem *button = gtk_tool_button_new(icon_widget, NULL);
     gtk_tool_item_set_tooltip_text(button, tooltip_text);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), button, position);
 
     g_signal_connect(button, "clicked", G_CALLBACK(callback), user_data);
-    return (GTK_WIDGET(button));
+
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), button, -1);
+
+    return GTK_WIDGET(button);
 }
 
-static void XXX_gtk_toolbar_insert_space(GtkToolbar *toolbar, gint position)
+static void toolbar_append_separator(GtkWidget *toolbar)
 {
-    GtkToolItem *button;
+    GtkToolItem *separator = gtk_separator_tool_item_new();
+    gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(separator), TRUE);
 
-    button = gtk_separator_tool_item_new();
-    gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(button), TRUE);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), button, position);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), separator, -1);
 }
 
-static void XXX_gtk_toolbar_insert_widget(GtkToolbar *toolbar, GtkWidget *widget, gint position)
+static void toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
 {
-    GtkToolItem *ti = gtk_tool_item_new();
+    GtkToolItem *item = gtk_tool_item_new();
+    gtk_container_add(GTK_CONTAINER(item), widget);
 
-    gtk_container_add(GTK_CONTAINER(ti), widget);
-    gtk_widget_show(GTK_WIDGET(ti));
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+}
 
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), ti, position);
+static GtkWidget *build_toolbar(void)
+{
+    GtkWidget *toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+
+#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+    GLOBALS->main_popup_menu_button = toolbar_append_button(toolbar,
+                                                            "open-menu-symbolic",
+                                                            "Menu",
+                                                            G_CALLBACK(do_popup_main_menu),
+                                                            NULL);
+#endif
+
+    toolbar_append_button(toolbar, "edit-cut", "Cut Traces", G_CALLBACK(menu_cut_traces), NULL);
+    toolbar_append_button(toolbar, "edit-copy", "Copy Traces", G_CALLBACK(menu_copy_traces), NULL);
+    toolbar_append_button(toolbar,
+                          "edit-paste",
+                          "Paste Traces",
+                          G_CALLBACK(menu_paste_traces),
+                          NULL);
+
+    toolbar_append_separator(toolbar);
+
+    toolbar_append_button(toolbar, "zoom-fit-best", "Zoom Fit", G_CALLBACK(service_zoom_fit), NULL);
+    toolbar_append_button(toolbar, "zoom-in", "Zoom In", G_CALLBACK(service_zoom_in), NULL);
+    toolbar_append_button(toolbar, "zoom-out", "Zoom Out", G_CALLBACK(service_zoom_out), NULL);
+    toolbar_append_button(toolbar, "edit-undo", "Zoom Undo", G_CALLBACK(service_zoom_undo), NULL);
+    toolbar_append_button(toolbar,
+                          "go-first",
+                          "Zoom to Start",
+                          G_CALLBACK(service_zoom_left),
+                          NULL);
+    toolbar_append_button(toolbar, "go-last", "Zoom to End", G_CALLBACK(service_zoom_right), NULL);
+
+    toolbar_append_separator(toolbar);
+
+    toolbar_append_button(toolbar,
+                          "go-previous",
+                          "Find Previous Edge",
+                          G_CALLBACK(service_left_edge),
+                          NULL);
+    toolbar_append_button(toolbar,
+                          "go-next",
+                          "Find Next Edge",
+                          G_CALLBACK(service_right_edge),
+                          NULL);
+
+    toolbar_append_separator(toolbar);
+
+    toolbar_append_widget(toolbar, create_entry_box());
+
+    toolbar_append_separator(toolbar);
+
+    if ((GLOBALS->loaded_file_type != DUMPLESS_FILE) && (!GLOBALS->disable_menus)) {
+        toolbar_append_button(toolbar,
+                              "view-refresh",
+                              "Reload",
+                              G_CALLBACK(menu_reload_waveform_marshal),
+                              NULL);
+
+        toolbar_append_separator(toolbar);
+    }
+
+    toolbar_append_widget(toolbar, create_time_box());
+
+    gtk_widget_show_all(toolbar);
+
+    return toolbar;
 }
 
 int main(int argc, char *argv[])
@@ -733,7 +796,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
     GtkWidget *entry;
-    GtkWidget *timebox;
+    // GtkWidget *timebox;
     GtkWidget *panedwindow;
     int tcl_interpreter_needs_making = 0;
     struct Global *old_g = NULL;
@@ -2157,153 +2220,8 @@ savefile_bail:
 
             whole_table = gtk_grid_new();
 
-            tb = gtk_toolbar_new();
-            top_table = tb; /* export this as our top widget rather than a table */
-
-            gtk_toolbar_set_style(GTK_TOOLBAR(tb), GTK_TOOLBAR_ICONS);
-            tb_pos = 0;
-
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-            GLOBALS->main_popup_menu_button = stock =
-                XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                             "open-menu-symbolic",
-                                             "Menu",
-                                             NULL,
-                                             G_CALLBACK(do_popup_main_menu),
-                                             NULL,
-                                             tb_pos++);
-            gtk_widget_show(stock);
-#endif
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_CUT,
-                                                 "Cut Traces",
-                                                 NULL,
-                                                 G_CALLBACK(menu_cut_traces),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_COPY,
-                                                 "Copy Traces",
-                                                 NULL,
-                                                 G_CALLBACK(menu_copy_traces),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_PASTE,
-                                                 "Paste Traces",
-                                                 NULL,
-                                                 G_CALLBACK(menu_paste_traces),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_ZOOM_FIT,
-                                                 "Zoom Fit",
-                                                 NULL,
-                                                 G_CALLBACK(service_zoom_fit),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_ZOOM_IN,
-                                                 "Zoom In",
-                                                 NULL,
-                                                 G_CALLBACK(service_zoom_in),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_ZOOM_OUT,
-                                                 "Zoom Out",
-                                                 NULL,
-                                                 G_CALLBACK(service_zoom_out),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_UNDO,
-                                                 "Zoom Undo",
-                                                 NULL,
-                                                 G_CALLBACK(service_zoom_undo),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_GOTO_FIRST,
-                                                 "Zoom to Start",
-                                                 NULL,
-                                                 G_CALLBACK(service_zoom_left),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_GOTO_LAST,
-                                                 "Zoom to End",
-                                                 NULL,
-                                                 G_CALLBACK(service_zoom_right),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_GO_BACK,
-                                                 "Find Previous Edge",
-                                                 NULL,
-                                                 G_CALLBACK(service_left_edge),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                 XXX_GTK_STOCK_GO_FORWARD,
-                                                 "Find Next Edge",
-                                                 NULL,
-                                                 G_CALLBACK(service_right_edge),
-                                                 NULL,
-                                                 tb_pos++);
-            gtk_widget_show(stock);
-
-            XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
-
-            entry = create_entry_box();
-            gtk_widget_show(entry);
-            XXX_gtk_toolbar_insert_widget(GTK_TOOLBAR(tb), entry, tb_pos++);
-
-            XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
-
-            if ((GLOBALS->loaded_file_type != DUMPLESS_FILE) && (!GLOBALS->disable_menus)) {
-                stock = XXX_gtk_toolbar_insert_stock(GTK_TOOLBAR(tb),
-                                                     XXX_GTK_STOCK_REFRESH,
-                                                     "Reload",
-                                                     NULL,
-                                                     G_CALLBACK(menu_reload_waveform_marshal),
-                                                     NULL,
-                                                     tb_pos++);
-                gtk_widget_show(stock);
-
-                XXX_gtk_toolbar_insert_space(GTK_TOOLBAR(tb), tb_pos++);
-            }
-
-            timebox = create_time_box();
-            gtk_widget_show(timebox);
-            XXX_gtk_toolbar_insert_widget(GTK_TOOLBAR(tb),
-                                          timebox,
-                                          tb_pos /* ++ */); /* scan-build */
+            tb = build_toolbar();
+            top_table = tb;
 
             GLOBALS->missing_file_toolbar = tb;
             if (GLOBALS->loaded_file_type == MISSING_FILE) {
@@ -2322,6 +2240,7 @@ savefile_bail:
                 g_list_free(chld);
 #endif
             }
+
         } /* of ...if(mainwindow_already_built) */
     } else {
         fprintf(stderr, "GTKWAVE | The non toolbutton interface is no longer supported.\n");
