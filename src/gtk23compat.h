@@ -14,10 +14,6 @@
 #include <gdk/gdkwayland.h>
 #endif
 
-#ifndef MAC_INTEGRATION
-#define WAVE_ALLOW_GTK3_HEADER_BAR
-#endif
-
 /* workaround for wave_vslider not rendering properly on startup */
 #define WAVE_ALLOW_GTK3_VSLIDER_WORKAROUND
 

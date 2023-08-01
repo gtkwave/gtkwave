@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated the UI design of many dialogs.
 - Removed support for GTK 2.
 - Improved rendering of all 0s/1s states of vectors.
+- Replaced hamburger menu with traditional menubar.
 
 ### Added
 

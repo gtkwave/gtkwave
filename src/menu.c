@@ -3830,19 +3830,7 @@ menu_new_viewer_tab_cleanup_2(char *fname, int optimize_vcd)
 			{
                         if(g_old->missing_file_toolbar) 
 				{
-#ifndef WAVE_ALLOW_GTK3_HEADER_BAR
 				gtk_widget_set_sensitive(g_old->missing_file_toolbar, TRUE);
-#else
-	                        GList *chld = gtk_container_get_children (GTK_CONTAINER(GLOBALS->missing_file_toolbar));
-	                        GList *p = chld;
-	                        while(p)
-	                                {
-					GtkWidget *wp = p->data;
-	                                gtk_widget_set_sensitive(GTK_WIDGET(wp), TRUE);
-	                                p = p->next;
-	                                }
-	                        g_list_free(chld);
-#endif
 				}
 			menu_set_sensitive();
 			gtk_notebook_set_current_page(GTK_NOTEBOOK(g_old->notebook), g_old->this_context_page);
@@ -7456,21 +7444,9 @@ if(GLOBALS->helpbox_is_active)
 		if(GLOBALS->fullscreen)
 			{
 			gtk_window_fullscreen (GTK_WINDOW(GLOBALS->mainwindow));
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-			if(!GLOBALS->socket_xid)
-				{
-				gtk_widget_show(GLOBALS->time_mainbox);
-				}
-#endif
 			}
 			else
 			{
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-			if(!GLOBALS->socket_xid)
-				{
-				gtk_widget_hide(GLOBALS->time_mainbox);
-				}
-#endif
 			gtk_window_unfullscreen (GTK_WINDOW(GLOBALS->mainwindow));
 			}
 	
@@ -7495,51 +7471,6 @@ gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]),
 menu_fullscreen(NULL, 0, NULL);
 }
 
-/**/
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-void menu_toolbar(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-(void)null_data;
-(void)callback_action;
-(void)widget;
-
-if(GLOBALS->helpbox_is_active)
-        {
-        help_text_bold("\n\nShow Toolbar");
-        help_text(
-		" toggles the visibility status of the toolbar."
-        );
-        }
-	else
-	{
-	if(GLOBALS->tcl_menu_toggle_item)
-                {
-                GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TOOLBAR]), GLOBALS->show_toolbar = GLOBALS->wave_script_args ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE) : (!GLOBALS->show_toolbar));
-                }
-	else
-		{
-		GLOBALS->show_toolbar = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TOOLBAR]));
-		if(GLOBALS->show_toolbar)
-			{
-			if(GLOBALS->top_table) gtk_widget_show(GLOBALS->top_table);
-			}
-			else
-			{
-			if(GLOBALS->top_table) gtk_widget_hide(GLOBALS->top_table);
-			}
-	
-		if(GLOBALS->wave_hslider)
-			{
-			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"changed");
-			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider),"value_changed");
-			}
-		DEBUG(printf("Show Toolbar\n"));
-		}
-	}
-}
-#endif
-/**/
 void menu_show_grid(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
 (void)null_data;
@@ -7991,9 +7922,6 @@ static gtkwave_mlist_t menu_items[] =
     WAVE_GTKIFE("/Markers/Locking/Unlock from Named Marker", "O", unlock_marker, WV_MENU_MLKOFF, "<Item>"),
 
     WAVE_GTKIFE("/View/Fullscreen", "F11", menu_fullscreen, WV_MENU_FULLSCR, "<ToggleItem>"),
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-    WAVE_GTKIFE("/View/Show Toolbar", "F9", menu_toolbar, WV_MENU_TOOLBAR, "<ToggleItem>"),
-#endif
     WAVE_GTKIFE("/View/<separator>", NULL, NULL, WV_MENU_SEP8C, "<Separator>"),
     WAVE_GTKIFE("/View/Show Grid", "<Alt>G", menu_show_grid, WV_MENU_VSG, "<ToggleItem>"),
     WAVE_GTKIFE("/View/<separator>", NULL, NULL, WV_MENU_SEP9, "<Separator>"),
@@ -8099,9 +8027,6 @@ GLOBALS->quiet_checkmenu = 1;
 
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]), GLOBALS->zoom_pow10_snap);
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]), GLOBALS->fullscreen);
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TOOLBAR]), GLOBALS->show_toolbar);
-#endif
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]), GLOBALS->display_grid);
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]), GLOBALS->highlight_wavewindow);
 gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]), GLOBALS->fill_waveform);
@@ -8828,13 +8753,7 @@ GtkWidget *mw;
 
 menu_wlist = calloc(nmenu_items, sizeof(GtkWidget *)); /* calloc, not calloc_2() */
 
-menubar = alt_menu(mi, nmenu_items, menu_wlist, global_accel, 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-	FALSE
-#else
-	TRUE
-#endif
-	);
+menubar = alt_menu(mi, nmenu_items, menu_wlist, global_accel, TRUE);
 
 GLOBALS->regexp_string_menu_c_1 = calloc_2(1, 129);
 
@@ -9004,29 +8923,3 @@ if(GLOBALS->loaded_file_type != MISSING_FILE)
 #endif
 }
 
-
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-void do_popup_main_menu (GtkWidget *my_widget, GdkEventButton *event)
-{
-(void)my_widget;
-
-  GtkWidget *menu;
-  if(!GLOBALS->main_popup_menu)
-    {
-    GLOBALS->main_popup_menu = menu = alt_menu_top(GLOBALS->mainwindow);
-    }
-    else
-    {
-    menu = GLOBALS->main_popup_menu;
-    }
-
-if(GLOBALS->main_popup_menu_button)
-	{
-	gtk_menu_popup_at_widget (GTK_MENU (menu), GLOBALS->main_popup_menu_button, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST, NULL);
-	}
-	else
-	{
-	gtk_menu_popup_at_pointer (GTK_MENU (menu), NULL);
-	}
-}
-#endif
