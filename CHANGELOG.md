@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Merged in major GUI widget refactoring.
 - Updated the UI design of many dialogs.
 - Removed support for GTK 2.
+- Improved rendering of all 0s/1s states of vectors.
 
 ### Added
 
@@ -25,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Path fix for `twinwave` on Windows.
 - Fixed high CPU usage on Wayland.
 - Fixed display update issues on Wayland.
+- Fixed slow redrawing of dense waveforms.
 - Compiler fix for `__GTK_SOCKET_H__` availability.
 
 [Unreleased]: https://github.com/gtkwave/gtkwave/compare/v3.3.116...HEAD
