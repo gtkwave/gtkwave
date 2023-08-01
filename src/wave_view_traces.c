@@ -1224,62 +1224,76 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                 }
                 cairo_stroke(cr);
             } else {
-                if ((type != AN_X) && (type != AN_U)) {
-                    XXX_gdk_set_color(cr, GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1);
+                gdouble offset = GLOBALS->cairo_050_offset;
+                wave_rgb_t color;
+                if (type != AN_X && type != AN_U) {
+                    color = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
                 } else {
-                    XXX_gdk_set_color(cr, GLOBALS->rgb_gc.gc_x_wavewindow_c_1);
+                    color = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
                 }
 
-                gdouble offset = GLOBALS->cairo_050_offset;
-                if (_x1 - _x0 == 1) {
+                TimeType width = _x1 - _x0;
+
+                if (width == 1) {
+                    XXX_gdk_set_color(cr, color);
                     cairo_move_to(cr, _x0 + offset, _y0 + offset);
                     cairo_line_to(cr, _x0 + offset, _y1 + offset);
+                    cairo_stroke(cr);
                 } else {
+                    if (type == AN_1) {
+                        wave_rgb_t c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                        cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a / 3.0);
+                    } else {
+                        XXX_gdk_set_color(cr, color);
+                    }
+
                     if (GLOBALS->use_roundcaps) {
-                        if (_x1 - _x0 > 4) {
+                        if (width > 4) {
                             cairo_move_to(cr, _x0 + offset, yu + offset);
                             cairo_line_to(cr, _x0 + 2 + offset, _y0 + offset);
                             cairo_line_to(cr, _x1 - 2 + offset, _y0 + offset);
                             cairo_line_to(cr, _x1 + offset, yu + offset);
-                            cairo_line_to(cr, _x1 - 2 + offset, _y1 + offset);
-                            cairo_line_to(cr, _x0 + 2 + offset, _y1 + offset);
-                            cairo_close_path(cr);
-
-                            if (type == AN_0) {
-                                cairo_move_to(cr, _x0 + 2 + offset, _y0 - 1 + offset);
-                                cairo_line_to(cr, _x1 - 2 + offset, _y0 - 1 + offset);
-                            } else if (type == AN_1) {
-                                cairo_move_to(cr, _x0 + 2 + offset, _y1 + 1 + offset);
-                                cairo_line_to(cr, _x1 - 2 + offset, _y1 + 1 + offset);
-                            }
                         } else {
-                            gdouble middle = (_x0 + _x1) / 2.0;
-                            cairo_move_to(cr, middle + offset, _y0 + offset);
-                            cairo_line_to(cr, _x0 + offset, yu + offset);
-                            cairo_line_to(cr, middle + offset, _y1 + offset);
-
-                            cairo_move_to(cr, middle + offset, _y0 + offset);
+                            cairo_move_to(cr, _x0 + offset, yu + offset);
+                            cairo_line_to(cr, _x0 + width / 2.0 + offset, _y0 + offset);
+                            cairo_move_to(cr, _x0 + width / 2.0 + offset, _y0 + offset);
                             cairo_line_to(cr, _x1 + offset, yu + offset);
-                            cairo_line_to(cr, middle + offset, _y1 + offset);
                         }
                     } else {
-                        cairo_move_to(cr, _x0 + offset, _y0 + offset);
+                        cairo_move_to(cr, _x0 + offset, yu + offset);
+                        cairo_line_to(cr, _x0 + offset, _y0 + offset);
                         cairo_line_to(cr, _x1 + offset, _y0 + offset);
-                        cairo_line_to(cr, _x1 + offset, _y1 + offset);
-                        cairo_line_to(cr, _x0 + offset, _y1 + offset);
-                        cairo_close_path(cr);
-
-                        if (type == AN_0) {
-                            cairo_move_to(cr, _x0 + offset, _y0 - 1 + offset);
-                            cairo_line_to(cr, _x1 + offset, _y0 - 1 + offset);
-                        } else if (type == AN_1) {
-                            cairo_move_to(cr, _x0 + offset, _y1 + 1 + offset);
-                            cairo_line_to(cr, _x1 + offset, _y1 + 1 + offset);
-                        }
+                        cairo_line_to(cr, _x1 + offset, yu + offset);
                     }
-                }
+                    cairo_stroke(cr);
 
-                cairo_stroke(cr);
+                    if (type == AN_0) {
+                        wave_rgb_t c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                        cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a / 3.0);
+                    } else {
+                        XXX_gdk_set_color(cr, color);
+                    }
+
+                    if (GLOBALS->use_roundcaps) {
+                        if (width > 4) {
+                            cairo_move_to(cr, _x0 + offset, yu + offset);
+                            cairo_line_to(cr, _x0 + 2 + offset, _y1 + offset);
+                            cairo_line_to(cr, _x1 - 2 + offset, _y1 + offset);
+                            cairo_line_to(cr, _x1 + offset, yu + offset);
+                        } else {
+                            cairo_move_to(cr, _x0 + offset, yu + offset);
+                            cairo_line_to(cr, _x0 + width / 2.0 + offset, _y1 + offset);
+                            cairo_move_to(cr, _x0 + width / 2.0 + offset, _y1 + offset);
+                            cairo_line_to(cr, _x1 + offset, yu + offset);
+                        }
+                    } else {
+                        cairo_move_to(cr, _x0 + offset, yu + offset);
+                        cairo_line_to(cr, _x0 + offset, _y1 + offset);
+                        cairo_line_to(cr, _x1 + offset, _y1 + offset);
+                        cairo_line_to(cr, _x1 + offset, yu + offset);
+                    }
+                    cairo_stroke(cr);
+                }
 
                 if (_x0 < 0)
                     _x0 = 0; /* fixup left margin */
