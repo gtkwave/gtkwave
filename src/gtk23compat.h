@@ -66,18 +66,6 @@
 #define XXX_GTK_STOCK_CANCEL "_Cancel"
 #define XXX_GTK_STOCK_OPEN "_Open"
 #define XXX_GTK_STOCK_SAVE "_Save"
-#define XXX_GTK_STOCK_CUT "edit-cut"
-#define XXX_GTK_STOCK_COPY "edit-copy"
-#define XXX_GTK_STOCK_PASTE "edit-paste"
-#define XXX_GTK_STOCK_ZOOM_FIT "zoom-fit-best"
-#define XXX_GTK_STOCK_ZOOM_IN "zoom-in"
-#define XXX_GTK_STOCK_ZOOM_OUT "zoom-out"
-#define XXX_GTK_STOCK_UNDO "edit-undo"
-#define XXX_GTK_STOCK_GOTO_FIRST "go-first"
-#define XXX_GTK_STOCK_GOTO_LAST "go-last"
-#define XXX_GTK_STOCK_GO_BACK "go-previous"
-#define XXX_GTK_STOCK_GO_FORWARD "go-next"
-#define XXX_GTK_STOCK_REFRESH "view-refresh"
 
 #ifdef WAVE_ALLOW_GTK3_SEAT_VS_POINTER_GRAB_UNGRAB
 void XXX_gdk_pointer_ungrab (guint32 time_);
