@@ -134,13 +134,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->save_on_exit = g_old->save_on_exit;
     GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-    GLOBALS->header_bar = g_old->header_bar;
-    GLOBALS->main_popup_menu = g_old->main_popup_menu;
-    GLOBALS->main_popup_menu_button = g_old->main_popup_menu_button;
-    GLOBALS->top_table = g_old->top_table;
-#endif
-
     reformat_time(timestr,
                   GLOBALS->tims.first + GLOBALS->global_time_offset,
                   GLOBALS->time_dimension);
@@ -239,109 +232,9 @@ static void close_all_fsdb_files(
 }
 #endif
 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-static void service_pan_up(GtkWidget *text, gpointer data)
-{
-    (void)text;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nHide Toolbar");
-        help_text(" hides the toolbar (or optionally enabled traditional button layout) in order "
-                  "to provide more screen space for viewing traces.");
-
-        return;
-    }
-
-    gtk_widget_hide(GLOBALS->top_table);
-}
-
-static void service_pan_dn(GtkWidget *text, gpointer data)
-{
-    (void)text;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow Toolbar");
-        help_text(" restores the toolbar (or optionally enabled traditional button layout) that "
-                  "was hidden by Hide Toolbar.");
-
-        return;
-    }
-
-    gtk_widget_show(GLOBALS->top_table);
-}
-#endif
-
 void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, int pct)
 {
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-    if (!window || !title || GLOBALS->socket_xid)
-        return;
-
-    if (!GLOBALS->disable_menus) {
-        if (!GLOBALS->header_bar) {
-            GLOBALS->header_bar = gtk_header_bar_new();
-            if (GLOBALS->header_bar) {
-                gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(GLOBALS->header_bar), TRUE);
-                gtk_header_bar_set_title(GTK_HEADER_BAR(GLOBALS->header_bar), title);
-                gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(GLOBALS->header_bar), TRUE);
-                gtk_header_bar_set_subtitle(GTK_HEADER_BAR(GLOBALS->header_bar), WAVE_VERSION_INFO);
-                gtk_window_set_titlebar(GTK_WINDOW(window), GLOBALS->header_bar);
-
-                GtkWidget *pan_up =
-                    gtk_button_new_from_icon_name("pan-up-symbolic", GTK_ICON_SIZE_BUTTON);
-                gtk_header_bar_pack_start(GTK_HEADER_BAR(GLOBALS->header_bar), pan_up);
-                gtk_widget_show(pan_up);
-                gtk_tooltips_set_tip_2(pan_up, "Hide toolbar");
-
-                GtkWidget *pan_dn =
-                    gtk_button_new_from_icon_name("pan-down-symbolic", GTK_ICON_SIZE_BUTTON);
-                gtk_header_bar_pack_start(GTK_HEADER_BAR(GLOBALS->header_bar), pan_dn);
-                gtk_widget_show(pan_dn);
-                gtk_tooltips_set_tip_2(pan_dn, "Show toolbar");
-
-                GtkWidget *fs =
-                    gtk_button_new_from_icon_name("view-fullscreen-symbolic", GTK_ICON_SIZE_BUTTON);
-                gtk_header_bar_pack_end(GTK_HEADER_BAR(GLOBALS->header_bar), fs);
-                gtk_widget_show(fs);
-                gtk_tooltips_set_tip_2(fs, "Fullscreen");
-
-                gtk_header_bar_set_decoration_layout(GTK_HEADER_BAR(GLOBALS->header_bar),
-                                                     ":minimize,maximize,close");
-                gtk_widget_show(GLOBALS->header_bar);
-
-                g_signal_connect(pan_up, "released", G_CALLBACK(service_pan_up), NULL);
-                g_signal_connect(pan_dn, "released", G_CALLBACK(service_pan_dn), NULL);
-                g_signal_connect(fs, "released", G_CALLBACK(service_fullscreen), NULL);
-            }
-        } else {
-            switch (typ) {
-                case WAVE_SET_TITLE_MODIFIED: {
-                    const char *pfx = "[Modified] ";
-                    char *t = wave_alloca(strlen(pfx) + strlen(title) + 1);
-
-                    strcpy(t, pfx);
-                    strcat(t, title);
-                    gtk_header_bar_set_title(GTK_HEADER_BAR(GLOBALS->header_bar), t);
-                } break;
-
-                case WAVE_SET_TITLE_LOADING: {
-                    char *t = wave_alloca(64 + strlen(title) + 1); /* make extra long */
-
-                    sprintf(t, "[Loading %d%%] %s", pct, title);
-                    gtk_header_bar_set_title(GTK_HEADER_BAR(GLOBALS->header_bar), t);
-                } break;
-
-                case WAVE_SET_TITLE_NONE:
-                default:
-                    gtk_header_bar_set_title(GTK_HEADER_BAR(GLOBALS->header_bar), title);
-                    break;
-            }
-        }
-    } else
-#endif
-        if (window && title) {
+    if (window && title) {
         switch (typ) {
             case WAVE_SET_TITLE_MODIFIED: {
                 const char *pfx = "[Modified] ";
@@ -694,14 +587,6 @@ static GtkWidget *build_toolbar(void)
     GtkWidget *toolbar = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-    GLOBALS->main_popup_menu_button = toolbar_append_button(toolbar,
-                                                            "open-menu-symbolic",
-                                                            "Menu",
-                                                            G_CALLBACK(do_popup_main_menu),
-                                                            NULL);
-#endif
-
     toolbar_append_button(toolbar, "edit-cut", "Cut Traces", G_CALLBACK(menu_cut_traces), NULL);
     toolbar_append_button(toolbar, "edit-copy", "Copy Traces", G_CALLBACK(menu_copy_traces), NULL);
     toolbar_append_button(toolbar,
@@ -1013,13 +898,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
         GLOBALS->cr_line_width = old_g->cr_line_width;
         GLOBALS->cairo_050_offset = old_g->cairo_050_offset;
-
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-        GLOBALS->header_bar = old_g->header_bar;
-        GLOBALS->main_popup_menu = old_g->main_popup_menu;
-        GLOBALS->main_popup_menu_button = old_g->main_popup_menu_button;
-        GLOBALS->top_table = old_g->top_table;
-#endif
 
         strcpy2_into_new_context(GLOBALS,
                                  &GLOBALS->sst_exclude_filename,
@@ -2184,9 +2062,7 @@ savefile_bail:
 #endif
 
                 menubar = alt_menu_top(GLOBALS->mainwindow);
-#ifndef WAVE_ALLOW_GTK3_HEADER_BAR
                 gtk_widget_show(menubar);
-#endif
 
 #ifdef MAC_INTEGRATION
                 {
@@ -2212,9 +2088,7 @@ savefile_bail:
 #endif
 
                 {
-#ifndef WAVE_ALLOW_GTK3_HEADER_BAR
                     gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, TRUE, 0);
-#endif
                 }
             }
 
@@ -2225,20 +2099,7 @@ savefile_bail:
 
             GLOBALS->missing_file_toolbar = tb;
             if (GLOBALS->loaded_file_type == MISSING_FILE) {
-#ifndef WAVE_ALLOW_GTK3_HEADER_BAR
                 gtk_widget_set_sensitive(GLOBALS->missing_file_toolbar, FALSE);
-#else
-                GList *chld =
-                    gtk_container_get_children(GTK_CONTAINER(GLOBALS->missing_file_toolbar));
-                GList *p = chld;
-                while (p) {
-                    GtkWidget *wp = p->data;
-                    if (p != chld)
-                        gtk_widget_set_sensitive(GTK_WIDGET(wp), FALSE);
-                    p = p->next;
-                }
-                g_list_free(chld);
-#endif
             }
 
         } /* of ...if(mainwindow_already_built) */
@@ -2344,12 +2205,7 @@ savefile_bail:
 
     if (!mainwindow_already_built) {
         gtk_widget_show(top_table);
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-        GLOBALS->top_table = top_table;
-#endif
-
         gtk_grid_attach(GTK_GRID(whole_table), top_table, 0, 0, 16, 1);
-        gtk_widget_set_hexpand(GLOBALS->top_table, TRUE);
 
         if (!GLOBALS->do_resize_signals) {
             int dri;

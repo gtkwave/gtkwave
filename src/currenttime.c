@@ -22,32 +22,6 @@ static char *marker_label_text ="Marker Time";
 static char *maxtime_label_text_hpos="Max";
 static char *marker_label_text_hpos ="Marker";
 
-
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-static void update_labels_to_header_bar(void)
-{
-if(GLOBALS->header_bar)
-	{
-	char buf[1024];
-
-	sprintf(buf, "%s" ": " "%s" "  |  " "%s" ": " "%s",     
-	        gtk_label_get_text(GTK_LABEL(GLOBALS->max_or_marker_label_currenttime_c_1)),
-	        gtk_label_get_text(GTK_LABEL(GLOBALS->maxtimewid_currenttime_c_1)),
-	        gtk_label_get_text(GTK_LABEL(GLOBALS->base_or_curtime_label_currenttime_c_1)),
-	        gtk_label_get_text(GTK_LABEL(GLOBALS->curtimewid_currenttime_c_1))
-	        );
-
-	gtk_header_bar_set_subtitle(GTK_HEADER_BAR(GLOBALS->header_bar), buf);
-	}
-}
-#else
-static void update_labels_to_header_bar(void)
-{
-/* nothing */
-}
-#endif
-
-
 void fractional_timescale_fix(char *s)
 {
 char buf[32], sfx[2];
@@ -148,8 +122,6 @@ if(GLOBALS->use_maxtime_display)
 		(!GLOBALS->use_toolbutton_interface) ? marker_label_text : marker_label_text_hpos);
 	update_markertime(GLOBALS->tims.marker);
 	}
-
-update_labels_to_header_bar();
 }
 
 /* handles floating point values with units */
@@ -620,8 +592,6 @@ if(GLOBALS->named_marker_lock_idx>-1)
 			}
 		}
 	}
-
-update_labels_to_header_bar();
 }
 
 
@@ -639,7 +609,6 @@ if(val>=0)
 	}
 
 gtk_label_set_text(GTK_LABEL(GLOBALS->curtimewid_currenttime_c_1), GLOBALS->curtext_currenttime_c_1);
-update_labels_to_header_bar();
 }
 
 
@@ -652,8 +621,6 @@ if(GLOBALS->use_maxtime_display)
 	reformat_time(GLOBALS->maxtext_currenttime_c_1, val + GLOBALS->global_time_offset, GLOBALS->time_dimension);
 	gtk_label_set_text(GTK_LABEL(GLOBALS->maxtimewid_currenttime_c_1), GLOBALS->maxtext_currenttime_c_1);
 	}
-
-update_labels_to_header_bar();
 }
 
 
@@ -667,8 +634,6 @@ if(GLOBALS->tims.baseline<0)
 	reformat_time_blackout(GLOBALS->curtext_currenttime_c_1, val + GLOBALS->global_time_offset, GLOBALS->time_dimension);
 	gtk_label_set_text(GTK_LABEL(GLOBALS->curtimewid_currenttime_c_1), GLOBALS->curtext_currenttime_c_1);
 	}
-
-update_labels_to_header_bar();
 }
 
 
@@ -718,12 +683,7 @@ if(!GLOBALS->use_toolbutton_interface)
 	mainbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	}
 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-if(GLOBALS->socket_xid)
-#endif
-	{
 	gtk_widget_show(mainbox);
-	}
 GLOBALS->time_mainbox = mainbox;
 
 eventbox=gtk_event_box_new();
