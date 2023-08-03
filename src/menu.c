@@ -260,7 +260,7 @@ if(!success)
 GLOBALS->named_marker_lock_idx = ent_idx;
 GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
 
-update_markertime(GLOBALS->tims.marker);
+update_time_box();
 GLOBALS->signalwindow_width_dirty=1;
 redraw_signals_and_waves();
 }
@@ -315,7 +315,7 @@ if(!success)
 GLOBALS->named_marker_lock_idx = ent_idx;
 GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
 
-update_markertime(GLOBALS->tims.marker);
+update_time_box();
 
 GLOBALS->signalwindow_width_dirty=1;
 redraw_signals_and_waves();
@@ -1617,7 +1617,7 @@ if(GLOBALS->helpbox_is_active)
 			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed"); /* force zoom update */
 			g_signal_emit_by_name (GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed"); /* force zoom update */
 	
-			update_maxmarker_labels();
+			update_time_box();
 			}
 		}
 	}
@@ -2028,7 +2028,7 @@ if(GLOBALS->helpbox_is_active)
 	else
 	{
 	GLOBALS->use_frequency_delta=(GLOBALS->use_frequency_delta)?0:1;
-	update_maxmarker_labels();
+	update_time_box();
 	}
 }
 /**/
@@ -2051,7 +2051,7 @@ if(GLOBALS->helpbox_is_active)
 	else
 	{
 	GLOBALS->use_maxtime_display=(GLOBALS->use_maxtime_display)?0:1;
-	update_maxmarker_labels();
+	update_time_box();
 	}
 }
 /**/
@@ -2247,8 +2247,7 @@ reformat_time(sstr, GLOBALS->tims.first, GLOBALS->time_dimension);
 gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry),sstr);
 reformat_time(sstr, GLOBALS->tims.last, GLOBALS->time_dimension);
 gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry),sstr);
-update_maxmarker_labels();
-update_basetime(GLOBALS->tims.baseline);
+update_time_box();
 
 gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname);
 
@@ -4031,7 +4030,7 @@ if(GLOBALS->helpbox_is_active)
   if(GLOBALS->tims.marker!=-1)
   {
     GLOBALS->tims.baseline = GLOBALS->tims.marker;
-    update_basetime(GLOBALS->tims.baseline);
+	update_time_box();
     GLOBALS->signalwindow_width_dirty=1;
     redraw_signals_and_waves();
   }
@@ -4071,7 +4070,8 @@ if(GLOBALS->tims.marker!=-1)
 		if(t->asciivalue) { free_2(t->asciivalue); t->asciivalue=NULL; }
 		}
 
-	update_markertime(GLOBALS->tims.marker=-1);
+	GLOBALS->tims.marker=-1;
+	update_time_box();
 	GLOBALS->signalwindow_width_dirty=1;
 	redraw_signals_and_waves();
 	}

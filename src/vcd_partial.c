@@ -2629,7 +2629,7 @@ if(GLOBALS->partial_vcd)
 			}
 
 		update_endcap_times_for_partial_vcd();
-		update_maxmarker_labels();
+		update_time_box();
 
 		if(old_maxtime_marker_conflict)
 			{
@@ -2667,7 +2667,7 @@ if(GLOBALS->partial_vcd)
 				gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
 			}
 
-		update_maxmarker_labels();
+		update_time_box();
 
 		gtkwave_main_iteration();
 		}

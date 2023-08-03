@@ -168,10 +168,11 @@ if (gtk_text_buffer_get_selection_bounds (gtk_text_view_get_buffer(GTK_TEXT_VIEW
                                if((tm >= GLOBALS->tims.first) && (tm <= GLOBALS->tims.last))
                                        {
                                        GLOBALS->tims.lmbcache = -1;
-                                       update_markertime(GLOBALS->tims.marker = tm);
+                                       GLOBALS->tims.marker = tm;
                                        center_op();
                                        redraw_signals_and_waves();
-                                       update_markertime(GLOBALS->tims.marker = tm); /* centering problem in GTK2 */
+                                       GLOBALS->tims.marker = tm; /* centering problem in GTK2 */
+                                       update_time_box(); /* centering problem in GTK2 */
                                        }
                                }
 

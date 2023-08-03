@@ -7,6 +7,7 @@
  * of the License, or (at your option) any later version.
  */
 
+#include "debug.h"
 #include "globals.h"
 
 #ifndef CURRENTTIME_H
@@ -29,15 +30,11 @@ struct blackout_region_t *next;
 TimeType bstart, bend;
 };
 
-
 /* currenttime.c protos */
 
 void fractional_timescale_fix(char *);
-void update_markertime(TimeType val);
-void update_maxtime(TimeType val);
-void update_basetime(TimeType val);
+void update_time_box();
 void update_currenttime(TimeType val);
-void update_maxmarker_labels(void);
 void reformat_time(char *buf, TimeType val, char dim);
 void reformat_time_simple(char *buf, TimeType val, char dim);
 TimeType unformat_time(const char *buf, char dim);

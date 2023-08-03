@@ -8,6 +8,7 @@
  */
 
 /* AIX may need this for alloca to work */
+#include "gtk/gtkcssprovider.h"
 #include "gtk23compat.h"
 #if defined _AIX
 #pragma alloca
@@ -116,7 +117,7 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->display_grid = g_old->display_grid;
     GLOBALS->fullscreen = g_old->fullscreen;
     GLOBALS->show_toolbar = g_old->show_toolbar;
-    GLOBALS->time_mainbox = g_old->time_mainbox;
+    GLOBALS->time_box = g_old->time_box;
     GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
     GLOBALS->fill_waveform = g_old->fill_waveform;
     GLOBALS->lz_removal = g_old->lz_removal;
@@ -143,8 +144,7 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
                   GLOBALS->time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
-    update_maxmarker_labels();
-    update_basetime(GLOBALS->tims.baseline);
+    update_time_box();
 
     GLOBALS->keypress_handler_id = g_old->keypress_handler_id;
 
@@ -566,12 +566,14 @@ static GtkWidget *toolbar_append_button(GtkWidget *toolbar,
     return GTK_WIDGET(button);
 }
 
-static void toolbar_append_separator(GtkWidget *toolbar)
+static GtkToolItem *toolbar_append_separator(GtkWidget *toolbar)
 {
     GtkToolItem *separator = gtk_separator_tool_item_new();
     gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(separator), TRUE);
 
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), separator, -1);
+
+    return separator;
 }
 
 static void toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
@@ -586,6 +588,7 @@ static GtkWidget *build_toolbar(void)
 {
     GtkWidget *toolbar = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    gtk_toolbar_set_show_arrow(GTK_TOOLBAR(toolbar), FALSE);
 
     toolbar_append_button(toolbar, "edit-cut", "Cut Traces", G_CALLBACK(menu_cut_traces), NULL);
     toolbar_append_button(toolbar, "edit-copy", "Copy Traces", G_CALLBACK(menu_copy_traces), NULL);
@@ -625,7 +628,7 @@ static GtkWidget *build_toolbar(void)
 
     toolbar_append_widget(toolbar, create_entry_box());
 
-    toolbar_append_separator(toolbar);
+    GtkToolItem *last_separator = toolbar_append_separator(toolbar);
 
     if ((GLOBALS->loaded_file_type != DUMPLESS_FILE) && (!GLOBALS->disable_menus)) {
         toolbar_append_button(toolbar,
@@ -634,14 +637,49 @@ static GtkWidget *build_toolbar(void)
                               G_CALLBACK(menu_reload_waveform_marshal),
                               NULL);
 
-        toolbar_append_separator(toolbar);
+        last_separator = toolbar_append_separator(toolbar);
     }
 
-    toolbar_append_widget(toolbar, create_time_box());
+    gtk_tool_item_set_expand(last_separator, TRUE);
+    gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(last_separator), FALSE);
+
+    GLOBALS->time_box = create_time_box();
+    toolbar_append_widget(toolbar, GLOBALS->time_box);
 
     gtk_widget_show_all(toolbar);
 
     return toolbar;
+}
+
+static const gchar *CUSTOM_CSS = ".gw-time-box {"
+                                 "  color: @theme_unfocused_text_color;"
+                                 "  background: @theme_unfocused_base_color;"
+                                 "  border: 1px solid @unfocused_borders;"
+                                 "  padding: 0 8px;"
+                                 "}"
+                                 ".gw-time-box-label {"
+                                 "  margin-right: 8px;"
+                                 "}"
+                                 ".gw-time-box-value {"
+                                 "  font-feature-settings: \"tnum\";"
+                                 "  font-weight: bold;"
+                                 "}"
+                                 ".gw-time-box-separator {"
+                                 "  color: alpha(@theme_unfocused_text_color, 0.4);"
+                                 "  margin: 0 8px;"
+                                 "}"
+                                 ;
+
+static void add_custom_css(void)
+{
+    GtkCssProvider *css_provider = gtk_css_provider_new();
+    GError *error = NULL;
+    gtk_css_provider_load_from_data(css_provider, CUSTOM_CSS, -1, &error);
+    g_assert_no_error(error);
+
+    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+                                              GTK_STYLE_PROVIDER(css_provider),
+                                              GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
 
 int main(int argc, char *argv[])
@@ -732,13 +770,8 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->vcd_jmp_buf = old_g->vcd_jmp_buf;
 
         /* currenttime.c */
-        GLOBALS->max_or_marker_label_currenttime_c_1 = old_g->max_or_marker_label_currenttime_c_1;
         GLOBALS->maxtext_currenttime_c_1 = (char *)malloc_2(40);
-        GLOBALS->maxtimewid_currenttime_c_1 = old_g->maxtimewid_currenttime_c_1;
         GLOBALS->curtext_currenttime_c_1 = old_g->curtext_currenttime_c_1;
-        GLOBALS->base_or_curtime_label_currenttime_c_1 =
-            old_g->base_or_curtime_label_currenttime_c_1;
-        GLOBALS->curtimewid_currenttime_c_1 = old_g->curtimewid_currenttime_c_1;
 
         /* status.c */
         GLOBALS->text_status_c_2 = old_g->text_status_c_2;
@@ -829,7 +862,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->display_grid = old_g->display_grid;
         GLOBALS->fullscreen = old_g->fullscreen;
         GLOBALS->show_toolbar = old_g->show_toolbar;
-        GLOBALS->time_mainbox = old_g->time_mainbox;
+        GLOBALS->time_box = old_g->time_box;
         GLOBALS->highlight_wavewindow = old_g->highlight_wavewindow;
         GLOBALS->use_standard_trace_select = old_g->use_standard_trace_select;
         GLOBALS->use_big_fonts = old_g->use_big_fonts;
@@ -1973,6 +2006,8 @@ savefile_bail:
 
     calczoom(GLOBALS->tims.zoom);
 
+    add_custom_css();
+
     if (!mainwindow_already_built) {
 #ifdef WAVE_USE_XID
         if (!GLOBALS->socket_xid)
@@ -2301,7 +2336,7 @@ savefile_bail:
         if (GLOBALS->tims.marker < GLOBALS->tims.first)
             GLOBALS->tims.marker = GLOBALS->tims.first;
     }
-    update_markertime(GLOBALS->tims.marker);
+    update_time_box();
 
     set_window_xypos(GLOBALS->initial_window_xpos, GLOBALS->initial_window_ypos);
     GLOBALS->xy_ignore_main_c_1 = 1;
@@ -2438,8 +2473,7 @@ savefile_bail:
 
                         GLOBALS->tims.marker = GLOBALS->dual_ctx[GLOBALS->dual_id].marker;
                         GLOBALS->tims.baseline = GLOBALS->dual_ctx[GLOBALS->dual_id].baseline;
-                        update_basetime(GLOBALS->tims.baseline);
-                        update_markertime(GLOBALS->tims.marker);
+                        update_time_box();
                         GLOBALS->signalwindow_width_dirty = 1;
                         button_press_release_common();
                     } else if (GLOBALS->dual_ctx[GLOBALS->dual_id].marker != GLOBALS->tims.marker) {
@@ -2463,7 +2497,7 @@ savefile_bail:
                         }
 
                         GLOBALS->tims.marker = GLOBALS->dual_ctx[GLOBALS->dual_id].marker;
-                        update_markertime(GLOBALS->tims.marker);
+                        update_time_box();
                         GLOBALS->signalwindow_width_dirty = 1;
                         button_press_release_common();
                     }
@@ -2739,7 +2773,7 @@ void activate_stems_reader(char *stems_name)
                 strcpy(GLOBALS->anno_ctx->aet_name, GLOBALS->aet_name);
                 strcpy(GLOBALS->anno_ctx->stems_name, stems_name);
 
-                update_markertime(GLOBALS->tims.marker);
+                update_time_box();
 
                 rc = CreateProcess("rtlbrowse.exe",
                                    mylist,
@@ -2782,7 +2816,7 @@ void activate_stems_reader(char *stems_name)
                 strcpy(GLOBALS->anno_ctx->stems_name, stems_name);
 
                 GLOBALS->anno_ctx->gtkwave_process = getpid();
-                update_markertime(GLOBALS->tims.marker);
+                update_time_box();
 
 #ifdef __linux__
                 shmctl(shmid, IPC_RMID, &ds); /* mark for destroy */

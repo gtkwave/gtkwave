@@ -7,9 +7,11 @@
  * of the License, or (at your option) any later version.
  */
 
+#include "debug.h"
 #include "globals.h"
 #include <config.h>
 #include <gtk/gtk.h>
+#include <string.h>
 #include "currenttime.h"
 #include "symbol.h"
 #include "wave_view.h"
@@ -89,21 +91,6 @@ void fractional_timescale_fix(char *s)
     strcat(buf, "s");
     /* printf("old time: '%s', new time: '%s'\n", s, buf); */
     strcpy(s, buf);
-}
-
-void update_maxmarker_labels(void)
-{
-    if (GLOBALS->use_maxtime_display) {
-        gtk_label_set_text(GTK_LABEL(GLOBALS->max_or_marker_label_currenttime_c_1),
-                           (!GLOBALS->use_toolbutton_interface) ? maxtime_label_text
-                                                                : maxtime_label_text_hpos);
-        update_maxtime(GLOBALS->max_time);
-    } else {
-        gtk_label_set_text(GTK_LABEL(GLOBALS->max_or_marker_label_currenttime_c_1),
-                           (!GLOBALS->use_toolbutton_interface) ? marker_label_text
-                                                                : marker_label_text_hpos);
-        update_markertime(GLOBALS->tims.marker);
-    }
 }
 
 /* handles floating point values with units */
@@ -252,6 +239,82 @@ void reformat_time_simple(char *buf, TimeType val, char dim)
     }
 }
 
+static int dim_to_exponent(char dim)
+{
+    char *pnt = strchr(time_prefix, (int)dim);
+    if (pnt == NULL) {
+        return 0;
+    }
+
+    return (pnt - time_prefix) * 3;
+}
+
+static gchar *reformat_time_2_scale_to_dimension(TimeType val, char dim, gboolean show_plus_sign)
+{
+    int value_exponent = dim_to_exponent(dim);
+    int target_exponent = dim_to_exponent(GLOBALS->scale_to_time_dimension);
+
+    double v = val;
+    while (value_exponent > target_exponent) {
+        v /= 1000.0;
+        value_exponent -= 3;
+    }
+    while (value_exponent < target_exponent) {
+        v *= 1000.0;
+        value_exponent += 3;
+    }
+
+    if (GLOBALS->scale_to_time_dimension == 's') {
+        return g_strdup_printf("%.9g sec", v);
+    } else {
+        return g_strdup_printf("%.9g %cs", v, GLOBALS->scale_to_time_dimension);
+    }
+}
+
+static gchar *reformat_time_2(TimeType val, char dim, gboolean show_plus_sign)
+{
+    static const gunichar THIN_SPACE = 0x2009;
+
+    if (GLOBALS->scale_to_time_dimension) {
+        return reformat_time_2_scale_to_dimension(val, dim, show_plus_sign);
+    }
+
+    gboolean negative = val < 0;
+    val = ABS(val);
+
+    gchar *value_str = g_strdup_printf(TTFormat, val);
+    gsize value_len = strlen(value_str);
+
+    GString *str = g_string_new(NULL);
+    if (negative) {
+        g_string_append_c(str, '-');
+    } else if (show_plus_sign) {
+        g_string_append_c(str, '+');
+    }
+
+    gsize first_group_len = value_len % 3;
+    if (first_group_len > 0) {
+        g_string_append_len(str, value_str, first_group_len);
+    }
+    for (gsize group = 0; group < value_len / 3; group++) {
+        if (group > 0 || first_group_len != 0) {
+            g_string_append_unichar(str, THIN_SPACE);
+        }
+        g_string_append_len(str, &value_str[first_group_len + group * 3], 3);
+    }
+
+    g_string_append_c(str, ' ');
+
+    if (dim != 0 && dim != ' ') {
+        g_string_append_c(str, dim);
+        g_string_append_c(str, 's');
+    } else {
+        g_string_append(str, "sec");
+    }
+
+    return g_string_free(str, FALSE);
+}
+
 void reformat_time(char *buf, TimeType val, char dim)
 {
     char *pnt;
@@ -344,81 +407,21 @@ void reformat_time_as_frequency(char *buf, TimeType val, char dim)
     }
 }
 
-void reformat_time_blackout(char *buf, TimeType val, char dim)
+static gboolean is_in_blackout_region(TimeType val)
 {
-    char *pnt;
-    int i, offset, offsetfix;
-    struct blackout_region_t *bt = GLOBALS->blackout_regions;
-    char blackout = ' ';
-
-    while (bt) {
-        if ((val >= bt->bstart) && (val < bt->bend)) {
-            blackout = '*';
-            break;
-        }
-
-        bt = bt->next;
-    }
-
-    pnt = strchr(time_prefix, (int)dim);
-    if (pnt) {
-        offset = pnt - time_prefix;
-    } else
-        offset = 0;
-
-    for (i = offset; i > 0; i--) {
-        if (val % 1000)
-            break;
-        val = val / 1000;
-    }
-
-    if (GLOBALS->scale_to_time_dimension) {
-        if (GLOBALS->scale_to_time_dimension == 's') {
-            pnt = time_prefix;
-        } else {
-            pnt = strchr(time_prefix, (int)GLOBALS->scale_to_time_dimension);
-        }
-        if (pnt) {
-            offsetfix = pnt - time_prefix;
-            if (offsetfix != i) {
-                int j;
-                int deltaexp = (offsetfix - i);
-                gdouble gval = (gdouble)val;
-                gdouble mypow = 1.0;
-
-                if (deltaexp > 0) {
-                    for (j = 0; j < deltaexp; j++) {
-                        mypow *= 1000.0;
-                    }
-                } else {
-                    for (j = 0; j > deltaexp; j--) {
-                        mypow /= 1000.0;
-                    }
-                }
-
-                gval *= mypow;
-
-                if (GLOBALS->scale_to_time_dimension == 's') {
-                    sprintf(buf, "%.9g%csec", gval, blackout);
-                } else {
-                    sprintf(buf, "%.9g%c%cs", gval, blackout, GLOBALS->scale_to_time_dimension);
-                }
-
-                return;
-            }
+    for (struct blackout_region_t *bt = GLOBALS->blackout_regions; bt != NULL; bt = bt->next) {
+        if (val >= bt->bstart && val < bt->bend) {
+            return TRUE;
         }
     }
 
-    if ((i) && (time_prefix)) /* scan-build on time_prefix, should not be necessary however */
-    {
-        sprintf(buf, TTFormat "%c%cs", val, blackout, time_prefix[i]);
-    } else {
-        sprintf(buf, TTFormat "%csec", val, blackout);
-    }
+    return FALSE;
 }
 
-void update_markertime(TimeType val)
+static void update_markertime(void)
 {
+    TimeType val = GLOBALS->tims.marker;
+
     if (GLOBALS->anno_ctx) {
         if (val >= 0) {
             GLOBALS->anno_ctx->marker_set = 0; /* avoid race on update */
@@ -440,33 +443,23 @@ void update_markertime(TimeType val)
         }
     }
 
+    gchar *text = NULL;
+
     if (!GLOBALS->use_maxtime_display) {
         if (val >= 0) {
             if (GLOBALS->tims.baseline >= 0) {
                 val -= GLOBALS->tims.baseline; /* do delta instead */
-                *GLOBALS->maxtext_currenttime_c_1 = 'B';
-                if (val >= 0) {
-                    *(GLOBALS->maxtext_currenttime_c_1 + 1) = '+';
-                    if (GLOBALS->use_frequency_delta) {
-                        reformat_time_as_frequency(GLOBALS->maxtext_currenttime_c_1 + 2,
-                                                   val,
-                                                   GLOBALS->time_dimension);
-                    } else {
-                        reformat_time(GLOBALS->maxtext_currenttime_c_1 + 2,
-                                      val,
-                                      GLOBALS->time_dimension);
-                    }
+
+                if (GLOBALS->use_frequency_delta) {
+                    text = g_malloc0(40);
+                    reformat_time_as_frequency(text, val, GLOBALS->time_dimension);
                 } else {
-                    if (GLOBALS->use_frequency_delta) {
-                        reformat_time_as_frequency(GLOBALS->maxtext_currenttime_c_1 + 1,
-                                                   val,
-                                                   GLOBALS->time_dimension);
-                    } else {
-                        reformat_time(GLOBALS->maxtext_currenttime_c_1 + 1,
-                                      val,
-                                      GLOBALS->time_dimension);
-                    }
+                    text = reformat_time_2(val, GLOBALS->time_dimension, TRUE);
                 }
+
+                gchar *t = g_strconcat("B", text, NULL);
+                g_free(text);
+                text = t;
             } else if (GLOBALS->tims.lmbcache >= 0) {
                 val -= GLOBALS->tims.lmbcache; /* do delta instead */
 
@@ -475,28 +468,21 @@ void update_markertime(TimeType val)
                                                val,
                                                GLOBALS->time_dimension);
                 } else {
-                    if (val >= 0) {
-                        *GLOBALS->maxtext_currenttime_c_1 = '+';
-                        reformat_time(GLOBALS->maxtext_currenttime_c_1 + 1,
-                                      val,
-                                      GLOBALS->time_dimension);
-                    } else {
-                        reformat_time(GLOBALS->maxtext_currenttime_c_1,
-                                      val,
-                                      GLOBALS->time_dimension);
-                    }
+                    text = reformat_time_2(val, GLOBALS->time_dimension, TRUE);
                 }
             } else {
-                reformat_time(GLOBALS->maxtext_currenttime_c_1,
-                              val + GLOBALS->global_time_offset,
-                              GLOBALS->time_dimension);
+                text = reformat_time_2(val + GLOBALS->global_time_offset,
+                                       GLOBALS->time_dimension,
+                                       FALSE);
             }
         } else {
-            sprintf(GLOBALS->maxtext_currenttime_c_1, "--");
+            text = g_strdup("--");
         }
+    }
 
-        gtk_label_set_text(GTK_LABEL(GLOBALS->maxtimewid_currenttime_c_1),
-                           GLOBALS->maxtext_currenttime_c_1);
+    if (text != NULL) {
+        strncpy(GLOBALS->maxtext_currenttime_c_1, text, 40);
+        g_free(text);
     }
 
     if (GLOBALS->named_marker_lock_idx > -1) {
@@ -511,160 +497,127 @@ void update_markertime(TimeType val)
     }
 }
 
-void update_basetime(TimeType val)
+void update_time_box(void)
 {
-    if (val >= 0) {
-        gtk_label_set_text(GTK_LABEL(GLOBALS->base_or_curtime_label_currenttime_c_1),
-                           (!GLOBALS->use_toolbutton_interface) ? "Base Marker" : "Base");
-        reformat_time(GLOBALS->curtext_currenttime_c_1,
-                      val + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
-    } else {
-        gtk_label_set_text(GTK_LABEL(GLOBALS->base_or_curtime_label_currenttime_c_1),
-                           (!GLOBALS->use_toolbutton_interface) ? "Current Time" : "Cursor");
-        reformat_time_blackout(GLOBALS->curtext_currenttime_c_1,
-                               GLOBALS->cached_currenttimeval_currenttime_c_1 +
-                                   GLOBALS->global_time_offset,
-                               GLOBALS->time_dimension);
-    }
+    static const gchar *EM_DASH = "\xe2\x80\x94";
 
-    gtk_label_set_text(GTK_LABEL(GLOBALS->curtimewid_currenttime_c_1),
-                       GLOBALS->curtext_currenttime_c_1);
-}
+    GList *children = gtk_container_get_children(GTK_CONTAINER(GLOBALS->time_box));
+    GtkWidget *marker_label = g_list_nth_data(children, 0);
+    GtkWidget *marker_value = g_list_nth_data(children, 1);
+    GtkWidget *cursor_label = g_list_nth_data(children, 3);
+    GtkWidget *cursor_value = g_list_nth_data(children, 4);
+    g_list_free(children);
 
-void update_maxtime(TimeType val)
-{
-    GLOBALS->max_time = val;
-
+    update_markertime();
     if (GLOBALS->use_maxtime_display) {
-        reformat_time(GLOBALS->maxtext_currenttime_c_1,
-                      val + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
-        gtk_label_set_text(GTK_LABEL(GLOBALS->maxtimewid_currenttime_c_1),
-                           GLOBALS->maxtext_currenttime_c_1);
+        gchar *text = reformat_time_2(GLOBALS->max_time + GLOBALS->global_time_offset,
+                                      GLOBALS->time_dimension,
+                                      FALSE);
+        strncpy(GLOBALS->maxtext_currenttime_c_1, text, 40);
+        g_free(text);
+
+        gtk_label_set_text(GTK_LABEL(marker_label), "Max");
+        gtk_label_set_text(GTK_LABEL(marker_value), GLOBALS->maxtext_currenttime_c_1);
+    } else {
+        gtk_label_set_text(GTK_LABEL(marker_label), "Marker");
+        if (GLOBALS->tims.marker >= 0) {
+            gtk_label_set_text(GTK_LABEL(marker_value), GLOBALS->maxtext_currenttime_c_1);
+        } else {
+            gtk_label_set_text(GTK_LABEL(marker_value), EM_DASH);
+        }
     }
+
+    gchar *text;
+    if (GLOBALS->tims.baseline >= 0) {
+        gtk_label_set_text(GTK_LABEL(cursor_label), "Base");
+        text = reformat_time_2(GLOBALS->tims.baseline + GLOBALS->global_time_offset,
+                               GLOBALS->time_dimension,
+                               FALSE);
+    } else {
+        gtk_label_set_text(GTK_LABEL(cursor_label), "Cursor");
+
+        text = reformat_time_2(GLOBALS->currenttime + GLOBALS->global_time_offset,
+                               GLOBALS->time_dimension,
+                               FALSE);
+
+        if (is_in_blackout_region(GLOBALS->currenttime + GLOBALS->global_time_offset)) {
+            gchar *last_space = g_strrstr(text, " ");
+            if (last_space != NULL) {
+                *last_space = '*';
+            } else {
+                g_assert_not_reached();
+            }
+        }
+    }
+
+    strncpy(GLOBALS->curtext_currenttime_c_1, text, 40);
+    g_free(text);
+
+    gtk_label_set_text(GTK_LABEL(cursor_value), GLOBALS->curtext_currenttime_c_1);
 }
 
 void update_currenttime(TimeType val)
 {
     GLOBALS->cached_currenttimeval_currenttime_c_1 = val;
 
-    if (GLOBALS->tims.baseline < 0) {
-        GLOBALS->currenttime = val;
-        reformat_time_blackout(GLOBALS->curtext_currenttime_c_1,
-                               val + GLOBALS->global_time_offset,
-                               GLOBALS->time_dimension);
-        gtk_label_set_text(GTK_LABEL(GLOBALS->curtimewid_currenttime_c_1),
-                           GLOBALS->curtext_currenttime_c_1);
+    if (GLOBALS->tims.baseline >= 0) {
+        return;
     }
+
+    GLOBALS->currenttime = val;
+
+    update_time_box();
 }
 
 /* Create an entry box */
 GtkWidget *create_time_box(void)
 {
-    GtkWidget *mainbox;
-    GtkWidget *eventbox;
+    GLOBALS->maxtext_currenttime_c_1 = malloc_2(40);
+    GLOBALS->curtext_currenttime_c_1 = malloc_2(40);
 
-    GLOBALS->max_or_marker_label_currenttime_c_1 =
-        (GLOBALS->use_maxtime_display)
-            ? gtk_label_new((!GLOBALS->use_toolbutton_interface) ? maxtime_label_text
-                                                                 : maxtime_label_text_hpos)
-            : gtk_label_new((!GLOBALS->use_toolbutton_interface) ? marker_label_text
-                                                                 : marker_label_text_hpos);
+    // Determine the maximum value length
+    gchar buf[40] = {0};
+    reformat_time(buf, GLOBALS->max_time, GLOBALS->time_dimension);
+    gint max_length = strlen(buf) + 2; // two extra chars for sign and 'B' delta marker
+    max_length = MAX(max_length, 17); // at least 17 chars to fit delta frequency
 
-    GLOBALS->maxtext_currenttime_c_1 = (char *)malloc_2(40);
-    if (GLOBALS->use_maxtime_display) {
-        reformat_time(GLOBALS->maxtext_currenttime_c_1, GLOBALS->max_time, GLOBALS->time_dimension);
-    } else {
-        sprintf(GLOBALS->maxtext_currenttime_c_1, "--");
-    }
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_style_context_add_class(gtk_widget_get_style_context(box), "gw-time-box");
 
-    GLOBALS->maxtimewid_currenttime_c_1 = gtk_label_new(GLOBALS->maxtext_currenttime_c_1);
+    GtkWidget *marker_label = gtk_label_new(NULL);
+    gtk_label_set_width_chars(GTK_LABEL(marker_label), 6);
+    gtk_label_set_xalign(GTK_LABEL(marker_label), 0.0);
+    gtk_widget_set_valign(marker_label, GTK_ALIGN_BASELINE);
+    gtk_box_pack_start(GTK_BOX(box), marker_label, FALSE, FALSE, 0);
+    gtk_style_context_add_class(gtk_widget_get_style_context(marker_label), "gw-time-box-label");
 
-    GLOBALS->curtext_currenttime_c_1 = (char *)malloc_2(40);
-    if (GLOBALS->tims.baseline < 0) {
-        GLOBALS->base_or_curtime_label_currenttime_c_1 =
-            gtk_label_new((!GLOBALS->use_toolbutton_interface) ? "Current Time" : "Cursor");
-        reformat_time(GLOBALS->curtext_currenttime_c_1,
-                      (GLOBALS->currenttime = GLOBALS->min_time),
-                      GLOBALS->time_dimension);
-        GLOBALS->curtimewid_currenttime_c_1 = gtk_label_new(GLOBALS->curtext_currenttime_c_1);
-    } else {
-        GLOBALS->base_or_curtime_label_currenttime_c_1 =
-            gtk_label_new((!GLOBALS->use_toolbutton_interface) ? "Base Marker" : "Base");
-        reformat_time(GLOBALS->curtext_currenttime_c_1,
-                      GLOBALS->tims.baseline,
-                      GLOBALS->time_dimension);
-        GLOBALS->curtimewid_currenttime_c_1 = gtk_label_new(GLOBALS->curtext_currenttime_c_1);
-    }
+    GtkWidget *marker_value = gtk_label_new(NULL);
+    gtk_label_set_width_chars(GTK_LABEL(marker_value), max_length);
+    gtk_label_set_xalign(GTK_LABEL(marker_value), 1.0);
+    gtk_widget_set_valign(marker_value, GTK_ALIGN_BASELINE);
+    gtk_box_pack_start(GTK_BOX(box), marker_value, FALSE, FALSE, 0);
+    gtk_style_context_add_class(gtk_widget_get_style_context(marker_value), "gw-time-box-value");
 
-    if (!GLOBALS->use_toolbutton_interface) {
-        mainbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    } else {
-        mainbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    }
+    GtkWidget *separator = gtk_label_new("|");
+    gtk_widget_set_valign(separator, GTK_ALIGN_BASELINE);
+    gtk_box_pack_start(GTK_BOX(box), separator, FALSE, FALSE, 0);
+    gtk_style_context_add_class(gtk_widget_get_style_context(separator), "gw-time-box-separator");
 
-    gtk_widget_show(mainbox);
-    GLOBALS->time_mainbox = mainbox;
+    GtkWidget *cursor_label = gtk_label_new(NULL);
+    gtk_label_set_width_chars(GTK_LABEL(cursor_label), 6);
+    gtk_label_set_xalign(GTK_LABEL(cursor_label), 0.0);
+    gtk_widget_set_valign(cursor_label, GTK_ALIGN_BASELINE);
+    gtk_box_pack_start(GTK_BOX(box), cursor_label, FALSE, FALSE, 0);
+    gtk_style_context_add_class(gtk_widget_get_style_context(cursor_label), "gw-time-box-label");
 
-    eventbox = gtk_event_box_new();
-    gtk_container_add(GTK_CONTAINER(eventbox), mainbox);
+    GtkWidget *cursor_value = gtk_label_new(NULL);
+    gtk_label_set_width_chars(GTK_LABEL(cursor_value), max_length);
+    gtk_label_set_xalign(GTK_LABEL(cursor_value), 1.0);
+    gtk_widget_set_valign(cursor_value, GTK_ALIGN_BASELINE);
+    gtk_box_pack_start(GTK_BOX(box), cursor_value, FALSE, FALSE, 0);
+    gtk_style_context_add_class(gtk_widget_get_style_context(cursor_value), "gw-time-box-value");
 
-    if (!GLOBALS->use_toolbutton_interface) {
-        gtk_box_pack_start(GTK_BOX(mainbox),
-                           GLOBALS->max_or_marker_label_currenttime_c_1,
-                           TRUE,
-                           FALSE,
-                           0);
-        gtk_widget_show(GLOBALS->max_or_marker_label_currenttime_c_1);
-        gtk_box_pack_start(GTK_BOX(mainbox), GLOBALS->maxtimewid_currenttime_c_1, TRUE, FALSE, 0);
-        gtk_widget_show(GLOBALS->maxtimewid_currenttime_c_1);
-
-        gtk_box_pack_start(GTK_BOX(mainbox),
-                           GLOBALS->base_or_curtime_label_currenttime_c_1,
-                           TRUE,
-                           FALSE,
-                           0);
-        gtk_widget_show(GLOBALS->base_or_curtime_label_currenttime_c_1);
-        gtk_box_pack_start(GTK_BOX(mainbox), GLOBALS->curtimewid_currenttime_c_1, TRUE, FALSE, 0);
-        gtk_widget_show(GLOBALS->curtimewid_currenttime_c_1);
-    } else {
-        GtkWidget *dummy;
-
-        gtk_box_pack_start(GTK_BOX(mainbox),
-                           GLOBALS->max_or_marker_label_currenttime_c_1,
-                           TRUE,
-                           FALSE,
-                           0);
-        gtk_widget_show(GLOBALS->max_or_marker_label_currenttime_c_1);
-
-        dummy = gtk_label_new(": ");
-        gtk_widget_show(dummy);
-        gtk_box_pack_start(GTK_BOX(mainbox), dummy, TRUE, FALSE, 0);
-
-        gtk_box_pack_start(GTK_BOX(mainbox), GLOBALS->maxtimewid_currenttime_c_1, TRUE, FALSE, 0);
-        gtk_widget_show(GLOBALS->maxtimewid_currenttime_c_1);
-
-        dummy = gtk_label_new("  |  ");
-        gtk_widget_show(dummy);
-        gtk_box_pack_start(GTK_BOX(mainbox), dummy, TRUE, FALSE, 0);
-
-        gtk_box_pack_start(GTK_BOX(mainbox),
-                           GLOBALS->base_or_curtime_label_currenttime_c_1,
-                           TRUE,
-                           FALSE,
-                           0);
-        gtk_widget_show(GLOBALS->base_or_curtime_label_currenttime_c_1);
-
-        dummy = gtk_label_new(": ");
-        gtk_widget_show(dummy);
-        gtk_box_pack_start(GTK_BOX(mainbox), dummy, TRUE, FALSE, 0);
-
-        gtk_box_pack_start(GTK_BOX(mainbox), GLOBALS->curtimewid_currenttime_c_1, TRUE, FALSE, 0);
-        gtk_widget_show(GLOBALS->curtimewid_currenttime_c_1);
-    }
-
-    return (eventbox);
+    return box;
 }
 
 TimeType time_trunc(TimeType t)

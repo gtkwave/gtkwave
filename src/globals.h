@@ -210,8 +210,6 @@ char is_vcd; /* from currenttime.c 56 */
 char partial_vcd; /* from currenttime.c 57 */
 char use_maxtime_display; /* from currenttime.c 58 */
 char use_frequency_delta; /* from currenttime.c 59 */
-GtkWidget *max_or_marker_label_currenttime_c_1; /* from currenttime.c 60 */
-GtkWidget *base_or_curtime_label_currenttime_c_1; /* from currenttime.c 61 */
 TimeType cached_currenttimeval_currenttime_c_1; /* from currenttime.c 62 */
 TimeType currenttime; /* from currenttime.c 63 */
 TimeType max_time; /* from currenttime.c 64 */
@@ -219,12 +217,12 @@ TimeType min_time; /* from currenttime.c 65 */
 char display_grid; /* from currenttime.c 66 */
 char fullscreen;
 char show_toolbar;
-GtkWidget *time_mainbox;
+GtkWidget *time_box;
 TimeType time_scale; /* from currenttime.c 67 */
 char time_dimension; /* from currenttime.c 68 */
 char scale_to_time_dimension; /* from currenttime.c */
-GtkWidget *maxtimewid_currenttime_c_1; /* from currenttime.c 70 */
-GtkWidget *curtimewid_currenttime_c_1; /* from currenttime.c 71 */
+// GtkWidget *maxtimewid_currenttime_c_1; /* from currenttime.c 70 */
+// GtkWidget *curtimewid_currenttime_c_1; /* from currenttime.c 71 */
 char *maxtext_currenttime_c_1; /* from currenttime.c 72 */
 char *curtext_currenttime_c_1; /* from currenttime.c 73 */
 TimeType time_trunc_val_currenttime_c_1; /* from currenttime.c 77 */

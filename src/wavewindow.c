@@ -701,7 +701,8 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
         newcurr = GLOBALS->min_time; /* prevents marker from disappearing? */
 
     if (!is_button_2) {
-        update_markertime(GLOBALS->tims.marker = cook_markertime(newcurr, xin, yin));
+        GLOBALS->tims.marker = cook_markertime(newcurr, xin, yin);
+        update_time_box();
         if (GLOBALS->tims.lmbcache < 0)
             GLOBALS->tims.lmbcache = time_trunc(newcurr);
 
@@ -714,8 +715,7 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
         GLOBALS->tims.baseline = ((GLOBALS->tims.baseline < 0) || (is_button_2 < 0))
                                      ? cook_markertime(newcurr, xin, yin)
                                      : -1;
-        update_basetime(GLOBALS->tims.baseline);
-        update_markertime(GLOBALS->tims.marker);
+        update_time_box();
         // gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
     }
 
@@ -1307,7 +1307,7 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
         }
 
         GLOBALS->tims.lmbcache = -1;
-        update_markertime(GLOBALS->tims.marker);
+        update_time_box();
     }
 
     GLOBALS->mouseover_counter = 11;

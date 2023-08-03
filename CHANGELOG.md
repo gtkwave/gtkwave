@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Removed support for GTK 2.
 - Improved rendering of all 0s/1s states of vectors.
 - Replaced hamburger menu with traditional menubar.
+- Improved the readability of the cursor and marker time display.
 
 ### Added
 

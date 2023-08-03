@@ -958,7 +958,7 @@ static void strace_search_2(int direction, int is_last_iteration)
 
     GLOBALS->tims.marker = maxbase;
     if (is_last_iteration) {
-        update_markertime(GLOBALS->tims.marker);
+        update_time_box();
 
         width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
         if ((GLOBALS->tims.marker < GLOBALS->tims.start) ||

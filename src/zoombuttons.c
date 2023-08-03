@@ -371,7 +371,8 @@ if((time2>time1)&&(dragzoom_ok))	/* ensure at least 1 tick and dragzoom_threshol
 
 	if(!((GLOBALS->tims.baseline>=0)&&(GLOBALS->tims.marker>=0)))
 		{
-	        update_markertime(GLOBALS->tims.marker=-1);
+	        GLOBALS->tims.marker=-1;
+	        update_time_box();
 		}
         GLOBALS->signalwindow_width_dirty=1;
         MaxSignalLength();

@@ -861,7 +861,7 @@ int read_save_helper(char *wname, char **dumpfile, char **savefile, off_t *dumps
                 GLOBALS->default_flags=TR_RJUSTIFY;
                 GLOBALS->default_fpshift=0;
 		GLOBALS->shift_timebase_default_for_add=LLDescriptor(0);
-		update_markertime(GLOBALS->tims.marker);
+		update_time_box();
                 if(wave_is_compressed) pclose(wave); else fclose(wave);
 
 		if(traces_already_exist) GLOBALS->timestart_from_savefile_valid = 0;
