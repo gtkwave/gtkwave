@@ -197,8 +197,6 @@ LLDescriptor(0), /* global_time_offset */
 0, /* partial_vcd */
 1, /* use_maxtime_display 57 */
 0, /* use_frequency_delta 58 */
-NULL, /* max_or_marker_label_currenttime_c_1 59 */
-NULL, /* base_or_curtime_label_currenttime_c_1 60 */
 0, /* cached_currenttimeval_currenttime_c_1 61 */
 0, /* currenttime 62 */
 0, /* max_time 63 */
@@ -206,12 +204,12 @@ NULL, /* base_or_curtime_label_currenttime_c_1 60 */
 ~0, /* display_grid 65 */
 0, /* fullscreen */
 1, /* show_toolbar */
-NULL, /* time_mainbox */
+NULL, /* time_box */
 1, /* time_scale 66 */
 'n', /* time_dimension 67 */
 0,   /* scale_to_time_dimension */
-0, /* maxtimewid_currenttime_c_1 69 */
-0, /* curtimewid_currenttime_c_1 70 */
+// 0, /* maxtimewid_currenttime_c_1 69 */
+// 0, /* curtimewid_currenttime_c_1 70 */
 0, /* maxtext_currenttime_c_1 71 */
 0, /* curtext_currenttime_c_1 72 */
 1, /* time_trunc_val_currenttime_c_1 76 */
@@ -1676,14 +1674,10 @@ void reload_into_new_context_2(void)
  new_globals->expanderwindow = GLOBALS->expanderwindow;
  new_globals->wave_hslider = GLOBALS->wave_hslider;
  new_globals->hscroll_wavewindow_c_2 = GLOBALS->hscroll_wavewindow_c_2;
- new_globals->max_or_marker_label_currenttime_c_1 = GLOBALS->max_or_marker_label_currenttime_c_1;
  new_globals->maxtext_currenttime_c_1 = (char *) calloc_2_into_context(new_globals,1,40);
  memcpy(new_globals->maxtext_currenttime_c_1, GLOBALS->maxtext_currenttime_c_1,40);
- new_globals->maxtimewid_currenttime_c_1 = GLOBALS->maxtimewid_currenttime_c_1;
  new_globals->curtext_currenttime_c_1 = (char *) calloc_2_into_context(new_globals,1,40);
  memcpy(new_globals->curtext_currenttime_c_1, GLOBALS->curtext_currenttime_c_1, 40);
- new_globals->base_or_curtime_label_currenttime_c_1 = GLOBALS->base_or_curtime_label_currenttime_c_1;
- new_globals->curtimewid_currenttime_c_1 = GLOBALS->curtimewid_currenttime_c_1;
  new_globals->from_entry = GLOBALS->from_entry;
  new_globals->to_entry = GLOBALS->to_entry;
 
@@ -1821,7 +1815,7 @@ void reload_into_new_context_2(void)
  new_globals->display_grid = GLOBALS->display_grid;
  new_globals->fullscreen = GLOBALS->fullscreen;
  new_globals->show_toolbar = GLOBALS->show_toolbar;
- new_globals->time_mainbox = GLOBALS->time_mainbox;
+ new_globals->time_box = GLOBALS->time_box;
  new_globals->highlight_wavewindow = GLOBALS->highlight_wavewindow;
  new_globals->fill_waveform = GLOBALS->fill_waveform;
  new_globals->lz_removal = GLOBALS->lz_removal;
@@ -2767,7 +2761,7 @@ switch(type)
 							GLOBALS->display_grid = g_old->display_grid;
 							GLOBALS->fullscreen = g_old->fullscreen;
 							GLOBALS->show_toolbar = g_old->show_toolbar;
-							GLOBALS->time_mainbox = g_old->time_mainbox;
+							GLOBALS->time_box = g_old->time_box;
 							GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
 							GLOBALS->fill_waveform = g_old->fill_waveform;
 							GLOBALS->lz_removal = g_old->lz_removal;

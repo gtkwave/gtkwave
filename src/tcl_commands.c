@@ -783,7 +783,7 @@ if(objc == 3)
 				Tcl_SetObjResult(interp, aobj);
 
 				GLOBALS->tims.marker = oldmarker;
-				update_markertime(GLOBALS->tims.marker);
+				update_time_box();
 			        GLOBALS->signalwindow_width_dirty=1;
 		        	redraw_signals_and_waves();
 				gtkwave_main_iteration();
@@ -792,7 +792,7 @@ if(objc == 3)
 				}
 
 			GLOBALS->tims.marker = oldmarker;
-			update_markertime(GLOBALS->tims.marker);
+			update_time_box();
 		        GLOBALS->signalwindow_width_dirty=1;
 		        redraw_signals_and_waves();
 			gtkwave_main_iteration();
@@ -873,7 +873,7 @@ if(objc == 2)
 		GLOBALS->tims.marker = LLDescriptor(-1);
 		}
 
-        update_markertime(GLOBALS->tims.marker);
+        update_time_box();
         GLOBALS->signalwindow_width_dirty=1;
 	redraw_signals_and_waves();
 
@@ -904,7 +904,7 @@ if(objc == 2)
 		GLOBALS->tims.baseline = LLDescriptor(-1);
 		}
 
-        update_markertime(GLOBALS->tims.marker);
+        update_time_box();
         GLOBALS->signalwindow_width_dirty=1;
 	redraw_signals_and_waves();
 

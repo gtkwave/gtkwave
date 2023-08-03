@@ -468,7 +468,7 @@ basetime=maxbase;
 GLOBALS->tims.marker=maxbase;
 if(is_last_iteration)
 	{
-	update_markertime(GLOBALS->tims.marker);
+	update_time_box();
 
 	width=(TimeType)(((gdouble)GLOBALS->wavewidth)*GLOBALS->nspx);
 	if((GLOBALS->tims.marker<GLOBALS->tims.start)||(GLOBALS->tims.marker>=GLOBALS->tims.start+width))
