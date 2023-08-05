@@ -3,7 +3,7 @@
 <component type="desktop">
   <id>io.github.gtkwave.GTKWave</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-2.0-only</project_license>
+  <project_license>GPL-2.0-or-later</project_license>
   <name>GTKWave</name>
   <developer_name>Tony Bybell</developer_name>
   <update_contact>bybell@rocketmail.com</update_contact>
