@@ -30,7 +30,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "symbol.h"
-#include "wavealloca.h"
 #include "debug.h"
 #include "tree.h"
 

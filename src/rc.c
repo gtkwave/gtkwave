@@ -26,7 +26,6 @@
 #include "currenttime.h"
 #include "symbol.h"
 #include "vcd.h"
-#include "wavealloca.h"
 #include "fgetdynamic.h"
 #include "debug.h"
 #include "main.h"

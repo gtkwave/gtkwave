@@ -9,7 +9,6 @@
 
 #include <config.h>
 #include "gconf.h"
-#include "wavealloca.h"
 #include "globals.h"
 
 int wave_rpc_id = 0;
@@ -563,7 +562,7 @@ void wave_gconf_init(int argc, char **argv)
 {
 if(!client)
 	{
-	char *ks = wave_alloca(WAVE_GCONF_DIR_LEN + 32 + 32 + 1);
+	char *ks = g_alloca(WAVE_GCONF_DIR_LEN + 32 + 32 + 1);
 	int len = sprintf(ks, WAVE_GCONF_DIR"/%d", wave_rpc_id);
 
 	gconf_init(argc, argv, NULL);
@@ -624,7 +623,7 @@ gboolean wave_gconf_client_set_string(const gchar *key, const gchar *val)
 {
 if(key && client)
 	{
-	char *ks = wave_alloca(WAVE_GCONF_DIR_LEN + 32 + strlen(key) + 1);
+	char *ks = g_alloca(WAVE_GCONF_DIR_LEN + 32 + strlen(key) + 1);
 	sprintf(ks, WAVE_GCONF_DIR"/%d%s", wave_rpc_id, key);
 
 	return(gconf_client_set_string(client, ks, val ? val : "", NULL));
@@ -638,7 +637,7 @@ static gchar *wave_gconf_client_get_string(const gchar *key)
 {
 if(key && client)
 	{
-	char *ks = wave_alloca(WAVE_GCONF_DIR_LEN + 32 + strlen(key) + 1);
+	char *ks = g_alloca(WAVE_GCONF_DIR_LEN + 32 + strlen(key) + 1);
 	sprintf(ks, WAVE_GCONF_DIR"/%d%s", wave_rpc_id, key);
 
 	return(gconf_client_get_string(client, ks, NULL));

@@ -89,7 +89,7 @@ static gboolean mouseover_timer(gpointer dummy)
                     if (qn_len < mlen) {
                         simplereqbox("File queued for loading", 300, qn, "OK", NULL, NULL, 1);
                     } else {
-                        char *qn_2 = wave_alloca(mlen + 4);
+                        char *qn_2 = g_alloca(mlen + 4);
                         strcpy(qn_2, "...");
                         strcat(qn_2, qn + qn_len - mlen);
                         simplereqbox("File queued for loading", 300, qn_2, "OK", NULL, NULL, 1);

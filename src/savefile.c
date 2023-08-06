@@ -664,7 +664,7 @@ int read_save_helper(char *wname, char **dumpfile, char **savefile, off_t *dumps
 
 	if(suffix_check(wname, ".gz") || suffix_check(wname, ".zip"))
                 {
-                str=wave_alloca(strlen(wname)+5+1);
+                str=g_alloca(strlen(wname)+5+1);
                 strcpy(str,"zcat ");
                 strcpy(str+5,wname);
                 wave=popen(str,"r");
@@ -1010,9 +1010,9 @@ int parsewavline(char *w, char *alias, int depth)
 
   /* sscanf(w2,"%s",prefix); */
 
- prefix=(char *)wave_alloca(len+1);
- suffix=(char *)wave_alloca(len+1);
- new=(char *)wave_alloca(len+1);
+ prefix=(char *)g_alloca(len+1);
+ suffix=(char *)g_alloca(len+1);
+ new=(char *)g_alloca(len+1);
  memset(new, 0, len+1); /* scan-build */
 
  prefix_init = prefix;
@@ -1995,9 +1995,9 @@ int parsewavline_lx2(char *w, char *alias, int depth)
 
 /* sscanf(w2,"%s",prefix); */
 
- prefix=(char *)wave_alloca(len+1);
- suffix=(char *)wave_alloca(len+1);
- new=(char *)wave_alloca(len+1);
+ prefix=(char *)g_alloca(len+1);
+ suffix=(char *)g_alloca(len+1);
+ new=(char *)g_alloca(len+1);
  new[0] = 0; /* scan-build : in case there are weird mode problems */
 
  prefix_init = prefix;
@@ -2573,7 +2573,7 @@ if(lc && !is_working)
 				if(dfn)
 					{
 					char *old_dfn = dfn;
-					dfn = wave_alloca(strlen(dfn)+1); /* as context can change on file load */
+					dfn = g_alloca(strlen(dfn)+1); /* as context can change on file load */
 					strcpy(dfn, old_dfn);
 					free_2(old_dfn);
 					}
@@ -2581,7 +2581,7 @@ if(lc && !is_working)
 				if(sfn)
 					{
 					char *old_sfn = sfn;
-					sfn = wave_alloca(strlen(sfn)+1); /* as context can change on file load */
+					sfn = g_alloca(strlen(sfn)+1); /* as context can change on file load */
 					strcpy(sfn, old_sfn);
 					free_2(old_sfn);
 					}
@@ -2594,7 +2594,7 @@ if(lc && !is_working)
 		                        char *old_fdf = find_dumpfile(sfn, dfn, can);
 
 		                        free(can);
-					fdf = wave_alloca(strlen(old_fdf)+1);
+					fdf = g_alloca(strlen(old_fdf)+1);
 					strcpy(fdf, old_fdf);
 					free_2(old_fdf);
 
@@ -2624,7 +2624,7 @@ if(lc && !is_working)
 		if(try_to_load_file)
 			{
 			int plen = strlen(lcname);
-			char *fni = wave_alloca(plen + 32); /* extra space for message */
+			char *fni = g_alloca(plen + 32); /* extra space for message */
 
 			sprintf(fni, "Loading %s...", lcname);
 			wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), fni, GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED: WAVE_SET_TITLE_NONE, 0);

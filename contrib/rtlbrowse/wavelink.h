@@ -6,8 +6,8 @@
 
 #include "../../src/ae2.h"
 #include "../../src/debug.h"
-#include "../../src/helpers/vzt_read.h"
-#include "../../src/helpers/lxt2_read.h"
+#include <vzt_read.h>
+#include <lxt2_read.h>
 #include <fstapi.h>
 
 extern struct vzt_rd_trace  *vzt;

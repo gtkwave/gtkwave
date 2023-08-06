@@ -85,7 +85,7 @@ while(t)
 	t = find_next_highlighted_trace(t);
 	if(t)
 		{
-		s->next = wave_alloca(sizeof(struct strace));
+		s->next = g_alloca(sizeof(struct strace));
 		memset(s = s->next, 0, sizeof(struct strace));
 		s->trace = t;
 		s->value = ST_ANY;

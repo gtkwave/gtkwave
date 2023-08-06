@@ -23,7 +23,7 @@
 #include <config.h>
 #include "fst/fstapi.h"
 
-#if HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
 

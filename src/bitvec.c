@@ -1010,7 +1010,7 @@ if(!GLOBALS->vcd_explicit_zero_subscripts)	/* 0==yes, -1==no */
 	hier_delimeter2='[';
 	}
 
-n=(struct Node **)wave_alloca(len*sizeof(struct Node *));
+n=(struct Node **)g_alloca(len*sizeof(struct Node *));
 memset(n, 0, len*sizeof(struct Node *)); /* scan-build */
 
 if(!GLOBALS->autocoalesce_reversal)		/* normal case for MTI */
@@ -1937,7 +1937,7 @@ if(!n->extvals)
 			}
 		}
 
-	nam=(char *)wave_alloca(offset+20+30);
+	nam=(char *)g_alloca(offset+20+30);
 	memcpy(nam, namex, offset);
 
 	if(was_packed)
@@ -2195,7 +2195,7 @@ if(!n->extvals)
 			}
 		}
 
-	nam=(char *)wave_alloca(offset+20);
+	nam=(char *)g_alloca(offset+20);
 	memcpy(nam, namex, offset);
 
 	if(was_packed)

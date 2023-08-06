@@ -334,7 +334,7 @@ if(!s_pnt)
 		char ch = s[len-1];
                 if((ch != ']') && (ch != '}'))
 			{
-                       	char *s2 = wave_alloca(len + 4);
+                       	char *s2 = g_alloca(len + 4);
                        	memcpy(s2, s, len);
                        	strcpy(s2+len, "[0]"); /* bluespec vs modelsim */
 

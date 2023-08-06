@@ -16,7 +16,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include "wavealloca.h"
 #include "analyzer.h"
 #include "currenttime.h"
 #include "tree.h"

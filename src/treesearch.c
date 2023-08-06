@@ -328,7 +328,7 @@ if(model && gtk_tree_model_get_iter_first(model, &iter))
 	if (1)
     		{
       		int namlen = strlen (name);
-      		char *namecache = wave_alloca (namlen + 1);
+      		char *namecache = g_alloca (namlen + 1);
       		char *name_end = name + namlen - 1;
       		char *zap = name;
 	      	int depth = 1;
@@ -361,8 +361,8 @@ if(model && gtk_tree_model_get_iter_first(model, &iter))
 					{
 					GtkTreePath *path = gtk_tree_model_get_path (model, &iter);
 					GtkTreePath *path2 = gtk_tree_model_get_path (model, &iter);
-					gboolean *exphist = wave_alloca (depth * sizeof (gboolean));
-					GtkTreePath **pathhist = wave_alloca (depth * sizeof (GtkTreePath *));
+					gboolean *exphist = g_alloca (depth * sizeof (gboolean));
+					GtkTreePath **pathhist = g_alloca (depth * sizeof (GtkTreePath *));
 					int i = depth - 1;
 
 					memset(exphist, 0, depth * sizeof (gboolean)); /* scan-build */
@@ -455,7 +455,7 @@ if(model && gtk_tree_model_get_iter_first(model, &iter))
 	if (1)
     		{
       		int namlen = strlen (name);
-      		char *namecache = wave_alloca (namlen + 1);
+      		char *namecache = g_alloca (namlen + 1);
       		char *name_end = name + namlen - 1;
       		char *zap = name;
 	      	int depth = 1;
@@ -548,7 +548,7 @@ depth++;
 
 path2 = gtk_tree_path_copy(path);
 
-gctr = wave_alloca(depth * sizeof(struct tree *));
+gctr = g_alloca(depth * sizeof(struct tree *));
 for(i=depth-1;i>=0;i--)
         {
         gtk_tree_model_get_iter(model, &iter, path2);
@@ -561,7 +561,7 @@ for(i=depth-1;i>=0;i--)
 
 gtk_tree_path_free(path2);
 
-tstring = wave_alloca(len);
+tstring = g_alloca(len);
 memset(tstring, 0, len);
 
 for(i=0;i<depth;i++)
@@ -748,7 +748,7 @@ depth++;
 
 path2 = gtk_tree_path_copy(path);
 
-gctr = wave_alloca(depth * sizeof(struct tree *));
+gctr = g_alloca(depth * sizeof(struct tree *));
 for(i=depth-1;i>=0;i--)
         {
         gtk_tree_model_get_iter(model, iter, path2);
@@ -761,7 +761,7 @@ for(i=depth-1;i>=0;i--)
 
 gtk_tree_path_free(path2);
 
-tstring = wave_alloca(len);
+tstring = g_alloca(len);
 memset(tstring, 0, len);
 
 for(i=0;i<depth;i++)
@@ -1233,7 +1233,7 @@ if(event->type == GDK_2BUTTON_PRESS)
 	{
 	if(GLOBALS->selected_hierarchy_name && GLOBALS->selected_sig_name)
 		{
-		char *sstr = wave_alloca(strlen(GLOBALS->selected_hierarchy_name) + strlen(GLOBALS->selected_sig_name) + 1);
+		char *sstr = g_alloca(strlen(GLOBALS->selected_hierarchy_name) + strlen(GLOBALS->selected_sig_name) + 1);
 		strcpy(sstr, GLOBALS->selected_hierarchy_name);
 		strcat(sstr, GLOBALS->selected_sig_name);
 

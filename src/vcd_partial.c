@@ -2034,7 +2034,7 @@ struct sym_chain *sym_chain=NULL, *sym_curr=NULL;
 int duphier=0;
 char hashdirty;
 struct vcdsymbol *v, *vprime;
-char *str = wave_alloca(1); /* quiet scan-build null pointer warning below */
+char *str = g_alloca(1); /* quiet scan-build null pointer warning below */
 #ifdef _WAVE_HAVE_JUDY
 int ss_len, longest = 0;
 #endif
@@ -2054,7 +2054,7 @@ while(v)
 		substnode=0;
 
 		slen=strlen(v->name);
-		str=(slen>max_slen)?(wave_alloca((max_slen=slen)+32)):(str); /* more than enough */
+		str=(slen>max_slen)?(g_alloca((max_slen=slen)+32)):(str); /* more than enough */
 		strcpy(str,v->name);
 
 		if((v->msi>=0)||(v->msi != v->lsi))

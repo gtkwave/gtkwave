@@ -1073,7 +1073,7 @@ for(ii=0;ii<c;ii++)
 
 	if(s_new != unescaped_str) { free_2(unescaped_str); }
 
-	entry_suffixed=wave_alloca(2+strlen(s_new)+strlen(this_regex)+1);
+	entry_suffixed=g_alloca(2+strlen(s_new)+strlen(this_regex)+1);
 	*entry_suffixed=0x00;
 	strcpy(entry_suffixed, "\\<");
 	strcat(entry_suffixed,s_new);
@@ -1103,7 +1103,7 @@ for(ii=0;ii<c;ii++)
 		{
 		*most_recent_lbrack_list[ii] = 0;
 
-		entry_suffixed=wave_alloca(2+strlen(s_new)+strlen(this_regex)+1);
+		entry_suffixed=g_alloca(2+strlen(s_new)+strlen(this_regex)+1);
 		*entry_suffixed=0x00;
 		strcpy(entry_suffixed, "\\<");
 		strcat(entry_suffixed,s_new);
@@ -1361,7 +1361,7 @@ if(s)
 
 	s = hier_decompress_flagged(s, &was_packed);
 	len = strlen(s);
-	s2 = wave_alloca(len+1);
+	s2 = g_alloca(len+1);
 
 	strcpy(s2, s);
 	if(was_packed)
@@ -2700,7 +2700,7 @@ if(objc > 1)
 		{
 		char *s = Tcl_GetString(objv[i]);
 		int slen = strlen(s);
-		struct wave_script_args *w = wave_alloca(sizeof(struct wave_script_args) + slen + 1);
+		struct wave_script_args *w = g_alloca(sizeof(struct wave_script_args) + slen + 1);
 			/*  alloca used in case we context switch and get our allocator ripped out from under us -- the call stack won't go away */
 		if(slen)
 			{
@@ -2727,7 +2727,7 @@ if(objc > 1)
 
 	if(!GLOBALS->wave_script_args) /* create a dummy list in order to keep requesters from popping up in file.c, etc. */
 		{
-		GLOBALS->wave_script_args = wave_alloca(sizeof(struct wave_script_args) + 1);
+		GLOBALS->wave_script_args = g_alloca(sizeof(struct wave_script_args) + 1);
 		GLOBALS->wave_script_args->curr = NULL;
 		GLOBALS->wave_script_args->next = NULL;
 		GLOBALS->wave_script_args->payload[0] = 0;
@@ -2767,7 +2767,7 @@ if((nam) && (strlen(nam)) && (!GLOBALS->tcl_running))
 	{
 	int tclrc;
 	int nlen = strlen(nam);
-        char *tcl_cmd = wave_alloca(8 + nlen + 1 + 1);
+        char *tcl_cmd = g_alloca(8 + nlen + 1 + 1);
         strcpy(tcl_cmd, "source {");
         strcpy(tcl_cmd+8, nam);
         strcpy(tcl_cmd+8+nlen, "}");
@@ -2896,7 +2896,7 @@ if((GLOBALS->repscript_name) && (!GLOBALS->tcl_running))
 	{
 	int tclrc;
 	int nlen = strlen(GLOBALS->repscript_name);
-	char *tcl_cmd = wave_alloca(8 + nlen + 1 + 1);
+	char *tcl_cmd = g_alloca(8 + nlen + 1 + 1);
         strcpy(tcl_cmd, "source {");
         strcpy(tcl_cmd+8, GLOBALS->repscript_name);
         strcpy(tcl_cmd+8+nlen, "}");

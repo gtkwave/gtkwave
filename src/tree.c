@@ -775,14 +775,14 @@ if(t2->t_which >= 0)
 
                         tmp2=makename_chain(GLOBALS->facs[t2->t_which]);
                         tmp3=leastsig_hiername(tmp2);
-                        tmp=wave_alloca(strlen(tmp3)+4);
+                        tmp=g_alloca(strlen(tmp3)+4);
                         strcpy(tmp,   "[] ");
                         strcpy(tmp+3, tmp3);
                         free_2(tmp2);
                         }
                         else
                         {
-                        tmp=wave_alloca(strlen(t2->name)+4);
+                        tmp=g_alloca(strlen(t2->name)+4);
                         strcpy(tmp,   "[] ");
                         strcpy(tmp+3, t2->name);
                         }
@@ -805,7 +805,7 @@ if(t2->t_which >= 0)
 			{
 			char *sc = GLOBALS->comp_name_idx[thidx];
 			int tlen = strlen(t2->name) + 2 + 1 + strlen(sc) + 1 + 1;
-			tmp = wave_alloca(tlen);
+			tmp = g_alloca(tlen);
 			if(!GLOBALS->is_vhdl_component_format)
 				{
 				sprintf(tmp, "%s  (%s)", t2->name, sc);

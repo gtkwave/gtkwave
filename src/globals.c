@@ -40,7 +40,6 @@
 #include "vcd_saver.h"
 #include "vlist.h"
 #include "vzt.h"
-#include "wavealloca.h"
 #include "signal_list.h"
 
 #include "lxt2_read.h"

@@ -26,7 +26,7 @@
 #undef HAVE_RPC_XDR_H
 #endif
 
-#if HAVE_RPC_XDR_H
+#ifdef HAVE_RPC_XDR_H
 #include <rpc/types.h>
 #include <rpc/xdr.h>
 #endif
@@ -673,7 +673,7 @@ return(1);
 static void vzt_rd_double_xdr(char *pnt, char *buf)
 {
 int j;
-#if HAVE_RPC_XDR_H
+#ifdef HAVE_RPC_XDR_H
 XDR x;
 #else
 const vztint32_t endian_matchword = 0x12345678;
@@ -695,7 +695,7 @@ for(j=0;j<64;j++)
 		}
 	}
 
-#if HAVE_RPC_XDR_H
+#ifdef HAVE_RPC_XDR_H
 xdrmem_create(&x, xdrdata, sizeof(xdrdata), XDR_DECODE);
 xdr_double(&x, &d);
 #else

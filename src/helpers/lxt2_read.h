@@ -35,7 +35,7 @@ extern "C" {
 
 #ifndef _MSC_VER
 #include <unistd.h>
-#if HAVE_INTTYPES_H
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
 #else

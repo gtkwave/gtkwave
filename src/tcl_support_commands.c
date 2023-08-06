@@ -46,7 +46,7 @@ int SST_open_node(char *name) {
 if(name)
 	{
 	int name_len = strlen(name);
-	char *name2 = wave_alloca(name_len+2);
+	char *name2 = g_alloca(name_len+2);
 	
 	memcpy(name2, name, name_len);
 	strcpy(name2 + name_len, ".");
