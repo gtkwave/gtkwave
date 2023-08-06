@@ -105,7 +105,7 @@ TimeType atoi_64(char *str);
  */
 
 #include <stdlib.h>
-#if HAVE_ALLOCA_H
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
 #elif defined(__GNUC__)
 #ifndef alloca

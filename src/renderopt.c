@@ -220,7 +220,7 @@ static void wave_GtkPrintJobCompleteFunc(GtkPrintJob *print_job, gpointer user_d
 if(user_data)
 	{
 	const char *ban = "Sent print job";
-	char *buf = wave_alloca(strlen(ban) + strlen(user_data) + 32);
+	char *buf = g_alloca(strlen(ban) + strlen(user_data) + 32);
 
 	sprintf(buf, "%s '%s'", ban, (char *)user_data);
 	status_text(buf);

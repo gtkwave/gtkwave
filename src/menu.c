@@ -3336,7 +3336,7 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
                         }
                 }
 
-	  nam=(char *)wave_alloca(offset+50); /* to handle [a:b][c:d] case */
+	  nam=(char *)g_alloca(offset+50); /* to handle [a:b][c:d] case */
 	  memcpy(nam, namex, offset);
 	  if(was_packed) { free_2(namex); }
 
@@ -5789,7 +5789,7 @@ if(idx)
 			return;
 			}
 
-		fname = wave_alloca(strlen(rp) + 1);
+		fname = g_alloca(strlen(rp) + 1);
 		strcpy(fname, rp);
 		free_2(rp);
 		}
@@ -8185,7 +8185,7 @@ if(1) /* all scripts are Tcl now */
 	{
 #if defined(HAVE_LIBTCL)
 	int tclrc;
-	char *tcl_cmd = wave_alloca(8 + nlen + 1 + 1); /* originally a malloc, but the script can change the context! */
+	char *tcl_cmd = g_alloca(8 + nlen + 1 + 1); /* originally a malloc, but the script can change the context! */
 	strcpy(tcl_cmd, "source {");
 	strcpy(tcl_cmd+8, name);
 	strcpy(tcl_cmd+8+nlen, "}");

@@ -12,7 +12,7 @@
 
 #include <pango/pango.h>
 #include <gtk/gtk.h>
-#include <color.h>
+#include "color.h"
 
 struct font_engine_font_t
 {

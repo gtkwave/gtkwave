@@ -40,7 +40,7 @@ if(!GLOBALS->quiet_checkmenu) /* when gtkwave_mlist_t check menuitems are being 
 		}
 
 	{
-	char *stemp = wave_alloca(len+1);
+	char *stemp = g_alloca(len+1);
 	strcpy(stemp, str);
 
 	if(ch == '\n')

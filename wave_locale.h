@@ -7,7 +7,7 @@
 #include "locale.h"
 #define WAVE_LOCALE_FIX {setlocale(LC_ALL, "C"); }
 #else
-#if HAVE_SETENV && HAVE_UNSETENV
+#if defined HAVE_SETENV && defined HAVE_UNSETENV
 #define WAVE_LOCALE_FIX \
 { \
 char *wlve = getenv("LANG"); \

@@ -746,7 +746,7 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
     GLOBALS->num_rows_search_c_2 = 0;
 
     entry_suffixed =
-        wave_alloca(strlen(GLOBALS->searchbox_text_search_c_1 /* scan-build, was entry_text */) +
+        g_alloca(strlen(GLOBALS->searchbox_text_search_c_1 /* scan-build, was entry_text */) +
                     strlen(regex_type[GLOBALS->regex_which_search_c_1]) + 1 +
                     ((GLOBALS->regex_which_search_c_1 < 2) ? 2 : 0));
     *entry_suffixed = 0x00;

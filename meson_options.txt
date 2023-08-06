@@ -1,0 +1,41 @@
+option(
+    'update_mime_database',
+    type: 'boolean',
+    value: true,
+    description: 'run update-mime-database after install',
+)
+
+option(
+    'struct_packing',
+    type: 'boolean',
+    value: false,
+    description: 'Enable struct packing',
+)
+
+option(
+    'tcl',
+    type: 'feature',
+    value: 'auto',
+    description: 'Tcl support',
+)
+
+option(
+    'judy',
+    type: 'feature',
+    value: 'auto',
+    description: 'Judy support',
+)
+
+option(
+    'manymarkers',
+    type: 'boolean',
+    value: false,
+    description: 'Increase named marker cound from 26 to 702',
+)
+
+option(
+    'fasttree',
+    type: 'boolean',
+    value: true,
+    description: 'Enable Fast SST Tree widget code',
+)

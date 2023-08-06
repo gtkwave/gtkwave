@@ -24,7 +24,7 @@
 
 #include "vzt_read.h"
 
-#if HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
 

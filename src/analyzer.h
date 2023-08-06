@@ -14,7 +14,6 @@
 
 #include <gtk/gtk.h>
 #include <stdlib.h>
-#include "wavealloca.h"
 #include "vlist.h"
 #include "debug.h"
 

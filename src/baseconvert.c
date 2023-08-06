@@ -529,7 +529,7 @@ if(flags&(TR_ZEROFILL|TR_ONEFILL))
 			{
 			if(lsi > 0)
 				{
-				pnt=wave_alloca(msi + 1);
+				pnt=g_alloca(msi + 1);
 
 				memcpy(pnt, bits, nbits);
 
@@ -546,7 +546,7 @@ if(flags&(TR_ZEROFILL|TR_ONEFILL))
 			{
 			if(msi > 0)
 				{
-				pnt=wave_alloca(lsi + 1);
+				pnt=g_alloca(lsi + 1);
 
 	        		for(i=0;i<msi;i++)
 	                		{
@@ -1280,7 +1280,7 @@ if(vec)
         }
         else
         {
-        pnt=bits=wave_alloca(nbits);
+        pnt=bits=g_alloca(nbits);
         for(i=0;i<nbits;i++)
                 {
                 *pnt++=AN_X;
@@ -1295,7 +1295,7 @@ if((flags&(TR_ZEROFILL|TR_ONEFILL))&&(nbits>1)&&(t->n.nd->msi)&&(t->n.nd->lsi))
 		{
 		if(t->n.nd->lsi > 0)
 			{
-			pnt=wave_alloca(t->n.nd->msi + 1);
+			pnt=g_alloca(t->n.nd->msi + 1);
 
 			memcpy(pnt, bits, nbits);
 
@@ -1312,7 +1312,7 @@ if((flags&(TR_ZEROFILL|TR_ONEFILL))&&(nbits>1)&&(t->n.nd->msi)&&(t->n.nd->lsi))
 		{
 		if(t->n.nd->msi > 0)
 			{
-			pnt=wave_alloca(t->n.nd->lsi + 1);
+			pnt=g_alloca(t->n.nd->lsi + 1);
 
         		for(i=0;i<t->n.nd->msi;i++)
                 		{
@@ -1932,7 +1932,7 @@ if(vec)
         }
         else
         {
-        pnt=bits=wave_alloca(nbits);
+        pnt=bits=g_alloca(nbits);
         for(i=0;i<nbits;i++)
                 {
                 *pnt++=AN_X;

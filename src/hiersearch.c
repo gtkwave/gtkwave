@@ -55,7 +55,7 @@ void refresh_hier_tree(struct tree *t)
         while (t2) {
             {
                 if (t2->child) {
-                    tmp = wave_alloca(strlen(t2->name) + 5);
+                    tmp = g_alloca(strlen(t2->name) + 5);
                     strcpy(tmp, "(+) ");
                     strcpy(tmp + 4, t2->name);
                 } else if (t2->t_which >= 0) {
@@ -69,12 +69,12 @@ void refresh_hier_tree(struct tree *t)
 
                             tmp2 = makename_chain(GLOBALS->facs[t2->t_which]);
                             tmp3 = leastsig_hiername(tmp2);
-                            tmp = wave_alloca(strlen(tmp3) + 4);
+                            tmp = g_alloca(strlen(tmp3) + 4);
                             strcpy(tmp, "[] ");
                             strcpy(tmp + 3, tmp3);
                             free_2(tmp2);
                         } else {
-                            tmp = wave_alloca(strlen(t2->name) + 4);
+                            tmp = g_alloca(strlen(t2->name) + 4);
                             strcpy(tmp, "[] ");
                             strcpy(tmp + 3, t2->name);
                         }
@@ -116,12 +116,12 @@ void refresh_hier_tree(struct tree *t)
 
                             tmp2 = makename_chain(GLOBALS->facs[t2->t_which]);
                             tmp3 = leastsig_hiername(tmp2);
-                            tmp = wave_alloca(strlen(tmp3) + 4);
+                            tmp = g_alloca(strlen(tmp3) + 4);
                             strcpy(tmp, "[] ");
                             strcpy(tmp + 3, tmp3);
                             free_2(tmp2);
                         } else {
-                            tmp = wave_alloca(strlen(t2->name) + 4);
+                            tmp = g_alloca(strlen(t2->name) + 4);
                             strcpy(tmp, "[] ");
                             strcpy(tmp + 3, t2->name);
                         }
@@ -151,7 +151,7 @@ void refresh_hier_tree(struct tree *t)
         t2 = t;
         while (t2) {
             if (t2->child) {
-                tmp = wave_alloca(strlen(t2->name) + 5);
+                tmp = g_alloca(strlen(t2->name) + 5);
                 strcpy(tmp, "(+) ");
                 strcpy(tmp + 4, t2->name);
 

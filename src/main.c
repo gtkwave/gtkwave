@@ -238,7 +238,7 @@ void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, i
         switch (typ) {
             case WAVE_SET_TITLE_MODIFIED: {
                 const char *pfx = "[Modified] ";
-                char *t = wave_alloca(strlen(pfx) + strlen(title) + 1);
+                char *t = g_alloca(strlen(pfx) + strlen(title) + 1);
 
                 strcpy(t, pfx);
                 strcat(t, title);
@@ -246,7 +246,7 @@ void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, i
             } break;
 
             case WAVE_SET_TITLE_LOADING: {
-                char *t = wave_alloca(64 + strlen(title) + 1); /* make extra long */
+                char *t = g_alloca(64 + strlen(title) + 1); /* make extra long */
 
                 sprintf(t, "[Loading %d%%] %s", pct, title);
                 gtk_window_set_title(window, t);
@@ -264,7 +264,7 @@ static void print_help(char *nam)
 {
 #if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
     int slen = strlen(EXTLOAD_SUFFIX);
-    char *ucase_ext = wave_alloca(slen + 1);
+    char *ucase_ext = g_alloca(slen + 1);
     int i;
 
     for (i = 0; i < slen; i++) {
@@ -1848,7 +1848,7 @@ loader_check_head:
             wname = vcd_autosave_name;
             GLOBALS->do_initial_zoom_fit = 1;
         } else if ((!wname) /* && (is_smartsave) */) {
-            char *pnt = wave_alloca(strlen(GLOBALS->loaded_file_name) + 1);
+            char *pnt = g_alloca(strlen(GLOBALS->loaded_file_name) + 1);
             char *pnt2;
             strcpy(pnt, GLOBALS->loaded_file_name);
 
@@ -1877,7 +1877,7 @@ loader_check_head:
             ((strlen(wname) > 3) && (!strcasecmp(wname + strlen(wname) - 4, ".zip")))) {
             int dlen;
             dlen = strlen(WAVE_DECOMPRESSOR);
-            str = wave_alloca(strlen(wname) + dlen + 1);
+            str = g_alloca(strlen(wname) + dlen + 1);
             strcpy(str, WAVE_DECOMPRESSOR);
             strcpy(str + dlen, wname);
             wave = popen(str, "r");

@@ -13,7 +13,6 @@
 #include "gtk23compat.h"
 #include "menu.h"
 #include "debug.h"
-#include "wavealloca.h"
 #include <string.h>
 #include <stdlib.h>
 /* #include <fnmatch.h> */
@@ -496,7 +495,7 @@ if((gtk_dialog_run(GTK_DIALOG (pFileChoose)) == GTK_RESPONSE_ACCEPT) &&
 			{
 			char *s = *GLOBALS->fileselbox_text;
 			char *s2;
-			char *suffix = wave_alloca(strlen(pattn) + 1);
+			char *suffix = g_alloca(strlen(pattn) + 1);
 			char *term;
 			int attempt_suffix = 1;
 

@@ -301,7 +301,7 @@ if(ascii[len-1]=='}')
 		if(isdigit((int)(unsigned char)ascii[i])) continue;
 		if(ascii[i]=='{')
 			{
-			char *tsc = wave_alloca(i+1);
+			char *tsc = g_alloca(i+1);
 			memcpy(tsc, ascii, i+1);
 			tsc[i] = 0;
 			rc=(struct symbol **)bsearch(tsc, GLOBALS->facs, GLOBALS->numfacs, sizeof(struct symbol *), compar_facs);

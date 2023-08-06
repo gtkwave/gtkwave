@@ -28,7 +28,6 @@
 #include "analyzer.h"
 #include "symbol.h"
 #include "bsearch.h"
-#include "wavealloca.h"
 #include "debug.h"
 #include "strace.h"
 #include "print.h"
@@ -3224,7 +3223,7 @@ pr_RenderSig (pr_context * prc, Trptr t, int i)
       {
 	gdouble realwidth;
 	char *cbuf;
-	cbuf = wave_alloca (maxwidth + 1);
+	cbuf = g_alloca (maxwidth + 1);
 	cbuf[0] = 0;
 	if (buf[0])
 	  {

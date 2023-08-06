@@ -31,7 +31,7 @@
 #undef HAVE_RPC_XDR_H
 #endif
 
-#if HAVE_RPC_XDR_H
+#ifdef HAVE_RPC_XDR_H
 #include <rpc/types.h>
 #include <rpc/xdr.h>
 #endif
@@ -1611,7 +1611,7 @@ return(vzt_wr_emit_value_bit_string(lt, s, row, vzt_wr_expand_integer_to_bits(s-
 int vzt_wr_emit_value_double(struct vzt_wr_trace *lt, struct vzt_wr_symbol *s, unsigned int row, double value)
 {
 char xdrdata[8];
-#if HAVE_RPC_XDR_H
+#ifdef HAVE_RPC_XDR_H
 XDR x;
 #else
 const vztint32_t endian_matchword = 0x12345678;
@@ -1637,7 +1637,7 @@ while(s->aliased_to)	/* find root alias if exists */
 	s=s->aliased_to;
 	}
 
-#if HAVE_RPC_XDR_H
+#ifdef HAVE_RPC_XDR_H
 xdrmem_create(&x, xdrdata, sizeof(xdrdata), XDR_ENCODE);
 xdr_double(&x, &value);
 #else

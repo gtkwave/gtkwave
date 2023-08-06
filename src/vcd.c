@@ -2190,7 +2190,7 @@ struct sym_chain *sym_chain=NULL, *sym_curr=NULL;
 int duphier=0;
 char hashdirty;
 struct vcdsymbol *v, *vprime;
-char *str = wave_alloca(1); /* quiet scan-build null pointer warning below */
+char *str = g_alloca(1); /* quiet scan-build null pointer warning below */
 #ifdef _WAVE_HAVE_JUDY
 int ss_len, longest = 0;
 #endif
@@ -2210,7 +2210,7 @@ while(v)
 		substnode=0;
 
 		slen=strlen(v->name);
-		str=(slen>max_slen)?(wave_alloca((max_slen=slen)+32)):(str); /* more than enough */
+		str=(slen>max_slen)?(g_alloca((max_slen=slen)+32)):(str); /* more than enough */
 		strcpy(str,v->name);
 
 		if((v->msi>=0)||(v->msi != v->lsi))
@@ -2623,7 +2623,7 @@ if(suffix_check(fname, ".gz") || suffix_check(fname, ".zip"))
 	char *str;
 	int dlen;
 	dlen=strlen(WAVE_DECOMPRESSOR);
-	str=wave_alloca(strlen(fname)+dlen+1);
+	str=g_alloca(strlen(fname)+dlen+1);
 	strcpy(str,WAVE_DECOMPRESSOR);
 	strcpy(str+dlen,fname);
 	GLOBALS->vcd_handle_vcd_c_1=popen(str,"r");

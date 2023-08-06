@@ -1256,7 +1256,7 @@ switch((typ = GLOBALS->yytext_vcd_recoder_c_3[0]))
 #ifndef STRICT_VCD_ONLY
         case 's':
         case 'S':
-                vector=wave_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3=GLOBALS->yylen_vcd_recoder_c_3);
+                vector=g_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3=GLOBALS->yylen_vcd_recoder_c_3);
 		vlen = fstUtilityEscToBin((unsigned char *)vector, (unsigned char *)(GLOBALS->yytext_vcd_recoder_c_3+1), GLOBALS->yylen_vcd_recoder_c_3-1);
 		vector[vlen] = 0;
 
@@ -1267,7 +1267,7 @@ switch((typ = GLOBALS->yytext_vcd_recoder_c_3[0]))
         case 'B':
         case 'r':
         case 'R':
-                vector=wave_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3=GLOBALS->yylen_vcd_recoder_c_3);
+                vector=g_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3=GLOBALS->yylen_vcd_recoder_c_3);
                 strcpy(vector,GLOBALS->yytext_vcd_recoder_c_3+1);
                 vlen=GLOBALS->yylen_vcd_recoder_c_3-1;
 
@@ -1334,7 +1334,7 @@ process_binary:
 					}
 					else
 					{
-					char *bits = wave_alloca(v->size + 1);
+					char *bits = g_alloca(v->size + 1);
 					int i, j, k=0;
 
 					memset(bits, 0x0, v->size + 1);
@@ -1358,7 +1358,7 @@ process_binary:
 	case 'p':
 	case 'P':
 		/* extract port dump value.. */
-		vector=wave_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3=GLOBALS->yylen_vcd_recoder_c_3);
+		vector=g_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3=GLOBALS->yylen_vcd_recoder_c_3);
 		evcd_strcpy(vector,GLOBALS->yytext_vcd_recoder_c_3+1);	/* convert to regular vcd */
 		vlen=GLOBALS->yylen_vcd_recoder_c_3-1;
 
@@ -2425,7 +2425,7 @@ struct sym_chain *sym_chain=NULL, *sym_curr=NULL;
 int duphier=0;
 char hashdirty;
 struct vcdsymbol *v, *vprime;
-char *str = wave_alloca(1); /* quiet scan-build null pointer warning below */
+char *str = g_alloca(1); /* quiet scan-build null pointer warning below */
 #ifdef _WAVE_HAVE_JUDY
 int ss_len, longest = 0;
 #endif
@@ -2445,7 +2445,7 @@ while(v)
 		substnode=0;
 
 		slen=strlen(v->name);
-		str=(slen>max_slen)?(wave_alloca((max_slen=slen)+32)):(str); /* more than enough */
+		str=(slen>max_slen)?(g_alloca((max_slen=slen)+32)):(str); /* more than enough */
 		strcpy(str,v->name);
 
 		if((v->msi>=0)||(v->msi != v->lsi))
@@ -2813,7 +2813,7 @@ if(suffix_check(fname, ".gz") || suffix_check(fname, ".zip"))
 	char *str;
 	int dlen;
 	dlen=strlen(WAVE_DECOMPRESSOR);
-	str=wave_alloca(strlen(fname)+dlen+1);
+	str=g_alloca(strlen(fname)+dlen+1);
 	strcpy(str,WAVE_DECOMPRESSOR);
 	strcpy(str+dlen,fname);
 	GLOBALS->vcd_handle_vcd_recoder_c_2=popen(str,"r");

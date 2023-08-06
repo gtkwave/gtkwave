@@ -1291,7 +1291,7 @@ if(!GLOBALS->traces.total) return(0);
 GLOBALS->traces.dirty = 1;
 
 t=GLOBALS->traces.first;
-tsort=tsort_pnt=wave_alloca(sizeof(Trptr)*GLOBALS->traces.total);
+tsort=tsort_pnt=g_alloca(sizeof(Trptr)*GLOBALS->traces.total);
 memset(tsort_pnt, 0, sizeof(Trptr)*GLOBALS->traces.total);
 
 for(i=0;i<GLOBALS->traces.total;i++)
@@ -1329,7 +1329,7 @@ if((cptr) && (!groupsArePresent()))
 	}
 	else /* keep groups segregated off on the side and sort names + (indirect pointer to) top-level groups */
 	{
-	Trptr *tsort_reduced = wave_alloca(sizeof(Trptr)*GLOBALS->traces.total);
+	Trptr *tsort_reduced = g_alloca(sizeof(Trptr)*GLOBALS->traces.total);
 	int num_reduced = 0;
 	int j;
 

@@ -25,6 +25,7 @@ extern ds_Tree *flattened_mod_list_root;
 extern struct gtkwave_annotate_ipc_t *anno_ctx;
 extern GtkWidget *notebook;
 extern int verilog_2005;
+extern size_t yyleng;
 
 TimeType old_marker = 0;
 unsigned old_marker_set = 0;
