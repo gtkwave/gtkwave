@@ -8385,6 +8385,7 @@ static gtkwave_mlist_t popmenu_items[] =
 void do_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
 {
 (void)my_widget;
+(void)event;
 
   GtkWidget *menu;
   if(!GLOBALS->signal_popup_menu)
@@ -8435,6 +8436,7 @@ static gtkwave_mlist_t sst_popmenu_items[] =
 void do_sst_popup_menu (GtkWidget *my_widget, GdkEventButton *event)
 {
 (void)my_widget;
+(void)event;
 
   GtkWidget *menu;
   if(!GLOBALS->sst_signal_popup_menu)

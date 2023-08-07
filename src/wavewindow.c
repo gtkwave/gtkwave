@@ -29,10 +29,6 @@
 
 #define WAVE_CAIRO_050_OFFSET (GLOBALS->cairo_050_offset)
 
-static void rendertimebar(cairo_t *cr);
-static void rendertraces(cairo_t *cr);
-static void rendertimes(cairo_t *cr);
-
 static const GdkModifierType bmask[4] = {0,
                                          GDK_BUTTON1_MASK,
                                          0,

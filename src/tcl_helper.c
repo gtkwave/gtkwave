@@ -2662,7 +2662,7 @@ gtkwave_mlist_t *ife = (gtkwave_mlist_t *)clientData;
 int i;
 struct wave_script_args *old_wave_script_args = GLOBALS->wave_script_args; /* stackable args */
 char fexit = GLOBALS->enable_fast_exit;
-int old_toggle_item;
+int old_toggle_item = 0;
 
 if(GLOBALS->in_tcl_callback) /* don't allow callbacks to call menu functions (yet) */
 	{

@@ -218,6 +218,8 @@ static void add_labeled_widget(GtkWidget *grid, const gchar *text, GtkWidget *wi
 
 void showchange(char *title, Trptr t, GCallback func)
 {
+    (void)title;
+
     TraceFlagsType old_flags = t->flags;
     unsigned int old_color = t->t_color;
 
@@ -281,7 +283,7 @@ void showchange(char *title, Trptr t, GCallback func)
 
         uint64_t base;
         if (combo_box_get_active_value(base_combo_box, &base)) {
-            new_flags = new_flags & ~TR_NUMMASK | base;
+            new_flags = (new_flags & ~TR_NUMMASK) | base;
         }
 
         int64_t color;
@@ -291,12 +293,12 @@ void showchange(char *title, Trptr t, GCallback func)
 
         uint64_t analog_format;
         if (combo_box_get_active_value(analog_format_combo_box, &analog_format)) {
-            new_flags = new_flags & ~TR_ANALOGMASK | analog_format;
+            new_flags = (new_flags & ~TR_ANALOGMASK) | analog_format;
         }
 
         uint64_t analog_resizing;
         if (combo_box_get_active_value(analog_resizing_combo_box, &analog_resizing)) {
-            new_flags = new_flags & ~TR_ANALOG_FULLSCALE | analog_resizing;
+            new_flags = (new_flags & ~TR_ANALOG_FULLSCALE) | analog_resizing;
         }
 
         int i = 0;

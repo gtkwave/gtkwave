@@ -517,8 +517,15 @@ static void window_drag_data_received(GtkWidget *widget,
                                       guint info,
                                       guint time_)
 {
+    (void)widget;
+    (void)context;
+    (void)x;
+    (void)y;
+    (void)info;
+    (void)time_;
+
     if (gtk_selection_data_get_length(selection_data) > 0) {
-        const gchar *uris = gtk_selection_data_get_data(selection_data);
+        const gchar *uris = (const gchar *) gtk_selection_data_get_data(selection_data);
 
         gchar *uris_copy = g_strndup(uris, gtk_selection_data_get_length(selection_data));
 
@@ -718,8 +725,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
-    GtkWidget *entry;
-    // GtkWidget *timebox;
     GtkWidget *panedwindow;
     int tcl_interpreter_needs_making = 0;
     struct Global *old_g = NULL;
@@ -2081,8 +2086,6 @@ savefile_bail:
 
     if (GLOBALS->use_toolbutton_interface) {
         GtkWidget *tb;
-        GtkWidget *stock;
-        int tb_pos;
 
         if (!mainwindow_already_built) {
             main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);

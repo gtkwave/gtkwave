@@ -84,7 +84,7 @@ struct _GwSignalList
 G_DEFINE_TYPE(GwSignalList, gw_signal_list, GTK_TYPE_DRAWING_AREA)
 
 // Get the text and background colors for a trace
-static wave_rgb_t get_trace_colors(Trptr t, wave_rgb_t *bg_color, wave_rgb_t *text_color)
+static void get_trace_colors(Trptr t, wave_rgb_t *bg_color, wave_rgb_t *text_color)
 {
     wave_rgb_t clr_comment = GLOBALS->rgb_gc.gc_brkred;
     wave_rgb_t clr_group = GLOBALS->rgb_gc.gc_gmstrd;
@@ -230,6 +230,8 @@ static void render_signals(GwSignalList *signal_list)
 
 static gint configure_event(GtkWidget *widget, GdkEventConfigure *event)
 {
+    (void)event;
+
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
 
     if (signal_list->surface) {
@@ -806,6 +808,8 @@ static int y_to_drop_position(int y)
 
 static gboolean drag_motion(GtkWidget* widget, GdkDragContext* context, gint x, gint y, guint time)
 {
+    (void)x;
+
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
 
     GdkAtom target = gtk_drag_dest_find_target(widget, context, NULL);
@@ -855,6 +859,9 @@ static gboolean drag_motion(GtkWidget* widget, GdkDragContext* context, gint x, 
 
 static void drag_leave(GtkWidget* widget, GdkDragContext* context, guint time)
 {
+    (void)context;
+    (void)time;
+
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
 
     if (drop_reset(&signal_list->drop)) {
@@ -864,6 +871,9 @@ static void drag_leave(GtkWidget* widget, GdkDragContext* context, guint time)
 
 static gboolean drag_drop(GtkWidget* widget, GdkDragContext* context, gint x, gint y, guint time)
 {
+    (void)x;
+    (void)y;
+
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
 
     GdkAtom target = gtk_drag_dest_find_target(widget, context, NULL);
@@ -880,6 +890,8 @@ static gboolean drag_drop(GtkWidget* widget, GdkDragContext* context, gint x, gi
 
 static void drag_data_received(GtkWidget *widget, GdkDragContext *context, gint x, gint y, GtkSelectionData *data, guint info, guint time)
 {
+    (void)x;
+
     GwSignalList *signal_list = GW_SIGNAL_LIST(widget);
 
     // recalculate the drop position (the highlight position has been cleared by drag_leave)
@@ -928,7 +940,7 @@ static void drag_data_received(GtkWidget *widget, GdkDragContext *context, gint 
 
         case WAVE_DRAG_INFO_TCL:
             if (gtk_selection_data_get_length(data) > 0) {
-                const char *tcl = gtk_selection_data_get_data(data);
+                const char *tcl = (const char *)gtk_selection_data_get_data(data);
 
                 ClearTraces();
 
@@ -963,6 +975,10 @@ static void drag_data_received(GtkWidget *widget, GdkDragContext *context, gint 
 
 static void drag_data_get(GtkWidget *widget, GdkDragContext *context, GtkSelectionData *data, guint info, guint time)
 {
+    (void)widget;
+    (void)context;
+    (void)time;
+
     switch (info) {
         case WAVE_DRAG_INFO_SIGNAL_LIST:
             // Data isn't required for widget internal dragging.
@@ -973,7 +989,7 @@ static void drag_data_get(GtkWidget *widget, GdkDragContext *context, GtkSelecti
                 char *tcl = emit_gtkwave_savefile_formatted_entries_in_tcl_list(GLOBALS->traces.first, TRUE);
                 if (tcl != NULL) {
                     GdkAtom type = gdk_atom_intern_static_string(WAVE_DRAG_TARGET_TCL);
-                    gtk_selection_data_set(data, type, 8, tcl, strlen(tcl));
+                    gtk_selection_data_set(data, type, 8, (const guchar*)tcl, strlen(tcl));
                     free_2(tcl);
                 }
             }
