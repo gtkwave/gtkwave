@@ -39,8 +39,6 @@ gboolean configure_event(GtkWidget *widget, GdkEventConfigure *event)
     GtkAllocation allocation;
     gtk_widget_get_allocation(widget, &allocation);
 
-    int scale_factor = gtk_widget_get_scale_factor(widget);
-
     DEBUG(printf("WaveWin Configure Event h: %d, w: %d\n", allocation.height, allocation.width));
 
     if (GLOBALS->timestart_from_savefile_valid) {
@@ -94,6 +92,8 @@ static gboolean gw_wave_view_configure_event(GtkWidget *widget, GdkEventConfigur
 
 static void draw_marker(GwWaveView *self, cairo_t *cr)
 {
+    (void)self;
+
     gdouble pixstep;
     gint xl;
 
@@ -177,6 +177,8 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
 
 static void renderhash(GwWaveView *self, cairo_t *cr, int x, TimeType tim)
 {
+    (void)self;
+
     TimeType rborder;
     int fhminus2;
     int rhs;

@@ -18,12 +18,6 @@
 
 static char *time_prefix = WAVE_SI_UNITS;
 
-static char *maxtime_label_text = "Maximum Time";
-static char *marker_label_text = "Marker Time";
-
-static char *maxtime_label_text_hpos = "Max";
-static char *marker_label_text_hpos = "Marker";
-
 void fractional_timescale_fix(char *s)
 {
     char buf[32], sfx[2];
@@ -31,10 +25,10 @@ void fractional_timescale_fix(char *s)
     int prefix_idx = 0;
 
     if (*s != '0') {
-        unsigned char *dot = strchr(s, '.');
-        unsigned char *src, *dst;
+        char *dot = strchr(s, '.');
+        char *src, *dst;
         if (dot) {
-            unsigned char *pnt = dot + 1;
+            char *pnt = dot + 1;
             int alpha_found = 0;
             while (*pnt) {
                 if (isalpha(*pnt)) {
@@ -264,10 +258,19 @@ static gchar *reformat_time_2_scale_to_dimension(TimeType val, char dim, gboolea
         value_exponent += 3;
     }
 
+    gchar *str;
     if (GLOBALS->scale_to_time_dimension == 's') {
-        return g_strdup_printf("%.9g sec", v);
+         str = g_strdup_printf("%.9g sec", v);
     } else {
-        return g_strdup_printf("%.9g %cs", v, GLOBALS->scale_to_time_dimension);
+        str = g_strdup_printf("%.9g %cs", v, GLOBALS->scale_to_time_dimension);
+    }
+
+    if (show_plus_sign && val >= 0) {
+        gchar *t = g_strconcat("+", str, NULL);
+        g_free(str);
+        return t;
+    } else {
+        return str;
     }
 }
 

@@ -268,7 +268,6 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
     hptr h2, h3;
     char hval, h2val, invert;
     LineColor c;
-    LineColor gcxl;
     wave_rgb_t gcx, gcxf;
     char identifier_str[2];
     int is_event = t && t->n.nd && (t->n.nd->vartype == ND_VCD_EVENT);
@@ -1072,13 +1071,12 @@ static void draw_hptr_trace_vector_analog(cairo_t *cr,
  */
 static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
 {
-    TimeType _x0, _x1, newtime, width;
+    TimeType _x0, _x1, newtime;
     int _y0, _y1, yu, liney, ytext;
     TimeType tim /* , h2tim */; /* scan-build */
     hptr h2, h3;
     char *ascii = NULL;
     int type;
-    int lasttype = -1;
 
     GLOBALS->tims.start -= GLOBALS->shift_timebase;
     GLOBALS->tims.end -= GLOBALS->shift_timebase;
@@ -1420,7 +1418,6 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
             h3 = bsearch_node(t->n.nd, newtime);
             if (h3->time > h->time) {
                 h = h3;
-                lasttype = type;
                 continue;
             }
         }
@@ -1430,7 +1427,6 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
             ascii = NULL;
         }
         h = h->next;
-        lasttype = type;
     }
 
     GLOBALS->color_active_in_filter = 0;
