@@ -21,26 +21,9 @@
 #endif
 #endif
 
-#ifdef __linux__
 #include <sys/types.h>
 #include <stdlib.h>
 #include <regex.h>
-#else
-#if defined __CYGWIN__ || defined __MINGW32__
-#include <sys/types.h>
-#include <stdlib.h>
-#ifndef HAVE_BZERO
-#define bcopy(a,b,c) memcpy((b),(a),(c))
-#define bzero(a,b) memset((a),0,(b))
-#define bcmp(a,b,c) memcmp((a),(b),(c))
-#endif
-#define REGEX_MAY_COMPILE
-#include "gnu_regex.c"
-#else			/* or for any other compiler that doesn't support POSIX.2 regexs properly like xlc or vc++ */
-#define REGEX_MAY_COMPILE
-#include "gnu_regex.c"
-#endif
-#endif
 
 #include "regex_wave.h"
 #include "debug.h"

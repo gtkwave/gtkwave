@@ -19,7 +19,6 @@
 #include "ghw.h"
 #include "globals.h"
 #include "gnu-getopt.h"
-#include "gnu_regex.h"
 #include "gtk23compat.h"
 #include "lx2.h"
 #include "lxt.h"

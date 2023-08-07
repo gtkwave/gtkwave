@@ -47,12 +47,10 @@ gtkwave_sources = [
     'getopt.c',
     'ghw.c',
     'globals.c',
-    'gnu_regex.c',
     'gtk23compat.c',
     'help.c',
     'hierpack.c',
     'hiersearch.c',
-    'interp.c',
     'jrb.c',
     'libghw.c',
     'logfile.c',
@@ -119,6 +117,7 @@ gtkwave_dependencies = [
     judy_dep,
     tcl_dep,
     tk_dep,
+    gnu_regex_dep,
 ]
 
 gtkwave_include_directories = [

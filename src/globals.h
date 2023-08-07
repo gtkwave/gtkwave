@@ -12,6 +12,8 @@
 
 #include <config.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <regex.h>
 
 #if defined __MINGW32__
 #include <windows.h>
@@ -35,7 +37,6 @@
 #include "gconf.h"
 #include "ghw.h"
 #include "globals.h"
-#include "gnu_regex.h"
 #include "gtk23compat.h"
 #include "lx2.h"
 #include "lxt.h"
