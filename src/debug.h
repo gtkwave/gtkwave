@@ -25,44 +25,16 @@
 #define WAVE_MAX_CLIST_LENGTH 15000
 
 
-/*
- * If you have problems viewing traces (mangled timevalues),
- * make sure that you use longs rather than the glib 64-bit
- * types...
- */
-#ifdef G_HAVE_GINT64
-	typedef gint64          TimeType;
-	typedef guint64         UTimeType;
+typedef gint64  TimeType;
+typedef guint64 UTimeType;
 
-                #define LLDescriptor(x) x##LL
-                #define ULLDescriptor(x) x##ULL
-		#ifdef __MINGW32__
-			#define TTFormat "%I64d"
-			#define UTTFormat "%I64u"
-		#else
-			#if __WORDSIZE == 64
-		                #define TTFormat "%ld"
-		                #define UTTFormat "%lu"
-			#else
-		                #define TTFormat "%lld"
-		                #define UTTFormat "%llu"
-			#endif
-		#endif
+#define LLDescriptor(x) G_GINT64_CONSTANT(x)
+#define ULLDescriptor(x) G_GUINT64_CONSTANT(x)
 
-	#define WAVE_MINZOOM (LLDescriptor(-4000000000))
-#else
-	typedef long            TimeType;
-	typedef unsigned long   UTimeType;
-	#define TTFormat "%d"
-	#define UTTFormat "%u"
+#define TTFormat "%" G_GINT64_FORMAT
+#define UTTFormat "%" G_GUINT64_FORMAT
 
-	#define LLDescriptor(x) x
-	#define ULLDescriptor(x) x
-
-	#define WAVE_MINZOOM (LLDescriptor(-20000000))
-#endif
-
-
+#define WAVE_MINZOOM (LLDescriptor(-4000000000))
 
 
 #ifdef DEBUG_PRINTF

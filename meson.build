@@ -34,13 +34,26 @@ tk_req = '>=8.6.0'
 
 glib_dep = dependency('glib-2.0', version: glib_req)
 gtk_dep = dependency('gtk+-3.0', version: gtk_req)
-gtk_unix_print_dep = dependency('gtk+-unix-print-3.0', version: gtk_req, required: false)
+gtk_unix_print_dep = dependency(
+    'gtk+-unix-print-3.0',
+    version: gtk_req,
+    required: false,
+)
 zlib_dep = dependency('zlib', version: zlib_req)
 bzip2_dep = dependency('bzip2', version: bzip2_req)
 tcl_dep = dependency('tcl', version: tcl_req, required: get_option('tcl'))
 tk_dep = dependency('tk', version: tk_req, required: get_option('tcl'))
 m_dep = cc.find_library('m', required: false)
-judy_dep = cc.find_library('Judy', has_headers: 'Judy.h', required: get_option('judy'))
+judy_dep = cc.find_library(
+    'Judy',
+    has_headers: 'Judy.h',
+    required: get_option('judy'),
+)
+gnu_regex_dep = cc.find_library(
+    'regex',
+    has_headers: 'regex.h',
+    required: host_machine.system() == 'windows',
+)
 
 # External programs
 
@@ -59,6 +72,7 @@ flex_gen = generator(
 # Check header files
 
 config = configuration_data()
+config.set('STDC_HEADERS', 1)
 config.set('HAVE_INTTYPES_H', cc.has_header('inttypes.h'))
 config.set('HAVE_SYS_STAT_H', cc.has_header('sys/stat.h'))
 config.set('HAVE_ALLOCA_H', cc.has_header('alloca.h'))
@@ -69,6 +83,16 @@ config.set('WAVE_GTK_UNIX_PRINT', gtk_unix_print_dep.found())
 config.set('WAVE_USE_STRUCT_PACKING', get_option('struct_packing'))
 config.set('WAVE_MANYMARKERS_MODE', get_option('manymarkers'))
 config.set('WAVE_DISABLE_FAST_TREE', not get_option('fasttree'))
+
+# Check functions
+
+functions = [
+    'fseeko',
+]
+
+foreach function : functions
+    config.set('HAVE_' + function.to_upper(), cc.has_function(function))
+endforeach
 
 # config.h
 
