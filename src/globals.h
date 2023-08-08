@@ -654,29 +654,7 @@ struct Global
     GdkPixbuf *wave_info_pixbuf;
     GdkPixbuf *wave_alert_pixbuf;
 
-    GdkPixbuf *hiericon_module_pixbuf; /* from pixmaps.c */
-    GdkPixbuf *hiericon_task_pixbuf; /* from pixmaps.c */
-    GdkPixbuf *hiericon_function_pixbuf; /* from pixmaps.c */
-    GdkPixbuf *hiericon_begin_pixbuf; /* from pixmaps.c */
-    GdkPixbuf *hiericon_fork_pixbuf; /* from pixmaps.c */
-    GdkPixbuf *hiericon_interface_pixbuf;
-    GdkPixbuf *hiericon_svpackage_pixbuf;
-    GdkPixbuf *hiericon_program_pixbuf;
-    GdkPixbuf *hiericon_class_pixbuf;
-    GdkPixbuf *hiericon_record_pixbuf;
-    GdkPixbuf *hiericon_generate_pixbuf;
-    GdkPixbuf *hiericon_design_pixbuf;
-    GdkPixbuf *hiericon_block_pixbuf;
-    GdkPixbuf *hiericon_generateif_pixbuf;
-    GdkPixbuf *hiericon_generatefor_pixbuf;
-    GdkPixbuf *hiericon_instance_pixbuf;
-    GdkPixbuf *hiericon_package_pixbuf;
-    GdkPixbuf *hiericon_signal_pixbuf;
-    GdkPixbuf *hiericon_portin_pixbuf;
-    GdkPixbuf *hiericon_portout_pixbuf;
-    GdkPixbuf *hiericon_portinout_pixbuf;
-    GdkPixbuf *hiericon_buffer_pixbuf;
-    GdkPixbuf *hiericon_linkage_pixbuf;
+    GwHierarchyIcons *hierarchy_icons;
 
     /*
      * print.c
@@ -1302,7 +1280,6 @@ void set_GLOBALS_x(struct Global *g, const char *file, int line);
 #endif
 
 void logbox_reload(void);
-void clone_icon_pointers_across_contexts(struct Global *a, struct Global *b);
 
 extern struct Global *GLOBALS;
 #endif

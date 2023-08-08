@@ -21,12 +21,39 @@ void
 #endif
 make_pixmaps(GtkWidget *window);
 
-
 #define WAVE_SPLASH_X (512)
 #define WAVE_SPLASH_Y (384)
 
 void make_splash_pixmaps(GtkWidget *window);
 
+typedef struct
+{
+    GdkPixbuf *module;
+    GdkPixbuf *task;
+    GdkPixbuf *function;
+    GdkPixbuf *begin;
+    GdkPixbuf *fork;
+    GdkPixbuf *interface;
+    GdkPixbuf *svpackage;
+    GdkPixbuf *program;
+    GdkPixbuf *class;
+    GdkPixbuf *record;
+    GdkPixbuf *generate;
+    GdkPixbuf *design;
+    GdkPixbuf *block;
+    GdkPixbuf *generateif;
+    GdkPixbuf *generatefor;
+    GdkPixbuf *instance;
+    GdkPixbuf *package;
+    GdkPixbuf *signal;
+    GdkPixbuf *portin;
+    GdkPixbuf *portout;
+    GdkPixbuf *portinout;
+    GdkPixbuf *buffer;
+    GdkPixbuf *linkage;
+} GwHierarchyIcons;
+
+GwHierarchyIcons *gw_hierarchy_icons_new(void);
+GdkPixbuf *gw_hierarchy_icons_get(GwHierarchyIcons *self, guint tree_kind);
 
 #endif
-

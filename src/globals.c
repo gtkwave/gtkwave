@@ -629,30 +629,7 @@ static const struct Global globals_base_values = {
      */
     NULL, /* wave_info_pixbuf */
     NULL, /* wave_alert_pixbuf */
-
-    NULL, /* hiericon_module_pixbuf */
-    NULL, /* hiericon_task_pixbuf */
-    NULL, /* hiericon_function_pixbuf */
-    NULL, /* hiericon_begin_pixbuf */
-    NULL, /* hiericon_fork_pixbuf */
-    NULL, /* hiericon_interface_pixbuf */
-    NULL, /* hiericon_svpackage_pixbuf */
-    NULL, /* hiericon_program_pixbuf */
-    NULL, /* hiericon_class_pixbuf */
-    NULL, /* hiericon_record_pixbuf */
-    NULL, /* hiericon_generate_pixbuf */
-    NULL, /* hiericon_design_pixbuf */
-    NULL, /* hiericon_block_pixbuf */
-    NULL, /* hiericon_generateif_pixbuf */
-    NULL, /* hiericon_generatefor_pixbuf */
-    NULL, /* hiericon_instance_pixbuf */
-    NULL, /* hiericon_package_pixbuf */
-    NULL, /* hiericon_signal_pixbuf */
-    NULL, /* hiericon_portin_pixbuf */
-    NULL, /* hiericon_portout_pixbuf */
-    NULL, /* hiericon_portinout_pixbuf */
-    NULL, /* hiericon_buffer_pixbuf */
-    NULL, /* hiericon_linkage_pixbuf */
+    NULL, /* hierarchy_icons */
 
     /*
      * print.c
@@ -1321,6 +1298,8 @@ struct Global *initialize_globals(void)
 
     g->strace_ctx = &g->strace_windows[0]; /* arbitrarily point to first one */
 
+    g->hierarchy_icons = gw_hierarchy_icons_new();
+
     return (g); /* what to do with ctx is at discretion of caller */
 }
 
@@ -1705,8 +1684,6 @@ void reload_into_new_context_2(void)
     /* pixmaps.c */
     new_globals->wave_info_pixbuf = GLOBALS->wave_info_pixbuf;
     new_globals->wave_alert_pixbuf = GLOBALS->wave_alert_pixbuf;
-
-    clone_icon_pointers_across_contexts(new_globals, GLOBALS);
 
     /* rc.c */
     new_globals->scale_to_time_dimension = GLOBALS->scale_to_time_dimension;
@@ -2984,38 +2961,4 @@ void set_GLOBALS_x(struct Global *g, const char *file, int line)
         sprintf(sstr, "%d", GLOBALS->this_context_page);
         gtkwavetcl_setvar(WAVE_TCLCB_CURRENT_ACTIVE_TAB, sstr, WAVE_TCLCB_CURRENT_ACTIVE_TAB_FLAGS);
     }
-}
-
-/*
- * for ensuring continuity of pixmap/mask pointers
- */
-void clone_icon_pointers_across_contexts(struct Global *a, struct Global *b)
-{
-    if (!a || !b)
-        return;
-
-    a->hiericon_module_pixbuf = b->hiericon_module_pixbuf;
-    a->hiericon_task_pixbuf = b->hiericon_task_pixbuf;
-    a->hiericon_function_pixbuf = b->hiericon_function_pixbuf;
-    a->hiericon_begin_pixbuf = b->hiericon_begin_pixbuf;
-    a->hiericon_fork_pixbuf = b->hiericon_fork_pixbuf;
-    a->hiericon_interface_pixbuf = b->hiericon_interface_pixbuf;
-    a->hiericon_svpackage_pixbuf = b->hiericon_svpackage_pixbuf;
-    a->hiericon_program_pixbuf = b->hiericon_program_pixbuf;
-    a->hiericon_class_pixbuf = b->hiericon_class_pixbuf;
-    a->hiericon_record_pixbuf = b->hiericon_record_pixbuf;
-    a->hiericon_generate_pixbuf = b->hiericon_generate_pixbuf;
-    a->hiericon_design_pixbuf = b->hiericon_design_pixbuf;
-    a->hiericon_block_pixbuf = b->hiericon_block_pixbuf;
-    a->hiericon_generateif_pixbuf = b->hiericon_generateif_pixbuf;
-    a->hiericon_generatefor_pixbuf = b->hiericon_generatefor_pixbuf;
-    a->hiericon_instance_pixbuf = b->hiericon_instance_pixbuf;
-    a->hiericon_package_pixbuf = b->hiericon_package_pixbuf;
-
-    a->hiericon_signal_pixbuf = b->hiericon_signal_pixbuf;
-    a->hiericon_portin_pixbuf = b->hiericon_portin_pixbuf;
-    a->hiericon_portout_pixbuf = b->hiericon_portout_pixbuf;
-    a->hiericon_portinout_pixbuf = b->hiericon_portinout_pixbuf;
-    a->hiericon_buffer_pixbuf = b->hiericon_buffer_pixbuf;
-    a->hiericon_linkage_pixbuf = b->hiericon_linkage_pixbuf;
 }
