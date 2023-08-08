@@ -627,17 +627,6 @@ static const struct Global globals_base_values = {
     /*
      * pixmaps.c
      */
-    NULL, /* redo_pixbuf */
-    NULL, /* larrow_pixbuf */
-    NULL, /* rarrow_pixbuf */
-    NULL, /* zoomin_pixbuf */
-    NULL, /* zoomout_pixbuf */
-    NULL, /* zoomfit_pixbuf */
-    NULL, /* zoomundo_pixbuf */
-    NULL, /* zoom_larrow_pixbuf */
-    NULL, /* zoom_rarrow_pixbuf */
-    NULL, /* prev_page_pixbuf */
-    NULL, /* next_page_pixbuf */
     NULL, /* wave_info_pixbuf */
     NULL, /* wave_alert_pixbuf */
 
@@ -1714,17 +1703,6 @@ void reload_into_new_context_2(void)
     new_globals->busy_busy_c_1 = GLOBALS->busy_busy_c_1;
 
     /* pixmaps.c */
-    new_globals->redo_pixbuf = GLOBALS->redo_pixbuf;
-    new_globals->larrow_pixbuf = GLOBALS->larrow_pixbuf;
-    new_globals->rarrow_pixbuf = GLOBALS->rarrow_pixbuf;
-    new_globals->zoomin_pixbuf = GLOBALS->zoomin_pixbuf;
-    new_globals->zoomout_pixbuf = GLOBALS->zoomout_pixbuf;
-    new_globals->zoomfit_pixbuf = GLOBALS->zoomfit_pixbuf;
-    new_globals->zoomundo_pixbuf = GLOBALS->zoomundo_pixbuf;
-    new_globals->zoom_larrow_pixbuf = GLOBALS->zoom_larrow_pixbuf;
-    new_globals->zoom_rarrow_pixbuf = GLOBALS->zoom_rarrow_pixbuf;
-    new_globals->prev_page_pixbuf = GLOBALS->prev_page_pixbuf;
-    new_globals->next_page_pixbuf = GLOBALS->next_page_pixbuf;
     new_globals->wave_info_pixbuf = GLOBALS->wave_info_pixbuf;
     new_globals->wave_alert_pixbuf = GLOBALS->wave_alert_pixbuf;
 

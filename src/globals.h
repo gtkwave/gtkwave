@@ -651,17 +651,6 @@ struct Global
     /*
      * pixmaps.c
      */
-    GdkPixbuf *redo_pixbuf;
-    GdkPixbuf *larrow_pixbuf;
-    GdkPixbuf *rarrow_pixbuf;
-    GdkPixbuf *zoomin_pixbuf;
-    GdkPixbuf *zoomout_pixbuf;
-    GdkPixbuf *zoomfit_pixbuf;
-    GdkPixbuf *zoomundo_pixbuf;
-    GdkPixbuf *zoom_larrow_pixbuf;
-    GdkPixbuf *zoom_rarrow_pixbuf;
-    GdkPixbuf *prev_page_pixbuf;
-    GdkPixbuf *next_page_pixbuf;
     GdkPixbuf *wave_info_pixbuf;
     GdkPixbuf *wave_alert_pixbuf;
 
