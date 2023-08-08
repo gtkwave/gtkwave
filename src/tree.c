@@ -824,44 +824,7 @@ if(t2->t_which >= 0)
 
 text[0]=tmp;
 
-		switch(t2->kind)
-			{
-   			case TREE_VCD_ST_MODULE:	pxb = GLOBALS->hiericon_module_pixbuf; break;
-   			case TREE_VCD_ST_TASK:		pxb = GLOBALS->hiericon_task_pixbuf; break;
-   			case TREE_VCD_ST_FUNCTION:	pxb = GLOBALS->hiericon_function_pixbuf; break;
-   			case TREE_VCD_ST_BEGIN:		pxb = GLOBALS->hiericon_begin_pixbuf; break;
-   			case TREE_VCD_ST_FORK:		pxb = GLOBALS->hiericon_fork_pixbuf; break;
-			case TREE_VCD_ST_GENERATE:	pxb = GLOBALS->hiericon_generatefor_pixbuf; break; /* same as TREE_VHDL_ST_GENFOR */
-			case TREE_VCD_ST_STRUCT:	pxb = GLOBALS->hiericon_block_pixbuf; break; /* same as TREE_VHDL_ST_BLOCK */
-			case TREE_VCD_ST_UNION:		pxb = GLOBALS->hiericon_instance_pixbuf; break; /* same as TREE_VHDL_ST_INSTANCE */
-			case TREE_VCD_ST_CLASS:		pxb = GLOBALS->hiericon_class_pixbuf; break;
-			case TREE_VCD_ST_INTERFACE:	pxb = GLOBALS->hiericon_interface_pixbuf; break;
-			case TREE_VCD_ST_PACKAGE:	pxb = GLOBALS->hiericon_svpackage_pixbuf; break;
-			case TREE_VCD_ST_PROGRAM:	pxb = GLOBALS->hiericon_program_pixbuf; break;
-
-			case TREE_VHDL_ST_DESIGN:	pxb = GLOBALS->hiericon_design_pixbuf; break;
-			case TREE_VHDL_ST_BLOCK:	pxb = GLOBALS->hiericon_block_pixbuf; break;
-			case TREE_VHDL_ST_GENIF:	pxb = GLOBALS->hiericon_generateif_pixbuf; break;
-			case TREE_VHDL_ST_GENFOR:	pxb = GLOBALS->hiericon_generatefor_pixbuf; break;
-			case TREE_VHDL_ST_INSTANCE:	pxb = GLOBALS->hiericon_instance_pixbuf; break;
-			case TREE_VHDL_ST_PACKAGE:	pxb = GLOBALS->hiericon_package_pixbuf; break;
-
-			case TREE_VHDL_ST_SIGNAL:	pxb = GLOBALS->hiericon_signal_pixbuf; break;
-			case TREE_VHDL_ST_PORTIN:	pxb = GLOBALS->hiericon_portin_pixbuf; break;
-			case TREE_VHDL_ST_PORTOUT:	pxb = GLOBALS->hiericon_portout_pixbuf; break;
-			case TREE_VHDL_ST_PORTINOUT:	pxb = GLOBALS->hiericon_portinout_pixbuf; break;
-			case TREE_VHDL_ST_BUFFER:	pxb = GLOBALS->hiericon_buffer_pixbuf; break;
-			case TREE_VHDL_ST_LINKAGE:	pxb = GLOBALS->hiericon_linkage_pixbuf; break;
-
-   			case TREE_VHDL_ST_ARCHITECTURE:	pxb = GLOBALS->hiericon_module_pixbuf; break; /* same as TREE_VCD_ST_MODULE */
-   			case TREE_VHDL_ST_FUNCTION:	pxb = GLOBALS->hiericon_function_pixbuf; break; /* same as TREE_VCD_ST_FUNCTION */
-   			case TREE_VHDL_ST_PROCESS:	pxb = GLOBALS->hiericon_task_pixbuf; break; /* same as TREE_VCD_ST_TASK */
-			case TREE_VHDL_ST_PROCEDURE:	pxb = GLOBALS->hiericon_class_pixbuf; break; /* same as TREE_VCD_ST_CLASS */
-			case TREE_VHDL_ST_RECORD:	pxb = GLOBALS->hiericon_record_pixbuf; break;
-			case TREE_VHDL_ST_GENERATE:	pxb = GLOBALS->hiericon_generate_pixbuf; break;
-
-			default:			pxb = NULL; break;
-			}
+		pxb = gw_hierarchy_icons_get(GLOBALS->hierarchy_icons, t2->kind);
 
 		gtk_tree_store_set (GLOBALS->treestore_main, iter,
                     XXX_NAME_COLUMN, text[0],

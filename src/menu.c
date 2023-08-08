@@ -3373,8 +3373,6 @@ int menu_new_viewer_tab_cleanup_2(char *fname, int optimize_vcd)
         g_now = GLOBALS;
         set_GLOBALS(g_old);
 
-        clone_icon_pointers_across_contexts(g_now, GLOBALS);
-
         free(GLOBALS->vcd_jmp_buf);
         GLOBALS->vcd_jmp_buf = NULL;
         set_window_idle(NULL);
