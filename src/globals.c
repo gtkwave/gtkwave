@@ -627,8 +627,6 @@ static const struct Global globals_base_values = {
     /*
      * pixmaps.c
      */
-    NULL, /* wave_info_pixbuf */
-    NULL, /* wave_alert_pixbuf */
     NULL, /* hierarchy_icons */
 
     /*
@@ -1680,10 +1678,6 @@ void reload_into_new_context_2(void)
     /* busy.c */
     new_globals->busycursor_busy_c_1 = GLOBALS->busycursor_busy_c_1;
     new_globals->busy_busy_c_1 = GLOBALS->busy_busy_c_1;
-
-    /* pixmaps.c */
-    new_globals->wave_info_pixbuf = GLOBALS->wave_info_pixbuf;
-    new_globals->wave_alert_pixbuf = GLOBALS->wave_alert_pixbuf;
 
     /* rc.c */
     new_globals->scale_to_time_dimension = GLOBALS->scale_to_time_dimension;

@@ -2079,11 +2079,6 @@ savefile_bail:
 #endif
     }
 
-#ifdef MAC_INTEGRATION
-    dock_pb =
-#endif
-        make_pixmaps(GLOBALS->mainwindow);
-
     if (GLOBALS->use_toolbutton_interface) {
         GtkWidget *tb;
 
