@@ -104,15 +104,11 @@ void simplereqbox(char *title, int width, char *default_text,
     gtk_box_pack_start (GTK_BOX (vbox), label, TRUE, TRUE, 0);
     gtk_widget_show (label);
 
+	pixmapwid1=gtk_image_new_from_icon_name("dialog-warning-symbolic", GTK_ICON_SIZE_DIALOG);
     if(is_alert)
 	{
-	pixmapwid1=gtk_image_new_from_pixbuf(GLOBALS->wave_alert_pixbuf);
+        gtk_widget_show(pixmapwid1);
 	}
-	else
-	{
-	pixmapwid1=gtk_image_new_from_pixbuf(GLOBALS->wave_info_pixbuf);
-	}
-    gtk_widget_show(pixmapwid1);
     gtk_box_pack_start(GTK_BOX(vbox), pixmapwid1, TRUE, TRUE, 0);
 
     separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);

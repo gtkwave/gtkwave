@@ -14,13 +14,6 @@
 
 #include <gtk/gtk.h>
 
-#ifdef MAC_INTEGRATION
-GdkPixbuf *
-#else
-void
-#endif
-make_pixmaps(GtkWidget *window);
-
 #define WAVE_SPLASH_X (512)
 #define WAVE_SPLASH_Y (384)
 

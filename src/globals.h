@@ -651,9 +651,6 @@ struct Global
     /*
      * pixmaps.c
      */
-    GdkPixbuf *wave_info_pixbuf;
-    GdkPixbuf *wave_alert_pixbuf;
-
     GwHierarchyIcons *hierarchy_icons;
 
     /*

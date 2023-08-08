@@ -2278,7 +2278,7 @@ if(GLOBALS->sst_sig_root_treesearch_gtk2_c_1)
 			char recwarn[128];
 			sprintf(recwarn, "Really import %d facilit%s?", fz, (fz==1)?"y":"ies");
 		
-			simplereqbox("Recurse Warning",300,recwarn,"Yes", "No", G_CALLBACK(func), 0);
+			simplereqbox("Recurse Warning",300,recwarn,"Yes", "No", G_CALLBACK(func), 1);
 			}
 			else
 			{
