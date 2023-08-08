@@ -1863,7 +1863,29 @@ void menu_version(gpointer null_data, guint callback_action, GtkWidget *widget)
         return;
     }
 
-    simplereqbox("Wave Version", 480, WAVE_VERSION_INFO, "OK", NULL, NULL, 0);
+    static const gchar *AUTHORS[] = {
+        "Tony Bybell",
+        "Udi Finkelstein",
+        "Kermin Elliott Fleming",
+        "Donald Baltus",
+        "Tristan Gingold",
+        "Thomas Sailer",
+        "Concept Engineering GmbH",
+        "Ralf Fuest",
+        NULL,
+    };
+
+    // clang-format off
+    gtk_show_about_dialog(NULL,
+                          "program-name", "GTKWave",
+                          "logo-icon-name", "io.github.gtkwave.GTKWave",
+                          "version", PACKAGE_VERSION,
+                          "copyright", "Copyright 1999-2023 BSI",
+                          "authors", AUTHORS,
+                          "license-type", GTK_LICENSE_GPL_2_0,
+                          "website", "https://gtkwave.sourceforge.net",
+                          NULL);
+    // clang-format on
 }
 /**/
 void menu_quit_callback(GtkWidget *widget, gpointer data)
@@ -5296,7 +5318,7 @@ static void menu_open_hierarchy_2(gpointer null_data,
 
                       " or gedit (if found during ./configure)"
 #else
-                       " gedit (if found during ./configure), or lastly open -t"
+                      " gedit (if found during ./configure), or lastly open -t"
 #endif
                       " on the appropriate source unit.  This is currently only supported by FST.");
         } else {
