@@ -50,7 +50,6 @@ gtkwave_sources = [
     'gtk23compat.c',
     'help.c',
     'hierpack.c',
-    'hiersearch.c',
     'jrb.c',
     'libghw.c',
     'logfile.c',

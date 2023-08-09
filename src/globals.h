@@ -393,30 +393,6 @@ struct Global
     char disable_auto_comphier;
 
     /*
-     * hiersearch.c
-     */
-    char hier_grouping; /* from hiersearch.c 120 */
-    GtkWidget *window_hiersearch_c_3; /* from hiersearch.c 121 */
-    GtkWidget *entry_main_hiersearch_c_1; /* from hiersearch.c 122 */
-    char bundle_direction_hiersearch_c_1; /* from hiersearch.c 124 */
-    void (*cleanup_hiersearch_c_3)(void); /* from hiersearch.c 125 */
-    int num_rows_hiersearch_c_1; /* from hiersearch.c 126 */
-    int selected_rows_hiersearch_c_1; /* from hiersearch.c 127 */
-    GtkWidget *window1_hiersearch_c_1; /* from hiersearch.c 128 */
-    GtkWidget *entry_hiersearch_c_2; /* from hiersearch.c 129 */
-    char *entrybox_text_local_hiersearch_c_1; /* from hiersearch.c 130 */
-    void (*cleanup_e_hiersearch_c_1)(void); /* from hiersearch.c 131 */
-    struct tree *h_selectedtree_hiersearch_c_1; /* from hiersearch.c 132 */
-    struct tree *current_tree_hiersearch_c_1; /* from hiersearch.c 133 */
-    struct treechain *treechain_hiersearch_c_1; /* from hiersearch.c 134 */
-    int is_active_hiersearch_c_1; /* from hiersearch.c 135 */
-    GtkListStore *sig_store_hiersearch;
-    GtkTreeSelection *sig_selection_hiersearch;
-#ifdef WAVE_GTK3_HIERSEARCH_DEBOUNCE
-    int h_debounce;
-#endif
-
-    /*
      * logfile.c
      */
     void **logfiles;

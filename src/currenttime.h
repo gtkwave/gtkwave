@@ -71,7 +71,6 @@ void exponent_to_time_scale(signed char scale);
 #include "vcd_partial.h"
 #include "wavewindow.h"
 #include "zoombuttons.h"
-#include "hiersearch.h"
 
 #endif
 

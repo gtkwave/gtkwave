@@ -395,13 +395,6 @@ if(strlen(str)) { GLOBALS->hier_delimeter=str[0]; GLOBALS->hier_was_explicitly_s
 return(0);
 }
 
-int f_hier_grouping(char *str)
-{
-DEBUG(printf("f_hier_grouping(\"%s\")\n",str));
-GLOBALS->hier_grouping=atoi_64(str)?1:0;
-return(0);
-}
-
 int f_hier_max_level(char *str)
 {
 DEBUG(printf("f_hier_max_level(\"%s\")\n",str));
@@ -966,7 +959,6 @@ static struct rc_entry rcitems[]=
 { "force_toolbars", f_force_toolbars },
 { "hide_sst", f_hide_sst },
 { "hier_delimeter", f_hier_delimeter },
-{ "hier_grouping", f_hier_grouping },
 { "hier_ignore_escapes", f_hier_ignore_escapes },
 { "hier_max_level", f_hier_max_level },
 { "highlight_wavewindow", f_highlight_wavewindow },

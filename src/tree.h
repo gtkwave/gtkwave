@@ -180,5 +180,9 @@ void XXX_maketree2(GtkTreeIter *subtree, struct tree *t, int depth);
 
 void sst_exclusion_loader(void);
 
+struct tree *fetchhigh(struct tree *t);
+struct tree *fetchlow(struct tree *t);
+void recurse_fetch_high_low(struct tree *t);
+
 #endif
 
