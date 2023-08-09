@@ -53,9 +53,6 @@
 
 #define WAVE_GTK_SFUNCAST(x) ((void (*)(GtkWidget *, gpointer))(x))
 
-/* doesn't work in gtk 2 or 3 */
-#undef WAVE_ALLOW_SLIDER_ZOOM
-
 /* gtk3->4 deprecated changes */
 
 #define XXX_GTK_STOCK_CANCEL "_Cancel"

@@ -337,12 +337,6 @@ static void print_help(char *nam)
 #define RPC_GETOPT3
 #endif
 
-#ifdef WAVE_ALLOW_SLIDER_ZOOM
-#define SLIDEZOOM_OPT "  -z, --slider-zoom          enable horizontal slider stretch zoom\n"
-#else
-#define SLIDEZOOM_OPT
-#endif
-
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
         "  -n, --nocli=DIRPATH        use file requester for dumpfile name\n"
@@ -367,7 +361,7 @@ static void print_help(char *nam)
         "  -C, --comphier             use compressed hierarchy names (slower)\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -L, --legacy               use legacy VCD mode rather than the VCD recoder\n"
-        "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT SLIDEZOOM_OPT
+        "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
         "  -V, --version              display version banner then exit\n"
         "  -h, --help                 display this help then exit\n"
         "  -x, --exit                 exit after loading trace (for loader benchmarks)\n\n"
@@ -524,7 +518,7 @@ static void window_drag_data_received(GtkWidget *widget,
     (void)time_;
 
     if (gtk_selection_data_get_length(selection_data) > 0) {
-        const gchar *uris = (const gchar *) gtk_selection_data_get_data(selection_data);
+        const gchar *uris = (const gchar *)gtk_selection_data_get_data(selection_data);
 
         gchar *uris_copy = g_strndup(uris, gtk_selection_data_get_length(selection_data));
 
@@ -673,8 +667,7 @@ static const gchar *CUSTOM_CSS = ".gw-time-box {"
                                  ".gw-time-box-separator {"
                                  "  color: alpha(@theme_unfocused_text_color, 0.4);"
                                  "  margin: 0 8px;"
-                                 "}"
-                                 ;
+                                 "}";
 
 static void add_custom_css(void)
 {
@@ -911,9 +904,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->use_toolbutton_interface = old_g->use_toolbutton_interface;
 
         GLOBALS->use_scrollwheel_as_y = old_g->use_scrollwheel_as_y;
-#ifdef WAVE_ALLOW_SLIDER_ZOOM
-        GLOBALS->enable_slider_zoom = old_g->enable_slider_zoom;
-#endif
 
         GLOBALS->missing_file_toolbar = old_g->missing_file_toolbar;
 
@@ -1381,16 +1371,6 @@ do_primary_inits:
                         free_2(output_name);
                     output_name = malloc_2(strlen(optarg) + 1);
                     strcpy(output_name, optarg);
-                    break;
-
-                case 'z':
-#ifdef WAVE_ALLOW_SLIDER_ZOOM
-                    GLOBALS->enable_slider_zoom = 1;
-#else
-                    fprintf(stderr,
-                            "GTKWAVE | --slider-zoom option does not work with this version of "
-                            "GTK, ignoring!\n");
-#endif
                     break;
 
                 case '?':

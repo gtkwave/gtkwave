@@ -1114,9 +1114,6 @@ struct Global
     char highlight_wavewindow; /* from wavewindow.c */
     char alt_wheel_mode; /* from wavewindow.c */
     char use_scrollwheel_as_y; /* from wavewindow.c */
-#ifdef WAVE_ALLOW_SLIDER_ZOOM
-    char enable_slider_zoom; /* from wavewindow.c */
-#endif
     char black_and_white; /* from wavewindow.c */
     char signalwindow_width_dirty; /* from wavewindow.c 644 */
     char enable_ghost_marker; /* from wavewindow.c 645 */
