@@ -2041,7 +2041,6 @@ if(i < GLOBALS->num_notebook_pages)
         GLOBALS->autoname_bundles = g_old->autoname_bundles;
         GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
         GLOBALS->autocoalesce = g_old->autocoalesce;
-        GLOBALS->hier_grouping = g_old->hier_grouping;
         GLOBALS->wave_scrolling = g_old->wave_scrolling;
         GLOBALS->constant_marker_update = g_old->constant_marker_update;
         GLOBALS->do_zoom_center = g_old->do_zoom_center;

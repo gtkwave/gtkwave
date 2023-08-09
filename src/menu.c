@@ -1157,46 +1157,6 @@ void menu_autoname_bundles_on(gpointer null_data, guint callback_action, GtkWidg
     }
 }
 
-void menu_hgrouping(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nSearch Hierarchy Grouping");
-        help_text(" when enabled ensures that new members added to the ``Tree Search'' and"
-                  " ``Hierarchy Search'' widgets are added alphanumerically: first hierarchy names "
-                  "as a group followed by signal names as a group."
-                  " This is the default and is recommended.  When disabled, hierarchy names and "
-                  "signal names are interleaved together in"
-                  " strict alphanumerical ordering."
-                  " Note that due to the caching mechanism in ``Tree Search'', dynamically "
-                  "changing this flag when the widget is active"
-                  " may not produce immediately obvious results.  Closing the widget then opening "
-                  "it up again will ensure that it follows the"
-                  " behavior of this flag.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HTGP]),
-                GLOBALS->hier_grouping =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->hier_grouping));
-        } else {
-            GLOBALS->hier_grouping =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HTGP]));
-            if (GLOBALS->hier_grouping) {
-                status_text("Hier Grouping On.\n");
-            } else {
-                status_text("Hier Grouping Off.\n");
-            }
-        }
-    }
-}
-
 void set_hier_cleanup(GtkWidget *widget, gpointer data, int level)
 {
     (void)widget;
@@ -4087,36 +4047,6 @@ void menu_alias(gpointer null_data, guint callback_action, GtkWidget *widget)
     }
 }
 
-/**/
-void menu_hiersearch_cleanup(GtkWidget *widget, gpointer data)
-{
-    (void)widget;
-    (void)data;
-
-    redraw_signals_and_waves();
-    DEBUG(printf("menu_hiersearch_cleanup()\n"));
-}
-
-void menu_hiersearch(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nHierarchy Search");
-        help_text(" provides an easy means of adding traces to the display in a text based"
-                  " treelike fashion.");
-        return;
-    }
-
-    if (GLOBALS->dnd_state) {
-        dnd_error();
-        return;
-    } /* don't mess with sigs when dnd active */
-
-    hier_searchbox("Hierarchy Search", G_CALLBACK(menu_hiersearch_cleanup));
-}
 /**/
 void menu_signalsearch_cleanup(GtkWidget *widget, gpointer data)
 {
@@ -7238,11 +7168,6 @@ static gtkwave_mlist_t menu_items[] = {
     WAVE_GTKIFE("/Search/Pattern Search 2", NULL, menu_tracesearchbox, WV_MENU_SPS2, "<Item>"),
     WAVE_GTKIFE("/Search/<separator>", NULL, NULL, WV_MENU_SEP7B, "<Separator>"),
     WAVE_GTKIFE("/Search/Signal Search Regexp", "<Alt>S", menu_signalsearch, WV_MENU_SSR, "<Item>"),
-    WAVE_GTKIFE("/Search/Signal Search Hierarchy",
-                "<Alt>T",
-                menu_hiersearch,
-                WV_MENU_SSH,
-                "<Item>"),
     WAVE_GTKIFE("/Search/Signal Search Tree",
                 "<Shift><Alt>T",
                 menu_treesearch,
@@ -7273,11 +7198,6 @@ static gtkwave_mlist_t menu_items[] = {
                 NULL,
                 menu_autoname_bundles_on,
                 WV_MENU_ABON,
-                "<ToggleItem>"),
-    WAVE_GTKIFE("/Search/Search Hierarchy Grouping",
-                NULL,
-                menu_hgrouping,
-                WV_MENU_HTGP,
                 "<ToggleItem>"),
     /* 80 */
     WAVE_GTKIFE("/Search/<separator>", NULL, NULL, WV_MENU_SEP7C, "<Separator>"),
@@ -7640,8 +7560,6 @@ void set_menu_toggles(void)
                                    GLOBALS->wave_scrolling);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]),
                                    GLOBALS->autoname_bundles);
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HTGP]),
-                                   GLOBALS->hier_grouping);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]),
                                    GLOBALS->use_full_precision);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]),

@@ -103,7 +103,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->autoname_bundles = g_old->autoname_bundles;
     GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
     GLOBALS->autocoalesce = g_old->autocoalesce;
-    GLOBALS->hier_grouping = g_old->hier_grouping;
     GLOBALS->wave_scrolling = g_old->wave_scrolling;
     GLOBALS->constant_marker_update = g_old->constant_marker_update;
     GLOBALS->do_zoom_center = g_old->do_zoom_center;
@@ -856,7 +855,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->force_toolbars = old_g->force_toolbars;
         GLOBALS->hide_sst = old_g->hide_sst;
         GLOBALS->sst_expanded = old_g->sst_expanded;
-        GLOBALS->hier_grouping = old_g->hier_grouping;
         GLOBALS->hier_max_level = old_g->hier_max_level;
         GLOBALS->hier_max_level_shadow = old_g->hier_max_level_shadow;
         GLOBALS->paned_pack_semantics = old_g->paned_pack_semantics;

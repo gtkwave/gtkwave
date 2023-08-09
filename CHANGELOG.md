@@ -10,7 +10,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Merged in major GUI widget refactoring.
 - Updated the UI design of many dialogs.
-- Removed support for GTK 2.
 - Improved rendering of all 0s/1s states of vectors.
 - Replaced hamburger menu with traditional menubar.
 - Improved the readability of the cursor and marker time display.
@@ -22,6 +21,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added OpenBSD and FreeBSD OS support for unbuffered FST I/O.
 - Added `dbl_mant_dig_overrides` rc environment variable.
 - Added `disable_antialiasing` rc variable.
+
+### Removed
+
+- Removed support for GTK 2.
+- Removed "Signal Search Hierarchy" dialog and `hier_grouping` rc variable.
 
 ### Fixed
 

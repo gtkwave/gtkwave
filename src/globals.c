@@ -376,30 +376,6 @@ static const struct Global globals_base_values = {
     0, /* disable_auto_comphier */
 
     /*
-     * hiersearch.c
-     */
-    1, /* hier_grouping 116 */
-    0, /* window_hiersearch_c_3 117 */
-    0, /* entry_main_hiersearch_c_1 118 */
-    0, /* bundle_direction_hiersearch_c_1 120 */
-    0, /* cleanup_hiersearch_c_3 121 */
-    0, /* num_rows_hiersearch_c_1 122 */
-    0, /* selected_rows_hiersearch_c_1 123 */
-    0, /* window1_hiersearch_c_1 124 */
-    0, /* entry_hiersearch_c_2 125 */
-    NULL, /* entrybox_text_local_hiersearch_c_1 126 */
-    NULL, /* cleanup_e_hiersearch_c_1 127 */
-    NULL, /* h_selectedtree_hiersearch_c_1 128 */
-    NULL, /* current_tree_hiersearch_c_1 129 */
-    NULL, /* treechain_hiersearch_c_1 130 */
-    0, /* is_active_hiersearch_c_1 131 */
-    NULL, /*sig_store_hiersearch */
-    NULL, /*sig_selection_hiersearch */
-#ifdef WAVE_GTK3_HIERSEARCH_DEBOUNCE
-    0, /* h_debounce */
-#endif
-
-    /*
      * logfile.c
      */
     NULL, /* logfiles */
@@ -1760,7 +1736,6 @@ void reload_into_new_context_2(void)
     new_globals->force_toolbars = GLOBALS->force_toolbars;
     new_globals->hide_sst = GLOBALS->hide_sst;
     new_globals->sst_expanded = GLOBALS->sst_expanded;
-    new_globals->hier_grouping = GLOBALS->hier_grouping;
     new_globals->hier_max_level = GLOBALS->hier_max_level;
     new_globals->hier_max_level_shadow = GLOBALS->hier_max_level_shadow;
     new_globals->paned_pack_semantics = GLOBALS->paned_pack_semantics;
@@ -2082,7 +2057,6 @@ void reload_into_new_context_2(void)
 
     /* windows which in theory should never destroy as they will have grab focus which means reload
      * will not be called */
-    widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1); /* hiersearch.c */
     widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4); /* markerbox.c */
     widget_ungrab_destroy(&GLOBALS->window1_search_c_2); /* search.c */
     widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9); /* simplereq.c */
@@ -2090,34 +2064,6 @@ void reload_into_new_context_2(void)
     widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3); /* treesearch_gtk2.c */
 
     /* supported migration of window contexts... */
-    if (GLOBALS->window_hiersearch_c_3) {
-        struct treechain *tc = GLOBALS->treechain_hiersearch_c_1;
-        while (tc) {
-            char *tclname;
-
-            if (!hier_curr) {
-                hier_head = hier_curr =
-                    calloc_2_into_context(new_globals, 1, sizeof(struct stringchain_t));
-            } else {
-                hier_curr->next =
-                    calloc_2_into_context(new_globals, 1, sizeof(struct stringchain_t));
-                hier_curr = hier_curr->next;
-            }
-
-            tclname = &tc->label->name[0];
-            strcpy2_into_new_context(new_globals, &hier_curr->name, &tclname);
-
-            tc = tc->next;
-        }
-
-        new_globals->window_hiersearch_c_3 = GLOBALS->window_hiersearch_c_3;
-        new_globals->entry_main_hiersearch_c_1 = GLOBALS->entry_main_hiersearch_c_1;
-        new_globals->sig_store_hiersearch = GLOBALS->sig_store_hiersearch;
-        new_globals->sig_selection_hiersearch = GLOBALS->sig_selection_hiersearch;
-        new_globals->bundle_direction_hiersearch_c_1 = GLOBALS->bundle_direction_hiersearch_c_1;
-        new_globals->cleanup_hiersearch_c_3 = GLOBALS->cleanup_hiersearch_c_3;
-        new_globals->is_active_hiersearch_c_1 = GLOBALS->is_active_hiersearch_c_1;
-    }
 
     if (GLOBALS->mouseover_mouseover_c_1) /* mouseover regenerates as the pointer moves so no real
                                              context lost */
@@ -2477,60 +2423,6 @@ void reload_into_new_context_2(void)
         search_enter_callback(GLOBALS->entry_search_c_3, NULL);
     }
 
-    /* part 2 of hier search (which needs to be done after the new dumpfile is loaded) */
-    if (GLOBALS->window_hiersearch_c_3) {
-        if (!hier_curr) {
-            GLOBALS->current_tree_hiersearch_c_1 = GLOBALS->treeroot;
-            GLOBALS->h_selectedtree_hiersearch_c_1 = NULL;
-        } else {
-            struct tree *t = GLOBALS->treeroot;
-            hier_curr = hier_head;
-
-            while ((hier_curr) && (t)) {
-                if (!strcmp(hier_curr->name, t->name)) {
-                    if (t->child) {
-                        struct treechain *tc, *tc2;
-
-                        tc = GLOBALS->treechain_hiersearch_c_1;
-                        if (tc) {
-                            while (tc->next)
-                                tc = tc->next;
-
-                            tc2 = calloc_2(1, sizeof(struct treechain));
-                            tc2->label = t;
-                            tc2->tree = GLOBALS->current_tree_hiersearch_c_1;
-                            tc->next = tc2;
-                        } else {
-                            GLOBALS->treechain_hiersearch_c_1 =
-                                calloc_2(1, sizeof(struct treechain));
-                            GLOBALS->treechain_hiersearch_c_1->tree =
-                                GLOBALS->current_tree_hiersearch_c_1;
-                            GLOBALS->treechain_hiersearch_c_1->label = t;
-                        }
-
-                        GLOBALS->current_tree_hiersearch_c_1 = t->child;
-                    }
-
-                    t = t->child;
-                    hier_curr = hier_curr->next;
-                    continue;
-                }
-                t = t->next;
-            }
-
-            hier_curr = hier_head;
-
-            while (hier_head) {
-                hier_head = hier_curr->next;
-                free_2(hier_curr->name);
-                free_2(hier_curr);
-                hier_curr = hier_head;
-            }
-        }
-
-        refresh_hier_tree(GLOBALS->current_tree_hiersearch_c_1);
-    }
-
     /* restore these in case we decide to write out the rc file later as a user option */
     GLOBALS->ignore_savefile_pane_pos = cached_ignore_savefile_pane_pos;
     GLOBALS->ignore_savefile_pos = cached_ignore_savefile_pos;
@@ -2674,15 +2566,11 @@ void free_and_destroy_page_context(void)
 
     /* windows which in theory should never destroy as they will have grab focus which means reload
      * will not be called */
-    widget_ungrab_destroy(&GLOBALS->window1_hiersearch_c_1); /* hiersearch.c */
     widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4); /* markerbox.c */
     widget_ungrab_destroy(&GLOBALS->window1_search_c_2); /* search.c */
     widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9); /* simplereq.c */
     widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk1_c); /* treesearch_gtk1.c */
     widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3); /* treesearch_gtk2.c */
-
-    /* supported migration of window contexts... */
-    widget_only_destroy(&GLOBALS->window_hiersearch_c_3);
 
     if (GLOBALS->mouseover_mouseover_c_1) /* mouseover regenerates as the pointer moves so no real
                                              context lost */
@@ -2789,7 +2677,6 @@ static gint context_swapper(GtkWindow *w, GdkEvent *event, void *data)
                                 GLOBALS->autoname_bundles = g_old->autoname_bundles;
                                 GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
                                 GLOBALS->autocoalesce = g_old->autocoalesce;
-                                GLOBALS->hier_grouping = g_old->hier_grouping;
                                 GLOBALS->wave_scrolling = g_old->wave_scrolling;
                                 GLOBALS->constant_marker_update = g_old->constant_marker_update;
                                 GLOBALS->do_zoom_center = g_old->do_zoom_center;
