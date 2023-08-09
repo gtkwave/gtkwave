@@ -1,79 +1,3 @@
-subdir('fst')
-
-# liblxt
-
-liblxt_sources = [
-    'lxt_write.c',
-]
-
-liblxt_dependencies = [
-    zlib_dep,
-    bzip2_dep,
-]
-
-liblxt = static_library(
-    'lxt',
-    sources: liblxt_sources,
-    dependencies: liblxt_dependencies,
-    include_directories: [config_inc, '..'],
-)
-
-liblxt_dep = declare_dependency(
-    link_with: liblxt,
-    include_directories: '.',
-)
-
-# liblxt2
-
-liblxt2_sources = [
-    'lxt2_read.c',
-    'lxt2_write.c',
-]
-
-liblxt2_dependencies = [
-    zlib_dep,
-]
-
-liblxt2 = static_library(
-    'lxt2',
-    sources: liblxt2_sources,
-    dependencies: liblxt2_dependencies,
-    include_directories: [config_inc, '..'],
-)
-
-liblxt2_dep = declare_dependency(
-    link_with: liblxt2,
-    include_directories: '.',
-)
-
-# libvzt
-
-libvzt_sources = [
-    'vzt_read.c',
-    'vzt_write.c',
-]
-
-libvzt_dependencies = [
-    liblzma_dep,
-    zlib_dep,
-    bzip2_dep,
-]
-
-libvzt = static_library(
-    'vzt',
-    sources: libvzt_sources,
-    dependencies: libvzt_dependencies,
-    include_directories: [config_inc, '..'],
-)
-
-libvzt_dep = declare_dependency(
-    link_with: libvzt,
-    dependencies: liblzma_dep,
-    include_directories: '.',
-)
-
-# Helper executables
-
 helpers = [
     'evcd2vcd',
     'fst2vcd',
@@ -107,7 +31,7 @@ foreach helper : helpers
     endif
 
     if helper.contains('lxt')
-        dependencies += [liblxt_dep, liblxt2_dep]
+        dependencies += liblxt_dep
     endif
     if helper.contains('fst')
         dependencies += libfst_dep

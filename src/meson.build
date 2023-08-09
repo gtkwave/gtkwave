@@ -1,4 +1,3 @@
-subdir('liblzma')
 subdir('helpers')
 
 vcd_keywords_c = custom_target(
@@ -50,8 +49,6 @@ gtkwave_sources = [
     'gtk23compat.c',
     'help.c',
     'hierpack.c',
-    'jrb.c',
-    'libghw.c',
     'logfile.c',
     'lx2.c',
     'lxt.c',
@@ -109,9 +106,9 @@ gtkwave_dependencies = [
     m_dep,
     libfst_dep,
     liblxt_dep,
-    liblxt2_dep,
     libvzt_dep,
-    liblzma_dep,
+    libghw_dep,
+    libjrb_dep,
     bzip2_dep,
     judy_dep,
     tcl_dep,

@@ -10,7 +10,7 @@
 #include <config.h>
 #include "globals.h"
 #include "vcd_saver.h"
-#include "helpers/lxt_write.h"
+#include <lxt_write.h>
 #include "ghw.h"
 #include "hierpack.h"
 #include <time.h>

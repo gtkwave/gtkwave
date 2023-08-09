@@ -32,7 +32,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "v2l_debug.h"
-#include "lxt_write.h"
+#include <lxt_write.h>
 
 #ifndef _MSC_VER
 #include <unistd.h>
