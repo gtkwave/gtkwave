@@ -25,7 +25,6 @@
 #endif
 
 #include <config.h>
-#include <wavealloca.h>
 
 #if defined(__CYGWIN__) || defined(__MINGW32__)
 #undef HAVE_RPC_XDR_H
@@ -37,6 +36,20 @@
 #endif
 #include "vzt_write.h"
 
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#elif defined(__GNUC__)
+#ifndef __MINGW32__
+#ifndef alloca
+#define alloca __builtin_alloca
+#endif
+#else
+#include <malloc.h>
+#endif
+#elif defined(_MSC_VER)
+#include <malloc.h>
+#define alloca _alloca
+#endif
 
 /*
  * in-place sort to keep chained facs from migrating...

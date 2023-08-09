@@ -26,7 +26,7 @@
 #include <getopt.h>
 #endif
 
-#include "fst/fstapi.h"
+#include <fstapi.h>
 #include "../../contrib/rtlbrowse/jrb.h"
 #include "wave_locale.h"
 

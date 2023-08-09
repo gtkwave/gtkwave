@@ -54,6 +54,7 @@ gnu_regex_dep = cc.find_library(
     has_headers: 'regex.h',
     required: host_machine.system() == 'windows',
 )
+thread_dep = dependency('threads', required: false)
 
 # External programs
 
@@ -77,6 +78,8 @@ config.set('HAVE_INTTYPES_H', cc.has_header('inttypes.h'))
 config.set('HAVE_SYS_STAT_H', cc.has_header('sys/stat.h'))
 config.set('HAVE_ALLOCA_H', cc.has_header('alloca.h'))
 config.set('HAVE_GETOPT_H', cc.has_header('getopt.h'))
+config.set('HAVE_FCNTL', cc.has_header('fcntl.h'))
+config.set('HAVE_LIBPTHREAD', thread_dep.found())
 config.set('_WAVE_HAVE_JUDY', judy_dep.found())
 config.set('HAVE_LIBTCL', tcl_dep.found() and tk_dep.found())
 config.set('WAVE_GTK_UNIX_PRINT', gtk_unix_print_dep.found())
@@ -102,6 +105,7 @@ config.set_quoted('PACKAGE_VERSION', meson.project_version())
 configure_file(output: 'config.h', configuration: config)
 config_inc = include_directories('.')
 
+subdir('lib')
 subdir('src')
 subdir('man')
 subdir('share')

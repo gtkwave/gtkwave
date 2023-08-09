@@ -21,7 +21,7 @@
  */
 
 #include <config.h>
-#include "fst/fstapi.h"
+#include <fstapi.h>
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>

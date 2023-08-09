@@ -27,6 +27,20 @@
 #include <config.h>
 #include "lxt2_write.h"
 
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#elif defined(__GNUC__)
+#ifndef __MINGW32__
+#ifndef alloca
+#define alloca __builtin_alloca
+#endif
+#else
+#include <malloc.h>
+#endif
+#elif defined(_MSC_VER)
+#include <malloc.h>
+#define alloca _alloca
+#endif
 
 static char *lxt2_wr_vcd_truncate_bitvec(char *s)
 {
@@ -1810,13 +1824,13 @@ while(s->aliased_to)	/* find root alias if exists */
 valuelen = strlen(value);	/* ensure string is proper length */
 if(valuelen == s->len)
 	{
-	vfix = (char*)wave_alloca(s->len+1);
+	vfix = (char*)alloca(s->len+1);
 	strcpy(vfix, value);
 	value = vfix;
 	}
 	else
 	{
-	vfix = (char*)wave_alloca(s->len+1);
+	vfix = (char*)alloca(s->len+1);
 
 	if(valuelen < s->len)
 		{

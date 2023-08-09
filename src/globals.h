@@ -22,6 +22,8 @@
 
 #define XXX_GDK_DRAWABLE(x) x
 
+#include <jrb.h>
+
 #include "ae2.h"
 #include "analyzer.h"
 #include "bsearch.h"
@@ -35,7 +37,6 @@
 #include "fstapi.h"
 #include "gconf.h"
 #include "ghw.h"
-#include "globals.h"
 #include "gtk23compat.h"
 #include "lx2.h"
 #include "lxt.h"
@@ -60,7 +61,6 @@
 #include "vlist.h"
 #include "vzt.h"
 #include "version.h"
-#include "jrb.h"
 #include "extload.h"
 
 #ifdef _WAVE_HAVE_JUDY
