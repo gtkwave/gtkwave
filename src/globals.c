@@ -1133,9 +1133,6 @@ static const struct Global globals_base_values = {
     0, /* highlight_wavewindow */
     1, /* alt_wheel_mode */
     0, /* use_scrollwheel_as_y */
-#ifdef WAVE_ALLOW_SLIDER_ZOOM
-    0, /* enable_slider_zoom */
-#endif
     0, /* black_and_white */
     1, /* signalwindow_width_dirty 590 */
     1, /* enable_ghost_marker 591 */
@@ -1660,9 +1657,6 @@ void reload_into_new_context_2(void)
     new_globals->zoom_dyn = GLOBALS->zoom_dyn;
     new_globals->zoom_dyne = GLOBALS->zoom_dyne;
     new_globals->use_scrollwheel_as_y = GLOBALS->use_scrollwheel_as_y;
-#ifdef WAVE_ALLOW_SLIDER_ZOOM
-    new_globals->enable_slider_zoom = GLOBALS->enable_slider_zoom;
-#endif
     new_globals->context_tabposition = GLOBALS->context_tabposition;
     new_globals->use_standard_clicking = GLOBALS->use_standard_clicking;
     new_globals->dragzoom_threshold = GLOBALS->dragzoom_threshold;
