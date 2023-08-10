@@ -900,8 +900,6 @@ struct Global
     GtkTreeSelection *sig_selection_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 491 */
     int is_active_treesearch_gtk2_c_6; /* from treesearch_gtk2.c 492 */
     struct autocoalesce_free_list *afl_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 494 */
-    GtkWidget *window_treesearch_gtk2_c_12; /* from treesearch_gtk2.c 495 */
-    void (*cleanup_treesearch_gtk2_c_8)(void); /* from treesearch_gtk2.c 498 */
     int pre_import_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 499 */
     Traces tcache_treesearch_gtk2_c_2; /* from treesearch_gtk2.c 500 */
     GtkWidget *dnd_sigview; /* from treesearch_gtk2.c */

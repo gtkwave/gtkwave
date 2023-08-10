@@ -3750,38 +3750,6 @@ void drop_named_marker(gpointer null_data, guint callback_action, GtkWidget *wid
     }
 }
 /**/
-void menu_treesearch_cleanup(GtkWidget *widget, gpointer data)
-{
-    (void)widget;
-    (void)data;
-
-    redraw_signals_and_waves();
-    DEBUG(printf("menu_treesearch_cleanup()\n"));
-}
-
-void menu_treesearch(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nSignal Search Tree");
-        help_text(" provides an easy means of adding traces to the display."
-                  " Various functions are provided in the Signal Search Tree requester"
-                  " which allow searching a treelike hierarchy and bundling"
-                  " (coalescing individual bits into a single vector).");
-        return;
-    }
-
-    if (GLOBALS->dnd_state) {
-        dnd_error();
-        return;
-    } /* don't mess with sigs when dnd active */
-
-    treebox("Signal Search Tree", G_CALLBACK(menu_treesearch_cleanup), NULL);
-}
-/**/
 void menu_showchangeall_cleanup(GtkWidget *widget, gpointer data)
 {
     (void)widget;
@@ -7168,11 +7136,6 @@ static gtkwave_mlist_t menu_items[] = {
     WAVE_GTKIFE("/Search/Pattern Search 2", NULL, menu_tracesearchbox, WV_MENU_SPS2, "<Item>"),
     WAVE_GTKIFE("/Search/<separator>", NULL, NULL, WV_MENU_SEP7B, "<Separator>"),
     WAVE_GTKIFE("/Search/Signal Search Regexp", "<Alt>S", menu_signalsearch, WV_MENU_SSR, "<Item>"),
-    WAVE_GTKIFE("/Search/Signal Search Tree",
-                "<Shift><Alt>T",
-                menu_treesearch,
-                WV_MENU_SST,
-                "<Item>"),
     WAVE_GTKIFE("/Search/<separator>", NULL, NULL, WV_MENU_SEP7, "<Separator>"),
 #if !defined __MINGW32__
     WAVE_GTKIFE("/Search/Open Source Definition",

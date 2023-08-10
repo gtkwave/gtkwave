@@ -10,9 +10,7 @@
 #ifndef WAVE_TREESEARCH_H
 #define WAVE_TREESEARCH_H
 
-void treebox(char *title, GCallback func, GtkWidget *old_window);
-GtkWidget* treeboxframe(char *title, GCallback func);
-void mkmenu_treesearch_cleanup(GtkWidget *widget, gpointer data);
+GtkWidget* treeboxframe(char *title);
 void dump_open_tree_nodes(FILE *wave, xl_Tree *t);
 int force_open_tree_node(char *name, int keep_path_nodes_open, struct tree **t_pnt);
 void select_tree_node(char *name);
