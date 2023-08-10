@@ -873,20 +873,6 @@ struct Global
     int comp_name_longest;
 
     /*
-     * treesearch_gtk1.c
-     */
-    GtkWidget *window1_treesearch_gtk1_c; /* manual adds by ajb... */
-    GtkWidget *entry_a_treesearch_gtk1_c;
-    char *entrybox_text_local_treesearch_gtk1_c;
-    void (*cleanup_e_treesearch_gtk1_c)(void);
-    struct tree *selectedtree_treesearch_gtk1_c;
-    int is_active_treesearch_gtk1_c;
-    GtkWidget *window_treesearch_gtk1_c;
-    GtkWidget *tree_treesearch_gtk1_c;
-    char bundle_direction_treesearch_gtk1_c;
-    void (*cleanup_treesearch_gtk1_c)(void); /* ...end of manual adds */
-
-    /*
      * treesearch_gtk2.c
      */
     struct string_chain_t *treeopen_chain_head; /* from bitvec.c */
