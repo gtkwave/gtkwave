@@ -919,8 +919,6 @@ static const struct Global globals_base_values = {
     NULL, /* sig_selection_treesearch_gtk2_c_1 461 */
     0, /* is_active_treesearch_gtk2_c_6 462 */
     NULL, /* afl_treesearch_gtk2_c_1 464 */
-    NULL, /* window_treesearch_gtk2_c_12 465 */
-    NULL, /* cleanup_treesearch_gtk2_c_8 468 */
     0, /* pre_import_treesearch_gtk2_c_1 469 */
     {0, 0, NULL, NULL, NULL, NULL, 0, 0}, /* tcache_treesearch_gtk2_c_2 470 */
     NULL, /* dnd_sigview */
@@ -1874,7 +1872,6 @@ void reload_into_new_context_2(void)
     /* treesearch_gtk2.c */
     new_globals->do_dynamic_treefilter = GLOBALS->do_dynamic_treefilter;
     new_globals->treesearch_gtk2_window_vbox = GLOBALS->treesearch_gtk2_window_vbox;
-    new_globals->window_treesearch_gtk2_c_12 = GLOBALS->window_treesearch_gtk2_c_12;
     new_globals->dnd_sigview = GLOBALS->dnd_sigview;
 
     strcpy2_into_new_context(new_globals,
@@ -2298,7 +2295,7 @@ void reload_into_new_context_2(void)
         gint pane_pos = gtk_paned_get_position(GLOBALS->sst_vpaned);
         gtk_widget_hide(GLOBALS->expanderwindow);
         gtk_container_remove(GTK_CONTAINER(GLOBALS->expanderwindow), GLOBALS->sstpane);
-        GLOBALS->sstpane = treeboxframe("SST", G_CALLBACK(mkmenu_treesearch_cleanup));
+        GLOBALS->sstpane = treeboxframe("SST");
         gtk_container_add(GTK_CONTAINER(GLOBALS->expanderwindow), GLOBALS->sstpane);
         gtk_paned_set_position(GLOBALS->sst_vpaned, pane_pos);
         gtk_widget_show(GLOBALS->expanderwindow);
@@ -2309,11 +2306,6 @@ void reload_into_new_context_2(void)
         if (GLOBALS->sig_view_search) {
             dnd_setup(GLOBALS->sig_view_search, TRUE);
         }
-    }
-    if (GLOBALS->window_treesearch_gtk2_c_12) {
-        gtk_container_remove(GTK_CONTAINER(GLOBALS->window_treesearch_gtk2_c_12),
-                             GLOBALS->treesearch_gtk2_window_vbox);
-        treebox(NULL, G_CALLBACK(mkmenu_treesearch_cleanup), GLOBALS->window_treesearch_gtk2_c_12);
     }
 
     if ((GLOBALS->filter_str_treesearch_gtk2_c_1) && (GLOBALS->filter_entry)) {
@@ -2342,7 +2334,7 @@ void reload_into_new_context_2(void)
 
     /* part 2 of SST (which needs to be done after the tree is expanded from loading the
      * savefile...) */
-    if ((!GLOBALS->hide_sst) || (GLOBALS->window_treesearch_gtk2_c_12)) {
+    if ((!GLOBALS->hide_sst)) {
         char *hiername_cache = NULL; /* some strange race condition side effect in gtk
                                         selecting/deselecting blows this out so cache it */
 
@@ -2537,7 +2529,6 @@ void free_and_destroy_page_context(void)
         widget_only_destroy(&GLOBALS->strace_ctx->window_strace_c_10); /* strace.c */
     }
     widget_only_destroy(&GLOBALS->window_translate_c_11); /* translate.c */
-    widget_only_destroy(&GLOBALS->window_treesearch_gtk2_c_12); /* treesearch_gtk2.c */
     widget_only_destroy(&GLOBALS->window_help_c_2); /* help.c : reload is gated off during help so
                                                        this should never execute */
 

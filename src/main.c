@@ -2152,7 +2152,7 @@ savefile_bail:
 
     if ((!GLOBALS->hide_sst) && (GLOBALS->loaded_file_type != MISSING_FILE)) {
         GLOBALS->toppanedwindow = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-        GLOBALS->sstpane = treeboxframe("SST", G_CALLBACK(mkmenu_treesearch_cleanup));
+        GLOBALS->sstpane = treeboxframe("SST");
 
         GLOBALS->expanderwindow = gtk_expander_new_with_mnemonic("_SST");
         gtk_expander_set_expanded(GTK_EXPANDER(GLOBALS->expanderwindow),
