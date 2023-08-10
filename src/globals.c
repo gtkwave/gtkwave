@@ -892,20 +892,6 @@ static const struct Global globals_base_values = {
     0, /* comp_name_longest */
 
     /*
-     * treesearch_gtk1.c
-     */
-    NULL, /* GtkWidget *window1_treesearch_gtk1_c;  */
-    NULL, /* GtkWidget *entry_a_treesearch_gtk1_c;  */
-    NULL, /* char *entrybox_text_local_treesearch_gtk1_c;  */
-    NULL, /* void (*cleanup_e_treesearch_gtk1_c)(); */
-    NULL, /* struct tree *selectedtree_treesearch_gtk1_c;  */
-    0, /* int is_active_treesearch_gtk1_c;  */
-    NULL, /* GtkWidget *window_treesearch_gtk1_c;  */
-    NULL, /* GtkWidget *tree_treesearch_gtk1_c; */
-    0, /* char bundle_direction_treesearch_gtk1_c;  */
-    NULL, /* void (*cleanup_treesearch_gtk1_c)(); */
-
-    /*
      * treesearch_gtk2.c
      */
     NULL, /* treeopen_chain_head */
@@ -2045,7 +2031,6 @@ void reload_into_new_context_2(void)
         widget_only_destroy(&GLOBALS->strace_ctx->window_strace_c_10); /* strace.c */
     }
     widget_only_destroy(&GLOBALS->window_translate_c_11); /* translate.c */
-    widget_only_destroy(&GLOBALS->window_treesearch_gtk1_c); /* treesearch_gtk1.c */
     widget_only_destroy(&GLOBALS->window_help_c_2); /* help.c : reload is gated off during help so
                                                        this should never execute */
 
@@ -2054,7 +2039,6 @@ void reload_into_new_context_2(void)
     widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4); /* markerbox.c */
     widget_ungrab_destroy(&GLOBALS->window1_search_c_2); /* search.c */
     widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9); /* simplereq.c */
-    widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk1_c); /* treesearch_gtk1.c */
     widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3); /* treesearch_gtk2.c */
 
     /* supported migration of window contexts... */
@@ -2553,7 +2537,6 @@ void free_and_destroy_page_context(void)
         widget_only_destroy(&GLOBALS->strace_ctx->window_strace_c_10); /* strace.c */
     }
     widget_only_destroy(&GLOBALS->window_translate_c_11); /* translate.c */
-    widget_only_destroy(&GLOBALS->window_treesearch_gtk1_c); /* treesearch_gtk1.c */
     widget_only_destroy(&GLOBALS->window_treesearch_gtk2_c_12); /* treesearch_gtk2.c */
     widget_only_destroy(&GLOBALS->window_help_c_2); /* help.c : reload is gated off during help so
                                                        this should never execute */
@@ -2563,7 +2546,6 @@ void free_and_destroy_page_context(void)
     widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4); /* markerbox.c */
     widget_ungrab_destroy(&GLOBALS->window1_search_c_2); /* search.c */
     widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9); /* simplereq.c */
-    widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk1_c); /* treesearch_gtk1.c */
     widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3); /* treesearch_gtk2.c */
 
     if (GLOBALS->mouseover_mouseover_c_1) /* mouseover regenerates as the pointer moves so no real
