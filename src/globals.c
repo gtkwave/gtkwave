@@ -530,7 +530,6 @@ static const struct Global globals_base_values = {
     -1, /* initial_window_ypos_get 218 */
     0, /* xpos_delta 219 */
     0, /* ypos_delta 219 */
-    0, /* force_toolbars 221 */
     0, /* hide_sst 222 */
     1, /* sst_expanded 223 */
     0, /* socket_xid 224 */
@@ -1702,7 +1701,6 @@ void reload_into_new_context_2(void)
     new_globals->enable_horiz_grid = GLOBALS->enable_horiz_grid;
     new_globals->make_vcd_save_file = GLOBALS->make_vcd_save_file;
     new_globals->enable_vert_grid = GLOBALS->enable_vert_grid;
-    new_globals->force_toolbars = GLOBALS->force_toolbars;
     new_globals->hide_sst = GLOBALS->hide_sst;
     new_globals->sst_expanded = GLOBALS->sst_expanded;
     new_globals->hier_max_level = GLOBALS->hier_max_level;
