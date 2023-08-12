@@ -546,7 +546,6 @@ struct Global
     int initial_window_ypos_get; /* from main.c 234 */
     int xpos_delta; /* from main.c 235 */
     int ypos_delta; /* from main.c 236 */
-    int hide_sst; /* from main.c 239 */
     int sst_expanded; /* from main.c 240 */
 #if GTK_CHECK_VERSION(3, 0, 0)
 #ifdef GDK_WINDOWING_X11

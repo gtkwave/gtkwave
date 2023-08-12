@@ -530,7 +530,6 @@ static const struct Global globals_base_values = {
     -1, /* initial_window_ypos_get 218 */
     0, /* xpos_delta 219 */
     0, /* ypos_delta 219 */
-    0, /* hide_sst 222 */
     1, /* sst_expanded 223 */
     0, /* socket_xid 224 */
     0, /* disable_menus 225 */
@@ -1701,7 +1700,6 @@ void reload_into_new_context_2(void)
     new_globals->enable_horiz_grid = GLOBALS->enable_horiz_grid;
     new_globals->make_vcd_save_file = GLOBALS->make_vcd_save_file;
     new_globals->enable_vert_grid = GLOBALS->enable_vert_grid;
-    new_globals->hide_sst = GLOBALS->hide_sst;
     new_globals->sst_expanded = GLOBALS->sst_expanded;
     new_globals->hier_max_level = GLOBALS->hier_max_level;
     new_globals->hier_max_level_shadow = GLOBALS->hier_max_level_shadow;
@@ -2277,21 +2275,19 @@ void reload_into_new_context_2(void)
 
     /* Change SST - if it exists */
     /* XXX need to destroy/free the old tree widgets. */
-    if (!GLOBALS->hide_sst) {
-        gint pane_pos = gtk_paned_get_position(GLOBALS->sst_vpaned);
-        gtk_widget_hide(GLOBALS->expanderwindow);
-        gtk_container_remove(GTK_CONTAINER(GLOBALS->expanderwindow), GLOBALS->sstpane);
-        GLOBALS->sstpane = treeboxframe("SST");
-        gtk_container_add(GTK_CONTAINER(GLOBALS->expanderwindow), GLOBALS->sstpane);
-        gtk_paned_set_position(GLOBALS->sst_vpaned, pane_pos);
-        gtk_widget_show(GLOBALS->expanderwindow);
-        if (GLOBALS->dnd_sigview) {
-            dnd_setup(GLOBALS->dnd_sigview, FALSE);
-        }
+    gint pane_pos = gtk_paned_get_position(GLOBALS->sst_vpaned);
+    gtk_widget_hide(GLOBALS->expanderwindow);
+    gtk_container_remove(GTK_CONTAINER(GLOBALS->expanderwindow), GLOBALS->sstpane);
+    GLOBALS->sstpane = treeboxframe("SST");
+    gtk_container_add(GTK_CONTAINER(GLOBALS->expanderwindow), GLOBALS->sstpane);
+    gtk_paned_set_position(GLOBALS->sst_vpaned, pane_pos);
+    gtk_widget_show(GLOBALS->expanderwindow);
+    if (GLOBALS->dnd_sigview) {
+        dnd_setup(GLOBALS->dnd_sigview, FALSE);
+    }
 
-        if (GLOBALS->sig_view_search) {
-            dnd_setup(GLOBALS->sig_view_search, TRUE);
-        }
+    if (GLOBALS->sig_view_search) {
+        dnd_setup(GLOBALS->sig_view_search, TRUE);
     }
 
     if ((GLOBALS->filter_str_treesearch_gtk2_c_1) && (GLOBALS->filter_entry)) {
@@ -2320,58 +2316,56 @@ void reload_into_new_context_2(void)
 
     /* part 2 of SST (which needs to be done after the tree is expanded from loading the
      * savefile...) */
-    if ((!GLOBALS->hide_sst)) {
-        char *hiername_cache = NULL; /* some strange race condition side effect in gtk
-                                        selecting/deselecting blows this out so cache it */
+    char *hiername_cache = NULL; /* some strange race condition side effect in gtk
+                                    selecting/deselecting blows this out so cache it */
 
+    if (GLOBALS->selected_hierarchy_name) {
+        hiername_cache = strdup_2(GLOBALS->selected_hierarchy_name);
+        select_tree_node(GLOBALS->selected_hierarchy_name);
+    }
+
+    if (tree_vadj_value != 0.0) {
+        GtkAdjustment *vadj =
+            gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main));
+
+        if ((vadj) && (tree_vadj_value >= gtk_adjustment_get_value(vadj)) &&
+            (tree_vadj_value <= gtk_adjustment_get_upper(vadj))) {
+            gtk_adjustment_set_value(vadj, tree_vadj_value);
+            gtk_scrollable_set_vadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main), vadj);
+
+            g_signal_emit_by_name(GTK_ADJUSTMENT(vadj), "changed");
+            g_signal_emit_by_name(GTK_ADJUSTMENT(vadj), "value_changed");
+        }
+    }
+
+    if (tree_hadj_value != 0.0) {
+        GtkAdjustment *hadj =
+            gtk_scrollable_get_hadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main));
+
+        if ((hadj) && (tree_hadj_value >= gtk_adjustment_get_lower(hadj)) &&
+            (tree_hadj_value <= gtk_adjustment_get_upper(hadj))) {
+            gtk_adjustment_set_value(hadj, tree_hadj_value);
+            gtk_scrollable_set_hadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main), hadj);
+
+            g_signal_emit_by_name(GTK_ADJUSTMENT(hadj), "changed");
+            g_signal_emit_by_name(GTK_ADJUSTMENT(hadj), "value_changed");
+        }
+    }
+
+    if (hiername_cache) {
         if (GLOBALS->selected_hierarchy_name) {
-            hiername_cache = strdup_2(GLOBALS->selected_hierarchy_name);
-            select_tree_node(GLOBALS->selected_hierarchy_name);
+            free_2(GLOBALS->selected_hierarchy_name);
         }
+        GLOBALS->selected_hierarchy_name = hiername_cache;
+    }
 
-        if (tree_vadj_value != 0.0) {
-            GtkAdjustment *vadj =
-                gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main));
+    if (tree_frame_y != -1) {
+        /* this doesn't work...this sets the *minimum* size */
+        /* gtk_widget_set_size_request(GLOBALS->gtk2_tree_frame, -1, tree_frame_y); */
+    }
 
-            if ((vadj) && (tree_vadj_value >= gtk_adjustment_get_value(vadj)) &&
-                (tree_vadj_value <= gtk_adjustment_get_upper(vadj))) {
-                gtk_adjustment_set_value(vadj, tree_vadj_value);
-                gtk_scrollable_set_vadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main), vadj);
-
-                g_signal_emit_by_name(GTK_ADJUSTMENT(vadj), "changed");
-                g_signal_emit_by_name(GTK_ADJUSTMENT(vadj), "value_changed");
-            }
-        }
-
-        if (tree_hadj_value != 0.0) {
-            GtkAdjustment *hadj =
-                gtk_scrollable_get_hadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main));
-
-            if ((hadj) && (tree_hadj_value >= gtk_adjustment_get_lower(hadj)) &&
-                (tree_hadj_value <= gtk_adjustment_get_upper(hadj))) {
-                gtk_adjustment_set_value(hadj, tree_hadj_value);
-                gtk_scrollable_set_hadjustment(GTK_SCROLLABLE(GLOBALS->treeview_main), hadj);
-
-                g_signal_emit_by_name(GTK_ADJUSTMENT(hadj), "changed");
-                g_signal_emit_by_name(GTK_ADJUSTMENT(hadj), "value_changed");
-            }
-        }
-
-        if (hiername_cache) {
-            if (GLOBALS->selected_hierarchy_name) {
-                free_2(GLOBALS->selected_hierarchy_name);
-            }
-            GLOBALS->selected_hierarchy_name = hiername_cache;
-        }
-
-        if (tree_frame_y != -1) {
-            /* this doesn't work...this sets the *minimum* size */
-            /* gtk_widget_set_size_request(GLOBALS->gtk2_tree_frame, -1, tree_frame_y); */
-        }
-
-        if (GLOBALS->filter_entry) {
-            g_signal_emit_by_name(GLOBALS->filter_entry, "activate");
-        }
+    if (GLOBALS->filter_entry) {
+        g_signal_emit_by_name(GLOBALS->filter_entry, "activate");
     }
 
     /* part 2 of search (which needs to be done after the new dumpfile is loaded) */

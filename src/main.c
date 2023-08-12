@@ -842,7 +842,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->lz_removal = old_g->lz_removal;
         GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->enable_vert_grid = old_g->enable_vert_grid;
-        GLOBALS->hide_sst = old_g->hide_sst;
         GLOBALS->sst_expanded = old_g->sst_expanded;
         GLOBALS->hier_max_level = old_g->hier_max_level;
         GLOBALS->hier_max_level_shadow = old_g->hier_max_level_shadow;
@@ -2133,7 +2132,7 @@ savefile_bail:
 
     gtk_widget_show(GLOBALS->signalwindow);
 
-    if ((!GLOBALS->hide_sst) && (GLOBALS->loaded_file_type != MISSING_FILE)) {
+    if (GLOBALS->loaded_file_type != MISSING_FILE) {
         GLOBALS->toppanedwindow = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
         GLOBALS->sstpane = treeboxframe("SST");
 
@@ -2172,7 +2171,7 @@ savefile_bail:
         dnd_setup(GLOBALS->dnd_sigview, FALSE);
     }
 
-    if ((!GLOBALS->hide_sst) && (GLOBALS->loaded_file_type != MISSING_FILE)) {
+    if (GLOBALS->loaded_file_type != MISSING_FILE) {
         gtk_paned_pack1(GTK_PANED(GLOBALS->toppanedwindow), GLOBALS->expanderwindow, 0, 0);
         gtk_paned_pack2(GTK_PANED(GLOBALS->toppanedwindow), panedwindow, ~0, 0);
         gtk_widget_show(GLOBALS->toppanedwindow);

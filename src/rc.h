@@ -89,7 +89,6 @@ int  f_fill_waveform (char *str);
 int  f_fontname_logfile (char *str);
 int  f_fontname_signals (char *str);
 int  f_fontname_waves (char *str);
-int  f_hide_sst (char *str);
 int  f_hier_delimeter (char *str);
 int  f_hier_max_level (char *str);
 int  f_ignore_savefile_pos (char *str);
