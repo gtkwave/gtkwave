@@ -120,7 +120,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
     GLOBALS->fill_waveform = g_old->fill_waveform;
     GLOBALS->lz_removal = g_old->lz_removal;
-    GLOBALS->use_standard_trace_select = g_old->use_standard_trace_select;
     GLOBALS->disable_mouseover = g_old->disable_mouseover;
     GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
     GLOBALS->keep_xz_colors = g_old->keep_xz_colors;
@@ -860,7 +859,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->show_toolbar = old_g->show_toolbar;
         GLOBALS->time_box = old_g->time_box;
         GLOBALS->highlight_wavewindow = old_g->highlight_wavewindow;
-        GLOBALS->use_standard_trace_select = old_g->use_standard_trace_select;
         GLOBALS->use_big_fonts = old_g->use_big_fonts;
         GLOBALS->use_full_precision = old_g->use_full_precision;
         GLOBALS->use_frequency_delta = old_g->use_frequency_delta;
