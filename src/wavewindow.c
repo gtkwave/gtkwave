@@ -407,51 +407,6 @@ static void draw_marker_partitions(cairo_t *cr)
     //     draw_marker();
 }
 
-static void renderblackout(cairo_t *cr)
-{
-    gfloat pageinc;
-    TimeType lhs, rhs, lclip, rclip;
-    struct blackout_region_t *bt = GLOBALS->blackout_regions;
-
-    if (bt) {
-        pageinc = (gfloat)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
-        lhs = GLOBALS->tims.start;
-        rhs = pageinc + lhs;
-
-        while (bt) {
-            if ((bt->bend < lhs) || (bt->bstart > rhs)) {
-                /* nothing, out of bounds */
-            } else {
-                lclip = bt->bstart;
-                rclip = bt->bend;
-
-                if (lclip < lhs)
-                    lclip = lhs;
-                else if (lclip > rhs)
-                    lclip = rhs;
-
-                if (rclip < lhs)
-                    rclip = lhs;
-
-                lclip -= lhs;
-                rclip -= lhs;
-                if (rclip > ((GLOBALS->wavewidth + 1) * GLOBALS->nspx))
-                    rclip = (GLOBALS->wavewidth + 1) * (GLOBALS->nspx);
-
-                XXX_gdk_draw_rectangle(cr,
-                                       GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1,
-                                       TRUE,
-                                       (((gdouble)lclip) * GLOBALS->pxns),
-                                       GLOBALS->fontheight,
-                                       (((gdouble)(rclip - lclip)) * GLOBALS->pxns),
-                                       GLOBALS->waveheight - GLOBALS->fontheight);
-            }
-
-            bt = bt->next;
-        }
-    }
-}
-
 static void service_hslider(GtkWidget *text, gpointer data)
 {
     (void)text;
