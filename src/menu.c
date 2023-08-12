@@ -948,40 +948,6 @@ void menu_warp_traces(gpointer null_data, guint callback_action, GtkWidget *widg
     }
 }
 
-void menu_altwheel(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAlternate Wheel Mode");
-        help_text(" makes the mouse wheel act how TomB expects it to."
-                  " Wheel alone will pan part of a page (so you can still"
-                  " see where you were).  Ctrl+Wheel will zoom around the"
-                  " cursor (not where the marker is), and Alt+Wheel will"
-                  " edge left or right on the selected signal.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HSWM]),
-                GLOBALS->alt_wheel_mode =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->alt_wheel_mode));
-        } else {
-            GLOBALS->alt_wheel_mode =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HSWM]));
-            if (GLOBALS->alt_wheel_mode) {
-                status_text("Alternate Wheel Mode On.\n");
-            } else {
-                status_text("Alternate Wheel Mode Off.\n");
-            }
-        }
-    }
-}
-
 void wave_scrolling_on(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
     (void)null_data;
@@ -7232,7 +7198,6 @@ static gtkwave_mlist_t menu_items[] = {
                 "<Item>"),
     WAVE_GTKIFE("/Markers/Find Next Edge", NULL, service_right_edge_marshal, WV_MENU_SRE, "<Item>"),
     WAVE_GTKIFE("/Markers/<separator>", NULL, NULL, WV_MENU_SEP8B, "<Separator>"),
-    WAVE_GTKIFE("/Markers/Alternate Wheel Mode", NULL, menu_altwheel, WV_MENU_HSWM, "<ToggleItem>"),
     WAVE_GTKIFE("/Markers/Wave Scrolling", NULL, wave_scrolling_on, WV_MENU_MWSON, "<ToggleItem>"),
 
     WAVE_GTKIFE("/Markers/Locking/Lock to Lesser Named Marker",
@@ -7459,8 +7424,6 @@ void set_menu_toggles(void)
                                    GLOBALS->fill_waveform);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]),
                                    GLOBALS->lz_removal);
-    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_HSWM]),
-                                   GLOBALS->alt_wheel_mode);
 
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]),
                                    !GLOBALS->disable_mouseover);

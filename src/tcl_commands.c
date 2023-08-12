@@ -2046,7 +2046,6 @@ if(i < GLOBALS->num_notebook_pages)
         GLOBALS->do_zoom_center = g_old->do_zoom_center;
         GLOBALS->use_roundcaps = g_old->use_roundcaps;
         GLOBALS->do_resize_signals = g_old->do_resize_signals;
-        GLOBALS->alt_wheel_mode = g_old->alt_wheel_mode;
 	GLOBALS->initial_signal_window_width = g_old->initial_signal_window_width;
         GLOBALS->use_full_precision = g_old->use_full_precision;
         GLOBALS->show_base = g_old->show_base;

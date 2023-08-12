@@ -26,9 +26,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Removed support for GTK 2.
 - Removed "Signal Search Hierarchy" dialog.
+- Removed setting to disable the "Alternate Wheel Mode".
 - Removed rc variables:
+    - `alt_wheel_mode`
     - `hier_grouping`
     - `use_scrollbar_only`
+    - `use_scrollwheel_as_y`
     - `use_standard_clicking`
     - `use_standard_trace_select`
     - `use_toolbutton_interface`
