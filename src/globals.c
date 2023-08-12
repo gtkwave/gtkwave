@@ -537,7 +537,6 @@ static const struct Global globals_base_values = {
     0, /* socket_xid 224 */
     0, /* disable_menus 225 */
     NULL, /* ftext_main_main_c_1 226 */
-    1, /* use_toolbutton_interface */
     0, /* dbl_mant_dig_override */
 
     /*
@@ -1808,7 +1807,6 @@ void reload_into_new_context_2(void)
     /* main.c */
     new_globals->missing_file_toolbar = GLOBALS->missing_file_toolbar;
     new_globals->is_gtkw_save_file = GLOBALS->is_gtkw_save_file;
-    new_globals->use_toolbutton_interface = GLOBALS->use_toolbutton_interface;
     new_globals->optimize_vcd = GLOBALS->optimize_vcd;
     strcpy2_into_new_context(new_globals,
                              &new_globals->winname,

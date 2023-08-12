@@ -164,14 +164,7 @@ gtk_widget_set_size_request(GTK_WIDGET(GLOBALS->to_entry), 90, 22);
 gtk_tooltips_set_tip_2(GLOBALS->to_entry, "Scroll Upper Bound (use MX for named marker X)");
 gtk_widget_show(GLOBALS->to_entry);
 
-if(!GLOBALS->use_toolbutton_interface)
-	{
-	mainbox=gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	}
-	else
-	{
-	mainbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	}
+mainbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
 gtk_box_pack_start(GTK_BOX(mainbox), box, TRUE, FALSE, 1);
 gtk_widget_show(box);
