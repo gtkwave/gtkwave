@@ -108,7 +108,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->do_zoom_center = g_old->do_zoom_center;
     GLOBALS->use_roundcaps = g_old->use_roundcaps;
     GLOBALS->do_resize_signals = g_old->do_resize_signals;
-    GLOBALS->alt_wheel_mode = g_old->alt_wheel_mode;
     GLOBALS->initial_signal_window_width = g_old->initial_signal_window_width;
     GLOBALS->scale_to_time_dimension = g_old->scale_to_time_dimension;
     GLOBALS->use_full_precision = g_old->use_full_precision;
@@ -834,7 +833,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->disable_tooltips = old_g->disable_tooltips;
         GLOBALS->do_initial_zoom_fit = old_g->do_initial_zoom_fit;
         GLOBALS->do_resize_signals = old_g->do_resize_signals;
-        GLOBALS->alt_wheel_mode = old_g->alt_wheel_mode;
         GLOBALS->initial_signal_window_width = old_g->initial_signal_window_width;
         GLOBALS->scale_to_time_dimension = old_g->scale_to_time_dimension;
         GLOBALS->enable_fast_exit = old_g->enable_fast_exit;
@@ -897,8 +895,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->vlist_prepack = old_g->vlist_prepack;
         GLOBALS->do_dynamic_treefilter = old_g->do_dynamic_treefilter;
         GLOBALS->dragzoom_threshold = old_g->dragzoom_threshold;
-
-        GLOBALS->use_scrollwheel_as_y = old_g->use_scrollwheel_as_y;
 
         GLOBALS->missing_file_toolbar = old_g->missing_file_toolbar;
 

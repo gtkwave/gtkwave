@@ -673,13 +673,6 @@ GLOBALS->ruler_step=atoi_64(str);
 return(0);
 }
 
-int f_use_scrollwheel_as_y(char *str)
-{
-DEBUG(printf("f_use_scrollwheel_as_y(\"%s\")\n",str));
-GLOBALS->use_scrollwheel_as_y=atoi_64(str)?1:0;
-return(0);
-}
-
 int f_vcd_explicit_zero_subscripts(char *str)
 {
 DEBUG(printf("f_vcd_explicit_zero_subscripts(\"%s\")\n",str));
@@ -785,14 +778,6 @@ GLOBALS->zoom_pow10_snap=atoi_64(str)?1:0;
 return(0);
 }
 
-int f_alt_wheel_mode(char *str)
-{
-DEBUG(printf("f_alt_wheel_mode(\"%s\")\n",str));
-GLOBALS->alt_wheel_mode=atoi_64(str)?1:0;
-return(0);
-}
-
-
 int rc_compare(const void *v1, const void *v2)
 {
 return(strcasecmp((char *)v1, ((struct rc_entry *)v2)->name));
@@ -858,7 +843,6 @@ static struct rc_entry rcitems[]=
 {
 { "accel", f_accel },
 { "alt_hier_delimeter", f_alt_hier_delimeter },
-{ "alt_wheel_mode", f_alt_wheel_mode },
 { "analog_redraw_skip_count", f_analog_redraw_skip_count },
 { "append_vcd_hier", f_append_vcd_hier },
 { "atomic_vectors", f_atomic_vectors },
@@ -968,7 +952,6 @@ static struct rc_entry rcitems[]=
 { "use_nonprop_fonts", f_use_nonprop_fonts },
 { "use_pango_fonts", f_use_pango_fonts },
 { "use_roundcaps", f_use_roundcaps },
-{ "use_scrollwheel_as_y", f_use_scrollwheel_as_y },
 { "vcd_explicit_zero_subscripts", f_vcd_explicit_zero_subscripts },
 { "vcd_preserve_glitches", f_vcd_preserve_glitches },
 { "vcd_preserve_glitches_real", f_vcd_preserve_glitches_real },
@@ -989,7 +972,6 @@ static struct rc_entry rcitems[]=
 static void vanilla_rc(void)
 {
 f_enable_fast_exit 	("on");
-f_alt_wheel_mode 	("on");
 f_splash_disable 	("off");
 f_zoom_pow10_snap	("on");
 f_hier_max_level	("1");

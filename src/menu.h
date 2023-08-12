@@ -242,7 +242,6 @@ enum WV_MenuItems
     WV_MENU_SLE,
     WV_MENU_SRE,
     WV_MENU_SEP8B,
-    WV_MENU_HSWM,
     WV_MENU_MWSON,
     WV_MENU_MLKLT,
     WV_MENU_MLKRT,

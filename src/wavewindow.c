@@ -289,7 +289,6 @@ xit:
     return (marker);
 }
 
-
 static void sync_marker(void)
 {
     if ((GLOBALS->tims.prevmarker == -1) && (GLOBALS->tims.marker != -1)) {
@@ -802,87 +801,33 @@ static gint scroll_event(GtkWidget *widget, GdkEventScroll *event)
     GtkAllocation allocation;
     gtk_widget_get_allocation(GLOBALS->signalarea, &allocation);
 
-    int num_traces_displayable = (allocation.height) / (GLOBALS->fontheight);
-    num_traces_displayable--;
-
     DEBUG(printf("Mouse Scroll Event\n"));
 
-    if (GLOBALS->alt_wheel_mode) {
-        /* TomB mouse wheel handling */
 #ifdef MAC_INTEGRATION
-        if (event->state & GDK_MOD2_MASK)
+    if (event->state & GDK_MOD2_MASK)
 #else
-        if (event->state & GDK_CONTROL_MASK)
+    if (event->state & GDK_CONTROL_MASK)
 #endif
-        {
-            /* CTRL+wheel - zoom in/out around current mouse cursor position */
-            if (event->direction == GDK_SCROLL_UP)
-                alt_zoom_in(NULL, 0);
-            else if (event->direction == GDK_SCROLL_DOWN)
-                alt_zoom_out(NULL, 0);
-        } else if (event->state & GDK_MOD1_MASK) {
-            /* ALT+wheel - edge left/right mode */
-            if (event->direction == GDK_SCROLL_UP)
-                service_left_edge(NULL, 0);
-            else if (event->direction == GDK_SCROLL_DOWN)
-                service_right_edge(NULL, 0);
-        } else {
-            /* wheel alone - scroll part of a page along */
-            if (event->direction == GDK_SCROLL_UP)
-                alt_move_left((event->state & GDK_SHIFT_MASK) != 0); /* finer scroll if shift */
-            else if (event->direction == GDK_SCROLL_DOWN)
-                alt_move_right((event->state & GDK_SHIFT_MASK) != 0); /* finer scroll if shift */
-        }
+    {
+        /* CTRL+wheel - zoom in/out around current mouse cursor position */
+        if (event->direction == GDK_SCROLL_UP)
+            alt_zoom_in(NULL, 0);
+        else if (event->direction == GDK_SCROLL_DOWN)
+            alt_zoom_out(NULL, 0);
+    } else if (event->state & GDK_MOD1_MASK) {
+        /* ALT+wheel - edge left/right mode */
+        if (event->direction == GDK_SCROLL_UP)
+            service_left_edge(NULL, 0);
+        else if (event->direction == GDK_SCROLL_DOWN)
+            service_right_edge(NULL, 0);
     } else {
-        /* Original 3.3.31 mouse wheel handling */
-        switch (event->direction) {
-            case GDK_SCROLL_UP:
-                if (GLOBALS->use_scrollwheel_as_y) {
-                    if (event->state & GDK_SHIFT_MASK) {
-                        alternate_y_scroll(-num_traces_displayable);
-                    } else {
-                        alternate_y_scroll(-1);
-                    }
-                } else {
-#ifdef MAC_INTEGRATION
-                    if (event->state & GDK_MOD2_MASK)
-#else
-                    if (event->state & GDK_CONTROL_MASK)
-#endif
-                        service_left_shift(NULL, 0);
-                    else if (event->state & GDK_MOD1_MASK)
-                        service_zoom_out(NULL, 0);
-                    else
-                        service_left_page(NULL, 0);
-                }
-                break;
-            case GDK_SCROLL_DOWN:
-                if (GLOBALS->use_scrollwheel_as_y) {
-                    if (event->state & GDK_SHIFT_MASK) {
-                        alternate_y_scroll(num_traces_displayable);
-                    } else {
-                        alternate_y_scroll(1);
-                    }
-                }
-
-                {
-#ifdef MAC_INTEGRATION
-                    if (event->state & GDK_MOD2_MASK)
-#else
-                    if (event->state & GDK_CONTROL_MASK)
-#endif
-                        service_right_shift(NULL, 0);
-                    else if (event->state & GDK_MOD1_MASK)
-                        service_zoom_in(NULL, 0);
-                    else
-                        service_right_page(NULL, 0);
-                }
-                break;
-
-            default:
-                break;
-        }
+        /* wheel alone - scroll part of a page along */
+        if (event->direction == GDK_SCROLL_UP)
+            alt_move_left((event->state & GDK_SHIFT_MASK) != 0); /* finer scroll if shift */
+        else if (event->direction == GDK_SCROLL_DOWN)
+            alt_move_right((event->state & GDK_SHIFT_MASK) != 0); /* finer scroll if shift */
     }
+
     return (TRUE);
 }
 

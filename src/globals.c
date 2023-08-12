@@ -1111,8 +1111,6 @@ static const struct Global globals_base_values = {
      * wavewindow.c
      */
     0, /* highlight_wavewindow */
-    1, /* alt_wheel_mode */
-    0, /* use_scrollwheel_as_y */
     0, /* black_and_white */
     1, /* signalwindow_width_dirty 590 */
     1, /* enable_ghost_marker 591 */
@@ -1636,7 +1634,6 @@ void reload_into_new_context_2(void)
     new_globals->scale_to_time_dimension = GLOBALS->scale_to_time_dimension;
     new_globals->zoom_dyn = GLOBALS->zoom_dyn;
     new_globals->zoom_dyne = GLOBALS->zoom_dyne;
-    new_globals->use_scrollwheel_as_y = GLOBALS->use_scrollwheel_as_y;
     new_globals->context_tabposition = GLOBALS->context_tabposition;
     new_globals->dragzoom_threshold = GLOBALS->dragzoom_threshold;
     new_globals->cr_line_width = GLOBALS->cr_line_width;
@@ -1699,7 +1696,6 @@ void reload_into_new_context_2(void)
     new_globals->do_initial_zoom_fit = GLOBALS->do_initial_zoom_fit;
     new_globals->do_initial_zoom_fit_used = GLOBALS->do_initial_zoom_fit_used;
     new_globals->do_resize_signals = GLOBALS->do_resize_signals;
-    new_globals->alt_wheel_mode = GLOBALS->alt_wheel_mode;
     new_globals->initial_signal_window_width = GLOBALS->initial_signal_window_width;
     new_globals->enable_fast_exit = GLOBALS->enable_fast_exit;
     new_globals->enable_ghost_marker = GLOBALS->enable_ghost_marker;
@@ -2641,7 +2637,6 @@ static gint context_swapper(GtkWindow *w, GdkEvent *event, void *data)
                                 GLOBALS->do_zoom_center = g_old->do_zoom_center;
                                 GLOBALS->use_roundcaps = g_old->use_roundcaps;
                                 GLOBALS->do_resize_signals = g_old->do_resize_signals;
-                                GLOBALS->alt_wheel_mode = g_old->alt_wheel_mode;
                                 GLOBALS->initial_signal_window_width =
                                     g_old->initial_signal_window_width;
                                 GLOBALS->use_full_precision = g_old->use_full_precision;
