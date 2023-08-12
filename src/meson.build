@@ -1,5 +1,7 @@
 subdir('helpers')
 
+# gtkwave
+
 vcd_keywords_c = custom_target(
     'vcd_keywords.c',
     input: 'vcd_keywords.gperf',
@@ -20,7 +22,11 @@ vcd_keywords_c = custom_target(
     ],
 )
 
-# gtkwave
+gtkwave_resources = gnome.compile_resources(
+    'gtkwave-resources',
+    'io.github.gtkwave.GTKWave.gresource.xml',
+    c_name: 'gtkwave',
+)
 
 gtkwave_sources = [
     'ae2.c',
@@ -42,11 +48,12 @@ gtkwave_sources = [
     'fonts.c',
     'fst.c',
     'gconf.c',
-    'getopt1.c',
     'getopt.c',
+    'getopt1.c',
     'ghw.c',
     'globals.c',
     'gtk23compat.c',
+    'gw-time-display.c',
     'help.c',
     'hierpack.c',
     'logfile.c',
@@ -55,8 +62,8 @@ gtkwave_sources = [
     'main.c',
     'markerbox.c',
     'menu.c',
-    'mouseover.c',
     'mouseover_sigs.c',
+    'mouseover.c',
     'pagebuttons.c',
     'pipeio.c',
     'pixmaps.c',
@@ -83,18 +90,18 @@ gtkwave_sources = [
     'tcl_support_commands.c',
     'timeentry.c',
     'translate.c',
-    'tree.c',
     'tree_component.c',
+    'tree.c',
     'treesearch.c',
     'ttranslate.c',
-    'vcd.c',
     'vcd_partial.c',
     'vcd_recoder.c',
     'vcd_saver.c',
+    'vcd.c',
     'vlist.c',
     'vzt.c',
-    'wave_view.c',
     'wave_view_traces.c',
+    'wave_view.c',
     'wavewindow.c',
     'zoombuttons.c',
 ]
@@ -124,6 +131,7 @@ gtkwave_include_directories = [
 executable(
     'gtkwave',
     gtkwave_sources,
+    gtkwave_resources,
     vcd_keywords_c,
     dependencies: gtkwave_dependencies,
     include_directories: gtkwave_include_directories,

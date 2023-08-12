@@ -75,6 +75,7 @@
 #include "ptranslate.h"
 #include "ttranslate.h"
 #include "signal_list.h"
+#include "gw-time-display.h"
 
 #include "tcl_helper.h"
 #if defined(HAVE_LIBTCL)
@@ -641,7 +642,7 @@ static GtkWidget *build_toolbar(void)
     gtk_tool_item_set_expand(last_separator, TRUE);
     gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(last_separator), FALSE);
 
-    GLOBALS->time_box = create_time_box();
+    GLOBALS->time_box = gw_time_display_new();
     toolbar_append_widget(toolbar, GLOBALS->time_box);
 
     gtk_widget_show_all(toolbar);
@@ -649,30 +650,10 @@ static GtkWidget *build_toolbar(void)
     return toolbar;
 }
 
-static const gchar *CUSTOM_CSS = ".gw-time-box {"
-                                 "  color: @theme_unfocused_text_color;"
-                                 "  background: @theme_unfocused_base_color;"
-                                 "  border: 1px solid @unfocused_borders;"
-                                 "  padding: 0 8px;"
-                                 "}"
-                                 ".gw-time-box-label {"
-                                 "  margin-right: 8px;"
-                                 "}"
-                                 ".gw-time-box-value {"
-                                 "  font-feature-settings: \"tnum\";"
-                                 "  font-weight: bold;"
-                                 "}"
-                                 ".gw-time-box-separator {"
-                                 "  color: alpha(@theme_unfocused_text_color, 0.4);"
-                                 "  margin: 0 8px;"
-                                 "}";
-
 static void add_custom_css(void)
 {
     GtkCssProvider *css_provider = gtk_css_provider_new();
-    GError *error = NULL;
-    gtk_css_provider_load_from_data(css_provider, CUSTOM_CSS, -1, &error);
-    g_assert_no_error(error);
+    gtk_css_provider_load_from_resource(css_provider, "/io/github/gtkwave/GTKWave/gtkwave.css");
 
     gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
                                               GTK_STYLE_PROVIDER(css_provider),
@@ -763,10 +744,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->interp = old_g->interp;
 #endif
         GLOBALS->vcd_jmp_buf = old_g->vcd_jmp_buf;
-
-        /* currenttime.c */
-        GLOBALS->maxtext_currenttime_c_1 = (char *)malloc_2(40);
-        GLOBALS->curtext_currenttime_c_1 = old_g->curtext_currenttime_c_1;
 
         /* status.c */
         GLOBALS->text_status_c_2 = old_g->text_status_c_2;

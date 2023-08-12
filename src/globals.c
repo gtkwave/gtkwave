@@ -201,8 +201,6 @@ static const struct Global globals_base_values = {
     0, /* scale_to_time_dimension */
     // 0, /* maxtimewid_currenttime_c_1 69 */
     // 0, /* curtimewid_currenttime_c_1 70 */
-    0, /* maxtext_currenttime_c_1 71 */
-    0, /* curtext_currenttime_c_1 72 */
     1, /* time_trunc_val_currenttime_c_1 76 */
     0, /* use_full_precision 77 */
 
@@ -1592,10 +1590,6 @@ void reload_into_new_context_2(void)
     new_globals->expanderwindow = GLOBALS->expanderwindow;
     new_globals->wave_hslider = GLOBALS->wave_hslider;
     new_globals->hscroll_wavewindow_c_2 = GLOBALS->hscroll_wavewindow_c_2;
-    new_globals->maxtext_currenttime_c_1 = (char *)calloc_2_into_context(new_globals, 1, 40);
-    memcpy(new_globals->maxtext_currenttime_c_1, GLOBALS->maxtext_currenttime_c_1, 40);
-    new_globals->curtext_currenttime_c_1 = (char *)calloc_2_into_context(new_globals, 1, 40);
-    memcpy(new_globals->curtext_currenttime_c_1, GLOBALS->curtext_currenttime_c_1, 40);
     new_globals->from_entry = GLOBALS->from_entry;
     new_globals->to_entry = GLOBALS->to_entry;
 
