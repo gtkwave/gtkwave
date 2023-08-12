@@ -530,7 +530,6 @@ static const struct Global globals_base_values = {
     -1, /* initial_window_ypos_get 218 */
     0, /* xpos_delta 219 */
     0, /* ypos_delta 219 */
-    0, /* use_scrollbar_only 220 */
     0, /* force_toolbars 221 */
     0, /* hide_sst 222 */
     1, /* sst_expanded 223 */
@@ -1731,7 +1730,6 @@ void reload_into_new_context_2(void)
     new_globals->use_maxtime_display = GLOBALS->use_maxtime_display;
     new_globals->use_nonprop_fonts = GLOBALS->use_nonprop_fonts;
     new_globals->use_roundcaps = GLOBALS->use_roundcaps;
-    new_globals->use_scrollbar_only = GLOBALS->use_scrollbar_only;
     new_globals->vcd_explicit_zero_subscripts = GLOBALS->vcd_explicit_zero_subscripts;
     new_globals->vcd_preserve_glitches = GLOBALS->vcd_preserve_glitches;
     new_globals->vcd_preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;

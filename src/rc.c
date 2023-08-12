@@ -673,13 +673,6 @@ GLOBALS->ruler_step=atoi_64(str);
 return(0);
 }
 
-int f_use_scrollbar_only(char *str)
-{
-DEBUG(printf("f_use_scrollbar_only(\"%s\")\n",str));
-GLOBALS->use_scrollbar_only=atoi_64(str)?1:0;
-return(0);
-}
-
 int f_use_scrollwheel_as_y(char *str)
 {
 DEBUG(printf("f_use_scrollwheel_as_y(\"%s\")\n",str));
@@ -975,7 +968,6 @@ static struct rc_entry rcitems[]=
 { "use_nonprop_fonts", f_use_nonprop_fonts },
 { "use_pango_fonts", f_use_pango_fonts },
 { "use_roundcaps", f_use_roundcaps },
-{ "use_scrollbar_only", f_use_scrollbar_only },
 { "use_scrollwheel_as_y", f_use_scrollwheel_as_y },
 { "vcd_explicit_zero_subscripts", f_vcd_explicit_zero_subscripts },
 { "vcd_preserve_glitches", f_vcd_preserve_glitches },

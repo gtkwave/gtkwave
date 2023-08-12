@@ -114,7 +114,6 @@ int  f_use_full_precision (char *str);
 int  f_use_maxtime_display (char *str);
 int  f_use_nonprop_fonts (char *str);
 int  f_use_roundcaps (char *str);
-int  f_use_scrollbar_only (char *str);
 int  f_vcd_explicit_zero_subscripts (char *str);
 int  f_vcd_preserve_glitches (char *str);
 int  f_vcd_warning_filesize (char *str);
