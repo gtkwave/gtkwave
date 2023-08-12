@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Removed rc variables:
     - `alt_wheel_mode`
     - `hier_grouping`
+    - `hpane_pack`
     - `use_scrollbar_only`
     - `use_scrollwheel_as_y`
     - `use_standard_clicking`
