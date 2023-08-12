@@ -26,7 +26,6 @@ int main_2(int opt_vcd, int argc, char *argv[]);
 
 GtkWidget *create_text(void);
 GtkWidget *create_entry_box(void);
-GtkWidget *create_time_box(void);
 GtkWidget *create_wavewindow(void);
 GtkWidget *create_signalwindow(void);
 

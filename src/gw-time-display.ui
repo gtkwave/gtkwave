@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+    <requires lib="gtk" version="3.24" />
+    <template class="GwTimeDisplay" parent="GtkBox">
+        <property name="orientation">horizontal</property>
+        <style>
+            <class name="time-display" />
+        </style>
+        <child>
+            <object class="GtkLabel" id="marker_label">
+                <property name="xalign">0.0</property>
+                <property name="valign">baseline</property>
+                <property name="width-chars">6</property>
+                <style>
+                    <class name="label" />
+                </style>
+            </object>
+        </child>
+        <child>
+            <object class="GtkLabel" id="marker_value">
+                <property name="xalign">1.0</property>
+                <property name="valign">baseline</property>
+                <property name="width-chars">17</property>
+                <style>
+                    <class name="value" />
+                </style>
+            </object>
+        </child>
+        <child>
+            <object class="GtkLabel">
+                <property name="label">|</property>
+                <property name="valign">baseline</property>
+                <style>
+                    <class name="separator" />
+                </style>
+            </object>
+        </child>
+        <child>
+            <object class="GtkLabel" id="cursor_label">
+                <property name="xalign">0.0</property>
+                <property name="valign">baseline</property>
+                <property name="width-chars">6</property>
+                <style>
+                    <class name="label" />
+                </style>
+            </object>
+        </child>
+        <child>
+            <object class="GtkLabel" id="cursor_value">
+                <property name="xalign">1.0</property>
+                <property name="valign">baseline</property>
+                <property name="width-chars">17</property>
+                <style>
+                    <class name="value" />
+                </style>
+            </object>
+        </child>
+    </template>
+</interface>

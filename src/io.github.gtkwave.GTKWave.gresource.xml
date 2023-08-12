@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+    <gresource prefix="/io/github/gtkwave/GTKWave/ui">
+        <file preprocess="xml-stripblanks">gw-time-display.ui</file>
+    </gresource>
+    <gresource prefix="/io/github/gtkwave/GTKWave">
+        <file>gtkwave.css</file>
+    </gresource>
+</gresources>

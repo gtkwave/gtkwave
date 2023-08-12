@@ -1,0 +1,20 @@
+.time-display {
+  color: @theme_unfocused_text_color;
+  background: @theme_unfocused_base_color;
+  border: 1px solid @unfocused_borders;
+  padding: 0 8px;
+}
+
+.time-display label.label {
+  margin-right: 8px;
+}
+
+.time-display label.value {
+  font-feature-settings: "tnum";
+  font-weight: bold;
+}
+
+.time-display label.separator {
+  color: alpha(@theme_unfocused_text_color, 0.4);
+  margin: 0 8px;
+}
