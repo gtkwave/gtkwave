@@ -51,7 +51,6 @@ vlist_prepack off
 vlist_compression 4
 
 hier_max_level 1
-force_toolbars 0
 #cursor_snap 8
 zoom_pow10_snap on
 

@@ -842,7 +842,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->lz_removal = old_g->lz_removal;
         GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->enable_vert_grid = old_g->enable_vert_grid;
-        GLOBALS->force_toolbars = old_g->force_toolbars;
         GLOBALS->hide_sst = old_g->hide_sst;
         GLOBALS->sst_expanded = old_g->sst_expanded;
         GLOBALS->hier_max_level = old_g->hier_max_level;

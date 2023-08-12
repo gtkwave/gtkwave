@@ -322,19 +322,6 @@ strcpy(GLOBALS->fontname_waves,str);
 return(0);
 }
 
-int f_force_toolbars(char *str)
-{
-DEBUG(printf("f_force_toolbars(\"%s\")\n",str));
-GLOBALS->force_toolbars=atoi_64(str)?1:0;
-
-if(GLOBALS->force_toolbars)
-	{
-	fprintf(stderr, "GTKWAVE | force_toolbars rcvar option does not work with this version of GTK, ignoring!\n");
-	}
-
-return(0);
-}
-
 int f_hide_sst(char *str)
 {
 DEBUG(printf("f_hide_sst(\"%s\")\n",str));
@@ -904,7 +891,6 @@ static struct rc_entry rcitems[]=
 { "fontname_logfile", f_fontname_logfile },
 { "fontname_signals", f_fontname_signals },
 { "fontname_waves", f_fontname_waves },
-{ "force_toolbars", f_force_toolbars },
 { "hide_sst", f_hide_sst },
 { "hier_delimeter", f_hier_delimeter },
 { "hier_ignore_escapes", f_hier_ignore_escapes },
