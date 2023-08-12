@@ -470,8 +470,8 @@ const char *signal_value_prefix(TraceFlagsType flags)
 
 llist_p *signal_change_list(char *sig_name,
                             int dir,
-                            TimeType start_time,
-                            TimeType end_time,
+                            GwTime start_time,
+                            GwTime end_time,
                             int max_elements)
 {
     llist_p *l0_head = NULL, *l0_tail = NULL, *l1_head = NULL, *l_elem, *lp;
@@ -490,8 +490,8 @@ llist_p *signal_change_list(char *sig_name,
     if (t) { /* we have a signal */
         /* create a list of value change structs (hptrs or vptrs */
         int nelem = 0 /* , bw = -1 */; /* scan-build */
-        TimeType tstart = (dir == STRACE_FORWARD) ? start_time : end_time;
-        TimeType tend = (dir == STRACE_FORWARD) ? end_time : start_time;
+        GwTime tstart = (dir == STRACE_FORWARD) ? start_time : end_time;
+        GwTime tend = (dir == STRACE_FORWARD) ? end_time : start_time;
         if ((dir == STRACE_BACKWARD) && (max_elements == 1)) {
             max_elements++;
         }

@@ -183,7 +183,7 @@ static void menu_def_ruler(gpointer null_data, guint callback_action, GtkWidget 
         if (GLOBALS->ruler_step < 0)
             GLOBALS->ruler_step = -GLOBALS->ruler_step;
     } else {
-        GLOBALS->ruler_origin = GLOBALS->ruler_step = LLDescriptor(0);
+        GLOBALS->ruler_origin = GLOBALS->ruler_step = GW_TIME_CONSTANT(0);
     }
 
     GLOBALS->signalwindow_width_dirty = 1;
@@ -591,7 +591,7 @@ void menu_unwarp_traces_all(gpointer null_data, guint callback_action, GtkWidget
     t = GLOBALS->traces.first;
     while (t) {
         if (t->shift) {
-            t->shift = LLDescriptor(0);
+            t->shift = GW_TIME_CONSTANT(0);
             found++;
         }
         t = t->t_next;
@@ -615,7 +615,7 @@ void menu_unwarp_traces(gpointer null_data, guint callback_action, GtkWidget *wi
     t = GLOBALS->traces.first;
     while (t) {
         if (t->flags & TR_HIGHLIGHT) {
-            t->shift = LLDescriptor(0);
+            t->shift = GW_TIME_CONSTANT(0);
             t->flags &= (~TR_HIGHLIGHT);
             found++;
         }
@@ -634,7 +634,7 @@ void warp_cleanup(GtkWidget *widget, gpointer data)
     (void)data;
 
     if (GLOBALS->entrybox_text) {
-        TimeType gt, delta;
+        GwTime gt, delta;
         Trptr t;
 
         gt = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension);
@@ -659,7 +659,7 @@ void warp_cleanup(GtkWidget *widget, gpointer data)
                 {
                     t->shift = gt;
                 } else {
-                    t->shift = LLDescriptor(0);
+                    t->shift = GW_TIME_CONSTANT(0);
                 }
                 t->flags &= (~TR_HIGHLIGHT);
             }
@@ -691,7 +691,7 @@ void menu_warp_traces(gpointer null_data, guint callback_action, GtkWidget *widg
     }
 
     if (found) {
-        reformat_time(gt, LLDescriptor(0), GLOBALS->time_dimension);
+        reformat_time(gt, GW_TIME_CONSTANT(0), GLOBALS->time_dimension);
         entrybox("Warp Traces", 200, gt, NULL, 20, G_CALLBACK(warp_cleanup));
     }
 }
@@ -1689,7 +1689,7 @@ static unsigned expand_trace(Trptr t_top)
             bptr bits;
             int i;
             Trptr tfix;
-            TimeType otime = t->shift;
+            GwTime otime = t->shift;
 
             bits = t->n.vec->bits;
             if (!(t->flags & TR_REVERSE)) {
@@ -3787,11 +3787,11 @@ void movetotime_cleanup(GtkWidget *widget, gpointer data)
     (void)data;
 
     if (GLOBALS->entrybox_text) {
-        TimeType gt = GLOBALS->tims.first;
+        GwTime gt = GLOBALS->tims.first;
         char update_string[128];
         char timval[40];
         GtkAdjustment *hadj;
-        TimeType pageinc;
+        GwTime pageinc;
 
         if ((GLOBALS->entrybox_text[0] >= 'A' && GLOBALS->entrybox_text[0] <= 'Z') ||
             (GLOBALS->entrybox_text[0] >= 'a' && GLOBALS->entrybox_text[0] <= 'z')) {
@@ -3823,7 +3823,7 @@ void movetotime_cleanup(GtkWidget *widget, gpointer data)
         hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
         gtk_adjustment_set_value(hadj, gt);
 
-        pageinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+        pageinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
         if (gt < (GLOBALS->tims.last - pageinc + 1))
             GLOBALS->tims.timecache = gt;
         else {
@@ -3861,7 +3861,7 @@ static void fetchsize_cleanup(GtkWidget *widget, gpointer data)
     (void)data;
 
     if (GLOBALS->entrybox_text) {
-        TimeType fw;
+        GwTime fw;
         char update_string[128];
         fw = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension);
         if (fw < 1) {
@@ -3871,7 +3871,7 @@ static void fetchsize_cleanup(GtkWidget *widget, gpointer data)
         }
         free_2(GLOBALS->entrybox_text);
         GLOBALS->entrybox_text = NULL;
-        sprintf(update_string, "Fetch Size is now: " TTFormat "\n", fw);
+        sprintf(update_string, "Fetch Size is now: %" GW_TIME_FORMAT "\n", fw);
         status_text(update_string);
     }
 }

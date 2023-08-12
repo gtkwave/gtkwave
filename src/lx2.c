@@ -30,7 +30,7 @@
 /*
  * mainline
  */
-TimeType lx2_main(char *fname, char *skip_start, char *skip_end)
+GwTime lx2_main(char *fname, char *skip_start, char *skip_end)
 {
     int i;
     struct Node *n;
@@ -43,7 +43,8 @@ TimeType lx2_main(char *fname, char *skip_start, char *skip_end)
 
     GLOBALS->lx2_lx2_c_1 = lxt2_rd_init(fname);
     if (!GLOBALS->lx2_lx2_c_1) {
-        return (LLDescriptor(0)); /* look at GLOBALS->lx2_lx2_c_1 in caller for success status... */
+        return (
+            GW_TIME_CONSTANT(0)); /* look at GLOBALS->lx2_lx2_c_1 in caller for success status... */
     }
 
     /* SPLASH */ splash_create();
@@ -74,9 +75,9 @@ TimeType lx2_main(char *fname, char *skip_start, char *skip_end)
     /* SPLASH */ splash_sync(1, 5);
 
     GLOBALS->first_cycle_lx2_c_1 =
-        (TimeType)lxt2_rd_get_start_time(GLOBALS->lx2_lx2_c_1) * GLOBALS->time_scale;
+        (GwTime)lxt2_rd_get_start_time(GLOBALS->lx2_lx2_c_1) * GLOBALS->time_scale;
     GLOBALS->last_cycle_lx2_c_1 =
-        (TimeType)lxt2_rd_get_end_time(GLOBALS->lx2_lx2_c_1) * GLOBALS->time_scale;
+        (GwTime)lxt2_rd_get_end_time(GLOBALS->lx2_lx2_c_1) * GLOBALS->time_scale;
     GLOBALS->total_cycles_lx2_c_1 = GLOBALS->last_cycle_lx2_c_1 - GLOBALS->first_cycle_lx2_c_1 + 1;
 
     /* do your stuff here..all useful info has been initialized by now */
@@ -308,7 +309,7 @@ TimeType lx2_main(char *fname, char *skip_start, char *skip_end)
     GLOBALS->is_lx2 = LXT2_IS_LXT2;
 
     if (skip_start || skip_end) {
-        TimeType b_start, b_end;
+        GwTime b_start, b_end;
 
         if (!skip_start)
             b_start = GLOBALS->min_time;
@@ -330,7 +331,7 @@ TimeType lx2_main(char *fname, char *skip_start, char *skip_end)
             b_end = GLOBALS->max_time;
 
         if (b_start > b_end) {
-            TimeType tmp_time = b_start;
+            GwTime tmp_time = b_start;
             b_start = b_end;
             b_end = tmp_time;
         }

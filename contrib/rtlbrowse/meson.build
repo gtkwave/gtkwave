@@ -25,7 +25,13 @@ rtlbrowse_sources = [
     'tree_widget.c',
 ]
 
-rtlbrowse_dependencies = [gtk_dep, libfst_dep, libvzt_dep, liblxt_dep]
+rtlbrowse_dependencies = [
+    gtk_dep,
+    libfst_dep,
+    libvzt_dep,
+    liblxt_dep,
+    libgtkwave_dep,
+]
 
 rtlbrowse_include_directories = [
     config_inc,

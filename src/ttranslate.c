@@ -570,18 +570,18 @@ int traverse_vector_nodes(Trptr t)
                 struct VectorEnt *vprev;
                 bvptr bv;
                 int regions = 2;
-                TimeType prev_tim = LLDescriptor(-1);
+                GwTime prev_tim = GW_TIME_CONSTANT(-1);
                 char *trace_name = NULL;
                 char *orig_name = t->n.vec->bvname;
 
                 cvt_ok = 1;
 
                 vt_head = vt_curr = vt = calloc_2(1, sizeof(struct VectorEnt) + 1);
-                vt->time = LLDescriptor(-2);
+                vt->time = GW_TIME_CONSTANT(-2);
                 vprev = vt; /* for duplicate removal */
 
                 vt_curr = vt_curr->next = vt = calloc_2(1, sizeof(struct VectorEnt) + 1);
-                vt->time = LLDescriptor(-1);
+                vt->time = GW_TIME_CONSTANT(-1);
 
                 for (;;) {
                     char buf[1025];
@@ -637,7 +637,7 @@ int traverse_vector_nodes(Trptr t)
                     }
 
                     if (*pnt == '#') {
-                        TimeType tim = atoi_64(pnt + 1) * GLOBALS->time_scale;
+                        GwTime tim = atoi_64(pnt + 1) * GLOBALS->time_scale;
                         int slen;
                         char *sp;
 
@@ -697,12 +697,12 @@ int traverse_vector_nodes(Trptr t)
                         if (mlen) {
                             int which_marker = bijective_marker_id_string_hash(pnt);
                             if ((which_marker >= 0) && (which_marker < WAVE_NUM_NAMED_MARKERS)) {
-                                TimeType tim = atoi_64(pnt + mlen) * GLOBALS->time_scale;
+                                GwTime tim = atoi_64(pnt + mlen) * GLOBALS->time_scale;
                                 int slen;
                                 char *sp;
 
-                                if (tim < LLDescriptor(0))
-                                    tim = LLDescriptor(-1);
+                                if (tim < GW_TIME_CONSTANT(0))
+                                    tim = GW_TIME_CONSTANT(-1);
                                 GLOBALS->named_markers[which_marker] = tim;
 
                                 while (*pnt) {
@@ -737,7 +737,8 @@ int traverse_vector_nodes(Trptr t)
                                 if (GLOBALS->marker_names[which_marker])
                                     free_2(GLOBALS->marker_names[which_marker]);
                                 GLOBALS->marker_names[which_marker] =
-                                    (sp && (*sp) && (tim >= LLDescriptor(0))) ? strdup_2(sp) : NULL;
+                                    (sp && (*sp) && (tim >= GW_TIME_CONSTANT(0))) ? strdup_2(sp)
+                                                                                  : NULL;
                             }
                         }
 

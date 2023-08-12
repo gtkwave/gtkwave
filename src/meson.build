@@ -118,6 +118,7 @@ gtkwave_dependencies = [
     tcl_dep,
     tk_dep,
     gnu_regex_dep,
+    libgtkwave_dep,
 ]
 
 gtkwave_include_directories = [
@@ -144,6 +145,7 @@ twinwave_sources = [
 
 twinwave_dependencies = [
     gtk_dep,
+    libgtkwave_dep,
 ]
 
 twinwave_include_directories = [

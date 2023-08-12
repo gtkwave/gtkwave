@@ -9,6 +9,7 @@
 #include <vzt_read.h>
 #include <lxt2_read.h>
 #include <fstapi.h>
+#include <gtkwave.h>
 
 extern struct vzt_rd_trace  *vzt;
 extern struct lxt2_rd_trace *lx2;

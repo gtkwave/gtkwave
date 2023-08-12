@@ -18,7 +18,7 @@
 
 #include "vcd.h"
 
-TimeType lxt_main(char *fname);
+GwTime lxt_main(char *fname);
 void import_lxt_trace(nptr np);
 
 #define LT_SECTION_END (0)

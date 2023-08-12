@@ -16,4 +16,3 @@ void search_insert_callback(GtkWidget *widget, char is_prepend);
 int searchbox_is_active(void);
 
 #endif
-

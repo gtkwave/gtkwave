@@ -18,6 +18,6 @@ void service_zoom_full(GtkWidget *text, gpointer data);
 void service_zoom_undo(GtkWidget *text, gpointer data);
 void service_zoom_left(GtkWidget *text, gpointer data);
 void service_zoom_right(GtkWidget *text, gpointer data);
-void service_dragzoom(TimeType time1, TimeType time2);
+void service_dragzoom(GwTime time1, GwTime time2);
 
 #endif

@@ -13,4 +13,3 @@
 void simplereqbox(const char *title, int width, const char *default_text, const char *oktext, const char *canceltext, GCallback func, int is_alert);
 
 #endif
-

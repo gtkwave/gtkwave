@@ -89,7 +89,7 @@ void fractional_timescale_fix(char *s)
 }
 
 /* handles floating point values with units */
-static TimeType unformat_time_complex(const char *s, char dim)
+static GwTime unformat_time_complex(const char *s, char dim)
 {
     int i, delta, rc;
     unsigned char ch = dim;
@@ -122,13 +122,13 @@ static TimeType unformat_time_complex(const char *s, char dim)
         }
     }
 
-    return ((TimeType)d);
+    return ((GwTime)d);
 }
 
 /* handles integer values with units */
-static TimeType unformat_time_simple(const char *buf, char dim)
+static GwTime unformat_time_simple(const char *buf, char dim)
 {
-    TimeType rval;
+    GwTime rval;
     const char *pnt;
     const char *offs = NULL;
     const char *doffs;
@@ -175,7 +175,7 @@ static TimeType unformat_time_simple(const char *buf, char dim)
     return (rval);
 }
 
-TimeType unformat_time(const char *s, char dim)
+GwTime unformat_time(const char *s, char dim)
 {
     const char *compar = ".+eE";
     int compar_len = strlen(compar);
@@ -186,7 +186,7 @@ TimeType unformat_time(const char *s, char dim)
         if (bijective_marker_id_string_len(s + 1)) {
             unsigned int mkv = bijective_marker_id_string_hash(s + 1);
             if (mkv < WAVE_NUM_NAMED_MARKERS) {
-                TimeType mkvt = GLOBALS->named_markers[mkv];
+                GwTime mkvt = GLOBALS->named_markers[mkv];
                 if (mkvt != -1) {
                     return (mkvt);
                 }
@@ -206,12 +206,12 @@ TimeType unformat_time(const char *s, char dim)
     return (unformat_time_simple(s, dim));
 }
 
-void reformat_time_simple(char *buf, TimeType val, char dim)
+void reformat_time_simple(char *buf, GwTime val, char dim)
 {
     char *pnt;
     int i, offset;
 
-    if (val < LLDescriptor(0)) {
+    if (val < GW_TIME_CONSTANT(0)) {
         val = -val;
         buf[0] = '-';
         buf++;
@@ -230,18 +230,18 @@ void reformat_time_simple(char *buf, TimeType val, char dim)
     }
 
     if (i) {
-        sprintf(buf, TTFormat " %cs", val, time_prefix[i]);
+        sprintf(buf, "%" GW_TIME_FORMAT " %cs", val, time_prefix[i]);
     } else {
-        sprintf(buf, TTFormat " sec", val);
+        sprintf(buf, "%" GW_TIME_FORMAT " sec", val);
     }
 }
 
-void reformat_time(char *buf, TimeType val, char dim)
+void reformat_time(char *buf, GwTime val, char dim)
 {
     const char *pnt;
     int i, offset, offsetfix;
 
-    if (val < LLDescriptor(0)) {
+    if (val < GW_TIME_CONSTANT(0)) {
         val = -val;
         buf[0] = '-';
         buf++;
@@ -298,15 +298,15 @@ void reformat_time(char *buf, TimeType val, char dim)
 
     if ((i) && (time_prefix)) /* scan-build on time_prefix, should not be necessary however */
     {
-        sprintf(buf, TTFormat " %cs", val, time_prefix[i]);
+        sprintf(buf, "%" GW_TIME_FORMAT " %cs", val, time_prefix[i]);
     } else {
-        sprintf(buf, TTFormat " sec", val);
+        sprintf(buf, "%" GW_TIME_FORMAT " sec", val);
     }
 }
 
 void update_time_box(void)
 {
-    TimeType val = GLOBALS->tims.marker;
+    GwTime val = GLOBALS->tims.marker;
 
     if (GLOBALS->anno_ctx) {
         if (val >= 0) {
@@ -316,7 +316,7 @@ void update_time_box(void)
                 GLOBALS->anno_ctx->marker = val / GLOBALS->time_scale;
             } else {
                 int rvs_xlate = bsearch_aetinfo_timechain(val);
-                GLOBALS->anno_ctx->marker = ((TimeType)rvs_xlate) + GLOBALS->ae2_start_cyc;
+                GLOBALS->anno_ctx->marker = ((GwTime)rvs_xlate) + GLOBALS->ae2_start_cyc;
             }
 
             reformat_time(GLOBALS->anno_ctx->time_string,
@@ -343,7 +343,7 @@ void update_time_box(void)
     gw_time_display_update(GW_TIME_DISPLAY(GLOBALS->time_box), &GLOBALS->tims);
 }
 
-void update_currenttime(TimeType val)
+void update_currenttime(GwTime val)
 {
     GLOBALS->cached_currenttimeval_currenttime_c_1 = val;
 
@@ -356,7 +356,7 @@ void update_currenttime(TimeType val)
     update_time_box();
 }
 
-TimeType time_trunc(TimeType t)
+GwTime time_trunc(GwTime t)
 {
     if (!GLOBALS->use_full_precision)
         if (GLOBALS->time_trunc_val_currenttime_c_1 != 1) {
@@ -372,7 +372,7 @@ TimeType time_trunc(TimeType t)
 void time_trunc_set(void)
 {
     gdouble gcompar = 1e15;
-    TimeType compar = LLDescriptor(1000000000000000);
+    GwTime compar = GW_TIME_CONSTANT(1000000000000000);
 
     for (; compar != 1; compar = compar / 10, gcompar = gcompar / ((gdouble)10.0)) {
         if (GLOBALS->nspx >= gcompar) {
@@ -391,81 +391,81 @@ void exponent_to_time_scale(signed char scale)
 {
     switch (scale) {
         case 2:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 's';
             break;
         case 1:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case 0:
             GLOBALS->time_dimension = 's';
             break;
 
         case -1:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 'm';
             break;
         case -2:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case -3:
             GLOBALS->time_dimension = 'm';
             break;
 
         case -4:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 'u';
             break;
         case -5:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case -6:
             GLOBALS->time_dimension = 'u';
             break;
 
         case -10:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 'p';
             break;
         case -11:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case -12:
             GLOBALS->time_dimension = 'p';
             break;
 
         case -13:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 'f';
             break;
         case -14:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case -15:
             GLOBALS->time_dimension = 'f';
             break;
 
         case -16:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 'a';
             break;
         case -17:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case -18:
             GLOBALS->time_dimension = 'a';
             break;
 
         case -19:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 'z';
             break;
         case -20:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case -21:
             GLOBALS->time_dimension = 'z';
             break;
 
         case -7:
-            GLOBALS->time_scale = LLDescriptor(100);
+            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
             GLOBALS->time_dimension = 'n';
             break;
         case -8:
-            GLOBALS->time_scale = LLDescriptor(10); /* fallthrough */
+            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
         case -9:
         default:
             GLOBALS->time_dimension = 'n';

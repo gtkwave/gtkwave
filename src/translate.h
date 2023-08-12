@@ -22,21 +22,19 @@
  * char splay
  */
 typedef struct xl_tree_node xl_Tree;
-struct xl_tree_node {
+struct xl_tree_node
+{
     xl_Tree *left, *right;
     char *item;
     char *trans;
 };
 
-
 #define FILE_FILTER_MAX (128)
 #define WAVE_TCL_INSTALLED_FILTER "\"TCL_Installed_Filter\""
 
-
-xl_Tree * xl_splay (char *i, xl_Tree * t);
-xl_Tree * xl_insert(char *i, xl_Tree * t, char *trans);
-xl_Tree * xl_delete(char *i, xl_Tree * t);
-
+xl_Tree *xl_splay(char *i, xl_Tree *t);
+xl_Tree *xl_insert(char *i, xl_Tree *t, char *trans);
+xl_Tree *xl_delete(char *i, xl_Tree *t);
 
 void trans_searchbox(const char *title);
 void init_filetrans_data(void);
@@ -46,4 +44,3 @@ void set_current_translate_enums(char *lst);
 void set_current_translate_file(char *name);
 
 #endif
-

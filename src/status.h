@@ -13,4 +13,3 @@
 void status_text(const char *str);
 
 #endif
-

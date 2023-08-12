@@ -13,4 +13,3 @@
 void entrybox(const char *title, int width, const char *dflt_text, const char *comment, int maxch, GCallback func);
 
 #endif
-

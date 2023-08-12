@@ -22,8 +22,8 @@ void llist_free(llist_p *head, ll_elem_type type, void *f(void *));
 
 llist_p *signal_change_list(char *sig_name,
                             int dir,
-                            TimeType start_time,
-                            TimeType end_time,
+                            GwTime start_time,
+                            GwTime end_time,
                             int max_elements);
 
 #define SST_NODE_FOUND 0

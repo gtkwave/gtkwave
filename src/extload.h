@@ -20,12 +20,11 @@
 
 #define EXTLOAD "EXTLOAD | "
 
-TimeType 	extload_main(char *fname, char *skip_start, char *skip_end);
-void 		import_extload_trace(nptr np);
+GwTime extload_main(char *fname, char *skip_start, char *skip_end);
+void import_extload_trace(nptr np);
 
 /* FsdbReader adds */
-void 		fsdb_import_masked(void);
-void 		fsdb_set_fac_process_mask(nptr np);
+void fsdb_import_masked(void);
+void fsdb_set_fac_process_mask(nptr np);
 
 #endif
-

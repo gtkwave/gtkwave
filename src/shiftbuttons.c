@@ -20,12 +20,13 @@ void service_left_shift(GtkWidget *text, gpointer data)
 
     GtkAdjustment *hadj;
     gfloat inc;
-    TimeType ntinc;
+    GwTime ntinc;
 
     if (GLOBALS->nspx > 1.0)
         inc = GLOBALS->nspx;
     else
         inc = 1.0;
+
 
     hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
     if ((gtk_adjustment_get_value(hadj) - inc) > GLOBALS->tims.first)
@@ -33,7 +34,7 @@ void service_left_shift(GtkWidget *text, gpointer data)
     else
         gtk_adjustment_set_value(hadj, GLOBALS->tims.first);
 
-    ntinc = (TimeType)inc;
+    ntinc = (GwTime)inc;
     if ((GLOBALS->tims.start - ntinc) > GLOBALS->tims.first)
         GLOBALS->tims.timecache = GLOBALS->tims.start - ntinc;
     else
@@ -51,13 +52,13 @@ void service_right_shift(GtkWidget *text, gpointer data)
 
     GtkAdjustment *hadj;
     gfloat inc;
-    TimeType ntinc, pageinc;
+    GwTime ntinc, pageinc;
 
     if (GLOBALS->nspx > 1.0)
         inc = GLOBALS->nspx;
     else
         inc = 1.0;
-    ntinc = (TimeType)inc;
+    ntinc = (GwTime)inc;
 
     hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
     if ((gtk_adjustment_get_value(hadj) + inc) < GLOBALS->tims.last)
@@ -65,7 +66,7 @@ void service_right_shift(GtkWidget *text, gpointer data)
     else
         gtk_adjustment_set_value(hadj, GLOBALS->tims.last - inc);
 
-    pageinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+    pageinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
 
     if ((GLOBALS->tims.start + ntinc) < (GLOBALS->tims.last - pageinc + 1))
         GLOBALS->tims.timecache = GLOBALS->tims.start + ntinc;

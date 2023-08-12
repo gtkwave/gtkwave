@@ -15,7 +15,8 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdio.h>
@@ -26,49 +27,48 @@ extern "C" {
 #include <inttypes.h>
 #endif
 
-struct fsdbReaderGetStatistics_t
-{
-int varCount;
-int scopeCount;
-};
+    struct fsdbReaderGetStatistics_t
+    {
+        int varCount;
+        int scopeCount;
+    };
 
-struct fsdbReaderBlackoutChain_t
-{
-uint64_t tim;
-unsigned active : 1;
-};
+    struct fsdbReaderBlackoutChain_t
+    {
+        uint64_t tim;
+        unsigned active : 1;
+    };
 
+    void *fsdbReaderOpenFile(char *nam);
+    void fsdbReaderReadScopeVarTree(void *ctx, void (*cb)(void *));
+    int fsdbReaderGetMaxVarIdcode(void *ctx);
+    struct fsdbReaderGetStatistics_t *fsdbReaderGetStatistics(void *ctx);
+    void fsdbReaderAddToSignalList(void *ctx, int i);
+    void fsdbReaderResetSignalList(void *ctx);
+    void fsdbReaderLoadSignals(void *ctx);
+    void *fsdbReaderCreateVCTraverseHandle(void *ctx, int i);
+    int fsdbReaderHasIncoreVC(void *ctx, void *hdl);
+    void fsdbReaderFree(void *ctx, void *hdl);
+    uint64_t fsdbReaderGetMinXTag(void *ctx, void *hdl);
+    uint64_t fsdbReaderGetMaxXTag(void *ctx, void *hdl);
+    int fsdbReaderGotoXTag(void *ctx, void *hdl, uint64_t tim);
+    uint64_t fsdbReaderGetXTag(void *ctx, void *hdl, int *rc);
+    int fsdbReaderGetVC(void *ctx, void *hdl, void **val_ptr);
+    int fsdbReaderGotoNextVC(void *ctx, void *hdl);
+    void fsdbReaderUnloadSignals(void *ctx);
+    void fsdbReaderClose(void *ctx);
+    int fsdbReaderGetBytesPerBit(void *hdl);
+    int fsdbReaderGetBitSize(void *hdl);
+    int fsdbReaderGetVarType(void *hdl);
+    char *fsdbReaderTranslateVC(void *hdl, void *val_ptr);
+    int fsdbReaderExtractScaleUnit(void *ctx, int *mult, char *scale);
+    int fsdbReaderGetMinFsdbTag64(void *ctx, uint64_t *tim);
+    int fsdbReaderGetMaxFsdbTag64(void *ctx, uint64_t *tim);
 
-void *fsdbReaderOpenFile(char *nam);
-void fsdbReaderReadScopeVarTree(void *ctx,void (*cb)(void *));
-int fsdbReaderGetMaxVarIdcode(void *ctx);
-struct fsdbReaderGetStatistics_t *fsdbReaderGetStatistics(void *ctx);
-void fsdbReaderAddToSignalList(void *ctx, int i);
-void fsdbReaderResetSignalList(void *ctx);
-void fsdbReaderLoadSignals(void *ctx);
-void *fsdbReaderCreateVCTraverseHandle(void *ctx, int i);
-int fsdbReaderHasIncoreVC(void *ctx, void *hdl);
-void fsdbReaderFree(void *ctx, void *hdl);
-uint64_t fsdbReaderGetMinXTag(void *ctx, void *hdl);
-uint64_t fsdbReaderGetMaxXTag(void *ctx, void *hdl);
-int fsdbReaderGotoXTag(void *ctx, void *hdl, uint64_t tim);
-uint64_t fsdbReaderGetXTag(void *ctx, void *hdl, int *rc);
-int fsdbReaderGetVC(void *ctx, void *hdl, void **val_ptr);
-int fsdbReaderGotoNextVC(void *ctx, void *hdl);
-void fsdbReaderUnloadSignals(void *ctx);
-void fsdbReaderClose(void *ctx);
-int fsdbReaderGetBytesPerBit(void *hdl);
-int fsdbReaderGetBitSize(void *hdl);
-int fsdbReaderGetVarType(void *hdl);
-char *fsdbReaderTranslateVC(void *hdl, void *val_ptr);
-int fsdbReaderExtractScaleUnit(void *ctx, int *mult, char *scale);
-int fsdbReaderGetMinFsdbTag64(void *ctx, uint64_t *tim);
-int fsdbReaderGetMaxFsdbTag64(void *ctx, uint64_t *tim);
+    unsigned int fsdbReaderGetDumpOffRange(void *ctx, struct fsdbReaderBlackoutChain_t **r);
+    int fsdbReaderGetTransInfo(void *ctx, int idx, void **trans_info);
 
-unsigned int fsdbReaderGetDumpOffRange(void *ctx, struct fsdbReaderBlackoutChain_t **r);
-int fsdbReaderGetTransInfo(void *ctx, int idx, void **trans_info);
-
-void fsdbReaderReadScopeVarTree2(void *ctx,void (*cb)(void *));
+    void fsdbReaderReadScopeVarTree2(void *ctx, void (*cb)(void *));
 
 #ifdef __cplusplus
 }

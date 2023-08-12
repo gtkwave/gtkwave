@@ -77,7 +77,7 @@ typedef union llist_payload
     short s;
     char *str;
     void *p;
-    TimeType tt;
+    GwTime tt;
 } llist_u;
 
 typedef struct llist_s

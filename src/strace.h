@@ -69,7 +69,7 @@ struct strace
 struct timechain
 {
     struct timechain *next;
-    TimeType t;
+    GwTime t;
 };
 
 struct mprintf_buff_t
@@ -92,7 +92,7 @@ struct strace_ctx_t
     struct mprintf_buff_t *mprintf_buff_current;
     char *shadow_string;
 
-    TimeType *timearray;
+    GwTime *timearray;
     int timearray_size;
 
     char logical_mutex[6];
@@ -108,7 +108,7 @@ struct strace_ctx_t
 
 void strace_search(int direction);
 void strace_maketimetrace(int mode); /* 1=create, zero=delete */
-TimeType strace_adjust(TimeType a, TimeType b);
+GwTime strace_adjust(GwTime a, GwTime b);
 
 void swap_strace_contexts(void);
 void delete_strace_context(void);

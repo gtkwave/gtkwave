@@ -48,7 +48,7 @@
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static hptr add_histent_p(TimeType time, struct Node *n, char ch, int regadd, char *vector);
+static hptr add_histent_p(GwTime time, struct Node *n, char ch, int regadd, char *vector);
 static void add_tail_histents(void);
 static void vcd_build_symbols(void);
 static void vcd_cleanup(void);
@@ -779,7 +779,7 @@ static void parse_valuechange(void)
                     double *d;
                     char *pnt;
                     char ch;
-                    TimeType k = 0;
+                    GwTime k = 0;
 
                     pnt = vector;
                     while ((ch = *(pnt++))) {
@@ -904,7 +904,7 @@ static void parse_valuechange(void)
                     double *d;
                     char *pnt;
                     char ch;
-                    TimeType k = 0;
+                    GwTime k = 0;
 
                     pnt = vector;
                     while ((ch = *(pnt++))) {
@@ -1130,7 +1130,7 @@ static void vcd_parse(void)
                     break;
                 GLOBALS->global_time_offset = atoi_64(GLOBALS->yytext_vcd_partial_c_2);
 
-                DEBUG(fprintf(stderr, "TIMEZERO: " TTFormat "\n", GLOBALS->global_time_offset));
+                DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n", GLOBALS->global_time_offset));
                 sync_end(NULL);
             } break;
             case T_TIMESCALE: {
@@ -1178,7 +1178,7 @@ static void vcd_parse(void)
                 }
 
                 DEBUG(fprintf(stderr,
-                              "TIMESCALE: " TTFormat " %cs\n",
+                              "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
                               GLOBALS->time_scale,
                               GLOBALS->time_dimension));
                 sync_end(NULL);
@@ -1713,7 +1713,7 @@ static void vcd_parse(void)
                 {
                     /* catchall for events when header over */
                     if (GLOBALS->yytext_vcd_partial_c_2[0] == '#') {
-                        TimeType tim;
+                        GwTime tim;
                         tim = atoi_64(GLOBALS->yytext_vcd_partial_c_2 + 1);
 
                         if (GLOBALS->start_time_vcd_partial_c_2 < 0) {
@@ -1724,7 +1724,7 @@ static void vcd_parse(void)
                         if (GLOBALS->end_time_vcd_partial_c_2 < tim)
                             GLOBALS->end_time_vcd_partial_c_2 =
                                 tim; /* in case of malformed vcd files */
-                        DEBUG(fprintf(stderr, "#" TTFormat "\n", tim));
+                        DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
                     } else {
                         parse_valuechange();
                     }
@@ -1786,7 +1786,7 @@ static void vcd_parse(void)
 
 /*******************************************************************************/
 
-hptr add_histent_p(TimeType tim, struct Node *n, char ch, int regadd, char *vector)
+hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
 {
     struct HistEnt *he, *rc;
     char heval;
@@ -1831,7 +1831,7 @@ hptr add_histent_p(TimeType tim, struct Node *n, char ch, int regadd, char *vect
                 (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
             {
                 if (n->curr->time == tim) {
-                    DEBUG(printf("Warning: Glitch at time [" TTFormat
+                    DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
                                  "] Signal [%p], Value [%c->%c].\n",
                                  tim,
                                  n,
@@ -1880,7 +1880,7 @@ hptr add_histent_p(TimeType tim, struct Node *n, char ch, int regadd, char *vect
                     }
 
                     if (n->curr->time == tim) {
-                        DEBUG(printf("Warning: String Glitch at time [" TTFormat "] Signal [%p].\n",
+                        DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT "] Signal [%p].\n",
                                      tim,
                                      n));
                         if (n->curr->v.h_vector)
@@ -1941,7 +1941,7 @@ hptr add_histent_p(TimeType tim, struct Node *n, char ch, int regadd, char *vect
                         (GLOBALS->vcd_preserve_glitches_real)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
-                            DEBUG(printf("Warning: Real number Glitch at time [" TTFormat
+                            DEBUG(printf("Warning: Real number Glitch at time [%" GW_TIME_FORMAT
                                          "] Signal [%p].\n",
                                          tim,
                                          n));
@@ -2002,7 +2002,7 @@ hptr add_histent_p(TimeType tim, struct Node *n, char ch, int regadd, char *vect
                         (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
-                            DEBUG(printf("Warning: Glitch at time [" TTFormat
+                            DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
                                          "] Signal [%p], Value [%c->%c].\n",
                                          tim,
                                          n,
@@ -2391,7 +2391,7 @@ static void vcd_cleanup(void)
 
 /*******************************************************************************/
 
-TimeType vcd_partial_main(char *fname)
+GwTime vcd_partial_main(char *fname)
 {
     unsigned int shmidu = ~(0L);
     int shmid;

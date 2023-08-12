@@ -15,7 +15,7 @@ static int dim_to_exponent(char dim)
     return (pnt - TIME_PREFIX) * 3;
 }
 
-static gchar *reformat_time_2_scale_to_dimension(TimeType val,
+static gchar *reformat_time_2_scale_to_dimension(GwTime val,
                                                  char dim,
                                                  char target_dim,
                                                  gboolean show_plus_sign)
@@ -49,7 +49,7 @@ static gchar *reformat_time_2_scale_to_dimension(TimeType val,
     }
 }
 
-static gchar *reformat_time_2(TimeType val, char dim, gboolean show_plus_sign)
+static gchar *reformat_time_2(GwTime val, char dim, gboolean show_plus_sign)
 {
     static const gunichar THIN_SPACE = 0x2009;
 
@@ -63,7 +63,7 @@ static gchar *reformat_time_2(TimeType val, char dim, gboolean show_plus_sign)
     gboolean negative = val < 0;
     val = ABS(val);
 
-    gchar *value_str = g_strdup_printf(TTFormat, val);
+    gchar *value_str = g_strdup_printf("%" GW_TIME_FORMAT, val);
     gsize value_len = strlen(value_str);
 
     GString *str = g_string_new(NULL);
@@ -96,7 +96,7 @@ static gchar *reformat_time_2(TimeType val, char dim, gboolean show_plus_sign)
     return g_string_free(str, FALSE);
 }
 
-static gchar *reformat_time_as_frequency(TimeType val, char dim)
+static gchar *reformat_time_as_frequency(GwTime val, char dim)
 {
     double k;
 
@@ -119,7 +119,7 @@ static gchar *reformat_time_as_frequency(TimeType val, char dim)
     }
 }
 
-static gboolean is_in_blackout_region(TimeType val)
+static gboolean is_in_blackout_region(GwTime val)
 {
     for (struct blackout_region_t *bt = GLOBALS->blackout_regions; bt != NULL; bt = bt->next) {
         if (val >= bt->bstart && val < bt->bend) {
@@ -180,7 +180,7 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
             gchar *text = NULL;
 
             if (times->baseline >= 0 || times->lmbcache >= 0) {
-                TimeType delta =
+                GwTime delta =
                     times->marker - (times->baseline >= 0 ? times->baseline : times->lmbcache);
 
                 if (GLOBALS->use_frequency_delta) {

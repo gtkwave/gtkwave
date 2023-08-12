@@ -590,7 +590,7 @@ static void fst_append_graft_chain(int len, char *nam, int which, struct tree *p
 /*
  * mainline
  */
-TimeType fst_main(char *fname, char *skip_start, char *skip_end)
+GwTime fst_main(char *fname, char *skip_start, char *skip_end)
 {
     int i;
     struct Node *n;
@@ -615,7 +615,8 @@ TimeType fst_main(char *fname, char *skip_start, char *skip_end)
 
     GLOBALS->fst_fst_c_1 = fstReaderOpen(fname);
     if (!GLOBALS->fst_fst_c_1) {
-        return (LLDescriptor(0)); /* look at GLOBALS->fst_fst_c_1 in caller for success status... */
+        return (
+            GW_TIME_CONSTANT(0)); /* look at GLOBALS->fst_fst_c_1 in caller for success status... */
     }
     /* SPLASH */ splash_create();
 
@@ -661,9 +662,9 @@ TimeType fst_main(char *fname, char *skip_start, char *skip_end)
     /* SPLASH */ splash_sync(1, 5);
 
     GLOBALS->first_cycle_fst_c_3 =
-        (TimeType)fstReaderGetStartTime(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
+        (GwTime)fstReaderGetStartTime(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
     GLOBALS->last_cycle_fst_c_3 =
-        (TimeType)fstReaderGetEndTime(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
+        (GwTime)fstReaderGetEndTime(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
     GLOBALS->total_cycles_fst_c_3 = GLOBALS->last_cycle_fst_c_3 - GLOBALS->first_cycle_fst_c_3 + 1;
     GLOBALS->global_time_offset = fstReaderGetTimezero(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
 
@@ -678,8 +679,8 @@ TimeType fst_main(char *fname, char *skip_start, char *skip_end)
             continue;
         if ((activity_idx + 1) == num_activity_changes) {
             struct blackout_region_t *bt = calloc_2(1, sizeof(struct blackout_region_t));
-            bt->bstart = (TimeType)(ct * GLOBALS->time_scale);
-            bt->bend = (TimeType)(GLOBALS->last_cycle_fst_c_3 * GLOBALS->time_scale);
+            bt->bstart = (GwTime)(ct * GLOBALS->time_scale);
+            bt->bend = (GwTime)(GLOBALS->last_cycle_fst_c_3 * GLOBALS->time_scale);
             bt->next = GLOBALS->blackout_regions;
 
             GLOBALS->blackout_regions = bt;
@@ -701,8 +702,8 @@ TimeType fst_main(char *fname, char *skip_start, char *skip_end)
 
             if (ac == 1) {
                 struct blackout_region_t *bt = calloc_2(1, sizeof(struct blackout_region_t));
-                bt->bstart = (TimeType)(ct * GLOBALS->time_scale);
-                bt->bend = (TimeType)(ct2 * GLOBALS->time_scale);
+                bt->bstart = (GwTime)(ct * GLOBALS->time_scale);
+                bt->bend = (GwTime)(ct2 * GLOBALS->time_scale);
                 bt->next = GLOBALS->blackout_regions;
 
                 GLOBALS->blackout_regions = bt;
@@ -1343,7 +1344,7 @@ if(num_dups)
     GLOBALS->is_lx2 = LXT2_IS_FST;
 
     if (skip_start || skip_end) {
-        TimeType b_start, b_end;
+        GwTime b_start, b_end;
 
         if (!skip_start)
             b_start = GLOBALS->min_time;
@@ -1365,7 +1366,7 @@ if(num_dups)
             b_end = GLOBALS->max_time;
 
         if (b_start > b_end) {
-            TimeType tmp_time = b_start;
+            GwTime tmp_time = b_start;
             b_start = b_end;
             b_end = tmp_time;
         }

@@ -103,10 +103,10 @@ enum FastloadState
     VCD_FSL_READ
 };
 
-TimeType vcd_main(char *fname);
-TimeType vcd_recoder_main(char *fname);
+GwTime vcd_main(char *fname);
+GwTime vcd_recoder_main(char *fname);
 
-TimeType vcd_partial_main(char *fname);
+GwTime vcd_partial_main(char *fname);
 void vcd_partial_mark_and_sweep(int mandclear);
 void kick_partial_vcd(void);
 

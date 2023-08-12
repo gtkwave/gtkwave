@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <gtkwave.h>
 #include "gtk23compat.h"
 
 #ifndef __MINGW32__
@@ -24,16 +25,7 @@
 
 #define WAVE_MAX_CLIST_LENGTH 15000
 
-typedef gint64 TimeType;
-typedef guint64 UTimeType;
-
-#define LLDescriptor(x) G_GINT64_CONSTANT(x)
-#define ULLDescriptor(x) G_GUINT64_CONSTANT(x)
-
-#define TTFormat "%" G_GINT64_FORMAT
-#define UTTFormat "%" G_GUINT64_FORMAT
-
-#define WAVE_MINZOOM (LLDescriptor(-4000000000))
+#define WAVE_MINZOOM (GW_TIME_CONSTANT(-4000000000))
 
 #ifdef DEBUG_PRINTF
 #define DEBUG(x) x
@@ -68,7 +60,7 @@ char *strdup_2s(const char *s);
 
 char *tmpnam_2(char *s, int *fd); /* mimic functionality of tmpnam() */
 
-TimeType atoi_64(const char *str);
+GwTime atoi_64(const char *str);
 
 void gtk_tooltips_set_tip_2(GtkWidget *widget, const gchar *tip_text);
 
@@ -115,7 +107,7 @@ struct gtkwave_annotate_ipc_t
     pid_t gtkwave_process;
     pid_t browser_process;
 
-    TimeType marker;
+    GwTime marker;
     unsigned marker_set : 1;
     unsigned cygwin_remote_kill : 1;
 
@@ -135,7 +127,7 @@ struct gtkwave_annotate_ipc_t
     HANDLE browser_process;
 #endif
 
-    TimeType marker;
+    GwTime marker;
     unsigned marker_set : 1;
     unsigned cygwin_remote_kill : 1;
 
@@ -152,8 +144,8 @@ struct gtkwave_dual_ipc_t
 {
     char matchword[4]; /* match against DUAL_MATCHWORD string */
 
-    TimeType left_margin_time;
-    TimeType marker, baseline;
+    GwTime left_margin_time;
+    GwTime marker, baseline;
     gdouble zoom;
     unsigned use_new_times : 1;
     unsigned viewer_is_initialized : 1;

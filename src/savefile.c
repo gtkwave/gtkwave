@@ -108,7 +108,7 @@ void write_save_helper(const char *savnam, FILE *wave)
     int i;
     TraceFlagsType def = 0;
     int sz_x, sz_y;
-    TimeType prevshift = LLDescriptor(0);
+    GwTime prevshift = GW_TIME_CONSTANT(0);
     int root_x, root_y;
     struct strace *st;
     int s_ctx_iter;
@@ -175,7 +175,7 @@ void write_save_helper(const char *savnam, FILE *wave)
         }
     }
 
-    fprintf(wave, "[timestart] " TTFormat "\n", GLOBALS->tims.start);
+    fprintf(wave, "[timestart] %" GW_TIME_FORMAT "\n", GLOBALS->tims.start);
 
     get_window_size(&sz_x, &sz_y);
     if (!GLOBALS->ignore_savefile_size)
@@ -186,12 +186,12 @@ void write_save_helper(const char *savnam, FILE *wave)
     if (!GLOBALS->ignore_savefile_pos)
         fprintf(wave, "[pos] %d %d\n", root_x + GLOBALS->xpos_delta, root_y + GLOBALS->ypos_delta);
 
-    fprintf(wave, "*%f " TTFormat, (float)(GLOBALS->tims.zoom), GLOBALS->tims.marker);
+    fprintf(wave, "*%f %" GW_TIME_FORMAT, (float)(GLOBALS->tims.zoom), GLOBALS->tims.marker);
 
     for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        TimeType nm = GLOBALS->named_markers[i]; /* gcc compiler problem...thinks this is a 'long
-                                                    int' in printf format warning reporting */
-        fprintf(wave, " " TTFormat, nm);
+        GwTime nm = GLOBALS->named_markers[i]; /* gcc compiler problem...thinks this is a 'long int'
+                                                  in printf format warning reporting */
+        fprintf(wave, " %" GW_TIME_FORMAT, nm);
     }
     fprintf(wave, "\n");
 
@@ -210,7 +210,7 @@ void write_save_helper(const char *savnam, FILE *wave)
 
     if (GLOBALS->ruler_step) {
         fprintf(wave,
-                "[ruler] " TTFormat " " TTFormat "\n",
+                "[ruler] %" GW_TIME_FORMAT " %" GW_TIME_FORMAT "\n",
                 GLOBALS->ruler_origin,
                 GLOBALS->ruler_step);
     }
@@ -255,7 +255,7 @@ void write_save_helper(const char *savnam, FILE *wave)
         }
 
         if ((t->shift) || ((prevshift) && (!t->shift))) {
-            fprintf(wave, ">" TTFormat "\n", t->shift);
+            fprintf(wave, ">%" GW_TIME_FORMAT "\n", t->shift);
         }
         prevshift = t->shift;
 
@@ -348,7 +348,7 @@ void write_save_helper(const char *savnam, FILE *wave)
                     }
                     if (ba) {
                         fprintf(wave,
-                                " " TTFormat " %" TRACEFLAGSPRIFMT,
+                                " %" GW_TIME_FORMAT " %" TRACEFLAGSPRIFMT,
                                 ba[ix].shift,
                                 ba[ix].flags);
                     }
@@ -438,7 +438,7 @@ void write_save_helper(const char *savnam, FILE *wave)
                     }
 
                     if ((t->shift) || ((prevshift) && (!t->shift))) {
-                        fprintf(wave, ">" TTFormat "\n", t->shift);
+                        fprintf(wave, ">%" GW_TIME_FORMAT "\n", t->shift);
                     }
                     prevshift = t->shift;
 
@@ -522,7 +522,7 @@ void write_save_helper(const char *savnam, FILE *wave)
                                 }
                                 if (ba) {
                                     fprintf(wave,
-                                            " " TTFormat " %" TRACEFLAGSPRIFMT,
+                                            " %" GW_TIME_FORMAT " %" TRACEFLAGSPRIFMT,
                                             ba[ix].shift,
                                             ba[ix].flags);
                                 }
@@ -780,7 +780,7 @@ int read_save_helper(char *wname,
 
         GLOBALS->default_flags = TR_RJUSTIFY;
         GLOBALS->default_fpshift = 0;
-        GLOBALS->shift_timebase_default_for_add = LLDescriptor(0);
+        GLOBALS->shift_timebase_default_for_add = GW_TIME_CONSTANT(0);
         GLOBALS->strace_current_window = 0; /* in case there are shadow traces */
 
         rc = 0;
@@ -816,7 +816,7 @@ int read_save_helper(char *wname,
 
         GLOBALS->default_flags = TR_RJUSTIFY;
         GLOBALS->default_fpshift = 0;
-        GLOBALS->shift_timebase_default_for_add = LLDescriptor(0);
+        GLOBALS->shift_timebase_default_for_add = GW_TIME_CONSTANT(0);
         update_time_box();
         if (wave_is_compressed)
             pclose(wave);
@@ -1008,7 +1008,7 @@ int parsewavline(char *w, char *alias, int depth)
 
     if (*w2 == '*') {
         float f;
-        TimeType ttlocal;
+        GwTime ttlocal;
         int which = 0;
 
         GLOBALS->zoom_was_explicitly_set = ~0;
@@ -1026,7 +1026,7 @@ int parsewavline(char *w, char *alias, int depth)
                     GLOBALS->tims.zoom = (gdouble)f;
                 }
             } else {
-                sscanf(w2, TTFormat, &ttlocal);
+                sscanf(w2, "%" GW_TIME_FORMAT, &ttlocal);
                 switch (which) {
                     case 1:
                         GLOBALS->tims.marker = ttlocal;
@@ -1054,7 +1054,7 @@ int parsewavline(char *w, char *alias, int depth)
         AddBlankTrace((*(w2 + 1) != 0) ? (w2 + 1) : NULL);
     } else if (*w2 == '>') {
         char *wnptr = (*(w2 + 1) != 0) ? (w2 + 1) : NULL;
-        GLOBALS->shift_timebase_default_for_add = wnptr ? atoi_64(wnptr) : LLDescriptor(0);
+        GLOBALS->shift_timebase_default_for_add = wnptr ? atoi_64(wnptr) : GW_TIME_CONSTANT(0);
     } else if (*w2 == '@') {
         /* handle trace flags */
         sscanf(w2 + 1, "%" TRACEFLAGSSCNFMT, &GLOBALS->default_flags);
@@ -1453,10 +1453,10 @@ int parsewavline(char *w, char *alias, int depth)
                     &GLOBALS->strace_windows[GLOBALS->strace_current_window = which_ctx];
             }
         } else if (strcmp(w2, "ruler") == 0) {
-            GLOBALS->ruler_origin = GLOBALS->ruler_step = LLDescriptor(0);
-            sscanf(w, TTFormat " " TTFormat, &GLOBALS->ruler_origin, &GLOBALS->ruler_step);
+            GLOBALS->ruler_origin = GLOBALS->ruler_step = GW_TIME_CONSTANT(0);
+            sscanf(w, "%" GW_TIME_FORMAT " %" GW_TIME_FORMAT, &GLOBALS->ruler_origin, &GLOBALS->ruler_step);
         } else if (strcmp(w2, "timestart") == 0) {
-            sscanf(w, TTFormat, &GLOBALS->timestart_from_savefile);
+            sscanf(w, "%" GW_TIME_FORMAT, &GLOBALS->timestart_from_savefile);
             GLOBALS->timestart_from_savefile_valid = 2;
         } else if (strcmp(w2, "treeopen") == 0) {
             while (*w) {

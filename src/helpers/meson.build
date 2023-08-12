@@ -15,7 +15,9 @@ helpers = [
 
 foreach helper : helpers
     sources = [helper + '.c']
-    dependencies = []
+    dependencies = [
+        libgtkwave_dep,
+    ]
 
     if helper in ['evcd2vcd', 'vcd2fst']
         sources += '../../contrib/rtlbrowse/jrb.c'

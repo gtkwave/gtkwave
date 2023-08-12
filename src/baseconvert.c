@@ -350,14 +350,14 @@ static void dpr_e16(char *str, double d)
     }
 }
 
-static void cvt_fpsdec(Trptr t, TimeType val, char *os, int len, int nbits)
+static void cvt_fpsdec(Trptr t, GwTime val, char *os, int len, int nbits)
 {
     (void)nbits; /* number of bits shouldn't be relevant here as we're going through a fraction */
 
     int shamt = t->t_fpdecshift;
-    TimeType lpart = val >> shamt;
-    TimeType rmsk = (ULLDescriptor(1) << shamt);
-    TimeType rbit = (val >= 0) ? (val & (rmsk - 1)) : ((-val) & (rmsk - 1));
+    GwTime lpart = val >> shamt;
+    GwTime rmsk = (GW_UTIME_CONSTANT(1) << shamt);
+    GwTime rbit = (val >= 0) ? (val & (rmsk - 1)) : ((-val) & (rmsk - 1));
     double rfrac;
     int negflag = 0;
     char dbuf[32];
@@ -384,20 +384,20 @@ static void cvt_fpsdec(Trptr t, TimeType val, char *os, int len, int nbits)
     char *dot = strchr(dbuf, '.');
 
     if (dot && (dbuf[0] == '0')) {
-        sprintf(bigbuf, "%s" TTFormat ".%s", negflag ? "-" : "", lpart, dot + 1);
+        sprintf(bigbuf, "%s%" GW_TIME_FORMAT ".%s", negflag ? "-" : "", lpart, dot + 1);
         strncpy(os, bigbuf, len);
         os[len - 1] = 0;
     } else {
-        sprintf(os, "%s" TTFormat, negflag ? "-" : "", lpart);
+        sprintf(os, "%s%" GW_TIME_FORMAT, negflag ? "-" : "", lpart);
     }
 }
 
-static void cvt_fpsudec(Trptr t, TimeType val, char *os, int len)
+static void cvt_fpsudec(Trptr t, GwTime val, char *os, int len)
 {
     int shamt = t->t_fpdecshift;
-    UTimeType lpart = ((UTimeType)val) >> shamt;
-    TimeType rmsk = (ULLDescriptor(1) << shamt);
-    TimeType rbit = (val & (rmsk - 1));
+    GwUTime lpart = ((GwUTime)val) >> shamt;
+    GwTime rmsk = (GW_UTIME_CONSTANT(1) << shamt);
+    GwTime rbit = (val & (rmsk - 1));
     double rfrac;
     char dbuf[32];
     char bigbuf[64];
@@ -411,11 +411,11 @@ static void cvt_fpsudec(Trptr t, TimeType val, char *os, int len)
     dpr_e16(dbuf, rfrac); /* sprintf(dbuf, "%.16g", rfrac);	*/
     char *dot = strchr(dbuf, '.');
     if (dot && (dbuf[0] == '0')) {
-        sprintf(bigbuf, UTTFormat ".%s", lpart, dot + 1);
+        sprintf(bigbuf, "%" GW_UTIME_FORMAT ".%s", lpart, dot + 1);
         strncpy(os, bigbuf, len);
         os[len - 1] = 0;
     } else {
-        sprintf(os, UTTFormat, lpart);
+        sprintf(os, "%" GW_UTIME_FORMAT, lpart);
     }
 }
 
@@ -799,7 +799,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
         *(pnt) = 0x00; /* scan build : remove dead increment */
     } else if (flags & TR_SIGNED) {
         char *parse;
-        TimeType val = 0;
+        GwTime val = 0;
         unsigned char fail = 0;
 
         len = 21; /* len+1 of 0x8000000000000000 expressed in decimal */
@@ -809,9 +809,9 @@ static char *convert_ascii_2(Trptr t, vptr v)
         cvt_gray(flags, parse, nbits);
 
         if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
-            val = LLDescriptor(-1);
+            val = GW_TIME_CONSTANT(-1);
         } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
-            val = LLDescriptor(0);
+            val = GW_TIME_CONSTANT(0);
         } else {
             fail = 1;
         }
@@ -821,7 +821,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
                 val <<= 1;
 
                 if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                    val |= LLDescriptor(1);
+                    val |= GW_TIME_CONSTANT(1);
                 } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                     fail = 1;
                     break;
@@ -833,7 +833,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
                 cvt_fpsdec(t, val, os, len, nbits);
             } else {
                 if (!(flags & TR_TIME)) {
-                    sprintf(os, TTFormat, val);
+                    sprintf(os, "%" GW_TIME_FORMAT, val);
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
@@ -847,7 +847,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
         char *parse;
 
         if ((nbits == 64) || (nbits == 32)) {
-            UTimeType utt = LLDescriptor(0);
+            GwUTime utt = GW_TIME_CONSTANT(0);
             double d;
             float f;
             uint32_t utt_32;
@@ -860,7 +860,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
                 if ((ch == '0') || (ch == '1')) {
                     utt <<= 1;
                     if (ch == '1') {
-                        utt |= LLDescriptor(1);
+                        utt |= GW_TIME_CONSTANT(1);
                     }
                 } else {
                     goto rl_go_binary;
@@ -896,7 +896,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
     } else /* decimal when all else fails */
     {
         char *parse;
-        UTimeType val = 0;
+        GwUTime val = 0;
         unsigned char fail = 0;
 
         len = 21; /* len+1 of 0xffffffffffffffff expressed in decimal */
@@ -909,7 +909,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
             val <<= 1;
 
             if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                val |= LLDescriptor(1);
+                val |= GW_TIME_CONSTANT(1);
             } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                 fail = 1;
                 break;
@@ -921,7 +921,7 @@ static char *convert_ascii_2(Trptr t, vptr v)
                 cvt_fpsudec(t, val, os, len);
             } else {
                 if (!(flags & TR_TIME)) {
-                    sprintf(os, UTTFormat, val);
+                    sprintf(os, "%" GW_UTIME_FORMAT, val);
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
@@ -954,7 +954,7 @@ char *convert_ascii_real(Trptr t, double *d)
 
         memcpy(&swapmem, d, sizeof(guint64));
         for (i = 0; i < 64; i++) {
-            if (swapmem & (ULLDescriptor(1) << (63 - i))) {
+            if (swapmem & (GW_UTIME_CONSTANT(1) << (63 - i))) {
                 vec[i] = AN_1;
             } else {
                 vec[i] = AN_0;
@@ -1523,7 +1523,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
         *(pnt) = 0x00; /* scan build : remove dead increment */
     } else if (flags & TR_SIGNED) {
         char *parse;
-        TimeType val = 0;
+        GwTime val = 0;
         unsigned char fail = 0;
 
         len = 21; /* len+1 of 0x8000000000000000 expressed in decimal */
@@ -1533,9 +1533,9 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
         cvt_gray(flags, parse, nbits);
 
         if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
-            val = LLDescriptor(-1);
+            val = GW_TIME_CONSTANT(-1);
         } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
-            val = LLDescriptor(0);
+            val = GW_TIME_CONSTANT(0);
         } else {
             fail = 1;
         }
@@ -1545,7 +1545,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
                 val <<= 1;
 
                 if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                    val |= LLDescriptor(1);
+                    val |= GW_TIME_CONSTANT(1);
                 } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                     fail = 1;
                     break;
@@ -1557,7 +1557,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
                 cvt_fpsdec(t, val, os, len, nbits);
             } else {
                 if (!(flags & TR_TIME)) {
-                    sprintf(os, TTFormat, val);
+                    sprintf(os, "%" GW_TIME_FORMAT, val);
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
@@ -1571,7 +1571,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
         char *parse;
 
         if ((nbits == 64) || (nbits == 32)) {
-            UTimeType utt = LLDescriptor(0);
+            GwUTime utt = GW_TIME_CONSTANT(0);
             double d;
             float f;
             uint32_t utt_32;
@@ -1584,7 +1584,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
                 if ((ch == '0') || (ch == '1')) {
                     utt <<= 1;
                     if (ch == '1') {
-                        utt |= LLDescriptor(1);
+                        utt |= GW_TIME_CONSTANT(1);
                     }
                 } else {
                     goto rl_go_binary;
@@ -1621,7 +1621,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
     } else /* decimal when all else fails */
     {
         char *parse;
-        UTimeType val = 0;
+        GwUTime val = 0;
         unsigned char fail = 0;
 
         len = 21; /* len+1 of 0xffffffffffffffff expressed in decimal */
@@ -1634,7 +1634,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
             val <<= 1;
 
             if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                val |= LLDescriptor(1);
+                val |= GW_TIME_CONSTANT(1);
             } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                 fail = 1;
                 break;
@@ -1646,7 +1646,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
                 cvt_fpsudec(t, val, os, len);
             } else {
                 if (!(flags & TR_TIME)) {
-                    sprintf(os, UTTFormat, val);
+                    sprintf(os, "%" GW_UTIME_FORMAT, val);
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
@@ -1798,7 +1798,7 @@ double convert_real_vec(Trptr t, char *vec)
         if ((nbits == 64) || (nbits == 32)) /* fail (NaN) otherwise */
         {
             char *parse;
-            UTimeType val = 0;
+            GwUTime val = 0;
             unsigned char fail = 0;
             uint32_t val_32;
 
@@ -1807,7 +1807,7 @@ double convert_real_vec(Trptr t, char *vec)
                 val <<= 1;
 
                 if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                    val |= LLDescriptor(1);
+                    val |= GW_TIME_CONSTANT(1);
                 } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                     fail = 1;
                     break;
@@ -1832,16 +1832,16 @@ double convert_real_vec(Trptr t, char *vec)
     } else {
         if (flags & TR_SIGNED) {
             char *parse;
-            TimeType val = 0;
+            GwTime val = 0;
             unsigned char fail = 0;
 
             parse = newbuff + 3;
             cvt_gray(flags, parse, nbits);
 
             if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
-                val = LLDescriptor(-1);
+                val = GW_TIME_CONSTANT(-1);
             } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
-                val = LLDescriptor(0);
+                val = GW_TIME_CONSTANT(0);
             } else {
                 fail = 1;
             }
@@ -1851,7 +1851,7 @@ double convert_real_vec(Trptr t, char *vec)
                     val <<= 1;
 
                     if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                        val |= LLDescriptor(1);
+                        val |= GW_TIME_CONSTANT(1);
                     } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                         fail = 1;
                         break;
@@ -1863,7 +1863,7 @@ double convert_real_vec(Trptr t, char *vec)
         } else /* decimal when all else fails */
         {
             char *parse;
-            UTimeType val = 0;
+            GwUTime val = 0;
             unsigned char fail = 0;
 
             parse = newbuff + 3;
@@ -1873,7 +1873,7 @@ double convert_real_vec(Trptr t, char *vec)
                 val <<= 1;
 
                 if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                    val |= LLDescriptor(1);
+                    val |= GW_TIME_CONSTANT(1);
                 } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                     fail = 1;
                     break;
@@ -1949,16 +1949,16 @@ double convert_real(Trptr t, vptr v)
 
     if (flags & TR_SIGNED) {
         char *parse;
-        TimeType val = 0;
+        GwTime val = 0;
         unsigned char fail = 0;
 
         parse = newbuff + 3;
         cvt_gray(flags, parse, nbits);
 
         if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
-            val = LLDescriptor(-1);
+            val = GW_TIME_CONSTANT(-1);
         } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
-            val = LLDescriptor(0);
+            val = GW_TIME_CONSTANT(0);
         } else {
             fail = 1;
         }
@@ -1968,7 +1968,7 @@ double convert_real(Trptr t, vptr v)
                 val <<= 1;
 
                 if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                    val |= LLDescriptor(1);
+                    val |= GW_TIME_CONSTANT(1);
                 } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                     fail = 1;
                     break;
@@ -1981,7 +1981,7 @@ double convert_real(Trptr t, vptr v)
     } else /* decimal when all else fails */
     {
         char *parse;
-        UTimeType val = 0;
+        GwUTime val = 0;
         unsigned char fail = 0;
 
         parse = newbuff + 3;
@@ -1991,7 +1991,7 @@ double convert_real(Trptr t, vptr v)
             val <<= 1;
 
             if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
-                val |= LLDescriptor(1);
+                val |= GW_TIME_CONSTANT(1);
             } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
                 fail = 1;
                 break;

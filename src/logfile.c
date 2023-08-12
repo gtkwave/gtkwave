@@ -80,7 +80,7 @@ static void log_realize_text(GtkWidget *text, gpointer data)
 
 static void center_op(void)
 {
-    TimeType middle = 0, width;
+    GwTime middle = 0, width;
 
     if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
         (GLOBALS->tims.marker > GLOBALS->tims.last)) {
@@ -93,7 +93,7 @@ static void center_op(void)
         middle = GLOBALS->tims.marker;
     }
 
-    width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+    width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
     GLOBALS->tims.start = time_trunc(middle - (width / 2));
     if (GLOBALS->tims.start + width > GLOBALS->tims.last)
         GLOBALS->tims.start = time_trunc(GLOBALS->tims.last - width);
@@ -132,7 +132,7 @@ static gboolean button_release_event(GtkWidget *text, GdkEventButton *event)
                 char *sel2 = NULL;
 
                 if ((slen) && (sel[0] >= '0') && (sel[0] <= '9')) {
-                    TimeType tm;
+                    GwTime tm;
                     gunichar gch = gtk_text_iter_get_char(&end);
                     int do_si_append = 0;
 

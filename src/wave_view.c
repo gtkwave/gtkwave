@@ -175,11 +175,11 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
     }
 }
 
-static void renderhash(GwWaveView *self, cairo_t *cr, int x, TimeType tim)
+static void renderhash(GwWaveView *self, cairo_t *cr, int x, GwTime tim)
 {
     (void)self;
 
-    TimeType rborder;
+    GwTime rborder;
     int fhminus2;
     int rhs;
     gdouble dx;
@@ -254,7 +254,7 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
 {
     int lastx = -1000; /* arbitrary */
     int x, lenhalf;
-    TimeType tim, rem;
+    GwTime tim, rem;
     char timebuff[32];
     char prevover = 0;
     gdouble realx;
@@ -287,7 +287,7 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
 
         if (GLOBALS->strace_ctx->timearray) {
             int pos, pos2;
-            TimeType *t, tm;
+            GwTime *t, tm;
             int y = GLOBALS->fontheight + 2;
             int oldx = -1;
 
@@ -339,11 +339,11 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
     cairo_set_dash(cr, dashed1, 0, 0);
 
     if (GLOBALS->ruler_step && !timearray_encountered) {
-        TimeType rhs =
+        GwTime rhs =
             (GLOBALS->tims.end > GLOBALS->tims.last) ? GLOBALS->tims.last : GLOBALS->tims.end;
-        TimeType low_x = (GLOBALS->tims.start - GLOBALS->ruler_origin) / GLOBALS->ruler_step;
-        TimeType high_x = (rhs - GLOBALS->ruler_origin) / GLOBALS->ruler_step;
-        TimeType iter_x, tm;
+        GwTime low_x = (GLOBALS->tims.start - GLOBALS->ruler_origin) / GLOBALS->ruler_step;
+        GwTime high_x = (rhs - GLOBALS->ruler_origin) / GLOBALS->ruler_step;
+        GwTime iter_x, tm;
         int y = GLOBALS->fontheight + 2;
         int oldx = -1;
 
@@ -358,12 +358,12 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
             x = (tm - GLOBALS->tims.start) * GLOBALS->pxns;
             if (oldx == x) {
                 gdouble xd, offset, pixstep;
-                TimeType newcurr;
+                GwTime newcurr;
 
                 xd = x + 1; /* for pix time calc */
 
                 pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
-                newcurr = (TimeType)(offset = ((gdouble)GLOBALS->tims.start) + (xd * pixstep));
+                newcurr = (GwTime)(offset = ((gdouble)GLOBALS->tims.start) + (xd * pixstep));
 
                 if (offset - newcurr > 0.5) /* round to nearest integer ns */
                 {
@@ -392,14 +392,14 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
 
     /***********/
 
-    DEBUG(printf("Ruler Start time: " TTFormat ", Finish time: " TTFormat "\n",
+    DEBUG(printf("Ruler Start time: %" GW_TIME_FORMAT ", Finish time: %" GW_TIME_FORMAT "\n",
                  GLOBALS->tims.start,
                  GLOBALS->tims.end));
 
     x = 0;
     realx = 0;
     if (tim) {
-        rem = tim % ((TimeType)GLOBALS->nsperframe);
+        rem = tim % ((GwTime)GLOBALS->nsperframe);
         if (rem) {
             tim = tim - GLOBALS->nsperframe - rem;
             x = -GLOBALS->pixelsperframe - ((rem * GLOBALS->pixelsperframe) / GLOBALS->nsperframe);
@@ -462,7 +462,7 @@ static void rendertimebar(GwWaveView *self, cairo_t *cr)
 static void renderblackout(cairo_t *cr)
 {
     gfloat pageinc;
-    TimeType lhs, rhs, lclip, rclip;
+    GwTime lhs, rhs, lclip, rclip;
     struct blackout_region_t *bt = GLOBALS->blackout_regions;
 
     if (bt) {
@@ -508,7 +508,7 @@ static void render_individual_named_marker(cairo_t *cr, int i, wave_rgb_t gc, in
 {
     gdouble pixstep;
     gint xl;
-    TimeType t;
+    GwTime t;
 
     gdouble offset = GLOBALS->cairo_050_offset;
 

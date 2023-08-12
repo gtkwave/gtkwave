@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <glib.h>
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -35,48 +36,6 @@ struct memchunk *next;
 void *ptr;
 size_t size;
 };
-
-
-/*
- * If you have problems viewing traces (mangled timevalues),
- * make sure that you use longs rather than the glib 64-bit
- * types...
- */
-#define G_HAVE_GINT64
-#define gint64 int64_t
-#define guint64 uint64_t
-
-#ifdef G_HAVE_GINT64
-typedef gint64          TimeType;
-typedef guint64         UTimeType;
-
-#ifndef _MSC_VER
-#define LLDescriptor(x) x##LL
-#define ULLDescriptor(x) x##ULL
-#ifndef __MINGW32__
-#if __WORDSIZE == 64
-#define TTFormat "%ld"
-#else
-#define TTFormat "%lld"
-#endif
-#else
-#define TTFormat "%I64d"
-#endif
-#else
-#define LLDescriptor(x) x##i64
-#define ULLDescriptor(x) x##i64
-#define TTFormat "%I64d"
-#endif
-
-#else
-typedef long            TimeType;
-typedef unsigned long   UTimeType;
-
-#define TTFormat "%d"
-#define LLDescriptor(x) x
-#define ULLDescriptor(x) x
-#endif
-
 
 #ifdef DEBUG_PRINTF
 #define DEBUG(x) x
@@ -95,7 +54,7 @@ void *realloc_2(void *ptr, size_t size);
 void *calloc_2(size_t nmemb, size_t size);
 void free_2(void *ptr);
 
-TimeType atoi_64(char *str);
+gint64 atoi_64(char *str);
 
 /*
  * if your system really doesn't have alloca() at all,
