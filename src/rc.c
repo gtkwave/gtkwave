@@ -687,13 +687,6 @@ GLOBALS->use_scrollwheel_as_y=atoi_64(str)?1:0;
 return(0);
 }
 
-int f_use_standard_clicking(char *str)
-{
-DEBUG(printf("f_use_standard_clicking(\"%s\")\n",str));
-GLOBALS->use_standard_clicking=atoi_64(str)?1:0;
-return(0);
-}
-
 int f_use_standard_trace_select(char *str)
 {
 DEBUG(printf("f_f_use_standard_trace_select(\"%s\")\n",str));
@@ -999,7 +992,6 @@ static struct rc_entry rcitems[]=
 { "use_roundcaps", f_use_roundcaps },
 { "use_scrollbar_only", f_use_scrollbar_only },
 { "use_scrollwheel_as_y", f_use_scrollwheel_as_y },
-{ "use_standard_clicking", f_use_standard_clicking },
 { "use_standard_trace_select", f_use_standard_trace_select },
 { "use_toolbutton_interface", f_use_toolbutton_interface },
 { "vcd_explicit_zero_subscripts", f_vcd_explicit_zero_subscripts },
