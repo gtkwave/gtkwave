@@ -262,9 +262,6 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
     int timearray_encountered = 0;
     static const double dashed1[] = {8.0, 8.0};
 
-    // TODO: fix
-    // renderblackout(cr);
-
     tim = GLOBALS->tims.start;
 
     GLOBALS->tims.end = GLOBALS->tims.start + (((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
@@ -462,6 +459,51 @@ static void rendertimebar(GwWaveView *self, cairo_t *cr)
     rendertimes(self, cr);
 }
 
+static void renderblackout(cairo_t *cr)
+{
+    gfloat pageinc;
+    TimeType lhs, rhs, lclip, rclip;
+    struct blackout_region_t *bt = GLOBALS->blackout_regions;
+
+    if (bt) {
+        pageinc = (gfloat)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+        lhs = GLOBALS->tims.start;
+        rhs = pageinc + lhs;
+
+        while (bt) {
+            if ((bt->bend < lhs) || (bt->bstart > rhs)) {
+                /* nothing, out of bounds */
+            } else {
+                lclip = bt->bstart;
+                rclip = bt->bend;
+
+                if (lclip < lhs)
+                    lclip = lhs;
+                else if (lclip > rhs)
+                    lclip = rhs;
+
+                if (rclip < lhs)
+                    rclip = lhs;
+
+                lclip -= lhs;
+                rclip -= lhs;
+                if (rclip > ((GLOBALS->wavewidth + 1) * GLOBALS->nspx))
+                    rclip = (GLOBALS->wavewidth + 1) * (GLOBALS->nspx);
+
+                XXX_gdk_draw_rectangle(cr,
+                                       GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1,
+                                       TRUE,
+                                       (((gdouble)lclip) * GLOBALS->pxns),
+                                       GLOBALS->fontheight,
+                                       (((gdouble)(rclip - lclip)) * GLOBALS->pxns),
+                                       GLOBALS->waveheight - GLOBALS->fontheight);
+            }
+
+            bt = bt->next;
+        }
+    }
+}
+
 static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
 {
     GwWaveView *self = GW_WAVE_VIEW(widget);
@@ -485,6 +527,8 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
 
         cairo_set_line_width(traces_cr, GLOBALS->cr_line_width);
         cairo_set_line_cap(traces_cr, CAIRO_LINE_CAP_SQUARE);
+
+        renderblackout(traces_cr);
 
         if (GLOBALS->disable_antialiasing) {
             cairo_set_antialias(traces_cr, CAIRO_ANTIALIAS_NONE);
