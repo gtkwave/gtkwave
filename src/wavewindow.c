@@ -289,83 +289,6 @@ xit:
     return (marker);
 }
 
-static void render_individual_named_marker(cairo_t *cr, int i, wave_rgb_t gc, int blackout)
-{
-    gdouble pixstep;
-    gint xl;
-    TimeType t;
-
-    if ((t = GLOBALS->named_markers[i]) != -1) {
-        if ((t >= GLOBALS->tims.start) && (t <= GLOBALS->tims.last) && (t <= GLOBALS->tims.end)) {
-            /* this needs to be here rather than outside the loop as gcc does some
-               optimizations that cause it to calculate slightly different from the marker if it's
-               not here */
-            pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
-
-            xl = ((gdouble)(t - GLOBALS->tims.start)) / pixstep; /* snap to integer */
-            if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
-                static const double dashed1[] = {5.0, 3.0};
-                char nbuff[16];
-                make_bijective_marker_id_string(nbuff, i);
-
-                cairo_set_dash(cr, dashed1, sizeof(dashed1) / sizeof(dashed1[0]), 0);
-                XXX_gdk_draw_line(cr, gc, xl, GLOBALS->fontheight - 1, xl, GLOBALS->waveheight - 1);
-                cairo_set_dash(cr, dashed1, 0, 0);
-
-                if ((!GLOBALS->marker_names[i]) || (!GLOBALS->marker_names[i][0])) {
-                    XXX_font_engine_draw_string(
-                        cr,
-                        GLOBALS->wavefont_smaller,
-                        &gc,
-                        xl - (font_engine_string_measure(GLOBALS->wavefont_smaller, nbuff) >> 1) +
-                            WAVE_CAIRO_050_OFFSET,
-                        GLOBALS->fontheight - 2 + WAVE_CAIRO_050_OFFSET,
-                        nbuff);
-                } else {
-                    int width = font_engine_string_measure(GLOBALS->wavefont_smaller,
-                                                           GLOBALS->marker_names[i]);
-                    if (blackout) /* blackout background so text is legible if overlaid with other
-                                     marker labels */
-                    {
-                        XXX_gdk_draw_rectangle(
-                            cr,
-                            GLOBALS->rgb_gc.gc_timeb_wavewindow_c_1,
-                            TRUE,
-                            xl - (width >> 1),
-                            GLOBALS->fontheight - 2 - GLOBALS->wavefont_smaller->ascent,
-                            width,
-                            GLOBALS->wavefont_smaller->ascent + GLOBALS->wavefont_smaller->descent);
-                    }
-
-                    XXX_font_engine_draw_string(cr,
-                                                GLOBALS->wavefont_smaller,
-                                                &gc,
-                                                xl - (width >> 1) + WAVE_CAIRO_050_OFFSET,
-                                                GLOBALS->fontheight - 2 + WAVE_CAIRO_050_OFFSET,
-                                                GLOBALS->marker_names[i]);
-                }
-            }
-        }
-    }
-}
-
-static void draw_named_markers(cairo_t *cr)
-{
-    int i;
-
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        if (i != GLOBALS->named_marker_lock_idx) {
-            render_individual_named_marker(cr, i, GLOBALS->rgb_gc.gc_mark_wavewindow_c_1, 0);
-        }
-    }
-
-    if (GLOBALS->named_marker_lock_idx >= 0) {
-        render_individual_named_marker(cr,
-                                       GLOBALS->named_marker_lock_idx,
-                                       GLOBALS->rgb_gc.gc_umark_wavewindow_c_1,
-                                       1);
-    }
-}
 
 static void sync_marker(void)
 {
@@ -381,30 +304,6 @@ static void sync_marker(void)
         (GLOBALS->tims.resizemarker != GLOBALS->tims.resizemarker2)) {
         GLOBALS->signalwindow_width_dirty = 1;
     }
-}
-
-static void draw_marker_partitions(cairo_t *cr)
-{
-    (void)cr;
-
-    g_printerr("draw_marker_partitions disabled\n");
-    //     draw_marker();
-
-    // #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-    //     GdkDrawingContext *gdc;
-    // #endif
-    //     cairo_t *cr =
-    //         XXX_gdk_cairo_create(XXX_GDK_DRAWABLE(gtk_widget_get_window(GLOBALS->wavearea)),
-    //         &gdc);
-    //     wavewindow_paint(cr);
-
-    // #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-    //     gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->wavearea), gdc);
-    // #else
-    //     cairo_destroy(cr);
-    // #endif
-
-    //     draw_marker();
 }
 
 static void service_hslider(GtkWidget *text, gpointer data)
@@ -522,8 +421,6 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
         update_time_box();
         if (GLOBALS->tims.lmbcache < 0)
             GLOBALS->tims.lmbcache = time_trunc(newcurr);
-
-        // draw_marker_partitions(cr);
 
         if ((pressrel) || (GLOBALS->constant_marker_update)) {
             button_press_release_common();
