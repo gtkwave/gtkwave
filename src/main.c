@@ -900,7 +900,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->vlist_prepack = old_g->vlist_prepack;
         GLOBALS->do_dynamic_treefilter = old_g->do_dynamic_treefilter;
         GLOBALS->dragzoom_threshold = old_g->dragzoom_threshold;
-        GLOBALS->use_toolbutton_interface = old_g->use_toolbutton_interface;
 
         GLOBALS->use_scrollwheel_as_y = old_g->use_scrollwheel_as_y;
 
@@ -2056,66 +2055,59 @@ savefile_bail:
 #endif
     }
 
-    if (GLOBALS->use_toolbutton_interface) {
-        GtkWidget *tb;
+    if (!mainwindow_already_built) {
+        main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+        gtk_container_add(GTK_CONTAINER(GLOBALS->mainwindow), main_vbox);
+        gtk_widget_show(main_vbox);
 
-        if (!mainwindow_already_built) {
-            main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-            gtk_container_add(GTK_CONTAINER(GLOBALS->mainwindow), main_vbox);
-            gtk_widget_show(main_vbox);
-
-            if (!GLOBALS->disable_menus) {
+        if (!GLOBALS->disable_menus) {
 #ifdef WAVE_USE_XID
-                if (GLOBALS->socket_xid)
-                    kill_main_menu_accelerators();
+            if (GLOBALS->socket_xid)
+                kill_main_menu_accelerators();
 #endif
 
-                menubar = alt_menu_top(GLOBALS->mainwindow);
-                gtk_widget_show(menubar);
+            menubar = alt_menu_top(GLOBALS->mainwindow);
+            gtk_widget_show(menubar);
 
 #ifdef MAC_INTEGRATION
-                {
-                    GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-                    gtk_widget_hide(menubar);
-                    gtkosx_application_set_menu_bar(theApp, GTK_MENU_SHELL(menubar));
-                    gtkosx_application_set_use_quartz_accelerators(theApp, TRUE);
-                    gtkosx_application_ready(theApp);
-                    gtkosx_application_set_dock_icon_pixbuf(theApp, dock_pb);
-                    if (GLOBALS->loaded_file_type == MISSING_FILE) {
-                        gtkosx_application_attention_request(theApp, INFO_REQUEST);
-                    }
-
-                    g_signal_connect(theApp,
-                                     "NSApplicationOpenFile",
-                                     G_CALLBACK(deal_with_finder_open),
-                                     NULL);
-                    g_signal_connect(theApp,
-                                     "NSApplicationBlockTermination",
-                                     G_CALLBACK(deal_with_termination),
-                                     NULL);
+            {
+                GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+                gtk_widget_hide(menubar);
+                gtkosx_application_set_menu_bar(theApp, GTK_MENU_SHELL(menubar));
+                gtkosx_application_set_use_quartz_accelerators(theApp, TRUE);
+                gtkosx_application_ready(theApp);
+                gtkosx_application_set_dock_icon_pixbuf(theApp, dock_pb);
+                if (GLOBALS->loaded_file_type == MISSING_FILE) {
+                    gtkosx_application_attention_request(theApp, INFO_REQUEST);
                 }
+
+                g_signal_connect(theApp,
+                                 "NSApplicationOpenFile",
+                                 G_CALLBACK(deal_with_finder_open),
+                                 NULL);
+                g_signal_connect(theApp,
+                                 "NSApplicationBlockTermination",
+                                 G_CALLBACK(deal_with_termination),
+                                 NULL);
+            }
 #endif
 
-                {
-                    gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, TRUE, 0);
-                }
+            {
+                gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, TRUE, 0);
             }
+        }
 
-            whole_table = gtk_grid_new();
+        whole_table = gtk_grid_new();
 
-            tb = build_toolbar();
-            top_table = tb;
+        GtkWidget *tb = build_toolbar();
+        top_table = tb;
 
-            GLOBALS->missing_file_toolbar = tb;
-            if (GLOBALS->loaded_file_type == MISSING_FILE) {
-                gtk_widget_set_sensitive(GLOBALS->missing_file_toolbar, FALSE);
-            }
+        GLOBALS->missing_file_toolbar = tb;
+        if (GLOBALS->loaded_file_type == MISSING_FILE) {
+            gtk_widget_set_sensitive(GLOBALS->missing_file_toolbar, FALSE);
+        }
 
-        } /* of ...if(mainwindow_already_built) */
-    } else {
-        fprintf(stderr, "GTKWAVE | The non toolbutton interface is no longer supported.\n");
-        exit(255);
-    }
+    } /* of ...if(mainwindow_already_built) */
 
     load_all_fonts(); /* must be done before create_signalwindow() */
     GLOBALS->signalwindow = create_signalwindow();

@@ -694,14 +694,6 @@ GLOBALS->use_standard_trace_select=atoi_64(str)?1:0;
 return(0);
 }
 
-int f_use_toolbutton_interface(char *str)
-{
-
-DEBUG(printf("f_use_toolbutton_interface(\"%s\")\n",str));
-GLOBALS->use_toolbutton_interface=atoi_64(str)?1:0;
-return(0);
-}
-
 int f_vcd_explicit_zero_subscripts(char *str)
 {
 DEBUG(printf("f_vcd_explicit_zero_subscripts(\"%s\")\n",str));
@@ -993,7 +985,6 @@ static struct rc_entry rcitems[]=
 { "use_scrollbar_only", f_use_scrollbar_only },
 { "use_scrollwheel_as_y", f_use_scrollwheel_as_y },
 { "use_standard_trace_select", f_use_standard_trace_select },
-{ "use_toolbutton_interface", f_use_toolbutton_interface },
 { "vcd_explicit_zero_subscripts", f_vcd_explicit_zero_subscripts },
 { "vcd_preserve_glitches", f_vcd_preserve_glitches },
 { "vcd_preserve_glitches_real", f_vcd_preserve_glitches_real },
