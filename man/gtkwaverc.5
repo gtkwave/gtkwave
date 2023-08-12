@@ -21,11 +21,6 @@ menu item.
 \fBalt_hier_delimeter\fR <\fIvalue\fP>
 This allows another character in addition to the hier_delimeter to be used to delimit levels in the hierarchy for VCD. Only the first character in the value is significant. Note that this is normally off. The intended use is to resolve the hierarchies of netlist based models that often contain slashes to delimit hierarchy inside of $var statements.
 .TP
-\fBalt_wheel_mode\fR <\fIvalue\fP> 
-Default is on.  Scrollwheel alone pans along a quarter at a time rather than a full page, so you don't get lost. 
-Ctrl+wheel zooms in/out around the mouse cursor position, not the marker position. 
-Alt+wheel edges left/right based on the currently selected signal.  This makes measuring deltas easier. 
-.TP 
 \fBanalog_redraw_skip_count\fR <\fIvalue\fP>
 Specifies how many overlapping analog segments can be drawn for a given X position onscreen.  (Default: 20)  If there are
 gaps in analog traces, this value is too low.
@@ -253,9 +248,6 @@ Sets the maximum hierarchy depth (from the right side) to display for trace name
 \fBhighlight_wavewindow\fR <\fIvalue\fP>
 When enabled, this causes traces highlighted in the signal window also to be highlighted in the wave window.
 .TP
-\fBhpane_pack\fR <\fIvalue\fP>
-A nonzero value indicates that the horizontal pane should be constructed using the gtk_paned_pack functions (default and recommended). A zero value indicates that gtk_paned_add will be used instead.
-.TP 
 \fBignore_savefile_pane_pos\fR <\fIvalue\fP>
 If nonzero, specifies that the pane position attributes (i.e., signal window width size, SST is expanded, etc.) are to be ignored during savefile loading and is to be skipped during saving.  Default is that the attribute is used.
 .TP 
@@ -361,21 +353,6 @@ Uses anti-aliased pango fonts (GTK2) rather than bitmapped X11 ones. Default is 
 \fBuse_roundcaps\fR <\fIvalue\fP>
 A nonzero value indicates that vector traces should be drawn with rounded caps rather than perpendicular ones. The default for this is zero.
 .TP 
-\fBuse_scrollbar_only\fR <\fIvalue\fP>
-A nonzero value indicates that the page, shift, fetch, and discard buttons should not be drawn (i.e., time manipulations should be through the scrollbar only rather than front panel buttons). The default for this is zero.
-.TP 
-\fBuse_scrollwheel_as_y\fR <\fIvalue\fP>
-A nonzero value indicates that the scroll wheel on the mouse should be used to scroll the signals up and down rather than scrolling the time value from left to right.
-.TP
-\fBuse_standard_clicking\fR <\fIvalue\fP>
-This option no longer has any effect in gtkwave: normal GTK click semantics are used in the signalwindow.
-.TP 
-\fBuse_standard_trace_select\fR <\fIvalue\fP>
-A nonzero value keeps the currently selected traces from deselecting on mouse button press. This allows drag and drop to function more smoothly.  As this behavior is not how GTK normally functions, it is by default disabled.
-.TP 
-\fBuse_toolbutton_interface\fR <\fIvalue\fP>
-A nonzero value indicates that a toolbar with buttons should be at the top of the screen instead of the traditional style gtkwave button groups.  Default is on.
-.TP
 \fBvcd_explicit_zero_subscripts\fR <\fIvalue\fP>
 indicates that signal names should be stored internally as name.bitnumber when enabled. When disabled, a more "normal" ordering of name[bitnumber] is used. Note that when disabled, the Bundle Up and Bundle Down options are disabled in the Signal Search Regexp,  Signal Search Hierarchy, and Signal Search Tree options. This is necessary as the internal data structures for signals are represented with one "less" level of hierarchy than when enabled and those functions would not work properly. This should not be an issue if atomic_vectors are enabled. Default for vcd_explicit_zero_subscripts is disabled.
 .TP 
