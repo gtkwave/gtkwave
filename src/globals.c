@@ -716,7 +716,6 @@ static const struct Global globals_base_values = {
     0, /* trtarget_signalwindow_c_1 384 */
     NULL, /* starting_unshifted_trace */
     0, /* use_standard_trace_select */
-    1, /* use_standard_clicking */
     0, /* std_collapse_pressed */
     0, /* keypress_handler_id */
     0, /* cached_mouseover_x */
@@ -1642,7 +1641,6 @@ void reload_into_new_context_2(void)
     new_globals->zoom_dyne = GLOBALS->zoom_dyne;
     new_globals->use_scrollwheel_as_y = GLOBALS->use_scrollwheel_as_y;
     new_globals->context_tabposition = GLOBALS->context_tabposition;
-    new_globals->use_standard_clicking = GLOBALS->use_standard_clicking;
     new_globals->dragzoom_threshold = GLOBALS->dragzoom_threshold;
     new_globals->cr_line_width = GLOBALS->cr_line_width;
     new_globals->cairo_050_offset = GLOBALS->cairo_050_offset;

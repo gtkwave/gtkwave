@@ -740,7 +740,6 @@ struct Global
     int trtarget_signalwindow_c_1; /* from signalwindow.c 412 */
     Trptr starting_unshifted_trace; /* from signalwindow.c */
     unsigned char use_standard_trace_select; /* from signalwindow.c */
-    unsigned char use_standard_clicking; /* from signalwindow.c */
     unsigned char std_collapse_pressed; /* from signalwindow.c */
     gint keypress_handler_id; /* from signalwindow.c */
     gint cached_mouseover_x; /* from signalwindow.c */

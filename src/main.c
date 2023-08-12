@@ -899,7 +899,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->vlist_spill_to_disk = old_g->vlist_spill_to_disk;
         GLOBALS->vlist_prepack = old_g->vlist_prepack;
         GLOBALS->do_dynamic_treefilter = old_g->do_dynamic_treefilter;
-        GLOBALS->use_standard_clicking = old_g->use_standard_clicking;
         GLOBALS->dragzoom_threshold = old_g->dragzoom_threshold;
         GLOBALS->use_toolbutton_interface = old_g->use_toolbutton_interface;
 

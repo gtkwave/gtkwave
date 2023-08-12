@@ -249,17 +249,9 @@ static gboolean mouseover_timer(gpointer dummy)
 
 GtkWidget *create_signalwindow(void)
 {
-    char do_focusing = 0;
-
     GLOBALS->signalarea = gw_signal_list_new();
 
     MaxSignalLength();
-
-    if (!GLOBALS->use_standard_clicking) {
-        fprintf(stderr, "GTKWAVE | \"use_standard_clicking off\" has been removed.\n");
-        fprintf(stderr, "GTKWAVE | Please update your rc files accordingly.\n");
-        GLOBALS->use_standard_clicking = 1;
-    }
 
     g_timeout_add(100, mouseover_timer, NULL);
 

@@ -25,7 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Removed
 
 - Removed support for GTK 2.
-- Removed "Signal Search Hierarchy" dialog and `hier_grouping` rc variable.
+- Removed "Signal Search Hierarchy" dialog.
+- Removed rc variables:
+    - `hier_grouping`
+    - `use_standard_clicking`
 
 ### Fixed
 
