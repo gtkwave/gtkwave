@@ -1546,8 +1546,8 @@ do_primary_inits:
     if (!GLOBALS->loaded_file_name) {
         GLOBALS->loaded_file_name = strdup_2("[no file loaded]");
         is_missing_file = 1;
-        GLOBALS->min_time = LLDescriptor(0);
-        GLOBALS->max_time = LLDescriptor(0);
+        GLOBALS->min_time = GW_TIME_CONSTANT(0);
+        GLOBALS->max_time = GW_TIME_CONSTANT(0);
         if (!is_wish) {
             fprintf(stderr, "GTKWAVE | Use the -h, --help command line flags to display help.\n");
         }
@@ -1588,7 +1588,7 @@ loader_check_head:
             (suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX ".bz2") &&
              !opt_vcd) /* loader automatically does bzip2 -cd */
         ) {
-        TimeType extload_max;
+        GwTime extload_max;
 
         GLOBALS->loaded_file_type = EXTLOAD_FILE;
         extload_max =
@@ -1895,7 +1895,7 @@ loader_check_head:
             read_save_helper_relative_init(wname);
             GLOBALS->default_flags = TR_RJUSTIFY;
             GLOBALS->default_fpshift = 0;
-            GLOBALS->shift_timebase_default_for_add = LLDescriptor(0);
+            GLOBALS->shift_timebase_default_for_add = GW_TIME_CONSTANT(0);
             GLOBALS->strace_current_window = 0; /* in case there are shadow traces */
             GLOBALS->which_t_color = 0;
             while ((iline = fgetmalloc(wave))) {
@@ -1907,7 +1907,7 @@ loader_check_head:
             GLOBALS->which_t_color = 0;
             GLOBALS->default_flags = TR_RJUSTIFY;
             GLOBALS->default_fpshift = 0;
-            GLOBALS->shift_timebase_default_for_add = LLDescriptor(0);
+            GLOBALS->shift_timebase_default_for_add = GW_TIME_CONSTANT(0);
 
             if (wave_is_compressed)
                 pclose(wave);
@@ -2364,7 +2364,7 @@ savefile_bail:
             GLOBALS->dual_ctx[GLOBALS->dual_id].viewer_is_initialized = 1;
             for (;;) {
                 GtkAdjustment *hadj;
-                TimeType pageinc, gt;
+                GwTime pageinc, gt;
 #ifndef __MINGW32__
                 struct timeval tv;
 #endif
@@ -2445,7 +2445,7 @@ savefile_bail:
                     hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
                     gtk_adjustment_set_value(hadj, gt);
 
-                    pageinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+                    pageinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
                     if (gt < (GLOBALS->tims.last - pageinc + 1))
                         GLOBALS->tims.timecache = gt;
                     else {

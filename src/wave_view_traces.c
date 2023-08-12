@@ -170,7 +170,7 @@ void rendertraces(cairo_t *cr)
                 GLOBALS->shift_timebase = t->shift;
                 if (!t->vector) {
                     h = bsearch_node(t->n.nd, GLOBALS->tims.start - t->shift);
-                    DEBUG(printf("Start time: " TTFormat ", Histent time: " TTFormat "\n",
+                    DEBUG(printf("Start time: %" GW_TIME_FORMAT ", Histent time: %" GW_TIME_FORMAT "\n",
                                  GLOBALS->tims.start,
                                  (h->time + GLOBALS->shift_timebase)));
 
@@ -193,7 +193,7 @@ void rendertraces(cairo_t *cr)
 
                     v = bsearch_vector(bv, GLOBALS->tims.start - t->shift);
                     DEBUG(printf("Vector Trace: %s, %s\n", t->name, bv->bvname));
-                    DEBUG(printf("Start time: " TTFormat ", Vectorent time: " TTFormat "\n",
+                    DEBUG(printf("Start time: %" GW_TIME_FORMAT ", Vectorent time: %" GW_TIME_FORMAT "\n",
                                  GLOBALS->tims.start,
                                  (v->time + GLOBALS->shift_timebase)));
                     if (i >= 0) {
@@ -262,9 +262,9 @@ void rendertraces(cairo_t *cr)
  */
 static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw, int kill_grid)
 {
-    TimeType _x0, _x1, newtime;
+    GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, ytext;
-    TimeType tim, h2tim;
+    GwTime tim, h2tim;
     hptr h2, h3;
     char hval, h2val, invert;
     LineColor c;
@@ -630,9 +630,9 @@ static void draw_hptr_trace_vector_analog(cairo_t *cr,
                                           int which,
                                           int num_extension)
 {
-    TimeType _x0, _x1, newtime;
+    GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, yt0, yt1;
-    TimeType tim, h2tim;
+    GwTime tim, h2tim;
     hptr h2, h3;
     int endcnt = 0;
     int type;
@@ -1077,9 +1077,9 @@ static void draw_hptr_trace_vector_analog(cairo_t *cr,
  */
 static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
 {
-    TimeType _x0, _x1, newtime;
+    GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, ytext;
-    TimeType tim /* , h2tim */; /* scan-build */
+    GwTime tim /* , h2tim */; /* scan-build */
     hptr h2, h3;
     char *ascii = NULL;
     int type;
@@ -1236,7 +1236,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                     color = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
                 }
 
-                TimeType width = _x1 - _x0;
+                GwTime width = _x1 - _x0;
 
                 if (width == 1) {
                     XXX_gdk_set_color(cr, color);
@@ -1445,9 +1445,9 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
 
 static void draw_vptr_trace_analog(cairo_t *cr, Trptr t, vptr v, int which, int num_extension)
 {
-    TimeType _x0, _x1, newtime;
+    GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, yt0, yt1;
-    TimeType tim, h2tim;
+    GwTime tim, h2tim;
     vptr h, h2, h3;
     int endcnt = 0;
     int type;
@@ -1845,9 +1845,9 @@ static void draw_vptr_trace_analog(cairo_t *cr, Trptr t, vptr v, int which, int 
  */
 static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
 {
-    TimeType _x0, _x1, newtime, width;
+    GwTime _x0, _x1, newtime, width;
     int _y0, _y1, yu, liney, ytext;
-    TimeType tim /* , h2tim */; /* scan-build */
+    GwTime tim /* , h2tim */; /* scan-build */
     vptr h, h2, h3;
     char *ascii = NULL;
     int type;

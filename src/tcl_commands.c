@@ -109,7 +109,7 @@ static int gtkwavetcl_printTimeType(ClientData clientData,
                                     Tcl_Interp *interp,
                                     int objc,
                                     Tcl_Obj *CONST objv[],
-                                    TimeType ttVal)
+                                    GwTime ttVal)
 {
     (void)clientData;
     (void)objc;
@@ -118,7 +118,7 @@ static int gtkwavetcl_printTimeType(ClientData clientData,
     Tcl_Obj *aobj;
     char reportString[65];
 
-    sprintf(reportString, TTFormat, ttVal);
+    sprintf(reportString, "%" GW_TIME_FORMAT, ttVal);
 
     aobj = Tcl_NewStringObj(reportString, -1);
     Tcl_SetObjResult(interp, aobj);
@@ -390,7 +390,7 @@ static int gtkwavetcl_getMinTime(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    TimeType value = GLOBALS->min_time;
+    GwTime value = GLOBALS->min_time;
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -399,7 +399,7 @@ static int gtkwavetcl_getMaxTime(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    TimeType value = GLOBALS->max_time;
+    GwTime value = GLOBALS->max_time;
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -408,7 +408,7 @@ static int gtkwavetcl_getTimeZero(ClientData clientData,
                                   int objc,
                                   Tcl_Obj *CONST objv[])
 {
-    TimeType value = GLOBALS->global_time_offset;
+    GwTime value = GLOBALS->global_time_offset;
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -455,7 +455,7 @@ static int gtkwavetcl_getBaselineMarker(ClientData clientData,
                                         int objc,
                                         Tcl_Obj *CONST objv[])
 {
-    TimeType value = GLOBALS->tims.baseline;
+    GwTime value = GLOBALS->tims.baseline;
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -464,7 +464,7 @@ static int gtkwavetcl_getMarker(ClientData clientData,
                                 int objc,
                                 Tcl_Obj *CONST objv[])
 {
-    TimeType value = GLOBALS->tims.marker;
+    GwTime value = GLOBALS->tims.marker;
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -473,7 +473,7 @@ static int gtkwavetcl_getWindowStartTime(ClientData clientData,
                                          int objc,
                                          Tcl_Obj *CONST objv[])
 {
-    TimeType value = GLOBALS->tims.start;
+    GwTime value = GLOBALS->tims.start;
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -482,7 +482,7 @@ static int gtkwavetcl_getWindowEndTime(ClientData clientData,
                                        int objc,
                                        Tcl_Obj *CONST objv[])
 {
-    TimeType value = GLOBALS->tims.end;
+    GwTime value = GLOBALS->tims.end;
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -557,7 +557,7 @@ static int gtkwavetcl_getNamedMarker(ClientData clientData,
         }
 
         if ((which >= 0) && (which < WAVE_NUM_NAMED_MARKERS)) {
-            TimeType value = GLOBALS->named_markers[which];
+            GwTime value = GLOBALS->named_markers[which];
             return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
         }
     } else {
@@ -780,8 +780,8 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
     if (objc == 3) {
         char *sv = get_Tcl_string(objv[1]);
         int which = -1;
-        TimeType oldmarker = GLOBALS->tims.marker;
-        TimeType value = LLDescriptor(-1);
+        GwTime oldmarker = GLOBALS->tims.marker;
+        GwTime value = GW_TIME_CONSTANT(-1);
 
         if ((sv[0] >= 'A') && (sv[0] <= 'Z')) {
             which = bijective_marker_id_string_hash(sv);
@@ -809,7 +809,7 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
                 t = t->t_next;
             }
 
-            if (t && (value >= LLDescriptor(0))) {
+            if (t && (value >= GW_TIME_CONSTANT(0))) {
                 GLOBALS->tims.marker = value;
                 GLOBALS->signalwindow_width_dirty = 1;
                 redraw_signals_and_waves();
@@ -918,12 +918,12 @@ static int gtkwavetcl_setMarker(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        TimeType mrk = unformat_time(s, GLOBALS->time_dimension);
+        GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
 
         if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
             GLOBALS->tims.marker = mrk;
         } else {
-            GLOBALS->tims.marker = LLDescriptor(-1);
+            GLOBALS->tims.marker = GW_TIME_CONSTANT(-1);
         }
 
         update_time_box();
@@ -945,12 +945,12 @@ static int gtkwavetcl_setBaselineMarker(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        TimeType mrk = unformat_time(s, GLOBALS->time_dimension);
+        GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
 
         if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
             GLOBALS->tims.baseline = mrk;
         } else {
-            GLOBALS->tims.baseline = LLDescriptor(-1);
+            GLOBALS->tims.baseline = GW_TIME_CONSTANT(-1);
         }
 
         update_time_box();
@@ -974,10 +974,10 @@ static int gtkwavetcl_setWindowStartTime(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
 
         if (s) {
-            TimeType gt;
+            GwTime gt;
             char timval[40];
             GtkAdjustment *hadj;
-            TimeType pageinc;
+            GwTime pageinc;
 
             gt = unformat_time(s, GLOBALS->time_dimension);
 
@@ -989,7 +989,7 @@ static int gtkwavetcl_setWindowStartTime(ClientData clientData,
             hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
             gtk_adjustment_set_value(hadj, gt);
 
-            pageinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+            pageinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
             if (gt < (GLOBALS->tims.last - pageinc + 1))
                 GLOBALS->tims.timecache = gt;
             else {
@@ -1051,8 +1051,8 @@ static int gtkwavetcl_setZoomRangeTimes(ClientData clientData,
 {
     if (objc == 3) {
         char *s, *t;
-        TimeType time1, time2;
-        TimeType oldmarker = GLOBALS->tims.marker;
+        GwTime time1, time2;
+        GwTime oldmarker = GLOBALS->tims.marker;
 
         s = get_Tcl_string(objv[1]);
         time1 = unformat_time(s, GLOBALS->time_dimension);
@@ -1093,8 +1093,8 @@ static int gtkwavetcl_setLeftJustifySigs(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        TimeType val = atoi_64(s);
-        GLOBALS->left_justify_sigs = (val != LLDescriptor(0)) ? ~0 : 0;
+        GwTime val = atoi_64(s);
+        GLOBALS->left_justify_sigs = (val != GW_TIME_CONSTANT(0)) ? ~0 : 0;
 
         MaxSignalLength();
         gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
@@ -1126,7 +1126,7 @@ static int gtkwavetcl_setNamedMarker(ClientData clientData,
 
         if ((which >= 0) && (which < WAVE_NUM_NAMED_MARKERS)) {
             char *t = get_Tcl_string(objv[2]);
-            TimeType gt = unformat_time(t, GLOBALS->time_dimension);
+            GwTime gt = unformat_time(t, GLOBALS->time_dimension);
 
             GLOBALS->named_markers[which] = gt;
 
@@ -1652,8 +1652,8 @@ static int gtkwavetcl_signalChangeList(ClientData clientData,
     (void)clientData;
 
     int dir = STRACE_FORWARD;
-    TimeType start_time = 0;
-    TimeType end_time = MAX_HISTENT_TIME;
+    GwTime start_time = 0;
+    GwTime end_time = MAX_HISTENT_TIME;
     int max_elements = 0x7fffffff;
     char *sig_name = NULL;
     int i;

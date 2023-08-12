@@ -27,19 +27,19 @@
 struct blackout_region_t
 {
     struct blackout_region_t *next;
-    TimeType bstart, bend;
+    GwTime bstart, bend;
 };
 
 /* currenttime.c protos */
 
 void fractional_timescale_fix(char *);
 void update_time_box(void);
-void update_currenttime(TimeType val);
-void reformat_time(char *buf, TimeType val, char dim);
-void reformat_time_simple(char *buf, TimeType val, char dim);
-TimeType unformat_time(const char *buf, char dim);
+void update_currenttime(GwTime val);
+void reformat_time(char *buf, GwTime val, char dim);
+void reformat_time_simple(char *buf, GwTime val, char dim);
+GwTime unformat_time(const char *buf, char dim);
 void time_trunc_set(void);
-TimeType time_trunc(TimeType t);
+GwTime time_trunc(GwTime t);
 void exponent_to_time_scale(signed char scale);
 
 /* other protos / definitions */

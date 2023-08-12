@@ -65,9 +65,9 @@ void service_zoom_right(GtkWidget *text, gpointer data)
     (void)data;
 
     GtkAdjustment *hadj;
-    TimeType ntinc;
+    GwTime ntinc;
 
-    ntinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+    ntinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
 
     GLOBALS->tims.timecache = GLOBALS->tims.last - ntinc + 1;
     if (GLOBALS->tims.timecache < GLOBALS->tims.first)
@@ -83,7 +83,7 @@ void service_zoom_out(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType middle = 0, width;
+    GwTime middle = 0, width;
 
     if (GLOBALS->do_zoom_center) {
         if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
@@ -104,7 +104,7 @@ void service_zoom_out(GtkWidget *text, gpointer data)
     calczoom(GLOBALS->tims.zoom);
 
     if (GLOBALS->do_zoom_center) {
-        width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+        width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
         GLOBALS->tims.start = time_trunc(middle - (width / 2));
         if (GLOBALS->tims.start + width > GLOBALS->tims.last)
             GLOBALS->tims.start = time_trunc(GLOBALS->tims.last - width);
@@ -132,7 +132,7 @@ void service_zoom_in(GtkWidget *text, gpointer data)
 
     if (GLOBALS->tims.zoom < 0) /* otherwise it's ridiculous and can cause */
     { /* overflow problems in the scope          */
-        TimeType middle = 0, width;
+        GwTime middle = 0, width;
 
         if (GLOBALS->do_zoom_center) {
             if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
@@ -154,7 +154,7 @@ void service_zoom_in(GtkWidget *text, gpointer data)
         calczoom(GLOBALS->tims.zoom);
 
         if (GLOBALS->do_zoom_center) {
-            width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+            width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
             GLOBALS->tims.start = time_trunc(middle - (width / 2));
             if (GLOBALS->tims.start + width > GLOBALS->tims.last)
                 GLOBALS->tims.start = time_trunc(GLOBALS->tims.last - width);
@@ -272,11 +272,11 @@ void service_zoom_full(GtkWidget *text, gpointer data)
     DEBUG(printf("Zoombuttons Full\n"));
 }
 
-void service_dragzoom(TimeType time1, TimeType time2) /* the function you've been waiting for... */
+void service_dragzoom(GwTime time1, GwTime time2) /* the function you've been waiting for... */
 {
     gdouble estimated;
     int fixedwidth;
-    TimeType temp;
+    GwTime temp;
     GtkAdjustment *hadj;
     Trptr t;
     int dragzoom_ok = 1;
@@ -288,7 +288,7 @@ void service_dragzoom(TimeType time1, TimeType time2) /* the function you've bee
     }
 
     if (GLOBALS->dragzoom_threshold) {
-        TimeType tdelta = time2 - time1;
+        GwTime tdelta = time2 - time1;
         gdouble x = tdelta * GLOBALS->pxns;
         if (x < GLOBALS->dragzoom_threshold) {
             dragzoom_ok = 0;

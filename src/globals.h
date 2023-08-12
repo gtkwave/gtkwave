@@ -100,13 +100,13 @@ struct Global
     FILE *ae2_f;
     AE2_HANDLE *ae2;
     AE2_FACREF *ae2_fr;
-    TimeType ae2_start_limit_cyc;
-    TimeType ae2_end_limit_cyc;
+    GwTime ae2_start_limit_cyc;
+    GwTime ae2_end_limit_cyc;
     char *ae2_process_mask;
 #endif
-    TimeType ae2_start_cyc;
-    TimeType ae2_end_cyc;
-    TimeType *ae2_time_xlate;
+    GwTime ae2_start_cyc;
+    GwTime ae2_end_cyc;
+    GwTime *ae2_time_xlate;
     char disable_ae2_alias;
 
     /*
@@ -118,7 +118,7 @@ struct Global
     Traces traces; /* from analyzer.c 7 */
     int hier_max_level; /* from analyzer.c 8 */
     int hier_max_level_shadow; /* from analyzer.c */
-    TimeType timestart_from_savefile;
+    GwTime timestart_from_savefile;
     char timestart_from_savefile_valid;
     int group_depth;
     char hier_ignore_escapes;
@@ -131,14 +131,14 @@ struct Global
     /*
      * bsearch.c
      */
-    TimeType shift_timebase; /* from bsearch.c 10 */
-    TimeType shift_timebase_default_for_add; /* from bsearch.c 11 */
-    TimeType max_compare_time_tc_bsearch_c_1; /* from bsearch.c 12 */
-    TimeType *max_compare_pos_tc_bsearch_c_1; /* from bsearch.c 13 */
-    TimeType max_compare_time_bsearch_c_1; /* from bsearch.c 14 */
+    GwTime shift_timebase; /* from bsearch.c 10 */
+    GwTime shift_timebase_default_for_add; /* from bsearch.c 11 */
+    GwTime max_compare_time_tc_bsearch_c_1; /* from bsearch.c 12 */
+    GwTime *max_compare_pos_tc_bsearch_c_1; /* from bsearch.c 13 */
+    GwTime max_compare_time_bsearch_c_1; /* from bsearch.c 14 */
     struct HistEnt *max_compare_pos_bsearch_c_1; /* from bsearch.c 15 */
     struct HistEnt **max_compare_index; /* from bsearch.c 16 */
-    TimeType vmax_compare_time_bsearch_c_1; /* from bsearch.c 17 */
+    GwTime vmax_compare_time_bsearch_c_1; /* from bsearch.c 17 */
     struct VectorEnt *vmax_compare_pos_bsearch_c_1; /* from bsearch.c 18 */
     struct VectorEnt **vmax_compare_index; /* from bsearch.c 19 */
     int maxlen_trunc; /* from bsearch.c 20 */
@@ -196,23 +196,23 @@ struct Global
     /*
      * currenttime.c
      */
-    TimeType global_time_offset;
+    GwTime global_time_offset;
     char is_vcd; /* from currenttime.c 56 */
     char partial_vcd; /* from currenttime.c 57 */
     char use_maxtime_display; /* from currenttime.c 58 */
     char use_frequency_delta; /* from currenttime.c 59 */
-    TimeType cached_currenttimeval_currenttime_c_1; /* from currenttime.c 62 */
-    TimeType currenttime; /* from currenttime.c 63 */
-    TimeType max_time; /* from currenttime.c 64 */
-    TimeType min_time; /* from currenttime.c 65 */
+    GwTime cached_currenttimeval_currenttime_c_1; /* from currenttime.c 62 */
+    GwTime currenttime; /* from currenttime.c 63 */
+    GwTime max_time; /* from currenttime.c 64 */
+    GwTime min_time; /* from currenttime.c 65 */
     char display_grid; /* from currenttime.c 66 */
     char fullscreen;
     char show_toolbar;
     GtkWidget *time_box;
-    TimeType time_scale; /* from currenttime.c 67 */
+    GwTime time_scale; /* from currenttime.c 67 */
     char time_dimension; /* from currenttime.c 68 */
     char scale_to_time_dimension; /* from currenttime.c */
-    TimeType time_trunc_val_currenttime_c_1; /* from currenttime.c 77 */
+    GwTime time_trunc_val_currenttime_c_1; /* from currenttime.c 77 */
     char use_full_precision; /* from currenttime.c 78 */
 
     /*
@@ -260,7 +260,7 @@ struct Global
     /*
      * fetchbuttons.c
      */
-    TimeType fetchwindow; /* from fetchbuttons.c 85 */
+    GwTime fetchwindow; /* from fetchbuttons.c 85 */
 
     /*
      * fgetdynamic.c
@@ -295,9 +295,9 @@ struct Global
     void *fst_fst_c_1;
     const char *fst_scope_name;
     int fst_scope_name_len;
-    TimeType first_cycle_fst_c_3;
-    TimeType last_cycle_fst_c_3;
-    TimeType total_cycles_fst_c_3;
+    GwTime first_cycle_fst_c_3;
+    GwTime last_cycle_fst_c_3;
+    GwTime total_cycles_fst_c_3;
     struct lx2_entry *fst_table_fst_c_1;
     struct fac *mvlfacs_fst_c_3;
     fstHandle *mvlfacs_fst_alias;
@@ -394,9 +394,9 @@ struct Global
      */
     unsigned char is_lx2; /* from lx2.c 143 */
     struct lxt2_rd_trace *lx2_lx2_c_1; /* from lx2.c 144 */
-    TimeType first_cycle_lx2_c_1; /* from lx2.c 145 */
-    TimeType last_cycle_lx2_c_1; /* from lx2.c 146 */
-    TimeType total_cycles_lx2_c_1; /* from lx2.c 147 */
+    GwTime first_cycle_lx2_c_1; /* from lx2.c 145 */
+    GwTime last_cycle_lx2_c_1; /* from lx2.c 146 */
+    GwTime total_cycles_lx2_c_1; /* from lx2.c 147 */
     struct lx2_entry *lx2_table_lx2_c_1; /* from lx2.c 148 */
     struct fac *mvlfacs_lx2_c_1; /* from lx2.c 149 */
     int busycnt_lx2_c_1; /* from lx2.c 150 */
@@ -417,14 +417,14 @@ struct Global
     void *mmcache_lxt_c_1; /* from lxt.c 155 */
     int version_lxt_c_1; /* from lxt.c 156 */
     struct fac *mvlfacs_lxt_c_2; /* from lxt.c 157 */
-    TimeType first_cycle_lxt_c_2; /* from lxt.c 158 */
-    TimeType last_cycle_lxt_c_2; /* from lxt.c 159 */
-    TimeType total_cycles_lxt_c_2; /* from lxt.c 160 */
+    GwTime first_cycle_lxt_c_2; /* from lxt.c 158 */
+    GwTime last_cycle_lxt_c_2; /* from lxt.c 159 */
+    GwTime total_cycles_lxt_c_2; /* from lxt.c 160 */
     int maxchange_lxt_c_1; /* from lxt.c 161 */
     int maxindex_lxt_c_1; /* from lxt.c 162 */
     int f_len_lxt_c_1; /* from lxt.c 163 */
     int *positional_information_lxt_c_1; /* from lxt.c 164 */
-    TimeType *time_information; /* from lxt.c 165 */
+    GwTime *time_information; /* from lxt.c 165 */
     int change_field_offset_lxt_c_1; /* from lxt.c 166 */
     int facname_offset_lxt_c_1; /* from lxt.c 167 */
     int facgeometry_offset_lxt_c_1; /* from lxt.c 168 */
@@ -554,7 +554,7 @@ struct Global
     GtkWidget *entries_markerbox_c_1[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c 249 */
     void (*cleanup_markerbox_c_4)(void); /* from markerbox.c 250 */
     int dirty_markerbox_c_1; /* from markerbox.c 251 */
-    TimeType shadow_markers_markerbox_c_1[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c 252 */
+    GwTime shadow_markers_markerbox_c_1[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c 252 */
     char *marker_names[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c */
     char *shadow_marker_names[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c */
 
@@ -925,9 +925,9 @@ struct Global
     int error_count_vcd_c_1; /* from vcd.c 514 */
     int header_over_vcd_c_1; /* from vcd.c 515 */
     int dumping_off_vcd_c_1; /* from vcd.c 516 */
-    TimeType start_time_vcd_c_1; /* from vcd.c 517 */
-    TimeType end_time_vcd_c_1; /* from vcd.c 518 */
-    TimeType current_time_vcd_c_1; /* from vcd.c 519 */
+    GwTime start_time_vcd_c_1; /* from vcd.c 517 */
+    GwTime end_time_vcd_c_1; /* from vcd.c 518 */
+    GwTime current_time_vcd_c_1; /* from vcd.c 519 */
     int num_glitches_vcd_c_2; /* from vcd.c 520 */
     int num_glitch_regions_vcd_c_2; /* from vcd.c 521 */
     char vcd_hier_delimeter[2]; /* from vcd.c 522 */
@@ -968,9 +968,9 @@ struct Global
     int error_count_vcd_partial_c_2; /* from vcd_partial.c 556 */
     int header_over_vcd_partial_c_2; /* from vcd_partial.c 557 */
     int dumping_off_vcd_partial_c_2; /* from vcd_partial.c 558 */
-    TimeType start_time_vcd_partial_c_2; /* from vcd_partial.c 559 */
-    TimeType end_time_vcd_partial_c_2; /* from vcd_partial.c 560 */
-    TimeType current_time_vcd_partial_c_2; /* from vcd_partial.c 561 */
+    GwTime start_time_vcd_partial_c_2; /* from vcd_partial.c 559 */
+    GwTime end_time_vcd_partial_c_2; /* from vcd_partial.c 560 */
+    GwTime current_time_vcd_partial_c_2; /* from vcd_partial.c 561 */
     int num_glitches_vcd_partial_c_3; /* from vcd_partial.c 562 */
     int num_glitch_regions_vcd_partial_c_3; /* from vcd_partial.c 563 */
     struct vcdsymbol *pv_vcd_partial_c_2; /* from vcd_partial.c 564 */
@@ -1013,9 +1013,9 @@ struct Global
     int error_count_vcd_recoder_c_3; /* from vcd_recoder.c 598 */
     int header_over_vcd_recoder_c_3; /* from vcd_recoder.c 599 */
     int dumping_off_vcd_recoder_c_3; /* from vcd_recoder.c 600 */
-    TimeType start_time_vcd_recoder_c_3; /* from vcd_recoder.c 601 */
-    TimeType end_time_vcd_recoder_c_3; /* from vcd_recoder.c 602 */
-    TimeType current_time_vcd_recoder_c_3; /* from vcd_recoder.c 603 */
+    GwTime start_time_vcd_recoder_c_3; /* from vcd_recoder.c 601 */
+    GwTime end_time_vcd_recoder_c_3; /* from vcd_recoder.c 602 */
+    GwTime current_time_vcd_recoder_c_3; /* from vcd_recoder.c 603 */
     int num_glitches_vcd_recoder_c_4; /* from vcd_recoder.c 604 */
     int num_glitch_regions_vcd_recoder_c_4; /* from vcd_recoder.c 605 */
     struct vcdsymbol *pv_vcd_recoder_c_3; /* from vcd_recoder.c 606 */
@@ -1063,9 +1063,9 @@ struct Global
      * vzt.c
      */
     struct vzt_rd_trace *vzt_vzt_c_1; /* from vzt.c 635 */
-    TimeType first_cycle_vzt_c_3; /* from vzt.c 636 */
-    TimeType last_cycle_vzt_c_3; /* from vzt.c 637 */
-    TimeType total_cycles_vzt_c_3; /* from vzt.c 638 */
+    GwTime first_cycle_vzt_c_3; /* from vzt.c 636 */
+    GwTime last_cycle_vzt_c_3; /* from vzt.c 637 */
+    GwTime total_cycles_vzt_c_3; /* from vzt.c 638 */
     struct lx2_entry *vzt_table_vzt_c_1; /* from vzt.c 639 */
     struct fac *mvlfacs_vzt_c_3; /* from vzt.c 640 */
     int busycnt_vzt_c_2; /* from vzt.c 641 */
@@ -1097,12 +1097,12 @@ struct Global
     int cursor_snap; /* from wavewindow.c 659 */
     float old_wvalue; /* from wavewindow.c 660 */
     struct blackout_region_t *blackout_regions; /* from wavewindow.c 661 */
-    TimeType zoom; /* from wavewindow.c 662 */
-    TimeType scale; /* from wavewindow.c 663 */
-    TimeType nsperframe; /* from wavewindow.c 664 */
+    GwTime zoom; /* from wavewindow.c 662 */
+    GwTime scale; /* from wavewindow.c 663 */
+    GwTime nsperframe; /* from wavewindow.c 664 */
     double pixelsperframe; /* from wavewindow.c 665 */
     double hashstep; /* from wavewindow.c 666 */
-    TimeType prevtim_wavewindow_c_1; /* from wavewindow.c 667 */
+    GwTime prevtim_wavewindow_c_1; /* from wavewindow.c 667 */
     double pxns; /* from wavewindow.c 668 */
     double nspx; /* from wavewindow.c 669 */
     double zoombase; /* from wavewindow.c 670 */
@@ -1116,13 +1116,13 @@ struct Global
     GtkWidget *hscroll_wavewindow_c_2; /* from wavewindow.c 679 */
     gpointer wave_vslider2; /* from wavewindow.c 681 */
     gpointer wave_hslider; /* from wavewindow.c 682 */
-    TimeType named_markers[WAVE_NUM_NAMED_MARKERS]; /* from wavewindow.c 683 */
+    GwTime named_markers[WAVE_NUM_NAMED_MARKERS]; /* from wavewindow.c 683 */
     int named_marker_lock_idx; /* from menu.c */
     char made_gc_contexts_wavewindow_c_1; /* from wavewindow.c 684 */
     int which_t_color;
     char made_sgc_contexts_wavewindow_c_1; /* from wavewindow.c 709 */
     char fill_in_smaller_rgb_areas_wavewindow_c_1; /* from wavewindow.c 719 */
-    TimeType prev_markertime; /* from wavewindow.c */
+    GwTime prev_markertime; /* from wavewindow.c */
     int analog_redraw_skip_count; /* from wavewindow.c */
     int str_wid_x;
     int str_wid_width;
@@ -1130,8 +1130,8 @@ struct Global
     int str_wid_state;
     int str_wid_slider;
     int str_wid_height;
-    TimeType ruler_origin;
-    TimeType ruler_step;
+    GwTime ruler_origin;
+    GwTime ruler_step;
     char fill_waveform;
     char lz_removal;
     gboolean disable_antialiasing;
@@ -1148,11 +1148,11 @@ struct Global
     gdouble wavearea_gesture_initial_zoom;
 #ifdef WAVE_GTK3_GESTURE_ZOOM_IS_1D
     gdouble wavearea_gesture_initial_zoom_x_distance;
-    TimeType wavearea_gesture_initial_x1tim;
+    GwTime wavearea_gesture_initial_x1tim;
 #endif
     GtkGesture *wavearea_gesture_swipe;
     GDateTime *swipe_init_time;
-    TimeType swipe_init_start;
+    GwTime swipe_init_start;
     gdouble wavearea_gesture_swipe_velocity_x;
     int wavearea_drag_start_x;
     int wavearea_drag_start_y;

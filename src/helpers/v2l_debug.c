@@ -154,9 +154,9 @@ if(ptr)
  * y/on     default to '1'
  * n/nonnum default to '0'
  */
-TimeType atoi_64(char *str)
+gint64 atoi_64(char *str)
 {
-TimeType val=0;
+gint64 val=0;
 unsigned char ch, nflag=0;
 
 #if 0
@@ -164,19 +164,19 @@ switch(*str)
 	{
 	case 'y':
 	case 'Y':
-		return(LLDescriptor(1));
+		return(GW_TIME_CONSTANT(1));
 
 	case 'o':
 	case 'O':
 		str++;
 		ch=*str;
 		if((ch=='n')||(ch=='N'))
-			return(LLDescriptor(1));
-		else	return(LLDescriptor(0));
+			return(GW_TIME_CONSTANT(1));
+		else	return(GW_TIME_CONSTANT(0));
 
 	case 'n':
 	case 'N':
-		return(LLDescriptor(0));
+		return(GW_TIME_CONSTANT(0));
 		break;
 
 	default:

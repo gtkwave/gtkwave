@@ -130,7 +130,7 @@ static gboolean mouseover_timer(gpointer dummy)
     gtk_widget_get_allocation(GLOBALS->signalarea, &s_allocation);
 
     if (!((x >= 0) && (x < s_allocation.width) && (y >= 0) && (y < s_allocation.height))) {
-        move_mouseover_sigs(NULL, 0, 0, LLDescriptor(0));
+        move_mouseover_sigs(NULL, 0, 0, GW_TIME_CONSTANT(0));
     } else if (GLOBALS->mouseover_counter == 10) {
         GtkAllocation allocation;
         gtk_widget_get_allocation(GLOBALS->wavearea, &allocation);
@@ -229,7 +229,7 @@ static gboolean mouseover_timer(gpointer dummy)
                                 GLOBALS->cached_mouseover_y,
                                 GLOBALS->tims.marker);
         } else {
-            move_mouseover_sigs(NULL, 0, 0, LLDescriptor(0));
+            move_mouseover_sigs(NULL, 0, 0, GW_TIME_CONSTANT(0));
         }
     }
 

@@ -10,6 +10,6 @@
 #ifndef WAVE_MOUSEOVER_SIGS_H
 #define WAVE_MOUSEOVER_SIGS_H
 
-void move_mouseover_sigs(Trptr t, gint xin, gint yin, TimeType tim);
+void move_mouseover_sigs(Trptr t, gint xin, gint yin, GwTime tim);
 
 #endif

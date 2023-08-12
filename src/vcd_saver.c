@@ -248,7 +248,7 @@ static int hpcmp(vcdsav_Tree *hp1, vcdsav_Tree *hp2)
 {
     hptr n1 = hp1->hist;
     hptr n2 = hp2->hist;
-    TimeType t1, t2;
+    GwTime t1, t2;
 
     if (n1)
         t1 = n1->time;
@@ -337,7 +337,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
     /* ExtNode *e; */
     /* int msi, lsi; */
     int i;
-    TimeType prevtime = LLDescriptor(-1);
+    GwTime prevtime = GW_TIME_CONSTANT(-1);
     time_t walltime;
     struct strace *st = NULL;
     int strace_append = 0;
@@ -514,7 +514,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
             if (GLOBALS->global_time_offset) {
                 w32redirect_fprintf(is_trans,
                                     GLOBALS->f_vcd_saver_c_1,
-                                    "$timezero\n\t" TTFormat "\n$end\n",
+                                    "$timezero\n\t%" GW_TIME_FORMAT "\n$end\n",
                                     GLOBALS->global_time_offset);
             }
         } else {
@@ -535,16 +535,16 @@ int save_nodes_to_export_generic(FILE *trans_file,
             if (GLOBALS->global_time_offset) {
                 w32redirect_fprintf(is_trans,
                                     GLOBALS->f_vcd_saver_c_1,
-                                    "$timezero " TTFormat " $end\n",
+                                    "$timezero %" GW_TIME_FORMAT " $end\n",
                                     GLOBALS->global_time_offset);
             }
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
-                                "$comment min_time " TTFormat " $end\n",
+                                "$comment min_time %" GW_TIME_FORMAT " $end\n",
                                 GLOBALS->min_time / GLOBALS->time_scale);
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
-                                "$comment max_time " TTFormat " $end\n",
+                                "$comment max_time %" GW_TIME_FORMAT " $end\n",
                                 GLOBALS->max_time / GLOBALS->time_scale);
         }
     }
@@ -676,8 +676,8 @@ int save_nodes_to_export_generic(FILE *trans_file,
             break;
 
         if ((GLOBALS->hp_vcd_saver_c_1[0]->hist->time != prevtime) &&
-            (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= LLDescriptor(0))) {
-            TimeType tnorm = GLOBALS->hp_vcd_saver_c_1[0]->hist->time;
+            (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= GW_TIME_CONSTANT(0))) {
+            GwTime tnorm = GLOBALS->hp_vcd_saver_c_1[0]->hist->time;
             if (GLOBALS->time_scale != 1) {
                 tnorm /= GLOBALS->time_scale;
             }
@@ -689,7 +689,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
                     w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
                     dumpvars_state = 2;
                 }
-                w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "#" TTFormat "\n", tnorm);
+                w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "#%" GW_TIME_FORMAT "\n", tnorm);
                 if (!dumpvars_state) {
                     w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$dumpvars\n");
                     dumpvars_state = 1;
@@ -698,12 +698,12 @@ int save_nodes_to_export_generic(FILE *trans_file,
             prevtime = GLOBALS->hp_vcd_saver_c_1[0]->hist->time;
         }
 
-        if (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= LLDescriptor(0)) {
+        if (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= GW_TIME_CONSTANT(0)) {
             if (GLOBALS->hp_vcd_saver_c_1[0]->flags & (HIST_REAL | HIST_STRING)) {
                 if (GLOBALS->hp_vcd_saver_c_1[0]->flags & HIST_STRING) {
-                    const char *vec = GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
-                                          ? GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
-                                          : "UNDEF";
+                    char *vec = GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
+                                    ? GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
+                                    : "UNDEF";
 
                     if (lxt) {
                         lt_emit_value_string(lt,
@@ -816,7 +816,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
             }
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
-                                "#" TTFormat "\n",
+                                "#%" GW_TIME_FORMAT "\n",
                                 GLOBALS->max_time / GLOBALS->time_scale);
         }
     }
@@ -1041,7 +1041,7 @@ char *output_hier(int is_trans, const char *name)
 /***                                  ***/
 /****************************************/
 
-static void write_hptr_trace(Trptr t, int *whichptr, TimeType tmin, TimeType tmax)
+static void write_hptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     nptr n = t->n.nd;
     hptr *ha = n->harray;
@@ -1105,7 +1105,7 @@ static void write_hptr_trace(Trptr t, int *whichptr, TimeType tmin, TimeType tma
             h_val = invert ? AN_USTR_INV[ha[i]->v.h_val] : AN_USTR[ha[i]->v.h_val];
             w32redirect_fprintf(0,
                                 GLOBALS->f_vcd_saver_c_1,
-                                "          Edge:               " TTFormat ".0 %c\n",
+                                "          Edge:               %" GW_TIME_FORMAT ".0 %c\n",
                                 ha[i]->time,
                                 h_val);
         }
@@ -1169,7 +1169,7 @@ static char *get_hptr_vector_val(Trptr t, hptr h)
 {
     char *ascii = NULL;
 
-    if (h->time < LLDescriptor(0)) {
+    if (h->time < GW_TIME_CONSTANT(0)) {
         ascii = strdup_2("X");
     } else if (h->flags & HIST_REAL) {
         if (!(h->flags & HIST_STRING)) {
@@ -1214,7 +1214,7 @@ static int determine_trace_data_type(char *s, int curtype)
     return (curtype);
 }
 
-static void write_hptr_trace_vector(Trptr t, int *whichptr, TimeType tmin, TimeType tmax)
+static void write_hptr_trace_vector(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     nptr n = t->n.nd;
     hptr *ha = n->harray;
@@ -1292,7 +1292,7 @@ static void write_hptr_trace_vector(Trptr t, int *whichptr, TimeType tmin, TimeT
             h_val = get_hptr_vector_val(t, ha[i]);
             w32redirect_fprintf(0,
                                 GLOBALS->f_vcd_saver_c_1,
-                                "          Edge:               " TTFormat ".0 %s\n",
+                                "          Edge:               %" GW_TIME_FORMAT ".0 %s\n",
                                 ha[i]->time,
                                 h_val);
         }
@@ -1330,7 +1330,7 @@ static char *get_vptr_vector_val(Trptr t, vptr v)
 {
     char *ascii = NULL;
 
-    if (v->time < LLDescriptor(0)) {
+    if (v->time < GW_TIME_CONSTANT(0)) {
         ascii = strdup_2("X");
     } else {
         ascii = convert_ascii(t, v);
@@ -1344,7 +1344,7 @@ static char *get_vptr_vector_val(Trptr t, vptr v)
     return (ascii);
 }
 
-static void write_vptr_trace(Trptr t, int *whichptr, TimeType tmin, TimeType tmax)
+static void write_vptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     vptr *ha = t->n.vec->vectors;
     int numhist = t->n.vec->numregions;
@@ -1421,7 +1421,7 @@ static void write_vptr_trace(Trptr t, int *whichptr, TimeType tmin, TimeType tma
             h_val = get_vptr_vector_val(t, ha[i]);
             w32redirect_fprintf(0,
                                 GLOBALS->f_vcd_saver_c_1,
-                                "          Edge:               " TTFormat ".0 %s\n",
+                                "          Edge:               %" GW_TIME_FORMAT ".0 %s\n",
                                 ha[i]->time,
                                 h_val);
         }
@@ -1453,7 +1453,7 @@ static void write_vptr_trace(Trptr t, int *whichptr, TimeType tmin, TimeType tma
     (*whichptr)++;
 }
 
-static void write_tim_tracedata(Trptr t, int *whichptr, TimeType tmin, TimeType tmax)
+static void write_tim_tracedata(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     if (!(t->flags & (TR_EXCLUDE | TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
         GLOBALS->shift_timebase = t->shift;
@@ -1477,11 +1477,11 @@ int do_timfile_save(const char *fname)
     int offset;
     Trptr t = GLOBALS->traces.first;
     int i = 1; /* trace index in the .tim file */
-    TimeType tmin, tmax;
+    GwTime tmin, tmax;
 
     errno = 0;
 
-    if ((GLOBALS->tims.marker > LLDescriptor(0)) && (GLOBALS->tims.baseline > LLDescriptor(0))) {
+    if ((GLOBALS->tims.marker > GW_TIME_CONSTANT(0)) && (GLOBALS->tims.baseline > GW_TIME_CONSTANT(0))) {
         if (GLOBALS->tims.marker < GLOBALS->tims.baseline) {
             tmin = GLOBALS->tims.marker;
             tmax = GLOBALS->tims.baseline;
@@ -1511,8 +1511,8 @@ int do_timfile_save(const char *fname)
                         "     Time_Scale:        %E\n"
                         "     Time_Per_Division: %E\n"
                         "     NumberDivisions:   10\n"
-                        "     Start_Time:        " TTFormat ".0\n"
-                        "     End_Time:          " TTFormat ".0\n",
+                        "     Start_Time:        %" GW_TIME_FORMAT ".0\n"
+                        "     End_Time:          %" GW_TIME_FORMAT ".0\n",
 
                         negpow[offset],
                         (tmax - tmin) / 10.0,

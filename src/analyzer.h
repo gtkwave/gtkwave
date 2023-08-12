@@ -145,7 +145,7 @@ typedef struct HistEnt
 #endif
     } v;
 
-    TimeType time; /* time of transition */
+    GwTime time; /* time of transition */
     unsigned char flags; /* so far only set on glitch/real condition */
 } HistEnt;
 
@@ -171,7 +171,7 @@ enum HistEntFlagBits
 
 typedef struct VectorEnt
 {
-    TimeType time;
+    GwTime time;
     vptr next;
     unsigned char flags; /* so far only set on strings */
     unsigned char v[]; /* C99 */
@@ -181,7 +181,7 @@ typedef struct VectorEnt
 #pragma pack(pop)
 #endif
 
-#define MAX_HISTENT_TIME ((TimeType)(~((ULLDescriptor(-1)) << (sizeof(TimeType) * 8 - 1))))
+#define MAX_HISTENT_TIME ((GwTime)(~((GW_UTIME_CONSTANT(-1)) << (sizeof(GwTime) * 8 - 1))))
 
 typedef struct ExpandInfo /* only used when expanding atomic vex.. */
 {
@@ -369,7 +369,7 @@ typedef uint64_t TraceFlagsType;
 
 typedef struct BitAttributes
 {
-    TimeType shift;
+    GwTime shift;
     TraceFlagsType flags;
 } BitAttributes;
 
@@ -415,18 +415,18 @@ typedef struct BitVector
 
 typedef struct
 {
-    TimeType first; /* beginning time of trace */
-    TimeType last; /* end time of trace */
-    TimeType start; /* beginning time of trace on screen */
-    TimeType end; /* ending time of trace on screen */
-    TimeType marker;
-    TimeType prevmarker; /* from last drawmarker()	        */
-    TimeType resizemarker; /* from last MaxSignalLength()          */
-    TimeType resizemarker2; /* from 2nd last MaxSignalLength()      */
-    TimeType lmbcache; /* initial marker pos                   */
-    TimeType timecache; /* to get around floating pt limitation */
-    TimeType laststart; /* caches last set value                */
-    TimeType baseline; /* baseline (center button) marker      */
+    GwTime first; /* beginning time of trace */
+    GwTime last; /* end time of trace */
+    GwTime start; /* beginning time of trace on screen */
+    GwTime end; /* ending time of trace on screen */
+    GwTime marker;
+    GwTime prevmarker; /* from last drawmarker()	        */
+    GwTime resizemarker; /* from last MaxSignalLength()          */
+    GwTime resizemarker2; /* from 2nd last MaxSignalLength()      */
+    GwTime lmbcache; /* initial marker pos                   */
+    GwTime timecache; /* to get around floating pt limitation */
+    GwTime laststart; /* caches last set value                */
+    GwTime baseline; /* baseline (center button) marker      */
 
     gdouble zoom; /* current zoom  */
     gdouble prevzoom; /* for zoom undo */
@@ -465,9 +465,9 @@ typedef struct TraceEnt
     char *name_full; /* full name */
     char *asciivalue; /* value that marker points to */
     char *transaction_args; /* for TR_TTRANSLATED traces */
-    TimeType asciitime; /* time this value corresponds with */
-    TimeType shift; /* offset added to all entries in the trace */
-    TimeType shift_drag; /* cached initial offset for CTRL+LMB drag on highlighted */
+    GwTime asciitime; /* time this value corresponds with */
+    GwTime shift; /* offset added to all entries in the trace */
+    GwTime shift_drag; /* cached initial offset for CTRL+LMB drag on highlighted */
 
     double d_minval, d_maxval; /* cached value for when auto scaling is turned off */
     int d_num_ext; /* need to regen if differs from current in analog! */

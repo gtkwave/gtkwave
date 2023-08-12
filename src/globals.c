@@ -87,12 +87,12 @@ static const struct Global globals_base_values = {
     NULL, /* ae2_f */
     NULL, /* ae2 */
     NULL, /* ae2_fr */
-    LLDescriptor(0), /* ae2_start_limit_cyc */
-    LLDescriptor(0), /* ae2_end_limit_cyc */
+    GW_TIME_CONSTANT(0), /* ae2_start_limit_cyc */
+    GW_TIME_CONSTANT(0), /* ae2_end_limit_cyc */
     NULL, /* ae2_process_mask */
 #endif
-    LLDescriptor(0), /* ae2_start_cyc */
-    LLDescriptor(0), /* ae2_end_cyc */
+    GW_TIME_CONSTANT(0), /* ae2_start_cyc */
+    GW_TIME_CONSTANT(0), /* ae2_end_cyc */
     NULL, /* ae2_time_xlate */
     0, /* disable_ae2_alias */
 
@@ -118,8 +118,8 @@ static const struct Global globals_base_values = {
     /*
      * bsearch.c
      */
-    LLDescriptor(0), /* shift_timebase 10 */
-    LLDescriptor(0), /* shift_timebase_default_for_add 11 */
+    GW_TIME_CONSTANT(0), /* shift_timebase 10 */
+    GW_TIME_CONSTANT(0), /* shift_timebase_default_for_add 11 */
     0, /* max_compare_time_tc_bsearch_c_1 12 */
     0, /* max_compare_pos_tc_bsearch_c_1 13 */
     0, /* max_compare_time_bsearch_c_1 14 */
@@ -183,7 +183,7 @@ static const struct Global globals_base_values = {
     /*
      * currenttime.c
      */
-    LLDescriptor(0), /* global_time_offset */
+    GW_TIME_CONSTANT(0), /* global_time_offset */
     0, /* is_vcd 56 */
     0, /* partial_vcd */
     1, /* use_maxtime_display 57 */
@@ -1405,7 +1405,7 @@ void reload_into_new_context_2(void)
     gdouble treeview_vadj_value = 0.0;
     gdouble treeview_hadj_value = 0.0;
     int fix_from_time = 0, fix_to_time = 0;
-    TimeType from_time = LLDescriptor(0), to_time = LLDescriptor(0);
+    GwTime from_time = GW_TIME_CONSTANT(0), to_time = GW_TIME_CONSTANT(0);
     char timestr[32];
     int load_was_success = 0;
     int reload_fail_delay = 1;

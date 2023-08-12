@@ -48,7 +48,7 @@ struct lx2_entry
 #pragma pack(pop)
 #endif
 
-TimeType lx2_main(char *fname, char *skip_start, char *skip_end);
+GwTime lx2_main(char *fname, char *skip_start, char *skip_end);
 void import_lx2_trace(nptr np);
 
 void lx2_set_fac_process_mask(nptr np);

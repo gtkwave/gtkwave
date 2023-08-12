@@ -64,11 +64,11 @@ char *strstr_i(char *hay, char *needle)
 /*
  * trap timescale overflows
  */
-TimeType strace_adjust(TimeType a, TimeType b)
+GwTime strace_adjust(GwTime a, GwTime b)
 {
-    TimeType res = a + b;
+    GwTime res = a + b;
 
-    if (b > LLDescriptor(0) && res < a) {
+    if (b > GW_TIME_CONSTANT(0) && res < a) {
         return MAX_HISTENT_TIME;
     }
 
@@ -580,11 +580,11 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
 static void strace_search_2(int direction, int is_last_iteration)
 {
     struct strace *s;
-    TimeType basetime, maxbase, sttim, fintim;
+    GwTime basetime, maxbase, sttim, fintim;
     Trptr t;
     int totaltraces, passcount;
     int whichpass;
-    TimeType middle = 0, width;
+    GwTime middle = 0, width;
 
     if (direction == STRACE_BACKWARD) /* backwards */
     {
@@ -616,8 +616,8 @@ static void strace_search_2(int direction, int is_last_iteration)
                 if (!(t->vector)) {
                     hptr h;
                     hptr *hp;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     /* h= */ bsearch_node(t->n.nd, basetime - t->shift); /* scan-build */
                     hp = GLOBALS->max_compare_index;
@@ -634,8 +634,8 @@ static void strace_search_2(int direction, int is_last_iteration)
                 } else {
                     vptr v;
                     vptr *vp;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     /* v= */ bsearch_vector(t->n.vec, basetime - t->shift); /* scan-build */
                     vp = GLOBALS->vmax_compare_index;
@@ -662,8 +662,8 @@ static void strace_search_2(int direction, int is_last_iteration)
                 GLOBALS->shift_timebase = t->shift;
                 if (!(t->vector)) {
                     hptr h;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     h = bsearch_node(t->n.nd, basetime - t->shift);
                     while (h->next && h->time == h->next->time)
@@ -679,8 +679,8 @@ static void strace_search_2(int direction, int is_last_iteration)
                         maxbase = tt;
                 } else {
                     vptr v;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     v = bsearch_vector(t->n.vec, basetime - t->shift);
                     while (v->next && v->time == v->next->time)
@@ -910,7 +910,7 @@ static void strace_search_2(int direction, int is_last_iteration)
         if ((maxbase < sttim) || (maxbase > fintim))
             return;
 
-        DEBUG(printf("Maxbase: " TTFormat ", total traces: %d\n", maxbase, totaltraces));
+        DEBUG(printf("Maxbase: %" GW_TIME_FORMAT ", total traces: %d\n", maxbase, totaltraces));
         s = GLOBALS->strace_ctx->straces;
         passcount = 0;
         while (s) {
@@ -954,7 +954,7 @@ static void strace_search_2(int direction, int is_last_iteration)
     if (is_last_iteration) {
         update_time_box();
 
-        width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+        width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
         if ((GLOBALS->tims.marker < GLOBALS->tims.start) ||
             (GLOBALS->tims.marker >= GLOBALS->tims.start + width)) {
             if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
@@ -999,10 +999,10 @@ void strace_search(int direction)
 /*
  * strace forward to make the timetrace
  */
-TimeType strace_timetrace(TimeType basetime, int notfirst)
+GwTime strace_timetrace(GwTime basetime, int notfirst)
 {
     struct strace *s;
-    TimeType maxbase, fintim;
+    GwTime maxbase, fintim;
     Trptr t;
     int totaltraces, passcount;
     int whichpass;
@@ -1017,8 +1017,8 @@ TimeType strace_timetrace(TimeType basetime, int notfirst)
             GLOBALS->shift_timebase = t->shift;
             if (!(t->vector)) {
                 hptr h;
-                UTimeType utt;
-                TimeType tt;
+                GwUTime utt;
+                GwTime tt;
 
                 h = bsearch_node(t->n.nd, basetime - t->shift);
                 s->his.h = h;
@@ -1037,8 +1037,8 @@ TimeType strace_timetrace(TimeType basetime, int notfirst)
                     maxbase = tt;
             } else {
                 vptr v;
-                UTimeType utt;
-                TimeType tt;
+                GwUTime utt;
+                GwTime tt;
 
                 v = bsearch_vector(t->n.vec, basetime - t->shift);
                 if ((whichpass) || (notfirst)) {
@@ -1274,7 +1274,7 @@ TimeType strace_timetrace(TimeType basetime, int notfirst)
         if (maxbase > fintim)
             return (MAX_HISTENT_TIME);
 
-        DEBUG(printf("Maxbase: " TTFormat ", total traces: %d\n", maxbase, totaltraces));
+        DEBUG(printf("Maxbase: %" GW_TIME_FORMAT ", total traces: %d\n", maxbase, totaltraces));
         s = GLOBALS->strace_ctx->straces;
         passcount = 0;
         while (s) {
@@ -1321,12 +1321,12 @@ TimeType strace_timetrace(TimeType basetime, int notfirst)
 
 void strace_maketimetrace(int mode)
 {
-    TimeType basetime = GLOBALS->tims.first;
-    TimeType endtime = MAX_HISTENT_TIME;
+    GwTime basetime = GLOBALS->tims.first;
+    GwTime endtime = MAX_HISTENT_TIME;
     int notfirst = 0;
-    TimeType *t;
+    GwTime *t;
     int t_allocated;
-    TimeType orig_basetime;
+    GwTime orig_basetime;
 
     if (GLOBALS->strace_ctx->timearray) {
         free_2(GLOBALS->strace_ctx->timearray);
@@ -1370,13 +1370,13 @@ void strace_maketimetrace(int mode)
     }
 
     if (basetime > endtime) {
-        TimeType tmp = basetime;
+        GwTime tmp = basetime;
         basetime = endtime;
         endtime = tmp;
     }
 
     t_allocated = 1;
-    t = malloc_2(sizeof(TimeType) * t_allocated);
+    t = malloc_2(sizeof(GwTime) * t_allocated);
 
     orig_basetime = basetime;
     while (1) {
@@ -1397,14 +1397,14 @@ void strace_maketimetrace(int mode)
             GLOBALS->strace_ctx->timearray_size++;
             if (GLOBALS->strace_ctx->timearray_size == t_allocated) {
                 t_allocated *= 2;
-                t = realloc_2(t, sizeof(TimeType) * t_allocated);
+                t = realloc_2(t, sizeof(GwTime) * t_allocated);
             }
         }
     }
 
     if (GLOBALS->strace_ctx->timearray_size) {
         GLOBALS->strace_ctx->timearray =
-            realloc_2(t, sizeof(TimeType) * GLOBALS->strace_ctx->timearray_size);
+            realloc_2(t, sizeof(GwTime) * GLOBALS->strace_ctx->timearray_size);
     } else {
         free_2(t);
         GLOBALS->strace_ctx->timearray = NULL;
@@ -1538,7 +1538,7 @@ void cache_actual_pattern_mark_traces(void)
 {
     Trptr t;
     TraceFlagsType def = 0;
-    TimeType prevshift = LLDescriptor(0);
+    GwTime prevshift = GW_TIME_CONSTANT(0);
     struct strace *st;
 
     delete_mprintf();
@@ -1571,7 +1571,7 @@ void cache_actual_pattern_mark_traces(void)
             }
 
             if ((t->shift) || ((prevshift) && (!t->shift))) {
-                mprintf(">" TTFormat "\n", t->shift);
+                mprintf(">%" GW_TIME_FORMAT "\n", t->shift);
             }
             prevshift = t->shift;
 

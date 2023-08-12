@@ -50,7 +50,7 @@ void from_entry_callback(GtkWidget *widget, GtkWidget *entry)
     (void)widget;
 
     const gchar *entry_text;
-    TimeType newlo;
+    GwTime newlo;
     char fromstr[40];
 
     entry_text = gtk_entry_get_text(GTK_ENTRY(entry));
@@ -95,7 +95,7 @@ void to_entry_callback(GtkWidget *widget, GtkWidget *entry)
     (void)widget;
 
     const gchar *entry_text;
-    TimeType newhi;
+    GwTime newhi;
     char tostr[40];
 
     entry_text = gtk_entry_get_text(GTK_ENTRY(entry));

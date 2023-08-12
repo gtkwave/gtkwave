@@ -18,7 +18,7 @@
 
 #define WAVE_GHW_DUMMYFACNAME "!!__(dummy)__!!"
 
-TimeType ghw_main(char *fname);
+GwTime ghw_main(char *fname);
 int strand_pnt(char *s);
 
 #endif

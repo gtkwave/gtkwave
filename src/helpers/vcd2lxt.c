@@ -35,6 +35,7 @@
 #endif
 
 #include <config.h>
+#include <gtkwave.h>
 #include "v2l_analyzer.h"
 #include "wave_locale.h"
 
@@ -45,13 +46,13 @@ struct lt_trace *lt = NULL;
 int numfacs = 0;
 int deadcnt = 0;
 
-struct symbol **sym = NULL;
-struct symbol **facs = NULL;
-struct symbol *firstnode = NULL;
-struct symbol *curnode = NULL;
-TimeType min_time = -1, max_time = -1;
-char hier_delimeter = '.';
-char deadchar = 'X';
+struct symbol **sym=NULL;
+struct symbol **facs=NULL;
+struct symbol *firstnode=NULL;
+struct symbol *curnode=NULL;
+GwTime min_time=-1, max_time=-1;
+char hier_delimeter='.';
+char deadchar='X';
 
 int vcd_explicit_zero_subscripts = -1; /* 0=yes, -1=no */
 char atomic_vectors = 1;
@@ -59,18 +60,18 @@ char atomic_vectors = 1;
 static FILE *vcd_handle = NULL;
 static char vcd_is_compressed = 0;
 
-static void add_histent(TimeType time, struct Node *n, char ch, int regadd, char *vector);
+static void add_histent(GwTime time, struct Node *n, char ch, int regadd, char *vector);
 static void add_tail_histents(void);
 static void evcd_strcpy(char *dst, char *src);
 
-static int vcdlineno = 1;
-static int header_over = 0;
-static int dumping_off = 0;
-static TimeType start_time = -1;
-static TimeType end_time = -1;
-static TimeType current_time = -1;
-static TimeType time_scale = 1; /* multiplier is 1, 10, 100 */
-static TimeType time_zero = 0;
+static int vcdlineno=1;
+static int header_over=0;
+static int dumping_off=0;
+static GwTime start_time=-1;
+static GwTime end_time=-1;
+static GwTime current_time=-1;
+static GwTime time_scale=1;	/* multiplier is 1, 10, 100 */
+static GwTime time_zero=0;
 
 static char vcd_hier_delimeter[2] = {0, 0}; /* fill in after rc reading code */
 
@@ -810,7 +811,7 @@ static void parse_valuechange(void)
                         if (current_time != (v->ev->last_event_time + 1)) {
                             /* dump degating event */
                             DEBUG(fprintf(stderr,
-                                          "#" TTFormat " %s = '%c' (event)\n",
+                                          "#%" GW_TIME_FORMAT " %s = '%c' (event)\n",
                                           v->ev->last_event_time + 1,
                                           v->name,
                                           '0'));
@@ -1382,16 +1383,17 @@ static void vcd_parse(int linear)
                         exit(1);
                     }
 
-                    if (linear)
-                        lt_set_no_interlace(lt);
-                }
-                break;
-            case T_STRING:
-                if (header_over) {
-                    /* catchall for events when header over */
-                    if (yytext[0] == '#') {
-                        TimeType t_time;
-                        t_time = atoi_64(yytext + 1);
+				if(linear)  lt_set_no_interlace(lt);
+				}
+			break;
+		case T_STRING:
+			if(header_over)
+				{
+				/* catchall for events when header over */
+				if(yytext[0]=='#')
+					{
+					GwTime t_time;
+					t_time=atoi_64(yytext+1);
 
                         if (start_time < 0) {
                             start_time = t_time;
@@ -1407,7 +1409,7 @@ static void vcd_parse(int linear)
                         if (end_time < t_time)
                             end_time = t_time; /* in case of malformed vcd files */
                         lt_set_time64(lt, current_time);
-                        DEBUG(fprintf(stderr, "#" TTFormat "\n", t_time));
+                        DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", t_time));
                     } else {
                         parse_valuechange();
                     }
@@ -1453,7 +1455,7 @@ static void vcd_parse(int linear)
  * this function doesn't do anything useful anymore except for to mark
  * statistics on the various nets...
  */
-void add_histent(TimeType t_time, struct Node *n, char ch, int regadd, char *vector)
+void add_histent(GwTime t_time, struct Node *n, char ch, int regadd, char *vector)
 {
     struct HistEnt *he;
 
@@ -1530,7 +1532,7 @@ static void add_tail_histents(void)
         if (current_time != (v->ev->last_event_time + 1)) {
             /* dump degating event */
             DEBUG(fprintf(stderr,
-                          "#" TTFormat " %s = '%c' (event)\n",
+                          "#%" GW_TIME_FORMAT " %s = '%c' (event)\n",
                           v->ev->last_event_time + 1,
                           v->name,
                           '0'));
@@ -1629,13 +1631,7 @@ void vcd_sortfacs(void)
 
 /*******************************************************************************/
 
-TimeType vcd_main(char *fname,
-                  char *lxname,
-                  int dostats,
-                  int doclock,
-                  int dochg,
-                  int dodict,
-                  int linear)
+GwTime vcd_main(char *fname, char *lxname, int dostats, int doclock, int dochg, int dodict, int linear)
 {
     struct vcdsymbol *v, *v2;
 
@@ -1700,7 +1696,7 @@ TimeType vcd_main(char *fname,
 
     add_tail_histents();
 
-    printf("[" TTFormat "] start time.\n[" TTFormat "] end time.\n\n", start_time, end_time);
+    printf("[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n\n", start_time, end_time);
 
     lt_close(lt);
     lt = NULL;

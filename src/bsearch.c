@@ -19,12 +19,12 @@
 
 static int compar_timechain(const void *s1, const void *s2)
 {
-    TimeType key, obj, delta;
-    TimeType *cpos;
+    GwTime key, obj, delta;
+    GwTime *cpos;
     int rv;
 
-    key = *((TimeType *)s1);
-    obj = *(cpos = (TimeType *)s2);
+    key = *((GwTime *)s1);
+    obj = *(cpos = (GwTime *)s2);
 
     if ((obj <= key) && (obj > GLOBALS->max_compare_time_tc_bsearch_c_1)) {
         GLOBALS->max_compare_time_tc_bsearch_c_1 = obj;
@@ -42,7 +42,7 @@ static int compar_timechain(const void *s1, const void *s2)
     return (rv);
 }
 
-int bsearch_timechain(TimeType key)
+int bsearch_timechain(GwTime key)
 {
     GLOBALS->max_compare_time_tc_bsearch_c_1 = -2;
     GLOBALS->max_compare_pos_tc_bsearch_c_1 = NULL;
@@ -53,7 +53,7 @@ int bsearch_timechain(TimeType key)
     if (bsearch(&key,
                 GLOBALS->strace_ctx->timearray,
                 GLOBALS->strace_ctx->timearray_size,
-                sizeof(TimeType),
+                sizeof(GwTime),
                 compar_timechain)) {
         /* nothing, all side effects are in bsearch */
     }
@@ -69,7 +69,7 @@ int bsearch_timechain(TimeType key)
 
 /*****************************************************************************************/
 
-int bsearch_aetinfo_timechain(TimeType key)
+int bsearch_aetinfo_timechain(GwTime key)
 {
     GLOBALS->max_compare_time_tc_bsearch_c_1 = -2;
     GLOBALS->max_compare_pos_tc_bsearch_c_1 = NULL;
@@ -80,7 +80,7 @@ int bsearch_aetinfo_timechain(TimeType key)
     if (bsearch(&key,
                 GLOBALS->ae2_time_xlate,
                 GLOBALS->ae2_end_cyc - GLOBALS->ae2_start_cyc + 1,
-                sizeof(TimeType),
+                sizeof(GwTime),
                 compar_timechain)) {
         /* nothing, all side effects are in bsearch */
     }
@@ -96,11 +96,11 @@ int bsearch_aetinfo_timechain(TimeType key)
 
 static int compar_histent(const void *s1, const void *s2)
 {
-    TimeType key, obj, delta;
+    GwTime key, obj, delta;
     hptr cpos;
     int rv;
 
-    key = *((TimeType *)s1);
+    key = *((GwTime *)s1);
     obj = (cpos = (*((hptr *)s2)))->time;
 
     if ((obj <= key) && (obj > GLOBALS->max_compare_time_bsearch_c_1)) {
@@ -120,7 +120,7 @@ static int compar_histent(const void *s1, const void *s2)
     return (rv);
 }
 
-hptr bsearch_node(nptr n, TimeType key)
+hptr bsearch_node(nptr n, GwTime key)
 {
     GLOBALS->max_compare_time_bsearch_c_1 = -2;
     GLOBALS->max_compare_pos_bsearch_c_1 = NULL;
@@ -131,7 +131,7 @@ hptr bsearch_node(nptr n, TimeType key)
     }
 
     if ((!GLOBALS->max_compare_pos_bsearch_c_1) ||
-        (GLOBALS->max_compare_time_bsearch_c_1 < LLDescriptor(0))) {
+        (GLOBALS->max_compare_time_bsearch_c_1 < GW_TIME_CONSTANT(0))) {
         GLOBALS->max_compare_pos_bsearch_c_1 = n->harray[1]; /* aix bsearch fix */
         GLOBALS->max_compare_index = &(n->harray[1]);
     }
@@ -151,11 +151,11 @@ hptr bsearch_node(nptr n, TimeType key)
 
 static int compar_vectorent(const void *s1, const void *s2)
 {
-    TimeType key, obj, delta;
+    GwTime key, obj, delta;
     vptr cpos;
     int rv;
 
-    key = *((TimeType *)s1);
+    key = *((GwTime *)s1);
     /* obj=(cpos=(*((vptr *)s2)))->time+GLOBALS->shift_timebase; */
 
     obj = (cpos = (*((vptr *)s2)))->time;
@@ -177,7 +177,7 @@ static int compar_vectorent(const void *s1, const void *s2)
     return (rv);
 }
 
-vptr bsearch_vector(bvptr b, TimeType key)
+vptr bsearch_vector(bvptr b, GwTime key)
 {
     GLOBALS->vmax_compare_time_bsearch_c_1 = -2;
     GLOBALS->vmax_compare_pos_bsearch_c_1 = NULL;
@@ -188,7 +188,7 @@ vptr bsearch_vector(bvptr b, TimeType key)
     }
 
     if ((!GLOBALS->vmax_compare_pos_bsearch_c_1) ||
-        (GLOBALS->vmax_compare_time_bsearch_c_1 < LLDescriptor(0))) {
+        (GLOBALS->vmax_compare_time_bsearch_c_1 < GW_TIME_CONSTANT(0))) {
         /* ignore warning: array index of '1' indexes past the end of an array (that contains 1
          * elements) [-Warray-bounds] */
         /* because this array is allocated with size > that declared in the structure definition via

@@ -42,7 +42,7 @@
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static void add_histent(TimeType time, struct Node *n, char ch, int regadd, char *vector);
+static void add_histent(GwTime time, struct Node *n, char ch, int regadd, char *vector);
 static void add_tail_histents(void);
 static void vcd_build_symbols(void);
 static void vcd_cleanup(void);
@@ -836,7 +836,7 @@ static void parse_valuechange(void)
                     double *d;
                     char *pnt;
                     char ch;
-                    TimeType k = 0;
+                    GwTime k = 0;
 
                     pnt = vector;
                     while ((ch = *(pnt++))) {
@@ -932,7 +932,7 @@ static void parse_valuechange(void)
                     double *d;
                     char *pnt;
                     char ch;
-                    TimeType k = 0;
+                    GwTime k = 0;
 
                     pnt = vector;
                     while ((ch = *(pnt++))) {
@@ -1109,7 +1109,7 @@ static void vcd_parse(void)
                     break;
                 GLOBALS->global_time_offset = atoi_64(GLOBALS->yytext_vcd_c_1);
 
-                DEBUG(fprintf(stderr, "TIMEZERO: " TTFormat "\n", GLOBALS->global_time_offset));
+                DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n", GLOBALS->global_time_offset));
                 sync_end(NULL);
             } break;
             case T_TIMESCALE: {
@@ -1156,7 +1156,7 @@ static void vcd_parse(void)
                 }
 
                 DEBUG(fprintf(stderr,
-                              "TIMESCALE: " TTFormat " %cs\n",
+                              "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
                               GLOBALS->time_scale,
                               GLOBALS->time_dimension));
                 sync_end(NULL);
@@ -1701,7 +1701,7 @@ static void vcd_parse(void)
                 {
                     /* catchall for events when header over */
                     if (GLOBALS->yytext_vcd_c_1[0] == '#') {
-                        TimeType tim;
+                        GwTime tim;
                         tim = atoi_64(GLOBALS->yytext_vcd_c_1 + 1);
 
                         if (GLOBALS->start_time_vcd_c_1 < 0) {
@@ -1728,7 +1728,7 @@ static void vcd_parse(void)
                         GLOBALS->current_time_vcd_c_1 = tim;
                         if (GLOBALS->end_time_vcd_c_1 < tim)
                             GLOBALS->end_time_vcd_c_1 = tim; /* in case of malformed vcd files */
-                        DEBUG(fprintf(stderr, "#" TTFormat "\n", tim));
+                        DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
                     } else {
                         parse_valuechange();
                     }
@@ -1788,7 +1788,7 @@ static void vcd_parse(void)
 
 /*******************************************************************************/
 
-void add_histent(TimeType tim, struct Node *n, char ch, int regadd, char *vector)
+void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
 {
     struct HistEnt *he;
     char heval;
@@ -1833,7 +1833,7 @@ void add_histent(TimeType tim, struct Node *n, char ch, int regadd, char *vector
             {
                 if (n->curr->time >= tim) /* backtracking fix */
                 {
-                    DEBUG(printf("Warning: Glitch at time [" TTFormat
+                    DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
                                  "] Signal [%p], Value [%c->%c].\n",
                                  tim,
                                  n,
@@ -1882,7 +1882,7 @@ void add_histent(TimeType tim, struct Node *n, char ch, int regadd, char *vector
 
                     if (n->curr->time >= tim) /* backtracking fix */
                     {
-                        DEBUG(printf("Warning: String Glitch at time [" TTFormat "] Signal [%p].\n",
+                        DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT "] Signal [%p].\n",
                                      tim,
                                      n));
                         if (n->curr->v.h_vector)
@@ -1944,7 +1944,7 @@ void add_histent(TimeType tim, struct Node *n, char ch, int regadd, char *vector
                     {
                         if (n->curr->time >= tim) /* backtracking fix */
                         {
-                            DEBUG(printf("Warning: Real number Glitch at time [" TTFormat
+                            DEBUG(printf("Warning: Real number Glitch at time [%" GW_TIME_FORMAT
                                          "] Signal [%p].\n",
                                          tim,
                                          n));
@@ -2005,7 +2005,7 @@ void add_histent(TimeType tim, struct Node *n, char ch, int regadd, char *vector
                     {
                         if (n->curr->time >= tim) /* backtracking fix */
                         {
-                            DEBUG(printf("Warning: Glitch at time [" TTFormat
+                            DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
                                          "] Signal [%p], Value [%c->%c].\n",
                                          tim,
                                          n,
@@ -2563,7 +2563,7 @@ static void vcd_cleanup(void)
 
 /*******************************************************************************/
 
-TimeType vcd_main(char *fname)
+GwTime vcd_main(char *fname)
 {
     GLOBALS->pv_vcd_c_1 = GLOBALS->rootv_vcd_c_1 = NULL;
     GLOBALS->vcd_hier_delimeter[0] = GLOBALS->hier_delimeter;
@@ -2652,7 +2652,7 @@ TimeType vcd_main(char *fname)
     }
 
     fprintf(stderr,
-            "[" TTFormat "] start time.\n[" TTFormat "] end time.\n",
+            "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
             GLOBALS->start_time_vcd_c_1 * GLOBALS->time_scale,
             GLOBALS->end_time_vcd_c_1 * GLOBALS->time_scale);
     if (GLOBALS->num_glitches_vcd_c_2)
@@ -2675,7 +2675,7 @@ TimeType vcd_main(char *fname)
     GLOBALS->max_time = GLOBALS->end_time_vcd_c_1 * GLOBALS->time_scale;
     GLOBALS->global_time_offset = GLOBALS->global_time_offset * GLOBALS->time_scale;
 
-    if ((GLOBALS->min_time == GLOBALS->max_time) && (GLOBALS->max_time == LLDescriptor(-1))) {
+    if ((GLOBALS->min_time == GLOBALS->max_time) && (GLOBALS->max_time == GW_TIME_CONSTANT(-1))) {
         fprintf(stderr, "VCD times range is equal to zero.  Exiting.\n");
         vcd_exit(255);
     }

@@ -27,7 +27,7 @@ extern GtkWidget *notebook;
 extern int verilog_2005;
 extern size_t yyleng;
 
-TimeType old_marker = 0;
+GwTime old_marker = 0;
 unsigned old_marker_set = 0;
 
 #define set_winsize(w,x,y) gtk_window_set_default_size(GTK_WINDOW(w),(x),(y))

@@ -18,11 +18,11 @@ void service_left_page(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType ntinc, ntfrac;
+    GwTime ntinc, ntfrac;
 
-    ntinc = (TimeType)(((gdouble)GLOBALS->wavewidth) *
-                       GLOBALS->nspx); /* really don't need this var but the speed of ui code is
-                                          human dependent.. */
+    ntinc = (GwTime)(((gdouble)GLOBALS->wavewidth) *
+                     GLOBALS->nspx); /* really don't need this var but the speed of ui code is human
+                                        dependent.. */
     ntfrac = ntinc * GLOBALS->page_divisor;
     if ((ntfrac < 1) || (ntinc < 1))
         ntfrac = /*ntinc=*/1; /* scan-build */
@@ -43,9 +43,9 @@ void service_right_page(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType ntinc, ntfrac;
+    GwTime ntinc, ntfrac;
 
-    ntinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+    ntinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
     ntfrac = ntinc * GLOBALS->page_divisor;
 
     if ((ntfrac < 1) || (ntinc < 1))

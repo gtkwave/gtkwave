@@ -150,7 +150,7 @@ static void change_callback(GtkWidget *widget, gpointer which)
     (void)widget;
 
     GtkWidget *entry;
-    TimeType temp;
+    GwTime temp;
     const gchar *entry_text;
     char buf[49];
     int i;
@@ -203,8 +203,8 @@ static void enter_callback(GtkWidget *widget, gpointer which)
     (void)widget;
 
     GtkWidget *entry;
-    /* TimeType *modify; */ /* scan-build */
-    TimeType temp;
+    /* GwTime *modify; */ /* scan-build */
+    GwTime temp;
     const gchar *entry_text;
     char buf[49];
     int i;
@@ -244,7 +244,7 @@ static void enter_callback(GtkWidget *widget, gpointer which)
     return;
 
 failure:
-    /* modify=(TimeType *)which; */ /* scan-build */
+    /* modify=(GwTime *)which; */ /* scan-build */
     if (GLOBALS->shadow_markers_markerbox_c_1[ent_idx] == -1) {
         sprintf(buf, "<None>");
     } else {

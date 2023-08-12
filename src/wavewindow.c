@@ -90,15 +90,15 @@ void XXX_gdk_draw_rectangle(cairo_t *cr,
 /*
  * aldec-like "snap" feature...
  */
-TimeType cook_markertime(TimeType marker, gint x, gint y)
+GwTime cook_markertime(GwTime marker, gint x, gint y)
 {
     int i, num_traces_displayable;
     Trptr t = NULL;
-    TimeType lft, rgh;
+    GwTime lft, rgh;
     char lftinv, rghinv;
     gdouble xlft, xrgh;
     gdouble xlftd, xrghd;
-    TimeType closest_named = MAX_HISTENT_TIME;
+    GwTime closest_named = MAX_HISTENT_TIME;
     int closest_which = -1;
     gint xold = x, yold = y;
     TraceEnt t_trans;
@@ -109,7 +109,7 @@ TimeType cook_markertime(TimeType marker, gint x, gint y)
     /* potential snapping to a named marker time */
     for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
         if (GLOBALS->named_markers[i] != -1) {
-            TimeType dlt;
+            GwTime dlt;
 
             if ((GLOBALS->named_markers[i] >= GLOBALS->tims.start) &&
                 (GLOBALS->named_markers[i] <= GLOBALS->tims.end) &&
@@ -317,7 +317,7 @@ static void service_hslider(GtkWidget *text, gpointer data)
     }
 
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
-    TimeType old_start = GLOBALS->tims.start;
+    GwTime old_start = GLOBALS->tims.start;
 #endif
     GtkAdjustment *hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
 
@@ -383,7 +383,7 @@ void button_press_release_common(void)
 static void button_motion_common(gint xin, gint yin, int pressrel, int is_button_2)
 {
     gdouble x, offset, pixstep;
-    TimeType newcurr;
+    GwTime newcurr;
 
     if (xin < 0)
         xin = 0;
@@ -393,7 +393,7 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
     x = xin; /* for pix time calc */
 
     pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
-    newcurr = (TimeType)(offset = ((gdouble)GLOBALS->tims.start) + (x * pixstep));
+    newcurr = (GwTime)(offset = ((gdouble)GLOBALS->tims.start) + (x * pixstep));
 
     if (offset - newcurr > 0.5) /* round to nearest integer ns */
     {
@@ -441,7 +441,7 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
 
     gdouble x, y, pixstep, offset;
     GdkModifierType state;
-    TimeType newcurr;
+    GwTime newcurr;
     int scrolled;
 
     gint xi, yi;
@@ -548,7 +548,7 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
         {
             int warp = 0;
             Trptr t = (GLOBALS->use_gestures > 0) ? NULL : GLOBALS->traces.first;
-            TimeType gt, delta;
+            GwTime gt, delta;
 
             while (t) {
                 if (t->flags & TR_HIGHLIGHT) {
@@ -637,11 +637,11 @@ g_signal_emit_by_name (wadj, "value_changed"); /* force text update */
 
 void alt_move_left(gboolean fine_scroll)
 {
-    TimeType ntinc, ntfrac;
+    GwTime ntinc, ntfrac;
 
-    ntinc = (TimeType)(((gdouble)GLOBALS->wavewidth) *
-                       GLOBALS->nspx); /* really don't need this var but the speed of ui code is
-                                          human dependent.. */
+    ntinc = (GwTime)(((gdouble)GLOBALS->wavewidth) *
+                     GLOBALS->nspx); /* really don't need this var but the speed of ui code is
+                                        human dependent.. */
     ntfrac = ntinc * GLOBALS->page_divisor * (SANE_INCREMENT / (fine_scroll ? 8.0 : 1.0));
     if (!ntfrac)
         ntfrac = 1;
@@ -659,9 +659,9 @@ void alt_move_left(gboolean fine_scroll)
 
 void alt_move_right(gboolean fine_scroll)
 {
-    TimeType ntinc, ntfrac;
+    GwTime ntinc, ntfrac;
 
-    ntinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+    ntinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
     ntfrac = ntinc * GLOBALS->page_divisor * (SANE_INCREMENT / (fine_scroll ? 8.0 : 1.0));
     if (!ntfrac)
         ntfrac = 1;
@@ -685,8 +685,8 @@ void alt_zoom_out(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType middle = 0, width;
-    TimeType marker = GLOBALS->cached_currenttimeval_currenttime_c_1;
+    GwTime middle = 0, width;
+    GwTime marker = GLOBALS->cached_currenttimeval_currenttime_c_1;
     /* Zoom on mouse cursor, not marker */
 
     if (GLOBALS->do_zoom_center) {
@@ -712,7 +712,7 @@ void alt_zoom_out(GtkWidget *text, gpointer data)
     calczoom(GLOBALS->tims.zoom);
 
     if (GLOBALS->do_zoom_center) {
-        width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+        width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
         GLOBALS->tims.start = time_trunc(middle - (width / 2));
         if (GLOBALS->tims.start + width > GLOBALS->tims.last)
             GLOBALS->tims.start = time_trunc(GLOBALS->tims.last - width);
@@ -742,8 +742,8 @@ void alt_zoom_in(GtkWidget *text, gpointer data)
 
     if (GLOBALS->tims.zoom < 0) /* otherwise it's ridiculous and can cause */
     { /* overflow problems in the scope          */
-        TimeType middle = 0, width;
-        TimeType marker = GLOBALS->cached_currenttimeval_currenttime_c_1;
+        GwTime middle = 0, width;
+        GwTime marker = GLOBALS->cached_currenttimeval_currenttime_c_1;
         /* Zoom on mouse cursor, not marker */
 
         if (GLOBALS->do_zoom_center) {
@@ -769,7 +769,7 @@ void alt_zoom_in(GtkWidget *text, gpointer data)
         calczoom(GLOBALS->tims.zoom);
 
         if (GLOBALS->do_zoom_center) {
-            width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+            width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
             GLOBALS->tims.start = time_trunc(middle - (width / 2));
             if (GLOBALS->tims.start + width > GLOBALS->tims.last)
                 GLOBALS->tims.start = time_trunc(GLOBALS->tims.last - width);
@@ -913,7 +913,7 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
             if (event->state & GDK_CONTROL_MASK)
 #endif
             {
-                TimeType gt, delta;
+                GwTime gt, delta;
 
                 while (t) {
                     if (t->flags & TR_HIGHLIGHT) {
@@ -970,10 +970,10 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
     }
 
     GLOBALS->mouseover_counter = 11;
-    move_mouseover(NULL, 0, 0, LLDescriptor(0));
+    move_mouseover(NULL, 0, 0, GW_TIME_CONSTANT(0));
     GLOBALS->tims.timecache = 0;
 
-    if (GLOBALS->prev_markertime == LLDescriptor(-1)) {
+    if (GLOBALS->prev_markertime == GW_TIME_CONSTANT(-1)) {
         gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
     }
 
@@ -1304,7 +1304,7 @@ static void wavearea_zoom_begin_event(GtkGesture *gesture,
             GLOBALS->wavearea_gesture_initial_zoom_x_distance =
                 1.0; /* min resolution is one pixel */
     } else {
-        TimeType middle = (GLOBALS->tims.start / 2) + (GLOBALS->tims.end / 2);
+        GwTime middle = (GLOBALS->tims.start / 2) + (GLOBALS->tims.end / 2);
         GLOBALS->wavearea_gesture_initial_x1tim = middle;
 
         GLOBALS->wavearea_gesture_initial_zoom_x_distance = 1.0; /* min resolution is one pixel */
@@ -1378,10 +1378,10 @@ static void wavearea_zoom_scale_changed_event(GtkGestureZoom *controller,
 
 #ifdef WAVE_GTK3_GESTURE_ZOOM_IS_1D
             {
-                TimeType width, new_x1tim;
+                GwTime width, new_x1tim;
 
                 calczoom(GLOBALS->tims.zoom = z0);
-                width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+                width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
                 GLOBALS->tims.start =
                     GLOBALS->wavearea_gesture_initial_x1tim - (x1 * GLOBALS->nspx);
 
@@ -1529,18 +1529,18 @@ static gboolean wavearea_swipe_tick(GtkWidget *widget,
         if (GLOBALS->wavearea_gesture_swipe_velocity_x < -1.0) {
             GtkAdjustment *hadj;
             gfloat inc;
-            TimeType ntinc, pageinc;
+            GwTime ntinc, pageinc;
 
             if (!GLOBALS->wavearea_drag_active) {
-                TimeType dest = GLOBALS->swipe_init_start -
-                                (GLOBALS->wavearea_gesture_swipe_velocity_x * GLOBALS->nspx *
-                                 WAVE_GTK3_SWIPE_VEL_VS_DIST_FACTOR) *
-                                    (1.0 - decaying);
+                GwTime dest = GLOBALS->swipe_init_start -
+                              (GLOBALS->wavearea_gesture_swipe_velocity_x * GLOBALS->nspx *
+                               WAVE_GTK3_SWIPE_VEL_VS_DIST_FACTOR) *
+                                  (1.0 - decaying);
                 /* gdouble vp = -GLOBALS->wavearea_gesture_swipe_velocity_x; */
                 hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
                 ntinc = inc = dest - gtk_adjustment_get_value(hadj);
                 if (ntinc) {
-                    pageinc = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+                    pageinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
 
                     if (dest <= (GLOBALS->tims.last - pageinc))
                         gtk_adjustment_set_value(hadj, GLOBALS->tims.timecache = dest);
@@ -1570,10 +1570,10 @@ static gboolean wavearea_swipe_tick(GtkWidget *widget,
             GtkAdjustment *hadj;
 
             if (!GLOBALS->wavearea_drag_active) {
-                TimeType dest = GLOBALS->swipe_init_start -
-                                (GLOBALS->wavearea_gesture_swipe_velocity_x * GLOBALS->nspx *
-                                 WAVE_GTK3_SWIPE_VEL_VS_DIST_FACTOR) *
-                                    (1.0 - decaying);
+                GwTime dest = GLOBALS->swipe_init_start -
+                              (GLOBALS->wavearea_gesture_swipe_velocity_x * GLOBALS->nspx *
+                               WAVE_GTK3_SWIPE_VEL_VS_DIST_FACTOR) *
+                                  (1.0 - decaying);
                 /* gdouble vp = GLOBALS->wavearea_gesture_swipe_velocity_x; */
                 hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
 
@@ -1608,7 +1608,7 @@ static gboolean wavearea_swipe_tick(GtkWidget *widget,
 
     if (gw) {
         gdouble x = 0, pixstep, offset;
-        TimeType newcurr = 0;
+        GwTime newcurr = 0;
         GdkModifierType state = 0;
         gint xi = 0, yi = 0;
 
@@ -2270,7 +2270,7 @@ void calczoom(gdouble z0)
 
     if (GLOBALS->zoom_pow10_snap)
         if (GLOBALS->nsperframe > 10.0) {
-            TimeType nsperframe2;
+            GwTime nsperframe2;
             gdouble p = 10.0;
             gdouble scale;
             int l;

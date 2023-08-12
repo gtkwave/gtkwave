@@ -13,4 +13,3 @@
 void renderbox(const char *title);
 
 #endif
-

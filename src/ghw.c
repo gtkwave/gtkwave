@@ -744,7 +744,7 @@ void facs_debug(void)
         if (n->extvals)
             printf("  ext: %d - %d\n", n->msi, n->lsi);
         for (h = &n->head; h; h = h->next)
-            printf("  time:" TTFormat " flags:%02x vect:%p\n", h->time, h->flags, h->v.h_vector);
+            printf("  time:%" GW_TIME_FORMAT " flags:%02x vect:%p\n", h->time, h->flags, h->v.h_vector);
     }
 }
 
@@ -1057,7 +1057,7 @@ static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
 static void add_tail(struct ghw_handler *h)
 {
     unsigned int i;
-    TimeType j;
+    GwTime j;
 
     for (j = 1; j >= 0; j--) /* add two endcaps */
         for (i = 0; i < h->nbr_sigs; i++) {
@@ -1111,7 +1111,7 @@ static void read_traces(struct ghw_handler *h)
                     int sig;
 
                     /* printf ("Time is "GHWPRI64"\n", h->snap_time); */
-                    if (h->snap_time < LLDescriptor(9223372036854775807)) {
+                    if (h->snap_time < GW_TIME_CONSTANT(9223372036854775807)) {
                         if (h->snap_time > GLOBALS->max_time)
                             GLOBALS->max_time = h->snap_time;
 
@@ -1139,7 +1139,7 @@ static void read_traces(struct ghw_handler *h)
 
 /*******************************************************************************/
 
-TimeType ghw_main(char *fname)
+GwTime ghw_main(char *fname)
 {
     struct ghw_handler handle;
     int i;
@@ -1154,7 +1154,7 @@ TimeType ghw_main(char *fname)
     handle.flag_verbose = 0;
     if ((rc = ghw_open(&handle, fname)) < 0) {
         fprintf(stderr, "Error opening ghw file '%s', rc=%d.\n", fname, rc);
-        return (LLDescriptor(0)); /* look at return code in caller for success status... */
+        return (GW_TIME_CONSTANT(0)); /* look at return code in caller for success status... */
     }
 
     GLOBALS->time_scale = 1;
@@ -1165,7 +1165,7 @@ TimeType ghw_main(char *fname)
         free_2(GLOBALS->asbuf);
         GLOBALS->asbuf = NULL;
         fprintf(stderr, "Error in ghw file '%s'.\n", fname);
-        return (LLDescriptor(0)); /* look at return code in caller for success status... */
+        return (GW_TIME_CONSTANT(0)); /* look at return code in caller for success status... */
     }
 
     GLOBALS->min_time = 0;
@@ -1228,7 +1228,7 @@ TimeType ghw_main(char *fname)
     GLOBALS->is_ghw = 1;
 
     fprintf(stderr,
-            "[" TTFormat "] start time.\n[" TTFormat "] end time.\n",
+            "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
             GLOBALS->min_time * GLOBALS->time_scale,
             GLOBALS->max_time * GLOBALS->time_scale);
     if (GLOBALS->num_glitches_ghw_c_1)

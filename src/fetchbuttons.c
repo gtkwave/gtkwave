@@ -18,7 +18,7 @@ void fetch_left(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType newlo;
+    GwTime newlo;
     char fromstr[32];
 
     DEBUG(printf("Fetch Left\n"));
@@ -46,7 +46,7 @@ void fetch_right(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType newhi;
+    GwTime newhi;
     char tostr[32];
 
     DEBUG(printf("Fetch Right\n"));
@@ -71,7 +71,7 @@ void discard_left(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType newlo;
+    GwTime newlo;
     char tostr[32];
 
     DEBUG(printf("Discard Left\n"));
@@ -92,7 +92,7 @@ void discard_right(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
-    TimeType newhi;
+    GwTime newhi;
     char tostr[32];
 
     DEBUG(printf("Discard Right\n"));

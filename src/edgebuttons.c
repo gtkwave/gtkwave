@@ -58,14 +58,14 @@ static void edge_search_2(int direction, int is_last_iteration)
 {
     struct strace s_tmp;
     struct strace *s_head, *s;
-    TimeType basetime, maxbase, sttim, fintim;
+    GwTime basetime, maxbase, sttim, fintim;
     Trptr t = find_first_highlighted_trace();
     int totaltraces;
 #ifdef DEBUG_PRINTF
     int passcount;
 #endif
     int whichpass;
-    TimeType middle = 0, width;
+    GwTime middle = 0, width;
 
     if (!t)
         return;
@@ -114,8 +114,8 @@ static void edge_search_2(int direction, int is_last_iteration)
                 if (!(t->vector)) {
                     hptr h;
                     hptr *hp;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     /* h= */ bsearch_node(t->n.nd, basetime - t->shift); /* scan-build */
                     hp = GLOBALS->max_compare_index;
@@ -132,8 +132,8 @@ static void edge_search_2(int direction, int is_last_iteration)
                 } else {
                     vptr v;
                     vptr *vp;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     /* v= */ bsearch_vector(t->n.vec, basetime - t->shift); /* scan-build */
                     vp = GLOBALS->vmax_compare_index;
@@ -160,8 +160,8 @@ static void edge_search_2(int direction, int is_last_iteration)
                 GLOBALS->shift_timebase = t->shift;
                 if (!(t->vector)) {
                     hptr h;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     h = bsearch_node(t->n.nd, basetime - t->shift);
                     while (h->next && h->time == h->next->time)
@@ -177,8 +177,8 @@ static void edge_search_2(int direction, int is_last_iteration)
                         maxbase = tt;
                 } else {
                     vptr v;
-                    UTimeType utt;
-                    TimeType tt;
+                    GwUTime utt;
+                    GwTime tt;
 
                     v = bsearch_vector(t->n.vec, basetime - t->shift);
                     while (v->next && v->time == v->next->time)
@@ -424,7 +424,7 @@ static void edge_search_2(int direction, int is_last_iteration)
             return;
 
 #ifdef DEBUG_PRINTF
-        DEBUG(printf("Maxbase: " TTFormat ", total traces: %d\n", maxbase, totaltraces));
+        DEBUG(printf("Maxbase: %" GW_TIME_FORMAT ", total traces: %d\n", maxbase, totaltraces));
         s = s_head;
         passcount = 0;
         while (s) {
@@ -446,7 +446,7 @@ static void edge_search_2(int direction, int is_last_iteration)
     if (is_last_iteration) {
         update_time_box();
 
-        width = (TimeType)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+        width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
         if ((GLOBALS->tims.marker < GLOBALS->tims.start) ||
             (GLOBALS->tims.marker >= GLOBALS->tims.start + width)) {
             if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||

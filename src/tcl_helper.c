@@ -2001,7 +2001,7 @@ char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr t, gboolean use_
     TraceFlagsType prev_flags = 0;
 
     TraceFlagsType def = 0;
-    TimeType prevshift = LLDescriptor(0);
+    GwTime prevshift = GW_TIME_CONSTANT(0);
     char is_first = 1;
     char flag_skip;
 
@@ -2046,7 +2046,7 @@ char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr t, gboolean use_
         }
 
         if ((t->shift) || ((prevshift) && (!t->shift))) {
-            one_entry = make_message(">" TTFormat "\n", t->shift);
+            one_entry = make_message(">%" GW_TIME_FORMAT "\n", t->shift);
             WAVE_OE_ME
         }
         prevshift = t->shift;
@@ -2127,7 +2127,7 @@ char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr t, gboolean use_
                         WAVE_OE_ME
                     }
                     if (ba) {
-                        one_entry = make_message(" " TTFormat " %" TRACEFLAGSPRIFMT,
+                        one_entry = make_message(" %" GW_TIME_FORMAT " %" TRACEFLAGSPRIFMT,
                                                  ba[i].shift,
                                                  ba[i].flags);
                         WAVE_OE_ME

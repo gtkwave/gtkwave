@@ -164,7 +164,7 @@ inline static unsigned int get_24(offset)
 
 inline static unsigned int get_64(offset)
 {
-    return ((((UTimeType)get_32(offset)) << 32) | ((UTimeType)get_32((offset) + 4)));
+    return ((((GwUTime)get_32(offset)) << 32) | ((GwUTime)get_32((offset) + 4)));
 }
 
 #else
@@ -202,9 +202,9 @@ static unsigned int get_32(off_t offset)
     return ((m1 << 24) | (m2 << 16) | (m3 << 8) | m4);
 }
 
-static UTimeType get_64(off_t offset)
+static GwUTime get_64(off_t offset)
 {
-    return ((((UTimeType)get_32(offset)) << 32) | ((UTimeType)get_32(offset + 4)));
+    return ((((GwUTime)get_32(offset)) << 32) | ((GwUTime)get_32(offset + 4)));
 }
 
 #endif
@@ -290,7 +290,7 @@ static int compar_mvl_timechain(const void *s1, const void *s2)
     return (rv);
 }
 
-static TimeType bsearch_mvl_timechain(int key)
+static GwTime bsearch_mvl_timechain(int key)
 {
     GLOBALS->max_compare_time_tc_lxt_c_2 = -1;
     GLOBALS->max_compare_pos_tc_lxt_c_2 = -1;
@@ -575,7 +575,7 @@ static void build_facs2(char *fname)
     int chg;
     int maxchg = 0, maxindx = 0;
     int last_position;
-    TimeType last_time;
+    GwTime last_time;
     char *decmem = NULL;
     int total_mem;
     gzFile zhandle = NULL;
@@ -667,10 +667,10 @@ static void build_facs2(char *fname)
             offs += 4;
         }
         GLOBALS->time_information =
-            (TimeType *)malloc_2(GLOBALS->total_cycles_lxt_c_2 * sizeof(TimeType));
-        last_time = LLDescriptor(0);
+            (GwTime *)malloc_2(GLOBALS->total_cycles_lxt_c_2 * sizeof(GwTime));
+        last_time = GW_TIME_CONSTANT(0);
         for (i = 0; i < GLOBALS->total_cycles_lxt_c_2; i++) {
-            last_time = GLOBALS->time_information[i] = ((TimeType)get_32(offs)) + last_time;
+            last_time = GLOBALS->time_information[i] = ((GwTime)get_32(offs)) + last_time;
             GLOBALS->time_information[i] *= (GLOBALS->time_scale);
             offs += 4;
         }
@@ -691,7 +691,7 @@ static void build_facs2(char *fname)
         DEBUG(printf(LXTHDR "Time table position: %08x\n",
                      GLOBALS->time_table_offset64_lxt_c_1 + 20));
 
-        GLOBALS->total_cycles_lxt_c_2 = (TimeType)((unsigned int)get_32(offs + 0));
+        GLOBALS->total_cycles_lxt_c_2 = (GwTime)((unsigned int)get_32(offs + 0));
         DEBUG(printf(LXTHDR "Total cycles: %d\n", GLOBALS->total_cycles_lxt_c_2));
 
         if (GLOBALS->ztime_table_size_lxt_c_1) {
@@ -759,10 +759,10 @@ static void build_facs2(char *fname)
             offs += 4;
         }
         GLOBALS->time_information =
-            (TimeType *)malloc_2(GLOBALS->total_cycles_lxt_c_2 * sizeof(TimeType));
-        last_time = LLDescriptor(0);
+            (GwTime *)malloc_2(GLOBALS->total_cycles_lxt_c_2 * sizeof(GwTime));
+        last_time = GW_TIME_CONSTANT(0);
         for (i = 0; i < GLOBALS->total_cycles_lxt_c_2; i++) {
-            last_time = GLOBALS->time_information[i] = ((TimeType)get_64(offs)) + last_time;
+            last_time = GLOBALS->time_information[i] = ((GwTime)get_64(offs)) + last_time;
             GLOBALS->time_information[i] *= (GLOBALS->time_scale);
             offs += 8;
         }
@@ -1508,7 +1508,7 @@ bail:
 /*
  * mainline
  */
-TimeType lxt_main(char *fname)
+GwTime lxt_main(char *fname)
 {
     int i;
     struct Node *n;
@@ -1661,7 +1661,7 @@ TimeType lxt_main(char *fname)
     if (GLOBALS->exclude_offset_lxt_c_1) {
         off_t offset = GLOBALS->exclude_offset_lxt_c_1;
         int ix, num_blackouts = get_32(offset);
-        TimeType bs, be;
+        GwTime bs, be;
         struct blackout_region_t *bt;
 
         offset += 4;
@@ -1932,7 +1932,7 @@ TimeType lxt_main(char *fname)
     GLOBALS->min_time = GLOBALS->first_cycle_lxt_c_2 * GLOBALS->time_scale;
     GLOBALS->max_time = GLOBALS->last_cycle_lxt_c_2 * GLOBALS->time_scale;
     fprintf(stderr,
-            "[" TTFormat "] start time.\n[" TTFormat "] end time.\n",
+            "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
             GLOBALS->min_time,
             GLOBALS->max_time);
     GLOBALS->is_lxt = ~0;
@@ -1975,8 +1975,8 @@ void import_lxt_trace(nptr np)
 {
     off_t offs, offsdelta;
     int v, w;
-    TimeType tmval;
-    TimeType prevtmval;
+    GwTime tmval;
+    GwTime prevtmval;
     struct HistEnt *htemp;
     struct HistEnt *histent_head, *histent_tail;
     char *parsed;
@@ -2024,8 +2024,8 @@ void import_lxt_trace(nptr np)
         np; /* in case we're an alias head for later.. */
     offs = GLOBALS->lastchange[f - GLOBALS->mvlfacs_lxt_c_2];
 
-    tmval = LLDescriptor(-1);
-    prevtmval = LLDescriptor(-1);
+    tmval = GW_TIME_CONSTANT(-1);
+    prevtmval = GW_TIME_CONSTANT(-1);
     len = np->mv.mvlfac->len;
 
     histent_tail = htemp = histent_calloc();
@@ -2071,7 +2071,7 @@ void import_lxt_trace(nptr np)
 
             if ((w = ((v = get_byte(offs)) & 0xF)) > 0xb) {
                 off_t offsminus1, offsminus2, offsminus3;
-                TimeType delta, time_offsminus1;
+                GwTime delta, time_offsminus1;
                 int skip;
 
                 switch (v & 0xF0) {

@@ -30,7 +30,7 @@
 /*
  * mainline
  */
-TimeType vzt_main(char *fname, char *skip_start, char *skip_end)
+GwTime vzt_main(char *fname, char *skip_start, char *skip_end)
 {
     int i;
     struct Node *n;
@@ -43,7 +43,8 @@ TimeType vzt_main(char *fname, char *skip_start, char *skip_end)
 
     GLOBALS->vzt_vzt_c_1 = vzt_rd_init_smp(fname, GLOBALS->num_cpus);
     if (!GLOBALS->vzt_vzt_c_1) {
-        return (LLDescriptor(0)); /* look at GLOBALS->vzt_vzt_c_1 in caller for success status... */
+        return (
+            GW_TIME_CONSTANT(0)); /* look at GLOBALS->vzt_vzt_c_1 in caller for success status... */
     }
     /* SPLASH */ splash_create();
 
@@ -74,9 +75,9 @@ TimeType vzt_main(char *fname, char *skip_start, char *skip_end)
     /* SPLASH */ splash_sync(1, 5);
 
     GLOBALS->first_cycle_vzt_c_3 =
-        (TimeType)vzt_rd_get_start_time(GLOBALS->vzt_vzt_c_1) * GLOBALS->time_scale;
+        (GwTime)vzt_rd_get_start_time(GLOBALS->vzt_vzt_c_1) * GLOBALS->time_scale;
     GLOBALS->last_cycle_vzt_c_3 =
-        (TimeType)vzt_rd_get_end_time(GLOBALS->vzt_vzt_c_1) * GLOBALS->time_scale;
+        (GwTime)vzt_rd_get_end_time(GLOBALS->vzt_vzt_c_1) * GLOBALS->time_scale;
     GLOBALS->total_cycles_vzt_c_3 = GLOBALS->last_cycle_vzt_c_3 - GLOBALS->first_cycle_vzt_c_3 + 1;
 
     /* do your stuff here..all useful info has been initialized by now */
@@ -308,7 +309,7 @@ TimeType vzt_main(char *fname, char *skip_start, char *skip_end)
     GLOBALS->is_lx2 = LXT2_IS_VZT;
 
     if (skip_start || skip_end) {
-        TimeType b_start, b_end;
+        GwTime b_start, b_end;
 
         if (!skip_start)
             b_start = GLOBALS->min_time;
@@ -330,7 +331,7 @@ TimeType vzt_main(char *fname, char *skip_start, char *skip_end)
             b_end = GLOBALS->max_time;
 
         if (b_start > b_end) {
-            TimeType tmp_time = b_start;
+            GwTime tmp_time = b_start;
             b_start = b_end;
             b_end = tmp_time;
         }

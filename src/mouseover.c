@@ -139,11 +139,7 @@ static int determine_trace_flags(Trptr t, char *ch)
 
 /************************************************************************************************/
 
-static void local_trace_asciival(Trptr t,
-                                 TimeType tim,
-                                 int *nmaxlen,
-                                 int *vmaxlen,
-                                 char **asciivalue)
+static void local_trace_asciival(Trptr t, GwTime tim, int *nmaxlen, int *vmaxlen, char **asciivalue)
 {
     int len = 0;
     int vlen = 0;
@@ -308,7 +304,7 @@ static void create_mouseover(gint x, gint y, gint width, gint height)
 #define MOUSEOVER_BREAKSIZE (32)
 #define MOUSEOVER_BREAKSIZE_ROWS (64)
 
-void move_mouseover(Trptr t, gint xin, gint yin, TimeType tim)
+void move_mouseover(Trptr t, gint xin, gint yin, GwTime tim)
 {
     gint xd = 0, yd = 0;
     char *asciivalue = NULL;

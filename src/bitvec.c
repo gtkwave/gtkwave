@@ -222,9 +222,9 @@ bvptr bits2vector(struct Bits *b)
     hptr *h;
     vptr vhead = NULL, vcurr = NULL, vadd;
     int numextrabytes;
-    TimeType mintime, lasttime = -1;
+    GwTime mintime, lasttime = -1;
     bvptr bitvec = NULL;
-    TimeType tshift, tmod;
+    GwTime tshift, tmod;
     int is_string;
     int string_len;
 
