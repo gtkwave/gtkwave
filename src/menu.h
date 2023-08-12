@@ -260,8 +260,6 @@ enum WV_MenuItems
     WV_MENU_SEP9A,
     WV_MENU_VSBS,
     WV_MENU_SEP10,
-    WV_MENU_ESTS,
-    WV_MENU_SEP10A,
     WV_MENU_VDR,
     WV_MENU_SEP11,
     WV_MENU_VCZ,

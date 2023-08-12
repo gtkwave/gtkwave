@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Removed rc variables:
     - `hier_grouping`
     - `use_standard_clicking`
+    - `use_standard_trace_select`
     - `use_toolbutton_interface`
 
 ### Fixed

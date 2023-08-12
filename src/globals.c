@@ -714,7 +714,6 @@ static const struct Global globals_base_values = {
     NULL, /* shift_click_trace 383 */
     0, /* trtarget_signalwindow_c_1 384 */
     NULL, /* starting_unshifted_trace */
-    0, /* use_standard_trace_select */
     0, /* std_collapse_pressed */
     0, /* keypress_handler_id */
     0, /* cached_mouseover_x */
@@ -1726,7 +1725,6 @@ void reload_into_new_context_2(void)
     new_globals->highlight_wavewindow = GLOBALS->highlight_wavewindow;
     new_globals->fill_waveform = GLOBALS->fill_waveform;
     new_globals->lz_removal = GLOBALS->lz_removal;
-    new_globals->use_standard_trace_select = GLOBALS->use_standard_trace_select;
     new_globals->use_big_fonts = GLOBALS->use_big_fonts;
     new_globals->use_full_precision = GLOBALS->use_full_precision;
     new_globals->use_frequency_delta = GLOBALS->use_frequency_delta;
@@ -2657,8 +2655,6 @@ static gint context_swapper(GtkWindow *w, GdkEvent *event, void *data)
                                 GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
                                 GLOBALS->fill_waveform = g_old->fill_waveform;
                                 GLOBALS->lz_removal = g_old->lz_removal;
-                                GLOBALS->use_standard_trace_select =
-                                    g_old->use_standard_trace_select;
                                 GLOBALS->disable_mouseover = g_old->disable_mouseover;
                                 GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
                                 GLOBALS->keep_xz_colors = g_old->keep_xz_colors;
