@@ -546,7 +546,6 @@ struct Global
     int initial_window_ypos_get; /* from main.c 234 */
     int xpos_delta; /* from main.c 235 */
     int ypos_delta; /* from main.c 236 */
-    char use_scrollbar_only; /* from main.c 237 */
     char force_toolbars; /* from main.c 238 */
     int hide_sst; /* from main.c 239 */
     int sst_expanded; /* from main.c 240 */

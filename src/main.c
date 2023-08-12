@@ -865,7 +865,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->use_maxtime_display = old_g->use_maxtime_display;
         GLOBALS->use_nonprop_fonts = old_g->use_nonprop_fonts;
         GLOBALS->use_roundcaps = old_g->use_roundcaps;
-        GLOBALS->use_scrollbar_only = old_g->use_scrollbar_only;
         GLOBALS->vcd_explicit_zero_subscripts = old_g->vcd_explicit_zero_subscripts;
         GLOBALS->vcd_preserve_glitches = old_g->vcd_preserve_glitches;
         GLOBALS->vcd_preserve_glitches_real = old_g->vcd_preserve_glitches_real;
