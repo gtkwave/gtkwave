@@ -178,6 +178,8 @@ config.set_quoted('PACKAGE_VERSION', meson.project_version())
 configure_file(output: 'config.h', configuration: config)
 config_inc = include_directories('.')
 
+exe_files = []
+
 subdir('lib')
 subdir('src')
 subdir('man')
@@ -191,3 +193,40 @@ gnome.post_install(
     update_desktop_database: true,
     gtk_update_icon_cache: true,
 )
+
+fs = import('fs')
+builddir = meson.current_build_dir()
+sourcedir = meson.current_source_dir()
+if host_machine.system() == 'windows'
+  name='gtkwave'
+  name_cap = 'GTKWave'
+
+  arch = 'x86_64-w64-mingw32'
+  host = 'w64'
+
+  nsis_cmd = [
+    find_program('makensis'), 
+    '-DBUILDDIR='+builddir,
+    '-DSOURCEDIR='+sourcedir,
+    '-DICON_DIR=../../compilation/windows',
+    '-DNAME='+name,
+    '-DNAME_CAP='+name_cap,
+    '-DICON_NAME='+name + '_logo',
+    '-DARCH='+arch,
+    '-DSYSROOT=/usr/' + arch + '/sys-root/mingw',
+    '-DHOST='+host,
+    '-DVERSION='+'v'+ meson.project_version(),
+    '-DLIBGCCDLL=libgcc_s_seh-1.dll',
+    '@INPUT@',
+  ]
+
+  windows_installer = custom_target(
+    'windows_installer',
+    output: ('Install' + name_cap
+             + '-' + host + '-' + meson.project_version() + '.exe'),
+    input: files('./compilation/windows/gtkwave.nsi'),
+    build_always_stale: true,
+    command: nsis_cmd,
+    depends: exe_files
+  )
+endif

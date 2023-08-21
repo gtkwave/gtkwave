@@ -103,6 +103,12 @@ gtkwave_sources = [
     'zoombuttons.c',
 ]
 
+if host_machine.system() == 'windows' 
+  windows = import('windows')
+  gtkwave_sources += windows.compile_resources('../compilation/windows/gtkwave.rc')
+endif
+
+
 gtkwave_dependencies = [
     glib_dep,
     gtk_dep,
@@ -125,16 +131,18 @@ gtkwave_include_directories = [
     'cocoa',
 ]
 
-executable(
+gtkwave_exe = executable(
     'gtkwave',
     gtkwave_sources,
     gtkwave_resources,
     vcd_keywords_c,
+    win_subsystem : 'windows',  # true to hide console
     dependencies: gtkwave_dependencies,
     include_directories: gtkwave_include_directories,
     c_args: warning_args,
     install: true,
 )
+exe_files += [gtkwave_exe]
 
 # twinwave
 
@@ -151,10 +159,11 @@ twinwave_include_directories = [
     # 'cocoa',
 ]
 
-executable(
+twinwave_exe = executable(
     'twinwave',
     twinwave_sources,
     dependencies: twinwave_dependencies,
     include_directories: twinwave_include_directories,
     install: true,
 )
+exe_files += [twinwave_exe]

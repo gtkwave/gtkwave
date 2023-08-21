@@ -1158,7 +1158,7 @@ static const struct Global globals_base_values = {
     0, /* ruler_step */
     0, /* fill_waveform */
     0, /* lz_removal */
-    FALSE, /* lz_removal */
+    FALSE, /* disable_antialiasing */
 
     {0.0, 0.0, 0.0, 0.0}, /* rgb_gc_white */
     {0.0, 0.0, 0.0, 0.0}, /* rgb_gc_black */

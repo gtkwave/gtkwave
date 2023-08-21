@@ -128,6 +128,31 @@ The current environment used is modulesets.  Bug 664894 has an interim fix in
 the binary distribution by applying patches using the
 `contrib/bundle_for_osx/gtk_diff_against_modulesets.patch` file.
 
+## Notes for cross compilation under Fedora for Windows
+
+### Dependencies
+
+```sh
+sudo dnf install meson gperf flex glib2-devel mingw64-gcc mingw64-gcc-c++ mingw64-filesystem mingw64-gtk3 mingw64-libgnurx mingw64-tcl mingw64-tk mingw64-nsis
+```
+
+### Building the project
+
+```sh
+mingw64-meson build_mingw64
+cd build_mingw64
+meson compile
+
+```
+
+### Building a windows installer
+
+```sh
+mingw64-meson build_mingw64
+cd build_mingw64
+meson compile windows_installer
+
+```
 ## MSYS2 notes for creating a working environment for compiling gtkwave:
 
 ```sh

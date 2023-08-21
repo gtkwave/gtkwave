@@ -76,7 +76,7 @@ vcd_explicit_zero_subscripts no
 
 disable_mouseover no
 clipboard_mouseover yes
-
+disable_antialiasing no
 
 #
 # color additions

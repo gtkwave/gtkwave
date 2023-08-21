@@ -32,7 +32,7 @@ rtlbrowse_include_directories = [
     '..',
 ]
 
-executable(
+rtlbrowse_exe = executable(
     'rtlbrowse',
     rtlbrowse_sources,
     definehash_c,
@@ -41,3 +41,6 @@ executable(
     include_directories: rtlbrowse_include_directories,
     install: true,
 )
+exe_files += [
+  rtlbrowse_exe
+]
