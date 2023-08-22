@@ -134,7 +134,7 @@ struct _GwTimeDisplay
     GtkWidget *cursor_value;
 };
 
-G_DEFINE_FINAL_TYPE(GwTimeDisplay, gw_time_display, GTK_TYPE_BOX)
+G_DEFINE_TYPE(GwTimeDisplay, gw_time_display, GTK_TYPE_BOX)
 
 static void gw_time_display_class_init(GwTimeDisplayClass *klass)
 {

@@ -24,6 +24,7 @@ datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 # Required dependency versions
 
 glib_req = '>=2.64.0'
+glib_req_macro = 'GLIB_VERSION_2_64'
 gtk_req = '>=3.24.0'
 zlib_req = '>=1.2.0'
 bzip2_req = '>=1.0.0'
@@ -40,7 +41,6 @@ gtk_unix_print_dep = dependency(
     required: false,
 )
 zlib_dep = dependency('zlib', version: zlib_req)
-bzip2_dep = dependency('bzip2', version: bzip2_req)
 tcl_dep = dependency('tcl', version: tcl_req, required: get_option('tcl'))
 tk_dep = dependency('tk', version: tk_req, required: get_option('tcl'))
 m_dep = cc.find_library('m', required: false)
@@ -55,6 +55,21 @@ gnu_regex_dep = cc.find_library(
     required: host_machine.system() == 'windows',
 )
 thread_dep = dependency('threads', required: false)
+
+bzip2_dep = dependency('bzip2', version: bzip2_req, required: false)
+if not bzip2_dep.found()
+    # pkg-config files for bzip2 aren't always installed,
+    # try to manually find the library as a fallback
+    bzip2_dep = cc.find_library('bz2', has_headers: 'bzlib.h')
+endif
+
+# Limit used glib functions to minimum required version
+
+add_project_arguments(
+    '-DGLIB_VERSION_MIN_REQUIRED=' + glib_req_macro,
+    '-DGLIB_VERSION_MAX_ALLOWED=' + glib_req_macro,
+    language: 'c',
+)
 
 # External programs
 

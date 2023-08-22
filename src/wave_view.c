@@ -14,7 +14,7 @@ struct _GwWaveView
     gboolean dirty;
 };
 
-G_DEFINE_FINAL_TYPE(GwWaveView, gw_wave_view, GTK_TYPE_DRAWING_AREA)
+G_DEFINE_TYPE(GwWaveView, gw_wave_view, GTK_TYPE_DRAWING_AREA)
 
 static const int wave_rgb_rainbow[WAVE_NUM_RAINBOW] = WAVE_RAINBOW_RGB;
 
