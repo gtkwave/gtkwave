@@ -112,6 +112,67 @@ foreach function : functions
     config.set('HAVE_' + function.to_upper(), cc.has_function(function))
 endforeach
 
+# Additional warnings and errors
+
+test_c_args = [
+    '-Wcast-align',
+    '-Wdeclaration-after-statement',
+    '-Werror=address',
+    '-Werror=array-bounds',
+    '-Werror=empty-body',
+    '-Werror=implicit',
+    '-Werror=implicit-function-declaration',
+    '-Werror=incompatible-pointer-types',
+    '-Werror=init-self',
+    '-Werror=int-conversion',
+    '-Werror=int-to-pointer-cast',
+    '-Werror=main',
+    '-Werror=misleading-indentation',
+    '-Werror=missing-braces',
+    '-Werror=missing-include-dirs',
+    '-Werror=nonnull',
+    '-Werror=overflow',
+    '-Werror=parenthesis',
+    '-Werror=pointer-arith',
+    '-Werror=pointer-to-int-cast',
+    '-Werror=return-type',
+    '-Werror=sequence-point',
+    '-Werror=shadow',
+    '-Werror=strict-prototypes',
+    '-Werror=trigraphs',
+    '-Werror=undef',
+    '-Werror=write-strings',
+    '-Wformat-nonliteral',
+    ['-Werror=format-security', '-Werror=format=2'],
+    '-Wignored-qualifiers',
+    '-Wimplicit-function-declaration',
+    '-Wlogical-op',
+    '-Wmissing-format-attribute',
+    '-Wmissing-include-dirs',
+    '-Wmissing-noreturn',
+    '-Wnested-externs',
+    '-Wno-cast-function-type',
+    '-Wno-missing-field-initializers',
+    '-Wno-sign-compare',
+    '-Wno-unused-parameter',
+    '-Wold-style-definition',
+    '-Wpointer-arith',
+    '-Wstrict-prototypes',
+    '-Wswitch-default',
+    '-Wswitch-enum',
+    '-Wundef',
+    '-Wuninitialized',
+    '-Wunused',
+    '-fno-strict-aliasing',
+]
+foreach arg : test_c_args
+    if cc.has_multi_arguments(arg)
+        add_project_arguments(arg, language: 'c')
+    endif
+endforeach
+
+
+
 # config.h
 
 config.set_quoted('PACKAGE_BUGREPORT', 'bybell@rocketmail.com')
