@@ -94,6 +94,7 @@ config.set('HAVE_SYS_STAT_H', cc.has_header('sys/stat.h'))
 config.set('HAVE_ALLOCA_H', cc.has_header('alloca.h'))
 config.set('HAVE_GETOPT_H', cc.has_header('getopt.h'))
 config.set('HAVE_FCNTL', cc.has_header('fcntl.h'))
+config.set10('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 config.set('HAVE_LIBPTHREAD', thread_dep.found())
 config.set('_WAVE_HAVE_JUDY', judy_dep.found())
 config.set('HAVE_LIBTCL', tcl_dep.found() and tk_dep.found())
@@ -116,7 +117,6 @@ endforeach
 
 test_c_args = [
     '-Wcast-align',
-    '-Wdeclaration-after-statement',
     '-Werror=address',
     '-Werror=array-bounds',
     '-Werror=empty-body',
@@ -137,19 +137,18 @@ test_c_args = [
     '-Werror=pointer-to-int-cast',
     '-Werror=return-type',
     '-Werror=sequence-point',
-    '-Werror=shadow',
+    # '-Werror=shadow',
     '-Werror=strict-prototypes',
     '-Werror=trigraphs',
     '-Werror=undef',
     '-Werror=write-strings',
-    '-Wformat-nonliteral',
-    ['-Werror=format-security', '-Werror=format=2'],
+    # '-Wformat-nonliteral',
+    # ['-Werror=format-security', '-Werror=format=2'],
     '-Wignored-qualifiers',
     '-Wimplicit-function-declaration',
     '-Wlogical-op',
     '-Wmissing-format-attribute',
     '-Wmissing-include-dirs',
-    '-Wmissing-noreturn',
     '-Wnested-externs',
     '-Wno-cast-function-type',
     '-Wno-missing-field-initializers',
@@ -170,8 +169,6 @@ foreach arg : test_c_args
         add_project_arguments(arg, language: 'c')
     endif
 endforeach
-
-
 
 # config.h
 

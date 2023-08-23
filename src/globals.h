@@ -367,15 +367,6 @@ struct Global
                                                buttons to ctx */
 
     /*
-     * help.c
-     */
-    int helpbox_is_active; /* from help.c 114 */
-    GtkWidget *text_help_c_1; /* from help.c 115 */
-    GtkTextIter iter_help_c_1; /* from help.c 117 */
-    GtkTextTag *bold_tag_help_c_1; /* from help.c 118 */
-    GtkWidget *window_help_c_2; /* from help.c 119 */
-
-    /*
      * hierpack.c
      */
     unsigned char *hp_buf;

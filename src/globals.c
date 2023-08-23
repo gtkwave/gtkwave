@@ -352,15 +352,6 @@ static const struct Global globals_base_values = {
     NULL, /* gtk_context_bridge_ptr */
 
     /*
-     * help.c
-     */
-    0, /* helpbox_is_active 110 */
-    0, /* text_help_c_1 111 */
-    {NULL, NULL, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, NULL}, /* iter_help_c_1 113 */
-    0, /* bold_tag_help_c_1 114 */
-    0, /* window_help_c_2 115 */
-
-    /*
      * hierpack.c
      */
     NULL, /* hp_buf */
@@ -2006,8 +1997,6 @@ void reload_into_new_context_2(void)
         widget_only_destroy(&GLOBALS->strace_ctx->window_strace_c_10); /* strace.c */
     }
     widget_only_destroy(&GLOBALS->window_translate_c_11); /* translate.c */
-    widget_only_destroy(&GLOBALS->window_help_c_2); /* help.c : reload is gated off during help so
-                                                       this should never execute */
 
     /* windows which in theory should never destroy as they will have grab focus which means reload
      * will not be called */
@@ -2503,8 +2492,6 @@ void free_and_destroy_page_context(void)
         widget_only_destroy(&GLOBALS->strace_ctx->window_strace_c_10); /* strace.c */
     }
     widget_only_destroy(&GLOBALS->window_translate_c_11); /* translate.c */
-    widget_only_destroy(&GLOBALS->window_help_c_2); /* help.c : reload is gated off during help so
-                                                       this should never execute */
 
     /* windows which in theory should never destroy as they will have grab focus which means reload
      * will not be called */

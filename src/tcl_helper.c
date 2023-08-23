@@ -2670,7 +2670,7 @@ if(GLOBALS->in_tcl_callback) /* don't allow callbacks to call menu functions (ye
 	char menuItem[512];
 	Tcl_Obj *aobj;
 
-	char *src = ife->path;
+	const char *src = ife->path;
 	char *dst = menuItem;
 
 	while(*src)
@@ -2735,7 +2735,7 @@ if(objc > 1)
 
 	old_toggle_item = GLOBALS->tcl_menu_toggle_item;
 	GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
-	ife->callback();
+	ife->callback(NULL, 0, NULL);
 	GLOBALS->tcl_menu_toggle_item = old_toggle_item;
 	gtkwave_main_iteration();
 
@@ -2744,7 +2744,7 @@ if(objc > 1)
 	else
 	{
 	GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
-	ife->callback();
+	ife->callback(NULL, 0, NULL);
 	GLOBALS->tcl_menu_toggle_item =	old_toggle_item;
 	gtkwave_main_iteration();
 	}

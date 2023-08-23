@@ -43,12 +43,12 @@ struct stringchain_t
     char *name;
 };
 
-typedef void (*gtkwave_mlist_callback)();
+typedef void (*gtkwave_mlist_callback)(gpointer data, guint callback_action, GtkWidget *widget);
 
 struct gtkwave_mlist_t
 {
-    gchar *path;
-    gchar *accelerator;
+    const gchar *path;
+    const gchar *accelerator;
 
     gtkwave_mlist_callback callback;
     guint callback_action;
@@ -58,7 +58,7 @@ struct gtkwave_mlist_t
      * "<ToggleItem>"     -> create a toggle item
      * "<Separator>"      -> create a separator
      */
-    gchar *item_type;
+    const gchar *item_type;
 
     /* Extra data for some item types:
      *  ImageItem  -> pointer to inlined pixbuf stream
@@ -293,7 +293,6 @@ enum WV_MenuItems
     WV_MENU_TDSCALEN,
     WV_MENU_TDSCALEP,
     WV_MENU_TDSCALEF,
-    WV_MENU_HWH,
 #ifdef MAC_INTEGRATION
     WV_MENU_HWM,
 #endif
@@ -400,7 +399,6 @@ void menu_zoom10_snap(gpointer null_data, guint callback_action, GtkWidget *widg
 void menu_use_full_precision(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_remove_marked(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_lxt_clk_compress(gpointer null_data, guint callback_action, GtkWidget *widget);
-void menu_help(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_version(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_expand(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_toggle_group(gpointer null_data, guint callback_action, GtkWidget *widget);
