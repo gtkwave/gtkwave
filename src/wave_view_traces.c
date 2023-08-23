@@ -37,7 +37,7 @@ typedef struct
     GArray *lines[N_LINE_COLORS];
 } LineBuffer;
 
-static LineBuffer *line_buffer_new()
+static LineBuffer *line_buffer_new(void)
 {
     LineBuffer *self = g_new0(LineBuffer, 1);
     self->colors[LINE_COLOR_X] = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;

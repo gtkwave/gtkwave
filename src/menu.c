@@ -177,19 +177,6 @@ static void menu_def_ruler(gpointer null_data, guint callback_action, GtkWidget 
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nDefine Time Ruler Marks");
-        help_text(" changes the ruler markings such that the Baseline marker"
-                  " defines the origin and the Primary marker distance from"
-                  " the Baseline marker defines the period. If either the"
-                  " Baseline marker or Primary marker are not present, the"
-                  " default ruler markers are used. If the Baseline marker"
-                  " and Primary marker have the same value, the default ruler"
-                  " markers are used.");
-
-        return;
-    }
-
     if ((GLOBALS->tims.baseline >= 0) && (GLOBALS->tims.marker >= 0)) {
         GLOBALS->ruler_origin = GLOBALS->tims.baseline;
         GLOBALS->ruler_step = GLOBALS->tims.baseline - GLOBALS->tims.marker;
@@ -214,18 +201,6 @@ static void lock_marker_left(gpointer null_data, guint callback_action, GtkWidge
     int ent_idx = GLOBALS->named_marker_lock_idx;
     int i;
     int success = 0;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nLock to Lesser Named Marker");
-        help_text(" locks the primary marker to a named marker."
-                  " If no named marker is currently selected, the last defined one is used,"
-                  " otherwise the marker selected will be one lower in the alphabet, scrolling"
-                  " through to the end of the alphabet on wrap."
-                  " If no named marker exists, one is dropped down for 'A' and the primary"
-                  " marker is locked to it.");
-
-        return;
-    }
 
     if (ent_idx < 0)
         ent_idx = WAVE_NUM_NAMED_MARKERS;
@@ -273,18 +248,6 @@ static void lock_marker_right(gpointer null_data, guint callback_action, GtkWidg
     if (ent_idx > (WAVE_NUM_NAMED_MARKERS - 1))
         ent_idx = 0;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nLock to Greater Named Marker");
-        help_text(" locks the primary marker to a named marker."
-                  " If no named marker is currently selected, the first defined one is used,"
-                  " otherwise the marker selected will be one higher in the alphabet, scrolling"
-                  " through to the beginning of the alphabet on wrap."
-                  " If no named marker exists, one is dropped down for 'A' and the primary"
-                  " marker is locked to it.");
-
-        return;
-    }
-
     for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
         if (GLOBALS->named_markers[ent_idx] >= 0) {
             success = 1;
@@ -316,13 +279,6 @@ static void unlock_marker(gpointer null_data, guint callback_action, GtkWidget *
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nUnlock from Named Marker");
-        help_text(" unlocks the primary marker from the currently selected named marker.");
-
-        return;
-    }
-
     GLOBALS->named_marker_lock_idx = -1;
 
     GLOBALS->signalwindow_width_dirty = 1;
@@ -331,158 +287,53 @@ static void unlock_marker(gpointer null_data, guint callback_action, GtkWidget *
 
 /* toggles for time dimension conversion */
 
-void menu_scale_to_td_x(GtkWidget *widget, gpointer data)
+static void menu_scale_to_td_common(GtkCheckMenuItem *menu_item, char dimension)
 {
-    (void)widget;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nScale To Time Dimension: None");
-        help_text(" turns off time dimension conversion.");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEX]), TRUE);
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEX]), TRUE);
-        } else {
-            if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-                GLOBALS->scale_to_time_dimension = 0;
-                set_scale_to_time_dimension_toggles();
-                redraw_signals_and_waves();
-            }
+        if (gtk_check_menu_item_get_active(menu_item)) {
+            GLOBALS->scale_to_time_dimension = dimension;
+            set_scale_to_time_dimension_toggles();
+            redraw_signals_and_waves();
         }
     }
 }
 
-void menu_scale_to_td_s(GtkWidget *widget, gpointer data)
+void menu_scale_to_td_x(gpointer data, guint callback_action, GtkWidget *widget)
 {
-    (void)widget;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nScale To Time Dimension: sec");
-        help_text(" changes the time dimension conversion value to seconds.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALES]), TRUE);
-        } else {
-            if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-                GLOBALS->scale_to_time_dimension = 's';
-                set_scale_to_time_dimension_toggles();
-                redraw_signals_and_waves();
-            }
-        }
-    }
+    menu_scale_to_td_common(GTK_CHECK_MENU_ITEM(data), 0);
 }
 
-void menu_scale_to_td_m(GtkWidget *widget, gpointer data)
+void menu_scale_to_td_s(gpointer data, guint callback_action, GtkWidget *widget)
 {
-    (void)widget;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nScale To Time Dimension: ms");
-        help_text(" changes the time dimension conversion value to milliseconds.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEM]), TRUE);
-        } else {
-            if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-                GLOBALS->scale_to_time_dimension = 'm';
-                set_scale_to_time_dimension_toggles();
-                redraw_signals_and_waves();
-            }
-        }
-    }
+    menu_scale_to_td_common(GTK_CHECK_MENU_ITEM(data), 's');
 }
 
-void menu_scale_to_td_u(GtkWidget *widget, gpointer data)
+void menu_scale_to_td_m(gpointer data, guint callback_action, GtkWidget *widget)
 {
-    (void)widget;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nScale To Time Dimension: us");
-        help_text(" changes the time dimension conversion value to microseconds.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEU]), TRUE);
-        } else {
-            if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-                GLOBALS->scale_to_time_dimension = 'u';
-                set_scale_to_time_dimension_toggles();
-                redraw_signals_and_waves();
-            }
-        }
-    }
+    menu_scale_to_td_common(GTK_CHECK_MENU_ITEM(data), 'm');
 }
 
-void menu_scale_to_td_n(GtkWidget *widget, gpointer data)
+void menu_scale_to_td_u(gpointer data, guint callback_action, GtkWidget *widget)
 {
-    (void)widget;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nScale To Time Dimension: ns");
-        help_text(" changes the time dimension conversion value to nanoseconds.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEN]), TRUE);
-        } else {
-            if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-                GLOBALS->scale_to_time_dimension = 'n';
-                set_scale_to_time_dimension_toggles();
-                redraw_signals_and_waves();
-            }
-        }
-    }
+    menu_scale_to_td_common(GTK_CHECK_MENU_ITEM(data), 'u');
 }
 
-void menu_scale_to_td_p(GtkWidget *widget, gpointer data)
+void menu_scale_to_td_n(gpointer data, guint callback_action, GtkWidget *widget)
 {
-    (void)widget;
-    (void)data;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nScale To Time Dimension: ps");
-        help_text(" changes the time dimension conversion value to picoseconds.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEP]), TRUE);
-        } else {
-            if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-                GLOBALS->scale_to_time_dimension = 'p';
-                set_scale_to_time_dimension_toggles();
-                redraw_signals_and_waves();
-            }
-        }
-    }
+    menu_scale_to_td_common(GTK_CHECK_MENU_ITEM(data), 'n');
 }
 
-void menu_scale_to_td_f(GtkWidget *widget, gpointer data)
+void menu_scale_to_td_p(gpointer data, guint callback_action, GtkWidget *widget)
 {
-    (void)widget;
-    (void)data;
+    menu_scale_to_td_common(GTK_CHECK_MENU_ITEM(data), 'p');
+}
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nScale To Time Dimension: fs");
-        help_text(" changes the time dimension conversion value to femtoseconds.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_TDSCALEF]), TRUE);
-        } else {
-            if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-                GLOBALS->scale_to_time_dimension = 'f';
-                set_scale_to_time_dimension_toggles();
-                redraw_signals_and_waves();
-            }
-        }
-    }
+void menu_scale_to_td_f(gpointer data, guint callback_action, GtkWidget *widget)
+{
+    menu_scale_to_td_common(GTK_CHECK_MENU_ITEM(data), 'f');
 }
 
 /********** transaction procsel filter install ********/
@@ -493,13 +344,6 @@ void menu_dataformat_xlate_ttrans_1(gpointer null_data, guint callback_action, G
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nTransaction Filter Process");
-        help_text(" will enable transaction filtering on marked traces using a filter process.  A "
-                  "requester will appear to get the filter filename.");
-        return;
-    }
-
     ttrans_searchbox("Select Transaction Filter Process");
 }
 
@@ -508,12 +352,6 @@ void menu_dataformat_xlate_ttrans_0(gpointer null_data, guint callback_action, G
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nTransaction Filter Process Disable");
-        help_text(" will remove transaction filtering.");
-        return;
-    }
 
     install_ttrans_filter(0); /* disable, 0 is always NULL */
 }
@@ -526,13 +364,6 @@ void menu_dataformat_xlate_proc_1(gpointer null_data, guint callback_action, Gtk
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nTranslate Filter Process");
-        help_text(" will enable translation on marked traces using a filter process.  A requester "
-                  "will appear to get the filter filename.");
-        return;
-    }
-
     ptrans_searchbox("Select Signal Filter Process");
 }
 
@@ -541,13 +372,6 @@ void menu_dataformat_xlate_proc_0(gpointer null_data, guint callback_action, Gtk
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nTranslate Filter Process Disable");
-        help_text(" will remove translation filtering used to reconstruct"
-                  " enums for marked traces.");
-        return;
-    }
 
     install_proc_filter(0); /* disable, 0 is always NULL */
 }
@@ -560,13 +384,6 @@ void menu_dataformat_xlate_file_1(gpointer null_data, guint callback_action, Gtk
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nTranslate Filter File");
-        help_text(" will enable translation on marked traces using a filter file.  A requester "
-                  "will appear to get the filter filename.");
-        return;
-    }
-
     trans_searchbox("Select Signal Filter");
 }
 
@@ -575,13 +392,6 @@ void menu_dataformat_xlate_file_0(gpointer null_data, guint callback_action, Gtk
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nTranslate Filter File Disable");
-        help_text(" will remove translation filtering used to reconstruct"
-                  " enums for marked traces.");
-        return;
-    }
 
     install_file_filter(0); /* disable, 0 is always NULL */
 }
@@ -632,18 +442,6 @@ void menu_write_lxt_file(gpointer null_data, guint callback_action, GtkWidget *w
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWrite LXT File As");
-        help_text(
-            " will open a file requester that will ask for the name"
-            " of an LXT dumpfile.  The contents of the dumpfile"
-            " generated will be the vcd representation of the traces onscreen"
-            " that can be seen by manipulating the signal and wavewindow scrollbars."
-            " The data saved corresponds to the trace information needed"
-            " to allow viewing when used in tandem with the corresponding GTKWave save file.");
-        return;
-    }
 
     if (GLOBALS->traces.first) {
         if ((GLOBALS->is_ghw) && (0)) {
@@ -708,18 +506,6 @@ void menu_write_vcd_file(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWrite VCD File As");
-        help_text(
-            " will open a file requester that will ask for the name"
-            " of a VCD dumpfile.  The contents of the dumpfile"
-            " generated will be the vcd representation of the traces onscreen"
-            " that can be seen by manipulating the signal and wavewindow scrollbars."
-            " The data saved corresponds to the trace information needed"
-            " to allow viewing when used in tandem with the corresponding GTKWave save file.");
-        return;
-    }
-
     if (GLOBALS->traces.first) {
         fileselbox("Write VCD File As",
                    &GLOBALS->filesel_vcd_writesave,
@@ -779,17 +565,6 @@ void menu_write_tim_file(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWrite TIM File As");
-        help_text(" will open a file requester that will ask for the name"
-                  " of a TimingAnalyzer .tim file.  The contents of the file"
-                  " generated will be the representation of the traces onscreen."
-                  " If the baseline and primary marker are set, the time range"
-                  " written to the file will be between the two markers, otherwise"
-                  " it will be the entire time range.");
-        return;
-    }
-
     if (GLOBALS->traces.first) {
         fileselbox("Write TIM File As",
                    &GLOBALS->filesel_tim_writesave,
@@ -812,12 +587,6 @@ void menu_unwarp_traces_all(gpointer null_data, guint callback_action, GtkWidget
 
     Trptr t;
     int found = 0;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nUnwarp All");
-        help_text(" unconditionally removes all offsets on all traces.");
-        return;
-    }
 
     t = GLOBALS->traces.first;
     while (t) {
@@ -842,12 +611,6 @@ void menu_unwarp_traces(gpointer null_data, guint callback_action, GtkWidget *wi
 
     Trptr t;
     int found = 0;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nUnwarp Marked");
-        help_text(" removes all offsets on all highlighted traces.");
-        return;
-    }
 
     t = GLOBALS->traces.first;
     while (t) {
@@ -918,21 +681,6 @@ void menu_warp_traces(gpointer null_data, guint callback_action, GtkWidget *widg
     Trptr t;
     int found = 0;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWarp Marked");
-        help_text(" offsets all highlighted traces by the amount of"
-                  " time entered in the requester.  (Positive values"
-                  " will shift traces to the right.)"
-                  " Attempting to shift greater than the absolute value of total simulation"
-                  " time will cap the shift magnitude at the length of simulation."
-                  " Note that you can also warp traces dynamically by holding"
-                  " down CTRL and dragging a group of highlighted traces to"
-                  " the left or right with the left mouse button pressed.  When you release"
-                  " the mouse button, if CTRL is pressed, the drag warp commits, else"
-                  " it reverts to its pre-drag condition.");
-        return;
-    }
-
     t = GLOBALS->traces.first;
     while (t) {
         if (t->flags & TR_HIGHLIGHT) {
@@ -954,29 +702,21 @@ void wave_scrolling_on(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWave Scrolling");
-        help_text(" allows movement of the primary marker beyond screen boundaries"
-                  " which causes the wave window to scroll when enabled."
-                  " When disabled, it"
-                  " disallows movement of the primary marker beyond screen boundaries.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_MWSON]),
-                GLOBALS->wave_scrolling =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->wave_scrolling));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_MWSON]),
             GLOBALS->wave_scrolling =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_MWSON]));
-            if (GLOBALS->wave_scrolling) {
-                status_text("Wave Scrolling On.\n");
-            } else {
-                status_text("Wave Scrolling Off.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->wave_scrolling));
+    } else {
+        GLOBALS->wave_scrolling =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_MWSON]));
+        if (GLOBALS->wave_scrolling) {
+            status_text("Wave Scrolling On.\n");
+        } else {
+            status_text("Wave Scrolling Off.\n");
         }
     }
 }
@@ -989,25 +729,17 @@ void menu_keep_xz_colors(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nKeep xz Colors");
-        help_text(
-            " when enabled"
-            " keeps the old non 0/1 signal value colors when a user specifies a color override"
-            " by using Edit/Color Format.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]),
-                GLOBALS->keep_xz_colors =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->keep_xz_colors));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]),
             GLOBALS->keep_xz_colors =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]));
-        }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->keep_xz_colors));
+    } else {
+        GLOBALS->keep_xz_colors =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]));
     }
 
     GLOBALS->signalwindow_width_dirty = 1;
@@ -1022,29 +754,21 @@ void menu_autocoalesce(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAutocoalesce");
-        help_text(" when enabled"
-                  " allows the wave viewer to reconstruct split vectors."
-                  " Split vectors will be indicated by a \"[]\""
-                  " prefix in the search requesters.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]),
-                GLOBALS->autocoalesce =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->autocoalesce));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]),
             GLOBALS->autocoalesce =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]));
-            if (GLOBALS->autocoalesce) {
-                status_text("Autocoalesce On.\n");
-            } else {
-                status_text("Autocoalesce Off.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->autocoalesce));
+    } else {
+        GLOBALS->autocoalesce =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOL]));
+        if (GLOBALS->autocoalesce) {
+            status_text("Autocoalesce On.\n");
+        } else {
+            status_text("Autocoalesce Off.\n");
         }
     }
 }
@@ -1055,29 +779,21 @@ void menu_autocoalesce_reversal(gpointer null_data, guint callback_action, GtkWi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAutocoalesce Reversal");
-        help_text(" causes split vectors to be reconstructed in reverse order (only if "
-                  "autocoalesce is also active).  This is necessary with some simulators."
-                  " Split vectors will be indicated by a \"[]\""
-                  " prefix in the search requesters.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOLR]),
-                GLOBALS->autocoalesce_reversal =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->autocoalesce_reversal));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOLR]),
             GLOBALS->autocoalesce_reversal =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOLR]));
-            if (GLOBALS->autocoalesce_reversal) {
-                status_text("Autocoalesce Rvs On.\n");
-            } else {
-                status_text("Autocoalesce Rvs Off.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->autocoalesce_reversal));
+    } else {
+        GLOBALS->autocoalesce_reversal =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ACOLR]));
+        if (GLOBALS->autocoalesce_reversal) {
+            status_text("Autocoalesce Rvs On.\n");
+        } else {
+            status_text("Autocoalesce Rvs Off.\n");
         }
     }
 }
@@ -1088,37 +804,21 @@ void menu_autoname_bundles_on(gpointer null_data, guint callback_action, GtkWidg
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAutoname Bundles");
-        help_text(" when enabled"
-                  " modifies the bundle up/down operations in the hierarchy"
-                  " and tree searches such that a NULL bundle name is"
-                  " implicitly created which informs GTKWave to create bundle"
-                  " and signal names based on the position in the hierarchy."
-                  " When disabled, it"
-                  " modifies the bundle up/down operations in the hierarchy"
-                  " and tree searches such that a NULL bundle name is"
-                  " not implicitly created.  This informs GTKWave to create bundle"
-                  " and signal names based on the position in the hierarchy"
-                  " only if the user enters a zero-length bundle name.  This"
-                  " behavior is the default.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]),
-                GLOBALS->autoname_bundles =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->autoname_bundles));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]),
             GLOBALS->autoname_bundles =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]));
-            if (GLOBALS->autoname_bundles) {
-                status_text("Autoname On.\n");
-            } else {
-                status_text("Autoname Off.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->autoname_bundles));
+    } else {
+        GLOBALS->autoname_bundles =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_ABON]));
+        if (GLOBALS->autoname_bundles) {
+            status_text("Autoname On.\n");
+        } else {
+            status_text("Autoname Off.\n");
         }
     }
 }
@@ -1212,16 +912,6 @@ void menu_set_max_hier(gpointer null_data, guint callback_action, GtkWidget *wid
 
     char za[32];
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nSet Max Hier");
-        help_text(" sets the maximum hierarchy depth (counting from the right"
-                  " with bit numbers or ranges ignored) that is displayable"
-                  " for trace names.  Zero indicates that no truncation will"
-                  " be performed (default).  Note that any aliased signals"
-                  " (prefix of a \"+\") will not have truncated names.");
-        return;
-    }
-
     sprintf(za, "%d", GLOBALS->hier_max_level);
 
     entrybox("Max Hier Depth", 200, za, NULL, 20, G_CALLBACK(max_hier_cleanup));
@@ -1230,12 +920,6 @@ void menu_set_max_hier(gpointer null_data, guint callback_action, GtkWidget *wid
 void menu_toggle_hier(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
     (void)callback_action;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nToggle Trace Hier");
-        help_text(" toggles the maximum hierarchy depth from zero to whatever was previously set.");
-        return;
-    }
 
     if (GLOBALS->hier_max_level)
         set_hier_cleanup(widget, null_data, 0);
@@ -1252,30 +936,23 @@ void menu_use_roundcaps(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nDraw Roundcapped Vectors");
-        help_text(" draws vector transitions that have sloping edges when enabled."
-                  " Draws vector transitions that have sharp edges when disabled;"
-                  " this is the default.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDRV]),
-                GLOBALS->use_roundcaps =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->use_roundcaps));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDRV]),
             GLOBALS->use_roundcaps =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDRV]));
-            if (GLOBALS->use_roundcaps) {
-                status_text("Using roundcaps.\n");
-            } else {
-                status_text("Using flatcaps.\n");
-            }
-            redraw_signals_and_waves();
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->use_roundcaps));
+    } else {
+        GLOBALS->use_roundcaps =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDRV]));
+        if (GLOBALS->use_roundcaps) {
+            status_text("Using roundcaps.\n");
+        } else {
+            status_text("Using flatcaps.\n");
         }
+        redraw_signals_and_waves();
     }
 }
 
@@ -1286,30 +963,23 @@ void menu_lxt_clk_compress(gpointer null_data, guint callback_action, GtkWidget 
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nLXT Clock Compress to Z");
-        help_text(" reduces memory usage when active as clocks compressed in LXT format are"
-                  " kept at Z in order to save memory.  Traces imported with this are permanently"
-                  " kept at Z.");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        if (menu_wlist[WV_MENU_LXTCC2Z]) {
+            gtk_check_menu_item_set_active(
+                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]),
+                GLOBALS->lxt_clock_compress_to_z =
+                    GLOBALS->wave_script_args
+                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                        : (!GLOBALS->lxt_clock_compress_to_z));
+        }
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            if (menu_wlist[WV_MENU_LXTCC2Z]) {
-                gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]),
-                    GLOBALS->lxt_clock_compress_to_z =
-                        GLOBALS->wave_script_args
-                            ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                            : (!GLOBALS->lxt_clock_compress_to_z));
-            }
+        GLOBALS->lxt_clock_compress_to_z =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]));
+        if (!GLOBALS->lxt_clock_compress_to_z) {
+            status_text("LXT CC2Z Off.\n");
         } else {
-            GLOBALS->lxt_clock_compress_to_z =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]));
-            if (!GLOBALS->lxt_clock_compress_to_z) {
-                status_text("LXT CC2Z Off.\n");
-            } else {
-                status_text("LXT CC2Z On.\n");
-            }
+            status_text("LXT CC2Z On.\n");
         }
     }
 }
@@ -1320,41 +990,34 @@ void menu_use_full_precision(gpointer null_data, guint callback_action, GtkWidge
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nFull Precision");
-        help_text(" does not round time values when the number of ticks per pixel onscreen is "
-                  "greater than"
-                  " 10 when active.  The default is that this feature is disabled.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]),
-                GLOBALS->use_full_precision =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->use_full_precision));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]),
             GLOBALS->use_full_precision =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]));
-            if (!GLOBALS->use_full_precision) {
-                status_text("Full Prec Off.\n");
-            } else {
-                status_text("Full Prec On.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->use_full_precision));
+    } else {
+        GLOBALS->use_full_precision =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VFTP]));
+        if (!GLOBALS->use_full_precision) {
+            status_text("Full Prec Off.\n");
+        } else {
+            status_text("Full Prec On.\n");
+        }
 
-            calczoom(GLOBALS->tims.zoom);
+        calczoom(GLOBALS->tims.zoom);
 
-            if (GLOBALS->wave_hslider) {
-                fix_wavehadj();
+        if (GLOBALS->wave_hslider) {
+            fix_wavehadj();
 
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
-                                      "changed"); /* force zoom update */
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
-                                      "value_changed"); /* force zoom update */
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
+                                  "changed"); /* force zoom update */
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
+                                  "value_changed"); /* force zoom update */
 
-                update_time_box();
-            }
+            update_time_box();
         }
     }
 }
@@ -1365,26 +1028,20 @@ void menu_remove_marked(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nRemove Pattern Marks");
-        help_text(" removes any vertical traces on the display caused by the Mark"
-                  " feature in pattern search and reverts to the normal format.");
-    } else {
-        int i;
+    int i;
 
-        WAVE_STRACE_ITERATOR(i)
-        {
-            GLOBALS->strace_ctx = &GLOBALS->strace_windows[GLOBALS->strace_current_window = i];
+    WAVE_STRACE_ITERATOR(i)
+    {
+        GLOBALS->strace_ctx = &GLOBALS->strace_windows[GLOBALS->strace_current_window = i];
 
-            if (GLOBALS->strace_ctx->shadow_straces) {
-                delete_strace_context();
-            }
-
-            strace_maketimetrace(0);
+        if (GLOBALS->strace_ctx->shadow_straces) {
+            delete_strace_context();
         }
 
-        redraw_signals_and_waves();
+        strace_maketimetrace(0);
     }
+
+    redraw_signals_and_waves();
 }
 /**/
 void menu_use_color(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -1393,14 +1050,9 @@ void menu_use_color(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nUse Color");
-        help_text(" draws signal names and trace data in color.  This is normal operation.");
-    } else {
-        force_normal_gcs();
+    force_normal_gcs();
 
-        redraw_signals_and_waves();
-    }
+    redraw_signals_and_waves();
 }
 /**/
 void menu_use_bw(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -1409,16 +1061,9 @@ void menu_use_bw(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nUse Black and White");
-        help_text(
-            " draws signal names and trace data in black and white.  This is intended for use in"
-            " black and white screen dumps.");
-    } else {
-        force_screengrab_gcs();
+    force_screengrab_gcs();
 
-        redraw_signals_and_waves();
-    }
+    redraw_signals_and_waves();
 }
 /**/
 void menu_zoom10_snap(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -1427,40 +1072,31 @@ void menu_zoom10_snap(gpointer null_data, guint callback_action, GtkWidget *widg
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nZoom Pow10 Snap");
-        help_text(
-            " snaps time values to a power of ten boundary when active.  Fractional zooms are"
-            " internally stored, but what is actually displayed will be rounded up/down to the"
-            " nearest power of 10.  This only works when the ticks per frame is greater than 100"
-            " units.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]),
-                GLOBALS->zoom_pow10_snap =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->zoom_pow10_snap));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]),
             GLOBALS->zoom_pow10_snap =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]));
-            if (!GLOBALS->zoom_pow10_snap) {
-                status_text("Pow10 Snap Off.\n");
-            } else {
-                status_text("Pow10 Snap On.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->zoom_pow10_snap));
+    } else {
+        GLOBALS->zoom_pow10_snap =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZPS]));
+        if (!GLOBALS->zoom_pow10_snap) {
+            status_text("Pow10 Snap Off.\n");
+        } else {
+            status_text("Pow10 Snap On.\n");
+        }
 
-            if (GLOBALS->wave_hslider) {
-                calczoom(GLOBALS->tims.zoom);
-                fix_wavehadj();
+        if (GLOBALS->wave_hslider) {
+            calczoom(GLOBALS->tims.zoom);
+            fix_wavehadj();
 
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
-                                      "changed"); /* force zoom update */
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
-                                      "value_changed"); /* force zoom update */
-            }
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
+                                  "changed"); /* force zoom update */
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
+                                  "value_changed"); /* force zoom update */
         }
     }
 }
@@ -1472,30 +1108,24 @@ void menu_zoom_dynf(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nPartial VCD Dynamic Zoom Full");
-        help_text(" causes the screen to be in full zoom mode while a VCD file is loading"
-                  " incrementally.");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        if (menu_wlist[WV_MENU_VZDYN]) /* not always available */
+        {
+            gtk_check_menu_item_set_active(
+                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]),
+                GLOBALS->zoom_dyn =
+                    GLOBALS->wave_script_args
+                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                        : (!GLOBALS->zoom_dyn));
+        }
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            if (menu_wlist[WV_MENU_VZDYN]) /* not always available */
-            {
-                gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]),
-                    GLOBALS->zoom_dyn =
-                        GLOBALS->wave_script_args
-                            ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                            : (!GLOBALS->zoom_dyn));
-            }
+        GLOBALS->zoom_dyn =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]));
+        if (!GLOBALS->zoom_dyn) {
+            status_text("Dynamic Zoom Full Off.\n");
         } else {
-            GLOBALS->zoom_dyn =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]));
-            if (!GLOBALS->zoom_dyn) {
-                status_text("Dynamic Zoom Full Off.\n");
-            } else {
-                status_text("Dynamic Zoom Full On.\n");
-            }
+            status_text("Dynamic Zoom Full On.\n");
         }
     }
 }
@@ -1507,30 +1137,24 @@ void menu_zoom_dyne(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nPartial VCD Dynamic Zoom To End");
-        help_text(" causes the screen to zoom to the end while a VCD file is loading"
-                  " incrementally.");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        if (menu_wlist[WV_MENU_VZDYNE]) /* not always available */
+        {
+            gtk_check_menu_item_set_active(
+                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]),
+                GLOBALS->zoom_dyne =
+                    GLOBALS->wave_script_args
+                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                        : (!GLOBALS->zoom_dyne));
+        }
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            if (menu_wlist[WV_MENU_VZDYNE]) /* not always available */
-            {
-                gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]),
-                    GLOBALS->zoom_dyne =
-                        GLOBALS->wave_script_args
-                            ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                            : (!GLOBALS->zoom_dyne));
-            }
+        GLOBALS->zoom_dyne =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]));
+        if (!GLOBALS->zoom_dyne) {
+            status_text("Dynamic Zoom To End Off.\n");
         } else {
-            GLOBALS->zoom_dyne =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]));
-            if (!GLOBALS->zoom_dyne) {
-                status_text("Dynamic Zoom To End Off.\n");
-            } else {
-                status_text("Dynamic Zoom To End On.\n");
-            }
+            status_text("Dynamic Zoom To End On.\n");
         }
     }
 }
@@ -1542,15 +1166,10 @@ void menu_left_justify(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nLeft Justify Signals");
-        help_text(" draws signal names flushed to the left border of the signal window.");
-    } else {
-        status_text("Left Justification.\n");
-        GLOBALS->left_justify_sigs = ~0;
-        MaxSignalLength();
-        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
-    }
+    status_text("Left Justification.\n");
+    GLOBALS->left_justify_sigs = ~0;
+    MaxSignalLength();
+    gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 }
 
 /**/
@@ -1560,16 +1179,10 @@ void menu_right_justify(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nRight Justify Signals");
-        help_text(
-            " draws signal names flushed to the right (\"equals\") side of the signal window.");
-    } else {
-        status_text("Right Justification.\n");
-        GLOBALS->left_justify_sigs = 0;
-        MaxSignalLength();
-        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
-    }
+    status_text("Right Justification.\n");
+    GLOBALS->left_justify_sigs = 0;
+    MaxSignalLength();
+    gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 }
 
 /**/
@@ -1581,33 +1194,21 @@ void menu_enable_constant_marker_update(gpointer null_data,
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nConstant Marker Update");
-        help_text(" when enabled,"
-                  " allows GTKWave to dynamically show the changing values of the"
-                  " traces under the primary marker while it is being dragged"
-                  " across the screen.  This works best with dynamic resizing disabled."
-                  " When disabled, it"
-                  " restricts GTKWave to only update the trace values when the"
-                  " left mouse button is initially pressed then again when it is released."
-                  " This is the default behavior.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCMU]),
-                GLOBALS->constant_marker_update =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->constant_marker_update));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCMU]),
             GLOBALS->constant_marker_update =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCMU]));
-            if (GLOBALS->constant_marker_update) {
-                status_text("Constant marker update enabled.\n");
-            } else {
-                status_text("Constant marker update disabled.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->constant_marker_update));
+    } else {
+        GLOBALS->constant_marker_update =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCMU]));
+        if (GLOBALS->constant_marker_update) {
+            status_text("Constant marker update enabled.\n");
+        } else {
+            status_text("Constant marker update disabled.\n");
         }
     }
 }
@@ -1619,35 +1220,27 @@ void menu_enable_dynamic_resize(gpointer null_data, guint callback_action, GtkWi
     (void)widget;
     int i;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nDynamic Resize");
-        help_text(" allows GTKWave to dynamically resize the signal"
-                  " window for you when toggled active.  This can be helpful during numerous"
-                  " signal additions and/or deletions.  This is the default"
-                  " behavior.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDR]),
-                GLOBALS->do_resize_signals =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->do_resize_signals));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDR]),
             GLOBALS->do_resize_signals =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDR]));
-            if (GLOBALS->do_resize_signals) {
-                status_text("Resizing enabled.\n");
-            } else {
-                status_text("Resizing disabled.\n");
-            }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->do_resize_signals));
+    } else {
+        GLOBALS->do_resize_signals =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VDR]));
+        if (GLOBALS->do_resize_signals) {
+            status_text("Resizing enabled.\n");
+        } else {
+            status_text("Resizing disabled.\n");
+        }
 
-            if (GLOBALS->signalarea && GLOBALS->wavearea) {
-                for (i = 0; i < 2; i++) {
-                    GLOBALS->signalwindow_width_dirty = 1;
-                    redraw_signals_and_waves();
-                }
+        if (GLOBALS->signalarea && GLOBALS->wavearea) {
+            for (i = 0; i < 2; i++) {
+                GLOBALS->signalwindow_width_dirty = 1;
+                redraw_signals_and_waves();
             }
         }
     }
@@ -1659,17 +1252,8 @@ void menu_toggle_delta_or_frequency(gpointer null_data, guint callback_action, G
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nToggle Delta-Frequency");
-        help_text(" allows you to switch between the delta time and"
-                  " frequency display in the upper right corner"
-                  " of the main window when measuring distances between markers.  Default behavior "
-                  "is that the"
-                  " delta time is displayed.");
-    } else {
-        GLOBALS->use_frequency_delta = (GLOBALS->use_frequency_delta) ? 0 : 1;
-        update_time_box();
-    }
+    GLOBALS->use_frequency_delta = (GLOBALS->use_frequency_delta) ? 0 : 1;
+    update_time_box();
 }
 /**/
 void menu_toggle_max_or_marker(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -1678,16 +1262,8 @@ void menu_toggle_max_or_marker(gpointer null_data, guint callback_action, GtkWid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nToggle Max-Marker");
-        help_text(" allows you to switch between the maximum time and"
-                  " marker time for display in the upper right corner"
-                  " of the main window.  Default behavior is that the"
-                  " maximum time is displayed.");
-    } else {
-        GLOBALS->use_maxtime_display = (GLOBALS->use_maxtime_display) ? 0 : 1;
-        update_time_box();
-    }
+    GLOBALS->use_maxtime_display = (GLOBALS->use_maxtime_display) ? 0 : 1;
+    update_time_box();
 }
 /**/
 #ifdef MAC_INTEGRATION
@@ -1697,64 +1273,36 @@ void menu_help_manual(gpointer null_data, guint callback_action, GtkWidget *widg
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWave User's Guide");
-        help_text(" opens the PDF file of the GTKWave User's Guide for viewing.");
-        return;
-    } else {
-        const gchar *bundle_id = gtkosx_application_get_bundle_id();
-        if (bundle_id) {
-            const gchar *rpath = gtkosx_application_get_resource_path();
-            const char *suf = "/doc/gtkwave.pdf";
-            char *pdfpath = NULL;
-            FILE *handle;
+    const gchar *bundle_id = gtkosx_application_get_bundle_id();
+    if (bundle_id) {
+        const gchar *rpath = gtkosx_application_get_resource_path();
+        const char *suf = "/doc/gtkwave.pdf";
+        char *pdfpath = NULL;
+        FILE *handle;
 
-            if (rpath) {
-                pdfpath = (char *)alloca(strlen(rpath) + strlen(suf) + 1);
-                strcpy(pdfpath, rpath);
-                strcat(pdfpath, suf);
-            }
-
-            if (!pdfpath || !(handle = fopen(pdfpath, "rb"))) {
-            } else {
-                fclose(handle);
-                gtk_open_external_file(pdfpath);
-                return;
-            }
+        if (rpath) {
+            pdfpath = (char *)alloca(strlen(rpath) + strlen(suf) + 1);
+            strcpy(pdfpath, rpath);
+            strcat(pdfpath, suf);
         }
 
-        simplereqbox("Wave User's Guide", 400, "Could not open PDF!", "OK", NULL, NULL, 1);
+        if (!pdfpath || !(handle = fopen(pdfpath, "rb"))) {
+        } else {
+            fclose(handle);
+            gtk_open_external_file(pdfpath);
+            return;
+        }
     }
+
+    simplereqbox("Wave User's Guide", 400, "Could not open PDF!", "OK", NULL, NULL, 1);
 }
 #endif
-/**/
-void menu_help(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWave Help");
-        help_text(" is already active.  It's this window.");
-        return;
-    }
-
-    helpbox("Wave Help", 480, "Select any main window menu item");
-}
 /**/
 void menu_version(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWave Version");
-        help_text(" merely brings up a requester which indicates the current"
-                  " version of this program.");
-        return;
-    }
 
     static const gchar *AUTHORS[] = {
         "Tony Bybell",
@@ -1803,12 +1351,6 @@ void menu_quit(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nQuit");
-        help_text(" closes GTKWave and exits immediately.");
-        return;
-    }
 
     if (GLOBALS->save_on_exit) {
         menu_write_save_file(NULL, 0, NULL);
@@ -1896,14 +1438,6 @@ void menu_quit_close(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nClose");
-        help_text(" immediately closes the current tab if multiple tabs exist or"
-                  " exits GTKWave after an additional confirmation"
-                  " requester is given the OK to quit.");
-        return;
-    }
 
     if ((GLOBALS->num_notebook_pages < 2) && (!GLOBALS->enable_fast_exit)) {
         simplereqbox("Quit Program",
@@ -2105,13 +1639,6 @@ void menu_create_group(gpointer null_data, guint callback_action, GtkWidget *wid
     Trptr t;
     unsigned dirty = 0;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCreate Group");
-        help_text(" creates a group of traces which may be opened or closed."
-                  " It is permitted for groups to be nested.");
-        return;
-    }
-
     t = GLOBALS->traces.first;
     while (t) {
         if (t->flags & TR_HIGHLIGHT) {
@@ -2246,21 +1773,6 @@ void menu_expand(gpointer null_data, guint callback_action, GtkWidget *widget)
     Trptr t, t_next;
     int dirty = 0;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nExpand");
-        help_text(
-            " decomposes the highlighted signals into their individual bits."
-            " The resulting bits are converted to traces and inserted after the"
-            " last highlighted trace.  The original unexpanded traces will"
-            " be placed in the cut buffer."
-            " It will function seemingly randomly"
-            " when used upon real valued single-bit traces."
-            " When used upon multi-bit vectors that contain"
-            " real valued traces, those traces will expand to their normal \"correct\" values,"
-            " not individual bits.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -2329,12 +1841,6 @@ void menu_toggle_group(gpointer null_data, guint callback_action, GtkWidget *wid
     Trptr t;
     unsigned dirty_group = 0;
     unsigned dirty_signal = 0;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nToggle Group");
-        help_text(" toggles a group opened or closed.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -2977,17 +2483,6 @@ void menu_combine_down(gpointer null_data, guint callback_action, GtkWidget *wid
 
     bvptr v;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCombine Down");
-        help_text(" coalesces the highlighted signals into a single vector named"
-                  " \"<Vector>\" in a top to bottom fashion"
-                  " placed after the last highlighted trace.  The original traces will"
-                  " be placed in the cut buffer."
-                  " It will function seemingly randomly"
-                  " when used upon real valued single-bit traces.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -3024,17 +2519,6 @@ void menu_combine_up(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)widget;
 
     bvptr v;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCombine Up");
-        help_text(" coalesces the highlighted signals into a single vector named"
-                  " \"<Vector>\" in a bottom to top fashion"
-                  " placed after the last highlighted trace.  The original traces will"
-                  " be placed in the cut buffer."
-                  " It will function seemingly randomly"
-                  " when used upon real valued single-bit traces.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -3080,29 +2564,6 @@ void menu_tracesearchbox(gpointer null_data, guint callback_action, GtkWidget *w
     (void)widget;
 
     Trptr t;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nPattern Search");
-        help_text(" only works when at least one trace is highlighted. "
-                  " A requester will appear that lists all the selected"
-                  " traces (maximum of 500) and allows various criteria"
-                  " to be specified for each trace.  Searches can go forward"
-                  " or backward from the primary (unnamed) marker.  If the"
-                  " primary marker has not been set, the search starts at the"
-                  " beginning of the displayed data (\"From\") for a forwards"
-                  " search and starts at the end of the displayed data (\"To\")"
-                  " for a backwards search."
-                  " \"Mark\" and \"Clear\" are used to modify the normal time"
-                  " vertical markings such that they can be used to indicate"
-                  " all the times that a specific pattern search condition is"
-                  " true (e.g., every upclock of a specific signal).  The"
-                  " \"Mark Count\" field indicates how many times the specific"
-                  " pattern search condition was encountered."
-                  " The \"Marking Begins at\" and \"Marking Stops at\" fields are"
-                  " used to limit the time over which marking is applied"
-                  " (but they have no effect on searching).");
-        return;
-    }
 
     for (t = GLOBALS->traces.first; t; t = t->t_next) {
         if ((t->flags & TR_HIGHLIGHT) && HasWave(t)) {
@@ -3235,24 +2696,17 @@ void menu_new_viewer(gpointer null_data, guint callback_action, GtkWidget *widge
 
     if (!mnv && !GLOBALS->busy_busy_c_1) {
         mnv = 1;
-        if (GLOBALS->helpbox_is_active) {
-            help_text_bold("\n\nOpen New Window");
-            help_text(" will open a file requester that will ask for the name"
-                      " of a VCD or AET file to view.  This will fork off a"
-                      " new viewer process.");
-        } else {
-            if (in_main_iteration()) {
-                mnv = 0;
-                return;
-            }
-
-            fileselbox("Select a trace to view...",
-                       &GLOBALS->filesel_newviewer_menu_c_1,
-                       G_CALLBACK(menu_new_viewer_cleanup),
-                       G_CALLBACK(NULL),
-                       NULL,
-                       0);
+        if (in_main_iteration()) {
+            mnv = 0;
+            return;
         }
+
+        fileselbox("Select a trace to view...",
+                   &GLOBALS->filesel_newviewer_menu_c_1,
+                   G_CALLBACK(menu_new_viewer_cleanup),
+                   G_CALLBACK(NULL),
+                   NULL,
+                   0);
         mnv = 0;
     }
 }
@@ -3398,13 +2852,6 @@ void menu_new_viewer_tab(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nOpen New Tab");
-        help_text(" will open a file requester that will ask for the name"
-                  " of a VCD or AET file to view.  This will create a tabbed page.");
-        return;
-    }
-
     if (in_main_iteration())
         return;
 
@@ -3425,13 +2872,6 @@ void menu_reload_waveform(gpointer null_data, guint callback_action, GtkWidget *
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nReload Current Waveform");
-        help_text(" will reload the currently displayed waveform"
-                  " from a potentially updated file.");
-        return;
-    }
 
     if (in_main_iteration())
         return;
@@ -3464,17 +2904,6 @@ void menu_print(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nPrint To File");
-        help_text(" will open up a requester that will allow you to select"
-                  " print options (PS or MIF; Letter, A4, or Legal; Full or Minimal)."
-                  " After selecting the options you want,"
-                  " a file requester will ask for the name of the"
-                  " output file to generate"
-                  " that reflects the current main window display's contents.");
-        return;
-    }
-
     renderbox("Print Formatting Options");
 }
 
@@ -3491,17 +2920,6 @@ void menu_markerbox(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow-Change Marker Data");
-        help_text(" displays and allows the modification of the times for"
-                  " all named markers by filling in the leftmost entry boxes.  In addition, "
-                  "optional marker text"
-                  " rather than a generic single letter name may be specified by filling in the "
-                  "rightmost entry boxes."
-                  " Note that the time for each marker must be unique.");
-        return;
-    }
-
     markerbox("Markers", G_CALLBACK(menu_markerbox_callback));
 }
 
@@ -3510,13 +2928,6 @@ void copy_pri_b_marker(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCopy Primary -> B Marker");
-        help_text(
-            " copies the primary marker position to the B marker (handy for measuring deltas).");
-        return;
-    }
 
     DEBUG(printf("copy_pri_b_marker()\n"));
 
@@ -3534,12 +2945,6 @@ void delete_unnamed_marker(gpointer null_data, guint callback_action, GtkWidget 
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nDelete Primary Marker");
-        help_text(" removes the primary marker from the display if present.");
-        return;
-    }
 
     DEBUG(printf("delete_unnamed marker()\n"));
 
@@ -3577,13 +2982,6 @@ void collect_all_named_markers(gpointer null_data, guint callback_action, GtkWid
     int i;
     int dirty = 0;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCollect All Named Markers");
-        help_text(" simply collects any and all named markers which have"
-                  " been dropped.");
-        return;
-    }
-
     DEBUG(printf("collect_all_unnamed_markers()\n"));
 
     for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
@@ -3611,13 +3009,6 @@ void collect_named_marker(gpointer null_data, guint callback_action, GtkWidget *
 
     int i;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCollect Named Marker");
-        help_text(" collects a named marker where the current primary (unnamed)"
-                  " marker is placed if there is a named marker at its position.");
-        return;
-    }
-
     DEBUG(printf("collect_named_marker()\n"));
 
     if (GLOBALS->tims.marker != -1) {
@@ -3644,22 +3035,6 @@ void drop_named_marker(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)widget;
 
     int i;
-
-    if (GLOBALS->helpbox_is_active) {
-        char nm_s[32];
-
-        sprintf(nm_s, "%d", WAVE_NUM_NAMED_MARKERS);
-
-        help_text_bold("\n\nDrop Named Marker");
-        help_text(" drops a named marker where the current primary (unnamed)"
-                  " marker is placed.  A maximum of ");
-
-        help_text(nm_s);
-
-        help_text(" named markers are allowed"
-                  " and the times for all must be different.");
-        return;
-    }
 
     DEBUG(printf("drop_named_marker()\n"));
 
@@ -3720,13 +3095,6 @@ void menu_showchangeall(gpointer null_data, guint callback_action, GtkWidget *wi
 
     Trptr t;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow-Change All Highlighted");
-        help_text(" provides an easy means of changing trace attributes en masse."
-                  " Various functions are provided in a Show-Change requester.");
-        return;
-    }
-
     DEBUG(printf("menu_showchangeall()\n"));
 
     GLOBALS->showchangeall_menu_c_1 = NULL;
@@ -3764,15 +3132,6 @@ void menu_showchange(gpointer null_data, guint callback_action, GtkWidget *widge
 
     Trptr t;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow-Change First Highlighted");
-        help_text(" provides a means of changing trace attributes for the"
-                  " first highlighted trace. "
-                  " Various functions are provided in a Show-Change requester. "
-                  " When a function is applied, the trace will be unhighlighted.");
-        return;
-    }
-
     DEBUG(printf("menu_showchange()\n"));
 
     t = GLOBALS->traces.first;
@@ -3796,15 +3155,6 @@ void menu_remove_aliases(gpointer null_data, guint callback_action, GtkWidget *w
 
     Trptr t;
     int dirty = 0, none_selected = 1;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nRemove Highlighted Aliases");
-        help_text(" only works when at least one trace has been highlighted. "
-                  " Any aliased traces will have their names restored to their"
-                  " original names.  As vectors get their names from aliases,"
-                  " vector aliases will not be removed.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -3904,19 +3254,6 @@ void menu_alias(gpointer null_data, guint callback_action, GtkWidget *widget)
 
     Trptr t;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAlias Highlighted Trace");
-        help_text(" only works when at least one trace has been highlighted. "
-                  " With this function, you will be prompted for an alias"
-                  " name for the first highlighted trace.  After successfully"
-                  " aliasing a trace, the aliased trace will be unhighlighted."
-                  " Single bits will be marked with a leading \"+\" and vectors"
-                  " will have no such designation.  The purpose of this is to"
-                  " provide a fast method of determining which trace names are"
-                  " real and which ones are aliases.");
-        return;
-    }
-
     GLOBALS->trace_to_alias_menu_c_1 = NULL;
 
     /* don't mess with sigs when dnd active */
@@ -3963,15 +3300,6 @@ void menu_signalsearch(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nSignal Search Regexp");
-        help_text(" provides an easy means of adding traces to the display. "
-                  " Various functions are provided in the Signal Search requester"
-                  " which allow searching using POSIX regular expressions and bundling"
-                  " (coalescing individual bits into a single vector). ");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -4035,15 +3363,6 @@ void menu_regexp_unhighlight(gpointer null_data, guint callback_action, GtkWidge
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nUnHighlight Regexp");
-        help_text(" brings up a text requester that will ask for a"
-                  " regular expression that may contain text with POSIX regular expressions."
-                  " All traces meeting this criterion / these criteria will be"
-                  " unhighlighted if they are currently highlighted.");
-        return;
-    }
-
     entrybox("Regexp UnHighlight",
              300,
              GLOBALS->regexp_string_menu_c_1,
@@ -4065,15 +3384,6 @@ void menu_regexp_highlight(gpointer null_data, guint callback_action, GtkWidget 
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nHighlight Regexp");
-        help_text(" brings up a text requester that will ask for a"
-                  " regular expression that may contain text with POSIX regular expressions."
-                  " All traces meeting this criterion / these criteria will be"
-                  " highlighted.");
-        return;
-    }
 
     entrybox("Regexp Highlight",
              300,
@@ -4143,15 +3453,6 @@ void menu_write_screengrab_as(gpointer null_data, guint callback_action, GtkWidg
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nGrab To File");
-        help_text(" will open a file requester that will ask for the name"
-                  " to be used for a PNG format image grab of the main GTKWave window."
-                  " Note that if the main window is covered by other windows or"
-                  " is partially offscreen, the grabbed image might not appear properly.");
-        return;
-    }
-
     errno = 0;
     fileselbox("Grab To File",
                &GLOBALS->filesel_imagegrab,
@@ -4203,17 +3504,6 @@ void menu_write_save_file_as(gpointer null_data, guint callback_action, GtkWidge
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWrite Save File As");
-        help_text(" will open a file requester that will ask for the name"
-                  " of a GTKWave save file.  The contents of the save file"
-                  " generated will be the traces as well as their"
-                  " format (binary, decimal, hex, reverse, etc.) which"
-                  " are currently a part of the display.  Marker positional"
-                  " data and the zoom factor are also a part of the save file.");
-        return;
-    }
-
     fileselbox("Write Save File",
                &GLOBALS->filesel_writesave,
                G_CALLBACK(menu_write_save_cleanup),
@@ -4228,14 +3518,6 @@ void menu_write_save_file(gpointer null_data, guint callback_action, GtkWidget *
     (void)callback_action;
     (void)widget;
     int len = 0;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nWrite Save File");
-        help_text(
-            " will invoke Write Save File As if no save file name has been specified previously."
-            " Otherwise it will write the save file data without prompting.");
-        return;
-    }
 
     if (GLOBALS->filesel_writesave) {
         len = strlen(GLOBALS->filesel_writesave);
@@ -4291,18 +3573,6 @@ void menu_read_save_file(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nRead Save File");
-        help_text(" will open a file requester that will ask for the name"
-                  " of a GTKWave save file.  The contents of the save file"
-                  " will determine which traces and vectors as well as their"
-                  " format (binary, decimal, hex, reverse, etc.) are to be"
-                  " appended to the display.  Note that the marker positional"
-                  " data and zoom factor present in the save file will"
-                  " replace any current settings.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -4339,17 +3609,6 @@ void menu_read_stems_file(gpointer null_data, guint callback_action, GtkWidget *
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nRead Verilog Stemsfile");
-        help_text(" will open a file requester that will ask for the name"
-                  " of a Verilog stemsfile.  This will then launch an RTL browser and allow source "
-                  "code annotation based on"
-                  " the primary marker position."
-                  " Stems files are generated by xml2stems.  Please see its manpage"
-                  " for syntax and more information on stems file generation.");
-        return;
-    }
 
     if (!stems_are_active()) {
         if (GLOBALS->stems_type != WAVE_ANNO_NONE) {
@@ -4389,14 +3648,6 @@ void menu_read_log_file(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nRead Logfile");
-        help_text(" will open a file requester that will ask for the name"
-                  " of a plaintext simulation log.  By clicking on the numbers in the logfile,"
-                  " the marker will jump to the appropriate time value in the wave window.");
-        return;
-    }
-
     fileselbox("Read Logfile",
                &GLOBALS->filesel_logfile_menu_c_1,
                G_CALLBACK(menu_read_log_cleanup),
@@ -4429,14 +3680,6 @@ void menu_read_script_file(gpointer null_data, guint callback_action, GtkWidget 
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nRead Script File");
-        help_text(" will open a file requester that will ask for the name"
-                  " of a TCL script to run.  This menu option itself is not callable"
-                  " by TCL scripts.");
-        return;
-    }
-
     fileselbox("Read Script File",
                &GLOBALS->filesel_scriptfile_menu,
                G_CALLBACK(menu_read_script_cleanup),
@@ -4451,14 +3694,6 @@ void menu_insert_blank_traces(gpointer null_data, guint callback_action, GtkWidg
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nInsert Blank");
-        help_text(" inserts a blank trace after the last highlighted trace."
-                  " If no traces are highlighted, the blank is inserted after"
-                  " the last trace.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -4478,15 +3713,6 @@ void menu_insert_analog_height_extension(gpointer null_data,
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nInsert Analog Height Extension");
-        help_text(" inserts a blank analog extension trace after the last highlighted trace."
-                  " If no traces are highlighted, the blank is inserted after"
-                  " the last trace.  This type of trace is used to increase the height of analog "
-                  "traces.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -4519,14 +3745,6 @@ void menu_insert_comment_traces(gpointer null_data, guint callback_action, GtkWi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nInsert Comment");
-        help_text(" inserts a comment trace after the last highlighted trace."
-                  " If no traces are highlighted, the comment is inserted after"
-                  " the last trace.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -4557,15 +3775,6 @@ void menu_strace_repcnt(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)widget;
 
     char gt[32];
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nSet Pattern Search Repeat Count");
-        help_text(" sets the number of times that both edge and pattern searches iterate forward "
-                  "or backward when marker forward/backward is selected."
-                  " Default value is one.  This can be used, for example, to skip forward 10 clock "
-                  "edges at a time rather than a single edge.");
-        return;
-    }
 
     sprintf(gt, "%d", GLOBALS->strace_repeat_count);
     entrybox("Repeat Count", 300, gt, NULL, 20, G_CALLBACK(strace_repcnt_cleanup));
@@ -4640,14 +3849,6 @@ void menu_movetotime(gpointer null_data, guint callback_action, GtkWidget *widge
 
     char gt[32];
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nMove To Time");
-        help_text(" scrolls the waveform display such that the left border"
-                  " is the time entered in the requester."
-                  " Use one of the letters A-Z to move to a named marker.");
-        return;
-    }
-
     reformat_time(gt, GLOBALS->tims.start + GLOBALS->global_time_offset, GLOBALS->time_dimension);
 
     entrybox("Move To Time", 200, gt, NULL, 20, G_CALLBACK(movetotime_cleanup));
@@ -4681,14 +3882,6 @@ void menu_fetchsize(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)widget;
 
     char fw[32];
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nFetch Size");
-        help_text(" brings up a requester which allows input of the"
-                  " number of ticks used for fetch/discard operations."
-                  "  Default is 100.");
-        return;
-    }
 
     reformat_time(fw, GLOBALS->fetchwindow, GLOBALS->time_dimension);
 
@@ -4734,13 +3927,6 @@ void menu_zoomsize(gpointer null_data, guint callback_action, GtkWidget *widget)
 
     char za[32];
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nZoom Amount");
-        help_text(" allows entry of zero or a negative value for the display"
-                  " zoom.  Zero is no magnification.");
-        return;
-    }
-
     sprintf(za, "%g", (float)(GLOBALS->tims.zoom));
 
     entrybox("New Zoom Amount", 200, za, NULL, 20, G_CALLBACK(zoomsize_cleanup));
@@ -4782,13 +3968,6 @@ void menu_zoombase(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)widget;
 
     char za[32];
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nZoom Base");
-        help_text(" allows entry of a zoom base for the zoom (magnification per integer step)"
-                  " Allowable values are 1.5 to 10.0.  Default is 2.0.");
-        return;
-    }
 
     sprintf(za, "%g", GLOBALS->zoombase);
 
@@ -4840,12 +4019,6 @@ void menu_colorformat_0(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Normal");
-        help_text(" uses normal waveform colorings for all selected traces.");
-        return;
-    }
-
     colorformat(WAVE_COLOR_NORMAL);
 }
 
@@ -4854,12 +4027,6 @@ void menu_colorformat_1(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Red");
-        help_text(" uses red waveform colorings for all selected traces.");
-        return;
-    }
 
     colorformat(WAVE_COLOR_RED);
 }
@@ -4870,12 +4037,6 @@ void menu_colorformat_2(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Orange");
-        help_text(" uses orange waveform colorings for all selected traces.");
-        return;
-    }
-
     colorformat(WAVE_COLOR_ORANGE);
 }
 
@@ -4884,12 +4045,6 @@ void menu_colorformat_3(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Yellow");
-        help_text(" uses yellow waveform colorings for all selected traces.");
-        return;
-    }
 
     colorformat(WAVE_COLOR_YELLOW);
 }
@@ -4900,12 +4055,6 @@ void menu_colorformat_4(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Green");
-        help_text(" uses green waveform colorings for all selected traces.");
-        return;
-    }
-
     colorformat(WAVE_COLOR_GREEN);
 }
 
@@ -4914,12 +4063,6 @@ void menu_colorformat_5(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Blue");
-        help_text(" uses blue waveform colorings for all selected traces.");
-        return;
-    }
 
     colorformat(WAVE_COLOR_BLUE);
 }
@@ -4930,12 +4073,6 @@ void menu_colorformat_6(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Indigo");
-        help_text(" uses indigo waveform colorings for all selected traces.");
-        return;
-    }
-
     colorformat(WAVE_COLOR_INDIGO);
 }
 
@@ -4945,12 +4082,6 @@ void menu_colorformat_7(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Violet");
-        help_text(" uses violet waveform colorings for all selected traces.");
-        return;
-    }
-
     colorformat(WAVE_COLOR_VIOLET);
 }
 
@@ -4959,12 +4090,6 @@ void menu_colorformat_cyc(gpointer null_data, guint callback_action, GtkWidget *
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nColor Format Cycle");
-        help_text(" uses cycling waveform colorings for all selected traces.");
-        return;
-    }
 
     colorformat(WAVE_COLOR_CYCLE);
 }
@@ -5134,32 +4259,6 @@ static void menu_open_hierarchy_2(gpointer null_data,
     int fix = 0;
     struct tree *t_forced = NULL;
 
-    if (GLOBALS->helpbox_is_active) {
-        if ((typ == FST_MT_SOURCESTEM) || (typ == FST_MT_SOURCEISTEM)) {
-            if (typ == FST_MT_SOURCESTEM) {
-                help_text_bold("\n\nOpen Source Definition");
-            } else {
-                help_text_bold("\n\nOpen Source Instantiation");
-            }
-            help_text(" opens and selects the appropriate level of hierarchy in the SST"
-                      " for the first selected signal and also invokes the editor specified by the"
-                      " \"editor\" gtkwaverc variable, that specified by the environment variable "
-                      "$GTKWAVE_EDITOR,"
-#ifndef MAC_INTEGRATION
-
-                      " or gedit (if found during ./configure)"
-#else
-                      " gedit (if found during ./configure), or lastly open -t"
-#endif
-                      " on the appropriate source unit.  This is currently only supported by FST.");
-        } else {
-            help_text_bold("\n\nOpen Scope");
-            help_text(" opens and selects the appropriate level of hierarchy in the SST"
-                      " for the first selected signal.");
-        }
-        return;
-    }
-
     if ((t = GLOBALS->traces.first)) {
         while (t) {
             if (IsSelected(t) && !IsShadowed(t)) {
@@ -5245,23 +4344,6 @@ static void menu_open_hierarchy_2a(gpointer null_data,
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        if ((typ == FST_MT_SOURCESTEM) || (typ == FST_MT_SOURCEISTEM)) {
-            if (typ == FST_MT_SOURCESTEM) {
-                help_text_bold("\n\nOpen Source Definition");
-            } else {
-                help_text_bold("\n\nOpen Source Instantiation");
-            }
-            help_text(
-                " invokes $GTKWAVE_EDITOR or gedit (if found) on the appropriate source unit.");
-        } else {
-            help_text_bold("\n\nOpen Scope");
-            help_text(" opens and selects the appropriate level of hierarchy in the SST"
-                      " for the first selected signal.");
-        }
-        return;
-    }
 
     if ((typ == FST_MT_SOURCESTEM) || (typ == FST_MT_SOURCEISTEM)) {
         struct tree *t_forced = GLOBALS->sst_sig_root_treesearch_gtk2_c_1;
@@ -5363,14 +4445,6 @@ void menu_dataformat_ascii(gpointer null_data, guint callback_action, GtkWidget 
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-ASCII");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed with ASCII"
-                  " values.");
-        return;
-    }
-
     dataformat(~(TR_NUMMASK | TR_ANALOGMASK), TR_ASCII);
 }
 
@@ -5379,15 +4453,6 @@ void menu_dataformat_real(gpointer null_data, guint callback_action, GtkWidget *
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-BitsToReal");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed with Real"
-                  " values.  Note that this only works for 64 or 32-bit quantities"
-                  " and that ones of other sizes (e.g., binary16) will display as binary.");
-        return;
-    }
 
     dataformat(~(TR_NUMMASK), TR_REAL);
 }
@@ -5398,17 +4463,6 @@ void menu_dataformat_real2bon(gpointer null_data, guint callback_action, GtkWidg
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-RealToBits On");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " Real vectors with this qualifier will be displayed as Hex"
-                  " values.  Note that this only works for Real quantities"
-                  " and other ones will remain to display as binary.  This is a pre-filter"
-                  " so it is possible to invert, reverse, apply Decimal, etc.  It will not be"
-                  " possible however to expand those values into their constituent bits.");
-        return;
-    }
-
     dataformat(~(TR_REAL2BITS | TR_NUMMASK | TR_ANALOGMASK), TR_REAL2BITS | TR_HEX);
 }
 
@@ -5417,13 +4471,6 @@ void menu_dataformat_real2boff(gpointer null_data, guint callback_action, GtkWid
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-RealToBits Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " the Real To Bits qualifier is removed from those traces.");
-        return;
-    }
 
     dataformat(~(TR_REAL2BITS | TR_ANALOGMASK), 0);
 }
@@ -5434,14 +4481,6 @@ void menu_dataformat_hex(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Hex");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed with hexadecimal"
-                  " values.");
-        return;
-    }
-
     dataformat(~(TR_NUMMASK), TR_HEX);
 }
 
@@ -5450,14 +4489,6 @@ void menu_dataformat_dec(gpointer null_data, guint callback_action, GtkWidget *w
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Decimal");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed with decimal"
-                  " values.");
-        return;
-    }
 
     dataformat(~(TR_NUMMASK), TR_DEC);
 }
@@ -5468,14 +4499,6 @@ void menu_dataformat_signed(gpointer null_data, guint callback_action, GtkWidget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Signed");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed as sign extended decimal"
-                  " values.");
-        return;
-    }
-
     dataformat(~(TR_NUMMASK), TR_SIGNED);
 }
 
@@ -5484,14 +4507,6 @@ void menu_dataformat_bin(gpointer null_data, guint callback_action, GtkWidget *w
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Binary");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed with binary"
-                  " values.");
-        return;
-    }
 
     dataformat(~(TR_NUMMASK), TR_BIN);
 }
@@ -5502,14 +4517,6 @@ void menu_dataformat_oct(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Octal");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed with octal"
-                  " values.");
-        return;
-    }
-
     dataformat(~(TR_NUMMASK), TR_OCT);
 }
 
@@ -5518,14 +4525,6 @@ void menu_dataformat_rjustify_on(gpointer null_data, guint callback_action, GtkW
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Right Justify-On");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed right"
-                  " justified.");
-        return;
-    }
 
     dataformat(~(TR_RJUSTIFY), TR_RJUSTIFY);
 }
@@ -5536,14 +4535,6 @@ void menu_dataformat_rjustify_off(gpointer null_data, guint callback_action, Gtk
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Right Justify-Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will not be displayed right"
-                  " justified.");
-        return;
-    }
-
     dataformat(~(TR_RJUSTIFY), 0);
 }
 
@@ -5552,15 +4543,6 @@ void menu_dataformat_bingray_on(gpointer null_data, guint callback_action, GtkWi
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Gray Filters-To Gray");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed after"
-                  " going through normal to gray conversion. This is a filter"
-                  " which sits before other Data Format options such as hex, etc.");
-        return;
-    }
 
     dataformat(~(TR_GRAYMASK | TR_ANALOGMASK), TR_BINGRAY);
 }
@@ -5571,15 +4553,6 @@ void menu_dataformat_graybin_on(gpointer null_data, guint callback_action, GtkWi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Gray Filters-From Gray");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed after"
-                  " going through gray to normal conversion. This is a filter"
-                  " which sits before other Data Format options such as hex, etc.");
-        return;
-    }
-
     dataformat(~(TR_GRAYMASK | TR_ANALOGMASK), TR_GRAYBIN);
 }
 
@@ -5588,14 +4561,6 @@ void menu_dataformat_nogray(gpointer null_data, guint callback_action, GtkWidget
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Gray Filters-None");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed with"
-                  " normal encoding.");
-        return;
-    }
 
     dataformat(~(TR_GRAYMASK | TR_ANALOGMASK), 0);
 }
@@ -5606,15 +4571,6 @@ void menu_dataformat_popcnt_on(gpointer null_data, guint callback_action, GtkWid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Popcnt-On");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed after"
-                  " going through a population (one's) count conversion.  This is a filter"
-                  " which sits before other Data Format options such as hex, etc.");
-        return;
-    }
-
     dataformat(~(TR_POPCNT), TR_POPCNT);
 }
 
@@ -5623,14 +4579,6 @@ void menu_dataformat_popcnt_off(gpointer null_data, guint callback_action, GtkWi
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Popcnt-Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed with"
-                  " normal encoding.");
-        return;
-    }
 
     dataformat(~(TR_POPCNT), 0);
 }
@@ -5641,15 +4589,6 @@ void menu_dataformat_ffo_on(gpointer null_data, guint callback_action, GtkWidget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Find First Rightmost One Index-On");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed after"
-                  " going through a right->left FFO conversion.  This is a filter"
-                  " which sits before other Data Format options such as hex, etc.");
-        return;
-    }
-
     dataformat(~(TR_FFO), TR_FFO);
 }
 
@@ -5658,14 +4597,6 @@ void menu_dataformat_ffo_off(gpointer null_data, guint callback_action, GtkWidge
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Find First Rightmost One Index-Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed with"
-                  " normal encoding.");
-        return;
-    }
 
     dataformat(~(TR_FFO), 0);
 }
@@ -5676,13 +4607,6 @@ void menu_dataformat_time(gpointer null_data, guint callback_action, GtkWidget *
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Time");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will display as time values.");
-        return;
-    }
-
     dataformat(~(TR_NUMMASK), (TR_TIME | TR_DEC));
 }
 
@@ -5691,14 +4615,6 @@ void menu_dataformat_enum(gpointer null_data, guint callback_action, GtkWidget *
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Enum");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will display as enum values, provided "
-                  "such values were dumped into file.");
-        return;
-    }
 
     dataformat(~(TR_NUMMASK), (TR_ENUM | TR_BIN));
 }
@@ -5709,14 +4625,6 @@ void menu_dataformat_fpshift_on(gpointer null_data, guint callback_action, GtkWi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Fixed Point Shift-On");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be right shifted"
-                  " prior to being displayed as Signed Decimal or Decimal values.");
-        return;
-    }
-
     dataformat(~(TR_FPDECSHIFT), TR_FPDECSHIFT);
 }
 
@@ -5725,14 +4633,6 @@ void menu_dataformat_fpshift_off(gpointer null_data, guint callback_action, GtkW
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Fixed Point Shift-Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will not be right shifted"
-                  " prior to being displayed as Signed Decimal or Decimal values.");
-        return;
-    }
 
     dataformat(~(TR_FPDECSHIFT), 0);
 }
@@ -5784,15 +4684,6 @@ void menu_dataformat_fpshift_specify(gpointer null_data, guint callback_action, 
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Fixed Point Shift-Specify");
-        help_text(" will open up a requester to specify a shift count then"
-                  " will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be right shifted"
-                  " prior to being displayed as Signed Decimal or Decimal values.");
-        return;
-    }
-
     entrybox("Fixed Point Shift Specify",
              300,
              "",
@@ -5809,14 +4700,6 @@ void menu_dataformat_invert_on(gpointer null_data, guint callback_action, GtkWid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Invert-On");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will be displayed with"
-                  " 1's and 0's inverted.");
-        return;
-    }
-
     dataformat(~(TR_INVERT), TR_INVERT);
 }
 
@@ -5825,14 +4708,6 @@ void menu_dataformat_invert_off(gpointer null_data, guint callback_action, GtkWi
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Invert-Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " bits and vectors with this qualifier will not be displayed with"
-                  " 1's and 0's inverted.");
-        return;
-    }
 
     dataformat(~(TR_INVERT), 0);
 }
@@ -5843,14 +4718,6 @@ void menu_dataformat_reverse_on(gpointer null_data, guint callback_action, GtkWi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Reverse Bits-On");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed in"
-                  " reversed bit order.");
-        return;
-    }
-
     dataformat(~(TR_REVERSE), TR_REVERSE);
 }
 
@@ -5859,14 +4726,6 @@ void menu_dataformat_reverse_off(gpointer null_data, guint callback_action, GtkW
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Reverse Bits-Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will not be displayed in"
-                  " reversed bit order.");
-        return;
-    }
 
     dataformat(~(TR_REVERSE), 0);
 }
@@ -5877,13 +4736,6 @@ void menu_dataformat_exclude_on(gpointer null_data, guint callback_action, GtkWi
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nExclude");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be blanked out.");
-        return;
-    }
-
     dataformat(~(TR_EXCLUDE), TR_EXCLUDE);
 }
 
@@ -5892,14 +4744,6 @@ void menu_dataformat_exclude_off(gpointer null_data, guint callback_action, GtkW
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be displayed as normal if the exclude attribute is currently"
-                  " set on the highlighted traces.");
-        return;
-    }
 
     dataformat(~(TR_EXCLUDE), 0);
 }
@@ -5910,15 +4754,6 @@ void menu_dataformat_rangefill_zero(gpointer null_data, guint callback_action, G
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Range Fill With 0s");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed as if"
-                  " the bitrange of the MSB or LSB as appropriate goes to zero."
-                  " Zero bits will be filled in for the missing bits.");
-        return;
-    }
-
     dataformat(~(TR_ZEROFILL | TR_ONEFILL | TR_ANALOGMASK), TR_ZEROFILL);
 }
 
@@ -5927,17 +4762,6 @@ void menu_dataformat_rangefill_one(gpointer null_data, guint callback_action, Gt
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Range Fill With 1s");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " vectors with this qualifier will be displayed as if"
-                  " the bitrange of the MSB or LSB as appropriate goes to zero."
-                  " One bits will be filled in for the missing bits; this is mostly intended"
-                  " to be used when viewing values which are inverted in the logic and need"
-                  " to be inverted in the viewer.");
-        return;
-    }
 
     dataformat(~(TR_ZEROFILL | TR_ONEFILL | TR_ANALOGMASK), TR_ONEFILL);
 }
@@ -5948,13 +4772,6 @@ void menu_dataformat_rangefill_off(gpointer null_data, guint callback_action, Gt
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nData Format-Zero Range Fill Off");
-        help_text(" will step through all highlighted traces and ensure that"
-                  " normal bitrange displays are used.");
-        return;
-    }
-
     dataformat(~(TR_ZEROFILL | TR_ONEFILL | TR_ANALOGMASK), 0);
 }
 /**/
@@ -5963,13 +4780,6 @@ void menu_dataformat_analog_off(gpointer null_data, guint callback_action, GtkWi
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAnalog Off");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be displayed as normal.");
-        return;
-    }
 
     dataformat(~(TR_ANALOGMASK), 0);
 }
@@ -5980,13 +4790,6 @@ void menu_dataformat_analog_step(gpointer null_data, guint callback_action, GtkW
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAnalog Step");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be displayed as stepwise analog waveform.");
-        return;
-    }
-
     dataformat(~(TR_ANALOGMASK), TR_ANALOG_STEP);
 }
 
@@ -5995,13 +4798,6 @@ void menu_dataformat_analog_interpol(gpointer null_data, guint callback_action, 
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAnalog Interpolate");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be displayed as interpolated analog waveform.");
-        return;
-    }
 
     dataformat(~(TR_ANALOGMASK), TR_ANALOG_INTERPOLATED);
 }
@@ -6014,14 +4810,6 @@ void menu_dataformat_analog_interpol_step(gpointer null_data,
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAnalog Interpolate Annotated");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be displayed as an interpolated analog waveform annotated"
-                  " with the non-interpolated data sampling points that the cursor snaps to.");
-        return;
-    }
-
     dataformat(~(TR_ANALOGMASK), (TR_ANALOG_INTERPOLATED | TR_ANALOG_STEP));
 }
 
@@ -6033,14 +4821,6 @@ void menu_dataformat_analog_resize_screen(gpointer null_data,
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAnalog Resizing Screen Data");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be displayed such that the y-value scaling maximizes the on-screen trace"
-                  " data so if fills the whole trace width at all times.");
-        return;
-    }
-
     dataformat(~(TR_ANALOG_FULLSCALE), 0);
 }
 
@@ -6049,15 +4829,6 @@ void menu_dataformat_analog_resize_all(gpointer null_data, guint callback_action
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAnalog Resizing All Data");
-        help_text(" causes the waveform data for all currently highlighted traces"
-                  " to be displayed such that the y-value scaling maximizes the on-screen trace"
-                  " data so if fills the whole trace width only when fully zoomed out."
-                  " (i.e., the scale used goes across all trace data)");
-        return;
-    }
 
     dataformat(~(TR_ANALOG_FULLSCALE), (TR_ANALOG_FULLSCALE));
 }
@@ -6069,12 +4840,6 @@ void menu_dataformat_highlight_all(gpointer null_data, guint callback_action, Gt
     (void)widget;
 
     Trptr t;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nHighlight All");
-        help_text(" simply highlights all displayed traces.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -6098,12 +4863,6 @@ void menu_dataformat_unhighlight_all(gpointer null_data, guint callback_action, 
 
     Trptr t;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nUnHighlight All");
-        help_text(" simply unhighlights all displayed traces.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -6124,13 +4883,6 @@ void menu_lexize(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nSigsort All");
-        help_text(" sorts all displayed traces with the numeric parts being taken into account.  "
-                  "Blank traces are sorted to the bottom.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -6148,12 +4900,6 @@ void menu_alphabetize(gpointer null_data, guint callback_action, GtkWidget *widg
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAlphabetize All");
-        help_text(" alphabetizes all displayed traces.  Blank traces are sorted to the bottom.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -6173,13 +4919,6 @@ void menu_alphabetize2(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nAlphabetize All (CaseIns)");
-        help_text(" alphabetizes all displayed traces without regard to case.  Blank traces are "
-                  "sorted to the bottom.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -6197,12 +4936,6 @@ void menu_reverse(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)null_data;
     (void)callback_action;
     (void)widget;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nReverse All");
-        help_text(" reverses all displayed traces unconditionally.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -6223,14 +4956,6 @@ void menu_cut_traces(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)widget;
 
     Trptr cutbuffer = NULL;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCut");
-        help_text(" removes highlighted signals from the display and places them"
-                  " in an offscreen cut/copy buffer for later Paste operations. "
-                  " Cut implicitly destroys the previous contents of the cut/copy buffer.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -6262,13 +4987,6 @@ void menu_delete_traces(gpointer null_data, guint callback_action, GtkWidget *wi
 
     int num_cut;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nDelete");
-        help_text(" removes highlighted signals from the display and discards them"
-                  " without affecting the previous contents of the cut/copy buffer.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -6292,14 +5010,6 @@ void menu_copy_traces(gpointer null_data, guint callback_action, GtkWidget *widg
 
     Trptr t = GLOBALS->traces.first;
     gboolean highlighted = FALSE;
-
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCopy");
-        help_text(" copies highlighted signals from the display and places them"
-                  " in an offscreen cut/copy buffer for later Paste operations. "
-                  " Copy implicitly destroys the previous contents of the cut/copy buffer.");
-        return;
-    }
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -6336,15 +5046,6 @@ void menu_paste_traces(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nPaste");
-        help_text(" pastes signals from"
-                  " an offscreen cut/copy buffer and places them in a group after"
-                  " the last highlighted signal, or at the end of the display"
-                  " if no signal is highlighted.");
-        return;
-    }
-
     if (GLOBALS->dnd_state) {
         dnd_error();
         return;
@@ -6372,29 +5073,18 @@ void menu_center_zooms(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nCenter Zooms");
-        help_text(" when enabled"
-                  " configures zoom in/out operations such that all zooms use the center of the"
-                  " display as the fixed zoom origin if the primary (unnamed) marker is"
-                  " not present, otherwise, the primary marker is used as the center origin."
-                  " When disabled, it"
-                  " configures zoom in/out operations such that all zooms use the"
-                  " left margin of the display as the fixed zoom origin.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCZ]),
-                GLOBALS->do_zoom_center =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->do_zoom_center));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCZ]),
             GLOBALS->do_zoom_center =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCZ]));
-            DEBUG(printf("Center Zooms\n"));
-        }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->do_zoom_center));
+    } else {
+        GLOBALS->do_zoom_center =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VCZ]));
+        DEBUG(printf("Center Zooms\n"));
     }
 }
 
@@ -6404,29 +5094,19 @@ void menu_show_base(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow Base Symbols");
-        help_text(" enables the display of leading base symbols ('$' for hex,"
-                  " '%' for binary, '#' for octal if they are turned off and"
-                  " disables the drawing of leading base symbols if"
-                  " they are turned on."
-                  " Base symbols are displayed by default.");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]),
+            GLOBALS->show_base = GLOBALS->wave_script_args
+                                     ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                                     : (!GLOBALS->show_base));
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]),
-                GLOBALS->show_base =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->show_base));
-        } else {
-            GLOBALS->show_base =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]));
-            GLOBALS->signalwindow_width_dirty = 1;
-            redraw_signals_and_waves();
-            DEBUG(printf("Show Base Symbols\n"));
-        }
+        GLOBALS->show_base =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSBS]));
+        GLOBALS->signalwindow_width_dirty = 1;
+        redraw_signals_and_waves();
+        DEBUG(printf("Show Base Symbols\n"));
     }
 }
 
@@ -6437,33 +5117,27 @@ void menu_fullscreen(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nFullscreen");
-        help_text(" toggles the fullscreen status of the main window.");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]),
+            GLOBALS->fullscreen = GLOBALS->wave_script_args
+                                      ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                                      : (!GLOBALS->fullscreen));
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]),
-                GLOBALS->fullscreen =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->fullscreen));
+        GLOBALS->fullscreen =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]));
+        if (GLOBALS->fullscreen) {
+            gtk_window_fullscreen(GTK_WINDOW(GLOBALS->mainwindow));
         } else {
-            GLOBALS->fullscreen =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FULLSCR]));
-            if (GLOBALS->fullscreen) {
-                gtk_window_fullscreen(GTK_WINDOW(GLOBALS->mainwindow));
-            } else {
-                gtk_window_unfullscreen(GTK_WINDOW(GLOBALS->mainwindow));
-            }
-
-            if (GLOBALS->wave_hslider) {
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
-            }
-            DEBUG(printf("Fullscreen\n"));
+            gtk_window_unfullscreen(GTK_WINDOW(GLOBALS->mainwindow));
         }
+
+        if (GLOBALS->wave_hslider) {
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
+        }
+        DEBUG(printf("Fullscreen\n"));
     }
 }
 
@@ -6483,27 +5157,22 @@ void menu_show_grid(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow Grid");
-        help_text(" toggles the drawing of gridlines in the waveform display.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]),
-                GLOBALS->display_grid =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->display_grid));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]),
             GLOBALS->display_grid =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]));
-            if (GLOBALS->wave_hslider) {
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
-            }
-            DEBUG(printf("Show Grid\n"));
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->display_grid));
+    } else {
+        GLOBALS->display_grid =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSG]));
+        if (GLOBALS->wave_hslider) {
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
         }
+        DEBUG(printf("Show Grid\n"));
     }
 }
 
@@ -6514,28 +5183,22 @@ void menu_show_wave_highlight(gpointer null_data, guint callback_action, GtkWidg
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow Wave Highlight");
-        help_text(" toggles the drawing of highlighted waveforms (instead of gridlines) in the "
-                  "waveform display.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]),
-                GLOBALS->highlight_wavewindow =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->highlight_wavewindow));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]),
             GLOBALS->highlight_wavewindow =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]));
-            if (GLOBALS->wave_hslider) {
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
-            }
-            DEBUG(printf("Show Wave Highlight\n"));
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->highlight_wavewindow));
+    } else {
+        GLOBALS->highlight_wavewindow =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_SHW]));
+        if (GLOBALS->wave_hslider) {
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
         }
+        DEBUG(printf("Show Wave Highlight\n"));
     }
 }
 
@@ -6546,27 +5209,22 @@ void menu_show_filled_high_values(gpointer null_data, guint callback_action, Gtk
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow Filled High Values");
-        help_text(" toggles the drawing of filled in 1/H values in the waveform display.");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]),
-                GLOBALS->fill_waveform =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->fill_waveform));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]),
             GLOBALS->fill_waveform =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]));
-            if (GLOBALS->wave_hslider) {
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
-                g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
-            }
-            DEBUG(printf("Show Filled High Values\n"));
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->fill_waveform));
+    } else {
+        GLOBALS->fill_waveform =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_FILL1]));
+        if (GLOBALS->wave_hslider) {
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
+            g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "value_changed");
         }
+        DEBUG(printf("Show Filled High Values\n"));
     }
 }
 
@@ -6577,28 +5235,21 @@ void menu_lz_removal(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nLeading Zero Removal");
-        help_text(" toggles the display of leading zeros on non-filtered traces.  This has no "
-                  "effect on filtered traces.");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]),
+            GLOBALS->lz_removal = GLOBALS->wave_script_args
+                                      ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                                      : (!GLOBALS->lz_removal));
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]),
-                GLOBALS->lz_removal =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->lz_removal));
-        } else {
-            GLOBALS->lz_removal =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]));
-            if (GLOBALS->signalarea && GLOBALS->wavearea) {
-                GLOBALS->signalwindow_width_dirty = 1;
-                redraw_signals_and_waves();
-            }
-            DEBUG(printf("Leading Zero Removal\n"));
+        GLOBALS->lz_removal =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LZ_REMOVAL]));
+        if (GLOBALS->signalarea && GLOBALS->wavearea) {
+            GLOBALS->signalwindow_width_dirty = 1;
+            redraw_signals_and_waves();
         }
+        DEBUG(printf("Leading Zero Removal\n"));
     }
 }
 
@@ -6609,53 +5260,18 @@ void menu_show_mouseover(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nShow Mouseover");
-        help_text(" toggles the dynamic tooltip for signal names and values which follow the "
-                  "marker on mouse button presses in the waveform display."
-                  " This is useful for examining the values of closely packed value changes "
-                  "without having to zoom outward and without having to"
-                  " refer to the signal name pane to the left.  Note that an encoded string will "
-                  "be displayed next to the signal name that"
-                  " indicates what data format flags are currently active for that signal.  Flags "
-                  "are as follows:\n"
-                  " + = Signed Decimal\n"
-                  " X = Hexadecimal\n"
-                  " A = ASCII\n"
-                  " D = Decimal\n"
-                  " B = Binary\n"
-                  " O = Octal\n"
-                  " J = Right Justify\n"
-                  " ~ = Invert\n"
-                  " V = Reverse\n"
-                  " * = Analog Step+Interpolated\n"
-                  " S = Analog Step\n"
-                  " I = Analog Interpolated\n"
-                  " R = Real\n"
-                  " r = Real to Bits\n"
-                  " 0 = Range Fill with 0s\n"
-                  " 1 = Range Fill with 1s\n"
-                  " G = Binary to Gray\n"
-                  " g = Gray to Binary\n"
-                  " F = File Filter\n"
-                  " P = Process Filter\n"
-                  " T = Transaction Filter\n"
-                  " p = Population Count\n"
-                  " s = Fixed Point Shift (count)\n");
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]),
+            !(GLOBALS->disable_mouseover =
+                  GLOBALS->wave_script_args
+                      ? (atoi_64(GLOBALS->wave_script_args->payload) ? FALSE : TRUE)
+                      : (!GLOBALS->disable_mouseover)));
     } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]),
-                !(GLOBALS->disable_mouseover =
-                      GLOBALS->wave_script_args
-                          ? (atoi_64(GLOBALS->wave_script_args->payload) ? FALSE : TRUE)
-                          : (!GLOBALS->disable_mouseover)));
-        } else {
-            GLOBALS->disable_mouseover =
-                !gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]));
-            DEBUG(printf("Show Mouseover\n"));
-        }
+        GLOBALS->disable_mouseover =
+            !gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMO]));
+        DEBUG(printf("Show Mouseover\n"));
     }
 }
 
@@ -6666,24 +5282,18 @@ void menu_clipboard_mouseover(gpointer null_data, guint callback_action, GtkWidg
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->helpbox_is_active) {
-        help_text_bold("\n\nMouseover Copies To Clipboard");
-        help_text(" toggles automatic copying to the clipboard of mouseover values.  Requires that "
-                  "Show Mouseover is enabled.\n");
-    } else {
-        if (GLOBALS->tcl_menu_toggle_item) {
-            GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMC]),
-                GLOBALS->clipboard_mouseover =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->clipboard_mouseover));
-        } else {
+    if (GLOBALS->tcl_menu_toggle_item) {
+        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
+        gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMC]),
             GLOBALS->clipboard_mouseover =
-                gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMC]));
-            DEBUG(printf("Mouseover Copies To Clipboard\n"));
-        }
+                GLOBALS->wave_script_args
+                    ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
+                    : (!GLOBALS->clipboard_mouseover));
+    } else {
+        GLOBALS->clipboard_mouseover =
+            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VSMC]));
+        DEBUG(printf("Mouseover Copies To Clipboard\n"));
     }
 }
 /**/
@@ -7356,7 +5966,6 @@ static gtkwave_mlist_t menu_items[] = {
                 "<ToggleItem>"),
 
     /* 130 */
-    WAVE_GTKIFE("/Help/WAVE Help", "<Control>H", menu_help, WV_MENU_HWH, "<Item>"),
 #ifdef MAC_INTEGRATION
     WAVE_GTKIFE("/Help/WAVE User Manual", NULL, menu_help_manual, WV_MENU_HWM, "<Item>"),
 #endif
@@ -7507,7 +6116,6 @@ void menu_set_sensitive(void)
             case WV_MENU_TCLSCR:
 #endif
             case WV_MENU_FQY:
-            case WV_MENU_HWH:
 #ifdef MAC_INTEGRATION
             case WV_MENU_HWM:
 #endif
@@ -8036,7 +6644,7 @@ struct menu_item_t
     unsigned valid : 1;
 };
 
-static void decompose_path(char *pathname, int *items, char ***parts)
+static void decompose_path(const char *pathname, int *items, char ***parts)
 {
     char *s, **slashes;
     int i;
@@ -8282,7 +6890,6 @@ GtkWidget *alt_menu_top(GtkWidget *window)
                 case WV_MENU_TCLSCR:
 #endif
                 case WV_MENU_FQY:
-                case WV_MENU_HWH:
 #ifdef MAC_INTEGRATION
                 case WV_MENU_HWM:
 #endif
@@ -8398,7 +7005,6 @@ void wave_gtk_grab_remove(GtkWidget *w)
                 case WV_MENU_TCLSCR:
 #endif
                 case WV_MENU_FQY:
-                case WV_MENU_HWH:
 #ifdef MAC_INTEGRATION
                 case WV_MENU_HWM:
 #endif

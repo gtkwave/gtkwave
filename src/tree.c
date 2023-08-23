@@ -353,11 +353,11 @@ tnext = t->next;
 while(tnext)
 	{
 	if(tnext->child) treenamefix(tnext->child);
-	if(tnext->name) treenamefix_str(tnext->name);
+	treenamefix_str(tnext->name);
 	tnext=tnext->next;
 	}
 
-if(t->name) treenamefix_str(t->name);
+treenamefix_str(t->name);
 }
 
 

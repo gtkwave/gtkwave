@@ -26,10 +26,12 @@
       TCL_RELEASE_SERIAL >= (micro)))
 
 
+typedef int (*tcl_cmd)(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]);
+
 typedef struct
         {
         const char *cmdstr;
-        int (*func)();
+        tcl_cmd func;
         } tcl_cmdstruct;
 
 extern tcl_cmdstruct gtkwave_commands[];

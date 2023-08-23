@@ -33,7 +33,7 @@ TimeType bstart, bend;
 /* currenttime.c protos */
 
 void fractional_timescale_fix(char *);
-void update_time_box();
+void update_time_box(void);
 void update_currenttime(TimeType val);
 void reformat_time(char *buf, TimeType val, char dim);
 void reformat_time_simple(char *buf, TimeType val, char dim);
@@ -50,7 +50,6 @@ void exponent_to_time_scale(signed char scale);
 #include "fetchbuttons.h"
 #include "file.h"
 #include "fonts.h"
-#include "help.h"
 #include "logfile.h"
 #include "markerbox.h"
 #include "menu.h"

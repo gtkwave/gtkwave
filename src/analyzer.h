@@ -92,9 +92,7 @@ enum AnalyzerBits  { AN_0, AN_X, AN_Z, AN_1, AN_H, AN_U, AN_W, AN_L, AN_DASH, AN
 
 /* ^^^   Bit representation   ^^^ */
 
-#if (SIZEOF_VOID_P == SIZEOF_DOUBLE)
 #define WAVE_HAS_H_DOUBLE
-#endif
 
 
 #ifdef WAVE_USE_STRUCT_PACKING

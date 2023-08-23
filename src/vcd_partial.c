@@ -2638,7 +2638,7 @@ if(GLOBALS->partial_vcd)
 
 		vcd_partial_mark_and_sweep(1);
 
-		if ((GLOBALS->zoom_dyn) && (!GLOBALS->helpbox_is_active))
+		if ((GLOBALS->zoom_dyn))
 			{
 			GLOBALS->tims.marker = GLOBALS->tims.last;
 			service_zoom_full(NULL, NULL);
@@ -2647,7 +2647,7 @@ if(GLOBALS->partial_vcd)
 			MaxSignalLength();
 		        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 			}
-		else if ((GLOBALS->zoom_dyne) && (!GLOBALS->helpbox_is_active))
+		else if ((GLOBALS->zoom_dyne))
 			{
 			GLOBALS->tims.marker = GLOBALS->tims.last;
 			service_zoom_right(NULL, NULL);
@@ -2656,7 +2656,7 @@ if(GLOBALS->partial_vcd)
 			MaxSignalLength();
 		        gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
 			}
-		else if ((old_maxtime_marker_conflict) && (!GLOBALS->helpbox_is_active))
+		else if ((old_maxtime_marker_conflict))
 			{
 			GLOBALS->signalwindow_width_dirty=1;
 			redraw_signals_and_waves();
