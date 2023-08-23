@@ -23,17 +23,17 @@
 /* need to do this at top of every entry point function where a signal is connected */
 #define GET_WV_STRACE_CURWIN(x) GLOBALS->strace_ctx = g_object_get_data(G_OBJECT(x), WV_STRACE_CTX)
 
-static char *logical[] = {"AND", "OR", "XOR", "NAND", "NOR", "XNOR"};
+static const char *logical[] = {"AND", "OR", "XOR", "NAND", "NOR", "XNOR"};
 
-static char *stype[WAVE_STYPE_COUNT] = {"Don't Care",
-                                        "High",
-                                        "Z (Mid)",
-                                        "X",
-                                        "Low",
-                                        "String",
-                                        "Rising Edge",
-                                        "Falling Edge",
-                                        "Any Edge"};
+static const char *stype[WAVE_STYPE_COUNT] = {"Don't Care",
+                                              "High",
+                                              "Z (Mid)",
+                                              "X",
+                                              "Low",
+                                              "String",
+                                              "Rising Edge",
+                                              "Falling Edge",
+                                              "Any Edge"};
 
 /*
  * naive nonoptimized case insensitive strstr
@@ -537,17 +537,11 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     gtk_widget_show(button1);
     gtk_box_pack_start(GTK_BOX(hbox), button1, TRUE, TRUE, 0);
     gtk_widget_set_can_default(button1, TRUE);
-    gtkwave_signal_connect_object(button1,
-                                  "realize",
-                                  (GCallback)gtk_widget_grab_default,
-                                  button1);
+    gtkwave_signal_connect_object(button1, "realize", (GCallback)gtk_widget_grab_default, button1);
 
     button1a = gtk_button_new_with_label("Bkwd");
     gtk_widget_set_size_request(button1a, 75, -1);
-    gtkwave_signal_connect(button1a,
-                           "clicked",
-                           G_CALLBACK(backwards_callback),
-                           NULL);
+    gtkwave_signal_connect(button1a, "clicked", G_CALLBACK(backwards_callback), NULL);
     WV_STRACE_CURWIN(button1a);
     gtk_widget_show(button1a);
     gtk_box_pack_start(GTK_BOX(hbox), button1a, TRUE, TRUE, 0);
@@ -1489,6 +1483,8 @@ void delete_strace_context(void)
 /*
  * printf to memory..
  */
+
+int mprintf(const char *fmt, ...) G_GNUC_PRINTF(1, 2);
 
 int mprintf(const char *fmt, ...)
 {

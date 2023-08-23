@@ -9,8 +9,7 @@
 /* #undef WAVE_ALLOW_QUARTZ_FLUSH_WORKAROUND */
 #endif
 
-#if !defined(__MINGW32__) && !defined(MAC_INTEGRATION) \
-  && defined(GDK_WINDOWING_WAYLAND)
+#if !defined(__MINGW32__) && !defined(MAC_INTEGRATION) && defined(GDK_WINDOWING_WAYLAND)
 #include <gdk/gdkwayland.h>
 #endif
 
@@ -44,12 +43,23 @@
 #define WAVE_GTK3_GESTURE_ZOOM_USES_GTK_PHASE_CAPTURE
 #define WAVE_GTK3_GESTURE_ZOOM_IS_1D
 
-#define WAVE_GTKIFE(a,b,c,d,e) {a,b,c,d,e,NULL}
+#define WAVE_GTKIFE(a, b, c, d, e) \
+    { \
+        a, b, c, d, e, NULL \
+    }
 
-#define WAVE_GDK_GET_POINTER(a,b,c,bi,ci,d)  gdk_window_get_device_position(a, gdk_seat_get_pointer(gdk_display_get_default_seat(gdk_display_get_default())), bi, ci, d)
+#define WAVE_GDK_GET_POINTER(a, b, c, bi, ci, d) \
+    gdk_window_get_device_position( \
+        a, \
+        gdk_seat_get_pointer(gdk_display_get_default_seat(gdk_display_get_default())), \
+        bi, \
+        ci, \
+        d)
 
-#define WAVE_GDK_GET_POINTER_COPY x=xi; y=yi;
-#define WAVE_GDK_GET_POINTER_COPY_XONLY x=xi;
+#define WAVE_GDK_GET_POINTER_COPY \
+    x = xi; \
+    y = yi;
+#define WAVE_GDK_GET_POINTER_COPY_XONLY x = xi;
 
 #define WAVE_GTK_SFUNCAST(x) ((void (*)(GtkWidget *, gpointer))(x))
 
@@ -60,14 +70,13 @@
 #define XXX_GTK_STOCK_SAVE "_Save"
 
 #ifdef WAVE_ALLOW_GTK3_SEAT_VS_POINTER_GRAB_UNGRAB
-void XXX_gdk_pointer_ungrab (guint32 time_);
+void XXX_gdk_pointer_ungrab(guint32 time_);
 #else
 #define XXX_gdk_pointer_ungrab gdk_pointer_ungrab
 #endif
 
-
 #ifdef WAVE_ALLOW_GTK3_CAIRO_CREATE_FIX
-cairo_t *XXX_gdk_cairo_create (GdkWindow *window, GdkDrawingContext **gdc);
+cairo_t *XXX_gdk_cairo_create(GdkWindow *window, GdkDrawingContext **gdc);
 #else
 #define XXX_gdk_cairo_create(a, b) gdk_cairo_create(a)
 #endif

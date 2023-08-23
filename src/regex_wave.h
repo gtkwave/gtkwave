@@ -14,8 +14,8 @@
 
 enum WaveRegexTypes { WAVE_REGEX_SEARCH, WAVE_REGEX_TREE, WAVE_REGEX_WILD, WAVE_REGEX_DND, WAVE_REGEX_TOTAL };
 
-int wave_regex_compile(char *regex, int which);
-int wave_regex_match(char *str, int which);
+int wave_regex_compile(const char *regex, int which);
+int wave_regex_match(const char *str, int which);
 
 void *wave_regex_alloc_compile(char *regex);
 int wave_regex_alloc_match(void *mreg, char *str);

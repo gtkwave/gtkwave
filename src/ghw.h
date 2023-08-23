@@ -22,4 +22,3 @@ TimeType ghw_main(char *fname);
 int strand_pnt(char *s);
 
 #endif
-

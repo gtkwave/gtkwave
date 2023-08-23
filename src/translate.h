@@ -38,7 +38,7 @@ xl_Tree * xl_insert(char *i, xl_Tree * t, char *trans);
 xl_Tree * xl_delete(char *i, xl_Tree * t);
 
 
-void trans_searchbox(char *title);
+void trans_searchbox(const char *title);
 void init_filetrans_data(void);
 int install_file_filter(int which);
 

@@ -10,7 +10,7 @@
 #ifndef WAVE_SEARCHBOX_H
 #define WAVE_SEARCHBOX_H
 
-void searchbox(char *title, GCallback func);
+void searchbox(const char *title, GCallback func);
 void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning);
 void search_insert_callback(GtkWidget *widget, char is_prepend);
 int searchbox_is_active(void);

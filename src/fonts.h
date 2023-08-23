@@ -16,33 +16,27 @@
 
 struct font_engine_font_t
 {
-PangoFontDescription *desc;
-PangoFont *font;
-PangoFontMetrics *metrics;
+    PangoFontDescription *desc;
+    PangoFont *font;
+    PangoFontMetrics *metrics;
 
-int ascent, descent;
-int mono_width;
+    int ascent, descent;
+    int mono_width;
 
-/* GdkFont *gdkfont; */
+    /* GdkFont *gdkfont; */
 
-unsigned is_mono : 1;
+    unsigned is_mono : 1;
 };
 
 void load_all_fonts(void);
 
-gint font_engine_string_measure
-			(struct font_engine_font_t      *font,
-                         const gchar    		*string);
+gint font_engine_string_measure(struct font_engine_font_t *font, const gchar *string);
 
-
-void XXX_font_engine_draw_string
-                        (cairo_t                        *cr,
-                         struct font_engine_font_t	*font,
-                         wave_rgb_t                     *gc,
-                         gint                           x,
-                         gint                           y,
-                         const gchar                    *string);
-
+void XXX_font_engine_draw_string(cairo_t *cr,
+                                 struct font_engine_font_t *font,
+                                 wave_rgb_t *gc,
+                                 gint x,
+                                 gint y,
+                                 const gchar *string);
 
 #endif
-

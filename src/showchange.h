@@ -10,7 +10,6 @@
 #ifndef WAVE_SHOWCHANGE_H
 #define WAVE_SHOWCHANGE_H
 
-void showchange(char *title, Trptr t, GCallback func);
+void showchange(const char *title, Trptr t, GCallback func);
 
 #endif
-

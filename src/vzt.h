@@ -18,11 +18,9 @@
 
 #include "vcd.h"
 
-
-TimeType 	vzt_main(char *fname, char *skip_start, char *skip_end);
-void 		import_vzt_trace(nptr np);
-void 		vzt_set_fac_process_mask(nptr np);
-void 		vzt_import_masked(void);
+TimeType vzt_main(char *fname, char *skip_start, char *skip_end);
+void import_vzt_trace(nptr np);
+void vzt_set_fac_process_mask(nptr np);
+void vzt_import_masked(void);
 
 #endif
-

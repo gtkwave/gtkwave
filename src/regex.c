@@ -28,42 +28,36 @@
 #include "regex_wave.h"
 #include "debug.h"
 
-
 /*
  * compile a regular expression into a regex_t and
  * dealloc any previously valid ones
  */
-int wave_regex_compile(char *regex, int which)
+int wave_regex_compile(const char *regex, int which)
 {
-int comp_rc;
+    int comp_rc;
 
-
-if(GLOBALS->regex_ok_regex_c_1[which]) { regfree(&GLOBALS->preg_regex_c_1[which]); } /* free previous regex_t ancillary data if valid */
-comp_rc=regcomp(&GLOBALS->preg_regex_c_1[which], regex, REG_ICASE|REG_NOSUB);
-return(GLOBALS->regex_ok_regex_c_1[which]=(comp_rc)?0:1);
+    if (GLOBALS->regex_ok_regex_c_1[which]) {
+        regfree(&GLOBALS->preg_regex_c_1[which]);
+    } /* free previous regex_t ancillary data if valid */
+    comp_rc = regcomp(&GLOBALS->preg_regex_c_1[which], regex, REG_ICASE | REG_NOSUB);
+    return (GLOBALS->regex_ok_regex_c_1[which] = (comp_rc) ? 0 : 1);
 }
-
 
 /*
  * do match
  */
-int wave_regex_match(char *str, int which)
+int wave_regex_match(const char *str, int which)
 {
-int rc;
+    int rc;
 
+    if (GLOBALS->regex_ok_regex_c_1[which]) {
+        rc = regexec(&GLOBALS->preg_regex_c_1[which], str, 0, NULL, 0);
+    } else {
+        rc = 1; /* fail on malformed regex */
+    }
 
-if(GLOBALS->regex_ok_regex_c_1[which])
-	{
-	rc = regexec(&GLOBALS->preg_regex_c_1[which], str, 0, NULL, 0);
-	}
-	else
-	{
-	rc = 1; /* fail on malformed regex */
-	}
-
-return((rc)?0:1);
+    return ((rc) ? 0 : 1);
 }
-
 
 /*
  * compile a regular expression and return the pointer to
@@ -71,41 +65,36 @@ return((rc)?0:1);
  */
 void *wave_regex_alloc_compile(char *regex)
 {
-regex_t *mreg = (regex_t *)malloc_2(sizeof(regex_t));
-int comp_rc=regcomp(mreg, regex, REG_ICASE|REG_NOSUB);
+    regex_t *mreg = (regex_t *)malloc_2(sizeof(regex_t));
+    int comp_rc = regcomp(mreg, regex, REG_ICASE | REG_NOSUB);
 
-if(comp_rc)
-	{
-	free_2(mreg);
-	mreg=NULL;
-	}
+    if (comp_rc) {
+        free_2(mreg);
+        mreg = NULL;
+    }
 
-return((void *)mreg);
+    return ((void *)mreg);
 }
-
 
 /*
  * do match
  */
 int wave_regex_alloc_match(void *mreg, char *str)
 {
-int rc=regexec((regex_t *)mreg, str, 0, NULL, 0);
+    int rc = regexec((regex_t *)mreg, str, 0, NULL, 0);
 
-return((rc)?0:1);
+    return ((rc) ? 0 : 1);
 }
-
 
 /*
  * free it
  */
 void wave_regex_alloc_free(void *pnt)
 {
-regex_t *mreg = (regex_t *)pnt;
+    regex_t *mreg = (regex_t *)pnt;
 
-if(mreg)
-	{
-	regfree(mreg);
-	free_2(mreg);
-	}
+    if (mreg) {
+        regfree(mreg);
+        free_2(mreg);
+    }
 }
-

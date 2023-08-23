@@ -17,50 +17,47 @@
  */
 wave_rgb_t XXX_alloc_color(int tuple)
 {
-wave_rgb_t rc;
-int red, green, blue;
+    wave_rgb_t rc;
+    int red, green, blue;
 
-red=  (tuple>>16)&0x000000ff;
-green=(tuple>>8) &0x000000ff;
-blue= (tuple)    &0x000000ff;
+    red = (tuple >> 16) & 0x000000ff;
+    green = (tuple >> 8) & 0x000000ff;
+    blue = (tuple)&0x000000ff;
 
-rc.r = (double)red/255;
-rc.g = (double)green/255;
-rc.b = (double)blue/255;
-rc.a = (double)1.0;
+    rc.r = (double)red / 255;
+    rc.g = (double)green / 255;
+    rc.b = (double)blue / 255;
+    rc.a = (double)1.0;
 
-return(rc);
+    return (rc);
 }
-
-
 
 void XXX_set_alternate_gcs(wave_rgb_t ctx, wave_rgb_t ctx_fill)
 {
-GLOBALS->rgb_gc.gc_low_wavewindow_c_1 = ctx;
-GLOBALS->rgb_gc.gc_high_wavewindow_c_1 = ctx;
-GLOBALS->rgb_gc.gc_trans_wavewindow_c_1 = ctx;
-GLOBALS->rgb_gc.gc_0_wavewindow_c_1 = ctx;
-GLOBALS->rgb_gc.gc_1_wavewindow_c_1 = ctx;
-GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1 = ctx;
-GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1 = ctx;
+    GLOBALS->rgb_gc.gc_low_wavewindow_c_1 = ctx;
+    GLOBALS->rgb_gc.gc_high_wavewindow_c_1 = ctx;
+    GLOBALS->rgb_gc.gc_trans_wavewindow_c_1 = ctx;
+    GLOBALS->rgb_gc.gc_0_wavewindow_c_1 = ctx;
+    GLOBALS->rgb_gc.gc_1_wavewindow_c_1 = ctx;
+    GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1 = ctx;
+    GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1 = ctx;
 
-if(!GLOBALS->keep_xz_colors)
-	{
-	GLOBALS->rgb_gc.gc_mid_wavewindow_c_1 = ctx;
-	GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1 = ctx_fill;
-	GLOBALS->rgb_gc.gc_1fill_wavewindow_c_1 = ctx_fill;
-	GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1 = ctx_fill;
-	GLOBALS->rgb_gc.gc_x_wavewindow_c_1 = ctx;
-	GLOBALS->rgb_gc.gc_ufill_wavewindow_c_1 = ctx_fill;
-	GLOBALS->rgb_gc.gc_u_wavewindow_c_1 = ctx;
-	GLOBALS->rgb_gc.gc_wfill_wavewindow_c_1 = ctx_fill;
-	GLOBALS->rgb_gc.gc_w_wavewindow_c_1 = ctx;
-	GLOBALS->rgb_gc.gc_dashfill_wavewindow_c_1 = ctx_fill;
-	GLOBALS->rgb_gc.gc_dash_wavewindow_c_1 = ctx;
-	}
+    if (!GLOBALS->keep_xz_colors) {
+        GLOBALS->rgb_gc.gc_mid_wavewindow_c_1 = ctx;
+        GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1 = ctx_fill;
+        GLOBALS->rgb_gc.gc_1fill_wavewindow_c_1 = ctx_fill;
+        GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1 = ctx_fill;
+        GLOBALS->rgb_gc.gc_x_wavewindow_c_1 = ctx;
+        GLOBALS->rgb_gc.gc_ufill_wavewindow_c_1 = ctx_fill;
+        GLOBALS->rgb_gc.gc_u_wavewindow_c_1 = ctx;
+        GLOBALS->rgb_gc.gc_wfill_wavewindow_c_1 = ctx_fill;
+        GLOBALS->rgb_gc.gc_w_wavewindow_c_1 = ctx;
+        GLOBALS->rgb_gc.gc_dashfill_wavewindow_c_1 = ctx_fill;
+        GLOBALS->rgb_gc.gc_dash_wavewindow_c_1 = ctx;
+    }
 }
 
 void wave_rgb_set_source(wave_rgb_t *color, cairo_t *cr)
 {
-cairo_set_source_rgba(cr, color->r, color->g, color->b, color->a);
+    cairo_set_source_rgba(cr, color->r, color->g, color->b, color->a);
 }

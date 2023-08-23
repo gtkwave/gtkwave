@@ -5109,9 +5109,9 @@ void splash_create(void)
         gtk_widget_show(GLOBALS->darea_splash_c_1);
         gtk_widget_set_events(GLOBALS->darea_splash_c_1, GDK_EXPOSURE_MASK | GDK_BUTTON_PRESS_MASK);
 
-		gtk_grid_attach(GTK_GRID(splash_table), GLOBALS->darea_splash_c_1, 0, 0, 9, 9);
-		gtk_widget_set_hexpand(GLOBALS->darea_splash_c_1, TRUE);
-		gtk_widget_set_vexpand(GLOBALS->darea_splash_c_1, TRUE);
+        gtk_grid_attach(GTK_GRID(splash_table), GLOBALS->darea_splash_c_1, 0, 0, 9, 9);
+        gtk_widget_set_hexpand(GLOBALS->darea_splash_c_1, TRUE);
+        gtk_widget_set_vexpand(GLOBALS->darea_splash_c_1, TRUE);
 
         gtk_widget_show(splash_table);
         gtk_container_add(GTK_CONTAINER(GLOBALS->splash_splash_c_1), splash_table);

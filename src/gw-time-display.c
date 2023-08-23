@@ -15,7 +15,10 @@ static int dim_to_exponent(char dim)
     return (pnt - TIME_PREFIX) * 3;
 }
 
-static gchar *reformat_time_2_scale_to_dimension(TimeType val, char dim, char target_dim, gboolean show_plus_sign)
+static gchar *reformat_time_2_scale_to_dimension(TimeType val,
+                                                 char dim,
+                                                 char target_dim,
+                                                 gboolean show_plus_sign)
 {
     int value_exponent = dim_to_exponent(dim);
     int target_exponent = dim_to_exponent(target_dim);
@@ -51,7 +54,10 @@ static gchar *reformat_time_2(TimeType val, char dim, gboolean show_plus_sign)
     static const gunichar THIN_SPACE = 0x2009;
 
     if (GLOBALS->scale_to_time_dimension) {
-        return reformat_time_2_scale_to_dimension(val, dim, GLOBALS->scale_to_time_dimension, show_plus_sign);
+        return reformat_time_2_scale_to_dimension(val,
+                                                  dim,
+                                                  GLOBALS->scale_to_time_dimension,
+                                                  show_plus_sign);
     }
 
     gboolean negative = val < 0;

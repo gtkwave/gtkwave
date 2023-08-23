@@ -14,4 +14,3 @@ void service_left_edge(GtkWidget *text, gpointer data);
 void service_right_edge(GtkWidget *text, gpointer data);
 
 #endif
-

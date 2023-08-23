@@ -15,21 +15,19 @@
 /* 702 will go from A-Z, AA-AZ, ... , ZA-ZZ */
 /* this is a bijective name similar to the columns on spreadsheets */
 /* the upper count is (practically) unbounded */
-#define WAVE_NUM_NAMED_MARKERS      (702)
+#define WAVE_NUM_NAMED_MARKERS (702)
 
 #else
 
 /* do not go less than 26! */
-#define WAVE_NUM_NAMED_MARKERS      (26)
+#define WAVE_NUM_NAMED_MARKERS (26)
 
 #endif
 
-
-void markerbox(char *title, GCallback func);
+void markerbox(const char *title, GCallback func);
 
 char *make_bijective_marker_id_string(char *buf, unsigned int value);
 unsigned int bijective_marker_id_string_hash(const char *so);
 unsigned int bijective_marker_id_string_len(const char *s);
 
 #endif
-

@@ -27,54 +27,66 @@
 
 #define WAVE_NUM_RAINBOW (7)
 
-#define WAVE_RAINBOW_RGB {0xFF0000, 0xFF7F00, 0xFFFF00, 0x00FF00, 0x0000FF, 0x6600FF, 0x9B00FF}
+#define WAVE_RAINBOW_RGB \
+    { \
+        0xFF0000, 0xFF7F00, 0xFFFF00, 0x00FF00, 0x0000FF, 0x6600FF, 0x9B00FF \
+    }
 
-#define RGB_WAVE_RAINBOW_INITIALIZER {{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0}}
+#define RGB_WAVE_RAINBOW_INITIALIZER \
+    { \
+        {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, \
+            {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, \
+            {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, \
+            {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, \
+        { \
+            0.0, 0.0, 0.0, 0.0 \
+        } \
+    }
 
 struct wave_rgb_t
 {
-double r, g, b, a;
+    double r, g, b, a;
 };
 
 typedef struct wave_rgb_t wave_rgb_t;
 
 struct wave_rgbmaster_t
 {
-wave_rgb_t gc_ltgray;
-wave_rgb_t gc_normal;
-wave_rgb_t gc_mdgray;
-wave_rgb_t gc_dkgray;
-wave_rgb_t gc_dkblue;
-wave_rgb_t gc_brkred;
-wave_rgb_t gc_ltblue;
-wave_rgb_t gc_gmstrd;
-wave_rgb_t gc_back_wavewindow_c_1;
-wave_rgb_t gc_baseline_wavewindow_c_1;
-wave_rgb_t gc_grid_wavewindow_c_1;
-wave_rgb_t gc_grid2_wavewindow_c_1;
-wave_rgb_t gc_time_wavewindow_c_1;
-wave_rgb_t gc_timeb_wavewindow_c_1;
-wave_rgb_t gc_value_wavewindow_c_1;
-wave_rgb_t gc_low_wavewindow_c_1;
-wave_rgb_t gc_highfill_wavewindow_c_1;
-wave_rgb_t gc_high_wavewindow_c_1;
-wave_rgb_t gc_trans_wavewindow_c_1;
-wave_rgb_t gc_mid_wavewindow_c_1;
-wave_rgb_t gc_xfill_wavewindow_c_1;
-wave_rgb_t gc_x_wavewindow_c_1;
-wave_rgb_t gc_vbox_wavewindow_c_1;
-wave_rgb_t gc_vtrans_wavewindow_c_1;
-wave_rgb_t gc_mark_wavewindow_c_1;
-wave_rgb_t gc_umark_wavewindow_c_1;
-wave_rgb_t gc_0_wavewindow_c_1;
-wave_rgb_t gc_1fill_wavewindow_c_1;
-wave_rgb_t gc_1_wavewindow_c_1;
-wave_rgb_t gc_ufill_wavewindow_c_1;
-wave_rgb_t gc_u_wavewindow_c_1;
-wave_rgb_t gc_wfill_wavewindow_c_1;
-wave_rgb_t gc_w_wavewindow_c_1;
-wave_rgb_t gc_dashfill_wavewindow_c_1;
-wave_rgb_t gc_dash_wavewindow_c_1;
+    wave_rgb_t gc_ltgray;
+    wave_rgb_t gc_normal;
+    wave_rgb_t gc_mdgray;
+    wave_rgb_t gc_dkgray;
+    wave_rgb_t gc_dkblue;
+    wave_rgb_t gc_brkred;
+    wave_rgb_t gc_ltblue;
+    wave_rgb_t gc_gmstrd;
+    wave_rgb_t gc_back_wavewindow_c_1;
+    wave_rgb_t gc_baseline_wavewindow_c_1;
+    wave_rgb_t gc_grid_wavewindow_c_1;
+    wave_rgb_t gc_grid2_wavewindow_c_1;
+    wave_rgb_t gc_time_wavewindow_c_1;
+    wave_rgb_t gc_timeb_wavewindow_c_1;
+    wave_rgb_t gc_value_wavewindow_c_1;
+    wave_rgb_t gc_low_wavewindow_c_1;
+    wave_rgb_t gc_highfill_wavewindow_c_1;
+    wave_rgb_t gc_high_wavewindow_c_1;
+    wave_rgb_t gc_trans_wavewindow_c_1;
+    wave_rgb_t gc_mid_wavewindow_c_1;
+    wave_rgb_t gc_xfill_wavewindow_c_1;
+    wave_rgb_t gc_x_wavewindow_c_1;
+    wave_rgb_t gc_vbox_wavewindow_c_1;
+    wave_rgb_t gc_vtrans_wavewindow_c_1;
+    wave_rgb_t gc_mark_wavewindow_c_1;
+    wave_rgb_t gc_umark_wavewindow_c_1;
+    wave_rgb_t gc_0_wavewindow_c_1;
+    wave_rgb_t gc_1fill_wavewindow_c_1;
+    wave_rgb_t gc_1_wavewindow_c_1;
+    wave_rgb_t gc_ufill_wavewindow_c_1;
+    wave_rgb_t gc_u_wavewindow_c_1;
+    wave_rgb_t gc_wfill_wavewindow_c_1;
+    wave_rgb_t gc_w_wavewindow_c_1;
+    wave_rgb_t gc_dashfill_wavewindow_c_1;
+    wave_rgb_t gc_dash_wavewindow_c_1;
 };
 
 void XXX_set_alternate_gcs(wave_rgb_t ctx, wave_rgb_t ctx_fill);
@@ -83,4 +95,3 @@ wave_rgb_t XXX_alloc_color(int tuple);
 void wave_rgb_set_source(wave_rgb_t *color, cairo_t *context);
 
 #endif
-

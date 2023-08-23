@@ -376,11 +376,11 @@ static void add_filter_callback(GtkWidget *widget, GtkWidget *nothing)
 /*
  * mainline..
  */
-void ttrans_searchbox(char *title)
+void ttrans_searchbox(const char *title)
 {
     int i;
 
-    gchar *titles[] = {"Transaction Process Filter Select"};
+    const gchar *titles[] = {"Transaction Process Filter Select"};
 
     if (GLOBALS->is_active_ttranslate_c_2) {
         gdk_window_raise(gtk_widget_get_window(GLOBALS->window_ttranslate_c_5));

@@ -76,7 +76,7 @@ static void enter_callback_e(GtkWidget *widget, GtkWidget *nothing)
 
     const gchar *entry_text;
     int len;
-    char *vname = "<Vector>";
+    const char *vname = "<Vector>";
     entry_text = gtk_entry_get_text(GTK_ENTRY(GLOBALS->entry_a_search_c_1));
     entry_text = entry_text ? entry_text : "";
     DEBUG(printf("Entry contents: %s\n", entry_text));
@@ -105,7 +105,7 @@ static void destroy_callback_e(GtkWidget *widget, GtkWidget *nothing)
     GLOBALS->window1_search_c_2 = NULL;
 }
 
-static void entrybox_local(char *title, int width, char *default_text, int maxch, GCallback func)
+static void entrybox_local(const char *title, int width, const char *default_text, int maxch, GCallback func)
 {
     GtkWidget *vbox, *hbox;
     GtkWidget *button1, *button2;
@@ -172,12 +172,12 @@ static void entrybox_local(char *title, int width, char *default_text, int maxch
 
 /***************************************************************************/
 
-static char *regex_type[] = {"\\(\\[.*\\]\\)*$",
-                             "\\>.\\([0-9]\\)*$",
-                             "\\(\\[.*\\]\\)*$",
-                             "\\>.\\([0-9]\\)*$",
-                             ""};
-static char *regex_name[] = {"WRange", "WStrand", "Range", "Strand", "None"};
+static const char *regex_type[] = {"\\(\\[.*\\]\\)*$",
+                                   "\\>.\\([0-9]\\)*$",
+                                   "\\(\\[.*\\]\\)*$",
+                                   "\\>.\\([0-9]\\)*$",
+                                   ""};
+static const char *regex_name[] = {"WRange", "WStrand", "Range", "Strand", "None"};
 
 static void on_changed(GtkComboBox *widget, gpointer user_data)
 {
@@ -747,8 +747,8 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
 
     entry_suffixed =
         g_alloca(strlen(GLOBALS->searchbox_text_search_c_1 /* scan-build, was entry_text */) +
-                    strlen(regex_type[GLOBALS->regex_which_search_c_1]) + 1 +
-                    ((GLOBALS->regex_which_search_c_1 < 2) ? 2 : 0));
+                 strlen(regex_type[GLOBALS->regex_which_search_c_1]) + 1 +
+                 ((GLOBALS->regex_which_search_c_1 < 2) ? 2 : 0));
     *entry_suffixed = 0x00;
     if (GLOBALS->regex_which_search_c_1 < 2)
         strcpy(entry_suffixed, "\\<"); /* match on word boundary */
@@ -891,10 +891,10 @@ static void unselect_all_callback(GtkWidget *widget, GtkWidget *nothing)
 /*
  * mainline..
  */
-void searchbox(char *title, GCallback func)
+void searchbox(const char *title, GCallback func)
 {
     int i;
-    gchar *titles[] = {"Matches"};
+    const gchar *titles[] = {"Matches"};
     int cached_which = GLOBALS->regex_which_search_c_1;
 
     /* fix problem where ungrab doesn't occur if button pressed + simultaneous accelerator key

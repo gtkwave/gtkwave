@@ -10,7 +10,7 @@
 #ifndef WAVE_STATUS_H
 #define WAVE_STATUS_H
 
-void status_text(char *str);
+void status_text(const char *str);
 
 #endif
 

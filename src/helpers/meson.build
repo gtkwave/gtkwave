@@ -44,6 +44,7 @@ foreach helper : helpers
         helper,
         sources,
         dependencies: dependencies,
+        c_args: warning_args,
         include_directories: config_inc,
         install: true,
     )

@@ -258,11 +258,11 @@ GtkWidget *create_signalwindow(void)
     GtkAdjustment *hslider = gw_signal_list_get_hadjustment(GW_SIGNAL_LIST(GLOBALS->signalarea));
     GLOBALS->hscroll_signalwindow_c_1 = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, hslider);
 
-	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	gtk_box_pack_start(GTK_BOX(box), GLOBALS->signalarea, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(box), GLOBALS->hscroll_signalwindow_c_1, FALSE, FALSE, 0);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_box_pack_start(GTK_BOX(box), GLOBALS->signalarea, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(box), GLOBALS->hscroll_signalwindow_c_1, FALSE, FALSE, 0);
 
-	gtk_widget_show_all(box);
+    gtk_widget_show_all(box);
 
     return box;
 }
@@ -277,5 +277,5 @@ void redraw_signals_and_waves(void)
 
     MaxSignalLength();
     gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
-	gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
+    gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
 }

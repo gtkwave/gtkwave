@@ -25,4 +25,3 @@ char *hier_decompress_flagged(char *n, int *was_packed);
 void hier_auto_enable(void);
 
 #endif
-

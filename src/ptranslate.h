@@ -20,12 +20,10 @@
 
 #define PROC_FILTER_MAX (128)
 
-
-void ptrans_searchbox(char *title);
+void ptrans_searchbox(const char *title);
 void init_proctrans_data(void);
 int install_proc_filter(int which);
 void set_current_translate_proc(char *name);
 void remove_all_proc_filters(void);
 
 #endif
-

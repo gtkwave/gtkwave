@@ -1537,7 +1537,7 @@ static void menu_close_group(GtkWidget *widget, gpointer data)
     }
 }
 
-unsigned create_group(char *name, Trptr t_composite)
+unsigned create_group(const char *name, Trptr t_composite)
 {
     Trptr t, t_prev, t_begin, t_end;
     unsigned dirty = 0;
@@ -2720,8 +2720,8 @@ int menu_new_viewer_tab_cleanup_2(char *fname, int optimize_vcd)
     struct Global *g_old = GLOBALS;
     struct Global *g_now;
 
-    argv[0] = gtkwave_argv0_cached ? gtkwave_argv0_cached : "gtkwave";
-    argv[1] = fname;
+    argv[0] = g_strdup(gtkwave_argv0_cached ? gtkwave_argv0_cached : "gtkwave");
+    argv[1] = g_strdup(fname);
 
     /* fix problem where ungrab doesn't occur if button pressed + simultaneous accelerator key
      * occurs */
@@ -2738,6 +2738,9 @@ int menu_new_viewer_tab_cleanup_2(char *fname, int optimize_vcd)
 
     if (!setjmp(*(GLOBALS->vcd_jmp_buf))) {
         main_2(optimize_vcd, 2, argv);
+
+        g_free(argv[0]);
+        g_free(argv[1]);
 
         g_now = GLOBALS;
         set_GLOBALS(g_old);
@@ -3323,9 +3326,7 @@ static void regexp_highlight_generic(int mode)
         free_2(GLOBALS->entrybox_text);
         t = GLOBALS->traces.first;
         while (t) {
-            char *pnt;
-
-            pnt = (t->name) ? t->name : ""; /* handle (really) blank lines */
+            const char *pnt = (t->name) ? t->name : ""; /* handle (really) blank lines */
 
             if (*pnt == '+') /* skip alias prefix if present */
             {
@@ -5965,7 +5966,7 @@ static gtkwave_mlist_t menu_items[] = {
                 WV_MENU_TDSCALEF,
                 "<ToggleItem>"),
 
-    /* 130 */
+/* 130 */
 #ifdef MAC_INTEGRATION
     WAVE_GTKIFE("/Help/WAVE User Manual", NULL, menu_help_manual, WV_MENU_HWM, "<Item>"),
 #endif
@@ -6244,7 +6245,7 @@ gtkwave_mlist_t *retrieve_menu_items_array(int *num_items)
 /*
  * support for menu accelerator modifications...
  */
-int set_wave_menu_accelerator(char *str)
+int set_wave_menu_accelerator(const char *str)
 {
     char *path, *pathend;
     char *accel;

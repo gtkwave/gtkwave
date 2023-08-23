@@ -298,7 +298,7 @@ static void destroy_callback(GtkWidget *widget, GtkWidget *nothing)
     GLOBALS->window_markerbox_c_4 = NULL;
 }
 
-void markerbox(char *title, GCallback func)
+void markerbox(const char *title, GCallback func)
 {
     char labtitle[16];
     int i;
@@ -364,7 +364,7 @@ void markerbox(char *title, GCallback func)
 
         GtkWidget *entry = X_gtk_entry_new_with_max_length(48);
         gtk_widget_set_hexpand(entry, TRUE);
-        GLOBALS->entries_markerbox_c_1[i] = entry; 
+        GLOBALS->entries_markerbox_c_1[i] = entry;
         gtkwave_signal_connect(entry,
                                "activate",
                                G_CALLBACK(enter_callback),

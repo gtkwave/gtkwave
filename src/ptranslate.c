@@ -294,11 +294,11 @@ static void add_filter_callback(GtkWidget *widget, GtkWidget *nothing)
 /*
  * mainline..
  */
-void ptrans_searchbox(char *title)
+void ptrans_searchbox(const char *title)
 {
     int i;
 
-    gchar *titles[] = {"Process Filter Select"};
+    const gchar *titles[] = {"Process Filter Select"};
 
     if (GLOBALS->is_active_ptranslate_c_2) {
         gdk_window_raise(gtk_widget_get_window(GLOBALS->window_ptranslate_c_5));

@@ -115,7 +115,8 @@ endforeach
 
 # Additional warnings and errors
 
-test_c_args = [
+warning_args = []
+test_warning_args = [
     '-Wcast-align',
     '-Werror=address',
     '-Werror=array-bounds',
@@ -137,13 +138,13 @@ test_c_args = [
     '-Werror=pointer-to-int-cast',
     '-Werror=return-type',
     '-Werror=sequence-point',
-    # '-Werror=shadow',
+    '-Werror=shadow',
     '-Werror=strict-prototypes',
     '-Werror=trigraphs',
     '-Werror=undef',
     '-Werror=write-strings',
-    # '-Wformat-nonliteral',
-    # ['-Werror=format-security', '-Werror=format=2'],
+    '-Wformat-nonliteral',
+    ['-Werror=format-security', '-Werror=format=2'],
     '-Wignored-qualifiers',
     '-Wimplicit-function-declaration',
     '-Wlogical-op',
@@ -158,15 +159,14 @@ test_c_args = [
     '-Wpointer-arith',
     '-Wstrict-prototypes',
     '-Wswitch-default',
-    '-Wswitch-enum',
+    # '-Wswitch-enum',
     '-Wundef',
     '-Wuninitialized',
     '-Wunused',
-    '-fno-strict-aliasing',
 ]
-foreach arg : test_c_args
+foreach arg: test_warning_args
     if cc.has_multi_arguments(arg)
-        add_project_arguments(arg, language: 'c')
+        warning_args += arg
     endif
 endforeach
 
