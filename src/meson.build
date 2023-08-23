@@ -20,7 +20,7 @@ vcd_keywords_c = custom_target(
     ],
 )
 
-gtkwave_resources = gnome.compile_resources(
+additional_gtkwave_sources += gnome.compile_resources(
     'gtkwave-resources',
     'io.github.gtkwave.GTKWave.gresource.xml',
     c_name: 'gtkwave',
@@ -103,12 +103,6 @@ gtkwave_sources = [
     'zoombuttons.c',
 ]
 
-if host_machine.system() == 'windows' 
-  windows = import('windows')
-  gtkwave_sources += windows.compile_resources('../compilation/windows/gtkwave.rc')
-endif
-
-
 gtkwave_dependencies = [
     glib_dep,
     gtk_dep,
@@ -134,9 +128,9 @@ gtkwave_include_directories = [
 gtkwave_exe = executable(
     'gtkwave',
     gtkwave_sources,
-    gtkwave_resources,
+    additional_gtkwave_sources,
     vcd_keywords_c,
-    win_subsystem : 'windows',  # true to hide console
+    win_subsystem: 'windows', # true to hide console
     dependencies: gtkwave_dependencies,
     include_directories: gtkwave_include_directories,
     c_args: warning_args,

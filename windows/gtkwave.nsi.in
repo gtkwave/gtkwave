@@ -1,0 +1,192 @@
+Name "@project_name@"
+OutFile "@out_file@"
+
+!include "FileFunc.nsh"
+!include "DumpLog.nsh"
+!insertmacro GetTime
+
+SetCompress force ; (can be off or force)
+CRCCheck on ; (can be off)
+
+LicenseText "Please read and accept the following license:"
+LicenseData "COPYING"
+
+BrandingText "GTKWave Installer"
+
+InstallDir "$PROGRAMFILES64\@application_name@"
+InstallDirRegKey HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@" ""
+
+; The text to prompt the user to enter a directory
+DirText "Choose a folder in which to install @application_name@"
+
+; Show details
+ShowInstDetails show
+
+Icon "gtkwave_logo.ico"
+UninstallIcon "gtkwave_logo.ico"
+XPStyle on
+
+Section "Info"
+  # Print version info into the installer window
+  ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+  DetailPrint "Running installer on $3 $2-$1-$0 $4:$5:$6"
+  DetailPrint "Version=@project_version@"
+SectionEnd
+  
+; optional section
+Section "Start Menu Shortcuts"
+  CreateDirectory "$SMPROGRAMS\@application_name@"
+  CreateShortCut "$SMPROGRAMS\@application_name@\Uninstall.lnk" "$INSTDIR\bin\uninst.exe" "" "$INSTDIR\uninst.exe" 0
+  CreateShortCut "$SMPROGRAMS\@application_name@\@application_name@.lnk" "$INSTDIR\bin\@application_name@.exe" "" "$INSTDIR\@application_name@.exe" 0
+SectionEnd
+
+Section "" ; (default section)
+
+  SetOutPath $INSTDIR
+  
+  File /oname=COPYING.txt COPYING
+  File README.md
+  
+  SetOutPath $INSTDIR\bin
+  File @bindir@\libintl-8.dll
+  File @bindir@\iconv.dll
+  #File @bindir@\libpcre-1.dll
+  File @bindir@\libpcre2-8-0.dll
+  File @bindir@\libgtk-3-0.dll
+  File @bindir@\libgdk-3-0.dll
+  File @bindir@\libssp-0.dll
+  File @bindir@\libgdk_pixbuf-2.0-0.dll
+  File @bindir@\libpixman-1-0.dll
+  File @bindir@\libffi-8.dll
+  File @bindir@\libgio-2.0-0.dll
+  File @bindir@\libgnurx-0.dll
+  File @bindir@\libcairo-2.dll
+  File @bindir@\libcairo-gobject-2.dll
+  File @bindir@\zlib1.dll
+  File @bindir@\libglib-2.0-0.dll
+  File @bindir@\libatk-1.0-0.dll
+  File @bindir@\libgobject-2.0-0.dll
+  File @bindir@\libgmodule-2.0-0.dll
+  File @bindir@\libgthread-2.0-0.dll
+  File @bindir@\libpango-1.0-0.dll
+  File @bindir@\libfribidi-0.dll
+  File @bindir@\libpangocairo-1.0-0.dll
+  File @bindir@\libpangoft2-1.0-0.dll
+  File @bindir@\libpangowin32-1.0-0.dll
+  File @bindir@\libpng16-16.dll
+  File @bindir@\libtiff-5.dll
+  File @bindir@\libjpeg-62.dll
+  File @bindir@\libfontconfig-1.dll
+  File @bindir@\libxml2-2.dll
+  File @bindir@\libfreetype-6.dll
+  File @bindir@\gdk-pixbuf-query-loaders.exe
+  File @bindir@\${LIBGCCDLL}
+  File @bindir@\libstdc++-6.dll
+  File @bindir@\libwinpthread-1.dll
+  #File @bindir@\libgfortran-*.dll
+  #File @bindir@\librsvg-2-2.dll
+  #File @bindir@\libcroco-0.6-3.dll
+  File @bindir@\libxml2-2.dll
+  #File @bindir@\libquadmath-0.dll
+  #File @bindir@\libopenjp2.dll
+  #File @bindir@\libsqlite3-0.dll
+  File @bindir@\libexpat-1.dll
+  File @bindir@\libbz2-1.dll
+  #File @bindir@\glew32.dll
+  #File @bindir@\libzip-5.dll
+  File @bindir@\libharfbuzz-0.dll
+  File @bindir@\libharfbuzz-icu-0.dll
+  File @bindir@\libharfbuzz-subset-0.dll
+  File @bindir@\gspawn-win64-helper.exe
+  File @bindir@\gdbus.exe
+  #File @bindir@\libsigc-2.0-0.dll
+  #File @bindir@\libmpfr-6.dll
+  File @bindir@\libepoxy-0.dll
+  File @buildroot@\src\*.exe
+  File @buildroot@\src\helpers\*.exe
+  
+  
+  SetOutPath "$INSTDIR"
+  File /r @sysconfdir@
+  SetOutPath $INSTDIR\lib\gdk-pixbuf-2.0\2.10.0\loaders
+  File @libdir@\gdk-pixbuf-2.0\2.10.0\loaders\*
+  SetOutPath $INSTDIR\lib\gdk-pixbuf-2.0\2.10.0
+  File @libdir@\gdk-pixbuf-2.0\2.10.0\loaders.cache
+  
+  SetOutPath $INSTDIR\share
+  File /r @datadir@\themes
+  SetOutPath $INSTDIR\share\icons
+  File /r @datadir@\icons\Adwaita
+  
+  SetOutPath $INSTDIR\share\glib-2.0
+  File /r @datadir@\glib-2.0\schemas
+  
+  # Build the gdk-pixbuf.loaders file automatically
+  ExpandEnvStrings $0 %COMSPEC%
+  nsExec::ExecToStack '"$0" /C ""$INSTDIR\bin\gdk-pixbuf-query-loaders" > "$INSTDIR\lib\gdk-pixbuf-2.0\2.10.0\loaders.cache""'
+  
+  ; Set up association with .gtkw files
+  DeleteRegKey HKCR ".gtkw"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gtkw"
+  WriteRegStr HKCR ".gtkw" "" "GtkwFile"
+  DeleteRegKey HKCR "GtkwFile"
+  DeleteRegKey HKCR "Gtkw File"
+  WriteRegStr HKCR "GtkwFile" "" "Gtkw File"
+  WriteRegStr HKCR "GtkwFile\DefaultIcon" "" "$INSTDIR\bin\gtkwave.exe,1"
+  WriteRegStr HKCR "GtkwFile\shell" "" "open"
+  WriteRegStr HKCR "GtkwFile\shell\open\command" "" '$INSTDIR\bin\gtkwave.exe "%1"'
+  
+  ; Set up association with .vcd files
+  DeleteRegKey HKCR ".vcd"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.vcd"
+  WriteRegStr HKCR ".vcd" "" "VcdFile"
+  DeleteRegKey HKCR "VcdFile"
+  DeleteRegKey HKCR "Vcd File"
+  WriteRegStr HKCR "VcdFile" "" "Vcd File"
+  WriteRegStr HKCR "VcdFile\DefaultIcon" "" "$INSTDIR\bin\gtkwave.exe,1"
+  WriteRegStr HKCR "VcdFile\shell" "" "open"
+  WriteRegStr HKCR "VcdFile\shell\open\command" "" '$INSTDIR\bin\gtkwave.exe "%1"'
+  
+  ; Set up association with .fst files
+  DeleteRegKey HKCR ".fst"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.fst"
+  WriteRegStr HKCR ".fst" "" "FstFile"
+  DeleteRegKey HKCR "FstFile"
+  DeleteRegKey HKCR "Fst File"
+  WriteRegStr HKCR "FstFile" "" "Fst File"
+  WriteRegStr HKCR "FstFile\DefaultIcon" "" "$INSTDIR\bin\gtkwave.exe,1"
+  WriteRegStr HKCR "FstFile\shell" "" "open"
+  WriteRegStr HKCR "FstFile\shell\open\command" "" '$INSTDIR\bin\gtkwave.exe "%1"'
+
+
+  System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
+  
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@" "" "$INSTDIR"
+  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\@application_name@" "DisplayName" "@application_name@ (remove only)"
+  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\@application_name@" "UninstallString" '"$INSTDIR\bin\uninst.exe"'
+  ; write out uninstaller
+  WriteUninstaller "$INSTDIR\bin\uninst.exe"
+
+  # Copy the install file
+  StrCpy $0 "$INSTDIR\install-gtkwave.log"
+  Push $0
+  Call DumpLog
+SectionEnd ; end of default section
+
+; begin uninstall settings/section
+UninstallText "This will uninstall @application_name@ from your system"
+
+Section Uninstall
+  ; add delete commands to delete whatever files/registry keys/etc you installed here.
+  ReadRegStr $0 HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@" ""
+  DetailPrint "Deleting from $0"
+  
+  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@"
+  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\@application_name@"
+  SetOutPath "$TEMP"
+  RMDir /r "$0"
+  
+  RMDir /r "$SMPROGRAMS\@application_name@"
+SectionEnd ; end of uninstall section
+
+; eof
