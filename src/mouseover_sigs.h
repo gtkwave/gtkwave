@@ -13,4 +13,3 @@
 void move_mouseover_sigs(Trptr t, gint xin, gint yin, TimeType tim);
 
 #endif
-

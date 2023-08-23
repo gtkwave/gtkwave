@@ -15,10 +15,11 @@
 #include "vlist.h"
 
 /* using alloca avoids having to preserve across contexts */
-struct wave_script_args {
-  struct wave_script_args *curr;
-  struct wave_script_args *next;
-  char payload[]; /* C99 */
+struct wave_script_args
+{
+    struct wave_script_args *curr;
+    struct wave_script_args *next;
+    char payload[]; /* C99 */
 };
 
 char *fgetmalloc(FILE *handle);
@@ -28,4 +29,3 @@ char *wave_script_args_fgetmalloc(struct wave_script_args *wave_script_args);
 char *wave_script_args_fgetmalloc_stripspaces(struct wave_script_args *wave_script_args);
 
 #endif
-

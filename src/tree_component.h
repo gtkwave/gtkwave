@@ -22,4 +22,3 @@ void iter_through_comp_name_table(void);
 int add_to_comp_name_table(const char *s, int slen);
 
 #endif
-

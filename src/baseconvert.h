@@ -21,4 +21,3 @@ int vtype(Trptr t, char *vec);
 int vtype2(Trptr t, vptr v);
 
 #endif
-

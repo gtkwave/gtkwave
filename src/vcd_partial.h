@@ -13,4 +13,3 @@
 void update_endcap_times_for_partial_vcd(void);
 
 #endif
-

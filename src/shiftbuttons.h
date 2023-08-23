@@ -14,4 +14,3 @@ void service_left_shift(GtkWidget *text, gpointer data);
 void service_right_shift(GtkWidget *text, gpointer data);
 
 #endif
-

@@ -26,8 +26,8 @@
 
 struct blackout_region_t
 {
-struct blackout_region_t *next;
-TimeType bstart, bend;
+    struct blackout_region_t *next;
+    TimeType bstart, bend;
 };
 
 /* currenttime.c protos */
@@ -72,4 +72,3 @@ void exponent_to_time_scale(signed char scale);
 #include "zoombuttons.h"
 
 #endif
-

@@ -30,6 +30,10 @@ extern int wave_rpc_id;
 
 void wave_gconf_init(int argc, char **argv);
 gboolean wave_gconf_client_set_string(const gchar *key, const gchar *val);
-void wave_gconf_restore(char **dumpfile, char **savefile, char **rcfile, char **wave_pwd, int *opt_vcd);
+void wave_gconf_restore(char **dumpfile,
+                        char **savefile,
+                        char **rcfile,
+                        char **wave_pwd,
+                        int *opt_vcd);
 
 #endif

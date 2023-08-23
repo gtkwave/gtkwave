@@ -21,4 +21,3 @@ void service_zoom_right(GtkWidget *text, gpointer data);
 void service_dragzoom(TimeType time1, TimeType time2);
 
 #endif
-

@@ -21,4 +21,3 @@ char *bsearch_trunc_print(char *ascii, int maxlen);
 struct symbol *bsearch_facs(char *ascii, unsigned int *rows_return);
 
 #endif
-

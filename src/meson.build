@@ -132,6 +132,7 @@ executable(
     vcd_keywords_c,
     dependencies: gtkwave_dependencies,
     include_directories: gtkwave_include_directories,
+    c_args: warning_args,
     install: true,
 )
 

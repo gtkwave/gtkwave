@@ -14,12 +14,12 @@
 
 #include "busy.h"
 
-#define HAVE_PANED_PACK	/* undefine this if you have an older GTK */
+#define HAVE_PANED_PACK /* undefine this if you have an older GTK */
 
 struct logfile_chain
 {
-struct logfile_chain *next;
-char *name;
+    struct logfile_chain *next;
+    char *name;
 };
 
 int main_2(int opt_vcd, int argc, char *argv[]);
@@ -32,8 +32,8 @@ GtkWidget *create_signalwindow(void);
 void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, int pct);
 
 /* Get/set the current size of the window.  */
-extern void get_window_size (int *x, int *y);
-extern void set_window_size (int x, int y);
+extern void get_window_size(int *x, int *y);
+extern void set_window_size(int x, int y);
 
 /* Get/set the x/y pos of the window */
 void get_window_xypos(int *root_x, int *root_y);
@@ -48,26 +48,24 @@ void kill_stems_browser_single(void *G);
 /* prototype only used in main.c */
 void menu_reload_waveform_marshal(GtkWidget *widget, gpointer data);
 
-
 /* function for spawning vcd conversions */
 void optimize_vcd_file(void);
 
-
-enum FileType {
-  MISSING_FILE,
-  LXT_FILE,
-  LX2_FILE,
-  VZT_FILE,
-  AE2_FILE,
-  GHW_FILE,
-  VCD_FILE,
-  VCD_RECODER_FILE,
+enum FileType
+{
+    MISSING_FILE,
+    LXT_FILE,
+    LX2_FILE,
+    VZT_FILE,
+    AE2_FILE,
+    GHW_FILE,
+    VCD_FILE,
+    VCD_RECODER_FILE,
 #ifdef EXTLOAD_SUFFIX
-  EXTLOAD_FILE,
+    EXTLOAD_FILE,
 #endif
-  FST_FILE,
-  DUMPLESS_FILE
+    FST_FILE,
+    DUMPLESS_FILE
 };
 
 #endif
-

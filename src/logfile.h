@@ -10,7 +10,6 @@
 #ifndef WAVE_LOGFILE_H
 #define WAVE_LOGFILE_H
 
-void logbox(char *title, int width, char *default_text);
+void logbox(const char *title, int width, const char *default_text);
 
 #endif
-

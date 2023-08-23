@@ -1300,6 +1300,13 @@ static int handle_setjmp(void)
             case VCD_RECODER_FILE:
                 vcd_recoder_main(GLOBALS->loaded_file_name);
                 break;
+            case LX2_FILE:
+            case VZT_FILE:
+            case AE2_FILE:
+            case GHW_FILE:
+            case FST_FILE:
+            case DUMPLESS_FILE:
+            case MISSING_FILE:
             default:
                 break;
         }
@@ -1403,7 +1410,6 @@ void reload_into_new_context_2(void)
     int fix_from_time = 0, fix_to_time = 0;
     TimeType from_time = LLDescriptor(0), to_time = LLDescriptor(0);
     char timestr[32];
-    struct stringchain_t *hier_head = NULL, *hier_curr = NULL;
     int load_was_success = 0;
     int reload_fail_delay = 1;
     char *save_tmpfilename = NULL;
@@ -2161,6 +2167,9 @@ void reload_into_new_context_2(void)
             case VCD_RECODER_FILE:
                 load_was_success = handle_setjmp();
                 break;
+
+            case MISSING_FILE:
+            case DUMPLESS_FILE:
             default:
                 break;
         }
@@ -2578,82 +2587,76 @@ static gint context_swapper(GtkWindow *w, GdkEvent *event, void *data)
 
     /* printf("Window: %08x GtkEvent: %08x gpointer: %08x, type: %d\n", w, event, data, type); */
 
-    switch (type) {
-        case GDK_ENTER_NOTIFY:
-        case GDK_FOCUS_CHANGE:
-            if (GLOBALS->num_notebook_pages >= 2) {
-                unsigned int i;
-                void **vp;
-                GtkWindow *wcmp;
+    if (type == GDK_ENTER_NOTIFY || type == GDK_FOCUS_CHANGE) {
+        if (GLOBALS->num_notebook_pages >= 2) {
+            unsigned int i;
+            void **vp;
+            GtkWindow *wcmp;
 
-                for (i = 0; i < GLOBALS->num_notebook_pages; i++) {
-                    struct Global *test_g = (*GLOBALS->contexts)[i];
+            for (i = 0; i < GLOBALS->num_notebook_pages; i++) {
+                struct Global *test_g = (*GLOBALS->contexts)[i];
 
-                    vp = (void **)(((char *)test_g) + (intptr_t)data);
-                    wcmp = (GtkWindow *)(*vp);
+                vp = (void **)(((char *)test_g) + (intptr_t)data);
+                wcmp = (GtkWindow *)(*vp);
 
-                    if (wcmp != NULL) {
-                        if (wcmp == w) {
-                            if (i != GLOBALS->this_context_page) {
-                                struct Global *g_old = GLOBALS;
+                if (wcmp != NULL) {
+                    if (wcmp == w) {
+                        if (i != GLOBALS->this_context_page) {
+                            struct Global *g_old = GLOBALS;
 
-                                /* printf("Switching to: %d %08x\n", i, GTK_WINDOW(wcmp)); */
+                            /* printf("Switching to: %d %08x\n", i, GTK_WINDOW(wcmp)); */
 
-                                set_GLOBALS((*GLOBALS->contexts)[i]);
+                            set_GLOBALS((*GLOBALS->contexts)[i]);
 
-                                GLOBALS->lxt_clock_compress_to_z = g_old->lxt_clock_compress_to_z;
-                                GLOBALS->autoname_bundles = g_old->autoname_bundles;
-                                GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
-                                GLOBALS->autocoalesce = g_old->autocoalesce;
-                                GLOBALS->wave_scrolling = g_old->wave_scrolling;
-                                GLOBALS->constant_marker_update = g_old->constant_marker_update;
-                                GLOBALS->do_zoom_center = g_old->do_zoom_center;
-                                GLOBALS->use_roundcaps = g_old->use_roundcaps;
-                                GLOBALS->do_resize_signals = g_old->do_resize_signals;
-                                GLOBALS->initial_signal_window_width =
-                                    g_old->initial_signal_window_width;
-                                GLOBALS->use_full_precision = g_old->use_full_precision;
-                                GLOBALS->show_base = g_old->show_base;
-                                GLOBALS->display_grid = g_old->display_grid;
-                                GLOBALS->fullscreen = g_old->fullscreen;
-                                GLOBALS->show_toolbar = g_old->show_toolbar;
-                                GLOBALS->time_box = g_old->time_box;
-                                GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
-                                GLOBALS->fill_waveform = g_old->fill_waveform;
-                                GLOBALS->lz_removal = g_old->lz_removal;
-                                GLOBALS->disable_mouseover = g_old->disable_mouseover;
-                                GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
-                                GLOBALS->keep_xz_colors = g_old->keep_xz_colors;
-                                GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
+                            GLOBALS->lxt_clock_compress_to_z = g_old->lxt_clock_compress_to_z;
+                            GLOBALS->autoname_bundles = g_old->autoname_bundles;
+                            GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
+                            GLOBALS->autocoalesce = g_old->autocoalesce;
+                            GLOBALS->wave_scrolling = g_old->wave_scrolling;
+                            GLOBALS->constant_marker_update = g_old->constant_marker_update;
+                            GLOBALS->do_zoom_center = g_old->do_zoom_center;
+                            GLOBALS->use_roundcaps = g_old->use_roundcaps;
+                            GLOBALS->do_resize_signals = g_old->do_resize_signals;
+                            GLOBALS->initial_signal_window_width =
+                                g_old->initial_signal_window_width;
+                            GLOBALS->use_full_precision = g_old->use_full_precision;
+                            GLOBALS->show_base = g_old->show_base;
+                            GLOBALS->display_grid = g_old->display_grid;
+                            GLOBALS->fullscreen = g_old->fullscreen;
+                            GLOBALS->show_toolbar = g_old->show_toolbar;
+                            GLOBALS->time_box = g_old->time_box;
+                            GLOBALS->highlight_wavewindow = g_old->highlight_wavewindow;
+                            GLOBALS->fill_waveform = g_old->fill_waveform;
+                            GLOBALS->lz_removal = g_old->lz_removal;
+                            GLOBALS->disable_mouseover = g_old->disable_mouseover;
+                            GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
+                            GLOBALS->keep_xz_colors = g_old->keep_xz_colors;
+                            GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
 
-                                GLOBALS->scale_to_time_dimension = g_old->scale_to_time_dimension;
-                                GLOBALS->zoom_dyn = g_old->zoom_dyn;
-                                GLOBALS->zoom_dyne = g_old->zoom_dyne;
+                            GLOBALS->scale_to_time_dimension = g_old->scale_to_time_dimension;
+                            GLOBALS->zoom_dyn = g_old->zoom_dyn;
+                            GLOBALS->zoom_dyne = g_old->zoom_dyne;
 
-                                GLOBALS->ignore_savefile_pane_pos = g_old->ignore_savefile_pane_pos;
-                                GLOBALS->ignore_savefile_pos = g_old->ignore_savefile_pos;
-                                GLOBALS->ignore_savefile_size = g_old->ignore_savefile_size;
+                            GLOBALS->ignore_savefile_pane_pos = g_old->ignore_savefile_pane_pos;
+                            GLOBALS->ignore_savefile_pos = g_old->ignore_savefile_pos;
+                            GLOBALS->ignore_savefile_size = g_old->ignore_savefile_size;
 
-                                GLOBALS->hier_ignore_escapes = g_old->hier_ignore_escapes;
-                                GLOBALS->sst_dbl_action_type = g_old->sst_dbl_action_type;
-                                GLOBALS->use_gestures = g_old->use_gestures;
-                                GLOBALS->use_dark = g_old->use_dark;
-                                GLOBALS->save_on_exit = g_old->save_on_exit;
-                                GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
+                            GLOBALS->hier_ignore_escapes = g_old->hier_ignore_escapes;
+                            GLOBALS->sst_dbl_action_type = g_old->sst_dbl_action_type;
+                            GLOBALS->use_gestures = g_old->use_gestures;
+                            GLOBALS->use_dark = g_old->use_dark;
+                            GLOBALS->save_on_exit = g_old->save_on_exit;
+                            GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
-                                gtk_notebook_set_current_page(GTK_NOTEBOOK(GLOBALS->notebook),
-                                                              GLOBALS->this_context_page);
-                            }
-
-                            return (FALSE);
+                            gtk_notebook_set_current_page(GTK_NOTEBOOK(GLOBALS->notebook),
+                                                          GLOBALS->this_context_page);
                         }
+
+                        return (FALSE);
                     }
                 }
             }
-            break;
-
-        default:
-            break;
+        }
     }
 
     return (FALSE);

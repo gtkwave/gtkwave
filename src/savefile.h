@@ -19,7 +19,12 @@
 
 /* These should eventually have error values */
 void write_save_helper(const char *savnam, FILE *file);
-int read_save_helper(char *wname, char **dumpfile, char **savefile, off_t *dumpsiz, time_t *dumptim, int *opt_vcd); /* -1 = error, 0+ = number of lines read */
+int read_save_helper(char *wname,
+                     char **dumpfile,
+                     char **savefile,
+                     off_t *dumpsiz,
+                     time_t *dumptim,
+                     int *opt_vcd); /* -1 = error, 0+ = number of lines read */
 char *append_array_row(nptr n);
 
 int parsewavline(char *w, char *alias, int depth);

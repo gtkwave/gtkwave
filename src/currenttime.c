@@ -17,7 +17,7 @@
 #include "symbol.h"
 #include "wave_view.h"
 
-static char *time_prefix = WAVE_SI_UNITS;
+static const char *time_prefix = WAVE_SI_UNITS;
 
 void fractional_timescale_fix(char *s)
 {
@@ -94,7 +94,8 @@ static TimeType unformat_time_complex(const char *s, char dim)
     int i, delta, rc;
     unsigned char ch = dim;
     double d = 0.0;
-    const char *offs = NULL, *doffs = NULL;
+    const char *offs = NULL;
+    const char *doffs = NULL;
 
     rc = sscanf(s, "%lf %cs", &d, &ch);
     if (rc == 2) {
@@ -129,7 +130,8 @@ static TimeType unformat_time_simple(const char *buf, char dim)
 {
     TimeType rval;
     const char *pnt;
-    char *offs = NULL, *doffs;
+    const char *offs = NULL;
+    const char *doffs;
     char ch;
     int i, ich, delta;
 
@@ -236,7 +238,7 @@ void reformat_time_simple(char *buf, TimeType val, char dim)
 
 void reformat_time(char *buf, TimeType val, char dim)
 {
-    char *pnt;
+    const char *pnt;
     int i, offset, offsetfix;
 
     if (val < LLDescriptor(0)) {
@@ -326,7 +328,6 @@ void update_time_box(void)
             GLOBALS->anno_ctx->marker_set = 0;
         }
     }
-
 
     if (GLOBALS->named_marker_lock_idx > -1) {
         if (GLOBALS->tims.marker >= 0) {

@@ -406,6 +406,9 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                                 case AN_L:
                                     gcxf = GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1;
                                     break;
+                                default:
+                                    g_warn_if_reached();
+                                    break;
                             }
                             XXX_gdk_draw_rectangle(cr,
                                                    gcxf,
@@ -541,6 +544,9 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                                     break;
                                 case AN_H:
                                     gcxf = GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1;
+                                    break;
+                                default:
+                                    g_warn_if_reached();
                                     break;
                             }
                             XXX_gdk_draw_rectangle(cr,

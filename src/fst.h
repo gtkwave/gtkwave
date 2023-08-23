@@ -26,4 +26,3 @@ void fst_set_fac_process_mask(nptr np);
 void fst_import_masked(void);
 
 #endif
-

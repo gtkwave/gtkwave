@@ -22,7 +22,7 @@
 #include "debug.h"
 
 #define SYMPRIME 500009
-#define WAVE_DECOMPRESSOR "gzip -cd "	/* zcat alone doesn't cut it for AIX */
+#define WAVE_DECOMPRESSOR "gzip -cd " /* zcat alone doesn't cut it for AIX */
 
 #include <unistd.h>
 #ifdef HAVE_INTTYPES_H
@@ -36,60 +36,57 @@
 
 struct fac
 {
-struct Node *working_node;
-int node_alias;
-int len;
-unsigned int flags;
+    struct Node *working_node;
+    int node_alias;
+    int len;
+    unsigned int flags;
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(pop)
 #endif
 
-
 struct symbol
 {
 #ifndef _WAVE_HAVE_JUDY
-struct symbol *sym_next;  /* for hash chain, judy uses sym_judy in globals */
+    struct symbol *sym_next; /* for hash chain, judy uses sym_judy in globals */
 #endif
 
-struct symbol *vec_root, *vec_chain;
-char *name;
-struct Node *n;
+    struct symbol *vec_root, *vec_chain;
+    char *name;
+    struct Node *n;
 
 #ifndef _WAVE_HAVE_JUDY
-char s_selected;		/* for the clist object */
+    char s_selected; /* for the clist object */
 #endif
 };
 
-
-struct symchain		/* for restoring state of ->selected in signal regex search */
+struct symchain /* for restoring state of ->selected in signal regex search */
 {
-struct symchain *next;
-struct symbol *symbol;
+    struct symchain *next;
+    struct symbol *symbol;
 };
-
 
 struct string_chain_t
 {
-struct string_chain_t *next;
-char *str;
+    struct string_chain_t *next;
+    char *str;
 };
-
 
 /* hash create/destroy */
 void sym_hash_initialize(void *g);
 void sym_hash_destroy(void *g);
-
 
 struct symbol *symfind(char *, unsigned int *);
 struct symbol *symadd(char *, int);
 struct symbol *symadd_name_exists(char *name, int hv);
 int hash(char *s);
 
-/* typically use zero for hashval as it doesn't matter if facs are sorted as symfind will bsearch... */
+/* typically use zero for hashval as it doesn't matter if facs are sorted as symfind will bsearch...
+ */
 #define symadd_name_exists_sym_exists(s, nam, hv) \
-(s)->name = (nam); /* (s)->sym_next=GLOBALS->sym_hash[(hv)]; GLOBALS->sym_hash[(hv)]=(s); (obsolete) */
+    (s)->name = (nam); /* (s)->sym_next=GLOBALS->sym_hash[(hv)]; GLOBALS->sym_hash[(hv)]=(s); \
+                          (obsolete) */
 
 void facsplit(char *, int *, int *);
 int sigcmp(char *, char *);
@@ -100,7 +97,6 @@ void wave_heapsort(struct symbol **a, int num);
 struct Bits *makevec(char *, char *);
 struct Bits *makevec_annotated(char *, char *);
 int maketraces(char *, char *, int);
-
 
 /* additions to bitvec.c because of search.c/menu.c ==> formerly in analyzer.h */
 bvptr bits2vector(struct Bits *b);
@@ -124,4 +120,3 @@ char set_s_selected(struct symbol *s, char value);
 void destroy_s_selected(void);
 
 #endif
-

@@ -214,7 +214,7 @@ static void remove_file_filter(int which, int regen)
     }
 }
 
-static void load_file_filter(int which, char *name)
+static void load_file_filter(int which, const char *name)
 {
     FILE *f = fopen(name, "rb");
     if (!f) {
@@ -261,7 +261,7 @@ static void load_file_filter(int which, char *name)
     fclose(f);
 }
 
-static void load_enums_filter(int which, char *name)
+static void load_enums_filter(int which, const char *name)
 {
     int argc;
     char **spl = zSplitTclList(name, &argc);
@@ -409,11 +409,11 @@ static void add_filter_callback(GtkWidget *widget, GtkWidget *nothing)
 /*
  * mainline..
  */
-void trans_searchbox(char *title)
+void trans_searchbox(const char *title)
 {
     int i;
 
-    gchar *titles[] = {"Filter Select"};
+    const gchar *titles[] = {"Filter Select"};
 
     if (GLOBALS->is_active_translate_c_5) {
         gdk_window_raise(gtk_widget_get_window(GLOBALS->window_translate_c_11));
@@ -518,7 +518,7 @@ void trans_searchbox(char *title)
 /*
  * currently only called by parsewavline+tcl
  */
-static void set_current_translate_generic(char *name, int typ)
+static void set_current_translate_generic(const char *name, int typ)
 {
     int i;
 

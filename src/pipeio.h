@@ -27,29 +27,26 @@
 #include <windows.h>
 #endif
 
-
 struct pipe_ctx
 {
 #if defined __MINGW32__
 
-HANDLE g_hChildStd_IN_Rd;
-HANDLE g_hChildStd_IN_Wr;  /* handle for gtkwave to write to */
-HANDLE g_hChildStd_OUT_Rd; /* handle for gtkwave to read from */
-HANDLE g_hChildStd_OUT_Wr;
-PROCESS_INFORMATION piProcInfo;
+    HANDLE g_hChildStd_IN_Rd;
+    HANDLE g_hChildStd_IN_Wr; /* handle for gtkwave to write to */
+    HANDLE g_hChildStd_OUT_Rd; /* handle for gtkwave to read from */
+    HANDLE g_hChildStd_OUT_Wr;
+    PROCESS_INFORMATION piProcInfo;
 
 #else
 
-FILE *sin, *sout;
-int fd0, fd1;
-pid_t pid;
+    FILE *sin, *sout;
+    int fd0, fd1;
+    pid_t pid;
 
 #endif
 };
-
 
 struct pipe_ctx *pipeio_create(char *execappname, char *arg);
 void pipeio_destroy(struct pipe_ctx *p);
 
 #endif
-

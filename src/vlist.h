@@ -19,38 +19,36 @@
 
 struct vlist_t
 {
-struct vlist_t *next;
-unsigned int siz;
-unsigned int offs;
-unsigned int elem_siz;
+    struct vlist_t *next;
+    unsigned int siz;
+    unsigned int offs;
+    unsigned int elem_siz;
 };
-
 
 /* experimentation shows that 255 is one of the least common
    bytes found in recoded value change streams */
 #define WAVE_ZIVFLAG (0xff)
 
-#define WAVE_ZIVWRAP (1<<7) 		  /* must be power of two because of AND mask */
-#define WAVE_ZIVSRCH (WAVE_ZIVWRAP)	  /* search depth in bytes */
-#define WAVE_ZIVSKIP (1)		  /* number of bytes to skip for alternate rollover searches */
-#define WAVE_ZIVMASK ((WAVE_ZIVWRAP) - 1) /* then this becomes an AND mask for wrapping */
+#define WAVE_ZIVWRAP (1 << 7) /* must be power of two because of AND mask */
+#define WAVE_ZIVSRCH (WAVE_ZIVWRAP) /* search depth in bytes */
+#define WAVE_ZIVSKIP (1) /* number of bytes to skip for alternate rollover searches */
+#define WAVE_ZIVMASK ((WAVE_ZIVWRAP)-1) /* then this becomes an AND mask for wrapping */
 
 struct vlist_packer_t
 {
-struct vlist_t *v;
+    struct vlist_t *v;
 
-unsigned char buf[WAVE_ZIVWRAP];
+    unsigned char buf[WAVE_ZIVWRAP];
 
 #ifdef WAVE_VLIST_PACKER_STATS
-unsigned int packed_bytes;
+    unsigned int packed_bytes;
 #endif
-unsigned int unpacked_bytes;
-unsigned int repcnt, repcnt2, repcnt3, repcnt4;
+    unsigned int unpacked_bytes;
+    unsigned int repcnt, repcnt2, repcnt3, repcnt4;
 
-unsigned char bufpnt;
-unsigned char repdist, repdist2, repdist3, repdist4;
+    unsigned char bufpnt;
+    unsigned char repdist, repdist2, repdist3, repdist4;
 };
-
 
 void vlist_init_spillfile(void);
 void vlist_kill_spillfile(void);
@@ -70,4 +68,3 @@ unsigned char *vlist_packer_decompress(struct vlist_t *vl, unsigned int *declen)
 void vlist_packer_decompress_destroy(char *mem);
 
 #endif
-

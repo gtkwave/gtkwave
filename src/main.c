@@ -490,7 +490,9 @@ static void window_setup_dnd(GtkWidget *window)
 {
     GtkTargetEntry targets[1];
 
-    targets[0].target = "text/uri-list";
+    gchar *uri_list = g_strdup("text/uri-list");
+
+    targets[0].target = uri_list;
     targets[0].flags = 0;
     targets[0].info = 0;
 
@@ -499,6 +501,8 @@ static void window_setup_dnd(GtkWidget *window)
                       targets,
                       G_N_ELEMENTS(targets),
                       GDK_ACTION_COPY);
+
+    g_free(uri_list);
 }
 
 static void window_drag_data_received(GtkWidget *widget,
@@ -667,9 +671,9 @@ int main(int argc, char *argv[])
 
 int main_2(int opt_vcd, int argc, char *argv[])
 {
-    static char *winprefix = "GTKWave - ";
-    static char *winstd = "GTKWave (stdio) ";
-    static char *vcd_autosave_name = "vcd_autosave.sav";
+    static const char *winprefix = "GTKWave - ";
+    static const char *winstd = "GTKWave (stdio) ";
+    static const char *vcd_autosave_name = "vcd_autosave.sav";
     char *output_name = NULL;
     char *chdir_cache = NULL;
 
@@ -1560,7 +1564,7 @@ do_primary_inits:
             GLOBALS->winname = malloc_2(strlen(GLOBALS->loaded_file_name) + strlen(winprefix) + 1);
             strcpy(GLOBALS->winname, winprefix);
         } else {
-            char *iact = "GTKWave - Interactive Shared Memory ID ";
+            const char *iact = "GTKWave - Interactive Shared Memory ID ";
             GLOBALS->winname = malloc_2(strlen(GLOBALS->loaded_file_name) + strlen(iact) + 1);
             strcpy(GLOBALS->winname, iact);
         }
@@ -1794,7 +1798,8 @@ loader_check_head:
         GLOBALS->is_gtkw_save_file = (!wname) || suffix_check(wname, ".gtkw");
 
         if (vcd_save_handle_cached) {
-            wname = vcd_autosave_name;
+            wname = malloc_2(strlen(vcd_autosave_name) + 1);
+            strcpy(wname, vcd_autosave_name);
             GLOBALS->do_initial_zoom_fit = 1;
         } else if ((!wname) /* && (is_smartsave) */) {
             char *pnt = g_alloca(strlen(GLOBALS->loaded_file_name) + 1);
@@ -1877,6 +1882,9 @@ loader_check_head:
                         break;
                     case LXT2_IS_FSDB:
                         fsdb_import_masked();
+                        break;
+                    default:
+                        g_warn_if_reached();
                         break;
                 }
 
@@ -1990,7 +1998,7 @@ savefile_bail:
             g_signal_connect(GLOBALS->mainwindow,
                              "delete_event",
                              /* formerly was "destroy" */ G_CALLBACK(file_quit_cmd_callback),
-                             "WM destroy");
+                             NULL);
 
             window_setup_dnd(GLOBALS->mainwindow);
             g_signal_connect(GLOBALS->mainwindow,
@@ -2014,7 +2022,7 @@ savefile_bail:
             g_signal_connect(GLOBALS->mainwindow,
                              "destroy",
                              /* formerly was "destroy" */ G_CALLBACK(plug_destroy),
-                             "Plug destroy");
+                             NULL);
 #else
             fprintf(stderr, "GTKWAVE | GtkPlug widget is unavailable\n");
             exit(1);
