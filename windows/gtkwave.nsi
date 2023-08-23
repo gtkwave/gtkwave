@@ -1,5 +1,5 @@
-Name "@project_name@"
-OutFile "@out_file@"
+Name "${PROJECT_NAME}"
+OutFile "${OUT_FILE}"
 
 !include "FileFunc.nsh"
 !include "DumpLog.nsh"
@@ -30,7 +30,7 @@ Section "Info"
   # Print version info into the installer window
   ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
   DetailPrint "Running installer on $3 $2-$1-$0 $4:$5:$6"
-  DetailPrint "Version=@project_version@"
+  DetailPrint "Version=${PROJECT_VERSION}"
 SectionEnd
   
 ; optional section
@@ -48,68 +48,68 @@ Section "" ; (default section)
   File README.md
   
   SetOutPath $INSTDIR\bin
-  File @bindir@\libintl-8.dll
-  File @bindir@\iconv.dll
-  #File @bindir@\libpcre-1.dll
-  File @bindir@\libpcre2-8-0.dll
-  File @bindir@\libgtk-3-0.dll
-  File @bindir@\libgdk-3-0.dll
-  File @bindir@\libssp-0.dll
-  File @bindir@\libgdk_pixbuf-2.0-0.dll
-  File @bindir@\libpixman-1-0.dll
-  File @bindir@\libffi-8.dll
-  File @bindir@\libgio-2.0-0.dll
-  File @bindir@\libgnurx-0.dll
-  File @bindir@\libcairo-2.dll
-  File @bindir@\libcairo-gobject-2.dll
-  File @bindir@\zlib1.dll
-  File @bindir@\libglib-2.0-0.dll
-  File @bindir@\libatk-1.0-0.dll
-  File @bindir@\libgobject-2.0-0.dll
-  File @bindir@\libgmodule-2.0-0.dll
-  File @bindir@\libgthread-2.0-0.dll
-  File @bindir@\libpango-1.0-0.dll
-  File @bindir@\libfribidi-0.dll
-  File @bindir@\libpangocairo-1.0-0.dll
-  File @bindir@\libpangoft2-1.0-0.dll
-  File @bindir@\libpangowin32-1.0-0.dll
-  File @bindir@\libpng16-16.dll
-  File @bindir@\libtiff-5.dll
-  File @bindir@\libjpeg-62.dll
-  File @bindir@\libfontconfig-1.dll
-  File @bindir@\libxml2-2.dll
-  File @bindir@\libfreetype-6.dll
-  File @bindir@\gdk-pixbuf-query-loaders.exe
-  File @bindir@\${LIBGCCDLL}
-  File @bindir@\libstdc++-6.dll
-  File @bindir@\libwinpthread-1.dll
-  File @bindir@\libxml2-2.dll
-  File @bindir@\libexpat-1.dll
-  File @bindir@\libbz2-1.dll
-  File @bindir@\libharfbuzz-0.dll
-  File @bindir@\libharfbuzz-icu-0.dll
-  File @bindir@\libharfbuzz-subset-0.dll
-  File @bindir@\gspawn-win64-helper.exe
-  File @bindir@\gdbus.exe
-  File @bindir@\libepoxy-0.dll
-  File @buildroot@\src\*.exe
-  File @buildroot@\src\helpers\*.exe
+  File ${BINDIR}\libintl-8.dll
+  File ${BINDIR}\iconv.dll
+  #File ${BINDIR}\libpcre-1.dll
+  File ${BINDIR}\libpcre2-8-0.dll
+  File ${BINDIR}\libgtk-3-0.dll
+  File ${BINDIR}\libgdk-3-0.dll
+  File ${BINDIR}\libssp-0.dll
+  File ${BINDIR}\libgdk_pixbuf-2.0-0.dll
+  File ${BINDIR}\libpixman-1-0.dll
+  File ${BINDIR}\libffi-8.dll
+  File ${BINDIR}\libgio-2.0-0.dll
+  File ${BINDIR}\libgnurx-0.dll
+  File ${BINDIR}\libcairo-2.dll
+  File ${BINDIR}\libcairo-gobject-2.dll
+  File ${BINDIR}\zlib1.dll
+  File ${BINDIR}\libglib-2.0-0.dll
+  File ${BINDIR}\libatk-1.0-0.dll
+  File ${BINDIR}\libgobject-2.0-0.dll
+  File ${BINDIR}\libgmodule-2.0-0.dll
+  File ${BINDIR}\libgthread-2.0-0.dll
+  File ${BINDIR}\libpango-1.0-0.dll
+  File ${BINDIR}\libfribidi-0.dll
+  File ${BINDIR}\libpangocairo-1.0-0.dll
+  File ${BINDIR}\libpangoft2-1.0-0.dll
+  File ${BINDIR}\libpangowin32-1.0-0.dll
+  File ${BINDIR}\libpng16-16.dll
+  File ${BINDIR}\libtiff-5.dll
+  File ${BINDIR}\libjpeg-62.dll
+  File ${BINDIR}\libfontconfig-1.dll
+  File ${BINDIR}\libxml2-2.dll
+  File ${BINDIR}\libfreetype-6.dll
+  File ${BINDIR}\gdk-pixbuf-query-loaders.exe
+  File ${BINDIR}\${LIBGCCDLL}
+  File ${BINDIR}\libstdc++-6.dll
+  File ${BINDIR}\libwinpthread-1.dll
+  File ${BINDIR}\libxml2-2.dll
+  File ${BINDIR}\libexpat-1.dll
+  File ${BINDIR}\libbz2-1.dll
+  File ${BINDIR}\libharfbuzz-0.dll
+  File ${BINDIR}\libharfbuzz-icu-0.dll
+  File ${BINDIR}\libharfbuzz-subset-0.dll
+  File ${BINDIR}\gspawn-win64-helper.exe
+  File ${BINDIR}\gdbus.exe
+  File ${BINDIR}\libepoxy-0.dll
+  File ${BUILDROOT}\src\*.exe
+  File ${BUILDROOT}\src\helpers\*.exe
   
   
   SetOutPath "$INSTDIR"
-  File /r @sysconfdir@
+  File /r ${SYSCONFDIR}
   SetOutPath $INSTDIR\lib\gdk-pixbuf-2.0\2.10.0\loaders
-  File @libdir@\gdk-pixbuf-2.0\2.10.0\loaders\*
+  File ${LIBDIR}\gdk-pixbuf-2.0\2.10.0\loaders\*
   SetOutPath $INSTDIR\lib\gdk-pixbuf-2.0\2.10.0
-  File @libdir@\gdk-pixbuf-2.0\2.10.0\loaders.cache
+  File ${LIBDIR}\gdk-pixbuf-2.0\2.10.0\loaders.cache
   
   SetOutPath $INSTDIR\share
-  File /r @datadir@\themes
+  File /r ${DATADIR}\themes
   SetOutPath $INSTDIR\share\icons
-  File /r @datadir@\icons\Adwaita
+  File /r ${DATADIR}\icons\Adwaita
   
   SetOutPath $INSTDIR\share\glib-2.0
-  File /r @datadir@\glib-2.0\schemas
+  File /r ${DATADIR}\glib-2.0\schemas
   
   # Build the gdk-pixbuf.loaders file automatically
   ExpandEnvStrings $0 %COMSPEC%
