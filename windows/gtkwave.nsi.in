@@ -13,11 +13,11 @@ LicenseData "COPYING"
 
 BrandingText "GTKWave Installer"
 
-InstallDir "$PROGRAMFILES64\@application_name@"
-InstallDirRegKey HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@" ""
+InstallDir "$PROGRAMFILES64\${APPLICATION_NAME}"
+InstallDirRegKey HKEY_LOCAL_MACHINE "SOFTWARE\${APPLICATION_NAME}" ""
 
 ; The text to prompt the user to enter a directory
-DirText "Choose a folder in which to install @application_name@"
+DirText "Choose a folder in which to install ${APPLICATION_NAME}"
 
 ; Show details
 ShowInstDetails show
@@ -35,9 +35,9 @@ SectionEnd
   
 ; optional section
 Section "Start Menu Shortcuts"
-  CreateDirectory "$SMPROGRAMS\@application_name@"
-  CreateShortCut "$SMPROGRAMS\@application_name@\Uninstall.lnk" "$INSTDIR\bin\uninst.exe" "" "$INSTDIR\uninst.exe" 0
-  CreateShortCut "$SMPROGRAMS\@application_name@\@application_name@.lnk" "$INSTDIR\bin\@application_name@.exe" "" "$INSTDIR\@application_name@.exe" 0
+  CreateDirectory "$SMPROGRAMS\${APPLICATION_NAME}"
+  CreateShortCut "$SMPROGRAMS\${APPLICATION_NAME}\Uninstall.lnk" "$INSTDIR\bin\uninst.exe" "" "$INSTDIR\uninst.exe" 0
+  CreateShortCut "$SMPROGRAMS\${APPLICATION_NAME}\${APPLICATION_NAME}.lnk" "$INSTDIR\bin\${APPLICATION_NAME}.exe" "" "$INSTDIR\${APPLICATION_NAME}.exe" 0
 SectionEnd
 
 Section "" ; (default section)
@@ -83,24 +83,14 @@ Section "" ; (default section)
   File @bindir@\${LIBGCCDLL}
   File @bindir@\libstdc++-6.dll
   File @bindir@\libwinpthread-1.dll
-  #File @bindir@\libgfortran-*.dll
-  #File @bindir@\librsvg-2-2.dll
-  #File @bindir@\libcroco-0.6-3.dll
   File @bindir@\libxml2-2.dll
-  #File @bindir@\libquadmath-0.dll
-  #File @bindir@\libopenjp2.dll
-  #File @bindir@\libsqlite3-0.dll
   File @bindir@\libexpat-1.dll
   File @bindir@\libbz2-1.dll
-  #File @bindir@\glew32.dll
-  #File @bindir@\libzip-5.dll
   File @bindir@\libharfbuzz-0.dll
   File @bindir@\libharfbuzz-icu-0.dll
   File @bindir@\libharfbuzz-subset-0.dll
   File @bindir@\gspawn-win64-helper.exe
   File @bindir@\gdbus.exe
-  #File @bindir@\libsigc-2.0-0.dll
-  #File @bindir@\libmpfr-6.dll
   File @bindir@\libepoxy-0.dll
   File @buildroot@\src\*.exe
   File @buildroot@\src\helpers\*.exe
@@ -161,9 +151,9 @@ Section "" ; (default section)
 
   System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
   
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@" "" "$INSTDIR"
-  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\@application_name@" "DisplayName" "@application_name@ (remove only)"
-  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\@application_name@" "UninstallString" '"$INSTDIR\bin\uninst.exe"'
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\${APPLICATION_NAME}" "" "$INSTDIR"
+  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION_NAME}" "DisplayName" "${APPLICATION_NAME} (remove only)"
+  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION_NAME}" "UninstallString" '"$INSTDIR\bin\uninst.exe"'
   ; write out uninstaller
   WriteUninstaller "$INSTDIR\bin\uninst.exe"
 
@@ -174,19 +164,19 @@ Section "" ; (default section)
 SectionEnd ; end of default section
 
 ; begin uninstall settings/section
-UninstallText "This will uninstall @application_name@ from your system"
+UninstallText "This will uninstall ${APPLICATION_NAME} from your system"
 
 Section Uninstall
   ; add delete commands to delete whatever files/registry keys/etc you installed here.
-  ReadRegStr $0 HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@" ""
+  ReadRegStr $0 HKEY_LOCAL_MACHINE "SOFTWARE\${APPLICATION_NAME}" ""
   DetailPrint "Deleting from $0"
   
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\@application_name@"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\@application_name@"
+  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\${APPLICATION_NAME}"
+  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION_NAME}"
   SetOutPath "$TEMP"
   RMDir /r "$0"
   
-  RMDir /r "$SMPROGRAMS\@application_name@"
+  RMDir /r "$SMPROGRAMS\${APPLICATION_NAME}"
 SectionEnd ; end of uninstall section
 
 ; eof

@@ -31,7 +31,6 @@ if makensis.found()
     windows_installer_config.set('sysconfdir', get_option('prefix') / get_option('sysconfdir'))
     windows_installer_config.set('project_name', meson.project_name())
     windows_installer_config.set('project_version', meson.project_version())
-    windows_installer_config.set('application_name', application_name)
     windows_installer_config.set('out_file', meson.current_build_dir() / windows_installer_output)
 
     gtkwave_nsi = configure_file(
@@ -47,7 +46,10 @@ if makensis.found()
         build_always_stale: true,
         command: [
             makensis,
-            '-DLIBGCCDLL=libgcc_s_seh-1.dll', '@INPUT0@',
+            '-DLIBGCCDLL=libgcc_s_seh-1.dll',
+            '-DAPPLICATION_NAME='+application_name,
+            '@INPUT0@',
+            
         ],
         depends: exe_files,
     )
