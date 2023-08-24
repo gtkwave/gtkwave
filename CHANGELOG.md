@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced hamburger menu with traditional menubar.
 - Improved the readability of the cursor and marker time display.
 - Migrated from autotools to meson.
+- Changed the fallback text editor from gedit to the default editor that is associated with the source filetype.
 
 ### Added
 
@@ -21,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added OpenBSD and FreeBSD OS support for unbuffered FST I/O.
 - Added `dbl_mant_dig_overrides` rc environment variable.
 - Added `disable_antialiasing` rc variable.
+- Added `editor_run_in_terminal` rc variable.
 
 ### Removed
 

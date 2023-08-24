@@ -634,6 +634,7 @@ struct Global
     int rc_line_no; /* from rc.c 336 */
     int possibly_use_rc_defaults; /* from rc.c 337 */
     char *editor_name; /* from rc.c */
+    gboolean editor_run_in_terminal; /* from rc.c */
 
     /*
      * regex.c

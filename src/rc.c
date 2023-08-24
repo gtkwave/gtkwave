@@ -238,6 +238,13 @@ int f_editor(const char *str)
     return (0);
 }
 
+int f_editor_run_in_terminal(const char *str)
+{
+    DEBUG(printf("f_editor_run_in_terminal(\"%s\")\n", str));
+    GLOBALS->editor_run_in_terminal = atoi_64(str) ? 1 : 0;
+    return (0);
+}
+
 int f_enable_fast_exit(const char *str)
 {
     DEBUG(printf("f_enable_fast_exit(\"%s\")\n", str));
@@ -870,6 +877,7 @@ static struct rc_entry rcitems[] = {
     {"dragzoom_threshold", f_dragzoom_threshold},
     {"dynamic_resizing", f_dynamic_resizing},
     {"editor", f_editor},
+    {"editor_run_in_terminal", f_editor_run_in_terminal},
     {"enable_fast_exit", f_enable_fast_exit},
     {"enable_ghost_marker", f_enable_ghost_marker},
     {"enable_horiz_grid", f_enable_horiz_grid},

@@ -199,6 +199,9 @@ A nonzero value indicates that dynamic resizing should be initially enabled (def
 This is used to specify a string (quotes mandatory) for when gtkwave invokes a text editor (e.g., Open Source Definition).  Examples are:
 editor "vimx -g +%d %s", editor "gedit +%d %s", editor "emacs +%d %s", and for OSX, editor "mate -l %d %s".  The %d may be combined with other characters in a string such as +, etc.  The %s argument must stand by itself.  Note that if this rc variable is not set, 
 then the environment variable GTKWAVE_EDITOR will be consulted next, then finally gedit will be used (if found).
+.TP
+\fBeditor_run_in_terminal\fR <\fIvalue\fP>
+A nonzero value indicates that the editor is run in a terminal window. Default is disabled.
 .TP 
 \fBenable_fast_exit\fR <\fIvalue\fP>
 Allows exit without bringing up a confirmation requester. The default is nonzero/yes.
