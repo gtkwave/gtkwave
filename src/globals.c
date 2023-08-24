@@ -622,6 +622,7 @@ static const struct Global globals_base_values = {
     0, /* rc_line_no 318 */
     1, /* possibly_use_rc_defaults 319 */
     NULL, /* editor_string */
+    FALSE, /* editor_run_in_terminal */
 
     /*
      * regex.c

@@ -4111,139 +4111,97 @@ char **grow_array(char ***src, int *siz, char *str)
     return (*src);
 }
 
+static const gchar *EDITORS_WITH_LINE_NUMBER_SUPPORT[] =
+    {"vi", "vim", "gvim", "emacs", "gedit", "code", "codium", NULL};
+
 static void open_index_in_forked_editor(uint32_t idx, int typ)
 {
-    if (idx) {
-        int lineno = 1;
-        char *edname = getenv("GTKWAVE_EDITOR");
-        char *fname = NULL;
-        FILE *ftest = NULL;
-
-        if (GLOBALS->editor_name) {
-            edname = GLOBALS->editor_name; /* rcfile "editor" variable first */
-        } else {
-            if (edname) {
-                /* ok, env var GTKWAVE_EDITOR second */
-            }
-#ifdef GEDIT_PATH
-            else {
-                /* fallback */
-                edname = GEDIT_PATH;
-            }
-#endif
-        }
-
-#ifdef MAC_INTEGRATION
-        if (!edname) {
-            edname = "open -t"; /* Use OSX TextEdit as editor of last resort */
-        }
-#endif
-
-        idx--;
-        if (typ == FST_MT_SOURCESTEM) {
-            lineno = GLOBALS->stem_struct_base[idx].stem_line_number;
-            fname = GLOBALS->stem_path_string_table[GLOBALS->stem_struct_base[idx].stem_idx];
-        } else {
-            lineno = GLOBALS->istem_struct_base[idx].stem_line_number;
-            fname = GLOBALS->stem_path_string_table[GLOBALS->istem_struct_base[idx].stem_idx];
-        }
-
-#ifdef __MINGW32__
-        {
-            fprintf(stderr, "GTKWAVE | Not supported in Windows!\n");
-        }
-#else
-
-        if (!(ftest = fopen(fname, "rb"))) {
-            char *rp = get_relative_adjusted_name(GLOBALS->loaded_file_name,
-                                                  fname,
-                                                  GLOBALS->loaded_file_name);
-            if (!rp) {
-                int clen = strlen(fname);
-                int wid = clen * 10;
-
-                if (wid < 400)
-                    wid = 400;
-
-                simplereqbox("Could not open file!", wid, fname, "OK", NULL, NULL, 1);
-                return;
-            }
-
-            fname = g_alloca(strlen(rp) + 1);
-            strcpy(fname, rp);
-            free_2(rp);
-        } else {
-            fclose(ftest);
-            ftest = NULL;
-        }
-
-        {
-            pid_t pid = fork();
-
-            if (((int)pid) < 0) {
-                /* can't do anything about this */
-            } else {
-                if (pid) /* parent==original server_pid */
-                {
-                } else {
-                    char *str = strdup_2(edname);
-                    char nbuf[32];
-
-                    char *saveptr1 = NULL;
-                    char *str1, *token, *sd_token;
-                    const char *delim = " \t";
-                    int num_seen = 0;
-                    int fn_seen = 0;
-
-                    char **ar = NULL;
-                    int siz = 0;
-
-                    for (str1 = str;; str1 = NULL) {
-                        token = strtok_r(str1, delim, &saveptr1);
-                        if (!token)
-                            break;
-
-                        if (strstr(token, "%d")) {
-                            sprintf(nbuf, token, lineno);
-                            sd_token = strdup_2(nbuf);
-                            num_seen = 1;
-                        } else if (!strcmp(token, "%s")) {
-                            sd_token = strdup_2(fname);
-                            fn_seen = 1;
-                        } else {
-                            sd_token = strdup_2(token);
-                        }
-                        grow_array(&ar, &siz, sd_token);
-                    }
-
-                    if (ar && edname) {
-                        if (!num_seen) {
-                            if ((strstr(ar[0], "vi")) || (strstr(ar[0], "emacs")) ||
-                                (strstr(ar[0], "gedit"))) {
-                                sprintf(nbuf, "+%d", lineno);
-                                sd_token = strdup_2(nbuf);
-                                grow_array(&ar, &siz, sd_token);
-                            }
-                        }
-
-                        if (!fn_seen) {
-                            sd_token = strdup_2(fname);
-                            grow_array(&ar, &siz, sd_token);
-                        }
-
-                        grow_array(&ar, &siz, NULL);
-
-                        execvp(ar[0], ar);
-                    }
-
-                    fprintf(stderr, "GTKWAVE | Could not find editor executable!\n");
-                    exit(255); /* control never gets here if successful */
-                }
-            }
-        }
-#endif
-    } else {
+    if (idx == 0) {
         simplereqbox("Open Source", 400, "Source stem not present!", "OK", NULL, NULL, 1);
+        return;
+    }
+
+    int lineno = 1;
+    char *fname = NULL;
+
+    idx--;
+    if (typ == FST_MT_SOURCESTEM) {
+        lineno = GLOBALS->stem_struct_base[idx].stem_line_number;
+        fname = g_strdup(GLOBALS->stem_path_string_table[GLOBALS->stem_struct_base[idx].stem_idx]);
+    } else {
+        lineno = GLOBALS->istem_struct_base[idx].stem_line_number;
+        fname = g_strdup(GLOBALS->stem_path_string_table[GLOBALS->istem_struct_base[idx].stem_idx]);
+    }
+
+    g_return_if_fail(fname != NULL);
+
+    if (!g_file_test(fname, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)) {
+        char *rp =
+            get_relative_adjusted_name(GLOBALS->loaded_file_name, fname, GLOBALS->loaded_file_name);
+        if (!rp) {
+            int clen = strlen(fname);
+            int wid = MIN(clen * 10, 400);
+
+            simplereqbox("Could not open file!", wid, fname, "OK", NULL, NULL, 1);
+            return;
+        }
+
+        g_free(fname);
+        fname = g_strdup(rp);
+        free_2(rp);
+    }
+
+    const gchar *editor_name = GLOBALS->editor_name;
+    if (editor_name == NULL) {
+        editor_name = g_getenv("GTKWAVE_EDITOR");
+    }
+
+    if (editor_name != NULL) {
+        gchar *editor_command;
+        if (strstr(editor_name, "%s") != NULL) {
+            char *lineno_str = g_strdup_printf("%d", lineno);
+
+            GRegex *d_re = g_regex_new("%d", 0, 0, NULL);
+            GRegex *s_re = g_regex_new("%s", 0, 0, NULL);
+            g_assert_nonnull(d_re);
+            g_assert_nonnull(s_re);
+
+            gchar *t = g_regex_replace_literal(d_re, editor_name, -1, 0, lineno_str, 0, NULL);
+            editor_command = g_regex_replace_literal(s_re, t, -1, 0, fname, 0, NULL);
+            g_free(t);
+        } else if (g_strv_contains(EDITORS_WITH_LINE_NUMBER_SUPPORT, editor_name)) {
+            editor_command = g_strdup_printf("%s %s +%d", editor_name, fname, lineno);
+        } else {
+            editor_command = g_strdup_printf("%s %s", editor_name, fname);
+        }
+
+        GdkDisplay *display = gtk_widget_get_display(GLOBALS->mainwindow);
+        GdkAppLaunchContext *app_launch_context = gdk_display_get_app_launch_context(display);
+        gdk_app_launch_context_set_timestamp(app_launch_context, GDK_CURRENT_TIME);
+
+        GAppInfoCreateFlags flags = G_APP_INFO_CREATE_NONE;
+        if (GLOBALS->editor_run_in_terminal) {
+            flags |= G_APP_INFO_CREATE_NEEDS_TERMINAL;
+        }
+
+        GAppInfo *app_info = g_app_info_create_from_commandline(editor_command, NULL, flags, NULL);
+        g_assert_nonnull(app_info);
+        if (!g_app_info_launch(app_info, NULL, G_APP_LAUNCH_CONTEXT(app_launch_context), NULL)) {
+            simplereqbox("Could not launch editor!", 400, editor_command, "OK", NULL, NULL, 1);
+        }
+
+        g_object_unref(app_info);
+        g_object_unref(app_launch_context);
+    } else {
+        GFile *file = g_file_new_for_path(fname);
+        gchar *uri = g_file_get_uri(file);
+
+        if (!gtk_show_uri_on_window(GTK_WINDOW(GLOBALS->mainwindow), uri, GDK_CURRENT_TIME, NULL)) {
+            simplereqbox("Could not launch default editor!", 400, fname, "OK", NULL, NULL, 1);
+        }
+
+        g_free(uri);
+        g_object_unref(file);
     }
 }
 
