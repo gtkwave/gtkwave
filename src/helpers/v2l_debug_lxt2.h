@@ -61,7 +61,7 @@ typedef guint64         UTimeType;
 #define TTFormat "%lld"
 #endif
 #else
-#define TTFormat "%I64d"
+#define TTFormat "%lld"
 #endif
 #else
 #define LLDescriptor(x) x##i64

@@ -20,6 +20,17 @@ gnome = import('gnome')
 cc = meson.get_compiler('c')
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
 
+# Heuristic setting of flags to make cross compilation work.
+#
+# Ralf: can you clean this up?
+if host_machine.system() == 'windows'
+    add_project_arguments(
+      ['-DHAVE_LIBINTL_H=0',
+       '-DHAVE_STRING_H=1',
+       '-D__GNU_LIBRARY__'],
+       language: 'c')
+endif
+
 datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 
 # Required dependency versions

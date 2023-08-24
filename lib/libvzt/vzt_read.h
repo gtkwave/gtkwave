@@ -90,7 +90,7 @@ typedef int32_t			vztsint32_t;
 #define VZT_RD_LLD "%"PRId64
 #define VZT_RD_LD "%"PRId32
 #else
-#define VZT_RD_LLD "%I64d"
+#define VZT_RD_LLD "%lld"
 #define VZT_RD_LD "%d"
 #endif
 #define VZT_RD_LLDESC(x) x##LL

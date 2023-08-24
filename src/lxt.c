@@ -579,10 +579,7 @@ static void build_facs2(char *fname)
     char *decmem = NULL;
     int total_mem;
     gzFile zhandle = NULL;
-
-#if defined __MINGW32__
     FILE *tmp;
-#endif
 
     if ((!GLOBALS->time_table_offset_lxt_c_1) && (!GLOBALS->time_table_offset64_lxt_c_1)) {
         fprintf(stderr, "LXT '%s' is missing a time table section, exiting.\n", fname);
@@ -852,7 +849,7 @@ static void build_facs2(char *fname)
         if (GLOBALS->zchg_predec_size_lxt_c_1 > LXT_MMAP_MALLOC_BOUNDARY) {
             int fd_dummy;
             char *nam = tmpnam_2(NULL, &fd_dummy);
-            FILE *tmp = fopen(nam, "wb");
+            tmp = fopen(nam, "wb");
             unsigned int len = GLOBALS->zchg_predec_size_lxt_c_1;
             int rc;
             char buf[32768];
@@ -1082,7 +1079,6 @@ static void build_facs2(char *fname)
         unsigned int dict_32_offset_new = 0;
 
         char *nam;
-        FILE *tmp;
         int recfd;
         int fd_dummy;
 
