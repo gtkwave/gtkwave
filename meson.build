@@ -20,17 +20,6 @@ gnome = import('gnome')
 cc = meson.get_compiler('c')
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
 
-# Heuristic setting of flags to make cross compilation work.
-#
-# Ralf: can you clean this up?
-if host_machine.system() == 'windows'
-    add_project_arguments(
-      ['-DHAVE_LIBINTL_H=0',
-       '-DHAVE_STRING_H=1',
-       '-D__GNU_LIBRARY__'],
-       language: 'c')
-endif
-
 datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 
 # Required dependency versions
@@ -104,7 +93,6 @@ config.set('STDC_HEADERS', 1)
 config.set('HAVE_INTTYPES_H', cc.has_header('inttypes.h'))
 config.set('HAVE_SYS_STAT_H', cc.has_header('sys/stat.h'))
 config.set('HAVE_ALLOCA_H', cc.has_header('alloca.h'))
-config.set('HAVE_GETOPT_H', cc.has_header('getopt.h'))
 config.set('HAVE_FCNTL', cc.has_header('fcntl.h'))
 config.set10('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 config.set('HAVE_LIBPTHREAD', thread_dep.found())

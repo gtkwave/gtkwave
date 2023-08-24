@@ -46,8 +46,6 @@ gtkwave_sources = [
     'fonts.c',
     'fst.c',
     'gconf.c',
-    'getopt.c',
-    'getopt1.c',
     'ghw.c',
     'globals.c',
     'gtk23compat.c',
