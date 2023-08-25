@@ -34,6 +34,7 @@ tk_req = '>=8.6.0'
 # Dependencies
 
 glib_dep = dependency('glib-2.0', version: glib_req)
+gobject_dep = dependency('gobject-2.0', version: glib_req)
 gtk_dep = dependency('gtk+-3.0', version: gtk_req)
 gtk_unix_print_dep = dependency(
     'gtk+-unix-print-3.0',
