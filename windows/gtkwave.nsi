@@ -77,13 +77,12 @@ Section "" ; (default section)
   File ${BINDIR}\libtiff-5.dll
   File ${BINDIR}\libjpeg-62.dll
   File ${BINDIR}\libfontconfig-1.dll
-  File ${BINDIR}\libxml2-2.dll
+  #File ${BINDIR}\libxml2-2.dll
   File ${BINDIR}\libfreetype-6.dll
   File ${BINDIR}\gdk-pixbuf-query-loaders.exe
   File ${BINDIR}\${LIBGCCDLL}
   File ${BINDIR}\libstdc++-6.dll
   File ${BINDIR}\libwinpthread-1.dll
-  File ${BINDIR}\libxml2-2.dll
   File ${BINDIR}\libexpat-1.dll
   File ${BINDIR}\libbz2-1.dll
   File ${BINDIR}\libharfbuzz-0.dll

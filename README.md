@@ -133,7 +133,7 @@ the binary distribution by applying patches using the
 ### Dependencies
 
 ```sh
-sudo dnf install meson gperf flex glib2-devel mingw64-gcc mingw64-gcc-c++ mingw64-filesystem mingw64-gtk3 mingw64-libgnurx mingw64-tcl mingw64-tk mingw64-nsis
+sudo dnf install meson gperf flex glib2-devel mingw64-gcc mingw64-gcc-c++ mingw64-filesystem mingw64-gtk3 mingw64-libgnurx mingw64-tcl mingw64-tk mingw64-nsis mingw32-nsis
 ```
 
 ### Building the project
@@ -142,7 +142,6 @@ sudo dnf install meson gperf flex glib2-devel mingw64-gcc mingw64-gcc-c++ mingw6
 mingw64-meson build_mingw64
 cd build_mingw64
 meson compile
-
 ```
 
 ### Building a windows installer
@@ -151,7 +150,6 @@ meson compile
 mingw64-meson build_mingw64
 cd build_mingw64
 meson compile windows_installer
-
 ```
 ## MSYS2 notes for creating a working environment for compiling gtkwave:
 

@@ -10,7 +10,7 @@ additional_gtkwave_sources += windows.compile_resources('gtkwave.rc')
 # Installer
 
 if makensis.found()
-    windows_installer_additional_inputs = [
+    windows_installer_inputs = [
         fs.copyfile('gtkwave.nsi'),
         fs.copyfile('gtkwave_logo.ico'),
         fs.copyfile('gtkwave_files_logo.ico'),
@@ -26,7 +26,7 @@ if makensis.found()
 
     custom_target(
         'windows_installer',
-        input: windows_installer_additional_inputs,
+        input: windows_installer_inputs,
         output: windows_installer_output,
         build_always_stale: true,
         command: [
