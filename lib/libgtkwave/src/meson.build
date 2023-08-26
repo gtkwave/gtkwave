@@ -1,6 +1,7 @@
 libgtkwave_sources = [
     'gw-marker.c',
     'gw-named-markers.c',
+    'gw-project.c',
     'gw-time.c',
     'gw-util.c',
 ]
