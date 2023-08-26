@@ -37,7 +37,7 @@ static void test_find_first_disabled(void)
     GwNamedMarkers *markers = gw_named_markers_new(4);
 
     GwMarker *marker;
-    
+
     marker = gw_named_markers_find_first_disabled(markers);
     g_assert_cmpstr(gw_marker_get_name(marker), ==, "A");
 
@@ -78,6 +78,27 @@ static void test_find(void)
     g_object_unref(markers);
 }
 
+static void append_marker_name(gpointer data, gpointer user_data)
+{
+    GwMarker *marker = data;
+    GString *string = user_data;
+
+    g_string_append(string, gw_marker_get_name(marker));
+}
+
+static void test_foreach(void)
+{
+    GwNamedMarkers *markers = gw_named_markers_new(5);
+
+    GString *string = g_string_new(NULL);
+    gw_named_markers_foreach(markers, append_marker_name, string);
+
+    g_assert_cmpstr(string->str, ==, "ABCDE");
+
+    g_string_free(string, TRUE);
+    g_object_unref(markers);
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
@@ -86,6 +107,7 @@ int main(int argc, char *argv[])
     g_test_add_func("/named_markers/names", test_names);
     g_test_add_func("/named_markers/find_first_disabled", test_find_first_disabled);
     g_test_add_func("/named_markers/find", test_find);
+    g_test_add_func("/named_markers/foreach", test_foreach);
 
     return g_test_run();
 }

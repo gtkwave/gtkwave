@@ -204,3 +204,22 @@ GwMarker *gw_named_markers_find_first_disabled(GwNamedMarkers *self)
 
     return NULL;
 }
+
+/**
+ * gw_named_markers_foreach:
+ * @self: A #GwNamedMarkers.
+ * @func: The function to call for each marker.
+ * @user_data: The user data passed to the function.
+ *
+ * Calls a function for each marker.
+ */
+void gw_named_markers_foreach(GwNamedMarkers *self, GFunc func, gpointer user_data)
+{
+    g_return_if_fail(GW_IS_NAMED_MARKERS(self));
+    g_return_if_fail(func != NULL);
+
+    for (guint i = 0; i < self->markers->len; i++) {
+        GwMarker *marker = gw_named_markers_get(self, i);
+        func(marker, user_data);
+    }
+}
