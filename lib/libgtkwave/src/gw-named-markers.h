@@ -18,4 +18,6 @@ GwMarker *gw_named_markers_get(GwNamedMarkers *self, guint index);
 GwMarker *gw_named_markers_find(GwNamedMarkers *self, GwTime time);
 GwMarker *gw_named_markers_find_first_disabled(GwNamedMarkers *self);
 
+void gw_named_markers_foreach(GwNamedMarkers *self, GFunc func, gpointer user_data);
+
 G_END_DECLS
