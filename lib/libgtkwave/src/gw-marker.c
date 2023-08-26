@@ -36,6 +36,8 @@ static void gw_marker_finalize(GObject *object)
     GwMarker *self = GW_MARKER(object);
 
     g_clear_pointer(&self->name, g_free);
+
+    G_OBJECT_CLASS(gw_marker_parent_class)->finalize(object);
 }
 
 static void gw_marker_set_property(GObject *object,

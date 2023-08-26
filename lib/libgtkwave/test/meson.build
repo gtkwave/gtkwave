@@ -1,6 +1,7 @@
 libgtkwave_tests = [
     'gw-marker',
     'gw-named-markers',
+    'gw-project',
 ]
 
 foreach test : libgtkwave_tests
