@@ -1,3 +1,0 @@
-## -*- makefile -*-
-##
-SUBDIRS= apps

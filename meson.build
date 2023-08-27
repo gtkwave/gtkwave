@@ -189,4 +189,5 @@ subdir('contrib')
 gnome.post_install(
     update_mime_database: get_option('update_mime_database'),
     update_desktop_database: true,
+    gtk_update_icon_cache: true,
 )
