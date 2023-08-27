@@ -1,12 +1,12 @@
 icons_dir = get_option('datadir') / 'icons/hicolor'
 
 install_data(
-    '@0@.svg'.format(app_id),
+    '@0@.svg'.format(application_id),
     install_dir: icons_dir / 'scalable/apps',
 )
 
 install_data(
     'io.github.gtkwave.GTKWave-symbolic.svg',
-    rename: '@0@-symbolic.svg'.format(app_id),
+    rename: '@0@-symbolic.svg'.format(application_id),
     install_dir: icons_dir / 'symbolic/apps',
 )

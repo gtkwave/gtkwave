@@ -34,6 +34,7 @@ if makensis.found()
             '-DLIBGCCDLL=libgcc_s_seh-1.dll',
             '-DAPPLICATION_NAME='+application_name,
             '-DBUILDROOT=' + meson.project_build_root(),
+            '-DSOURCEROOT=' + meson.project_source_root(),
             '-DBINDIR=' + get_option('prefix') / get_option('bindir'),
             '-DLIBDIR=' + get_option('prefix') / get_option('libdir'),
             '-DDATADIR=' + get_option('prefix') / get_option('datadir'),

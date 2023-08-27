@@ -106,7 +106,11 @@ Section "" ; (default section)
   File /r ${DATADIR}\themes
   SetOutPath $INSTDIR\share\icons
   File /r ${DATADIR}\icons\Adwaita
-  
+
+  # Also copy gtk wave to the applications directory
+  SetOutPath "$INSTDIR\share\icons\highcolor\scalable\apps"
+  File ${SOURCEROOT}\share\icons\io.github.gtkwave.GTKWave.svg
+
   SetOutPath $INSTDIR\share\glib-2.0
   File /r ${DATADIR}\glib-2.0\schemas
   
