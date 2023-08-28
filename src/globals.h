@@ -830,7 +830,6 @@ struct Global
     char hier_delimeter; /* from tree.c 477 */
     char hier_was_explicitly_set; /* from tree.c 478 */
     char alt_hier_delimeter; /* from tree.c 479 */
-    int fast_tree_sort; /* from tree.c 480 */
     struct symbol **facs2_tree_c_1; /* from tree.c 481 */
     int facs2_pos_tree_c_1; /* from tree.c 482 */
     unsigned char *talloc_pool_base;

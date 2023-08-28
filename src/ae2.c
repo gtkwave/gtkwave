@@ -499,14 +499,7 @@ GLOBALS->ae2_process_mask = calloc_2(1, GLOBALS->numfacs/8+1);
 GLOBALS->ae2_fr=calloc_2(GLOBALS->numfacs, sizeof(AE2_FACREF));
 GLOBALS->ae2_lx2_table=(struct lx2_entry **)calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry *));
 
-if(!GLOBALS->fast_tree_sort)
-        {
-        GLOBALS->do_hier_compress = 0;
-        }
-        else
-	{
         hier_auto_enable(); /* enable if greater than threshold */
-        }
 
 init_facility_pack();
 
@@ -788,7 +781,7 @@ freeze_facility_pack();
 /* SPLASH */                            splash_sync(2, 5);
 GLOBALS->facs=(struct symbol **)malloc_2(GLOBALS->numfacs*sizeof(struct symbol *));
 
-if(GLOBALS->fast_tree_sort)
+if(1 /* GLOBALS->fast_tree_sort */)
 	{
 	for(i=0;i<(unsigned int)GLOBALS->numfacs;i++)
 		{

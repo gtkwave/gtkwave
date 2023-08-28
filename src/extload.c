@@ -1375,12 +1375,9 @@ else
 	        symadd_name_exists_sym_exists(s,str,0);
 		GLOBALS->extload_prevsymroot = GLOBALS->extload_prevsym = NULL;
 
-                if(GLOBALS->fast_tree_sort)
-                       	{
                         len = sprintf_2_sdd(buf, fnam_prev,GLOBALS->extload_node_block[i].msi, GLOBALS->extload_node_block[i].lsi);
                         fsdb_append_graft_chain(len, buf, i, GLOBALS->extload_npar[i & F_NAME_MODULUS]);
 			if(fnam) strcpy(fnam_prev, fnam);
-                        }
 		}
 	else if (
 			((f->len==1)&&(!(f->flags&(VZT_RD_SYM_F_INTEGER|VZT_RD_SYM_F_DOUBLE|VZT_RD_SYM_F_STRING)))&&
@@ -1428,12 +1425,9 @@ else
 			GLOBALS->extload_prevsymroot = GLOBALS->extload_prevsym = s;
 			}
 
-                if(GLOBALS->fast_tree_sort)
-                       	{
                         len = sprintf_2_sd(buf, fnam_prev, GLOBALS->extload_node_block[i].msi);
                         fsdb_append_graft_chain(len, buf, i, GLOBALS->extload_npar[i & F_NAME_MODULUS]);
 			if(fnam) strcpy(fnam_prev, fnam);
-                       	}
 
 		}
 		else
@@ -1473,8 +1467,6 @@ else
 			GLOBALS->mvlfacs_vzt_c_3[i].len=32;
 			}
 
-                if(GLOBALS->fast_tree_sort)
-                       	{
                         fsdb_append_graft_chain(strlen(fnam_prev), fnam_prev, i, GLOBALS->extload_npar[i & F_NAME_MODULUS]);
 			if(fnam) strcpy(fnam_prev, fnam);
                        	}
@@ -1838,14 +1830,7 @@ GLOBALS->extload_inv_idcodes=(int *)calloc_2(max_idcode+1, sizeof(int));
 GLOBALS->extload_npar=(struct tree **)calloc_2(F_NAME_MODULUS+1, sizeof(struct tree *));
 #endif
 
-if(!GLOBALS->fast_tree_sort)
-        {
-        GLOBALS->do_hier_compress = 0;
-        }
-	else
-	{
-	hier_auto_enable(); /* enable if greater than threshold */
-	}
+hier_auto_enable(); /* enable if greater than threshold */
 
 GLOBALS->f_name_build_buf_len = 128;
 GLOBALS->f_name_build_buf = malloc_2(GLOBALS->f_name_build_buf_len + 1);
@@ -1941,7 +1926,7 @@ freeze_facility_pack();
 
 GLOBALS->facs=(struct symbol **)malloc_2(GLOBALS->numfacs*sizeof(struct symbol *));
 
-if(GLOBALS->fast_tree_sort)
+if(1 /* GLOBALS->fast_tree_sort */)
         {
         for(i=0;i<GLOBALS->numfacs;i++)
                 {

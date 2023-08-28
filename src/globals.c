@@ -851,7 +851,6 @@ static const struct Global globals_base_values = {
     '.', /* hier_delimeter 447 */
     0, /* hier_was_explicitly_set 448 */
     0x00, /* alt_hier_delimeter 449 */
-    1, /* fast_tree_sort 450 */
     NULL, /* facs2_tree_c_1 451 */
     0, /* facs2_pos_tree_c_1 452 */
     NULL, /* talloc_pool_base */

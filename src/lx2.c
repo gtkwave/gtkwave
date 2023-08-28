@@ -213,150 +213,95 @@ TimeType lx2_main(char *fname, char *skip_start, char *skip_end)
     /* SPLASH */ splash_sync(2, 5);
     GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
 
-    if (GLOBALS->fast_tree_sort) {
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            int len;
-            GLOBALS->facs[i] = &sym_block[i];
-            if ((len = strlen(GLOBALS->facs[i]->name)) > GLOBALS->longestname)
-                GLOBALS->longestname = len;
-        }
+    for (i = 0; i < GLOBALS->numfacs; i++) {
+        int len;
+        GLOBALS->facs[i] = &sym_block[i];
+        if ((len = strlen(GLOBALS->facs[i]->name)) > GLOBALS->longestname)
+            GLOBALS->longestname = len;
+    }
 
-        if (numalias) {
-            int idx_lft = 0;
-            int idx_lftmax = GLOBALS->numfacs - numalias;
-            int idx_rgh = GLOBALS->numfacs - numalias;
-            struct symbol **facs_merge =
-                (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
+    if (numalias) {
+        int idx_lft = 0;
+        int idx_lftmax = GLOBALS->numfacs - numalias;
+        int idx_rgh = GLOBALS->numfacs - numalias;
+        struct symbol **facs_merge =
+            (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
 
-            fprintf(stderr, LXT2_RDLOAD "Merging in %d aliases.\n", numalias);
+        fprintf(stderr, LXT2_RDLOAD "Merging in %d aliases.\n", numalias);
 
-            for (i = 0; i < GLOBALS->numfacs; i++) /* fix possible tail appended aliases by
-                                                      remerging in partial one pass merge sort */
-            {
-                if (strcmp(GLOBALS->facs[idx_lft]->name, GLOBALS->facs[idx_rgh]->name) <= 0) {
-                    facs_merge[i] = GLOBALS->facs[idx_lft++];
+        for (i = 0; i < GLOBALS->numfacs; i++) /* fix possible tail appended aliases by
+                                                  remerging in partial one pass merge sort */
+        {
+            if (strcmp(GLOBALS->facs[idx_lft]->name, GLOBALS->facs[idx_rgh]->name) <= 0) {
+                facs_merge[i] = GLOBALS->facs[idx_lft++];
 
-                    if (idx_lft == idx_lftmax) {
-                        for (i++; i < GLOBALS->numfacs; i++) {
-                            facs_merge[i] = GLOBALS->facs[idx_rgh++];
-                        }
+                if (idx_lft == idx_lftmax) {
+                    for (i++; i < GLOBALS->numfacs; i++) {
+                        facs_merge[i] = GLOBALS->facs[idx_rgh++];
                     }
-                } else {
-                    facs_merge[i] = GLOBALS->facs[idx_rgh++];
+                }
+            } else {
+                facs_merge[i] = GLOBALS->facs[idx_rgh++];
 
-                    if (idx_rgh == GLOBALS->numfacs) {
-                        for (i++; i < GLOBALS->numfacs; i++) {
-                            facs_merge[i] = GLOBALS->facs[idx_lft++];
-                        }
+                if (idx_rgh == GLOBALS->numfacs) {
+                    for (i++; i < GLOBALS->numfacs; i++) {
+                        facs_merge[i] = GLOBALS->facs[idx_lft++];
                     }
                 }
             }
-
-            free_2(GLOBALS->facs);
-            GLOBALS->facs = facs_merge;
         }
 
-        /* SPLASH */ splash_sync(3, 5);
-        fprintf(stderr, LXT2_RDLOAD "Building facility hierarchy tree.\n");
+        free_2(GLOBALS->facs);
+        GLOBALS->facs = facs_merge;
+    }
 
-        init_tree();
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            int esc = 0;
-            char *subst = GLOBALS->facs[i]->name;
-            char ch;
+    /* SPLASH */ splash_sync(3, 5);
+    fprintf(stderr, LXT2_RDLOAD "Building facility hierarchy tree.\n");
 
-            while ((ch = (*subst))) {
-                if (ch == GLOBALS->hier_delimeter) {
-                    if (esc)
-                        *subst = VCDNAM_ESCAPE;
-                } else if (ch == '\\') {
-                    esc = 1;
-                    GLOBALS->escaped_names_found_vcd_c_1 = 1;
-                }
-                subst++;
+    init_tree();
+    for (i = 0; i < GLOBALS->numfacs; i++) {
+        int esc = 0;
+        char *subst = GLOBALS->facs[i]->name;
+        char ch;
+
+        while ((ch = (*subst))) {
+            if (ch == GLOBALS->hier_delimeter) {
+                if (esc)
+                    *subst = VCDNAM_ESCAPE;
+            } else if (ch == '\\') {
+                esc = 1;
+                GLOBALS->escaped_names_found_vcd_c_1 = 1;
             }
-
-            build_tree_from_name(GLOBALS->facs[i]->name, i);
-        }
-        /* SPLASH */ splash_sync(4, 5);
-        if (GLOBALS->escaped_names_found_vcd_c_1) {
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                char *subst, ch;
-                subst = GLOBALS->facs[i]->name;
-                while ((ch = (*subst))) {
-                    if (ch == VCDNAM_ESCAPE) {
-                        *subst = GLOBALS->hier_delimeter;
-                    } /* restore back to normal */
-                    subst++;
-                }
-            }
-        }
-        treegraft(&GLOBALS->treeroot);
-
-        fprintf(stderr, LXT2_RDLOAD "Sorting facility hierarchy tree.\n");
-        treesort(GLOBALS->treeroot, NULL);
-
-        /* SPLASH */ splash_sync(5, 5);
-        order_facs_from_treesort(GLOBALS->treeroot, &GLOBALS->facs);
-        if (GLOBALS->escaped_names_found_vcd_c_1) {
-            treenamefix(GLOBALS->treeroot);
+            subst++;
         }
 
-        GLOBALS->facs_are_sorted = 1;
-    } else {
+        build_tree_from_name(GLOBALS->facs[i]->name, i);
+    }
+    /* SPLASH */ splash_sync(4, 5);
+    if (GLOBALS->escaped_names_found_vcd_c_1) {
         for (i = 0; i < GLOBALS->numfacs; i++) {
             char *subst, ch;
-            int len;
-            int esc = 0;
-
-            GLOBALS->facs[i] = &sym_block[i];
-            if ((len = strlen(subst = GLOBALS->facs[i]->name)) > GLOBALS->longestname)
-                GLOBALS->longestname = len;
+            subst = GLOBALS->facs[i]->name;
             while ((ch = (*subst))) {
-                if ((ch == GLOBALS->hier_delimeter) && (esc)) {
-                    *subst = VCDNAM_ESCAPE;
-                } /* forces sort at hier boundaries */
-                else if (ch == '\\') {
-                    esc = 1;
-                    GLOBALS->escaped_names_found_vcd_c_1 = 1;
-                }
+                if (ch == VCDNAM_ESCAPE) {
+                    *subst = GLOBALS->hier_delimeter;
+                } /* restore back to normal */
                 subst++;
             }
         }
-
-        /* SPLASH */ splash_sync(3, 5);
-        fprintf(stderr, LXT2_RDLOAD "Sorting facilities at hierarchy boundaries.\n");
-        wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
-
-        GLOBALS->facs_are_sorted = 1;
-
-        /* SPLASH */ splash_sync(4, 5);
-        fprintf(stderr, LXT2_RDLOAD "Building facility hierarchy tree.\n");
-
-        init_tree();
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            char *nf = GLOBALS->facs[i]->name;
-            build_tree_from_name(nf, i);
-        }
-        /* SPLASH */ splash_sync(5, 5);
-        if (GLOBALS->escaped_names_found_vcd_c_1) {
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                char *subst, ch;
-                subst = GLOBALS->facs[i]->name;
-                while ((ch = (*subst))) {
-                    if (ch == VCDNAM_ESCAPE) {
-                        *subst = GLOBALS->hier_delimeter;
-                    } /* restore back to normal */
-                    subst++;
-                }
-            }
-        }
-        treegraft(&GLOBALS->treeroot);
-        treesort(GLOBALS->treeroot, NULL);
-        if (GLOBALS->escaped_names_found_vcd_c_1) {
-            treenamefix(GLOBALS->treeroot);
-        }
     }
+    treegraft(&GLOBALS->treeroot);
+
+    fprintf(stderr, LXT2_RDLOAD "Sorting facility hierarchy tree.\n");
+    treesort(GLOBALS->treeroot, NULL);
+
+    /* SPLASH */ splash_sync(5, 5);
+    order_facs_from_treesort(GLOBALS->treeroot, &GLOBALS->facs);
+    if (GLOBALS->escaped_names_found_vcd_c_1) {
+        treenamefix(GLOBALS->treeroot);
+    }
+
+    GLOBALS->facs_are_sorted = 1;
 
     GLOBALS->min_time = GLOBALS->first_cycle_lx2_c_1;
     GLOBALS->max_time = GLOBALS->last_cycle_lx2_c_1;
