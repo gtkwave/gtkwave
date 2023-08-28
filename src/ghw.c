@@ -359,23 +359,12 @@ static void ghw_sortfacs(void)
 
     for (i = 0; i < GLOBALS->numfacs; i++) {
         char *subst;
-#ifdef WAVE_HIERFIX
-        char ch;
-#endif
         int len;
         struct symbol *curnode = GLOBALS->facs[i];
 
         subst = curnode->name;
         if ((len = strlen(subst)) > GLOBALS->longestname)
             GLOBALS->longestname = len;
-#ifdef WAVE_HIERFIX
-        while ((ch = (*subst))) {
-            if (ch == GLOBALS->hier_delimeter) {
-                *subst = VCDNAM_HIERSORT;
-            } /* forces sort at hier boundaries */
-            subst++;
-        }
-#endif
     }
 
     wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
@@ -394,20 +383,6 @@ static void ghw_sortfacs(void)
         incinerate_whichcache_tree(GLOBALS->gwt_corr_ghw_c_1);
         GLOBALS->gwt_corr_ghw_c_1 = NULL;
     }
-
-#ifdef WAVE_HIERFIX
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        char *subst, ch;
-
-        subst = GLOBALS->facs[i]->name;
-        while ((ch = (*subst))) {
-            if (ch == VCDNAM_HIERSORT) {
-                *subst = GLOBALS->hier_delimeter;
-            } /* restore back to normal */
-            subst++;
-        }
-    }
-#endif
 
     GLOBALS->facs_are_sorted = 1;
 }

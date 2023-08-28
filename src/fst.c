@@ -1336,15 +1336,9 @@ TimeType fst_main(char *fname, char *skip_start, char *skip_end)
 
             subst = GLOBALS->facs[i]->name;
             while ((ch = (*subst))) {
-#ifdef WAVE_HIERFIX
-                if (ch == GLOBALS->hier_delimeter) {
-                    *subst = (!esc) ? VCDNAM_HIERSORT : VCDNAM_ESCAPE;
-                } /* forces sort at hier boundaries */
-#else
                 if ((ch == GLOBALS->hier_delimeter) && (esc)) {
                     *subst = VCDNAM_ESCAPE;
                 } /* forces sort at hier boundaries */
-#endif
                 else if (ch == '\\') {
                     esc = 1;
                     GLOBALS->escaped_names_found_vcd_c_1 = 1;
@@ -1356,20 +1350,6 @@ TimeType fst_main(char *fname, char *skip_start, char *skip_end)
         /* SPLASH */ splash_sync(3, 5);
         fprintf(stderr, FST_RDLOAD "Sorting facilities at hierarchy boundaries.\n");
         wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
-
-#ifdef WAVE_HIERFIX
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            char *subst, ch;
-
-            subst = GLOBALS->facs[i]->name;
-            while ((ch = (*subst))) {
-                if (ch == VCDNAM_HIERSORT) {
-                    *subst = GLOBALS->hier_delimeter;
-                } /* restore back to normal */
-                subst++;
-            }
-        }
-#endif
 
         GLOBALS->facs_are_sorted = 1;
 

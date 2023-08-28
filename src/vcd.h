@@ -48,9 +48,6 @@
 enum VCDName_ByteSubstitutions
 {
     VCDNAM_NULL = 0,
-#ifdef WAVE_HIERFIX
-    VCDNAM_HIERSORT,
-#endif
     VCDNAM_ESCAPE
 };
 

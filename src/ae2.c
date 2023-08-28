@@ -821,37 +821,12 @@ if(GLOBALS->fast_tree_sort)
 	{
 	for(i=0;i<(unsigned int)GLOBALS->numfacs;i++)
 		{
-#ifdef WAVE_HIERFIX
-		char *subst;
-		char ch;
-#endif
 		GLOBALS->facs[i]=&monolithic_sym[i];
-#ifdef WAVE_HIERFIX
-		while((ch=(*subst)))
-			{
-			if(ch==GLOBALS->hier_delimeter) { *subst=VCDNAM_HIERSORT; }	/* forces sort at hier boundaries */
-			subst++;
-			}
-#endif
 		}
 
 /* SPLASH */                            splash_sync(3, 5);
 	fprintf(stderr, AET2_RDLOAD"Sorting facilities at hierarchy boundaries.\n");
 	wave_heapsort(GLOBALS->facs,GLOBALS->numfacs);
-
-#ifdef WAVE_HIERFIX
-	for(i=0;i<GLOBALS->numfacs;i++)
-		{
-		char *subst, ch;
-
-		subst=GLOBALS->facs[i]->name;
-		while((ch=(*subst)))
-			{
-			if(ch==VCDNAM_HIERSORT) { *subst=GLOBALS->hier_delimeter; }	/* restore back to normal */
-			subst++;
-			}
-		}
-#endif
 
 	GLOBALS->facs_are_sorted=1;
 
