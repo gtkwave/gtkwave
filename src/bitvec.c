@@ -893,31 +893,6 @@ struct Bits *makevec_selected(char *vec, int numrows, char direction)
     return (b);
 }
 
-/*
- * add vector made in previous function
- */
-int add_vector_selected(char *alias, int numrows, char direction)
-{
-    bvptr v = NULL;
-    bptr b = NULL;
-
-    if ((b = makevec_selected(alias, numrows, direction))) {
-        if ((v = bits2vector(b))) {
-            v->bits = b; /* only needed for savefile function */
-            AddVector(v, NULL);
-            free_2(b->name);
-            b->name = NULL;
-            return (v != NULL);
-        } else {
-            free_2(b->name);
-            if (b->attribs)
-                free_2(b->attribs);
-            free_2(b);
-        }
-    }
-    return (v != NULL);
-}
-
 /***********************************************************************************/
 
 /*
@@ -932,14 +907,7 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
     struct Node **n;
     struct Bits *b = NULL;
     struct symbol *symhi = NULL, *symlo = NULL;
-    char hier_delimeter2;
-
-    if (!GLOBALS->vcd_explicit_zero_subscripts) /* 0==yes, -1==no */
-    {
-        hier_delimeter2 = GLOBALS->hier_delimeter;
-    } else {
-        hier_delimeter2 = '[';
-    }
+    char hier_delimeter2 = '[';
 
     n = (struct Node **)g_alloca(len * sizeof(struct Node *));
     memset(n, 0, len * sizeof(struct Node *)); /* scan-build */
@@ -1032,12 +1000,8 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
             } else {
                 int add1, add2, totallen;
 
-                add1 = l1 - root1len;
-                add2 = l2 - root2len;
-                if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                    add1--;
-                    add2--;
-                }
+                add1 = l1 - root1len - 1;
+                add2 = l2 - root2len - 1;
 
                 if (symlo != symhi) {
                     unsigned char fixup1 = 0, fixup2 = 0;
@@ -1051,21 +1015,17 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
                                + 1 /* add 0x00	      */
                         ;
 
-                    if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                        fixup1 = *(s1 + l1 - 1);
-                        *(s1 + l1 - 1) = 0;
-                        fixup2 = *(s2 + l2 - 1);
-                        *(s2 + l2 - 1) = 0;
-                    }
+                    fixup1 = *(s1 + l1 - 1);
+                    *(s1 + l1 - 1) = 0;
+                    fixup2 = *(s2 + l2 - 1);
+                    *(s2 + l2 - 1) = 0;
 
                     b->name = (char *)malloc_2(totallen);
                     strncpy(b->name, s1, root1len - 1);
                     sprintf(b->name + root1len - 1, "[%s:%s]", s1 + root1len, s2 + root2len);
 
-                    if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                        *(s1 + l1 - 1) = fixup1;
-                        *(s2 + l2 - 1) = fixup2;
-                    }
+                    *(s1 + l1 - 1) = fixup1;
+                    *(s2 + l2 - 1) = fixup2;
                 } else {
                     unsigned char fixup1 = 0;
 
@@ -1076,18 +1036,14 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
                                + 1 /* add 0x00	      */
                         ;
 
-                    if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                        fixup1 = *(s1 + l1 - 1);
-                        *(s1 + l1 - 1) = 0;
-                    }
+                    fixup1 = *(s1 + l1 - 1);
+                    *(s1 + l1 - 1) = 0;
 
                     b->name = (char *)malloc_2(totallen);
                     strncpy(b->name, s1, root1len - 1);
                     sprintf(b->name + root1len - 1, "[%s]", s1 + root1len);
 
-                    if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                        *(s1 + l1 - 1) = fixup1;
-                    }
+                    *(s1 + l1 - 1) = fixup1;
                 }
             }
 
@@ -1563,7 +1519,7 @@ char *makename_chain(struct symbol *sym)
 {
     int i;
     struct symbol *symhi = NULL, *symlo = NULL;
-    char hier_delimeter2;
+    char hier_delimeter2 = '[';
     char *name = NULL;
     char *s1, *s2;
     int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
@@ -1573,13 +1529,6 @@ char *makename_chain(struct symbol *sym)
     if (!sym) {
         fprintf(stderr, "Internal error '%s' line %d, exiting.\n", __FILE__, __LINE__);
         exit(255);
-    }
-
-    if (!GLOBALS->vcd_explicit_zero_subscripts) /* 0==yes, -1==no */
-    {
-        hier_delimeter2 = GLOBALS->hier_delimeter;
-    } else {
-        hier_delimeter2 = '[';
     }
 
     if (!GLOBALS->autocoalesce_reversal) /* normal case for MTI */
@@ -1634,12 +1583,8 @@ char *makename_chain(struct symbol *sym)
     } else {
         int add1, add2, totallen;
 
-        add1 = l1 - root1len;
-        add2 = l2 - root2len;
-        if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-            add1--;
-            add2--;
-        }
+        add1 = l1 - root1len - 1;
+        add2 = l2 - root2len - 1;
 
         if (symlo != symhi) {
             unsigned char fixup1 = 0, fixup2 = 0;
@@ -1653,21 +1598,17 @@ char *makename_chain(struct symbol *sym)
                        + 1 /* add 0x00	      */
                 ;
 
-            if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                fixup1 = *(s1 + l1 - 1);
-                *(s1 + l1 - 1) = 0;
-                fixup2 = *(s2 + l2 - 1);
-                *(s2 + l2 - 1) = 0;
-            }
+            fixup1 = *(s1 + l1 - 1);
+            *(s1 + l1 - 1) = 0;
+            fixup2 = *(s2 + l2 - 1);
+            *(s2 + l2 - 1) = 0;
 
             name = (char *)malloc_2(totallen);
             strncpy(name, s1, root1len - 1);
             sprintf(name + root1len - 1, "[%s:%s]", s1 + root1len, s2 + root2len);
 
-            if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                *(s1 + l1 - 1) = fixup1;
-                *(s2 + l2 - 1) = fixup2;
-            }
+            *(s1 + l1 - 1) = fixup1;
+            *(s2 + l2 - 1) = fixup2;
         } else {
             unsigned char fixup1 = 0;
 
@@ -1678,18 +1619,14 @@ char *makename_chain(struct symbol *sym)
                        + 1 /* add 0x00	      */
                 ;
 
-            if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                fixup1 = *(s1 + l1 - 1);
-                *(s1 + l1 - 1) = 0;
-            }
+            fixup1 = *(s1 + l1 - 1);
+            *(s1 + l1 - 1) = 0;
 
             name = (char *)malloc_2(totallen);
             strncpy(name, s1, root1len - 1);
             sprintf(name + root1len - 1, "[%s]", s1 + root1len);
 
-            if (GLOBALS->vcd_explicit_zero_subscripts == -1) {
-                *(s1 + l1 - 1) = fixup1;
-            }
+            *(s1 + l1 - 1) = fixup1;
         }
     }
 

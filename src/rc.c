@@ -642,13 +642,6 @@ int f_ruler_step(const char *str)
     return (0);
 }
 
-int f_vcd_explicit_zero_subscripts(const char *str)
-{
-    DEBUG(printf("f_vcd_explicit_zero_subscripts(\"%s\")\n", str));
-    GLOBALS->vcd_explicit_zero_subscripts = atoi_64(str) ? 0 : -1; /* 0==yes, -1==no */
-    return (0);
-}
-
 int f_vcd_preserve_glitches(const char *str)
 {
     DEBUG(printf("f_vcd_preserve_glitches(\"%s\")\n", str));
@@ -924,7 +917,6 @@ static struct rc_entry rcitems[] = {
     {"use_nonprop_fonts", f_use_nonprop_fonts},
     {"use_pango_fonts", f_use_pango_fonts},
     {"use_roundcaps", f_use_roundcaps},
-    {"vcd_explicit_zero_subscripts", f_vcd_explicit_zero_subscripts},
     {"vcd_preserve_glitches", f_vcd_preserve_glitches},
     {"vcd_preserve_glitches_real", f_vcd_preserve_glitches_real},
     {"vcd_warning_filesize", f_vcd_warning_filesize},

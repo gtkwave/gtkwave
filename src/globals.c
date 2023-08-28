@@ -935,7 +935,6 @@ static const struct Global globals_base_values = {
     -1, /* vcd_warning_filesize 472 */
     1, /* autocoalesce 473 */
     0, /* autocoalesce_reversal */
-    -1, /* vcd_explicit_zero_subscripts 474 */
     0, /* convert_to_reals 475 */
     0, /* make_vcd_save_file 477 */
     0, /* vcd_preserve_glitches 478 */
@@ -1710,7 +1709,6 @@ void reload_into_new_context_2(void)
     new_globals->use_maxtime_display = GLOBALS->use_maxtime_display;
     new_globals->use_nonprop_fonts = GLOBALS->use_nonprop_fonts;
     new_globals->use_roundcaps = GLOBALS->use_roundcaps;
-    new_globals->vcd_explicit_zero_subscripts = GLOBALS->vcd_explicit_zero_subscripts;
     new_globals->vcd_preserve_glitches = GLOBALS->vcd_preserve_glitches;
     new_globals->vcd_preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;
     new_globals->vcd_warning_filesize = GLOBALS->vcd_warning_filesize;

@@ -914,7 +914,6 @@ struct Global
     int vcd_warning_filesize; /* from vcd.c 502 */
     char autocoalesce; /* from vcd.c 503 */
     char autocoalesce_reversal; /* from vcd.c 504 */
-    int vcd_explicit_zero_subscripts; /* from vcd.c 505 */
     char convert_to_reals; /* from vcd.c 506 */
     char make_vcd_save_file; /* from vcd.c 508 */
     char vcd_preserve_glitches; /* from vcd.c 509 */

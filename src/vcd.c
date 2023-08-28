@@ -1322,8 +1322,7 @@ static void vcd_parse(void)
 
                     v = (struct vcdsymbol *)calloc_2(1, sizeof(struct vcdsymbol));
                     v->vartype = vtok;
-                    v->msi = v->lsi =
-                        GLOBALS->vcd_explicit_zero_subscripts; /* indicate [un]subscripted status */
+                    v->msi = v->lsi = -1;
 
                     if (vtok == V_PORT) {
                         vtok = get_vartoken(1);
@@ -1634,17 +1633,7 @@ static void vcd_parse(void)
                                 fprintf(GLOBALS->vcd_save_handle, "%s\n", v->name);
                             } else {
                                 if (v->msi >= 0) {
-                                    if (!GLOBALS->vcd_explicit_zero_subscripts)
-                                        fprintf(GLOBALS->vcd_save_handle,
-                                                "%s%c%d\n",
-                                                v->name,
-                                                GLOBALS->hier_delimeter,
-                                                v->msi);
-                                    else
-                                        fprintf(GLOBALS->vcd_save_handle,
-                                                "%s[%d]\n",
-                                                v->name,
-                                                v->msi);
+                                    fprintf(GLOBALS->vcd_save_handle, "%s[%d]\n", v->name, v->msi);
                                 } else {
                                     fprintf(GLOBALS->vcd_save_handle, "%s\n", v->name);
                                 }
@@ -2247,10 +2236,7 @@ static void vcd_build_symbols(void)
 
                 for (j = 0; j < v->size; j++) {
                     if (v->msi >= 0) {
-                        if (!GLOBALS->vcd_explicit_zero_subscripts)
-                            sprintf(str + slen, "%d", msi);
-                        else
-                            sprintf(str + slen - 1, "[%d]", msi);
+                        sprintf(str + slen - 1, "[%d]", msi);
                     }
 
                     hashdirty = 0;
