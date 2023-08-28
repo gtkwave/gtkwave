@@ -2525,9 +2525,6 @@ void vcd_sortfacs(void)
     GLOBALS->curnode = GLOBALS->firstnode;
     for (i = 0; i < GLOBALS->numfacs; i++) {
         char *subst;
-#ifdef WAVE_HIERFIX
-        char ch;
-#endif
         int len;
         struct symchain *sc;
 
@@ -2538,38 +2535,12 @@ void vcd_sortfacs(void)
         sc = GLOBALS->curnode;
         GLOBALS->curnode = GLOBALS->curnode->next;
         free_2(sc);
-#ifdef WAVE_HIERFIX
-        while ((ch = (*subst))) {
-            if (ch == GLOBALS->hier_delimeter) {
-                *subst = VCDNAM_HIERSORT;
-            } /* forces sort at hier boundaries */
-            subst++;
-        }
-#endif
     }
     GLOBALS->firstnode = GLOBALS->curnode = NULL;
 
     /* quicksort(facs,0,numfacs-1); */ /* quicksort deprecated because it degenerates on sorted
                                           traces..badly.  very badly. */
     wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
-
-#ifdef WAVE_HIERFIX
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        char *subst, ch;
-
-        subst = GLOBALS->facs[i]->name;
-        while ((ch = (*subst))) {
-            if (ch == VCDNAM_HIERSORT) {
-                *subst = GLOBALS->hier_delimeter;
-            } /* restore back to normal */
-            subst++;
-        }
-
-#ifdef DEBUG_FACILITIES
-        printf("%-4d %s\n", i, facs[i]->name);
-#endif
-    }
-#endif
 
     GLOBALS->facs_are_sorted = 1;
 

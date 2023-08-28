@@ -1143,9 +1143,6 @@ int TracesReorder(int mode)
 {
     Trptr t, prev = NULL;
     Trptr *tsort, *tsort_pnt;
-#ifdef WAVE_HIERFIX
-    char *subst, ch;
-#endif
     int i;
     int (*cptr)(const void *, const void *);
 
@@ -1163,16 +1160,6 @@ int TracesReorder(int mode)
             exit(255);
         }
         *(tsort_pnt++) = t;
-
-#ifdef WAVE_HIERFIX
-        if ((subst = t->name))
-            while ((ch = (*subst))) {
-                if (ch == GLOBALS->hier_delimeter) {
-                    *subst = VCDNAM_HIERSORT;
-                } /* forces sort at hier boundaries */
-                subst++;
-            }
-#endif
 
         t = t->t_next;
     }
@@ -1277,16 +1264,6 @@ int TracesReorder(int mode)
         }
 
         prev = t;
-
-#ifdef WAVE_HIERFIX
-        if ((subst = t->name))
-            while ((ch = (*subst))) {
-                if (ch == VCDNAM_HIERSORT) {
-                    *subst = GLOBALS->hier_delimeter;
-                } /* restore hier */
-                subst++;
-            }
-#endif
     }
 
     GLOBALS->traces.last = prev;

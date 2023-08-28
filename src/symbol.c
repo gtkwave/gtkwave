@@ -233,11 +233,9 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
             int i;
             int mat;
 
-#ifndef WAVE_HIERFIX
             if (!GLOBALS->escaped_names_found_vcd_c_1) {
                 return (sr);
             }
-#endif
 
             if (GLOBALS->facs_have_symbols_state_machine == 0) {
                 if (GLOBALS->escaped_names_found_vcd_c_1) {

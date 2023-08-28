@@ -1872,15 +1872,9 @@ TimeType lxt_main(char *fname)
         if ((len = strlen(subst = GLOBALS->facs[i]->name)) > GLOBALS->longestname)
             GLOBALS->longestname = len;
         while ((ch = (*subst))) {
-#ifdef WAVE_HIERFIX
-            if (ch == GLOBALS->hier_delimeter) {
-                *subst = (!esc) ? VCDNAM_HIERSORT : VCDNAM_ESCAPE;
-            } /* forces sort at hier boundaries */
-#else
             if ((ch == GLOBALS->hier_delimeter) && (esc)) {
                 *subst = VCDNAM_ESCAPE;
             } /* forces sort at hier boundaries */
-#endif
             else if (ch == '\\') {
                 esc = 1;
                 GLOBALS->escaped_names_found_vcd_c_1 = 1;
@@ -1892,24 +1886,6 @@ TimeType lxt_main(char *fname)
     fprintf(stderr, LXTHDR "Sorting facilities at hierarchy boundaries...");
     wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
     fprintf(stderr, "sorted.\n");
-
-#ifdef WAVE_HIERFIX
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        char *subst, ch;
-
-        subst = GLOBALS->facs[i]->name;
-        while ((ch = (*subst))) {
-            if (ch == VCDNAM_HIERSORT) {
-                *subst = GLOBALS->hier_delimeter;
-            } /* restore back to normal */
-            subst++;
-        }
-
-#ifdef DEBUG_FACILITIES
-        printf("%-4d %s\n", i, facs[i]->name);
-#endif
-    }
-#endif
 
     GLOBALS->facs_are_sorted = 1;
 
