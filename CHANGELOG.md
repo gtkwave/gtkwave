@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed rc variables:
     - `alt_wheel_mode`
+    - `atomic_vectors`
     - `force_toolbars`
     - `hide_sst`
     - `hier_grouping`

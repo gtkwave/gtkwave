@@ -937,7 +937,6 @@ static const struct Global globals_base_values = {
     0, /* autocoalesce_reversal */
     -1, /* vcd_explicit_zero_subscripts 474 */
     0, /* convert_to_reals 475 */
-    1, /* atomic_vectors 476 */
     0, /* make_vcd_save_file 477 */
     0, /* vcd_preserve_glitches 478 */
     0, /* vcd_preserve_glitches_real */
@@ -1669,7 +1668,6 @@ void reload_into_new_context_2(void)
     new_globals->color_ltblue = GLOBALS->color_ltblue;
     new_globals->color_gmstrd = GLOBALS->color_gmstrd;
 
-    new_globals->atomic_vectors = GLOBALS->atomic_vectors;
     new_globals->autoname_bundles = GLOBALS->autoname_bundles;
     new_globals->autocoalesce = GLOBALS->autocoalesce;
     new_globals->autocoalesce_reversal = GLOBALS->autocoalesce_reversal;
