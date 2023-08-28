@@ -71,7 +71,6 @@ constant_marker_update yes
 show_grid yes
 show_base_symbols no
 
-atomic_vectors yes
 vcd_explicit_zero_subscripts no
 
 disable_mouseover no

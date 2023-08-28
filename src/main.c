@@ -802,7 +802,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->color_ltblue = old_g->color_ltblue;
         GLOBALS->color_gmstrd = old_g->color_gmstrd;
 
-        GLOBALS->atomic_vectors = old_g->atomic_vectors;
         GLOBALS->autoname_bundles = old_g->autoname_bundles;
         GLOBALS->autocoalesce = old_g->autocoalesce;
         GLOBALS->autocoalesce_reversal = old_g->autocoalesce_reversal;

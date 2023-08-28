@@ -916,7 +916,6 @@ struct Global
     char autocoalesce_reversal; /* from vcd.c 504 */
     int vcd_explicit_zero_subscripts; /* from vcd.c 505 */
     char convert_to_reals; /* from vcd.c 506 */
-    char atomic_vectors; /* from vcd.c 507 */
     char make_vcd_save_file; /* from vcd.c 508 */
     char vcd_preserve_glitches; /* from vcd.c 509 */
     char vcd_preserve_glitches_real;

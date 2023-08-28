@@ -87,13 +87,6 @@ int f_append_vcd_hier(const char *str)
     return (0);
 }
 
-int f_atomic_vectors(const char *str)
-{
-    DEBUG(printf("f_atomic_vectors(\"%s\")\n", str));
-    GLOBALS->atomic_vectors = atoi_64(str) ? 1 : 0;
-    return (0);
-}
-
 int f_autoname_bundles(const char *str)
 {
     DEBUG(printf("f_autoname_bundles(\"%s\")\n", str));
@@ -828,7 +821,6 @@ static struct rc_entry rcitems[] = {
     {"alt_hier_delimeter", f_alt_hier_delimeter},
     {"analog_redraw_skip_count", f_analog_redraw_skip_count},
     {"append_vcd_hier", f_append_vcd_hier},
-    {"atomic_vectors", f_atomic_vectors},
     {"autocoalesce", f_autocoalesce},
     {"autocoalesce_reversal", f_autocoalesce_reversal},
     {"autoname_bundles", f_autoname_bundles},

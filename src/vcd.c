@@ -885,7 +885,7 @@ static void parse_valuechange(void)
                 }
                 DEBUG(fprintf(stderr, "%s = '%s'\n", v->name, v->value));
 
-                if ((v->size == 1) || (!GLOBALS->atomic_vectors)) {
+                if (v->size == 1) {
                     int i;
                     for (i = 0; i < v->size; i++) {
                         add_histent(GLOBALS->current_time_vcd_c_1,
@@ -981,7 +981,7 @@ static void parse_valuechange(void)
                 }
                 DEBUG(fprintf(stderr, "%s = '%s'\n", v->name, v->value));
 
-                if ((v->size == 1) || (!GLOBALS->atomic_vectors)) {
+                if (v->size == 1) {
                     int i;
                     for (i = 0; i < v->size; i++) {
                         add_histent(GLOBALS->current_time_vcd_c_1,
@@ -1611,28 +1611,13 @@ static void vcd_parse(void)
                     v->narray = (struct Node **)calloc_2(v->size, sizeof(struct Node *));
                     {
                         int i;
-                        if (GLOBALS->atomic_vectors) {
-                            for (i = 0; i < v->size; i++) {
-                                v->value[i] = 'x';
-                            }
-                            v->narray[0] = (struct Node *)calloc_2(1, sizeof(struct Node));
-                            v->narray[0]->head.time = -1;
-                            v->narray[0]->head.v.h_val = AN_X;
-                            set_vcd_vartype(v, v->narray[0]);
-                        } else {
-                            for (i = 0; i < v->size; i++) {
-                                v->value[i] = 'x';
-
-                                v->narray[i] = (struct Node *)calloc_2(1, sizeof(struct Node));
-                                v->narray[i]->head.time = -1;
-                                v->narray[i]->head.v.h_val = AN_X;
-                                if (i == 0) {
-                                    set_vcd_vartype(v, v->narray[0]);
-                                } else {
-                                    v->narray[i]->vartype = v->narray[0]->vartype;
-                                }
-                            }
+                        for (i = 0; i < v->size; i++) {
+                            v->value[i] = 'x';
                         }
+                        v->narray[0] = (struct Node *)calloc_2(1, sizeof(struct Node));
+                        v->narray[0]->head.time = -1;
+                        v->narray[0]->head.v.h_val = AN_X;
+                        set_vcd_vartype(v, v->narray[0]);
                     }
 
                     if (!GLOBALS->vcdsymroot_vcd_c_1) {
@@ -1665,51 +1650,11 @@ static void vcd_parse(void)
                                 }
                             }
                         } else {
-                            int i;
-
-                            if (!GLOBALS->atomic_vectors) {
-                                fprintf(GLOBALS->vcd_save_handle,
-                                        "#%s[%d:%d]",
-                                        v->name,
-                                        v->msi,
-                                        v->lsi);
-                                if (v->msi > v->lsi) {
-                                    for (i = v->msi; i >= v->lsi; i--) {
-                                        if (!GLOBALS->vcd_explicit_zero_subscripts)
-                                            fprintf(GLOBALS->vcd_save_handle,
-                                                    " %s%c%d",
-                                                    v->name,
-                                                    GLOBALS->hier_delimeter,
-                                                    i);
-                                        else
-                                            fprintf(GLOBALS->vcd_save_handle,
-                                                    " %s[%d]",
-                                                    v->name,
-                                                    i);
-                                    }
-                                } else {
-                                    for (i = v->msi; i <= v->lsi; i++) {
-                                        if (!GLOBALS->vcd_explicit_zero_subscripts)
-                                            fprintf(GLOBALS->vcd_save_handle,
-                                                    " %s%c%d",
-                                                    v->name,
-                                                    GLOBALS->hier_delimeter,
-                                                    i);
-                                        else
-                                            fprintf(GLOBALS->vcd_save_handle,
-                                                    " %s[%d]",
-                                                    v->name,
-                                                    i);
-                                    }
-                                }
-                                fprintf(GLOBALS->vcd_save_handle, "\n");
-                            } else {
-                                fprintf(GLOBALS->vcd_save_handle,
-                                        "%s[%d:%d]\n",
-                                        v->name,
-                                        v->msi,
-                                        v->lsi);
-                            }
+                            fprintf(GLOBALS->vcd_save_handle,
+                                    "%s[%d:%d]\n",
+                                    v->name,
+                                    v->msi,
+                                    v->lsi);
                         }
                     }
 
@@ -2212,7 +2157,7 @@ static void add_tail_histents(void)
             d = malloc_2(sizeof(double));
             *d = 1.0;
             add_histent(MAX_HISTENT_TIME - 1, v->narray[0], 'g', 0, (char *)d);
-        } else if ((v->size == 1) || (!GLOBALS->atomic_vectors))
+        } else if (v->size == 1)
             for (j = 0; j < v->size; j++) {
                 add_histent(MAX_HISTENT_TIME - 1, v->narray[j], 'x', 0, NULL);
             }
@@ -2235,7 +2180,7 @@ static void add_tail_histents(void)
             d = malloc_2(sizeof(double));
             *d = 0.0;
             add_histent(MAX_HISTENT_TIME, v->narray[0], 'g', 0, (char *)d);
-        } else if ((v->size == 1) || (!GLOBALS->atomic_vectors))
+        } else if (v->size == 1)
             for (j = 0; j < v->size; j++) {
                 add_histent(MAX_HISTENT_TIME, v->narray[j], 'z', 0, NULL);
             }
@@ -2297,8 +2242,7 @@ static void vcd_build_symbols(void)
                 }
             }
 
-            if (((v->size == 1) || (!GLOBALS->atomic_vectors)) && (v->vartype != V_REAL) &&
-                (v->vartype != V_STRINGTYPE)) {
+            if ((v->size == 1) && (v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
                 struct symbol *s = NULL;
 
                 for (j = 0; j < v->size; j++) {
