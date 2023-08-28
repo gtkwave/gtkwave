@@ -110,7 +110,6 @@ int f_use_full_precision(const char *str);
 int f_use_maxtime_display(const char *str);
 int f_use_nonprop_fonts(const char *str);
 int f_use_roundcaps(const char *str);
-int f_vcd_explicit_zero_subscripts(const char *str);
 int f_vcd_preserve_glitches(const char *str);
 int f_vcd_warning_filesize(const char *str);
 int f_vector_padding(const char *str);

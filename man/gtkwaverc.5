@@ -344,9 +344,6 @@ Uses anti-aliased pango fonts (GTK2) rather than bitmapped X11 ones. Default is 
 \fBuse_roundcaps\fR <\fIvalue\fP>
 A nonzero value indicates that vector traces should be drawn with rounded caps rather than perpendicular ones. The default for this is zero.
 .TP 
-\fBvcd_explicit_zero_subscripts\fR <\fIvalue\fP>
-indicates that signal names should be stored internally as name.bitnumber when enabled. When disabled, a more "normal" ordering of name[bitnumber] is used. Note that when disabled, the Bundle Up and Bundle Down options are disabled in the Signal Search Regexp,  Signal Search Hierarchy, and Signal Search Tree options. This is necessary as the internal data structures for signals are represented with one "less" level of hierarchy than when enabled and those functions would not work properly. This should not be an issue if atomic_vectors are enabled. Default for vcd_explicit_zero_subscripts is disabled.
-.TP 
 \fBvcd_preserve_glitches\fR <\fIvalue\fP>
 indicates that any repeat equal values for a net spanning different time values in the VCD/FST file are not to be compressed into a single value change but should remain in order to allow glitches to be present for this case. Default for vcd_preserve_glitches is disabled.
 .TP 

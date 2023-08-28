@@ -200,58 +200,6 @@ static void on_changed(GtkComboBox *widget, gpointer user_data)
 
 /* call cleanup() on ok/insert functions */
 
-static void bundle_cleanup(GtkWidget *widget, gpointer data)
-{
-    (void)widget;
-    (void)data;
-
-    if (GLOBALS->entrybox_text_local_search_c_2) {
-        char *efix;
-
-        efix = GLOBALS->entrybox_text_local_search_c_2;
-        while (*efix) {
-            if (*efix == ' ') {
-                *efix = '_';
-            }
-            efix++;
-        }
-
-        DEBUG(printf("Bundle name is: %s\n", GLOBALS->entrybox_text_local_search_c_2));
-        add_vector_selected(GLOBALS->entrybox_text_local_search_c_2,
-                            GLOBALS->selected_rows_search_c_2,
-                            GLOBALS->bundle_direction_search_c_2);
-        free_2(GLOBALS->entrybox_text_local_search_c_2);
-    }
-
-    redraw_signals_and_waves();
-}
-
-static void bundle_callback_generic(void)
-{
-    DEBUG(printf("Selected_rows: %d\n", GLOBALS->selected_rows_search_c_2));
-    if (GLOBALS->selected_rows_search_c_2 > 0) {
-        entrybox_local("Enter Bundle Name", 300, "", 128, G_CALLBACK(bundle_cleanup));
-    }
-}
-
-static void bundle_callback_up(GtkWidget *widget, gpointer data)
-{
-    (void)widget;
-    (void)data;
-
-    GLOBALS->bundle_direction_search_c_2 = 0;
-    bundle_callback_generic();
-}
-
-static void bundle_callback_down(GtkWidget *widget, gpointer data)
-{
-    (void)widget;
-    (void)data;
-
-    GLOBALS->bundle_direction_search_c_2 = 1;
-    bundle_callback_generic();
-}
-
 static void insert_callback(GtkWidget *widget, GtkWidget *nothing)
 {
     (void)nothing;
@@ -723,7 +671,6 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
     int i;
     char *s, *tmp2;
     gfloat interval;
-    int depack_cnt = 0;
     char *duplicate_row_buffer = NULL;
 
     if (GLOBALS->is_searching_running_search_c_1)
@@ -788,8 +735,6 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
             skiprow = 0;
             strcpy(duplicate_row_buffer, hfacname);
         }
-
-        depack_cnt += was_packed;
 
         if ((!skiprow) && wave_regex_match(hfacname, WAVE_REGEX_SEARCH))
             if ((!GLOBALS->is_ghw) || (strcmp(WAVE_GHW_DUMMYFACNAME, hfacname))) {
@@ -1071,28 +1016,6 @@ void searchbox(const char *title, GCallback func)
         insert_button,
         "Add selected signals after last highlighted signal on the main window.");
     gtk_box_pack_start(GTK_BOX(button_box2), insert_button, TRUE, TRUE, 0);
-
-    if (GLOBALS->vcd_explicit_zero_subscripts >= 0) {
-        GtkWidget *bundle_up_button = gtk_button_new_with_label("Bundle Up");
-        gtkwave_signal_connect_object(bundle_up_button,
-                                      "clicked",
-                                      G_CALLBACK(bundle_callback_up),
-                                      GLOBALS->window_search_c_7);
-        gtk_tooltips_set_tip_2(bundle_up_button,
-                               "Bundle selected signals into a single bit vector with the topmost "
-                               "selected signal as the LSB and the lowest as the MSB.");
-        gtk_box_pack_start(GTK_BOX(button_box2), bundle_up_button, TRUE, TRUE, 0);
-
-        GtkWidget *bundle_down_button = gtk_button_new_with_label("Bundle Down");
-        gtkwave_signal_connect_object(bundle_down_button,
-                                      "clicked",
-                                      G_CALLBACK(bundle_callback_down),
-                                      GLOBALS->window_search_c_7);
-        gtk_tooltips_set_tip_2(bundle_down_button,
-                               "Bundle selected signals into a single bit vector with the topmost "
-                               "selected signal as the MSB and the lowest as the LSB.");
-        gtk_box_pack_start(GTK_BOX(button_box2), bundle_down_button, TRUE, TRUE, 0);
-    }
 
     GtkWidget *replace_button = gtk_button_new_with_label("Replace");
     gtkwave_signal_connect_object(replace_button,

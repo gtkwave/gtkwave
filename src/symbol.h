@@ -101,7 +101,6 @@ int maketraces(char *, char *, int);
 /* additions to bitvec.c because of search.c/menu.c ==> formerly in analyzer.h */
 bvptr bits2vector(struct Bits *b);
 struct Bits *makevec_selected(char *vec, int numrows, char direction);
-int add_vector_selected(char *alias, int numrows, char direction);
 struct Bits *makevec_range(char *vec, int lo, int hi, char direction);
 int add_vector_range(char *alias, int lo, int hi, char direction);
 struct Bits *makevec_chain(char *vec, struct symbol *sym, int len);
