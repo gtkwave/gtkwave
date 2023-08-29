@@ -504,86 +504,104 @@ static void renderblackout(cairo_t *cr)
     }
 }
 
-static void render_individual_named_marker(cairo_t *cr, int i, wave_rgb_t gc, int blackout)
+typedef struct
 {
-    gdouble pixstep;
-    gint xl;
-    GwTime t;
+    GwWaveView *widget;
+    cairo_t *cr;
+    wave_rgb_t color;
+} DrawNamedMarkerData;
 
-    gdouble offset = GLOBALS->cairo_050_offset;
+static void draw_named_marker(gpointer data, gpointer user_data)
+{
+    GwMarker *marker = data;
+    DrawNamedMarkerData *draw_data = user_data;
 
-    if ((t = GLOBALS->named_markers[i]) != -1) {
-        if ((t >= GLOBALS->tims.start) && (t <= GLOBALS->tims.last) && (t <= GLOBALS->tims.end)) {
-            /* this needs to be here rather than outside the loop as gcc does some
-               optimizations that cause it to calculate slightly different from the marker if it's
-               not here */
-            pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
-
-            xl = ((gdouble)(t - GLOBALS->tims.start)) / pixstep; /* snap to integer */
-            if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
-                static const double dashed1[] = {5.0, 3.0};
-                char nbuff[16];
-                make_bijective_marker_id_string(nbuff, i);
-
-                cairo_set_dash(cr, dashed1, sizeof(dashed1) / sizeof(dashed1[0]), 0);
-                XXX_gdk_draw_line(cr, gc, xl, GLOBALS->fontheight - 1, xl, GLOBALS->waveheight - 1);
-                cairo_set_dash(cr, dashed1, 0, 0);
-
-                if ((!GLOBALS->marker_names[i]) || (!GLOBALS->marker_names[i][0])) {
-                    XXX_font_engine_draw_string(
-                        cr,
-                        GLOBALS->wavefont_smaller,
-                        &gc,
-                        xl - (font_engine_string_measure(GLOBALS->wavefont_smaller, nbuff) >> 1) +
-                            offset,
-                        GLOBALS->fontheight - 2 + offset,
-                        nbuff);
-                } else {
-                    int width = font_engine_string_measure(GLOBALS->wavefont_smaller,
-                                                           GLOBALS->marker_names[i]);
-                    if (blackout) /* blackout background so text is legible if overlaid with other
-                                     marker labels */
-                    {
-                        XXX_gdk_draw_rectangle(
-                            cr,
-                            GLOBALS->rgb_gc.gc_timeb_wavewindow_c_1,
-                            TRUE,
-                            xl - (width >> 1),
-                            GLOBALS->fontheight - 2 - GLOBALS->wavefont_smaller->ascent,
-                            width,
-                            GLOBALS->wavefont_smaller->ascent + GLOBALS->wavefont_smaller->descent);
-                    }
-
-                    XXX_font_engine_draw_string(cr,
-                                                GLOBALS->wavefont_smaller,
-                                                &gc,
-                                                xl - (width >> 1) + offset,
-                                                GLOBALS->fontheight - 2 + offset,
-                                                GLOBALS->marker_names[i]);
-                }
-            }
-        }
+    if (!gw_marker_is_enabled(marker)) {
+        return;
     }
+
+    GwTime t = gw_marker_get_position(marker);
+    if (t < GLOBALS->tims.start || t > GLOBALS->tims.last || t > GLOBALS->tims.end) {
+        return;
+    }
+
+    gdouble pixstep = GLOBALS->nsperframe / GLOBALS->pixelsperframe;
+    gint x = (t - GLOBALS->tims.start) / pixstep; /* snap to integer */
+
+    if (x < 0 || x > gtk_widget_get_allocated_width(GTK_WIDGET(draw_data->widget))) {
+        return;
+    }
+
+    cairo_t *cr = draw_data->cr;
+
+    static const double DASHES[] = {5.0, 3.0};
+    cairo_set_dash(cr, DASHES, G_N_ELEMENTS(DASHES), 0.0);
+
+    XXX_gdk_draw_line(cr, draw_data->color, x, GLOBALS->fontheight - 1, x, GLOBALS->waveheight - 1);
+    cairo_set_dash(cr, DASHES, 0, 0);
+
+    const gchar *name = gw_marker_get_display_name(marker);
+    gint text_width = font_engine_string_measure(GLOBALS->wavefont_smaller, name);
+    XXX_font_engine_draw_string(cr,
+                                GLOBALS->wavefont_smaller,
+                                &draw_data->color,
+                                x - text_width / 2,
+                                GLOBALS->fontheight - 2,
+                                name);
+
+    // if ((!GLOBALS->marker_names[i]) || (!GLOBALS->marker_names[i][0])) {
+    //     XXX_font_engine_draw_string(
+    //         cr,
+    //         GLOBALS->wavefont_smaller,
+    //         &gc,
+    //         x - (font_engine_string_measure(GLOBALS->wavefont_smaller, nbuff) >> 1) + offset,
+    //         GLOBALS->fontheight - 2 + offset,
+    //         nbuff);
+    // } else {
+    //     int width = font_engine_string_measure(GLOBALS->wavefont_smaller,
+    //     GLOBALS->marker_names[i]); if (blackout) /* blackout background so text is legible if
+    //     overlaid with other
+    //                      marker labels */
+    //     {
+    //         XXX_gdk_draw_rectangle(cr,
+    //                                GLOBALS->rgb_gc.gc_timeb_wavewindow_c_1,
+    //                                TRUE,
+    //                                x - (width >> 1),
+    //                                GLOBALS->fontheight - 2 - GLOBALS->wavefont_smaller->ascent,
+    //                                width,
+    //                                GLOBALS->wavefont_smaller->ascent +
+    //                                    GLOBALS->wavefont_smaller->descent);
+    //     }
+
+    //     XXX_font_engine_draw_string(cr,
+    //                                 GLOBALS->wavefont_smaller,
+    //                                 &gc,
+    //                                 xl - (width >> 1) + offset,
+    //                                 GLOBALS->fontheight - 2 + offset,
+    //                                 GLOBALS->marker_names[i]);
+    // }
 }
 
 static void draw_named_markers(GwWaveView *self, cairo_t *cr)
 {
     (void)self;
 
-    int i;
+    DrawNamedMarkerData data = {
+        .widget = self,
+        .cr = cr,
+        .color = GLOBALS->rgb_gc.gc_mark_wavewindow_c_1,
+    };
 
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        if (i != GLOBALS->named_marker_lock_idx) {
-            render_individual_named_marker(cr, i, GLOBALS->rgb_gc.gc_mark_wavewindow_c_1, 0);
-        }
-    }
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+    gw_named_markers_foreach(markers, draw_named_marker, &data);
 
-    if (GLOBALS->named_marker_lock_idx >= 0) {
-        render_individual_named_marker(cr,
-                                       GLOBALS->named_marker_lock_idx,
-                                       GLOBALS->rgb_gc.gc_umark_wavewindow_c_1,
-                                       1);
-    }
+    // TODO: draw locked marker on top
+    // if (GLOBALS->named_marker_lock_idx >= 0) {
+    //     render_individual_named_marker(cr,
+    //                                    GLOBALS->named_marker_lock_idx,
+    //                                    GLOBALS->rgb_gc.gc_umark_wavewindow_c_1,
+    //                                    1);
+    // }
 }
 
 static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)

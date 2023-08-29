@@ -696,14 +696,20 @@ int traverse_vector_nodes(Trptr t)
                         mlen = bijective_marker_id_string_len(pnt);
                         if (mlen) {
                             int which_marker = bijective_marker_id_string_hash(pnt);
-                            if ((which_marker >= 0) && (which_marker < WAVE_NUM_NAMED_MARKERS)) {
+
+                            GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+                            GwMarker *marker = gw_named_markers_get(markers, which_marker);
+
+                            if (marker != NULL) {
                                 GwTime tim = atoi_64(pnt + mlen) * GLOBALS->time_scale;
                                 int slen;
                                 char *sp;
 
                                 if (tim < GW_TIME_CONSTANT(0))
                                     tim = GW_TIME_CONSTANT(-1);
-                                GLOBALS->named_markers[which_marker] = tim;
+                                
+                                gw_marker_set_position(marker, tim);
+                                gw_marker_set_enabled(marker, tim >= 0);
 
                                 while (*pnt) {
                                     if (!isspace((int)(unsigned char)*pnt))
@@ -734,11 +740,7 @@ int traverse_vector_nodes(Trptr t)
                                     } while (pnt != (sp - 1));
                                 }
 
-                                if (GLOBALS->marker_names[which_marker])
-                                    free_2(GLOBALS->marker_names[which_marker]);
-                                GLOBALS->marker_names[which_marker] =
-                                    (sp && (*sp) && (tim >= GW_TIME_CONSTANT(0))) ? strdup_2(sp)
-                                                                                  : NULL;
+                                gw_marker_set_alias(marker, sp);
                             }
                         }
 

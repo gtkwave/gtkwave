@@ -77,6 +77,8 @@
 
 struct Global
 {
+    GwProject *project;
+
 /*
  * ae2.c
  */
@@ -546,17 +548,6 @@ struct Global
     int disable_menus; /* from main.c 242 */
     char *ftext_main_main_c_1; /* from main.c 243 */
     char dbl_mant_dig_override; /* from main.c */
-
-    /*
-     * markerbox.c
-     */
-    GtkWidget *window_markerbox_c_4; /* from markerbox.c 248 */
-    GtkWidget *entries_markerbox_c_1[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c 249 */
-    void (*cleanup_markerbox_c_4)(void); /* from markerbox.c 250 */
-    int dirty_markerbox_c_1; /* from markerbox.c 251 */
-    GwTime shadow_markers_markerbox_c_1[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c 252 */
-    char *marker_names[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c */
-    char *shadow_marker_names[WAVE_NUM_NAMED_MARKERS]; /* from markerbox.c */
 
     /*
      * menu.c
@@ -1116,7 +1107,6 @@ struct Global
     GtkWidget *hscroll_wavewindow_c_2; /* from wavewindow.c 679 */
     gpointer wave_vslider2; /* from wavewindow.c 681 */
     gpointer wave_hslider; /* from wavewindow.c 682 */
-    GwTime named_markers[WAVE_NUM_NAMED_MARKERS]; /* from wavewindow.c 683 */
     int named_marker_lock_idx; /* from menu.c */
     char made_gc_contexts_wavewindow_c_1; /* from wavewindow.c 684 */
     int which_t_color;

@@ -45,6 +45,13 @@ static void test_name_and_alias(void)
     g_assert_cmpstr(gw_marker_get_alias(marker), ==, NULL);
     g_assert_cmpstr(gw_marker_get_display_name(marker), ==, "marker");
 
+    // An empty alias should be handled the same as NULL.
+
+    gw_marker_set_alias(marker, "");
+    g_assert_cmpstr(gw_marker_get_name(marker), ==, "marker");
+    g_assert_cmpstr(gw_marker_get_alias(marker), ==, NULL);
+    g_assert_cmpstr(gw_marker_get_display_name(marker), ==, "marker");
+
     g_object_unref(marker);
 }
 

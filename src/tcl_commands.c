@@ -556,8 +556,15 @@ static int gtkwavetcl_getNamedMarker(ClientData clientData,
             which = atoi(s);
         }
 
-        if ((which >= 0) && (which < WAVE_NUM_NAMED_MARKERS)) {
-            GwTime value = GLOBALS->named_markers[which];
+        GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+        GwMarker *marker = gw_named_markers_get(markers, which);
+
+        if (marker != NULL) {
+            // TODO: don't use sentinel value for disabled markers
+            GwTime value = -1;
+            if (gw_marker_is_enabled(marker)) {
+                value = gw_marker_get_position(marker);
+            }
             return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
         }
     } else {
@@ -781,7 +788,6 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
         char *sv = get_Tcl_string(objv[1]);
         int which = -1;
         GwTime oldmarker = GLOBALS->tims.marker;
-        GwTime value = GW_TIME_CONSTANT(-1);
 
         if ((sv[0] >= 'A') && (sv[0] <= 'Z')) {
             which = bijective_marker_id_string_hash(sv);
@@ -791,11 +797,12 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
             which = atoi(sv);
         }
 
-        if ((which >= 0) && (which < WAVE_NUM_NAMED_MARKERS)) {
+        GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+        GwMarker *marker = gw_named_markers_get(markers, which);
+
+        if (marker != NULL) {
             char *s = get_Tcl_string(objv[2]);
             Trptr t = GLOBALS->traces.first;
-
-            value = GLOBALS->named_markers[which];
 
             while (t) {
                 if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -809,8 +816,8 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
                 t = t->t_next;
             }
 
-            if (t && (value >= GW_TIME_CONSTANT(0))) {
-                GLOBALS->tims.marker = value;
+            if (t && gw_marker_is_enabled(marker)) {
+                GLOBALS->tims.marker = gw_marker_get_position(marker);
                 GLOBALS->signalwindow_width_dirty = 1;
                 redraw_signals_and_waves();
                 gtkwave_main_iteration();
@@ -1124,21 +1131,22 @@ static int gtkwavetcl_setNamedMarker(ClientData clientData,
             which = atoi(s);
         }
 
-        if ((which >= 0) && (which < WAVE_NUM_NAMED_MARKERS)) {
+        GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+        GwMarker *marker = gw_named_markers_get(markers, which);
+
+        if (marker != NULL) {
             char *t = get_Tcl_string(objv[2]);
             GwTime gt = unformat_time(t, GLOBALS->time_dimension);
 
-            GLOBALS->named_markers[which] = gt;
-
-            if (GLOBALS->marker_names[which]) {
-                free_2(GLOBALS->marker_names[which]);
-                GLOBALS->marker_names[which] = NULL;
-            }
+            gw_marker_set_position(marker, gt);
+            // TODO: dont' use sentinel values for disabled markers
+            gw_marker_set_enabled(marker, gt >= 0);
 
             if (objc == 4) {
                 char *u = get_Tcl_string(objv[3]);
-
-                GLOBALS->marker_names[which] = strdup_2(u);
+                gw_marker_set_alias(marker, u);
+            } else {
+                gw_marker_set_alias(marker, NULL);
             }
 
             gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));

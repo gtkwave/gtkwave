@@ -223,3 +223,41 @@ void gw_named_markers_foreach(GwNamedMarkers *self, GFunc func, gpointer user_da
         func(marker, user_data);
     }
 }
+
+/**
+ * gw_named_markers_find_closest:
+ * @self: A #GwNamedMarkers.
+ * @time: The time.
+ * @delta: (out) (optional): A location to store the time delta for the closest marker or %NULL.
+ *
+ * Finds the closest marker to the given time.
+ *
+ * Returns: (transfer none): The closest marker or %NULL if all markers are disabled
+ */
+
+GwMarker *gw_named_markers_find_closest(GwNamedMarkers *self, GwTime time, GwTime *delta)
+{
+    g_return_val_if_fail(GW_IS_NAMED_MARKERS(self), NULL);
+
+    GwMarker *closest = NULL;
+    GwTime closest_delta = 0;
+
+    for (guint i = 0; i < self->markers->len; i++) {
+        GwMarker *marker = gw_named_markers_get(self, i);
+        if (gw_marker_is_enabled(marker)) {
+            GwTime position = gw_marker_get_position(marker);
+            GwTime marker_delta = time - position;
+
+            if (closest == NULL || ABS(marker_delta) < ABS(closest_delta)) {
+                closest = marker;
+                closest_delta = marker_delta;
+            }
+        }
+    }
+
+    if (closest != NULL && delta != NULL) {
+        *delta = closest_delta;
+    }
+
+    return closest;
+}

@@ -78,6 +78,58 @@ static void test_find(void)
     g_object_unref(markers);
 }
 
+static void test_find_closest(void)
+{
+    GwNamedMarkers *markers = gw_named_markers_new(4);
+
+    // No enabled marker
+
+    GwTime delta = 123;
+    g_assert_null(gw_named_markers_find_closest(markers, 10, &delta));
+    g_assert_cmpint(delta, ==, 123);
+
+    // One enabled marker
+
+    GwMarker *marker1 = gw_named_markers_get(markers, 2);
+    gw_marker_set_position(marker1, 10);
+    gw_marker_set_enabled(marker1, TRUE);
+
+    delta = 123;
+    g_assert_true(gw_named_markers_find_closest(markers, 10, &delta) == marker1);
+    g_assert_cmpint(delta, ==, 0);
+    g_assert_true(gw_named_markers_find_closest(markers, 11, &delta) == marker1);
+    g_assert_cmpint(delta, ==, 1);
+    g_assert_true(gw_named_markers_find_closest(markers, 8, &delta) == marker1);
+    g_assert_cmpint(delta, ==, -2);
+
+    // Two enabled marker
+
+    GwMarker *marker2 = gw_named_markers_get(markers, 1);
+    gw_marker_set_position(marker2, 20);
+    gw_marker_set_enabled(marker2, TRUE);
+
+    g_assert_true(gw_named_markers_find_closest(markers, 9, &delta) == marker1);
+    g_assert_cmpint(delta, ==, -1);
+    g_assert_true(gw_named_markers_find_closest(markers, 10, &delta) == marker1);
+    g_assert_cmpint(delta, ==, 0);
+    g_assert_true(gw_named_markers_find_closest(markers, 11, &delta) == marker1);
+    g_assert_cmpint(delta, ==, 1);
+    g_assert_true(gw_named_markers_find_closest(markers, 19, &delta) == marker2);
+    g_assert_cmpint(delta, ==, -1);
+    g_assert_true(gw_named_markers_find_closest(markers, 20, &delta) == marker2);
+    g_assert_cmpint(delta, ==, 0);
+    g_assert_true(gw_named_markers_find_closest(markers, 21, &delta) == marker2);
+    g_assert_cmpint(delta, ==, 1);
+
+    // If the absolute distance to two markers is identical the one with the
+    // lower index will be returned.
+
+    g_assert_true(gw_named_markers_find_closest(markers, 15, &delta) == marker2);
+    g_assert_cmpint(delta, ==, -5);
+
+    g_object_unref(markers);
+}
+
 static void append_marker_name(gpointer data, gpointer user_data)
 {
     GwMarker *marker = data;
@@ -107,6 +159,7 @@ int main(int argc, char *argv[])
     g_test_add_func("/named_markers/names", test_names);
     g_test_add_func("/named_markers/find_first_disabled", test_find_first_disabled);
     g_test_add_func("/named_markers/find", test_find);
+    g_test_add_func("/named_markers/find_closest", test_find_closest);
     g_test_add_func("/named_markers/foreach", test_foreach);
 
     return g_test_run();

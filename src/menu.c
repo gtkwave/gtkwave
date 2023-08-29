@@ -28,6 +28,7 @@
 #include "hierpack.h"
 #include "tcl_helper.h"
 #include "signal_list.h"
+#include "gw-named-marker-dialog.h"
 #include <cocoa_misc.h>
 #include <assert.h>
 
@@ -198,38 +199,40 @@ static void lock_marker_left(gpointer null_data, guint callback_action, GtkWidge
     (void)callback_action;
     (void)widget;
 
-    int ent_idx = GLOBALS->named_marker_lock_idx;
-    int i;
-    int success = 0;
+    g_error("lock_marker_left disabled");
 
-    if (ent_idx < 0)
-        ent_idx = WAVE_NUM_NAMED_MARKERS;
-    ent_idx--;
-    if (ent_idx < 0)
-        ent_idx = WAVE_NUM_NAMED_MARKERS - 1;
+    // int ent_idx = GLOBALS->named_marker_lock_idx;
+    // int i;
+    // int success = 0;
 
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        if (GLOBALS->named_markers[ent_idx] >= 0) {
-            success = 1;
-            break;
-        }
+    // if (ent_idx < 0)
+    //     ent_idx = WAVE_NUM_NAMED_MARKERS;
+    // ent_idx--;
+    // if (ent_idx < 0)
+    //     ent_idx = WAVE_NUM_NAMED_MARKERS - 1;
 
-        ent_idx--;
-        if (ent_idx < 0)
-            ent_idx = WAVE_NUM_NAMED_MARKERS - 1;
-    }
+    // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
+    //     if (GLOBALS->named_markers[ent_idx] >= 0) {
+    //         success = 1;
+    //         break;
+    //     }
 
-    if (!success) {
-        ent_idx = 0;
-        GLOBALS->named_markers[ent_idx] = GLOBALS->tims.marker;
-    }
+    //     ent_idx--;
+    //     if (ent_idx < 0)
+    //         ent_idx = WAVE_NUM_NAMED_MARKERS - 1;
+    // }
 
-    GLOBALS->named_marker_lock_idx = ent_idx;
-    GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
+    // if (!success) {
+    //     ent_idx = 0;
+    //     GLOBALS->named_markers[ent_idx] = GLOBALS->tims.marker;
+    // }
 
-    update_time_box();
-    GLOBALS->signalwindow_width_dirty = 1;
-    redraw_signals_and_waves();
+    // GLOBALS->named_marker_lock_idx = ent_idx;
+    // GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
+
+    // update_time_box();
+    // GLOBALS->signalwindow_width_dirty = 1;
+    // redraw_signals_and_waves();
 }
 
 static void lock_marker_right(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -238,39 +241,41 @@ static void lock_marker_right(gpointer null_data, guint callback_action, GtkWidg
     (void)callback_action;
     (void)widget;
 
-    int ent_idx = GLOBALS->named_marker_lock_idx;
-    int i;
-    int success = 0;
+    g_error("lock_marker_right disabled");
 
-    if (ent_idx < 0)
-        ent_idx = -1; /* not really necessary */
-    ent_idx++;
-    if (ent_idx > (WAVE_NUM_NAMED_MARKERS - 1))
-        ent_idx = 0;
+    // int ent_idx = GLOBALS->named_marker_lock_idx;
+    // int i;
+    // int success = 0;
 
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        if (GLOBALS->named_markers[ent_idx] >= 0) {
-            success = 1;
-            break;
-        }
+    // if (ent_idx < 0)
+    //     ent_idx = -1; /* not really necessary */
+    // ent_idx++;
+    // if (ent_idx > (WAVE_NUM_NAMED_MARKERS - 1))
+    //     ent_idx = 0;
 
-        ent_idx++;
-        if (ent_idx > (WAVE_NUM_NAMED_MARKERS - 1))
-            ent_idx = 0;
-    }
+    // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
+    //     if (GLOBALS->named_markers[ent_idx] >= 0) {
+    //         success = 1;
+    //         break;
+    //     }
 
-    if (!success) {
-        ent_idx = 0;
-        GLOBALS->named_markers[ent_idx] = GLOBALS->tims.marker;
-    }
+    //     ent_idx++;
+    //     if (ent_idx > (WAVE_NUM_NAMED_MARKERS - 1))
+    //         ent_idx = 0;
+    // }
 
-    GLOBALS->named_marker_lock_idx = ent_idx;
-    GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
+    // if (!success) {
+    //     ent_idx = 0;
+    //     GLOBALS->named_markers[ent_idx] = GLOBALS->tims.marker;
+    // }
 
-    update_time_box();
+    // GLOBALS->named_marker_lock_idx = ent_idx;
+    // GLOBALS->tims.marker = GLOBALS->named_markers[ent_idx];
 
-    GLOBALS->signalwindow_width_dirty = 1;
-    redraw_signals_and_waves();
+    // update_time_box();
+
+    // GLOBALS->signalwindow_width_dirty = 1;
+    // redraw_signals_and_waves();
 }
 
 static void unlock_marker(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -2923,7 +2928,21 @@ void menu_markerbox(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    markerbox("Markers", G_CALLBACK(menu_markerbox_callback));
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+    GtkWidget *dialog = gw_named_marker_dialog_new(markers);
+
+    // GtkWidget *dialog = g_object_new(GTK_TYPE_DIALOG, "use-header-bar", 1, NULL);
+    // gtk_dialog_add_button(GTK_DIALOG(dialog), "OK", GTK_RESPONSE_OK);
+    // gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+
+    // GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    // gtk_container_add(GTK_CONTAINER(content), gtk_label_new("label"));
+    // gtk_widget_show_all(content);
+
+
+    gtk_dialog_run(GTK_DIALOG(dialog));
+
+    // markerbox("Markers", G_CALLBACK(menu_markerbox_callback));
 }
 
 void copy_pri_b_marker(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -2975,6 +2994,19 @@ void delete_unnamed_marker(gpointer null_data, guint callback_action, GtkWidget 
     }
 }
 
+static void disable_marker(gpointer data, gpointer user_data) {
+    GwMarker *marker = data;
+    gboolean *dirty = user_data;
+
+    if (!gw_marker_is_enabled(marker)) {
+        return;
+    }
+
+    gw_marker_set_enabled(marker, FALSE);
+    gw_marker_set_alias(marker, NULL);
+    *dirty = TRUE;
+}
+
 /**/
 void collect_all_named_markers(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
@@ -2982,22 +3014,10 @@ void collect_all_named_markers(gpointer null_data, guint callback_action, GtkWid
     (void)callback_action;
     (void)widget;
 
-    int i;
-    int dirty = 0;
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
 
-    DEBUG(printf("collect_all_unnamed_markers()\n"));
-
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        if (GLOBALS->named_markers[i] != -1) {
-            GLOBALS->named_markers[i] = -1;
-            dirty = 1;
-        }
-
-        if (GLOBALS->marker_names[i]) {
-            free_2(GLOBALS->marker_names[i]);
-            GLOBALS->marker_names[i] = NULL;
-        }
-    }
+    gboolean dirty = FALSE;
+    gw_named_markers_foreach(markers, disable_marker, &dirty);
 
     if (dirty) {
         redraw_signals_and_waves();
@@ -3010,24 +3030,19 @@ void collect_named_marker(gpointer null_data, guint callback_action, GtkWidget *
     (void)callback_action;
     (void)widget;
 
-    int i;
-
     DEBUG(printf("collect_named_marker()\n"));
 
-    if (GLOBALS->tims.marker != -1) {
-        for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-            if (GLOBALS->named_markers[i] == GLOBALS->tims.marker) {
-                GLOBALS->named_markers[i] = -1;
-                redraw_signals_and_waves();
+    if (GLOBALS->tims.marker < 0) {
+        return;
+    }
 
-                if (GLOBALS->marker_names[i]) {
-                    free_2(GLOBALS->marker_names[i]);
-                    GLOBALS->marker_names[i] = NULL;
-                }
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+    GwMarker *marker = gw_named_markers_find(markers, GLOBALS->tims.marker);
 
-                /* return; */
-            }
-        }
+    if (marker != NULL) {
+        gw_marker_set_enabled(marker, FALSE);
+        gw_marker_set_alias(marker, NULL);
+        redraw_signals_and_waves();
     }
 }
 /**/
@@ -3037,27 +3052,16 @@ void drop_named_marker(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    int i;
+    if (GLOBALS->tims.marker < 0) {
+        return;
+    }
 
-    DEBUG(printf("drop_named_marker()\n"));
-
-    if (GLOBALS->tims.marker != -1) {
-        /* only one per slot requirement removed...
-        #if 0
-                for(i=0;i<WAVE_NUM_NAMED_MARKERS;i++)
-                        {
-                        if(GLOBALS->named_markers[i]==GLOBALS->tims.marker) return;
-                        }
-        #endif
-        ...only one per slot requirement removed */
-
-        for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-            if (GLOBALS->named_markers[i] == -1) {
-                GLOBALS->named_markers[i] = GLOBALS->tims.marker;
-                redraw_signals_and_waves();
-                return;
-            }
-        }
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+    GwMarker *marker = gw_named_markers_find_first_disabled(markers);
+    if (marker != NULL) {
+        gw_marker_set_position(marker, GLOBALS->tims.marker);
+        gw_marker_set_enabled(marker, TRUE);
+        redraw_signals_and_waves();
     }
 }
 /**/
@@ -3805,9 +3809,12 @@ void movetotime_cleanup(GtkWidget *widget, gpointer data)
 
             uch = bijective_marker_id_string_hash(GLOBALS->entrybox_text);
 
-            if ((uch >= 0) && (uch < WAVE_NUM_NAMED_MARKERS)) {
-                gt = GLOBALS->named_markers[uch];
+            GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+            GwMarker *marker = gw_named_markers_get(markers, uch);
+            if (marker != NULL && gw_marker_is_enabled(marker)) {
+                gt = gw_marker_get_position(marker);
             }
+
         } else {
             gt = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension);
             gt -= GLOBALS->global_time_offset;
