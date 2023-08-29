@@ -343,8 +343,6 @@ void update_time_box(void)
     //         }
     //     }
     // }
-
-    gw_time_display_update(GW_TIME_DISPLAY(GLOBALS->time_box), &GLOBALS->tims);
 }
 
 void update_currenttime(GwTime val)

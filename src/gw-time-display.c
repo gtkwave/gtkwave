@@ -134,6 +134,8 @@ struct _GwTimeDisplay
 {
     GtkBox parent_instance;
 
+    GwProject *project;
+
     GtkWidget *marker_label;
     GtkWidget *marker_value;
     GtkWidget *cursor_label;
@@ -142,34 +144,24 @@ struct _GwTimeDisplay
 
 G_DEFINE_TYPE(GwTimeDisplay, gw_time_display, GTK_TYPE_BOX)
 
-static void gw_time_display_class_init(GwTimeDisplayClass *klass)
+enum
 {
-    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
+    PROP_PROJECT = 1,
+    N_PROPERTIES,
+};
 
-    gtk_widget_class_set_template_from_resource(widget_class,
-                                                "/io/github/gtkwave/GTKWave/ui/gw-time-display.ui");
-    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, marker_label);
-    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, marker_value);
-    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, cursor_label);
-    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, cursor_value);
-}
+static GParamSpec *properties[N_PROPERTIES];
 
-static void gw_time_display_init(GwTimeDisplay *self)
+static void gw_time_display_update(GwTimeDisplay *self)
 {
-    gtk_widget_init_template(GTK_WIDGET(self));
-}
-
-GtkWidget *gw_time_display_new(void)
-{
-    return g_object_new(GW_TYPE_TIME_DISPLAY, NULL);
-}
-
-void gw_time_display_update(GwTimeDisplay *self, Times *times)
-{
-    // TODO: don't use GLOBALS
-    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
-    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
-    GwMarker *ghost_marker = gw_project_get_ghost_marker(GLOBALS->project);
+    GwMarker *primary_marker = NULL;
+    GwMarker *baseline_marker = NULL;
+    GwMarker *ghost_marker = NULL;
+    if (self->project != NULL) {
+        primary_marker = gw_project_get_primary_marker(self->project);
+        baseline_marker = gw_project_get_baseline_marker(self->project);
+        ghost_marker = gw_project_get_ghost_marker(self->project);
+    }
 
     if (GLOBALS->use_maxtime_display) {
         gchar *text = reformat_time_2(GLOBALS->max_time + GLOBALS->global_time_offset,
@@ -181,7 +173,7 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
     } else {
         gtk_label_set_text(GTK_LABEL(self->marker_label), "Marker");
 
-        if (gw_marker_is_enabled(primary_marker)) {
+        if (primary_marker != NULL && gw_marker_is_enabled(primary_marker)) {
             gchar *text = NULL;
 
             if (gw_marker_is_enabled(baseline_marker) || gw_marker_is_enabled(ghost_marker)) {
@@ -215,7 +207,7 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
         }
     }
 
-    if (gw_marker_is_enabled(baseline_marker)) {
+    if (baseline_marker != NULL && gw_marker_is_enabled(baseline_marker)) {
         gtk_label_set_text(GTK_LABEL(self->cursor_label), "Base");
         gchar *text =
             reformat_time_2(gw_marker_get_position(baseline_marker) + GLOBALS->global_time_offset,
@@ -242,4 +234,128 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
         gtk_label_set_text(GTK_LABEL(self->cursor_value), text);
         g_free(text);
     }
+}
+
+static void gw_time_display_dispose(GObject *object)
+{
+    GwTimeDisplay *self = GW_TIME_DISPLAY(object);
+
+    g_clear_object(&self->project);
+
+    G_OBJECT_CLASS(gw_time_display_parent_class)->dispose(object);
+}
+
+static void gw_time_display_set_property(GObject *object,
+                                         guint property_id,
+                                         const GValue *value,
+                                         GParamSpec *pspec)
+{
+    GwTimeDisplay *self = GW_TIME_DISPLAY(object);
+
+    switch (property_id) {
+        case PROP_PROJECT:
+            gw_time_display_set_project(self, g_value_get_object(value));
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+            break;
+    }
+}
+
+static void gw_time_display_get_property(GObject *object,
+                                         guint property_id,
+                                         GValue *value,
+                                         GParamSpec *pspec)
+{
+    GwTimeDisplay *self = GW_TIME_DISPLAY(object);
+
+    switch (property_id) {
+        case PROP_PROJECT:
+            g_value_set_object(value, gw_time_display_get_project(self));
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+            break;
+    }
+}
+
+static void gw_time_display_class_init(GwTimeDisplayClass *klass)
+{
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
+
+    object_class->dispose = gw_time_display_dispose;
+    object_class->set_property = gw_time_display_set_property;
+    object_class->get_property = gw_time_display_get_property;
+
+    properties[PROP_PROJECT] = g_param_spec_object("project",
+                                                   "Project",
+                                                   "The project",
+                                                   GW_TYPE_PROJECT,
+                                                   G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    g_object_class_install_properties(object_class, N_PROPERTIES, properties);
+
+    gtk_widget_class_set_template_from_resource(widget_class,
+                                                "/io/github/gtkwave/GTKWave/ui/gw-time-display.ui");
+    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, marker_label);
+    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, marker_value);
+    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, cursor_label);
+    gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, cursor_value);
+}
+
+static void gw_time_display_init(GwTimeDisplay *self)
+{
+    gtk_widget_init_template(GTK_WIDGET(self));
+
+    gw_time_display_update(self);
+}
+
+GtkWidget *gw_time_display_new(void)
+{
+    return g_object_new(GW_TYPE_TIME_DISPLAY, NULL);
+}
+
+static void on_marker_change(GObject *self, GParamSpec *pspec, gpointer user_data)
+{
+    GwTimeDisplay *time_display = user_data;
+    gw_time_display_update(time_display);
+}
+
+void gw_time_display_set_project(GwTimeDisplay *self, GwProject *project)
+{
+    g_return_if_fail(GW_IS_TIME_DISPLAY(self));
+    g_return_if_fail(project == NULL || GW_IS_PROJECT(project));
+
+    if (self->project == project) {
+        return;
+    }
+
+    if (self->project != NULL) {
+        g_signal_handlers_disconnect_by_data(gw_project_get_primary_marker(self->project), self);
+        g_signal_handlers_disconnect_by_data(gw_project_get_baseline_marker(self->project), self);
+        g_signal_handlers_disconnect_by_data(gw_project_get_ghost_marker(self->project), self);
+
+        g_object_unref(self->project);
+    }
+
+    if (project != NULL) {
+        self->project = g_object_ref(project);
+
+        GCallback cb = G_CALLBACK(on_marker_change);
+        g_signal_connect(gw_project_get_primary_marker(self->project), "notify", cb, self);
+        g_signal_connect(gw_project_get_baseline_marker(self->project), "notify", cb, self);
+        g_signal_connect(gw_project_get_ghost_marker(self->project), "notify", cb, self);
+    }
+
+    gw_time_display_update(self);
+}
+
+GwProject *gw_time_display_get_project(GwTimeDisplay *self)
+{
+    g_return_val_if_fail(GW_IS_TIME_DISPLAY(self), NULL);
+
+    return self->project;
 }
