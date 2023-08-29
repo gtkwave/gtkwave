@@ -419,7 +419,6 @@ typedef struct
     GwTime last; /* end time of trace */
     GwTime start; /* beginning time of trace on screen */
     GwTime end; /* ending time of trace on screen */
-    GwTime marker;
     GwTime prevmarker; /* from last drawmarker()	        */
     GwTime resizemarker; /* from last MaxSignalLength()          */
     GwTime resizemarker2; /* from 2nd last MaxSignalLength()      */

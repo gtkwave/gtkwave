@@ -185,7 +185,15 @@ void write_save_helper(const char *savnam, FILE *wave)
     if (!GLOBALS->ignore_savefile_pos)
         fprintf(wave, "[pos] %d %d\n", root_x + GLOBALS->xpos_delta, root_y + GLOBALS->ypos_delta);
 
-    fprintf(wave, "*%f %" GW_TIME_FORMAT, (float)(GLOBALS->tims.zoom), GLOBALS->tims.marker);
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    if (gw_marker_is_enabled(primary_marker)) {
+        fprintf(wave,
+                "*%f %" GW_TIME_FORMAT,
+                (float)(GLOBALS->tims.zoom),
+                gw_marker_get_position(primary_marker));
+    } else {
+        fprintf(wave, "*%f -1", (float)(GLOBALS->tims.zoom));
+    }
 
     GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
     guint num_markers = gw_named_markers_get_number_of_markers(markers);
@@ -1029,20 +1037,18 @@ int parsewavline(char *w, char *alias, int depth)
                 }
             } else {
                 sscanf(w2, "%" GW_TIME_FORMAT, &ttlocal);
-                switch (which) {
-                    case 1:
-                        GLOBALS->tims.marker = ttlocal;
-                        break;
-                    default: {
-                        GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
-                        GwMarker *marker = gw_named_markers_get(markers, which - 2);
-                        if (marker != NULL) {
-                            gw_marker_set_position(marker, ttlocal);
-                            // TODO: don't use sentinel values for disable markers
-                            gw_marker_set_enabled(marker, ttlocal >= 0);
-                        }
-                        break;
-                    }
+
+                GwMarker *marker = NULL;
+                if (which == 1) {
+                    marker = gw_project_get_primary_marker(GLOBALS->project);
+                } else {
+                    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+                    marker = gw_named_markers_get(markers, which - 2);
+                }
+
+                if (marker != NULL) {
+                    gw_marker_set_position(marker, ttlocal);
+                    gw_marker_set_enabled(marker, ttlocal >= 0);
                 }
             }
             which++;

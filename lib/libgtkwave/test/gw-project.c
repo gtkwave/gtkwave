@@ -5,6 +5,11 @@ static void test_basic(void)
     GwProject *project = gw_project_new();
     g_assert_true(GW_IS_PROJECT(project));
 
+    g_assert_true(GW_IS_MARKER(gw_project_get_cursor(project)));
+    g_assert_true(GW_IS_MARKER(gw_project_get_primary_marker(project)));
+    g_assert_true(GW_IS_MARKER(gw_project_get_baseline_marker(project)));
+    g_assert_true(GW_IS_MARKER(gw_project_get_ghost_marker(project)));
+
     g_assert_true(GW_IS_NAMED_MARKERS(gw_project_get_named_markers(project)));
 
     g_object_unref(project);

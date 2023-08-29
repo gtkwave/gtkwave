@@ -84,17 +84,21 @@ void service_zoom_out(GtkWidget *text, gpointer data)
     (void)data;
 
     GwTime middle = 0, width;
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTime primary_pos = gw_marker_get_position(primary_marker);
 
     if (GLOBALS->do_zoom_center) {
-        if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
-            (GLOBALS->tims.marker > GLOBALS->tims.last)) {
-            if (GLOBALS->tims.end > GLOBALS->tims.last)
+        if (!gw_marker_is_enabled(primary_marker) || primary_pos < GLOBALS->tims.first ||
+            primary_pos > GLOBALS->tims.last) {
+            if (GLOBALS->tims.end > GLOBALS->tims.last) {
                 GLOBALS->tims.end = GLOBALS->tims.last;
+            }
             middle = (GLOBALS->tims.start / 2) + (GLOBALS->tims.end / 2);
-            if ((GLOBALS->tims.start & 1) && (GLOBALS->tims.end & 1))
+            if ((GLOBALS->tims.start & 1) && (GLOBALS->tims.end & 1)) {
                 middle++;
+            }
         } else {
-            middle = GLOBALS->tims.marker;
+            middle = primary_pos;
         }
     }
 
@@ -130,20 +134,23 @@ void service_zoom_in(GtkWidget *text, gpointer data)
     (void)text;
     (void)data;
 
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTime primary_pos = gw_marker_get_position(primary_marker);
+
     if (GLOBALS->tims.zoom < 0) /* otherwise it's ridiculous and can cause */
     { /* overflow problems in the scope          */
         GwTime middle = 0, width;
 
         if (GLOBALS->do_zoom_center) {
-            if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
-                (GLOBALS->tims.marker > GLOBALS->tims.last)) {
+            if (!gw_marker_is_enabled(primary_marker) || primary_pos < GLOBALS->tims.first ||
+                primary_pos > GLOBALS->tims.last) {
                 if (GLOBALS->tims.end > GLOBALS->tims.last)
                     GLOBALS->tims.end = GLOBALS->tims.last;
                 middle = (GLOBALS->tims.start / 2) + (GLOBALS->tims.end / 2);
                 if ((GLOBALS->tims.start & 1) && (GLOBALS->tims.end & 1))
                     middle++;
             } else {
-                middle = GLOBALS->tims.marker;
+                middle = primary_pos;
             }
         }
 
@@ -206,9 +213,12 @@ void service_zoom_fit(GtkWidget *text, gpointer data)
     gdouble estimated;
     int fixedwidth;
 
-    if ((GLOBALS->tims.baseline >= 0) && (GLOBALS->tims.marker >= 0)) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+    if ((GLOBALS->tims.baseline >= 0) && gw_marker_is_enabled(primary_marker)) {
         service_dragzoom(GLOBALS->tims.baseline,
-                         GLOBALS->tims.marker); /* new semantics added to zoom between the two */
+                         gw_marker_get_position(
+                             primary_marker)); /* new semantics added to zoom between the two */
     } else {
         if (GLOBALS->wavewidth > 4) {
             fixedwidth = GLOBALS->wavewidth - 4;
@@ -327,8 +337,10 @@ void service_dragzoom(GwTime time1, GwTime time2) /* the function you've been wa
             }
         }
 
-        if (!((GLOBALS->tims.baseline >= 0) && (GLOBALS->tims.marker >= 0))) {
-            GLOBALS->tims.marker = -1;
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+        if (!((GLOBALS->tims.baseline >= 0) && gw_marker_is_enabled(primary_marker))) {
+            gw_marker_set_enabled(primary_marker, FALSE);
             update_time_box();
         }
         GLOBALS->signalwindow_width_dirty = 1;

@@ -1298,9 +1298,11 @@ static char *make_gtkwave_pid(void)
 
     sprintf(pidstr, "{gtkwave PID %d} ", getpid());
 
-    if (GLOBALS->tims.marker != -1) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+    if (gw_marker_is_enabled(primary_marker)) {
         char mrkbuf[128];
-        reformat_time(mrkbuf, GLOBALS->tims.marker, GLOBALS->time_dimension);
+        reformat_time(mrkbuf, gw_marker_get_position(primary_marker), GLOBALS->time_dimension);
         sprintf(pidstr + strlen(pidstr), "{marker %s} ", mrkbuf);
     }
 
@@ -1463,13 +1465,17 @@ static char *give_value_string(Trptr t)
         t->f_filter = 0;
         t->p_filter = 0;
 
-        if (GLOBALS->tims.marker != -1) {
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+        if (gw_marker_is_enabled(primary_marker)) {
             if (t->vector) {
                 /* this is currently unused as vectors are exploded into single bits */
-                vptr v = bsearch_vector(t->n.vec, GLOBALS->tims.marker - t->shift);
+                vptr v =
+                    bsearch_vector(t->n.vec, gw_marker_get_position(primary_marker) - t->shift);
                 rc = convert_ascii(t, v);
             } else {
-                hptr h_ptr = bsearch_node(t->n.nd, GLOBALS->tims.marker - t->shift);
+                hptr h_ptr =
+                    bsearch_node(t->n.nd, gw_marker_get_position(primary_marker) - t->shift);
                 if (h_ptr) {
                     if (!t->n.nd->extvals) {
                         rc = (char *)calloc_2(2, 2 * sizeof(char));
@@ -1607,6 +1613,8 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
     static const char xfwd[AN_COUNT] = AN_NORMAL;
     char trace_val_vec_single[2] = {0, 0};
 
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
     if (is_from_tcl_command) {
         mult_entry = strdup_2("");
     }
@@ -1618,8 +1626,9 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
             if (t->vector) {
                 int i;
                 nptr *nodes;
-                vptr v = (GLOBALS->tims.marker != -1)
-                             ? bsearch_vector(t->n.vec, GLOBALS->tims.marker - t->shift)
+                vptr v = gw_marker_is_enabled(primary_marker)
+                             ? bsearch_vector(t->n.vec,
+                                              gw_marker_get_position(primary_marker) - t->shift)
                              : NULL;
                 unsigned char *bits = v ? (v->v) : NULL;
                 char *first_str = NULL;

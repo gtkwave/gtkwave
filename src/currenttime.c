@@ -306,10 +306,13 @@ void reformat_time(char *buf, GwTime val, char dim)
 
 void update_time_box(void)
 {
-    GwTime val = GLOBALS->tims.marker;
+
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
     if (GLOBALS->anno_ctx) {
-        if (val >= 0) {
+        if (gw_marker_is_enabled(primary_marker)) {
+            GwTime val = gw_marker_get_position(primary_marker);
+
             GLOBALS->anno_ctx->marker_set = 0; /* avoid race on update */
 
             if (!GLOBALS->ae2_time_xlate) {

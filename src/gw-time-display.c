@@ -176,12 +176,15 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
     } else {
         gtk_label_set_text(GTK_LABEL(self->marker_label), "Marker");
 
-        if (times->marker >= 0) {
+        // TODO: don't use GLOBALS
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+        if (gw_marker_is_enabled(primary_marker)) {
             gchar *text = NULL;
 
             if (times->baseline >= 0 || times->lmbcache >= 0) {
-                GwTime delta =
-                    times->marker - (times->baseline >= 0 ? times->baseline : times->lmbcache);
+                GwTime delta = gw_marker_get_position(primary_marker) -
+                               (times->baseline >= 0 ? times->baseline : times->lmbcache);
 
                 if (GLOBALS->use_frequency_delta) {
                     text = reformat_time_as_frequency(delta, GLOBALS->time_dimension);
@@ -195,7 +198,8 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
                     text = t;
                 }
             } else {
-                text = reformat_time_2(times->marker + GLOBALS->global_time_offset,
+                text = reformat_time_2(gw_marker_get_position(primary_marker) +
+                                           GLOBALS->global_time_offset,
                                        GLOBALS->time_dimension,
                                        FALSE);
             }

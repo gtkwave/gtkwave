@@ -20,13 +20,20 @@ static const int wave_rgb_rainbow[WAVE_NUM_RAINBOW] = WAVE_RAINBOW_RGB;
 
 static void update_dual(void)
 {
-    if (GLOBALS->dual_ctx && !GLOBALS->dual_race_lock) {
-        GLOBALS->dual_ctx[GLOBALS->dual_id].zoom = GLOBALS->tims.zoom;
-        GLOBALS->dual_ctx[GLOBALS->dual_id].marker = GLOBALS->tims.marker;
-        GLOBALS->dual_ctx[GLOBALS->dual_id].baseline = GLOBALS->tims.baseline;
-        GLOBALS->dual_ctx[GLOBALS->dual_id].left_margin_time = GLOBALS->tims.start;
-        GLOBALS->dual_ctx[GLOBALS->dual_id].use_new_times = 1;
+    if (GLOBALS->dual_ctx == NULL || GLOBALS->dual_race_lock) {
+        return;
     }
+
+    // TODO: don't use sentinel values for disabled markers
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTime primary_pos =
+        gw_marker_is_enabled(primary_marker) ? gw_marker_get_position(primary_marker) : -1;
+
+    GLOBALS->dual_ctx[GLOBALS->dual_id].zoom = GLOBALS->tims.zoom;
+    GLOBALS->dual_ctx[GLOBALS->dual_id].marker = primary_pos;
+    GLOBALS->dual_ctx[GLOBALS->dual_id].baseline = GLOBALS->tims.baseline;
+    GLOBALS->dual_ctx[GLOBALS->dual_id].left_margin_time = GLOBALS->tims.start;
+    GLOBALS->dual_ctx[GLOBALS->dual_id].use_new_times = 1;
 }
 
 gboolean configure_event(GtkWidget *widget, GdkEventConfigure *event)
@@ -121,13 +128,13 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
         }
     }
 
-    if (GLOBALS->tims.marker >= 0) {
-        if ((GLOBALS->tims.marker >= GLOBALS->tims.start) &&
-            (GLOBALS->tims.marker <= GLOBALS->tims.last) &&
-            (GLOBALS->tims.marker <= GLOBALS->tims.end)) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    if (gw_marker_is_enabled(primary_marker)) {
+        GwTime primary_pos = gw_marker_get_position(primary_marker);
+        if (primary_pos >= GLOBALS->tims.start && primary_pos <= GLOBALS->tims.last &&
+            primary_pos <= GLOBALS->tims.end) {
             pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
-            xl = ((gdouble)(GLOBALS->tims.marker - GLOBALS->tims.start)) /
-                 pixstep; /* snap to integer */
+            xl = ((gdouble)(primary_pos - GLOBALS->tims.start)) / pixstep; /* snap to integer */
             if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
                 XXX_gdk_draw_line(cr,
                                   GLOBALS->rgb_gc.gc_umark_wavewindow_c_1,

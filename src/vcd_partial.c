@@ -2640,8 +2640,10 @@ void kick_partial_vcd(void)
         select(0, NULL, NULL, NULL, &tv);
 #endif
 
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
         while (*GLOBALS->consume_ptr_vcd_partial_c_1) {
-            int old_maxtime_marker_conflict = (GLOBALS->tims.marker > GLOBALS->max_time);
+            int old_maxtime_marker_conflict = (gw_marker_get_position(primary_marker) > GLOBALS->max_time);
 
             vcd_parse();
 
@@ -2662,21 +2664,21 @@ void kick_partial_vcd(void)
 
             if (old_maxtime_marker_conflict) {
                 old_maxtime_marker_conflict =
-                    (GLOBALS->tims.marker <=
+                    (gw_marker_get_position(primary_marker) <=
                      GLOBALS->max_time); /* data is now past what was invisible marker */
             }
 
             vcd_partial_mark_and_sweep(1);
 
             if ((GLOBALS->zoom_dyn)) {
-                GLOBALS->tims.marker = GLOBALS->tims.last;
+                gw_marker_set_position(primary_marker, GLOBALS->tims.last);
                 service_zoom_full(NULL, NULL);
 
                 GLOBALS->signalwindow_width_dirty = 1;
                 MaxSignalLength();
                 gw_signal_list_force_redraw(GW_SIGNAL_LIST(GLOBALS->signalarea));
             } else if ((GLOBALS->zoom_dyne)) {
-                GLOBALS->tims.marker = GLOBALS->tims.last;
+                gw_marker_set_position(primary_marker, GLOBALS->tims.last);
                 service_zoom_right(NULL, NULL);
 
                 GLOBALS->signalwindow_width_dirty = 1;

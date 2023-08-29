@@ -464,7 +464,10 @@ static int gtkwavetcl_getMarker(ClientData clientData,
                                 int objc,
                                 Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->tims.marker;
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTime value = gw_marker_is_enabled(primary_marker) ? gw_marker_get_position(primary_marker)
+                                                        : -1; // TODO: don't use sentinel value
+
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -787,7 +790,10 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
     if (objc == 3) {
         char *sv = get_Tcl_string(objv[1]);
         int which = -1;
-        GwTime oldmarker = GLOBALS->tims.marker;
+
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+        GwTime oldmarker_pos = gw_marker_get_position(primary_marker);
+        GwTime oldmarker_enabled = gw_marker_is_enabled(primary_marker);
 
         if ((sv[0] >= 'A') && (sv[0] <= 'Z')) {
             which = bijective_marker_id_string_hash(sv);
@@ -817,7 +823,9 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
             }
 
             if (t && gw_marker_is_enabled(marker)) {
-                GLOBALS->tims.marker = gw_marker_get_position(marker);
+                gw_marker_set_position(primary_marker, gw_marker_get_position(marker));
+                gw_marker_set_enabled(primary_marker, TRUE);
+
                 GLOBALS->signalwindow_width_dirty = 1;
                 redraw_signals_and_waves();
                 gtkwave_main_iteration();
@@ -831,7 +839,8 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
                     aobj = Tcl_NewStringObj(pnt, -1);
                     Tcl_SetObjResult(interp, aobj);
 
-                    GLOBALS->tims.marker = oldmarker;
+                    gw_marker_set_position(primary_marker, oldmarker_pos);
+                    gw_marker_set_enabled(primary_marker, oldmarker_enabled);
                     update_time_box();
                     GLOBALS->signalwindow_width_dirty = 1;
                     redraw_signals_and_waves();
@@ -840,7 +849,8 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
                     return (TCL_OK);
                 }
 
-                GLOBALS->tims.marker = oldmarker;
+                gw_marker_set_position(primary_marker, oldmarker_pos);
+                gw_marker_set_enabled(primary_marker, oldmarker_enabled);
                 update_time_box();
                 GLOBALS->signalwindow_width_dirty = 1;
                 redraw_signals_and_waves();
@@ -927,10 +937,13 @@ static int gtkwavetcl_setMarker(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
 
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
         if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
-            GLOBALS->tims.marker = mrk;
+            gw_marker_set_position(primary_marker, mrk);
+            gw_marker_set_enabled(primary_marker, TRUE);
         } else {
-            GLOBALS->tims.marker = GW_TIME_CONSTANT(-1);
+            gw_marker_set_enabled(primary_marker, FALSE);
         }
 
         update_time_box();
@@ -1059,7 +1072,10 @@ static int gtkwavetcl_setZoomRangeTimes(ClientData clientData,
     if (objc == 3) {
         char *s, *t;
         GwTime time1, time2;
-        GwTime oldmarker = GLOBALS->tims.marker;
+
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+        GwTime oldmarker_pos = gw_marker_get_position(primary_marker);
+        GwTime oldmarker_enabled = gw_marker_is_enabled(primary_marker);
 
         s = get_Tcl_string(objv[1]);
         time1 = unformat_time(s, GLOBALS->time_dimension);
@@ -1080,7 +1096,9 @@ static int gtkwavetcl_setZoomRangeTimes(ClientData clientData,
         }
 
         service_dragzoom(time1, time2);
-        GLOBALS->tims.marker = oldmarker;
+
+        gw_marker_set_position(primary_marker, oldmarker_pos);
+        gw_marker_set_enabled(primary_marker, oldmarker_enabled);
 
         GLOBALS->signalwindow_width_dirty = 1;
         redraw_signals_and_waves();

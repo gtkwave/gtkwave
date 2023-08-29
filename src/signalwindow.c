@@ -224,10 +224,15 @@ static gboolean mouseover_timer(gpointer dummy)
 
     bot:
         if (t) {
+            // TODO: don't use sentinel value for disabled primary marker
+            GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+            GwTime primary_pos =
+                gw_marker_is_enabled(primary_marker) ? gw_marker_get_position(primary_marker) : -1;
+
             move_mouseover_sigs(t,
                                 GLOBALS->cached_mouseover_x,
                                 GLOBALS->cached_mouseover_y,
-                                GLOBALS->tims.marker);
+                                primary_pos);
         } else {
             move_mouseover_sigs(NULL, 0, 0, GW_TIME_CONSTANT(0));
         }
