@@ -171,11 +171,12 @@ static gboolean button_release_event(GtkWidget *text, GdkEventButton *event)
 
                     tm = unformat_time(sel2 ? sel2 : sel, GLOBALS->time_dimension);
                     if ((tm >= GLOBALS->tims.first) && (tm <= GLOBALS->tims.last)) {
-                        GLOBALS->tims.lmbcache = -1;
-
                         GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
                         gw_marker_set_position(primary_marker, tm);
                         gw_marker_set_enabled(primary_marker, TRUE);
+
+                        GwMarker *ghost_marker = gw_project_get_ghost_marker(GLOBALS->project);
+                        gw_marker_set_enabled(ghost_marker, FALSE);
 
                         center_op();
                         redraw_signals_and_waves();

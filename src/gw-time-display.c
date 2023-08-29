@@ -169,6 +169,7 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
     // TODO: don't use GLOBALS
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
     GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+    GwMarker *ghost_marker = gw_project_get_ghost_marker(GLOBALS->project);
 
     if (GLOBALS->use_maxtime_display) {
         gchar *text = reformat_time_2(GLOBALS->max_time + GLOBALS->global_time_offset,
@@ -183,11 +184,11 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
         if (gw_marker_is_enabled(primary_marker)) {
             gchar *text = NULL;
 
-            if (gw_marker_is_enabled(baseline_marker) || times->lmbcache >= 0) {
+            if (gw_marker_is_enabled(baseline_marker) || gw_marker_is_enabled(ghost_marker)) {
+                GwMarker *base =
+                    gw_marker_is_enabled(baseline_marker) ? baseline_marker : ghost_marker;
                 GwTime delta =
-                    gw_marker_get_position(primary_marker) -
-                    (gw_marker_is_enabled(baseline_marker) ? gw_marker_get_position(baseline_marker)
-                                                           : times->lmbcache);
+                    gw_marker_get_position(primary_marker) - gw_marker_get_position(base);
 
                 if (GLOBALS->use_frequency_delta) {
                     text = reformat_time_as_frequency(delta, GLOBALS->time_dimension);

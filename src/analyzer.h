@@ -422,7 +422,6 @@ typedef struct
     GwTime prevmarker; /* from last drawmarker()	        */
     GwTime resizemarker; /* from last MaxSignalLength()          */
     GwTime resizemarker2; /* from 2nd last MaxSignalLength()      */
-    GwTime lmbcache; /* initial marker pos                   */
     GwTime timecache; /* to get around floating pt limitation */
     GwTime laststart; /* caches last set value                */
 
