@@ -184,12 +184,12 @@ GwTime unformat_time(const char *s, char dim)
 
     if ((*s == 'M') || (*s == 'm')) {
         if (bijective_marker_id_string_len(s + 1)) {
-            unsigned int mkv = bijective_marker_id_string_hash(s + 1);
-            if (mkv < WAVE_NUM_NAMED_MARKERS) {
-                GwTime mkvt = GLOBALS->named_markers[mkv];
-                if (mkvt != -1) {
-                    return (mkvt);
-                }
+            guint mkv = bijective_marker_id_string_hash(s + 1);
+
+            GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+            GwMarker *marker = gw_named_markers_get(markers, mkv);
+            if (marker != NULL && gw_marker_is_enabled(marker)) {
+                return gw_marker_get_position(marker);
             }
         }
     }
@@ -329,16 +329,17 @@ void update_time_box(void)
         }
     }
 
-    if (GLOBALS->named_marker_lock_idx > -1) {
-        if (GLOBALS->tims.marker >= 0) {
-            int ent_idx = GLOBALS->named_marker_lock_idx;
+    // TODO: reenable marker locking
+    // if (GLOBALS->named_marker_lock_idx > -1) {
+    //     if (GLOBALS->tims.marker >= 0) {
+    //         int ent_idx = GLOBALS->named_marker_lock_idx;
 
-            if (GLOBALS->named_markers[ent_idx] != GLOBALS->tims.marker) {
-                GLOBALS->named_markers[ent_idx] = GLOBALS->tims.marker;
-                gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
-            }
-        }
-    }
+    //         if (GLOBALS->named_markers[ent_idx] != GLOBALS->tims.marker) {
+    //             GLOBALS->named_markers[ent_idx] = GLOBALS->tims.marker;
+    //             gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
+    //         }
+    //     }
+    // }
 
     gw_time_display_update(GW_TIME_DISPLAY(GLOBALS->time_box), &GLOBALS->tims);
 }

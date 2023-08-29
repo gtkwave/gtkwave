@@ -99,7 +99,6 @@ GwTime cook_markertime(GwTime marker, gint x, gint y)
     gdouble xlft, xrgh;
     gdouble xlftd, xrghd;
     GwTime closest_named = MAX_HISTENT_TIME;
-    int closest_which = -1;
     gint xold = x, yold = y;
     TraceEnt t_trans;
 
@@ -107,26 +106,9 @@ GwTime cook_markertime(GwTime marker, gint x, gint y)
         return (marker);
 
     /* potential snapping to a named marker time */
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        if (GLOBALS->named_markers[i] != -1) {
-            GwTime dlt;
-
-            if ((GLOBALS->named_markers[i] >= GLOBALS->tims.start) &&
-                (GLOBALS->named_markers[i] <= GLOBALS->tims.end) &&
-                (GLOBALS->named_markers[i] <= GLOBALS->tims.last)) {
-                if (marker < GLOBALS->named_markers[i]) {
-                    dlt = GLOBALS->named_markers[i] - marker;
-                } else {
-                    dlt = marker - GLOBALS->named_markers[i];
-                }
-
-                if (dlt < closest_named) {
-                    closest_named = dlt;
-                    closest_which = i;
-                }
-            }
-        }
-    }
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+    GwMarker *closest_marker = gw_named_markers_find_closest(markers, marker, &closest_named);
+    closest_named = ABS(closest_named);
 
     GtkAllocation allocation;
     gtk_widget_get_allocation(GLOBALS->wavearea, &allocation);
@@ -252,9 +234,9 @@ process_trace:
 
     if (xlftd <= xrghd) {
         if ((!lftinv) && (xlftd <= GLOBALS->cursor_snap)) {
-            if (closest_which >= 0) {
+            if (closest_marker != NULL) {
                 if ((closest_named * GLOBALS->pxns) < xlftd) {
-                    marker = GLOBALS->named_markers[closest_which];
+                    marker = gw_marker_get_position(closest_marker);
                     goto xit;
                 }
             }
@@ -264,9 +246,9 @@ process_trace:
         }
     } else {
         if ((!rghinv) && (xrghd <= GLOBALS->cursor_snap)) {
-            if (closest_which >= 0) {
+            if (closest_marker != NULL) {
                 if ((closest_named * GLOBALS->pxns) < xrghd) {
-                    marker = GLOBALS->named_markers[closest_which];
+                    marker = gw_marker_get_position(closest_marker);
                     goto xit;
                 }
             }
@@ -277,9 +259,9 @@ process_trace:
     }
 
 bot:
-    if (closest_which >= 0) {
+    if (closest_marker != NULL) {
         if ((closest_named * GLOBALS->pxns) <= GLOBALS->cursor_snap) {
-            marker = GLOBALS->named_markers[closest_which];
+            marker = gw_marker_get_position(closest_marker);
         }
     }
 

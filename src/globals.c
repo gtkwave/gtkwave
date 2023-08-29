@@ -64,6 +64,8 @@ struct Global *GLOBALS = NULL;
 
 /* make this const so if we try to write to it we coredump */
 static const struct Global globals_base_values = {
+    NULL, // project
+
 /*
  * ae2.c
  */
@@ -524,17 +526,6 @@ static const struct Global globals_base_values = {
     0, /* disable_menus 225 */
     NULL, /* ftext_main_main_c_1 226 */
     0, /* dbl_mant_dig_override */
-
-    /*
-     * markerbox.c
-     */
-    NULL, /* window_markerbox_c_4 231 */
-    {0}, /* entries_markerbox_c_1 232 */
-    NULL, /* cleanup_markerbox_c_4 233 */
-    0, /* dirty_markerbox_c_1 234 */
-    {0}, /* shadow_markers_markerbox_c_1 235 */
-    {NULL}, /* marker_names */
-    {NULL}, /* shadow_marker_names */
 
     /*
      * menu.c
@@ -1137,7 +1128,6 @@ static const struct Global globals_base_values = {
     NULL, /* hscroll_wavewindow_c_2 620 */
     NULL, /* wave_vslider2 622 */
     NULL, /* wave_hslider */
-    {0}, /* named_markers 623 */
     -1, /* named_marker_lock_idx */
     0, /* made_gc_contexts_wavewindow_c_1 624 */
     0, /* which_t_color */
@@ -1232,6 +1222,7 @@ struct Global *initialize_globals(void)
     g->strace_ctx = &g->strace_windows[0]; /* arbitrarily point to first one */
 
     g->hierarchy_icons = gw_hierarchy_icons_new();
+    g->project = gw_project_new();
 
     return (g); /* what to do with ctx is at discretion of caller */
 }
@@ -1524,7 +1515,8 @@ void reload_into_new_context_2(void)
     }
 
     /* Marker positions */
-    memcpy(new_globals->named_markers, GLOBALS->named_markers, sizeof(GLOBALS->named_markers));
+    // TODO: fix
+    // memcpy(new_globals->named_markers, GLOBALS->named_markers, sizeof(GLOBALS->named_markers));
     new_globals->named_marker_lock_idx = GLOBALS->named_marker_lock_idx;
 
     /* notebook page flipping */
@@ -2001,7 +1993,6 @@ void reload_into_new_context_2(void)
 
     /* windows which in theory should never destroy as they will have grab focus which means reload
      * will not be called */
-    widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4); /* markerbox.c */
     widget_ungrab_destroy(&GLOBALS->window1_search_c_2); /* search.c */
     widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9); /* simplereq.c */
     widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3); /* treesearch_gtk2.c */
@@ -2499,7 +2490,6 @@ void free_and_destroy_page_context(void)
 
     /* windows which in theory should never destroy as they will have grab focus which means reload
      * will not be called */
-    widget_ungrab_destroy(&GLOBALS->window_markerbox_c_4); /* markerbox.c */
     widget_ungrab_destroy(&GLOBALS->window1_search_c_2); /* search.c */
     widget_ungrab_destroy(&GLOBALS->window_simplereq_c_9); /* simplereq.c */
     widget_ungrab_destroy(&GLOBALS->window1_treesearch_gtk2_c_3); /* treesearch_gtk2.c */

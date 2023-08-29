@@ -251,6 +251,10 @@ void gw_marker_set_alias(GwMarker *self, const gchar *alias)
 {
     g_return_if_fail(GW_IS_MARKER(self));
 
+    if (alias != NULL && alias[0] == '\0') {
+        alias = NULL;
+    }
+
     if (g_strcmp0(self->alias, alias) != 0) {
         g_clear_pointer(&self->alias, g_free);
         self->alias = g_strdup(alias);

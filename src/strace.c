@@ -1341,29 +1341,28 @@ void strace_maketimetrace(int mode)
         return; /* merely free stuff up */
     }
 
-    if (GLOBALS->strace_ctx->mark_idx_start > 0) {
-        if (GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_start - 1] >= 0) {
-            basetime = GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_start - 1];
-        } else {
-            char buf[16];
-            char *text;
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
 
-            make_bijective_marker_id_string(buf, GLOBALS->strace_ctx->mark_idx_start - 1);
-            text = g_strdup_printf("Named Marker %s not in use.\n", buf);
+    if (GLOBALS->strace_ctx->mark_idx_start > 0) {
+        GwMarker *start_marker =
+            gw_named_markers_get(markers, GLOBALS->strace_ctx->mark_idx_start - 1);
+        if (gw_marker_is_enabled(start_marker)) {
+            basetime = gw_marker_get_position(start_marker);
+        } else {
+            gchar *text =
+                g_strdup_printf("Named Marker %s not in use.\n", gw_marker_get_name(start_marker));
             status_text(text);
             g_free(text);
         }
     }
 
     if (GLOBALS->strace_ctx->mark_idx_end > 0) {
-        if (GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_end - 1] >= 0) {
-            endtime = GLOBALS->named_markers[GLOBALS->strace_ctx->mark_idx_end - 1];
+        GwMarker *end_marker = gw_named_markers_get(markers, GLOBALS->strace_ctx->mark_idx_end - 1);
+        if (gw_marker_is_enabled(end_marker)) {
+            endtime = gw_marker_get_position(end_marker);
         } else {
-            char buf[16];
-            char *text;
-
-            make_bijective_marker_id_string(buf, GLOBALS->strace_ctx->mark_idx_end - 1);
-            text = g_strdup_printf("Named Marker %s not in use.\n", buf);
+            gchar *text =
+                g_strdup_printf("Named Marker %s not in use.\n", gw_marker_get_name(end_marker));
             status_text(text);
             g_free(text);
         }

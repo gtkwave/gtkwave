@@ -105,7 +105,6 @@ char *append_array_row(nptr n)
 void write_save_helper(const char *savnam, FILE *wave)
 {
     Trptr t;
-    int i;
     TraceFlagsType def = 0;
     int sz_x, sz_y;
     GwTime prevshift = GW_TIME_CONSTANT(0);
@@ -188,22 +187,25 @@ void write_save_helper(const char *savnam, FILE *wave)
 
     fprintf(wave, "*%f %" GW_TIME_FORMAT, (float)(GLOBALS->tims.zoom), GLOBALS->tims.marker);
 
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        GwTime nm = GLOBALS->named_markers[i]; /* gcc compiler problem...thinks this is a 'long int'
-                                                  in printf format warning reporting */
-        fprintf(wave, " %" GW_TIME_FORMAT, nm);
+    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+    guint num_markers = gw_named_markers_get_number_of_markers(markers);
+
+    for (guint i = 0; i < num_markers; i++) {
+        GwMarker *marker = gw_named_markers_get(markers, i);
+        fprintf(wave, " %" GW_TIME_FORMAT, gw_marker_get_position(marker));
     }
     fprintf(wave, "\n");
 
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++) {
-        if (GLOBALS->marker_names[i]) {
-            char mbuf[16];
+    for (guint i = 0; i < num_markers; i++) {
+        GwMarker *marker = gw_named_markers_get(markers, i);
+        if (gw_marker_is_enabled(marker)) {
+            const gchar *name = gw_marker_get_name(marker);
+            const gchar *alias = gw_marker_get_name(marker);
 
-            make_bijective_marker_id_string(mbuf, i);
-            if (strlen(mbuf) < 2) {
-                fprintf(wave, "[markername] %s%s\n", mbuf, GLOBALS->marker_names[i]);
+            if (strlen(name) < 2) {
+                fprintf(wave, "[markername] %s%s\n", name, alias);
             } else {
-                fprintf(wave, "[markername_long] %s %s\n", mbuf, GLOBALS->marker_names[i]);
+                fprintf(wave, "[markername_long] %s %s\n", name, alias);
             }
         }
     }
@@ -1031,10 +1033,16 @@ int parsewavline(char *w, char *alias, int depth)
                     case 1:
                         GLOBALS->tims.marker = ttlocal;
                         break;
-                    default:
-                        if ((which - 2) < WAVE_NUM_NAMED_MARKERS)
-                            GLOBALS->named_markers[which - 2] = ttlocal;
+                    default: {
+                        GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+                        GwMarker *marker = gw_named_markers_get(markers, which - 2);
+                        if (marker != NULL) {
+                            gw_marker_set_position(marker, ttlocal);
+                            // TODO: don't use sentinel values for disable markers
+                            gw_marker_set_enabled(marker, ttlocal >= 0);
+                        }
                         break;
+                    }
                 }
             }
             which++;
@@ -1454,7 +1462,10 @@ int parsewavline(char *w, char *alias, int depth)
             }
         } else if (strcmp(w2, "ruler") == 0) {
             GLOBALS->ruler_origin = GLOBALS->ruler_step = GW_TIME_CONSTANT(0);
-            sscanf(w, "%" GW_TIME_FORMAT " %" GW_TIME_FORMAT, &GLOBALS->ruler_origin, &GLOBALS->ruler_step);
+            sscanf(w,
+                   "%" GW_TIME_FORMAT " %" GW_TIME_FORMAT,
+                   &GLOBALS->ruler_origin,
+                   &GLOBALS->ruler_step);
         } else if (strcmp(w2, "timestart") == 0) {
             sscanf(w, "%" GW_TIME_FORMAT, &GLOBALS->timestart_from_savefile);
             GLOBALS->timestart_from_savefile_valid = 2;
@@ -1489,14 +1500,11 @@ int parsewavline(char *w, char *alias, int depth)
 
             if (*pnt) {
                 which = (*pnt) - 'A';
-                if ((which >= 0) && (which < WAVE_NUM_NAMED_MARKERS)) {
-                    pnt++;
 
-                    if (*pnt) {
-                        if (GLOBALS->marker_names[which])
-                            free_2(GLOBALS->marker_names[which]);
-                        GLOBALS->marker_names[which] = strdup_2(pnt);
-                    }
+                GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+                GwMarker *marker = gw_named_markers_get(markers, which);
+                if (marker != NULL) {
+                    gw_marker_set_alias(marker, &pnt[1]);
                 }
             }
         } else if (strcmp(w2, "markername_long") == 0) {
@@ -1511,16 +1519,16 @@ int parsewavline(char *w, char *alias, int depth)
                 if (pnt2) {
                     *pnt2 = 0;
                     which = bijective_marker_id_string_hash(pnt);
-                    if ((which >= 0) && (which < WAVE_NUM_NAMED_MARKERS)) {
-                        pnt = pnt2 + 1;
-                        if ((*pnt) && (isspace((int)(unsigned char)*pnt)))
-                            pnt++;
 
-                        if (*pnt) {
-                            if (GLOBALS->marker_names[which])
-                                free_2(GLOBALS->marker_names[which]);
-                            GLOBALS->marker_names[which] = strdup_2(pnt);
+                    GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+                    GwMarker *marker = gw_named_markers_get(markers, which);
+                    if (marker != NULL) {
+                        pnt = pnt2 + 1;
+                        if ((*pnt) && (isspace((int)(unsigned char)*pnt))) {
+                            pnt++;
                         }
+
+                        gw_marker_set_alias(marker, pnt);
                     }
                 }
             }

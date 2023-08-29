@@ -24,9 +24,6 @@
 
 #endif
 
-void markerbox(const char *title, GCallback func);
-
-char *make_bijective_marker_id_string(char *buf, unsigned int value);
 unsigned int bijective_marker_id_string_hash(const char *so);
 unsigned int bijective_marker_id_string_len(const char *s);
 

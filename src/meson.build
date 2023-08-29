@@ -51,6 +51,7 @@ gtkwave_sources = [
     'ghw.c',
     'globals.c',
     'gtk23compat.c',
+    'gw-named-marker-dialog.c',
     'gw-time-display.c',
     'hierpack.c',
     'logfile.c',

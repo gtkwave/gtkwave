@@ -1713,9 +1713,9 @@ loader_check_head:
     /* deallocate the symbol hash table */
     sym_hash_destroy(GLOBALS);
 
-    /* reset/initialize various markers and time values */
-    for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
-        GLOBALS->named_markers[i] = -1; /* reset all named markers */
+    // /* reset/initialize various markers and time values */
+    // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
+    //     GLOBALS->named_markers[i] = -1; /* reset all named markers */
 
     GLOBALS->tims.last = GLOBALS->max_time;
     GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
