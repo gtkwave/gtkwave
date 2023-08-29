@@ -1721,9 +1721,9 @@ loader_check_head:
     GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
     GLOBALS->tims.first = GLOBALS->tims.start = GLOBALS->tims.laststart = GLOBALS->min_time;
     GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
-    GLOBALS->tims.lmbcache = -1; /* uninitialized at first */
     gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
     gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
+    gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
 
     if (GLOBALS->max_time >> DBL_MANT_DIG) {
         fprintf(stderr,

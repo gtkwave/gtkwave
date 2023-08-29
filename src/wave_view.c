@@ -115,6 +115,9 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
     int m2x_wavewindow_c_1 = -1;
 
     GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwMarker *ghost_marker = gw_project_get_ghost_marker(GLOBALS->project);
+
     if (gw_marker_is_enabled(baseline_marker)) {
         GwTime baseline_pos = gw_marker_get_position(baseline_marker);
         if (baseline_pos >= GLOBALS->tims.start && baseline_pos <= GLOBALS->tims.last &&
@@ -132,7 +135,6 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
         }
     }
 
-    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
     if (gw_marker_is_enabled(primary_marker)) {
         GwTime primary_pos = gw_marker_get_position(primary_marker);
         if (primary_pos >= GLOBALS->tims.start && primary_pos <= GLOBALS->tims.last &&
@@ -151,14 +153,13 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
         }
     }
 
-    if ((GLOBALS->enable_ghost_marker) && (GLOBALS->in_button_press_wavewindow_c_1) &&
-        (GLOBALS->tims.lmbcache >= 0)) {
-        if ((GLOBALS->tims.lmbcache >= GLOBALS->tims.start) &&
-            (GLOBALS->tims.lmbcache <= GLOBALS->tims.last) &&
-            (GLOBALS->tims.lmbcache <= GLOBALS->tims.end)) {
+    if (GLOBALS->enable_ghost_marker && GLOBALS->in_button_press_wavewindow_c_1 &&
+        gw_marker_is_enabled(ghost_marker)) {
+        GwTime ghost_pos = gw_marker_get_position(ghost_marker);
+        if ((ghost_pos >= GLOBALS->tims.start) && (ghost_pos <= GLOBALS->tims.last) &&
+            (ghost_pos <= GLOBALS->tims.end)) {
             pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
-            xl = ((gdouble)(GLOBALS->tims.lmbcache - GLOBALS->tims.start)) /
-                 pixstep; /* snap to integer */
+            xl = ((gdouble)(ghost_pos - GLOBALS->tims.start)) / pixstep; /* snap to integer */
             if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
                 XXX_gdk_draw_line(cr,
                                   GLOBALS->rgb_gc.gc_umark_wavewindow_c_1,

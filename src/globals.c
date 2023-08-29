@@ -103,7 +103,7 @@ static const struct Global globals_base_values = {
      */
     TR_RJUSTIFY, /* default_flags 5 */
     0, /* default_fpshift */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0}, /* tims 6 */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* tims 6 */
     {0, 0, NULL, NULL, NULL, NULL, 0, 0}, /* traces 9 */
     0, /* hier_max_level 8 */
     0, /* hier_max_level_shadow */
