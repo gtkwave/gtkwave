@@ -425,7 +425,6 @@ typedef struct
     GwTime lmbcache; /* initial marker pos                   */
     GwTime timecache; /* to get around floating pt limitation */
     GwTime laststart; /* caches last set value                */
-    GwTime baseline; /* baseline (center button) marker      */
 
     gdouble zoom; /* current zoom  */
     gdouble prevzoom; /* for zoom undo */

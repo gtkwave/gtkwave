@@ -86,7 +86,7 @@ static gchar *reformat_time_2(GwTime val, char dim, gboolean show_plus_sign)
 
     g_string_append_c(str, ' ');
 
-    if (dim != 0 && dim != ' ') {
+    if (dim != 0 && dim != ' ' && dim != 's') {
         g_string_append_c(str, dim);
         g_string_append_c(str, 's');
     } else {
@@ -166,6 +166,10 @@ GtkWidget *gw_time_display_new(void)
 
 void gw_time_display_update(GwTimeDisplay *self, Times *times)
 {
+    // TODO: don't use GLOBALS
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
     if (GLOBALS->use_maxtime_display) {
         gchar *text = reformat_time_2(GLOBALS->max_time + GLOBALS->global_time_offset,
                                       GLOBALS->time_dimension,
@@ -176,15 +180,14 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
     } else {
         gtk_label_set_text(GTK_LABEL(self->marker_label), "Marker");
 
-        // TODO: don't use GLOBALS
-        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
-
         if (gw_marker_is_enabled(primary_marker)) {
             gchar *text = NULL;
 
-            if (times->baseline >= 0 || times->lmbcache >= 0) {
-                GwTime delta = gw_marker_get_position(primary_marker) -
-                               (times->baseline >= 0 ? times->baseline : times->lmbcache);
+            if (gw_marker_is_enabled(baseline_marker) || times->lmbcache >= 0) {
+                GwTime delta =
+                    gw_marker_get_position(primary_marker) -
+                    (gw_marker_is_enabled(baseline_marker) ? gw_marker_get_position(baseline_marker)
+                                                           : times->lmbcache);
 
                 if (GLOBALS->use_frequency_delta) {
                     text = reformat_time_as_frequency(delta, GLOBALS->time_dimension);
@@ -192,7 +195,7 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
                     text = reformat_time_2(delta, GLOBALS->time_dimension, TRUE);
                 }
 
-                if (times->baseline >= 0) {
+                if (gw_marker_is_enabled(baseline_marker)) {
                     gchar *t = g_strconcat("B", text, NULL);
                     g_free(text);
                     text = t;
@@ -211,11 +214,12 @@ void gw_time_display_update(GwTimeDisplay *self, Times *times)
         }
     }
 
-    if (times->baseline >= 0) {
+    if (gw_marker_is_enabled(baseline_marker)) {
         gtk_label_set_text(GTK_LABEL(self->cursor_label), "Base");
-        gchar *text = reformat_time_2(times->baseline + GLOBALS->global_time_offset,
-                                      GLOBALS->time_dimension,
-                                      FALSE);
+        gchar *text =
+            reformat_time_2(gw_marker_get_position(baseline_marker) + GLOBALS->global_time_offset,
+                            GLOBALS->time_dimension,
+                            FALSE);
         gtk_label_set_text(GTK_LABEL(self->cursor_value), text);
         g_free(text);
     } else {

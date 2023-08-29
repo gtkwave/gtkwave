@@ -1723,7 +1723,7 @@ loader_check_head:
     GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
     GLOBALS->tims.lmbcache = -1; /* uninitialized at first */
     gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
-    GLOBALS->tims.baseline = -1; /* middle button toggle marker */
+    gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
 
     if (GLOBALS->max_time >> DBL_MANT_DIG) {
         fprintf(stderr,
@@ -2341,7 +2341,13 @@ savefile_bail:
                     GLOBALS->dual_ctx[1 - GLOBALS->dual_id].use_new_times = 0;
                     GLOBALS->dual_ctx[GLOBALS->dual_id].use_new_times = 0;
 
-                    if (GLOBALS->dual_ctx[GLOBALS->dual_id].baseline != GLOBALS->tims.baseline) {
+                    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
+                    // TODO: don't use sentinel value
+                    if (GLOBALS->dual_ctx[GLOBALS->dual_id].baseline !=
+                        (gw_marker_is_enabled(baseline_marker)
+                             ? gw_marker_get_position(baseline_marker)
+                             : -1)) {
                         if (gw_marker_is_enabled(primary_marker) &&
                             (GLOBALS->dual_ctx[GLOBALS->dual_id].marker == -1)) {
                             Trptr t;
@@ -2366,8 +2372,11 @@ savefile_bail:
                                                GLOBALS->dual_ctx[GLOBALS->dual_id].marker);
                         gw_marker_set_enabled(primary_marker,
                                               GLOBALS->dual_ctx[GLOBALS->dual_id].marker >= 0);
+                        gw_marker_set_position(baseline_marker,
+                                               GLOBALS->dual_ctx[GLOBALS->dual_id].baseline);
+                        gw_marker_set_enabled(baseline_marker,
+                                              GLOBALS->dual_ctx[GLOBALS->dual_id].baseline >= 0);
 
-                        GLOBALS->tims.baseline = GLOBALS->dual_ctx[GLOBALS->dual_id].baseline;
                         update_time_box();
                         GLOBALS->signalwindow_width_dirty = 1;
                         button_press_release_common();

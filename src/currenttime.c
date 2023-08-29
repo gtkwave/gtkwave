@@ -351,7 +351,9 @@ void update_currenttime(GwTime val)
 {
     GLOBALS->cached_currenttimeval_currenttime_c_1 = val;
 
-    if (GLOBALS->tims.baseline >= 0) {
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
+    if (gw_marker_is_enabled(baseline_marker)) {
         return;
     }
 

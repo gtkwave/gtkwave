@@ -455,7 +455,10 @@ static int gtkwavetcl_getBaselineMarker(ClientData clientData,
                                         int objc,
                                         Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->tims.baseline;
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+    GwTime value = gw_marker_is_enabled(baseline_marker) ? gw_marker_get_position(baseline_marker)
+                                                         : -1; // TODO: don't use sentinel value
+
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -967,10 +970,13 @@ static int gtkwavetcl_setBaselineMarker(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
 
+        GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
         if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
-            GLOBALS->tims.baseline = mrk;
+            gw_marker_set_position(baseline_marker, mrk);
+            gw_marker_set_enabled(baseline_marker, TRUE);
         } else {
-            GLOBALS->tims.baseline = GW_TIME_CONSTANT(-1);
+            gw_marker_set_enabled(baseline_marker, FALSE);
         }
 
         update_time_box();

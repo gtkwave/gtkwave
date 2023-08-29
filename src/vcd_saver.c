@@ -1485,17 +1485,14 @@ int do_timfile_save(const char *fname)
     errno = 0;
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
-    if (gw_marker_is_enabled(primary_marker) && (GLOBALS->tims.baseline > GW_TIME_CONSTANT(0))) {
+    if (gw_marker_is_enabled(primary_marker) && gw_marker_is_enabled(baseline_marker)) {
         GwTime primary_pos = gw_marker_get_position(primary_marker);
+        GwTime baseline_pos = gw_marker_get_position(baseline_marker);
 
-        if (primary_pos < GLOBALS->tims.baseline) {
-            tmin = primary_pos;
-            tmax = GLOBALS->tims.baseline;
-        } else {
-            tmax = primary_pos;
-            tmin = GLOBALS->tims.baseline;
-        }
+        tmin = MIN(primary_pos, baseline_pos);
+        tmax = MAX(primary_pos, baseline_pos);
     } else {
         tmin = GLOBALS->min_time;
         tmax = GLOBALS->max_time;
