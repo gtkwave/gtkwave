@@ -350,12 +350,13 @@ void update_currenttime(GwTime val)
     GLOBALS->cached_currenttimeval_currenttime_c_1 = val;
 
     GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+    GwMarker *cursor = gw_project_get_cursor(GLOBALS->project);
 
     if (gw_marker_is_enabled(baseline_marker)) {
         return;
     }
 
-    GLOBALS->currenttime = val;
+    gw_marker_set_position(cursor, val);
 
     update_time_box();
 }

@@ -40,6 +40,7 @@
 #include "vlist.h"
 #include "vzt.h"
 #include "signal_list.h"
+#include "gw-time-display.h"
 
 #include "lxt2_read.h"
 #include "vzt_read.h"
@@ -191,7 +192,6 @@ static const struct Global globals_base_values = {
     1, /* use_maxtime_display 57 */
     0, /* use_frequency_delta 58 */
     0, /* cached_currenttimeval_currenttime_c_1 61 */
-    0, /* currenttime 62 */
     0, /* max_time 63 */
     -1, /* min_time 64 */
     ~0, /* display_grid 65 */
@@ -2226,7 +2226,8 @@ void reload_into_new_context_2(void)
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
     GwTime primary_pos = gw_marker_get_position(primary_marker);
-    gw_marker_set_position(primary_marker, CLAMP(primary_pos, GLOBALS->tims.first, GLOBALS->tims.last));
+    gw_marker_set_position(primary_marker,
+                           CLAMP(primary_pos, GLOBALS->tims.first, GLOBALS->tims.last));
 
     if (GLOBALS->tims.prevmarker < GLOBALS->tims.first) {
         GLOBALS->tims.prevmarker = GLOBALS->tims.first;
@@ -2751,6 +2752,11 @@ void set_GLOBALS_x(struct Global *g, const char *file, int line)
         }
 
         GLOBALS = g;
+
+        if (GLOBALS->time_box != NULL) {
+            gw_time_display_set_project(GW_TIME_DISPLAY(GLOBALS->time_box), GLOBALS->project);
+        }
+
         sprintf(sstr, "%d", GLOBALS->this_context_page);
         gtkwavetcl_setvar(WAVE_TCLCB_CURRENT_ACTIVE_TAB, sstr, WAVE_TCLCB_CURRENT_ACTIVE_TAB_FLAGS);
     }

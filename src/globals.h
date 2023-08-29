@@ -204,7 +204,6 @@ struct Global
     char use_maxtime_display; /* from currenttime.c 58 */
     char use_frequency_delta; /* from currenttime.c 59 */
     GwTime cached_currenttimeval_currenttime_c_1; /* from currenttime.c 62 */
-    GwTime currenttime; /* from currenttime.c 63 */
     GwTime max_time; /* from currenttime.c 64 */
     GwTime min_time; /* from currenttime.c 65 */
     char display_grid; /* from currenttime.c 66 */
