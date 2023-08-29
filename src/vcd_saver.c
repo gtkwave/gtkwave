@@ -689,7 +689,10 @@ int save_nodes_to_export_generic(FILE *trans_file,
                     w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
                     dumpvars_state = 2;
                 }
-                w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "#%" GW_TIME_FORMAT "\n", tnorm);
+                w32redirect_fprintf(is_trans,
+                                    GLOBALS->f_vcd_saver_c_1,
+                                    "#%" GW_TIME_FORMAT "\n",
+                                    tnorm);
                 if (!dumpvars_state) {
                     w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$dumpvars\n");
                     dumpvars_state = 1;
@@ -1481,12 +1484,16 @@ int do_timfile_save(const char *fname)
 
     errno = 0;
 
-    if ((GLOBALS->tims.marker > GW_TIME_CONSTANT(0)) && (GLOBALS->tims.baseline > GW_TIME_CONSTANT(0))) {
-        if (GLOBALS->tims.marker < GLOBALS->tims.baseline) {
-            tmin = GLOBALS->tims.marker;
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+    if (gw_marker_is_enabled(primary_marker) && (GLOBALS->tims.baseline > GW_TIME_CONSTANT(0))) {
+        GwTime primary_pos = gw_marker_get_position(primary_marker);
+
+        if (primary_pos < GLOBALS->tims.baseline) {
+            tmin = primary_pos;
             tmax = GLOBALS->tims.baseline;
         } else {
-            tmax = GLOBALS->tims.marker;
+            tmax = primary_pos;
             tmin = GLOBALS->tims.baseline;
         }
     } else {

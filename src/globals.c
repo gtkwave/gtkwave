@@ -103,7 +103,7 @@ static const struct Global globals_base_values = {
      */
     TR_RJUSTIFY, /* default_flags 5 */
     0, /* default_fpshift */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0}, /* tims 6 */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0}, /* tims 6 */
     {0, 0, NULL, NULL, NULL, NULL, 0, 0}, /* traces 9 */
     0, /* hier_max_level 8 */
     0, /* hier_max_level_shadow */
@@ -2223,12 +2223,11 @@ void reload_into_new_context_2(void)
     if (GLOBALS->tims.end > GLOBALS->tims.last) {
         GLOBALS->tims.end = GLOBALS->tims.last;
     }
-    if (GLOBALS->tims.marker < GLOBALS->tims.first) {
-        GLOBALS->tims.marker = GLOBALS->tims.first;
-    }
-    if (GLOBALS->tims.marker > GLOBALS->tims.last) {
-        GLOBALS->tims.marker = GLOBALS->tims.last;
-    }
+
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTime primary_pos = gw_marker_get_position(primary_marker);
+    gw_marker_set_position(primary_marker, CLAMP(primary_pos, GLOBALS->tims.first, GLOBALS->tims.last));
+
     if (GLOBALS->tims.prevmarker < GLOBALS->tims.first) {
         GLOBALS->tims.prevmarker = GLOBALS->tims.first;
     }

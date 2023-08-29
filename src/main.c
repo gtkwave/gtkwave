@@ -1721,7 +1721,8 @@ loader_check_head:
     GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
     GLOBALS->tims.first = GLOBALS->tims.start = GLOBALS->tims.laststart = GLOBALS->min_time;
     GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
-    GLOBALS->tims.marker = GLOBALS->tims.lmbcache = -1; /* uninitialized at first */
+    GLOBALS->tims.lmbcache = -1; /* uninitialized at first */
+    gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
     GLOBALS->tims.baseline = -1; /* middle button toggle marker */
 
     if (GLOBALS->max_time >> DBL_MANT_DIG) {
@@ -2219,9 +2220,11 @@ savefile_bail:
                      TRUE,
                      0); /* prevents shrinkage of signal/waves windows if no waves loaded */
 
-    if (GLOBALS->tims.marker != -1) {
-        if (GLOBALS->tims.marker < GLOBALS->tims.first)
-            GLOBALS->tims.marker = GLOBALS->tims.first;
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    if (gw_marker_is_enabled(primary_marker)) {
+        if (gw_marker_get_position(primary_marker) < GLOBALS->tims.first) {
+            gw_marker_set_position(primary_marker, GLOBALS->tims.first);
+        }
     }
     update_time_box();
 
@@ -2339,7 +2342,7 @@ savefile_bail:
                     GLOBALS->dual_ctx[GLOBALS->dual_id].use_new_times = 0;
 
                     if (GLOBALS->dual_ctx[GLOBALS->dual_id].baseline != GLOBALS->tims.baseline) {
-                        if ((GLOBALS->tims.marker != -1) &&
+                        if (gw_marker_is_enabled(primary_marker) &&
                             (GLOBALS->dual_ctx[GLOBALS->dual_id].marker == -1)) {
                             Trptr t;
 
@@ -2358,13 +2361,21 @@ savefile_bail:
                             }
                         }
 
-                        GLOBALS->tims.marker = GLOBALS->dual_ctx[GLOBALS->dual_id].marker;
+                        // TODO: don't use sentinel values for disabled markers
+                        gw_marker_set_position(primary_marker,
+                                               GLOBALS->dual_ctx[GLOBALS->dual_id].marker);
+                        gw_marker_set_enabled(primary_marker,
+                                              GLOBALS->dual_ctx[GLOBALS->dual_id].marker >= 0);
+
                         GLOBALS->tims.baseline = GLOBALS->dual_ctx[GLOBALS->dual_id].baseline;
                         update_time_box();
                         GLOBALS->signalwindow_width_dirty = 1;
                         button_press_release_common();
-                    } else if (GLOBALS->dual_ctx[GLOBALS->dual_id].marker != GLOBALS->tims.marker) {
-                        if ((GLOBALS->tims.marker != -1) &&
+                    } else if (GLOBALS->dual_ctx[GLOBALS->dual_id].marker !=
+                               (gw_marker_is_enabled(primary_marker)
+                                    ? gw_marker_get_position(primary_marker)
+                                    : -1)) {
+                        if (gw_marker_is_enabled(primary_marker) &&
                             (GLOBALS->dual_ctx[GLOBALS->dual_id].marker == -1)) {
                             Trptr t;
 
@@ -2383,7 +2394,12 @@ savefile_bail:
                             }
                         }
 
-                        GLOBALS->tims.marker = GLOBALS->dual_ctx[GLOBALS->dual_id].marker;
+                        // TODO: don't use sentinel values for disabled markers
+                        gw_marker_set_position(primary_marker,
+                                               GLOBALS->dual_ctx[GLOBALS->dual_id].marker);
+                        gw_marker_set_enabled(primary_marker,
+                                              GLOBALS->dual_ctx[GLOBALS->dual_id].marker >= 0);
+
                         update_time_box();
                         GLOBALS->signalwindow_width_dirty = 1;
                         button_press_release_common();

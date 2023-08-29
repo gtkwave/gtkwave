@@ -178,9 +178,11 @@ static void menu_def_ruler(gpointer null_data, guint callback_action, GtkWidget 
     (void)callback_action;
     (void)widget;
 
-    if ((GLOBALS->tims.baseline >= 0) && (GLOBALS->tims.marker >= 0)) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+    if ((GLOBALS->tims.baseline >= 0) && gw_marker_is_enabled(primary_marker)) {
         GLOBALS->ruler_origin = GLOBALS->tims.baseline;
-        GLOBALS->ruler_step = GLOBALS->tims.baseline - GLOBALS->tims.marker;
+        GLOBALS->ruler_step = GLOBALS->tims.baseline - gw_marker_get_position(primary_marker);
         if (GLOBALS->ruler_step < 0)
             GLOBALS->ruler_step = -GLOBALS->ruler_step;
     } else {
@@ -2939,7 +2941,6 @@ void menu_markerbox(gpointer null_data, guint callback_action, GtkWidget *widget
     // gtk_container_add(GTK_CONTAINER(content), gtk_label_new("label"));
     // gtk_widget_show_all(content);
 
-
     gtk_dialog_run(GTK_DIALOG(dialog));
 
     // markerbox("Markers", G_CALLBACK(menu_markerbox_callback));
@@ -2953,12 +2954,16 @@ void copy_pri_b_marker(gpointer null_data, guint callback_action, GtkWidget *wid
 
     DEBUG(printf("copy_pri_b_marker()\n"));
 
-    if (GLOBALS->tims.marker != -1) {
-        GLOBALS->tims.baseline = GLOBALS->tims.marker;
-        update_time_box();
-        GLOBALS->signalwindow_width_dirty = 1;
-        redraw_signals_and_waves();
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    if (!gw_marker_is_enabled(primary_marker)) {
+        return;
     }
+
+    GLOBALS->tims.baseline = gw_marker_get_position(primary_marker);
+
+    update_time_box();
+    GLOBALS->signalwindow_width_dirty = 1;
+    redraw_signals_and_waves();
 }
 
 /**/
@@ -2970,31 +2975,36 @@ void delete_unnamed_marker(gpointer null_data, guint callback_action, GtkWidget 
 
     DEBUG(printf("delete_unnamed marker()\n"));
 
-    if (GLOBALS->tims.marker != -1) {
-        Trptr t;
-
-        for (t = GLOBALS->traces.first; t; t = t->t_next) {
-            if (t->asciivalue) {
-                free_2(t->asciivalue);
-                t->asciivalue = NULL;
-            }
-        }
-
-        for (t = GLOBALS->traces.buffer; t; t = t->t_next) {
-            if (t->asciivalue) {
-                free_2(t->asciivalue);
-                t->asciivalue = NULL;
-            }
-        }
-
-        GLOBALS->tims.marker = -1;
-        update_time_box();
-        GLOBALS->signalwindow_width_dirty = 1;
-        redraw_signals_and_waves();
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    if (!gw_marker_is_enabled(primary_marker)) {
+        return;
     }
+
+    Trptr t;
+
+    for (t = GLOBALS->traces.first; t; t = t->t_next) {
+        if (t->asciivalue) {
+            free_2(t->asciivalue);
+            t->asciivalue = NULL;
+        }
+    }
+
+    for (t = GLOBALS->traces.buffer; t; t = t->t_next) {
+        if (t->asciivalue) {
+            free_2(t->asciivalue);
+            t->asciivalue = NULL;
+        }
+    }
+
+    gw_marker_set_enabled(primary_marker, FALSE);
+
+    update_time_box();
+    GLOBALS->signalwindow_width_dirty = 1;
+    redraw_signals_and_waves();
 }
 
-static void disable_marker(gpointer data, gpointer user_data) {
+static void disable_marker(gpointer data, gpointer user_data)
+{
     GwMarker *marker = data;
     gboolean *dirty = user_data;
 
@@ -3032,12 +3042,13 @@ void collect_named_marker(gpointer null_data, guint callback_action, GtkWidget *
 
     DEBUG(printf("collect_named_marker()\n"));
 
-    if (GLOBALS->tims.marker < 0) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    if (!gw_marker_is_enabled(primary_marker)) {
         return;
     }
 
     GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
-    GwMarker *marker = gw_named_markers_find(markers, GLOBALS->tims.marker);
+    GwMarker *marker = gw_named_markers_find(markers, gw_marker_get_position(primary_marker));
 
     if (marker != NULL) {
         gw_marker_set_enabled(marker, FALSE);
@@ -3052,14 +3063,15 @@ void drop_named_marker(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    if (GLOBALS->tims.marker < 0) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    if (!gw_marker_is_enabled(primary_marker)) {
         return;
     }
 
     GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
     GwMarker *marker = gw_named_markers_find_first_disabled(markers);
     if (marker != NULL) {
-        gw_marker_set_position(marker, GLOBALS->tims.marker);
+        gw_marker_set_position(marker, gw_marker_get_position(primary_marker));
         gw_marker_set_enabled(marker, TRUE);
         redraw_signals_and_waves();
     }

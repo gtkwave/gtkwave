@@ -169,11 +169,13 @@ static void local_trace_asciival(Trptr t, GwTime tim, int *nmaxlen, int *vmaxlen
                 hptr h_ptr;
                 if ((h_ptr = bsearch_node(t->n.nd, tim - t->shift))) {
                     if (!t->n.nd->extvals) {
+                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+                        GwTime primary_pos = gw_marker_get_position(primary_marker);
+
                         unsigned char h_val = h_ptr->v.h_val;
                         if (t->n.nd->vartype == ND_VCD_EVENT) {
                             h_val = (h_ptr->time >= GLOBALS->tims.first) &&
-                                            ((GLOBALS->tims.marker - GLOBALS->shift_timebase) ==
-                                             h_ptr->time)
+                                            ((primary_pos - GLOBALS->shift_timebase) == h_ptr->time)
                                         ? AN_1
                                         : AN_0; /* generate impulse */
                         }

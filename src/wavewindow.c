@@ -273,12 +273,16 @@ xit:
 
 static void sync_marker(void)
 {
-    if ((GLOBALS->tims.prevmarker == -1) && (GLOBALS->tims.marker != -1)) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+    if ((GLOBALS->tims.prevmarker == -1) && gw_marker_is_enabled(primary_marker)) {
         GLOBALS->signalwindow_width_dirty = 1;
-    } else if ((GLOBALS->tims.marker == -1) && (GLOBALS->tims.prevmarker != -1)) {
+    } else if (gw_marker_is_enabled(primary_marker) && (GLOBALS->tims.prevmarker != -1)) {
         GLOBALS->signalwindow_width_dirty = 1;
     }
-    GLOBALS->tims.prevmarker = GLOBALS->tims.marker;
+    // TODO: don't use sentinel value for disabled marker
+    GLOBALS->tims.prevmarker =
+        gw_marker_is_enabled(primary_marker) ? gw_marker_get_position(primary_marker) : -1;
 
     /* additional case for race conditions with MaxSignalLength */
     if (((GLOBALS->tims.resizemarker == -1) || (GLOBALS->tims.resizemarker2 == -1)) &&
@@ -398,7 +402,12 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
         newcurr = GLOBALS->min_time; /* prevents marker from disappearing? */
 
     if (!is_button_2) {
-        GLOBALS->tims.marker = cook_markertime(newcurr, xin, yin);
+        GwTime markertime = cook_markertime(newcurr, xin, yin);
+
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+        gw_marker_set_position(primary_marker, markertime);
+        gw_marker_set_enabled(primary_marker, markertime >= 0); // TODO: don't use sentinel values
+
         update_time_box();
         if (GLOBALS->tims.lmbcache < 0)
             GLOBALS->tims.lmbcache = time_trunc(newcurr);
@@ -455,10 +464,15 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
                         }
                         if (GLOBALS->tims.start < GLOBALS->tims.first)
                             GLOBALS->tims.start = GLOBALS->tims.first;
-                        gtk_adjustment_set_value(
-                            GTK_ADJUSTMENT(GLOBALS->wave_hslider),
-                            GLOBALS->tims.marker =
-                                time_trunc(GLOBALS->tims.timecache = GLOBALS->tims.start));
+
+                        GLOBALS->tims.timecache = GLOBALS->tims.start;
+                        GwTime markertime = time_trunc(GLOBALS->tims.start);
+
+                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+                        gw_marker_set_position(primary_marker, markertime);
+                        gw_marker_set_enabled(primary_marker, TRUE);
+
+                        gtk_adjustment_set_value(GTK_ADJUSTMENT(GLOBALS->wave_hslider), markertime);
 
                         g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider), "changed");
                         g_signal_emit_by_name(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
@@ -484,9 +498,14 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
                         if (GLOBALS->tims.start < GLOBALS->tims.first)
                             GLOBALS->tims.start = GLOBALS->tims.first;
 
-                        GLOBALS->tims.marker = time_trunc(GLOBALS->tims.start + pageinc);
-                        if (GLOBALS->tims.marker > GLOBALS->tims.last)
-                            GLOBALS->tims.marker = GLOBALS->tims.last;
+                        GwTime markertime = time_trunc(GLOBALS->tims.start + pageinc);
+                        if (markertime > GLOBALS->tims.last) {
+                            markertime = GLOBALS->tims.last;
+                        }
+
+                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+                        gw_marker_set_position(primary_marker, markertime);
+                        gw_marker_set_enabled(primary_marker, TRUE);
 
                         gtk_adjustment_set_value(GTK_ADJUSTMENT(GLOBALS->wave_hslider),
                                                  GLOBALS->tims.timecache = GLOBALS->tims.start);
@@ -541,7 +560,10 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
                         t->shift_drag_valid = 1;
                     }
 
-                    gt = t->shift_drag + (GLOBALS->tims.marker - GLOBALS->tims.lmbcache);
+                    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+                    gt = t->shift_drag +
+                         (gw_marker_get_position(primary_marker) - GLOBALS->tims.lmbcache);
 
                     if (gt < 0) {
                         delta = GLOBALS->tims.first - GLOBALS->tims.last;
@@ -820,7 +842,12 @@ static gint button_press_event(GtkWidget *widget, GdkEventButton *event)
         GLOBALS->in_button_press_wavewindow_c_1 = event->button;
 
         DEBUG(printf("Button Press Event\n"));
-        GLOBALS->prev_markertime = GLOBALS->tims.marker;
+
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+        GLOBALS->prev_markertime = gw_marker_is_enabled(primary_marker)
+                                       ? gw_marker_get_position(primary_marker)
+                                       : -1; // TODO: don't use sentinel value
+
         button_motion_common(event->x, event->y, 1, 0);
         GLOBALS->tims.timecache = GLOBALS->tims.start;
 
@@ -900,8 +927,11 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
                 while (t) {
                     if (t->flags & TR_HIGHLIGHT) {
                         warp++;
+
+                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
                         gt = (t->shift_drag_valid ? t->shift_drag : t->shift) +
-                             (GLOBALS->tims.marker - GLOBALS->tims.lmbcache);
+                             (gw_marker_get_position(primary_marker) - GLOBALS->tims.lmbcache);
 
                         if (gt < 0) {
                             delta = GLOBALS->tims.first - GLOBALS->tims.last;
@@ -944,7 +974,12 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
 
         if (event->button == 3) /* oh yeah, dragzoooooooom! */
         {
-            service_dragzoom(GLOBALS->tims.lmbcache, GLOBALS->tims.marker);
+            GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+            GwTime primary_pos = gw_marker_is_enabled(primary_marker)
+                                     ? gw_marker_get_position(primary_marker)
+                                     : -1; // TODO: don't use sentinel value
+
+            service_dragzoom(GLOBALS->tims.lmbcache, primary_pos);
         }
 
         GLOBALS->tims.lmbcache = -1;
@@ -1370,7 +1405,10 @@ static void wavearea_zoom_scale_changed_event(GtkGestureZoom *controller,
                 new_x1tim = GLOBALS->tims.start + (x1 * GLOBALS->nspx);
                 GLOBALS->tims.start += (GLOBALS->wavearea_gesture_initial_x1tim - new_x1tim);
 
-                GLOBALS->tims.marker = new_x1tim;
+                GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+                gw_marker_set_position(primary_marker, new_x1tim);
+                gw_marker_set_enabled(primary_marker, TRUE);
+
                 GLOBALS->tims.baseline = GLOBALS->tims.start + (x2 * GLOBALS->nspx);
                 GLOBALS->tims.lmbcache = -1;
                 GLOBALS->in_button_press_wavewindow_c_1 = 0;
@@ -1422,7 +1460,9 @@ static void wavearea_zoom_end_event(GtkGestureZoom *gesture,
     (void)sequence;
     (void)user_data;
 
-    GLOBALS->tims.marker = -1;
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    gw_marker_set_enabled(primary_marker, FALSE);
+
     GLOBALS->tims.baseline = -1;
     GLOBALS->tims.lmbcache = -1;
     GLOBALS->in_button_press_wavewindow_c_1 = 0;
@@ -1848,6 +1888,8 @@ void MaxSignalLength(void)
     if ((!GLOBALS->signalwindow_width_dirty) && (GLOBALS->use_nonprop_fonts))
         return;
 
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
     dirty_kick = GLOBALS->signalwindow_width_dirty;
     GLOBALS->signalwindow_width_dirty = 0;
 
@@ -1909,8 +1951,8 @@ void MaxSignalLength(void)
             if (len > maxlen)
                 maxlen = len;
 
-            if ((GLOBALS->tims.marker != -1) && (!(t->flags & TR_EXCLUDE))) {
-                t->asciitime = GLOBALS->tims.marker;
+            if (gw_marker_is_enabled(primary_marker) && (!(t->flags & TR_EXCLUDE))) {
+                t->asciitime = gw_marker_get_position(primary_marker);
                 if (t->asciivalue) {
                     free_2(t->asciivalue);
                 }
@@ -1932,7 +1974,7 @@ void MaxSignalLength(void)
                         bv = t->n.vec;
                     }
 
-                    v = bsearch_vector(bv, GLOBALS->tims.marker - ts->shift);
+                    v = bsearch_vector(bv, gw_marker_get_position(primary_marker) - ts->shift);
                     str = convert_ascii(ts, v);
                     if (str) {
                         str2 = (char *)malloc_2(strlen(str) + 2);
@@ -1949,7 +1991,8 @@ void MaxSignalLength(void)
                 } else {
                     char *str;
                     hptr h_ptr;
-                    if ((h_ptr = bsearch_node(t->n.nd, GLOBALS->tims.marker - t->shift))) {
+                    if ((h_ptr = bsearch_node(t->n.nd,
+                                              gw_marker_get_position(primary_marker) - t->shift))) {
                         if (!t->n.nd->extvals) {
                             unsigned char h_val = h_ptr->v.h_val;
 
@@ -1957,8 +2000,8 @@ void MaxSignalLength(void)
                             str[0] = '=';
                             if (t->n.nd->vartype == ND_VCD_EVENT) {
                                 h_val = (h_ptr->time >= GLOBALS->tims.first) &&
-                                                ((GLOBALS->tims.marker - GLOBALS->shift_timebase) ==
-                                                 h_ptr->time)
+                                                ((gw_marker_get_position(primary_marker) -
+                                                  GLOBALS->shift_timebase) == h_ptr->time)
                                             ? AN_1
                                             : AN_0; /* generate impulse */
                             }
@@ -2020,14 +2063,16 @@ void MaxSignalLength(void)
 
     GLOBALS->max_signal_name_pixel_width = maxlen;
     GLOBALS->signal_pixmap_width = maxlen + 6; /* 2 * 3 pixel pad */
-    if (GLOBALS->tims.marker != -1) {
+    if (gw_marker_is_enabled(primary_marker)) {
         GLOBALS->signal_pixmap_width += (vmaxlen + 6);
         if (GLOBALS->signal_pixmap_width > 32767)
             GLOBALS->signal_pixmap_width = 32767; /* fixes X11 protocol limitation crash */
     }
 
     GLOBALS->tims.resizemarker2 = GLOBALS->tims.resizemarker;
-    GLOBALS->tims.resizemarker = GLOBALS->tims.marker;
+    GLOBALS->tims.resizemarker = gw_marker_is_enabled(primary_marker)
+                                     ? gw_marker_get_position(primary_marker)
+                                     : -1; // TODO: don't use sentinel value
 
     if (GLOBALS->signal_pixmap_width < 60)
         GLOBALS->signal_pixmap_width = 60;
@@ -2105,9 +2150,11 @@ void UpdateSigValue(Trptr t)
     bvptr bv = NULL;
     Trptr tscan = NULL;
 
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
     if (!t)
         return;
-    if ((t->asciivalue) && (t->asciitime == GLOBALS->tims.marker))
+    if ((t->asciivalue) && (t->asciitime == gw_marker_get_position(primary_marker)))
         return;
 
     if (t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH)) /* seek to real xact trace if present... */
@@ -2141,8 +2188,8 @@ void UpdateSigValue(Trptr t)
         GLOBALS->shift_timebase = t->shift;
         DEBUG(printf("UpdateSigValue: %s\n", t->name));
 
-        if ((GLOBALS->tims.marker != -1) && (!(t->flags & TR_EXCLUDE))) {
-            t->asciitime = GLOBALS->tims.marker;
+        if (gw_marker_is_enabled(primary_marker) && (!(t->flags & TR_EXCLUDE))) {
+            t->asciitime = gw_marker_get_position(primary_marker);
             if (t->asciivalue)
                 free_2(t->asciivalue);
 
@@ -2162,7 +2209,7 @@ void UpdateSigValue(Trptr t)
                     bv = t->n.vec;
                 }
 
-                v = bsearch_vector(bv, GLOBALS->tims.marker - ts->shift);
+                v = bsearch_vector(bv, gw_marker_get_position(primary_marker) - ts->shift);
                 str = convert_ascii(ts, v);
                 if (str) {
                     str2 = (char *)malloc_2(strlen(str) + 2);
@@ -2177,13 +2224,14 @@ void UpdateSigValue(Trptr t)
             } else {
                 char *str;
                 hptr h_ptr;
-                if ((h_ptr = bsearch_node(t->n.nd, GLOBALS->tims.marker - t->shift))) {
+                if ((h_ptr = bsearch_node(t->n.nd,
+                                          gw_marker_get_position(primary_marker) - t->shift))) {
                     if (!t->n.nd->extvals) {
                         unsigned char h_val = h_ptr->v.h_val;
                         if (t->n.nd->vartype == ND_VCD_EVENT) {
                             h_val = (h_ptr->time >= GLOBALS->tims.first) &&
-                                            ((GLOBALS->tims.marker - GLOBALS->shift_timebase) ==
-                                             h_ptr->time)
+                                            ((gw_marker_get_position(primary_marker) -
+                                              GLOBALS->shift_timebase) == h_ptr->time)
                                         ? AN_1
                                         : AN_0; /* generate impulse */
                         }

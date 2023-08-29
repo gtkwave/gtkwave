@@ -84,19 +84,15 @@ static void edge_search_2(int direction, int is_last_iteration)
         }
     }
 
-    if (direction == STRACE_BACKWARD) /* backwards */
-    {
-        if (GLOBALS->tims.marker < 0) {
-            basetime = MAX_HISTENT_TIME;
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+
+    if (gw_marker_is_enabled(primary_marker)) {
+        basetime = gw_marker_get_position(primary_marker);
+    } else {
+        if (direction == STRACE_BACKWARD) {
+            basetime = MAX_HISTENT_TIME; // backwards
         } else {
-            basetime = GLOBALS->tims.marker;
-        }
-    } else /* go forwards */
-    {
-        if (GLOBALS->tims.marker < 0) {
-            basetime = GLOBALS->tims.first;
-        } else {
-            basetime = GLOBALS->tims.marker;
+            basetime = GLOBALS->tims.first; // go forwards
         }
     }
 
@@ -166,7 +162,7 @@ static void edge_search_2(int direction, int is_last_iteration)
                     h = bsearch_node(t->n.nd, basetime - t->shift);
                     while (h->next && h->time == h->next->time)
                         h = h->next;
-                    if ((whichpass) || (GLOBALS->tims.marker >= 0))
+                    if ((whichpass) || gw_marker_is_enabled(primary_marker))
                         h = h->next;
                     if (!h)
                         return;
@@ -183,7 +179,7 @@ static void edge_search_2(int direction, int is_last_iteration)
                     v = bsearch_vector(t->n.vec, basetime - t->shift);
                     while (v->next && v->time == v->next->time)
                         v = v->next;
-                    if ((whichpass) || (GLOBALS->tims.marker >= 0))
+                    if ((whichpass) || gw_marker_is_enabled(primary_marker))
                         v = v->next;
                     if (!v)
                         return;
@@ -442,22 +438,23 @@ static void edge_search_2(int direction, int is_last_iteration)
         basetime = maxbase;
     }
 
-    GLOBALS->tims.marker = maxbase;
+    gw_marker_set_position(primary_marker, maxbase);
+    gw_marker_set_enabled(primary_marker, TRUE);
+
     if (is_last_iteration) {
         update_time_box();
 
         width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
-        if ((GLOBALS->tims.marker < GLOBALS->tims.start) ||
-            (GLOBALS->tims.marker >= GLOBALS->tims.start + width)) {
-            if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
-                (GLOBALS->tims.marker > GLOBALS->tims.last)) {
+        if ((maxbase < GLOBALS->tims.start) || (maxbase >= GLOBALS->tims.start + width)) {
+            if ((maxbase < 0) || (maxbase < GLOBALS->tims.first) ||
+                (maxbase > GLOBALS->tims.last)) {
                 if (GLOBALS->tims.end > GLOBALS->tims.last)
                     GLOBALS->tims.end = GLOBALS->tims.last;
                 middle = (GLOBALS->tims.start / 2) + (GLOBALS->tims.end / 2);
                 if ((GLOBALS->tims.start & 1) && (GLOBALS->tims.end & 1))
                     middle++;
             } else {
-                middle = GLOBALS->tims.marker;
+                middle = maxbase;
             }
 
             GLOBALS->tims.start = time_trunc(middle - (width / 2));

@@ -82,15 +82,18 @@ static void center_op(void)
 {
     GwTime middle = 0, width;
 
-    if ((GLOBALS->tims.marker < 0) || (GLOBALS->tims.marker < GLOBALS->tims.first) ||
-        (GLOBALS->tims.marker > GLOBALS->tims.last)) {
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTime primary_pos = gw_marker_get_position(primary_marker);
+
+    if (!gw_marker_is_enabled(primary_marker) || primary_pos < GLOBALS->tims.first ||
+        primary_pos > GLOBALS->tims.last) {
         if (GLOBALS->tims.end > GLOBALS->tims.last)
             GLOBALS->tims.end = GLOBALS->tims.last;
         middle = (GLOBALS->tims.start / 2) + (GLOBALS->tims.end / 2);
         if ((GLOBALS->tims.start & 1) && (GLOBALS->tims.end & 1))
             middle++;
     } else {
-        middle = GLOBALS->tims.marker;
+        middle = primary_pos;
     }
 
     width = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
@@ -169,10 +172,13 @@ static gboolean button_release_event(GtkWidget *text, GdkEventButton *event)
                     tm = unformat_time(sel2 ? sel2 : sel, GLOBALS->time_dimension);
                     if ((tm >= GLOBALS->tims.first) && (tm <= GLOBALS->tims.last)) {
                         GLOBALS->tims.lmbcache = -1;
-                        GLOBALS->tims.marker = tm;
+
+                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+                        gw_marker_set_position(primary_marker, tm);
+                        gw_marker_set_enabled(primary_marker, TRUE);
+
                         center_op();
                         redraw_signals_and_waves();
-                        GLOBALS->tims.marker = tm; /* centering problem in GTK2 */
                         update_time_box(); /* centering problem in GTK2 */
                     }
                 }
