@@ -157,10 +157,12 @@ static void gw_time_display_update(GwTimeDisplay *self)
     GwMarker *primary_marker = NULL;
     GwMarker *baseline_marker = NULL;
     GwMarker *ghost_marker = NULL;
+    GwMarker *cursor = NULL;
     if (self->project != NULL) {
         primary_marker = gw_project_get_primary_marker(self->project);
         baseline_marker = gw_project_get_baseline_marker(self->project);
         ghost_marker = gw_project_get_ghost_marker(self->project);
+        cursor = gw_project_get_cursor(self->project);
     }
 
     if (GLOBALS->use_maxtime_display) {
@@ -218,11 +220,12 @@ static void gw_time_display_update(GwTimeDisplay *self)
     } else {
         gtk_label_set_text(GTK_LABEL(self->cursor_label), "Cursor");
 
-        gchar *text = reformat_time_2(GLOBALS->currenttime + GLOBALS->global_time_offset,
-                                      GLOBALS->time_dimension,
-                                      FALSE);
+        GwTime cursor_pos = cursor != NULL ? gw_marker_get_position(cursor) : 0;
+        cursor_pos += GLOBALS->global_time_offset;
 
-        if (is_in_blackout_region(GLOBALS->currenttime + GLOBALS->global_time_offset)) {
+        gchar *text = reformat_time_2(cursor_pos, GLOBALS->time_dimension, FALSE);
+
+        if (is_in_blackout_region(cursor_pos)) {
             gchar *last_space = g_strrstr(text, " ");
             if (last_space != NULL) {
                 *last_space = '*';
@@ -334,6 +337,7 @@ void gw_time_display_set_project(GwTimeDisplay *self, GwProject *project)
     }
 
     if (self->project != NULL) {
+        g_signal_handlers_disconnect_by_data(gw_project_get_cursor(self->project), self);
         g_signal_handlers_disconnect_by_data(gw_project_get_primary_marker(self->project), self);
         g_signal_handlers_disconnect_by_data(gw_project_get_baseline_marker(self->project), self);
         g_signal_handlers_disconnect_by_data(gw_project_get_ghost_marker(self->project), self);
@@ -345,6 +349,7 @@ void gw_time_display_set_project(GwTimeDisplay *self, GwProject *project)
         self->project = g_object_ref(project);
 
         GCallback cb = G_CALLBACK(on_marker_change);
+        g_signal_connect(gw_project_get_cursor(self->project), "notify", cb, self);
         g_signal_connect(gw_project_get_primary_marker(self->project), "notify", cb, self);
         g_signal_connect(gw_project_get_baseline_marker(self->project), "notify", cb, self);
         g_signal_connect(gw_project_get_ghost_marker(self->project), "notify", cb, self);
