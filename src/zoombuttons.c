@@ -214,11 +214,12 @@ void service_zoom_fit(GtkWidget *text, gpointer data)
     int fixedwidth;
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
-    if ((GLOBALS->tims.baseline >= 0) && gw_marker_is_enabled(primary_marker)) {
-        service_dragzoom(GLOBALS->tims.baseline,
-                         gw_marker_get_position(
-                             primary_marker)); /* new semantics added to zoom between the two */
+    if (gw_marker_is_enabled(baseline_marker) && gw_marker_is_enabled(primary_marker)) {
+        /* new semantics added to zoom between the two */
+        service_dragzoom(gw_marker_get_position(baseline_marker),
+                         gw_marker_get_position(primary_marker));
     } else {
         if (GLOBALS->wavewidth > 4) {
             fixedwidth = GLOBALS->wavewidth - 4;
@@ -338,8 +339,9 @@ void service_dragzoom(GwTime time1, GwTime time2) /* the function you've been wa
         }
 
         GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+        GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
-        if (!((GLOBALS->tims.baseline >= 0) && gw_marker_is_enabled(primary_marker))) {
+        if (!(gw_marker_is_enabled(baseline_marker) && gw_marker_is_enabled(primary_marker))) {
             gw_marker_set_enabled(primary_marker, FALSE);
             update_time_box();
         }

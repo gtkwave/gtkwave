@@ -24,14 +24,18 @@ static void update_dual(void)
         return;
     }
 
-    // TODO: don't use sentinel values for disabled markers
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
+    // TODO: don't use sentinel values for disabled markers
     GwTime primary_pos =
         gw_marker_is_enabled(primary_marker) ? gw_marker_get_position(primary_marker) : -1;
+    GwTime baseline_pos =
+        gw_marker_is_enabled(baseline_marker) ? gw_marker_get_position(baseline_marker) : -1;
 
     GLOBALS->dual_ctx[GLOBALS->dual_id].zoom = GLOBALS->tims.zoom;
     GLOBALS->dual_ctx[GLOBALS->dual_id].marker = primary_pos;
-    GLOBALS->dual_ctx[GLOBALS->dual_id].baseline = GLOBALS->tims.baseline;
+    GLOBALS->dual_ctx[GLOBALS->dual_id].baseline = baseline_pos;
     GLOBALS->dual_ctx[GLOBALS->dual_id].left_margin_time = GLOBALS->tims.start;
     GLOBALS->dual_ctx[GLOBALS->dual_id].use_new_times = 1;
 }
@@ -110,13 +114,13 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
     int m1x_wavewindow_c_1 = -1;
     int m2x_wavewindow_c_1 = -1;
 
-    if (GLOBALS->tims.baseline >= 0) {
-        if ((GLOBALS->tims.baseline >= GLOBALS->tims.start) &&
-            (GLOBALS->tims.baseline <= GLOBALS->tims.last) &&
-            (GLOBALS->tims.baseline <= GLOBALS->tims.end)) {
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+    if (gw_marker_is_enabled(baseline_marker)) {
+        GwTime baseline_pos = gw_marker_get_position(baseline_marker);
+        if (baseline_pos >= GLOBALS->tims.start && baseline_pos <= GLOBALS->tims.last &&
+            baseline_pos <= GLOBALS->tims.end) {
             pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
-            xl = ((gdouble)(GLOBALS->tims.baseline - GLOBALS->tims.start)) /
-                 pixstep; /* snap to integer */
+            xl = ((gdouble)(baseline_pos - GLOBALS->tims.start)) / pixstep; /* snap to integer */
             if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
                 XXX_gdk_draw_line(cr,
                                   GLOBALS->rgb_gc.gc_baseline_wavewindow_c_1,

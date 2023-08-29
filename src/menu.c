@@ -179,14 +179,15 @@ static void menu_def_ruler(gpointer null_data, guint callback_action, GtkWidget 
     (void)widget;
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
-    if ((GLOBALS->tims.baseline >= 0) && gw_marker_is_enabled(primary_marker)) {
-        GLOBALS->ruler_origin = GLOBALS->tims.baseline;
-        GLOBALS->ruler_step = GLOBALS->tims.baseline - gw_marker_get_position(primary_marker);
-        if (GLOBALS->ruler_step < 0)
-            GLOBALS->ruler_step = -GLOBALS->ruler_step;
+    if (gw_marker_is_enabled(baseline_marker) && gw_marker_is_enabled(primary_marker)) {
+        GLOBALS->ruler_origin = gw_marker_get_position(baseline_marker);
+        GLOBALS->ruler_step =
+            ABS(gw_marker_get_position(baseline_marker) - gw_marker_get_position(primary_marker));
     } else {
-        GLOBALS->ruler_origin = GLOBALS->ruler_step = GW_TIME_CONSTANT(0);
+        GLOBALS->ruler_origin = 0;
+        GLOBALS->ruler_step = 0;
     }
 
     GLOBALS->signalwindow_width_dirty = 1;
@@ -2959,7 +2960,9 @@ void copy_pri_b_marker(gpointer null_data, guint callback_action, GtkWidget *wid
         return;
     }
 
-    GLOBALS->tims.baseline = gw_marker_get_position(primary_marker);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+    gw_marker_set_position(baseline_marker, gw_marker_get_position(primary_marker));
+    gw_marker_set_enabled(baseline_marker, TRUE);
 
     update_time_box();
     GLOBALS->signalwindow_width_dirty = 1;

@@ -416,9 +416,15 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
             button_press_release_common();
         }
     } else {
-        GLOBALS->tims.baseline = ((GLOBALS->tims.baseline < 0) || (is_button_2 < 0))
-                                     ? cook_markertime(newcurr, xin, yin)
-                                     : -1;
+        GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
+        if (!gw_marker_is_enabled(baseline_marker) || is_button_2 < 0) {
+            gw_marker_set_position(baseline_marker, cook_markertime(newcurr, xin, yin));
+            gw_marker_set_enabled(baseline_marker, TRUE);
+        } else {
+            gw_marker_set_enabled(baseline_marker, FALSE);
+        }
+
         update_time_box();
         // gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
     }
@@ -439,6 +445,9 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
 
     int dummy_x, dummy_y;
     get_window_xypos(&dummy_x, &dummy_y);
+
+    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
     if (event->is_hint) {
         WAVE_GDK_GET_POINTER(event->window, &x, &y, &xi, &yi, &state);
@@ -468,7 +477,6 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
                         GLOBALS->tims.timecache = GLOBALS->tims.start;
                         GwTime markertime = time_trunc(GLOBALS->tims.start);
 
-                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
                         gw_marker_set_position(primary_marker, markertime);
                         gw_marker_set_enabled(primary_marker, TRUE);
 
@@ -503,7 +511,6 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
                             markertime = GLOBALS->tims.last;
                         }
 
-                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
                         gw_marker_set_position(primary_marker, markertime);
                         gw_marker_set_enabled(primary_marker, TRUE);
 
@@ -517,7 +524,7 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
                     }
                 x = GLOBALS->wavewidth - 1;
             }
-        } else if ((state & GDK_BUTTON2_MASK) && (GLOBALS->tims.baseline >= 0)) {
+        } else if ((state & GDK_BUTTON2_MASK) && gw_marker_is_enabled(baseline_marker)) {
             button_motion_common(x, y, 0, -1); /* neg one says don't clear tims.baseline */
         }
 
@@ -559,8 +566,6 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
                         t->shift_drag = t->shift;
                         t->shift_drag_valid = 1;
                     }
-
-                    GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
                     gt = t->shift_drag +
                          (gw_marker_get_position(primary_marker) - GLOBALS->tims.lmbcache);
@@ -1406,10 +1411,13 @@ static void wavearea_zoom_scale_changed_event(GtkGestureZoom *controller,
                 GLOBALS->tims.start += (GLOBALS->wavearea_gesture_initial_x1tim - new_x1tim);
 
                 GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+                GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
                 gw_marker_set_position(primary_marker, new_x1tim);
                 gw_marker_set_enabled(primary_marker, TRUE);
+                gw_marker_set_position(baseline_marker, GLOBALS->tims.start + (x2 * GLOBALS->nspx));
+                gw_marker_set_enabled(baseline_marker, TRUE);
 
-                GLOBALS->tims.baseline = GLOBALS->tims.start + (x2 * GLOBALS->nspx);
                 GLOBALS->tims.lmbcache = -1;
                 GLOBALS->in_button_press_wavewindow_c_1 = 0;
 
@@ -1461,9 +1469,11 @@ static void wavearea_zoom_end_event(GtkGestureZoom *gesture,
     (void)user_data;
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
-    gw_marker_set_enabled(primary_marker, FALSE);
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
-    GLOBALS->tims.baseline = -1;
+    gw_marker_set_enabled(primary_marker, FALSE);
+    gw_marker_set_enabled(baseline_marker, FALSE);
+
     GLOBALS->tims.lmbcache = -1;
     GLOBALS->in_button_press_wavewindow_c_1 = 0;
 
@@ -1532,6 +1542,8 @@ static gboolean wavearea_swipe_tick(GtkWidget *widget,
     (void)frame_clock;
     (void)user_data;
 
+    GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+
     if (gesture_filter_cnt > 0) /* for X11 */
     {
         wavearea_zero_out_swipe_velocity();
@@ -1582,7 +1594,7 @@ static gboolean wavearea_swipe_tick(GtkWidget *widget,
 
             if (elapsed >= WAVE_GTK3_SWIPE_MICROSECONDS) {
                 wavearea_zero_out_swipe_velocity();
-                GLOBALS->tims.baseline = -1;
+                gw_marker_set_enabled(baseline_marker, FALSE);
                 GLOBALS->tims.lmbcache = -1;
                 GLOBALS->in_button_press_wavewindow_c_1 = 0;
             }
@@ -1619,7 +1631,7 @@ static gboolean wavearea_swipe_tick(GtkWidget *widget,
 
             if (elapsed >= WAVE_GTK3_SWIPE_MICROSECONDS) {
                 wavearea_zero_out_swipe_velocity();
-                GLOBALS->tims.baseline = -1;
+                gw_marker_set_enabled(baseline_marker, FALSE);
                 GLOBALS->tims.lmbcache = -1;
                 GLOBALS->in_button_press_wavewindow_c_1 = 0;
             }
