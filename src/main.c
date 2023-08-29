@@ -610,6 +610,7 @@ static GtkWidget *build_toolbar(void)
     gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(last_separator), FALSE);
 
     GLOBALS->time_box = gw_time_display_new();
+    gw_time_display_set_project(GW_TIME_DISPLAY(GLOBALS->time_box), GLOBALS->project);
     toolbar_append_widget(toolbar, GLOBALS->time_box);
 
     gtk_widget_show_all(toolbar);
