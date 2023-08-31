@@ -1,5 +1,11 @@
 #include "gw-project.h"
 
+/**
+ * GwProject:
+ *
+ * A GTKWave project.
+ */
+
 struct _GwProject
 {
     GObject parent_instance;
@@ -79,12 +85,22 @@ static void gw_project_class_init(GwProjectClass *klass)
     object_class->dispose = gw_project_dispose;
     object_class->get_property = gw_project_get_property;
 
+    /**
+     * GwProject:cursor:
+     *
+     * The cursor.
+     */
     properties[PROP_CURSOR] = g_param_spec_object("cursor",
                                                   "Cursor",
                                                   "The cursor",
                                                   GW_TYPE_MARKER,
                                                   G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+    /**
+     * GwProject:primary-marker:
+     *
+     * The primary marker.
+     */
     properties[PROP_PRIMARY_MARKER] =
         g_param_spec_object("primary-marker",
                             "Primary marker",
@@ -92,6 +108,11 @@ static void gw_project_class_init(GwProjectClass *klass)
                             GW_TYPE_MARKER,
                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+    /**
+     * GwProject:baseline-marker:
+     *
+     * The baseline marker.
+     */
     properties[PROP_BASELINE_MARKER] =
         g_param_spec_object("baseline-marker",
                             "Baseline marker",
@@ -99,12 +120,22 @@ static void gw_project_class_init(GwProjectClass *klass)
                             GW_TYPE_MARKER,
                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+    /**
+     * GwProject:ghost-marker:
+     *
+     * The ghost marker.
+     */
     properties[PROP_GHOST_MARKER] = g_param_spec_object("ghost-marker",
                                                         "Ghost marker",
                                                         "The ghost marker",
                                                         GW_TYPE_MARKER,
                                                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+    /**
+     * GwProject:named-markers:
+     *
+     * The named markers.
+     */
     properties[PROP_NAMED_MARKERS] = g_param_spec_object("named-markers",
                                                          "Named markers",
                                                          "The named markers",
@@ -124,11 +155,26 @@ static void gw_project_init(GwProject *self)
     self->named_markers = gw_named_markers_new(26); // TODO: support manymarkers
 }
 
+/**
+ * gw_project_new:
+ *
+ * Creates a new project.
+ *
+ * Returns: (transfer full): The project.
+ */
 GwProject *gw_project_new(void)
 {
     return g_object_new(GW_TYPE_PROJECT, NULL);
 }
 
+/**
+ * gw_project_get_cursor:
+ * @self: A #GwProject.
+ *
+ * Returns the cursor.
+ *
+ * Returns: (transfer none): The cursor.
+ */
 GwMarker *gw_project_get_cursor(GwProject *self)
 {
     g_return_val_if_fail(GW_IS_PROJECT(self), NULL);
@@ -136,6 +182,14 @@ GwMarker *gw_project_get_cursor(GwProject *self)
     return self->cursor;
 }
 
+/**
+ * gw_project_get_primary_marker:
+ * @self: A #GwProject.
+ *
+ * Returns the primary marker.
+ *
+ * Returns: (transfer none): The primary marker.
+ */
 GwMarker *gw_project_get_primary_marker(GwProject *self)
 {
     g_return_val_if_fail(GW_IS_PROJECT(self), NULL);
@@ -143,6 +197,14 @@ GwMarker *gw_project_get_primary_marker(GwProject *self)
     return self->primary_marker;
 }
 
+/**
+ * gw_project_get_baseline_marker:
+ * @self: A #GwProject.
+ *
+ * Returns the baseline marker.
+ *
+ * Returns: (transfer none): The baseline marker.
+ */
 GwMarker *gw_project_get_baseline_marker(GwProject *self)
 {
     g_return_val_if_fail(GW_IS_PROJECT(self), NULL);
@@ -150,6 +212,14 @@ GwMarker *gw_project_get_baseline_marker(GwProject *self)
     return self->baseline_marker;
 }
 
+/**
+ * gw_project_get_ghost_marker:
+ * @self: A #GwProject.
+ *
+ * Returns the ghost marker.
+ *
+ * Returns: (transfer none): The ghost marker.
+ */
 GwMarker *gw_project_get_ghost_marker(GwProject *self)
 {
     g_return_val_if_fail(GW_IS_PROJECT(self), NULL);
@@ -157,6 +227,14 @@ GwMarker *gw_project_get_ghost_marker(GwProject *self)
     return self->ghost_marker;
 }
 
+/**
+ * gw_project_get_named_markers:
+ * @self: A #GwProject.
+ *
+ * Returns the named markers.
+ *
+ * Returns: (transfer none): The named markers.
+ */
 GwNamedMarkers *gw_project_get_named_markers(GwProject *self)
 {
     g_return_val_if_fail(GW_IS_PROJECT(self), NULL);

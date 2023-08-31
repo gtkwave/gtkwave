@@ -95,6 +95,11 @@ static void gw_named_markers_class_init(GwNamedMarkersClass *klass)
     object_class->set_property = gw_named_markers_set_property;
 
     // TODO: remove property and use dynamic array to store markers
+    /**
+     * GwNamedMarkers:number-of-markers:
+     *
+     * The number of named markers.
+     */
     properties[PROP_NUMBER_OF_MARKERS] =
         g_param_spec_uint("number-of-markers",
                           "Number of markers",
@@ -143,7 +148,7 @@ guint gw_named_markers_get_number_of_markers(GwNamedMarkers *self)
 /**
  * gw_named_markers_get:
  * @self: A #GwNamedMarkers.
- * @guint: The index.
+ * @index: The index.
  *
  * Gets a named marker with the given index.
  *

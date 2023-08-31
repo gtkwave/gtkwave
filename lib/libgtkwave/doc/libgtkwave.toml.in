@@ -1,0 +1,10 @@
+[library]
+description = "GTKWave library"
+version = "@version@"
+authors = "The GTKWave authors"
+license = "GPL-2.0-or-later"
+website_url = "https://github.com/gtkwave/gtkwave"
+browse_url = "https://github.com/gtkwave/gtkwave"
+
+[theme]
+show_index_summary = true

@@ -39,3 +39,31 @@ option(
     value: true,
     description: 'Enable Fast SST Tree widget code',
 )
+
+option(
+    'experimental_plugin_support',
+    type: 'boolean',
+    value: false,
+    description: 'Enables experimental plugin support',
+)
+
+option(
+    'libgtkwave_docs',
+    type: 'boolean',
+    value: false,
+    description: 'Build libgtkwave docs',
+)
+
+option(
+    'introspection',
+    type: 'boolean',
+    value: true,
+    description: 'Generate GObject introspection data',
+)
+
+option(
+    'tests',
+    type: 'boolean',
+    value: true,
+    description: 'Build tests',
+)

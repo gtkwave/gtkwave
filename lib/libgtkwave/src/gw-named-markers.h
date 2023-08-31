@@ -10,7 +10,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE(GwNamedMarkers, gw_named_markers, GW, NAMED_MARKERS, GObject)
 
 GwNamedMarkers *gw_named_markers_new(gsize number_of_markers);
-GwNamedMarkers *gw_named_markers_copy(GwNamedMarkers *self);
 
 guint gw_named_markers_get_number_of_markers(GwNamedMarkers *self);
 

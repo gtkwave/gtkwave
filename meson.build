@@ -14,6 +14,7 @@ project(
 
 app_id = 'io.github.gtkwave.GTKWave'
 
+pkgconfig = import('pkgconfig')
 gnome = import('gnome')
 
 cc = meson.get_compiler('c')
@@ -62,6 +63,13 @@ if not bzip2_dep.found()
     # pkg-config files for bzip2 aren't always installed,
     # try to manually find the library as a fallback
     bzip2_dep = cc.find_library('bz2', has_headers: 'bzlib.h')
+endif
+
+# Experimental libpeas based plugin support
+
+if get_option('experimental_plugin_support')
+    libpeas_dep = dependency('libpeas-2')
+    add_project_arguments('-DEXPERIMENTAL_PLUGIN_SUPPORT', language: 'c')
 endif
 
 # Limit used glib functions to minimum required version
