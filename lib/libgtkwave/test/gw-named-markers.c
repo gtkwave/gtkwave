@@ -151,6 +151,35 @@ static void test_foreach(void)
     g_object_unref(markers);
 }
 
+static void on_changed(GwNamedMarkers *markers, guint *counter)
+{
+    g_assert_true(GW_IS_NAMED_MARKERS(markers));
+    (*counter)++;
+}
+
+static void test_changed_signal(void)
+{
+    GwNamedMarkers *markers = gw_named_markers_new(5);
+
+    guint counter = 0;
+    g_signal_connect(markers, "changed", G_CALLBACK(on_changed), &counter);
+    g_assert_cmpint(counter, ==, 0);
+
+    GwMarker *marker = gw_named_markers_get(markers, 3);
+    gw_marker_set_position(marker, 100);
+    g_assert_cmpint(counter, ==, 1);
+    gw_marker_set_position(marker, 100);
+    g_assert_cmpint(counter, ==, 1);
+
+    GwMarker *marker0 = gw_named_markers_get(markers, 0);
+    GwMarker *marker1 = gw_named_markers_get(markers, 1);
+    gw_marker_set_position(marker0, 101);
+    gw_marker_set_position(marker1, 102);
+    g_assert_cmpint(counter, ==, 3);
+
+    g_object_unref(markers);
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
@@ -161,6 +190,7 @@ int main(int argc, char *argv[])
     g_test_add_func("/named_markers/find", test_find);
     g_test_add_func("/named_markers/find_closest", test_find_closest);
     g_test_add_func("/named_markers/foreach", test_foreach);
+    g_test_add_func("/named_markers/changed_signal", test_changed_signal);
 
     return g_test_run();
 }

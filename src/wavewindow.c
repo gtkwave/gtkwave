@@ -1698,6 +1698,12 @@ GtkWidget *create_wavewindow(void)
     gtk_widget_set_hexpand(GLOBALS->wavearea, TRUE);
     gtk_widget_set_vexpand(GLOBALS->wavearea, TRUE);
 
+#ifdef EXPERIMENTAL_PLUGIN_SUPPORT
+    // TODO: Remove this hack! It doesn't support context changes and will update the waveform too often.
+    g_signal_connect_swapped(GLOBALS->project, "unnamed-marker-changed", G_CALLBACK(gw_wave_view_force_redraw), GLOBALS->wavearea);
+    g_signal_connect_swapped(gw_project_get_named_markers(GLOBALS->project), "changed", G_CALLBACK(gw_wave_view_force_redraw), GLOBALS->wavearea);
+#endif
+
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
     if (GLOBALS->use_gestures < 0) /* <0 means "maybe (if available, enable)" */
     {
