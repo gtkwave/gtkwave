@@ -68,8 +68,17 @@ static gboolean parse_time_entry(GtkEntry *entry, GwNamedMarkerDialog *dialog, G
 {
     g_return_val_if_fail(time_out != NULL, FALSE);
 
-    GwTime temp = unformat_time(gtk_entry_get_text(entry), GLOBALS->time_dimension);
+    gchar *text = g_strdup(gtk_entry_get_text(entry));
+    g_strstrip(text);
+
+    if (text[0] == '\0') {
+        g_free(text);
+        return FALSE;
+    }
+
+    GwTime temp = unformat_time(text, GLOBALS->time_dimension);
     temp -= GLOBALS->global_time_offset;
+    g_free(text);
 
     if (temp < GLOBALS->tims.start || temp > GLOBALS->tims.last) {
         return FALSE;
