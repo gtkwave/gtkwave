@@ -39,7 +39,22 @@ enum
     N_PROPERTIES,
 };
 
+enum
+{
+    CHANGED,
+    N_SIGNALS,
+};
+
 static GParamSpec *properties[N_PROPERTIES];
+static guint signals[N_PROPERTIES];
+
+static void on_marker_notify(GwMarker *marker, GParamSpec *pspec, GwNamedMarkers *named_markers)
+{
+    (void)pspec;
+    (void)marker;
+
+    g_signal_emit(named_markers, signals[CHANGED], 0);
+}
 
 static void gw_named_markers_dispose(GObject *object)
 {
@@ -73,7 +88,10 @@ static void gw_named_markers_set_property(GObject *object,
 
             for (guint i = 0; i < number_of_markers; i++) {
                 gchar *name = index_to_bijective_string(i);
+
                 GwMarker *marker = gw_marker_new(name);
+                g_signal_connect(marker, "notify", G_CALLBACK(on_marker_notify), self);
+
                 g_ptr_array_add(self->markers, marker);
                 g_free(name);
             }
@@ -108,6 +126,21 @@ static void gw_named_markers_class_init(GwNamedMarkersClass *klass)
                           G_MAXUINT,
                           1,
                           G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * GwNamedMarkers::changed:
+     *
+     * The "changed" signal is emitted when any of the named markers changes.
+     */
+    signals[CHANGED] = g_signal_new("changed",
+                                    GW_TYPE_NAMED_MARKERS,
+                                    G_SIGNAL_RUN_LAST,
+                                    0,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    G_TYPE_NONE,
+                                    0);
 
     g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }

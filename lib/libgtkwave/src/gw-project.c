@@ -29,7 +29,22 @@ enum
     N_PROPERTIES,
 };
 
+enum
+{
+    UNNAMED_MARKER_CHANGED,
+    N_SIGNALS,
+};
+
 static GParamSpec *properties[N_PROPERTIES];
+static guint signals[N_SIGNALS];
+
+static void on_marker_notify(GwMarker *marker, GParamSpec *pspec, GwProject *project)
+{
+    (void)pspec;
+    (void)marker;
+
+    g_signal_emit(project, signals[UNNAMED_MARKER_CHANGED], 0);
+}
 
 static void gw_project_dispose(GObject *object)
 {
@@ -142,6 +157,22 @@ static void gw_project_class_init(GwProjectClass *klass)
                                                          GW_TYPE_NAMED_MARKERS,
                                                          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+    /**
+     * GwProject::unnamed-marker-changed:
+     * @self: The project.
+     *
+     * The "unnamed-marker-changed" signal is emitted if any unnamed marker has changed.
+     */
+    signals[UNNAMED_MARKER_CHANGED] = g_signal_new("unnamed-marker-changed",
+                                                   G_TYPE_FROM_CLASS(klass),
+                                                   G_SIGNAL_RUN_LAST,
+                                                   0,
+                                                   NULL,
+                                                   NULL,
+                                                   NULL,
+                                                   G_TYPE_NONE,
+                                                   0);
+
     g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }
 
@@ -151,6 +182,10 @@ static void gw_project_init(GwProject *self)
     self->primary_marker = gw_marker_new("Primary marker");
     self->baseline_marker = gw_marker_new("Baseline marker");
     self->ghost_marker = gw_marker_new("Ghost marker");
+
+    g_signal_connect(self->primary_marker, "notify", G_CALLBACK(on_marker_notify), self);
+    g_signal_connect(self->baseline_marker, "notify", G_CALLBACK(on_marker_notify), self);
+    g_signal_connect(self->ghost_marker, "notify", G_CALLBACK(on_marker_notify), self);
 
     self->named_markers = gw_named_markers_new(26); // TODO: support manymarkers
 }

@@ -321,9 +321,18 @@ GtkWidget *gw_time_display_new(void)
     return g_object_new(GW_TYPE_TIME_DISPLAY, NULL);
 }
 
-static void on_marker_change(GObject *self, GParamSpec *pspec, gpointer user_data)
+static void on_unnamed_marker_changed(GwProject *project, GwTimeDisplay *time_display)
 {
-    GwTimeDisplay *time_display = user_data;
+    (void)project;
+
+    gw_time_display_update(time_display);
+}
+
+static void on_cursor_changed(GwMarker *cursor, GParamSpec *pspec, GwTimeDisplay *time_display)
+{
+    (void)cursor;
+    (void)pspec;
+
     gw_time_display_update(time_display);
 }
 
@@ -337,10 +346,8 @@ void gw_time_display_set_project(GwTimeDisplay *self, GwProject *project)
     }
 
     if (self->project != NULL) {
+        g_signal_handlers_disconnect_by_data(self->project, self);
         g_signal_handlers_disconnect_by_data(gw_project_get_cursor(self->project), self);
-        g_signal_handlers_disconnect_by_data(gw_project_get_primary_marker(self->project), self);
-        g_signal_handlers_disconnect_by_data(gw_project_get_baseline_marker(self->project), self);
-        g_signal_handlers_disconnect_by_data(gw_project_get_ghost_marker(self->project), self);
 
         g_object_unref(self->project);
     }
@@ -348,11 +355,14 @@ void gw_time_display_set_project(GwTimeDisplay *self, GwProject *project)
     if (project != NULL) {
         self->project = g_object_ref(project);
 
-        GCallback cb = G_CALLBACK(on_marker_change);
-        g_signal_connect(gw_project_get_cursor(self->project), "notify", cb, self);
-        g_signal_connect(gw_project_get_primary_marker(self->project), "notify", cb, self);
-        g_signal_connect(gw_project_get_baseline_marker(self->project), "notify", cb, self);
-        g_signal_connect(gw_project_get_ghost_marker(self->project), "notify", cb, self);
+        g_signal_connect(self->project,
+                         "unnamed-marker-changed",
+                         G_CALLBACK(on_unnamed_marker_changed),
+                         self);
+        g_signal_connect(gw_project_get_cursor(self->project),
+                         "notify",
+                         G_CALLBACK(on_cursor_changed),
+                         self);
     }
 
     gw_time_display_update(self);
