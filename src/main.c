@@ -627,6 +627,47 @@ static void add_custom_css(void)
                                               GTK_STYLE_PROVIDER(css_provider),
                                               GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
+#ifdef EXPERIMENTAL_PLUGIN_SUPPORT
+#include <libpeas.h>
+
+static void on_activate(GtkMenuItem *menu_item, gpointer user_data) {
+    GwPlugin *plugin = user_data;
+    gw_plugin_activate(plugin, GLOBALS->project);
+    g_printerr("activate\n");
+}
+
+static void add_plugins_to_menu(GtkWidget *widget) {
+    GwPluginManager *manager = gw_plugin_manager_new();
+
+    GtkWidget *plugins = gtk_menu_item_new_with_label("Plugins");
+    gtk_menu_shell_append(GTK_MENU_SHELL(widget), plugins);
+
+    GtkWidget *plugins_menu = gtk_menu_new();
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(plugins), plugins_menu);
+
+    PeasEngine *engine = peas_engine_get_default();
+
+    g_printerr("Found %d plugins\n", g_list_model_get_n_items(G_LIST_MODEL(engine)));
+
+    for (guint i = 0; i < g_list_model_get_n_items(G_LIST_MODEL(engine)); i++) {
+        PeasPluginInfo *info = g_list_model_get_item(G_LIST_MODEL(engine), i);
+
+        gchar *name = g_strdup_printf("%d - %s", i, peas_plugin_info_get_name(info));
+
+        GwPlugin *plugin = gw_plugin_manager_build(manager, i);
+
+        GtkWidget *menu_item = gtk_menu_item_new_with_label(name);
+        gtk_menu_shell_append(GTK_MENU_SHELL(plugins_menu), menu_item);
+        g_signal_connect(menu_item, "activate", G_CALLBACK(on_activate), plugin);
+
+        g_free(name);
+
+        g_object_unref(info);
+    }
+
+    gtk_widget_show_all(plugins);
+}
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -1990,6 +2031,10 @@ savefile_bail:
 
             menubar = alt_menu_top(GLOBALS->mainwindow);
             gtk_widget_show(menubar);
+
+#ifdef EXPERIMENTAL_PLUGIN_SUPPORT
+            add_plugins_to_menu(menubar);
+#endif
 
 #ifdef MAC_INTEGRATION
             {

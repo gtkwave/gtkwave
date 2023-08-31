@@ -4,7 +4,7 @@
 /**
  * GwMarker:
  *
- * A object to represent named and unnamed markers.
+ * A named or unnamed markers.
  */
 
 struct _GwMarker
@@ -163,7 +163,7 @@ static void gw_marker_init(GwMarker *self)
  *
  * Creates a marker.
  *
- * Returns: A new instance of #GwMarker.
+ * Returns: (transfer full): A new instance of #GwMarker.
  */
 GwMarker *gw_marker_new(const gchar *name)
 {
