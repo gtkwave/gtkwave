@@ -144,6 +144,9 @@ void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
                         if (xmt) {
                             const char *nam = (*xmt)[string("name")].c_str();
                             const char *fl = (*xmt)[string("fl")].c_str();
+                            const char *loc = (*xmt)[string("loc")].c_str();
+                            int loc_offset = 0;
+                            if(!fl || !strlen(fl)) { fl = loc; loc_offset = 1; }
 
                             if (!oneline) {
                                 bQueue.push((*xmt)[string("name")]);
@@ -156,6 +159,7 @@ void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
                                     }
                                     *d = 0;
 
+                                    s+=loc_offset;
                                     unsigned int lineno = atoi(s);
                                     const char *mnam = fId[fl_dup].c_str();
 
@@ -203,6 +207,9 @@ void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
                             const char *fl = (*xmt)[string("fl")].c_str();
                             const char *nam = (*xmt)[string("name")].c_str();
                             const char *tms = (*xmt)[string("topModule")].c_str();
+                            const char *loc = (*xmt)[string("loc")].c_str();
+                            int loc_offset = 0;
+                            if(!fl || !strlen(fl)) { fl = loc; loc_offset = 1; }
 
                             if (fl && nam && tms) {
                                 int tm = (tms[0] == '1') ? is_verilator_sim : 0;
@@ -217,6 +224,7 @@ void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
                                 }
                                 *d = 0;
 
+                                s += loc_offset;
                                 unsigned int lineno = atoi(s);
                                 const char *mnam = fId[fl_dup].c_str();
                                 fprintf(fo,
@@ -298,6 +306,10 @@ void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
                         if (xmt) {
                             const char *fl = (*xmt)[string("fl")].c_str();
                             const char *nam = (*xmt)[string("name")].c_str();
+                            const char *loc = (*xmt)[string("loc")].c_str();
+                            int loc_offset = 0;
+                            if(!fl || !strlen(fl)) { fl = loc; loc_offset = 1; }
+
 
                             if (fl && nam) {
                                 mId.push(nam);
@@ -310,6 +322,7 @@ void xml2stems(FILE *fi, FILE *fo, int is_verilator_sim)
                                 }
                                 *d = 0;
 
+                                s += loc_offset;
                                 unsigned int lineno = atoi(s);
                                 const char *mnam = fId[fl_dup].c_str();
                                 fprintf(fo,
