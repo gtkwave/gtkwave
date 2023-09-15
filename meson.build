@@ -12,7 +12,8 @@ project(
     license: 'GPL-2.0-or-later',
 )
 
-app_id = 'io.github.gtkwave.GTKWave'
+application_name = 'GTKWave'
+application_id = 'io.github.gtkwave.GTKWave'
 
 gnome = import('gnome')
 
@@ -92,7 +93,6 @@ config.set('STDC_HEADERS', 1)
 config.set('HAVE_INTTYPES_H', cc.has_header('inttypes.h'))
 config.set('HAVE_SYS_STAT_H', cc.has_header('sys/stat.h'))
 config.set('HAVE_ALLOCA_H', cc.has_header('alloca.h'))
-config.set('HAVE_GETOPT_H', cc.has_header('getopt.h'))
 config.set('HAVE_FCNTL', cc.has_header('fcntl.h'))
 config.set10('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 config.set('HAVE_LIBPTHREAD', thread_dep.found())
@@ -178,10 +178,13 @@ config.set_quoted('PACKAGE_VERSION', meson.project_version())
 configure_file(output: 'config.h', configuration: config)
 config_inc = include_directories('.')
 
+exe_files = []
+additional_gtkwave_sources = []
+
 subdir('lib')
+subdir('share')
 subdir('src')
 subdir('man')
-subdir('share')
 subdir('examples')
 subdir('doc')
 subdir('contrib')
@@ -191,3 +194,15 @@ gnome.post_install(
     update_desktop_database: true,
     gtk_update_icon_cache: true,
 )
+
+fs = import('fs')
+builddir = meson.current_build_dir()
+sourcedir = meson.current_source_dir()
+if host_machine.system() == 'windows'
+    subdir('windows')
+else
+    gnome.post_install(
+        update_mime_database: get_option('update_mime_database'),
+        update_desktop_database: true,
+    )
+endif

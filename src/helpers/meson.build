@@ -40,7 +40,7 @@ foreach helper : helpers
         dependencies += libvzt_dep
     endif
 
-    executable(
+    helper_exe = executable(
         helper,
         sources,
         dependencies: dependencies,
@@ -48,4 +48,5 @@ foreach helper : helpers
         include_directories: config_inc,
         install: true,
     )
+    exe_files += [helper_exe]
 endforeach

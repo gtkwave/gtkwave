@@ -86,7 +86,7 @@ typedef int64_t			lxtsint64_t;
 #define LXT2_RD_LLD "%"PRId64
 #define LXT2_RD_LD "%"PRId32
 #else
-#define LXT2_RD_LLD "%I64d"
+#define LXT2_RD_LLD "%lld"
 #define LXT2_RD_LD "%d"
 #endif
 #define LXT2_RD_LLDESC(x) x##LL

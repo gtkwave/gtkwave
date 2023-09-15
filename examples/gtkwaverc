@@ -73,7 +73,7 @@ show_base_symbols no
 
 disable_mouseover no
 clipboard_mouseover yes
-
+disable_antialiasing no
 
 #
 # color additions

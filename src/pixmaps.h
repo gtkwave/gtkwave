@@ -26,7 +26,7 @@ typedef struct
     GdkPixbuf *function;
     GdkPixbuf *begin;
     GdkPixbuf *fork;
-    GdkPixbuf *interface;
+    GdkPixbuf *iface;
     GdkPixbuf *svpackage;
     GdkPixbuf *program;
     GdkPixbuf *class;

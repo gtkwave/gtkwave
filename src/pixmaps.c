@@ -3015,7 +3015,7 @@ GwHierarchyIcons *gw_hierarchy_icons_new(void)
     self->fork = gdk_pixbuf_new_from_xpm_data(arrow_divide);
 
     /* SV */
-    self->interface = gdk_pixbuf_new_from_xpm_data(arrow_inout);
+    self->iface = gdk_pixbuf_new_from_xpm_data(arrow_inout);
     self->svpackage = gdk_pixbuf_new_from_xpm_data(package);
     self->program = gdk_pixbuf_new_from_xpm_data(application);
     self->class = gdk_pixbuf_new_from_xpm_data(plugin);
@@ -3057,7 +3057,7 @@ GdkPixbuf *gw_hierarchy_icons_get(GwHierarchyIcons *self, guint tree_kind)
         case TREE_VCD_ST_STRUCT:    return self->block;       // same as TREE_VHDL_ST_BLOCK
         case TREE_VCD_ST_UNION:     return self->instance;    // same as TREE_VHDL_ST_INSTANCE
         case TREE_VCD_ST_CLASS:     return self->class;
-        case TREE_VCD_ST_INTERFACE: return self->interface;
+        case TREE_VCD_ST_INTERFACE: return self->iface;
         case TREE_VCD_ST_PACKAGE:   return self->svpackage;
         case TREE_VCD_ST_PROGRAM:   return self->program;
 

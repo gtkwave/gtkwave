@@ -20,7 +20,7 @@ vcd_keywords_c = custom_target(
     ],
 )
 
-gtkwave_resources = gnome.compile_resources(
+additional_gtkwave_sources += gnome.compile_resources(
     'gtkwave-resources',
     'io.github.gtkwave.GTKWave.gresource.xml',
     c_name: 'gtkwave',
@@ -46,8 +46,6 @@ gtkwave_sources = [
     'fonts.c',
     'fst.c',
     'gconf.c',
-    'getopt.c',
-    'getopt1.c',
     'ghw.c',
     'globals.c',
     'gtk23compat.c',
@@ -125,16 +123,18 @@ gtkwave_include_directories = [
     'cocoa',
 ]
 
-executable(
+gtkwave_exe = executable(
     'gtkwave',
     gtkwave_sources,
-    gtkwave_resources,
+    additional_gtkwave_sources,
     vcd_keywords_c,
+    win_subsystem: 'windows', # true to hide console
     dependencies: gtkwave_dependencies,
     include_directories: gtkwave_include_directories,
     c_args: warning_args,
     install: true,
 )
+exe_files += [gtkwave_exe]
 
 # twinwave
 
@@ -151,10 +151,11 @@ twinwave_include_directories = [
     # 'cocoa',
 ]
 
-executable(
+twinwave_exe = executable(
     'twinwave',
     twinwave_sources,
     dependencies: twinwave_dependencies,
     include_directories: twinwave_include_directories,
     install: true,
 )
+exe_files += [twinwave_exe]

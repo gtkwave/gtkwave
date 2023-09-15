@@ -615,6 +615,7 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         if (GLOBALS->disable_antialiasing) {
             cairo_set_antialias(traces_cr, CAIRO_ANTIALIAS_NONE);
         }
+        
         rendertraces(traces_cr);
 
         cairo_destroy(traces_cr);

@@ -48,12 +48,7 @@
 #undef WAVE_USE_XID
 #endif
 
-#ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
-#else
-#include "gnu-getopt.h"
-#include <unistd.h>
-#endif
 
 #include "symbol.h"
 #include "lx2.h"
