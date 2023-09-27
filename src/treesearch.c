@@ -895,7 +895,7 @@ static void sig_selection_foreach(GtkTreeModel *model,
 
 static void sig_selection_foreach_finalize(gpointer data)
 {
-    const enum sst_cb_action action = (enum sst_cb_action)data;
+    const enum sst_cb_action action = GPOINTER_TO_INT(data);
 
     if (action == SST_ACTION_REPLACE || action == SST_ACTION_INSERT ||
         action == SST_ACTION_PREPEND) {
@@ -1045,7 +1045,7 @@ void action_callback(enum sst_cb_action action)
     /* once through to mass gather lx2 traces... */
     gtk_tree_selection_selected_foreach(GLOBALS->sig_selection_treesearch_gtk2_c_1,
                                         &sig_selection_foreach_preload_lx2,
-                                        (void *)action);
+                                        GINT_TO_POINTER(action));
     if (GLOBALS->pre_import_treesearch_gtk2_c_1) {
         lx2_import_masked();
     }
@@ -1061,9 +1061,9 @@ void action_callback(enum sst_cb_action action)
 
     gtk_tree_selection_selected_foreach(GLOBALS->sig_selection_treesearch_gtk2_c_1,
                                         &sig_selection_foreach,
-                                        (void *)action);
+                                        GINT_TO_POINTER(action));
 
-    sig_selection_foreach_finalize((void *)action);
+    sig_selection_foreach_finalize(GINT_TO_POINTER(action));
 
     if (action == SST_ACTION_APPEND) {
         gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
