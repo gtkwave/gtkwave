@@ -34,7 +34,7 @@ gint font_engine_string_measure(struct font_engine_font_t *font, const gchar *st
 
 void XXX_font_engine_draw_string(cairo_t *cr,
                                  struct font_engine_font_t *font,
-                                 wave_rgb_t *gc,
+                                 const GwColor *color,
                                  gint x,
                                  gint y,
                                  const gchar *string);

@@ -146,7 +146,7 @@ void load_all_fonts(void)
 
 void XXX_font_engine_draw_string(cairo_t *cr,
                                  struct font_engine_font_t *font,
-                                 wave_rgb_t *gc,
+                                 const GwColor *color,
                                  gint x,
                                  gint y,
                                  const gchar *string)
@@ -157,7 +157,7 @@ void XXX_font_engine_draw_string(cairo_t *cr,
     pango_layout_set_font_description(GLOBALS->fonts_layout, font->desc);
     /* pango_layout_get_extents(GLOBALS->fonts_layout,&ink,&logical); */
 
-    cairo_set_source_rgba(cr, gc->r, gc->g, gc->b, gc->a);
+    cairo_set_source_rgba(cr, color->r, color->g, color->b, color->a);
     cairo_move_to(cr, x, y - font->ascent);
     pango_cairo_show_layout(cr, GLOBALS->fonts_layout);
 }

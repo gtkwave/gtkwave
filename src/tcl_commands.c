@@ -30,7 +30,7 @@
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
 #include "signal_list.h"
-#include "wave_view.h"
+#include "gw-wave-view.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>

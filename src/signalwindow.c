@@ -16,7 +16,7 @@
 #include "symbol.h"
 #include "debug.h"
 #include "signal_list.h"
-#include "wave_view.h"
+#include "gw-wave-view.h"
 
 /* GDK_KEY_equal defined from gtk2 2.22 onwards. */
 #ifndef GDK_KEY_equal

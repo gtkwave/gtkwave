@@ -19,18 +19,16 @@ void MaxSignalLength_2(
 void populateBuffer(Trptr t, char *altname, char *buf);
 void calczoom(double z0);
 void make_sigarea_gcs(GtkWidget *widget);
-void force_screengrab_gcs(void);
-void force_normal_gcs(void);
 
-void XXX_gdk_draw_line(cairo_t *cr, wave_rgb_t gc, gint _x1, gint _y1, gint _x2, gint _y2);
+void XXX_gdk_draw_line(cairo_t *cr, GwColor color, gint _x1, gint _y1, gint _x2, gint _y2);
 void XXX_gdk_draw_rectangle(cairo_t *cr,
-                            wave_rgb_t gc,
+                            GwColor color,
                             gboolean filled,
                             gint _x1,
                             gint _y1,
                             gint _w,
                             gint _h);
-void XXX_gdk_set_color(cairo_t *cr, wave_rgb_t gc);
+void XXX_gdk_set_color(cairo_t *cr, GwColor color);
 void XXX_gdk_draw_line2(cairo_t *cr, gint _x1, gint _y1, gint _x2, gint _y2);
 
 #ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_WAVE_VSLIDER

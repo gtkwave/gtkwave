@@ -969,8 +969,7 @@ void menu_use_color(gpointer null_data, guint callback_action, GtkWidget *widget
     (void)callback_action;
     (void)widget;
 
-    force_normal_gcs();
-
+    GLOBALS->black_and_white = 0;
     redraw_signals_and_waves();
 }
 /**/
@@ -980,8 +979,7 @@ void menu_use_bw(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)callback_action;
     (void)widget;
 
-    force_screengrab_gcs();
-
+    GLOBALS->black_and_white = 1;
     redraw_signals_and_waves();
 }
 /**/

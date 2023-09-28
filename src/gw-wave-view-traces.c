@@ -1,10 +1,20 @@
 #include <config.h>
 #include <gtk/gtk.h>
 #include "cairo.h"
-#include "wave_view_traces.h"
+#include "gw-wave-view.h"
+#include "gw-wave-view-private.h"
 #include "globals.h"
 #include "signal_list.h"
 #include "wavewindow.h"
+
+static GwColor XXX_get_gc_from_name(const char *str)
+{
+    GwColor color = {0.0, 0.0, 0.0, 0.0};
+
+    gw_color_init_from_x11_name(&color, str);
+
+    return color;
+}
 
 typedef enum
 {
@@ -19,7 +29,6 @@ typedef enum
     LINE_COLOR_1,
     LINE_COLOR_HIGH,
     LINE_COLOR_VBOX,
-    LINE_COLOR_VTRANS,
     N_LINE_COLORS,
 } LineColor;
 
@@ -33,25 +42,24 @@ typedef struct
 
 typedef struct
 {
-    wave_rgb_t colors[N_LINE_COLORS];
+    GwColor colors[N_LINE_COLORS];
     GArray *lines[N_LINE_COLORS];
 } LineBuffer;
 
-static LineBuffer *line_buffer_new(void)
+static LineBuffer *line_buffer_new(const GwWaveformColors *colors)
 {
     LineBuffer *self = g_new0(LineBuffer, 1);
-    self->colors[LINE_COLOR_X] = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
-    self->colors[LINE_COLOR_U] = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
-    self->colors[LINE_COLOR_W] = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
-    self->colors[LINE_COLOR_DASH] = GLOBALS->rgb_gc.gc_dash_wavewindow_c_1;
-    self->colors[LINE_COLOR_TRANS] = GLOBALS->rgb_gc.gc_trans_wavewindow_c_1;
-    self->colors[LINE_COLOR_0] = GLOBALS->rgb_gc.gc_0_wavewindow_c_1;
-    self->colors[LINE_COLOR_LOW] = GLOBALS->rgb_gc.gc_low_wavewindow_c_1;
-    self->colors[LINE_COLOR_MID] = GLOBALS->rgb_gc.gc_mid_wavewindow_c_1;
-    self->colors[LINE_COLOR_1] = GLOBALS->rgb_gc.gc_1_wavewindow_c_1;
-    self->colors[LINE_COLOR_HIGH] = GLOBALS->rgb_gc.gc_high_wavewindow_c_1;
-    self->colors[LINE_COLOR_VBOX] = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
-    self->colors[LINE_COLOR_VTRANS] = GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1;
+    self->colors[LINE_COLOR_X] = colors->stroke_x;
+    self->colors[LINE_COLOR_U] = colors->stroke_u;
+    self->colors[LINE_COLOR_W] = colors->stroke_w;
+    self->colors[LINE_COLOR_DASH] = colors->stroke_dash;
+    self->colors[LINE_COLOR_TRANS] = colors->stroke_transition;
+    self->colors[LINE_COLOR_0] = colors->stroke_0;
+    self->colors[LINE_COLOR_LOW] = colors->stroke_l;
+    self->colors[LINE_COLOR_MID] = colors->stroke_z;
+    self->colors[LINE_COLOR_1] = colors->stroke_1;
+    self->colors[LINE_COLOR_HIGH] = colors->stroke_h;
+    self->colors[LINE_COLOR_VBOX] = colors->stroke_vector;
 
     for (gint i = 0; i < N_LINE_COLORS; i++) {
         self->lines[i] = g_array_new(FALSE, FALSE, sizeof(Line));
@@ -84,7 +92,7 @@ static void line_buffer_draw(LineBuffer *self, cairo_t *cr)
     gdouble offset = GLOBALS->cairo_050_offset;
 
     for (gint i = 0; i < N_LINE_COLORS; i++) {
-        wave_rgb_t *color = &self->colors[i];
+        GwColor *color = &self->colors[i];
         GArray *lines = self->lines[i];
 
         if (lines->len == 0) {
@@ -104,37 +112,29 @@ static void line_buffer_draw(LineBuffer *self, cairo_t *cr)
     }
 }
 
-static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw, int kill_grid);
-static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which);
-static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which);
+static void draw_hptr_trace(GwWaveView *self,
+                            cairo_t *cr,
+                            GwWaveformColors *colors,
+                            Trptr t,
+                            hptr h,
+                            int which,
+                            int dodraw,
+                            int kill_grid);
+static void draw_hptr_trace_vector(GwWaveView *self,
+                                   cairo_t *cr,
+                                   GwWaveformColors *colors,
+                                   Trptr t,
+                                   hptr h,
+                                   int which);
+static void draw_vptr_trace(GwWaveView *self,
+                            cairo_t *cr,
+                            GwWaveformColors *colors,
+                            Trptr t,
+                            vptr v,
+                            int which);
 
-static void gc_save(Trptr t, struct wave_rgbmaster_t *gc_sav)
+void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
 {
-    if ((!GLOBALS->black_and_white) && (t->t_color)) {
-        int color = t->t_color;
-
-        color--;
-
-        memcpy(gc_sav, &GLOBALS->rgb_gc, sizeof(struct wave_rgbmaster_t));
-
-        if (color < WAVE_NUM_RAINBOW) {
-            XXX_set_alternate_gcs(GLOBALS->rgb_gc_rainbow[2 * color],
-                                  GLOBALS->rgb_gc_rainbow[2 * color + 1]);
-        }
-    }
-}
-
-static void gc_restore(Trptr t, struct wave_rgbmaster_t *gc_sav)
-{
-    if ((!GLOBALS->black_and_white) && (t->t_color)) {
-        memcpy(&GLOBALS->rgb_gc, gc_sav, sizeof(struct wave_rgbmaster_t));
-    }
-}
-
-void rendertraces(cairo_t *cr)
-{
-    struct wave_rgbmaster_t gc_sav;
-
     Trptr t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
     if (t) {
         Trptr tback = t;
@@ -166,25 +166,32 @@ void rendertraces(cairo_t *cr)
         }
 
         for (; ((i < num_traces_displayable) && (t)); i++) {
+            gboolean uses_rainbow_color =
+                t->t_color >= 1 && (t->t_color - 1) < GW_NUM_RAINBOW_COLORS;
+
+            GwWaveformColors *colors = gw_color_theme_get_waveform_colors(GLOBALS->color_theme);
+            if (GLOBALS->black_and_white) {
+                colors = gw_waveform_colors_new_black_and_white();
+            } else if (uses_rainbow_color) {
+                colors = gw_waveform_colors_get_rainbow_variant(colors,
+                                                                t->t_color - 1,
+                                                                GLOBALS->keep_xz_colors);
+            }
+
             if (!(t->flags & (TR_EXCLUDE | TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
                 GLOBALS->shift_timebase = t->shift;
                 if (!t->vector) {
                     h = bsearch_node(t->n.nd, GLOBALS->tims.start - t->shift);
-                    DEBUG(printf("Start time: %" GW_TIME_FORMAT ", Histent time: %" GW_TIME_FORMAT "\n",
+                    DEBUG(printf("Start time: %" GW_TIME_FORMAT ", Histent time: %" GW_TIME_FORMAT
+                                 "\n",
                                  GLOBALS->tims.start,
                                  (h->time + GLOBALS->shift_timebase)));
 
-                    if (!t->n.nd->extvals) {
-                        if (i >= 0) {
-                            gc_save(t, &gc_sav);
-                            draw_hptr_trace(cr, t, h, i, 1, 0);
-                            gc_restore(t, &gc_sav);
-                        }
-                    } else {
-                        if (i >= 0) {
-                            gc_save(t, &gc_sav);
-                            draw_hptr_trace_vector(cr, t, h, i);
-                            gc_restore(t, &gc_sav);
+                    if (i >= 0) {
+                        if (!t->n.nd->extvals) {
+                            draw_hptr_trace(self, cr, colors, t, h, i, 1, 0);
+                        } else {
+                            draw_hptr_trace_vector(self, cr, colors, t, h, i);
                         }
                     }
                 } else {
@@ -193,13 +200,12 @@ void rendertraces(cairo_t *cr)
 
                     v = bsearch_vector(bv, GLOBALS->tims.start - t->shift);
                     DEBUG(printf("Vector Trace: %s, %s\n", t->name, bv->bvname));
-                    DEBUG(printf("Start time: %" GW_TIME_FORMAT ", Vectorent time: %" GW_TIME_FORMAT "\n",
+                    DEBUG(printf("Start time: %" GW_TIME_FORMAT ", Vectorent time: %" GW_TIME_FORMAT
+                                 "\n",
                                  GLOBALS->tims.start,
                                  (v->time + GLOBALS->shift_timebase)));
                     if (i >= 0) {
-                        gc_save(t, &gc_sav);
-                        draw_vptr_trace(cr, t, v, i);
-                        gc_restore(t, &gc_sav);
+                        draw_vptr_trace(self, cr, colors, t, v, i);
                     }
 
                     if ((bv->transaction_chain) && (t->flags & TR_TTRANSLATED)) {
@@ -213,9 +219,7 @@ void rendertraces(cairo_t *cr)
                                 if (i < num_traces_displayable) {
                                     v = bsearch_vector(bv, GLOBALS->tims.start - t->shift);
                                     if (i >= 0) {
-                                        gc_save(t, &gc_sav);
-                                        draw_vptr_trace(cr, t_orig, v, i);
-                                        gc_restore(t, &gc_sav);
+                                        draw_vptr_trace(self, cr, colors, t_orig, v, i);
                                     }
                                     t = tn;
                                     continue;
@@ -238,13 +242,15 @@ void rendertraces(cairo_t *cr)
                 }
 
                 if (i >= 0) {
-                    gc_save(t, &gc_sav);
-                    draw_hptr_trace(cr, NULL, NULL, i, 0, kill_dodraw_grid);
-                    gc_restore(t, &gc_sav);
+                    draw_hptr_trace(self, cr, colors, NULL, NULL, i, 0, kill_dodraw_grid);
                 }
             }
             t = GiveNextTrace(t);
             /* bot:		1; */
+
+            if (GLOBALS->black_and_white || uses_rainbow_color) {
+                g_free(colors);
+            }
         }
     }
 
@@ -260,7 +266,14 @@ void rendertraces(cairo_t *cr)
  * draw single traces and use this for rendering the grid lines
  * for "excluded" traces
  */
-static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw, int kill_grid)
+static void draw_hptr_trace(GwWaveView *self,
+                            cairo_t *cr,
+                            GwWaveformColors *colors,
+                            Trptr t,
+                            hptr h,
+                            int which,
+                            int dodraw,
+                            int kill_grid)
 {
     GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, ytext;
@@ -268,11 +281,11 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
     hptr h2, h3;
     char hval, h2val, invert;
     LineColor c;
-    wave_rgb_t gcx, gcxf;
+    GwColor gcx, gcxf;
     char identifier_str[2];
     int is_event = t && t->n.nd && (t->n.nd->vartype == ND_VCD_EVENT);
 
-    LineBuffer *lines = line_buffer_new();
+    LineBuffer *lines = line_buffer_new(colors);
 
     GLOBALS->tims.start -= GLOBALS->shift_timebase;
     GLOBALS->tims.end -= GLOBALS->shift_timebase;
@@ -293,7 +306,7 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
     if ((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) &&
         (!GLOBALS->black_and_white) && (!kill_grid)) {
         XXX_gdk_draw_rectangle(cr,
-                               GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                               colors->grid,
                                TRUE,
                                0,
                                liney - GLOBALS->fontheight,
@@ -301,7 +314,7 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                                GLOBALS->fontheight);
     } else if ((GLOBALS->display_grid) && (GLOBALS->enable_horiz_grid) && (!kill_grid)) {
         XXX_gdk_draw_line(cr,
-                          GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                          colors->grid,
                           (GLOBALS->tims.start < GLOBALS->tims.first)
                               ? (GLOBALS->tims.first - GLOBALS->tims.start) * GLOBALS->pxns
                               : 0,
@@ -401,10 +414,10 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                         if (GLOBALS->fill_waveform && invert) {
                             switch (hval) {
                                 case AN_0:
-                                    gcxf = GLOBALS->rgb_gc.gc_1fill_wavewindow_c_1;
+                                    gcxf = colors->fill_1;
                                     break;
                                 case AN_L:
-                                    gcxf = GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1;
+                                    gcxf = colors->fill_h;
                                     break;
                                 default:
                                     g_warn_if_reached();
@@ -449,26 +462,26 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                         switch (hval) {
                             case AN_X:
                                 c = LINE_COLOR_X;
-                                gcx = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
-                                gcxf = GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1;
+                                gcx = colors->stroke_x;
+                                gcxf = colors->fill_x;
                                 identifier_str[0] = 0;
                                 break;
                             case AN_W:
                                 c = LINE_COLOR_W;
-                                gcx = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
-                                gcxf = GLOBALS->rgb_gc.gc_wfill_wavewindow_c_1;
+                                gcx = colors->stroke_w;
+                                gcxf = colors->fill_w;
                                 identifier_str[0] = 'W';
                                 break;
                             case AN_U:
                                 c = LINE_COLOR_U;
-                                gcx = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
-                                gcxf = GLOBALS->rgb_gc.gc_ufill_wavewindow_c_1;
+                                gcx = colors->stroke_u;
+                                gcxf = colors->fill_u;
                                 identifier_str[0] = 'U';
                                 break;
                             default:
                                 c = LINE_COLOR_DASH;
-                                gcx = GLOBALS->rgb_gc.gc_dash_wavewindow_c_1;
-                                gcxf = GLOBALS->rgb_gc.gc_dashfill_wavewindow_c_1;
+                                gcx = colors->stroke_dash;
+                                gcxf = colors->fill_dash;
                                 identifier_str[0] = '-';
                                 break;
                         }
@@ -500,13 +513,12 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                                     (font_engine_string_measure(GLOBALS->wavefont, identifier_str) +
                                          GLOBALS->vector_padding <=
                                      width)) {
-                                    XXX_font_engine_draw_string(
-                                        cr,
-                                        GLOBALS->wavefont,
-                                        &GLOBALS->rgb_gc.gc_value_wavewindow_c_1,
-                                        _x0 + 2 + GLOBALS->cairo_050_offset,
-                                        ytext + GLOBALS->cairo_050_offset,
-                                        identifier_str);
+                                    XXX_font_engine_draw_string(cr,
+                                                                GLOBALS->wavefont,
+                                                                &colors->value_text,
+                                                                _x0 + 2 + GLOBALS->cairo_050_offset,
+                                                                ytext + GLOBALS->cairo_050_offset,
+                                                                identifier_str);
                                 }
                             }
                         }
@@ -540,10 +552,10 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
                         if (GLOBALS->fill_waveform && !invert) {
                             switch (hval) {
                                 case AN_1:
-                                    gcxf = GLOBALS->rgb_gc.gc_1fill_wavewindow_c_1;
+                                    gcxf = colors->fill_1;
                                     break;
                                 case AN_H:
-                                    gcxf = GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1;
+                                    gcxf = colors->fill_h;
                                     break;
                                 default:
                                     g_warn_if_reached();
@@ -603,13 +615,7 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
             }
 
             if ((h->flags & HIST_GLITCH) && (GLOBALS->vcd_preserve_glitches)) {
-                XXX_gdk_draw_rectangle(cr,
-                                       GLOBALS->rgb_gc.gc_mid_wavewindow_c_1,
-                                       TRUE,
-                                       _x1 - 1,
-                                       yu - 1,
-                                       3,
-                                       3);
+                XXX_gdk_draw_rectangle(cr, colors->stroke_z, TRUE, _x1 - 1, yu - 1, 3, 3);
             }
 
             h = h->next;
@@ -624,7 +630,9 @@ static void draw_hptr_trace(cairo_t *cr, Trptr t, hptr h, int which, int dodraw,
 
 /********************************************************************************************************/
 
-static void draw_hptr_trace_vector_analog(cairo_t *cr,
+static void draw_hptr_trace_vector_analog(GwWaveView *self,
+                                          cairo_t *cr,
+                                          GwWaveformColors *colors,
                                           Trptr t,
                                           hptr h,
                                           int which,
@@ -637,18 +645,17 @@ static void draw_hptr_trace_vector_analog(cairo_t *cr,
     int endcnt = 0;
     int type;
     /* int lasttype=-1; */ /* scan-build */
-    wave_rgb_t c, ci;
-    wave_rgb_t cnan = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
-    wave_rgb_t cinf = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
-    wave_rgb_t cfixed;
+    GwColor c;
+    GwColor ci = colors->marker_baseline;
+    GwColor cnan = colors->stroke_u;
+    GwColor cinf = colors->stroke_w;
+    GwColor cfixed;
     double mynan = strtod("NaN", NULL);
     double tmin = mynan, tmax = mynan, tv, tv2;
     gint rmargin;
     int is_nan = 0, is_nan2 = 0, is_inf = 0, is_inf2 = 0;
     int any_infs = 0, any_infp = 0, any_infm = 0;
     int skipcnt = 0;
-
-    ci = GLOBALS->rgb_gc.gc_baseline_wavewindow_c_1;
 
     liney = ((which + 2 + num_extension) * GLOBALS->fontheight) - 2;
     _y1 = ((which + 1) * GLOBALS->fontheight) + 2;
@@ -908,9 +915,9 @@ static void draw_hptr_trace_vector_analog(cairo_t *cr,
             }
 
             if (type != AN_X) {
-                c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                c = colors->stroke_vector;
             } else {
-                c = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                c = colors->stroke_x;
             }
 
             if (h->next) {
@@ -1075,7 +1082,12 @@ static void draw_hptr_trace_vector_analog(cairo_t *cr,
 /*
  * draw hptr vectors (integer+real)
  */
-static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
+static void draw_hptr_trace_vector(GwWaveView *self,
+                                   cairo_t *cr,
+                                   GwWaveformColors *colors,
+                                   Trptr t,
+                                   hptr h,
+                                   int which)
 {
     GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, ytext;
@@ -1098,7 +1110,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
         Trptr tn = GiveNextTrace(t);
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
             XXX_gdk_draw_rectangle(cr,
-                                   GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                                   colors->grid,
                                    TRUE,
                                    0,
                                    liney - GLOBALS->fontheight,
@@ -1106,7 +1118,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                                    GLOBALS->fontheight);
         } else {
             XXX_gdk_draw_rectangle(cr,
-                                   GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                                   colors->grid,
                                    TRUE,
                                    0,
                                    liney - GLOBALS->fontheight,
@@ -1118,7 +1130,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
         } else {
             XXX_gdk_draw_line(cr,
-                              GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                              colors->grid,
                               (GLOBALS->tims.start < GLOBALS->tims.first)
                                   ? (GLOBALS->tims.first - GLOBALS->tims.start) * GLOBALS->pxns
                                   : 0,
@@ -1146,7 +1158,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
         if ((ext) && (GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) &&
             (!GLOBALS->black_and_white)) {
             XXX_gdk_draw_rectangle(cr,
-                                   GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                                   colors->grid,
                                    TRUE,
                                    0,
                                    liney,
@@ -1154,7 +1166,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                                    GLOBALS->fontheight * ext);
         }
 
-        draw_hptr_trace_vector_analog(cr, t, h, which, ext);
+        draw_hptr_trace_vector_analog(self, cr, colors, t, h, which, ext);
         GLOBALS->tims.start += GLOBALS->shift_timebase;
         GLOBALS->tims.end += GLOBALS->shift_timebase;
         return;
@@ -1217,7 +1229,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
         if (_x0 != _x1) {
             if (type == AN_Z) {
                 gdouble offset = GLOBALS->cairo_050_offset;
-                XXX_gdk_set_color(cr, GLOBALS->rgb_gc.gc_mid_wavewindow_c_1);
+                XXX_gdk_set_color(cr, colors->stroke_z);
 
                 if (GLOBALS->use_roundcaps) {
                     cairo_move_to(cr, _x0 + 1 + offset, yu + offset);
@@ -1229,11 +1241,11 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                 cairo_stroke(cr);
             } else {
                 gdouble offset = GLOBALS->cairo_050_offset;
-                wave_rgb_t color;
+                GwColor color;
                 if (type != AN_X && type != AN_U) {
-                    color = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                    color = colors->stroke_vector;
                 } else {
-                    color = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    color = colors->stroke_x;
                 }
 
                 GwTime width = _x1 - _x0;
@@ -1245,7 +1257,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                     cairo_stroke(cr);
                 } else {
                     if (type == AN_1) {
-                        wave_rgb_t c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                        GwColor c = colors->stroke_vector;
                         cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a / 3.0);
                     } else {
                         XXX_gdk_set_color(cr, color);
@@ -1272,7 +1284,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                     cairo_stroke(cr);
 
                     if (type == AN_0) {
-                        wave_rgb_t c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                        GwColor c = colors->stroke_vector;
                         cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a / 3.0);
                     } else {
                         XXX_gdk_set_color(cr, color);
@@ -1321,16 +1333,14 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
 
                     ascii2 = ascii;
                     if (*ascii == '?') {
-                        wave_rgb_t cb;
+                        GwColor cb;
                         char *srch_for_color = strchr(ascii + 1, '?');
                         if (srch_for_color) {
                             *srch_for_color = 0;
                             cb = XXX_get_gc_from_name(ascii + 1);
                             if (cb.a != 0.0) {
                                 ascii2 = srch_for_color + 1;
-                                if (memcmp(&GLOBALS->rgb_gc.gc_back_wavewindow_c_1,
-                                           &GLOBALS->rgb_gc_white,
-                                           sizeof(wave_rgb_t))) {
+                                if (!gw_color_equal(&colors->background, &GW_COLOR_WHITE)) {
                                     if (!GLOBALS->black_and_white)
                                         XXX_gdk_draw_rectangle(cr,
                                                                cb,
@@ -1353,7 +1363,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
                          width)) {
                         XXX_font_engine_draw_string(cr,
                                                     GLOBALS->wavefont,
-                                                    &GLOBALS->rgb_gc.gc_value_wavewindow_c_1,
+                                                    &colors->value_text,
                                                     _x0 + 2 + GLOBALS->cairo_050_offset,
                                                     ytext + GLOBALS->cairo_050_offset,
                                                     ascii2);
@@ -1367,7 +1377,7 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
 
                             XXX_font_engine_draw_string(cr,
                                                         GLOBALS->wavefont,
-                                                        &GLOBALS->rgb_gc.gc_value_wavewindow_c_1,
+                                                        &colors->value_text,
                                                         _x0 + 2 + GLOBALS->cairo_050_offset,
                                                         ytext + GLOBALS->cairo_050_offset,
                                                         ascii2);
@@ -1392,16 +1402,14 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
 
                     /* ascii2 = ascii; */ /* scan-build */
                     if (*ascii == '?') {
-                        wave_rgb_t cb;
+                        GwColor cb;
                         char *srch_for_color = strchr(ascii + 1, '?');
                         if (srch_for_color) {
                             *srch_for_color = 0;
                             cb = XXX_get_gc_from_name(ascii + 1);
                             if (cb.a != 0.0) {
                                 /* ascii2 =  srch_for_color + 1; */ /* scan-build */
-                                if (memcmp(&GLOBALS->rgb_gc.gc_back_wavewindow_c_1,
-                                           &GLOBALS->rgb_gc_white,
-                                           sizeof(wave_rgb_t))) {
+                                if (!gw_color_equal(&colors->background, &GW_COLOR_WHITE)) {
                                     if (!GLOBALS->black_and_white)
                                         XXX_gdk_draw_rectangle(cr,
                                                                cb,
@@ -1443,7 +1451,13 @@ static void draw_hptr_trace_vector(cairo_t *cr, Trptr t, hptr h, int which)
 
 /********************************************************************************************************/
 
-static void draw_vptr_trace_analog(cairo_t *cr, Trptr t, vptr v, int which, int num_extension)
+static void draw_vptr_trace_analog(GwWaveView *self,
+                                   cairo_t *cr,
+                                   GwWaveformColors *colors,
+                                   Trptr t,
+                                   vptr v,
+                                   int which,
+                                   int num_extension)
 {
     GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, yt0, yt1;
@@ -1452,18 +1466,17 @@ static void draw_vptr_trace_analog(cairo_t *cr, Trptr t, vptr v, int which, int 
     int endcnt = 0;
     int type;
     /* int lasttype=-1; */ /* scan-build */
-    wave_rgb_t c, ci;
-    wave_rgb_t cnan = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
-    wave_rgb_t cinf = GLOBALS->rgb_gc.gc_w_wavewindow_c_1;
-    wave_rgb_t cfixed;
+    GwColor c;
+    GwColor ci = colors->marker_baseline;
+    GwColor cnan = colors->stroke_u;
+    GwColor cinf = colors->stroke_w;
+    GwColor cfixed;
     double mynan = strtod("NaN", NULL);
     double tmin = mynan, tmax = mynan, tv = 0.0, tv2;
     gint rmargin;
     int is_nan = 0, is_nan2 = 0, is_inf = 0, is_inf2 = 0;
     int any_infs = 0, any_infp = 0, any_infm = 0;
     int skipcnt = 0;
-
-    ci = GLOBALS->rgb_gc.gc_baseline_wavewindow_c_1;
 
     h = v;
     liney = ((which + 2 + num_extension) * GLOBALS->fontheight) - 2;
@@ -1673,9 +1686,9 @@ static void draw_vptr_trace_analog(cairo_t *cr, Trptr t, vptr v, int which, int 
             }
 
             if (type != AN_X) {
-                c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                c = colors->stroke_vector;
             } else {
-                c = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                c = colors->stroke_x;
             }
 
             if (h->next) {
@@ -1843,7 +1856,12 @@ static void draw_vptr_trace_analog(cairo_t *cr, Trptr t, vptr v, int which, int 
 /*
  * draw vector traces
  */
-static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
+static void draw_vptr_trace(GwWaveView *self,
+                            cairo_t *cr,
+                            GwWaveformColors *colors,
+                            Trptr t,
+                            vptr v,
+                            int which)
 {
     GwTime _x0, _x1, newtime, width;
     int _y0, _y1, yu, liney, ytext;
@@ -1852,7 +1870,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
     char *ascii = NULL;
     int type;
     int lasttype = -1;
-    wave_rgb_t c;
+    GwColor c;
 
     GLOBALS->tims.start -= GLOBALS->shift_timebase;
     GLOBALS->tims.end -= GLOBALS->shift_timebase;
@@ -1868,7 +1886,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
         Trptr tn = GiveNextTrace(t);
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
             XXX_gdk_draw_rectangle(cr,
-                                   GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                                   colors->grid,
                                    TRUE,
                                    0,
                                    liney - GLOBALS->fontheight,
@@ -1876,7 +1894,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
                                    GLOBALS->fontheight);
         } else {
             XXX_gdk_draw_rectangle(cr,
-                                   GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                                   colors->grid,
                                    TRUE,
                                    0,
                                    liney - GLOBALS->fontheight,
@@ -1888,7 +1906,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
         } else {
             XXX_gdk_draw_line(cr,
-                              GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                              colors->grid,
                               (GLOBALS->tims.start < GLOBALS->tims.first)
                                   ? (GLOBALS->tims.first - GLOBALS->tims.start) * GLOBALS->pxns
                                   : 0,
@@ -1929,7 +1947,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
         if ((ext) && (GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) &&
             (!GLOBALS->black_and_white)) {
             XXX_gdk_draw_rectangle(cr,
-                                   GLOBALS->rgb_gc.gc_grid_wavewindow_c_1,
+                                   colors->grid,
                                    TRUE,
                                    0,
                                    liney,
@@ -1937,7 +1955,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
                                    GLOBALS->fontheight * ext);
         }
 
-        draw_vptr_trace_analog(cr, t, v, which, ext);
+        draw_vptr_trace_analog(self, cr, colors, t, v, which, ext);
 
         GLOBALS->tims.start += GLOBALS->shift_timebase;
         GLOBALS->tims.end += GLOBALS->shift_timebase;
@@ -1979,28 +1997,28 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
         type = vtype2(t, h);
 
         if (_x0 > -1) {
-            wave_rgb_t gltype, gtype;
+            GwColor gltype, gtype;
 
             switch (lasttype) {
                 case AN_X:
-                    gltype = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    gltype = colors->stroke_x;
                     break;
                 case AN_U:
-                    gltype = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+                    gltype = colors->stroke_u;
                     break;
                 default:
-                    gltype = GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1;
+                    gltype = colors->stroke_vector;
                     break;
             }
             switch (type) {
                 case AN_X:
-                    gtype = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    gtype = colors->stroke_x;
                     break;
                 case AN_U:
-                    gtype = GLOBALS->rgb_gc.gc_u_wavewindow_c_1;
+                    gtype = colors->stroke_u;
                     break;
                 default:
-                    gtype = GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1;
+                    gtype = colors->stroke_vector;
                     break;
             }
 
@@ -2036,20 +2054,15 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
         if (_x0 != _x1) {
             if (type == AN_Z) {
                 if (GLOBALS->use_roundcaps) {
-                    XXX_gdk_draw_line(cr,
-                                      GLOBALS->rgb_gc.gc_mid_wavewindow_c_1,
-                                      _x0 + 1,
-                                      yu,
-                                      _x1 - 1,
-                                      yu);
+                    XXX_gdk_draw_line(cr, colors->stroke_z, _x0 + 1, yu, _x1 - 1, yu);
                 } else {
-                    XXX_gdk_draw_line(cr, GLOBALS->rgb_gc.gc_mid_wavewindow_c_1, _x0, yu, _x1, yu);
+                    XXX_gdk_draw_line(cr, colors->stroke_z, _x0, yu, _x1, yu);
                 }
             } else {
                 if ((type != AN_X) && (type != AN_U)) {
-                    c = GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1;
+                    c = colors->stroke_vector;
                 } else {
-                    c = GLOBALS->rgb_gc.gc_x_wavewindow_c_1;
+                    c = colors->stroke_x;
                 }
 
                 if (GLOBALS->use_roundcaps) {
@@ -2076,7 +2089,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
 
                     ascii2 = ascii;
                     if (*ascii == '?') {
-                        wave_rgb_t cb;
+                        GwColor cb;
                         char *srch_for_color = strchr(ascii + 1, '?');
                         if (srch_for_color) {
                             *srch_for_color = 0;
@@ -2104,7 +2117,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
                          width)) {
                         XXX_font_engine_draw_string(cr,
                                                     GLOBALS->wavefont,
-                                                    &GLOBALS->rgb_gc.gc_value_wavewindow_c_1,
+                                                    &colors->value_text,
                                                     _x0 + 2,
                                                     ytext,
                                                     ascii2);
@@ -2118,7 +2131,7 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
 
                             XXX_font_engine_draw_string(cr,
                                                         GLOBALS->wavefont,
-                                                        &GLOBALS->rgb_gc.gc_value_wavewindow_c_1,
+                                                        &colors->value_text,
                                                         _x0 + 2,
                                                         ytext,
                                                         ascii2);
@@ -2132,16 +2145,14 @@ static void draw_vptr_trace(cairo_t *cr, Trptr t, vptr v, int which)
 
                     /* ascii2 = ascii; */ /* scan-build */
                     if (*ascii == '?') {
-                        wave_rgb_t cb;
+                        GwColor cb;
                         char *srch_for_color = strchr(ascii + 1, '?');
                         if (srch_for_color) {
                             *srch_for_color = 0;
                             cb = XXX_get_gc_from_name(ascii + 1);
                             if (cb.a != 0.0) {
                                 /* ascii2 =  srch_for_color + 1; */
-                                if (memcmp(&GLOBALS->rgb_gc.gc_back_wavewindow_c_1,
-                                           &GLOBALS->rgb_gc_white,
-                                           sizeof(wave_rgb_t))) {
+                                if (!gw_color_equal(&colors->background, &GW_COLOR_WHITE)) {
                                     if (!GLOBALS->black_and_white)
                                         XXX_gdk_draw_rectangle(cr,
                                                                cb,

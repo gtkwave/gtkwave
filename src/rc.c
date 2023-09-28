@@ -745,55 +745,75 @@ int rc_compare(const void *v1, const void *v2)
     return (strcasecmp((char *)v1, ((struct rc_entry *)v2)->name));
 }
 
+static void parse_color(const char *str, const char *property)
+{
+    GwColor color;
+    if (gw_color_init_from_x11_name(&color, str) || gw_color_init_from_hex(&color, str)) {
+        g_object_set(GLOBALS->color_theme, property, &color, NULL);
+
+    } else {
+#if defined __MINGW32__
+        fprintf(stderr,
+                "** gtkwave.ini (line %d): '%s' is an unknown color value; ignoring.\n",
+                GLOBALS->rc_line_no,
+                str);
+#else
+        fprintf(stderr,
+                "** .gtkwaverc (line %d): '%s' is an unknown color value; ignoring.\n",
+                GLOBALS->rc_line_no,
+                str);
+#endif
+    }
+}
+
 /* make the color functions */
-#define color_make(Z) \
+#define color_make(Z, prop) \
     int f_color_##Z(const char *str) \
     { \
-        int rgb; \
-        if ((rgb = get_rgb_from_name(str)) != ~0) { \
-            GLOBALS->color_##Z = rgb; \
-        } \
+        parse_color(str, prop); \
         return (0); \
     }
 
 // clang-format off
-color_make(back)
-color_make(baseline)
-color_make(grid)
-color_make(grid2)
-color_make(high)
-color_make(highfill)
-color_make(low)
-color_make(1)
-color_make(1fill)
-color_make(0)
-color_make(mark)
-color_make(mid)
-color_make(time)
-color_make(timeb)
-color_make(trans)
-color_make(umark)
-color_make(value)
-color_make(vbox)
-color_make(vtrans)
-color_make(x)
-color_make(xfill)
-color_make(u)
-color_make(ufill)
-color_make(w)
-color_make(wfill)
-color_make(dash)
-color_make(dashfill)
-color_make(white)
-color_make(black)
-color_make(ltgray)
-color_make(normal)
-color_make(mdgray)
-color_make(dkgray)
-color_make(dkblue)
-color_make(brkred)
-color_make(ltblue)
-color_make(gmstrd)
+color_make(back, "waveform-background")
+color_make(baseline, "marker-baseline")
+color_make(grid, "waveform-grid")
+color_make(grid2, "waveform-grid2")
+color_make(high, "stroke-h")
+color_make(highfill, "fill-h")
+color_make(low, "stroke-l")
+color_make(1, "stroke-1")
+color_make(1fill, "fill-1")
+color_make(0, "stroke-0")
+color_make(mark, "marker-named")
+color_make(mid, "stroke-z")
+color_make(trans, "stroke-transition")
+color_make(umark, "marker-unnamed")
+color_make(value, "waveform-value")
+color_make(vbox, "vector-stroke")
+//color_make(vtrans) TODO: remove
+color_make(x, "stroke-x")
+color_make(xfill, "fill-x")
+color_make(u, "stroke-u")
+color_make(ufill, "fill-u")
+color_make(w, "stroke-w")
+color_make(wfill, "fill-w")
+color_make(dash, "stroke-dash")
+color_make(dashfill, "fill-dash")
+
+color_make(time, "timebar-text")
+color_make(timeb, "timebar-background")
+
+color_make(white , "signal-list-white")
+color_make(black , "signal-list-black")
+color_make(ltgray, "signal-list-ltgray")
+color_make(normal, "signal-list-normal")
+color_make(mdgray, "signal-list-mdgray")
+color_make(dkgray, "signal-list-dkgray")
+color_make(dkblue, "signal-list-dkblue")
+color_make(brkred, "signal-list-brkred")
+color_make(ltblue, "signal-list-ltblue")
+color_make(gmstrd, "signal-list-gmstrd")
     // clang-format on
 
     // Unnecessary forward declaration to fix clang-format output.
@@ -842,7 +862,6 @@ static struct rc_entry rcitems[] = {
     {"color_umark", f_color_umark},
     {"color_value", f_color_value},
     {"color_vbox", f_color_vbox},
-    {"color_vtrans", f_color_vtrans},
     {"color_w", f_color_w},
     {"color_wfill", f_color_wfill},
     {"color_white", f_color_white},
@@ -937,43 +956,6 @@ static void vanilla_rc(void)
     f_use_pango_fonts("on");
     f_constant_marker_update("on");
     f_show_base_symbols("off");
-    f_color_back("000000"); /* black */
-    f_color_baseline("ffffff"); /* white */
-    f_color_grid("202070"); /* dark dark blue */
-    f_color_grid2("6a5acd"); /* slate blue */
-    f_color_high("79f6f2"); /* light light blue */
-    f_color_highfill("4ca09d"); /* dark dark blue */
-    f_color_low("5dbebb"); /* light blue */
-    f_color_1("00ff00"); /* green */
-    f_color_1fill("004d00"); /* dark dark green */
-    f_color_0("008000"); /* dark green */
-    f_color_trans("00c000"); /* medium green */
-    f_color_mid("c0c000"); /* mustard */
-    f_color_value("ffffff"); /* white */
-    f_color_vbox("00ff00"); /* green */
-    f_color_vtrans("00c000"); /* medium green */
-    f_color_x("ff0000"); /* red */
-    f_color_xfill("400000"); /* dark maroon */
-    f_color_u("cc0000"); /* brick */
-    f_color_ufill("200000"); /* dark maroon */
-    f_color_w("79f6f2"); /* light light blue */
-    f_color_wfill("3f817f"); /* dark blue-green */
-    f_color_dash("edf508"); /* yellow */
-    f_color_dashfill("7d8104"); /* green mustard */
-    f_color_umark("ff8080"); /* pink */
-    f_color_mark("ffff80"); /* light yellow */
-    f_color_time("ffffff"); /* white */
-    f_color_timeb("000000"); /* black */
-    f_color_white("ffffff"); /* white */
-    f_color_black("000000"); /* black */
-    f_color_ltgray("f5f5f5");
-    f_color_normal("e6e6e6");
-    f_color_mdgray("cccccc");
-    f_color_dkgray("aaaaaa");
-    f_color_dkblue("4464ac");
-    f_color_brkred("cc0000"); /* brick */
-    f_color_ltblue("5dbebb"); /* light blue    */
-    f_color_gmstrd("7d8104"); /* green mustard */
 }
 
 int insert_rc_variable(char *str)
