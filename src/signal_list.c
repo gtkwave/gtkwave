@@ -84,12 +84,12 @@ struct _GwSignalList
 G_DEFINE_TYPE(GwSignalList, gw_signal_list, GTK_TYPE_DRAWING_AREA)
 
 // Get the text and background colors for a trace
-static void get_trace_colors(Trptr t, wave_rgb_t *bg_color, wave_rgb_t *text_color)
+static void get_trace_colors(Trptr t, GwSignalListColors *colors, GwColor *bg_color, GwColor *text_color)
 {
-    wave_rgb_t clr_comment = GLOBALS->rgb_gc.gc_brkred;
-    wave_rgb_t clr_group = GLOBALS->rgb_gc.gc_gmstrd;
-    wave_rgb_t clr_shadowed = GLOBALS->rgb_gc.gc_ltblue;
-    wave_rgb_t clr_signal = GLOBALS->rgb_gc.gc_dkblue;
+    GwColor clr_comment = colors->brkred;
+    GwColor clr_group = colors->gmstrd;
+    GwColor clr_shadowed = colors->ltblue;
+    GwColor clr_signal = colors->dkblue;
 
     if (IsSelected(t)) {
         if (HasWave(t)) {
@@ -100,13 +100,13 @@ static void get_trace_colors(Trptr t, wave_rgb_t *bg_color, wave_rgb_t *text_col
             *bg_color = clr_comment;
         }
     } else {
-        *bg_color = GLOBALS->rgb_gc.gc_ltgray;
+        *bg_color = colors->ltgray;
     }
 
     if (IsSelected(t)) {
-        *text_color = GLOBALS->rgb_gc_white;
+        *text_color = colors->white;
     } else if (HasWave(t)) {
-        *text_color = GLOBALS->rgb_gc_black;
+        *text_color = colors->black;
     } else if (IsGroupBegin(t) || IsGroupEnd(t)) {
         *text_color = clr_group;
     } else {
@@ -129,7 +129,7 @@ int gw_signal_list_get_num_traces_displayable(GwSignalList *signal_list)
 //
 // The signal is always rendered at the origin. The cairo context needs to be
 // translated to the correct position before calling this function.
-static void render_signal(cairo_t *cr, Trptr t, int width, int text_dx)
+static void render_signal(cairo_t *cr, GwSignalListColors *colors, Trptr t, int width, int text_dx)
 {
     char buf[2048];
     char *subname = NULL;
@@ -175,11 +175,11 @@ static void render_signal(cairo_t *cr, Trptr t, int width, int text_dx)
     gdouble text_y = GLOBALS->fontheight / 2.0 + GLOBALS->signalfont->ascent / 2.0 -
                      GLOBALS->signalfont->descent / 2.0;
 
-    wave_rgb_t bg_color;
-    wave_rgb_t text_color;
-    get_trace_colors(t, &bg_color, &text_color);
+    GwColor bg_color;
+    GwColor text_color;
+    get_trace_colors(t, colors, &bg_color, &text_color);
 
-    wave_rgb_set_source(&bg_color, cr);
+    cairo_set_source_rgba(cr, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
     cairo_rectangle(cr, 0, 0, width, GLOBALS->fontheight - 1);
     cairo_fill(cr);
 
@@ -209,12 +209,12 @@ static void render_signal(cairo_t *cr, Trptr t, int width, int text_dx)
 }
 
 // Render all signals
-static void render_signals(GwSignalList *signal_list)
+static void render_signals(GwSignalList *signal_list, GwSignalListColors *colors)
 {
     cairo_t *cr = cairo_create(signal_list->surface);
 
     // Clear background
-    wave_rgb_set_source(&GLOBALS->rgb_gc_white, cr);
+    cairo_set_source_rgba(cr, colors->white.r, colors->white.g, colors->white.b, colors->white.a);
     cairo_paint(cr);
 
     int num_traces_displayable = gw_signal_list_get_num_traces_displayable(signal_list);
@@ -225,7 +225,7 @@ static void render_signals(GwSignalList *signal_list)
     if (t) {
         int i;
         for (i = 0; i < num_traces_displayable && t; i++) {
-            render_signal(cr, t, width, text_dx);
+            render_signal(cr, colors, t, width, text_dx);
 
             cairo_translate(cr, 0, GLOBALS->fontheight);
 
@@ -280,6 +280,11 @@ static void update_hadjustment(GwSignalList *signal_list)
 
 static gboolean draw(GtkWidget *widget, cairo_t *cr)
 {
+    GwSignalListColors *colors = gw_color_theme_get_signal_list_colors(GLOBALS->color_theme);
+    if (GLOBALS->black_and_white) {
+        colors = gw_signal_list_colors_new_black_and_white();
+    }
+
     gint page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(GLOBALS->notebook));
     struct Global *g_old = GLOBALS;
     set_GLOBALS((*GLOBALS->contexts)[page_num]);
@@ -292,8 +297,7 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
         gw_signal_list_scroll(signal_list, gtk_adjustment_get_value(signal_list->vadjustment));
 
         update_hadjustment(signal_list);
-        make_sigarea_gcs(widget);
-        render_signals(signal_list);
+        render_signals(signal_list, colors);
         signal_list->dirty = FALSE;
     }
 
@@ -306,13 +310,17 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
 
     // Draw the header
     if (!GLOBALS->use_dark) {
-        wave_rgb_set_source(&GLOBALS->rgb_gc.gc_mdgray, cr);
+        cairo_set_source_rgba(cr,
+                              colors->mdgray.r,
+                              colors->mdgray.g,
+                              colors->mdgray.b,
+                              colors->mdgray.a);
         cairo_rectangle(cr, 0, 0, allocation.width, GLOBALS->fontheight);
         cairo_fill(cr);
 
         XXX_font_engine_draw_string(cr,
                                     GLOBALS->signalfont,
-                                    &(GLOBALS->rgb_gc_black),
+                                    &colors->black,
                                     4,
                                     GLOBALS->fontheight - 4,
                                     "Time");
@@ -320,7 +328,11 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
 
     // Draw focus rectangle
     if (gtk_widget_has_focus(widget)) {
-        wave_rgb_set_source(&GLOBALS->rgb_gc_black, cr);
+        cairo_set_source_rgba(cr,
+                              colors->black.r,
+                              colors->black.g,
+                              colors->black.b,
+                              colors->black.a);
         cairo_set_line_width(cr, 1.0);
         cairo_rectangle(cr, 0.5, 0.5, allocation.width - 1, allocation.height - 1);
         cairo_stroke(cr);
@@ -330,7 +342,11 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
     if (signal_list->drop.highlight_position >= 0) {
         int ylin = ((signal_list->drop.highlight_position + 1) * GLOBALS->fontheight) - 1;
 
-        wave_rgb_set_source(&GLOBALS->rgb_gc_black, cr);
+        cairo_set_source_rgba(cr,
+                              colors->black.r,
+                              colors->black.g,
+                              colors->black.b,
+                              colors->black.a);
         cairo_set_line_width(cr, 1.0);
         cairo_move_to(cr, 0.0, ylin + 0.5);
         cairo_rel_line_to(cr, allocation.width, 0);
@@ -338,6 +354,10 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
     }
 
     set_GLOBALS(g_old);
+
+    if (GLOBALS->black_and_white) {
+        g_free(colors);
+    }
 
     return GDK_EVENT_STOP;
 }

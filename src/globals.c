@@ -109,43 +109,7 @@ static const struct Global globals_base_values = {
      * color.c
      */
     0, /* keep_xz_colors */
-    -1, /* color_back 25 */
-    -1, /* color_baseline 26 */
-    -1, /* color_grid 27 */
-    -1, /* color_grid2 27 */
-    -1, /* color_high 28 */
-    -1, /* color_low 29 */
-    -1, /* color_mark 30 */
-    -1, /* color_mid 31 */
-    -1, /* color_time 32 */
-    -1, /* color_timeb 33 */
-    -1, /* color_trans 34 */
-    -1, /* color_umark 35 */
-    -1, /* color_value 36 */
-    -1, /* color_vbox 37 */
-    -1, /* color_vtrans 38 */
-    -1, /* color_x 39 */
-    -1, /* color_xfill 40 */
-    -1, /* color_0 41 */
-    -1, /* color_1 42 */
-    -1, /* color_ufill 43 */
-    -1, /* color_u 44 */
-    -1, /* color_wfill 45 */
-    -1, /* color_w 46 */
-    -1, /* color_dashfill 47 */
-    -1, /* color_dash 48 */
-    -1, /* color_white 49 */
-    -1, /* color_black 50 */
-    -1, /* color_ltgray 51 */
-    -1, /* color_normal 52 */
-    -1, /* color_mdgray 53 */
-    -1, /* color_dkgray 54 */
-    -1, /* color_dkblue 55 */
-    -1, /* color_brkred */
-    -1, /* color_ltblue */
-    -1, /* color_gmstrd */
-    -1, /* color_highfill */
-    -1, /* color_1fill */
+    NULL, /* color_theme */
 
     /*
      * currenttime.c
@@ -1023,9 +987,7 @@ static const struct Global globals_base_values = {
     NULL, /* wave_vslider2 622 */
     NULL, /* wave_hslider */
     -1, /* named_marker_lock_idx */
-    0, /* made_gc_contexts_wavewindow_c_1 624 */
     0, /* which_t_color */
-    0, /* made_sgc_contexts_wavewindow_c_1 649 */
     0, /* fill_in_smaller_rgb_areas_wavewindow_c_1 659 */
     -1, /* prev_markertime */
     20, /* analog_redraw_skip_count */
@@ -1040,28 +1002,6 @@ static const struct Global globals_base_values = {
     0, /* fill_waveform */
     0, /* lz_removal */
     FALSE, /* lz_removal */
-
-    {0.0, 0.0, 0.0, 0.0}, /* rgb_gc_white */
-    {0.0, 0.0, 0.0, 0.0}, /* rgb_gc_black */
-    RGB_WAVE_RAINBOW_INITIALIZER, /* rgb_gc_rainbow */
-    {{0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}}, /* rgb_gc */
-    {{0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0},
-     {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}}, /* rgb_gccache */
 
     1.0, /* cr_line_width */
     0.5, /* cairo_050_offset */
@@ -1117,6 +1057,7 @@ struct Global *initialize_globals(void)
 
     g->hierarchy_icons = gw_hierarchy_icons_new();
     g->project = gw_project_new();
+    g->color_theme = gw_color_theme_new();
 
     return (g); /* what to do with ctx is at discretion of caller */
 }
@@ -1433,17 +1374,6 @@ void reload_into_new_context_2(void)
 
     new_globals->black_and_white = GLOBALS->black_and_white;
 
-    new_globals->made_sgc_contexts_wavewindow_c_1 = GLOBALS->made_sgc_contexts_wavewindow_c_1;
-    new_globals->made_gc_contexts_wavewindow_c_1 = GLOBALS->made_gc_contexts_wavewindow_c_1;
-
-    new_globals->rgb_gc_white = GLOBALS->rgb_gc_white;
-    new_globals->rgb_gc_black = GLOBALS->rgb_gc_black;
-    memcpy(&new_globals->rgb_gc, &GLOBALS->rgb_gc, sizeof(struct wave_rgbmaster_t));
-    memcpy(&new_globals->rgb_gccache, &GLOBALS->rgb_gccache, sizeof(struct wave_rgbmaster_t));
-    memcpy(&new_globals->rgb_gc_rainbow,
-           &GLOBALS->rgb_gc_rainbow,
-           2 * WAVE_NUM_RAINBOW * sizeof(wave_rgb_t));
-
     new_globals->mainwindow = GLOBALS->mainwindow;
     new_globals->signalwindow = GLOBALS->signalwindow;
     new_globals->wavewindow = GLOBALS->wavewindow;
@@ -1499,43 +1429,7 @@ void reload_into_new_context_2(void)
     new_globals->ignore_savefile_pos = 1; /* to keep window from resizing/jumping */
     new_globals->ignore_savefile_size = 1; /* to keep window from resizing/jumping */
 
-    new_globals->color_back = GLOBALS->color_back;
-    new_globals->color_baseline = GLOBALS->color_baseline;
-    new_globals->color_grid = GLOBALS->color_grid;
-    new_globals->color_grid2 = GLOBALS->color_grid2;
-    new_globals->color_high = GLOBALS->color_high;
-    new_globals->color_highfill = GLOBALS->color_highfill;
-    new_globals->color_low = GLOBALS->color_low;
-    new_globals->color_1 = GLOBALS->color_1;
-    new_globals->color_1fill = GLOBALS->color_1fill;
-    new_globals->color_0 = GLOBALS->color_0;
-    new_globals->color_mark = GLOBALS->color_mark;
-    new_globals->color_mid = GLOBALS->color_mid;
-    new_globals->color_time = GLOBALS->color_time;
-    new_globals->color_timeb = GLOBALS->color_timeb;
-    new_globals->color_trans = GLOBALS->color_trans;
-    new_globals->color_umark = GLOBALS->color_umark;
-    new_globals->color_value = GLOBALS->color_value;
-    new_globals->color_vbox = GLOBALS->color_vbox;
-    new_globals->color_vtrans = GLOBALS->color_vtrans;
-    new_globals->color_x = GLOBALS->color_x;
-    new_globals->color_xfill = GLOBALS->color_xfill;
-    new_globals->color_u = GLOBALS->color_u;
-    new_globals->color_ufill = GLOBALS->color_ufill;
-    new_globals->color_w = GLOBALS->color_w;
-    new_globals->color_wfill = GLOBALS->color_wfill;
-    new_globals->color_dash = GLOBALS->color_dash;
-    new_globals->color_dashfill = GLOBALS->color_dashfill;
-    new_globals->color_white = GLOBALS->color_white;
-    new_globals->color_black = GLOBALS->color_black;
-    new_globals->color_ltgray = GLOBALS->color_ltgray;
-    new_globals->color_normal = GLOBALS->color_normal;
-    new_globals->color_mdgray = GLOBALS->color_mdgray;
-    new_globals->color_dkgray = GLOBALS->color_dkgray;
-    new_globals->color_dkblue = GLOBALS->color_dkblue;
-    new_globals->color_brkred = GLOBALS->color_brkred;
-    new_globals->color_ltblue = GLOBALS->color_ltblue;
-    new_globals->color_gmstrd = GLOBALS->color_gmstrd;
+    new_globals->color_theme = g_object_ref(GLOBALS->color_theme);
 
     new_globals->autoname_bundles = GLOBALS->autoname_bundles;
     new_globals->autocoalesce = GLOBALS->autocoalesce;

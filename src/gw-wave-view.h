@@ -1,5 +1,4 @@
-#ifndef WAVE_WAVE_VIEW_H
-#define WAVE_WAVE_VIEW_H
+#pragma  once
 
 #include <gtk/gtk.h>
 
@@ -12,5 +11,3 @@ GtkWidget *gw_wave_view_new(void);
 void gw_wave_view_force_redraw(GwWaveView *self);
 
 G_END_DECLS
-
-#endif

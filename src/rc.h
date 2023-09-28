@@ -26,7 +26,6 @@ struct rc_override /* used for --rcvar command line option */
 
 void read_rc_file(const char *override_rc);
 int insert_rc_variable(char *str);
-int get_rgb_from_name(const char *str);
 
 int f_accel(const char *str);
 int f_alt_hier_delimeter(const char *str);
@@ -65,7 +64,6 @@ int f_color_ufill(const char *str);
 int f_color_umark(const char *str);
 int f_color_value(const char *str);
 int f_color_vbox(const char *str);
-int f_color_vtrans(const char *str);
 int f_color_w(const char *str);
 int f_color_wfill(const char *str);
 int f_color_white(const char *str);
@@ -118,7 +116,5 @@ int f_wave_scrolling(const char *str);
 int f_zoom_base(const char *str);
 int f_zoom_center(const char *str);
 int f_zoom_pow10_snap(const char *str);
-
-wave_rgb_t XXX_get_gc_from_name(const char *str);
 
 #endif

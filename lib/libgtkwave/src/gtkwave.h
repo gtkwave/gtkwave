@@ -6,3 +6,5 @@
 #include "gw-project.h"
 #include "gw-plugin.h"
 #include "gw-plugin-manager.h"
+#include "gw-color.h"
+#include "gw-color-theme.h"

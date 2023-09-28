@@ -281,8 +281,8 @@ static void create_mouseover(gint x, gint y, gint width, gint height)
     GLOBALS->cr_mo_pixmap_mouseover_c_1 = cairo_create(GLOBALS->surface_mo_pixmap_mouseover_c_1);
     cairo_set_line_width(GLOBALS->cr_mo_pixmap_mouseover_c_1, 1.0);
 
-    GLOBALS->rgb_mo_dk_gray_mouseover_c_1 = XXX_alloc_color(0x00cccccc);
-    GLOBALS->rgb_mo_black_mouseover_c_1 = XXX_alloc_color(0x00000000);
+    gw_color_init_from_hex(&GLOBALS->rgb_mo_dk_gray_mouseover_c_1, "cccccc");
+    gw_color_init_from_hex(&GLOBALS->rgb_mo_black_mouseover_c_1, "000000");
 
     XXX_gdk_draw_rectangle(GLOBALS->cr_mo_pixmap_mouseover_c_1,
                            GLOBALS->rgb_mo_dk_gray_mouseover_c_1,

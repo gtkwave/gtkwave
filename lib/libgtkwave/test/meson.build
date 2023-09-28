@@ -1,4 +1,6 @@
 libgtkwave_tests = [
+    'gw-color-theme',
+    'gw-color',
     'gw-marker',
     'gw-named-markers',
     'gw-project',

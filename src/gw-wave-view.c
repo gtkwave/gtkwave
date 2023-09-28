@@ -1,22 +1,12 @@
 #include <config.h>
 #include "cairo.h"
-#include "wave_view.h"
-#include "wave_view_traces.h"
+#include "gw-wave-view.h"
+#include "gw-wave-view-private.h"
+#include "gw-wave-view-traces.h"
 #include "globals.h"
 #include "wavewindow.h"
 
-struct _GwWaveView
-{
-    GtkDrawingArea parent_instance;
-
-    cairo_surface_t *traces_surface;
-
-    gboolean dirty;
-};
-
 G_DEFINE_TYPE(GwWaveView, gw_wave_view, GTK_TYPE_DRAWING_AREA)
-
-static const int wave_rgb_rainbow[WAVE_NUM_RAINBOW] = WAVE_RAINBOW_RGB;
 
 static void update_dual(void)
 {
@@ -101,7 +91,7 @@ static gboolean gw_wave_view_configure_event(GtkWidget *widget, GdkEventConfigur
     return FALSE;
 }
 
-static void draw_marker(GwWaveView *self, cairo_t *cr)
+static void draw_marker(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors)
 {
     (void)self;
 
@@ -126,7 +116,7 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
             xl = ((gdouble)(baseline_pos - GLOBALS->tims.start)) / pixstep; /* snap to integer */
             if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
                 XXX_gdk_draw_line(cr,
-                                  GLOBALS->rgb_gc.gc_baseline_wavewindow_c_1,
+                                  colors->marker_baseline,
                                   xl,
                                   GLOBALS->fontheight - 1,
                                   xl,
@@ -143,7 +133,7 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
             xl = ((gdouble)(primary_pos - GLOBALS->tims.start)) / pixstep; /* snap to integer */
             if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
                 XXX_gdk_draw_line(cr,
-                                  GLOBALS->rgb_gc.gc_umark_wavewindow_c_1,
+                                  colors->marker_primary,
                                   xl,
                                   GLOBALS->fontheight - 1,
                                   xl,
@@ -162,7 +152,7 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
             xl = ((gdouble)(ghost_pos - GLOBALS->tims.start)) / pixstep; /* snap to integer */
             if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
                 XXX_gdk_draw_line(cr,
-                                  GLOBALS->rgb_gc.gc_umark_wavewindow_c_1,
+                                  colors->marker_primary,
                                   xl,
                                   GLOBALS->fontheight - 1,
                                   xl,
@@ -187,7 +177,7 @@ static void draw_marker(GwWaveView *self, cairo_t *cr)
     }
 }
 
-static void renderhash(GwWaveView *self, cairo_t *cr, int x, GwTime tim)
+static void renderhash(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors, int x, GwTime tim)
 {
     (void)self;
 
@@ -211,11 +201,8 @@ static void renderhash(GwWaveView *self, cairo_t *cr, int x, GwTime tim)
         }
     }
 
-    cairo_set_source_rgba(cr,
-                          GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.r,
-                          GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.g,
-                          GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.b,
-                          GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.a);
+    cairo_set_line_width(cr, 1.0);
+    cairo_set_source_rgba(cr, colors->grid.r, colors->grid.g, colors->grid.b, colors->grid.a);
     cairo_move_to(cr, x + GLOBALS->cairo_050_offset, GLOBALS->cairo_050_offset);
     cairo_line_to(
         cr,
@@ -262,7 +249,7 @@ static void renderhash(GwWaveView *self, cairo_t *cr, int x, GwTime tim)
     }
 }
 
-static void rendertimes(GwWaveView *self, cairo_t *cr)
+static void rendertimes(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors)
 {
     int lastx = -1000; /* arbitrary */
     int x, lenhalf;
@@ -281,19 +268,19 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
     /***********/
     WAVE_STRACE_ITERATOR_FWD(s_ctx_iter)
     {
-        wave_rgb_t gc;
+        const GwColor *gc;
 
         if (!s_ctx_iter) {
-            gc = GLOBALS->rgb_gc.gc_grid_wavewindow_c_1;
+            gc = &colors->grid;
             cairo_set_dash(cr, dashed1, 0, 0);
         } else {
-            gc = GLOBALS->rgb_gc.gc_grid2_wavewindow_c_1;
+            gc = &colors->grid2;
             /* gdk_gc_set_line_attributes(gc, 1, GDK_LINE_ON_OFF_DASH, GDK_CAP_BUTT,
              * GDK_JOIN_BEVEL); */
             cairo_set_dash(cr, dashed1, sizeof(dashed1) / sizeof(dashed1[0]), 0);
         }
 
-        cairo_set_source_rgba(cr, gc.r, gc.g, gc.b, gc.a);
+        cairo_set_source_rgba(cr, gc->r, gc->g, gc->b, gc->a);
 
         GLOBALS->strace_ctx = &GLOBALS->strace_windows[GLOBALS->strace_current_window = s_ctx_iter];
 
@@ -359,11 +346,7 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
         int y = GLOBALS->fontheight + 2;
         int oldx = -1;
 
-        cairo_set_source_rgba(cr,
-                              GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.r,
-                              GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.g,
-                              GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.b,
-                              GLOBALS->rgb_gc.gc_grid_wavewindow_c_1.a);
+        cairo_set_source_rgba(cr, colors->grid.r, colors->grid.g, colors->grid.b, colors->grid.a);
 
         for (iter_x = low_x; iter_x <= high_x; iter_x++) {
             tm = GLOBALS->ruler_step * iter_x + GLOBALS->ruler_origin;
@@ -421,7 +404,7 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
     }
 
     for (;;) {
-        renderhash(self, cr, realx, tim);
+        renderhash(self, cr, colors, realx, tim);
 
         if (tim + GLOBALS->global_time_offset) {
             if (tim != GLOBALS->min_time) {
@@ -440,7 +423,7 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
         if ((x - lenhalf >= lastx) || (GLOBALS->pixelsperframe >= 200)) {
             XXX_font_engine_draw_string(cr,
                                         GLOBALS->wavefont,
-                                        &GLOBALS->rgb_gc.gc_time_wavewindow_c_1,
+                                        &colors->timebar_text,
                                         x - lenhalf + GLOBALS->cairo_050_offset,
                                         GLOBALS->wavefont->ascent - 1 + GLOBALS->cairo_050_offset,
                                         timebuff);
@@ -457,21 +440,15 @@ static void rendertimes(GwWaveView *self, cairo_t *cr)
     }
 }
 
-static void rendertimebar(GwWaveView *self, cairo_t *cr)
+static void rendertimebar(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors)
 {
     gint width = gtk_widget_get_allocated_width(GTK_WIDGET(self));
 
-    XXX_gdk_draw_rectangle(cr,
-                           GLOBALS->rgb_gc.gc_timeb_wavewindow_c_1,
-                           TRUE,
-                           0,
-                           -1,
-                           width,
-                           GLOBALS->fontheight);
-    rendertimes(self, cr);
+    XXX_gdk_draw_rectangle(cr, colors->timebar_background, TRUE, 0, -1, width, GLOBALS->fontheight);
+    rendertimes(self, cr, colors);
 }
 
-static void renderblackout(cairo_t *cr)
+static void renderblackout(cairo_t *cr, GwWaveformColors *colors)
 {
     gfloat pageinc;
     GwTime lhs, rhs, lclip, rclip;
@@ -503,7 +480,7 @@ static void renderblackout(cairo_t *cr)
                     rclip = (GLOBALS->wavewidth + 1) * (GLOBALS->nspx);
 
                 XXX_gdk_draw_rectangle(cr,
-                                       GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1,
+                                       colors->fill_x,
                                        TRUE,
                                        (((gdouble)lclip) * GLOBALS->pxns),
                                        GLOBALS->fontheight,
@@ -520,7 +497,7 @@ typedef struct
 {
     GwWaveView *widget;
     cairo_t *cr;
-    wave_rgb_t color;
+    GwColor color;
 } DrawNamedMarkerData;
 
 static void draw_named_marker(gpointer data, gpointer user_data)
@@ -594,14 +571,14 @@ static void draw_named_marker(gpointer data, gpointer user_data)
     // }
 }
 
-static void draw_named_markers(GwWaveView *self, cairo_t *cr)
+static void draw_named_markers(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors)
 {
     (void)self;
 
     DrawNamedMarkerData data = {
         .widget = self,
         .cr = cr,
-        .color = GLOBALS->rgb_gc.gc_mark_wavewindow_c_1,
+        .color = colors->marker_named,
     };
 
     GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
@@ -625,6 +602,11 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
 
     set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
+    GwWaveformColors *colors = gw_color_theme_get_waveform_colors(GLOBALS->color_theme);
+    if (GLOBALS->black_and_white) {
+        colors = gw_waveform_colors_new_black_and_white();
+    }
+
     if (self->dirty) {
         // GTimer *timer = g_timer_new();
 
@@ -640,12 +622,12 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         cairo_set_line_width(traces_cr, GLOBALS->cr_line_width);
         cairo_set_line_cap(traces_cr, CAIRO_LINE_CAP_SQUARE);
 
-        renderblackout(traces_cr);
+        renderblackout(traces_cr, colors);
 
         if (GLOBALS->disable_antialiasing) {
             cairo_set_antialias(traces_cr, CAIRO_ANTIALIAS_NONE);
         }
-        rendertraces(traces_cr);
+        gw_wave_view_render_traces(self, traces_cr);
 
         cairo_destroy(traces_cr);
 
@@ -656,10 +638,10 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         self->dirty = FALSE;
     }
 
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_set_source_rgba(cr, colors->background.r, colors->background.g, colors->background.b, colors->background.a);
     cairo_paint(cr);
 
-    rendertimebar(self, cr);
+    rendertimebar(self, cr, colors);
 
     cairo_set_source_surface(cr, self->traces_surface, 0.0, 0.0);
     cairo_paint(cr);
@@ -667,8 +649,8 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
     cairo_set_line_width(cr, GLOBALS->cr_line_width);
     cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
 
-    draw_marker(self, cr);
-    draw_named_markers(self, cr);
+    draw_marker(self, cr, colors);
+    draw_named_markers(self, cr, colors);
 
     /* seems to cause a conflict flipping back so don't! */
     /* set_GLOBALS(g_old); */
@@ -678,6 +660,10 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
     // TODO: check
     // if (gesture_filter_set)
     //     gesture_filter_set = 0;
+
+    if (GLOBALS->black_and_white) {
+        g_free(colors );
+    }
 
     return FALSE;
 }
@@ -717,55 +703,6 @@ static void gw_wave_view_class_init(GwWaveViewClass *klass)
     widget_class->draw = gw_wave_view_draw;
 }
 
-static void init_rgb_gc(void)
-{
-    if (GLOBALS->made_gc_contexts_wavewindow_c_1) {
-        return;
-    }
-    GLOBALS->rgb_gc.gc_back_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_back);
-    GLOBALS->rgb_gc.gc_baseline_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_baseline);
-    GLOBALS->rgb_gc.gc_grid_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_grid);
-    GLOBALS->rgb_gc.gc_grid2_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_grid2);
-    GLOBALS->rgb_gc.gc_time_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_time);
-    GLOBALS->rgb_gc.gc_timeb_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_timeb);
-    GLOBALS->rgb_gc.gc_value_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_value);
-    GLOBALS->rgb_gc.gc_low_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_low);
-    GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_highfill);
-    GLOBALS->rgb_gc.gc_high_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_high);
-    GLOBALS->rgb_gc.gc_trans_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_trans);
-    GLOBALS->rgb_gc.gc_mid_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_mid);
-    GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_xfill);
-    GLOBALS->rgb_gc.gc_x_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_x);
-    GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_vbox);
-    GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_vtrans);
-    GLOBALS->rgb_gc.gc_mark_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_mark);
-    GLOBALS->rgb_gc.gc_umark_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_umark);
-
-    GLOBALS->rgb_gc.gc_0_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_0);
-    GLOBALS->rgb_gc.gc_1fill_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_1fill);
-    GLOBALS->rgb_gc.gc_1_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_1);
-    GLOBALS->rgb_gc.gc_ufill_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_ufill);
-    GLOBALS->rgb_gc.gc_u_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_u);
-    GLOBALS->rgb_gc.gc_wfill_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_wfill);
-    GLOBALS->rgb_gc.gc_w_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_w);
-    GLOBALS->rgb_gc.gc_dashfill_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_dashfill);
-    GLOBALS->rgb_gc.gc_dash_wavewindow_c_1 = XXX_alloc_color(GLOBALS->color_dash);
-
-    GLOBALS->made_gc_contexts_wavewindow_c_1 = ~0;
-
-    memcpy(&GLOBALS->rgb_gccache, &GLOBALS->rgb_gc, sizeof(struct wave_rgbmaster_t));
-
-    /* add rainbow colors */
-    for (int i = 0; i < WAVE_NUM_RAINBOW; i++) {
-        int col = wave_rgb_rainbow[i];
-
-        GLOBALS->rgb_gc_rainbow[i * 2] = XXX_alloc_color(col);
-        col >>= 1;
-        col &= 0x007F7F7F;
-        GLOBALS->rgb_gc_rainbow[i * 2 + 1] = XXX_alloc_color(col);
-    }
-}
-
 static void gw_wave_view_init(GwWaveView *self)
 {
     gtk_widget_set_events(GTK_WIDGET(self),
@@ -776,8 +713,6 @@ static void gw_wave_view_init(GwWaveView *self)
                               | GDK_TOUCH_MASK | GDK_TABLET_PAD_MASK | GDK_TOUCHPAD_GESTURE_MASK
 #endif
     );
-
-    init_rgb_gc();
 
     self->dirty = TRUE;
 }

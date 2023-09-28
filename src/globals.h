@@ -121,43 +121,7 @@ struct Global
      * color.c
      */
     char keep_xz_colors;
-    int color_back; /* from color.c 25  */
-    int color_baseline; /* from color.c 26 */
-    int color_grid; /* from color.c 27 */
-    int color_grid2; /* from color.c */
-    int color_high; /* from color.c 28 */
-    int color_low; /* from color.c 29 */
-    int color_mark; /* from color.c 30 */
-    int color_mid; /* from color.c 31 */
-    int color_time; /* from color.c 32 */
-    int color_timeb; /* from color.c 33 */
-    int color_trans; /* from color.c 34 */
-    int color_umark; /* from color.c 35 */
-    int color_value; /* from color.c 36 */
-    int color_vbox; /* from color.c 37 */
-    int color_vtrans; /* from color.c 38 */
-    int color_x; /* from color.c 39 */
-    int color_xfill; /* from color.c 40 */
-    int color_0; /* from color.c 41 */
-    int color_1; /* from color.c 42 */
-    int color_ufill; /* from color.c 43 */
-    int color_u; /* from color.c 44 */
-    int color_wfill; /* from color.c 45 */
-    int color_w; /* from color.c 46 */
-    int color_dashfill; /* from color.c 47 */
-    int color_dash; /* from color.c 48 */
-    int color_white; /* from color.c 49 */
-    int color_black; /* from color.c 50 */
-    int color_ltgray; /* from color.c 51 */
-    int color_normal; /* from color.c 52 */
-    int color_mdgray; /* from color.c 53 */
-    int color_dkgray; /* from color.c 54 */
-    int color_dkblue; /* from color.c 55 */
-    int color_brkred;
-    int color_ltblue;
-    int color_gmstrd;
-    int color_highfill;
-    int color_1fill;
+    GwColorTheme *color_theme;
 
     /*
      * currenttime.c
@@ -483,8 +447,8 @@ struct Global
     cairo_surface_t *surface_mo_pixmap_mouseover_c_1;
     cairo_t *cr_mo_pixmap_mouseover_c_1;
 
-    wave_rgb_t rgb_mo_dk_gray_mouseover_c_1;
-    wave_rgb_t rgb_mo_black_mouseover_c_1;
+    GwColor rgb_mo_dk_gray_mouseover_c_1;
+    GwColor rgb_mo_black_mouseover_c_1;
 
     /*
      * pagebuttons.c
@@ -1002,9 +966,7 @@ struct Global
     gpointer wave_vslider2; /* from wavewindow.c 681 */
     gpointer wave_hslider; /* from wavewindow.c 682 */
     int named_marker_lock_idx; /* from menu.c */
-    char made_gc_contexts_wavewindow_c_1; /* from wavewindow.c 684 */
     int which_t_color;
-    char made_sgc_contexts_wavewindow_c_1; /* from wavewindow.c 709 */
     char fill_in_smaller_rgb_areas_wavewindow_c_1; /* from wavewindow.c 719 */
     GwTime prev_markertime; /* from wavewindow.c */
     int analog_redraw_skip_count; /* from wavewindow.c */
@@ -1019,12 +981,6 @@ struct Global
     char fill_waveform;
     char lz_removal;
     gboolean disable_antialiasing;
-
-    wave_rgb_t rgb_gc_white;
-    wave_rgb_t rgb_gc_black;
-    wave_rgb_t rgb_gc_rainbow[2 * WAVE_NUM_RAINBOW];
-    struct wave_rgbmaster_t rgb_gc;
-    struct wave_rgbmaster_t rgb_gccache;
 
     double cr_line_width;
     double cairo_050_offset;

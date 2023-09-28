@@ -20,7 +20,7 @@
 #include "debug.h"
 #include "main.h"
 #include "signal_list.h"
-#include "wave_view.h"
+#include "gw-wave-view.h"
 
 #if !defined _ISOC99_SOURCE
 #define _ISOC99_SOURCE 1
@@ -50,17 +50,17 @@ static int gesture_in_zoom = 0; /* for suppression of filtering of redraws: indi
 
 /******************************************************************/
 
-void XXX_gdk_draw_line(cairo_t *cr, wave_rgb_t gc, gint _x1, gint _y1, gint _x2, gint _y2)
+void XXX_gdk_draw_line(cairo_t *cr, GwColor color, gint _x1, gint _y1, gint _x2, gint _y2)
 {
-    cairo_set_source_rgba(cr, gc.r, gc.g, gc.b, gc.a);
+    cairo_set_source_rgba(cr, color.r, color.g, color.b, color.a);
     cairo_move_to(cr, _x1 + WAVE_CAIRO_050_OFFSET, _y1 + WAVE_CAIRO_050_OFFSET);
     cairo_line_to(cr, _x2 + WAVE_CAIRO_050_OFFSET, _y2 + WAVE_CAIRO_050_OFFSET);
     cairo_stroke(cr);
 }
 
-void XXX_gdk_set_color(cairo_t *cr, wave_rgb_t gc)
+void XXX_gdk_set_color(cairo_t *cr, GwColor color)
 {
-    cairo_set_source_rgba(cr, gc.r, gc.g, gc.b, gc.a);
+    cairo_set_source_rgba(cr, color.r, color.g, color.b, color.a);
 }
 
 void XXX_gdk_draw_line2(cairo_t *cr, gint _x1, gint _y1, gint _x2, gint _y2)
@@ -70,14 +70,14 @@ void XXX_gdk_draw_line2(cairo_t *cr, gint _x1, gint _y1, gint _x2, gint _y2)
 }
 
 void XXX_gdk_draw_rectangle(cairo_t *cr,
-                            wave_rgb_t gc,
+                            GwColor color,
                             gboolean filled,
                             gint _x1,
                             gint _y1,
                             gint _w,
                             gint _h)
 {
-    cairo_set_source_rgba(cr, gc.r, gc.g, gc.b, gc.a);
+    cairo_set_source_rgba(cr, color.r, color.g, color.b, color.a);
     if (filled) {
         cairo_rectangle(cr, _x1, _y1, _w, _h);
         cairo_fill(cr);
@@ -942,7 +942,8 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
                         warp++;
 
                         gt = (t->shift_drag_valid ? t->shift_drag : t->shift) +
-                             (gw_marker_get_position(primary_marker) - gw_marker_get_position(ghost_marker));
+                             (gw_marker_get_position(primary_marker) -
+                              gw_marker_get_position(ghost_marker));
 
                         if (gt < 0) {
                             delta = GLOBALS->tims.first - GLOBALS->tims.last;
@@ -989,8 +990,8 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
                                      ? gw_marker_get_position(primary_marker)
                                      : -1; // TODO: don't use sentinel value
             GwTime ghost_pos = gw_marker_is_enabled(ghost_marker)
-                                     ? gw_marker_get_position(ghost_marker)
-                                     : -1; // TODO: don't use sentinel value
+                                   ? gw_marker_get_position(ghost_marker)
+                                   : -1; // TODO: don't use sentinel value
 
             service_dragzoom(ghost_pos, primary_pos);
         }
@@ -1158,90 +1159,23 @@ void wavearea_drag_end_event(GtkGestureDrag *gesture,
 }
 #endif
 
-void make_sigarea_gcs(GtkWidget *signalarea)
-{
-    (void)signalarea;
-
-    if (!GLOBALS->made_sgc_contexts_wavewindow_c_1) {
-        gboolean dark = GLOBALS->use_dark;
-
-        if (!dark) {
-            g_object_get(gtk_settings_get_default(),
-                         "gtk-application-prefer-dark-theme",
-                         &dark,
-                         NULL);
-            GLOBALS->use_dark = dark;
-        }
-
-        GLOBALS->rgb_gc_white =
-            dark ? XXX_alloc_color(GLOBALS->color_black) : XXX_alloc_color(GLOBALS->color_white);
-        GLOBALS->rgb_gc_black =
-            dark ? XXX_alloc_color(GLOBALS->color_white) : XXX_alloc_color(GLOBALS->color_black);
-        GLOBALS->rgb_gc.gc_ltgray =
-            dark ? XXX_alloc_color(GLOBALS->color_black) : XXX_alloc_color(GLOBALS->color_ltgray);
-        GLOBALS->rgb_gc.gc_normal = XXX_alloc_color(GLOBALS->color_normal);
-        GLOBALS->rgb_gc.gc_mdgray =
-            dark ? XXX_alloc_color(GLOBALS->color_dkgray) : XXX_alloc_color(GLOBALS->color_mdgray);
-        GLOBALS->rgb_gc.gc_dkgray =
-            dark ? XXX_alloc_color(GLOBALS->color_white) : XXX_alloc_color(GLOBALS->color_dkgray);
-        GLOBALS->rgb_gc.gc_dkblue = XXX_alloc_color(GLOBALS->color_dkblue);
-        GLOBALS->rgb_gc.gc_brkred = XXX_alloc_color(GLOBALS->color_brkred);
-        GLOBALS->rgb_gc.gc_ltblue = XXX_alloc_color(GLOBALS->color_ltblue);
-        GLOBALS->rgb_gc.gc_gmstrd = XXX_alloc_color(GLOBALS->color_gmstrd);
-
-        GLOBALS->made_sgc_contexts_wavewindow_c_1 = ~0;
-    }
-}
-
 /*
  * screengrab vs normal rendering gcs...
  */
 void force_screengrab_gcs(void)
 {
-    GLOBALS->black_and_white = 1;
 
-    GLOBALS->rgb_gc.gc_ltgray = GLOBALS->rgb_gc_white;
-    GLOBALS->rgb_gc.gc_normal = GLOBALS->rgb_gc_white;
-    GLOBALS->rgb_gc.gc_mdgray = GLOBALS->rgb_gc_white;
-    GLOBALS->rgb_gc.gc_dkgray = GLOBALS->rgb_gc_white;
-    GLOBALS->rgb_gc.gc_dkblue = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_brkred = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_ltblue = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_gmstrd = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_back_wavewindow_c_1 = GLOBALS->rgb_gc_white;
-    GLOBALS->rgb_gc.gc_baseline_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_grid_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_grid2_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_time_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_timeb_wavewindow_c_1 = GLOBALS->rgb_gc_white;
-    GLOBALS->rgb_gc.gc_value_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_low_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_highfill_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_high_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_trans_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_mid_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_xfill_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_x_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_vbox_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_vtrans_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_mark_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_umark_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_0_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_1fill_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_1_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_ufill_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_u_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_wfill_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_w_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_dashfill_wavewindow_c_1 = GLOBALS->rgb_gc_black;
-    GLOBALS->rgb_gc.gc_dash_wavewindow_c_1 = GLOBALS->rgb_gc_black;
+    g_error("disabled");
+
 }
 
 void force_normal_gcs(void)
 {
     GLOBALS->black_and_white = 0;
 
-    memcpy(&GLOBALS->rgb_gc, &GLOBALS->rgb_gccache, sizeof(struct wave_rgbmaster_t));
+    g_error("disabled");
+
+    // memcpy(&GLOBALS->rgb_gc, &GLOBALS->rgb_gccache, sizeof(struct wave_rgbmaster_t));
 }
 
 #ifdef WAVE_GTK3_SIZE_ALLOCATE_WORKAROUND_WAVE_VSLIDER
@@ -1699,9 +1633,16 @@ GtkWidget *create_wavewindow(void)
     gtk_widget_set_vexpand(GLOBALS->wavearea, TRUE);
 
 #ifdef EXPERIMENTAL_PLUGIN_SUPPORT
-    // TODO: Remove this hack! It doesn't support context changes and will update the waveform too often.
-    g_signal_connect_swapped(GLOBALS->project, "unnamed-marker-changed", G_CALLBACK(gw_wave_view_force_redraw), GLOBALS->wavearea);
-    g_signal_connect_swapped(gw_project_get_named_markers(GLOBALS->project), "changed", G_CALLBACK(gw_wave_view_force_redraw), GLOBALS->wavearea);
+    // TODO: Remove this hack! It doesn't support context changes and will update the waveform too
+    // often.
+    g_signal_connect_swapped(GLOBALS->project,
+                             "unnamed-marker-changed",
+                             G_CALLBACK(gw_wave_view_force_redraw),
+                             GLOBALS->wavearea);
+    g_signal_connect_swapped(gw_project_get_named_markers(GLOBALS->project),
+                             "changed",
+                             G_CALLBACK(gw_wave_view_force_redraw),
+                             GLOBALS->wavearea);
 #endif
 
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT

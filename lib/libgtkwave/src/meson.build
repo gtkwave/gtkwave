@@ -1,4 +1,6 @@
 libgtkwave_public_sources = [
+    'gw-color-theme.c',
+    'gw-color.c',
     'gw-marker.c',
     'gw-named-markers.c',
     'gw-project.c',
@@ -7,6 +9,8 @@ libgtkwave_public_sources = [
 
 libgtkwave_public_headers = [
     'gtkwave.h',
+    'gw-color-theme.h',
+    'gw-color.h',
     'gw-marker.h',
     'gw-named-markers.h',
     'gw-project.h',

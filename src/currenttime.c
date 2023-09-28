@@ -15,7 +15,7 @@
 #include "currenttime.h"
 #include "gw-time-display.h"
 #include "symbol.h"
-#include "wave_view.h"
+#include "gw-wave-view.h"
 
 static const char *time_prefix = WAVE_SI_UNITS;
 

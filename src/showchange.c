@@ -45,15 +45,14 @@ static const LabeledUint64 BASES[] = {{"Hex", TR_HEX},
                                       {"Enum", TR_ENUM | TR_BIN},
                                       {}};
 
-static const LabeledInt64 COLORS[] = {{"Normal", WAVE_COLOR_NORMAL},
-                                      {"Red", WAVE_COLOR_RED},
-                                      {"Orange", WAVE_COLOR_ORANGE},
-                                      {"Yellow", WAVE_COLOR_YELLOW},
-                                      {"Green", WAVE_COLOR_GREEN},
-                                      {"Blue", WAVE_COLOR_BLUE},
-                                      {"Indigo", WAVE_COLOR_INDIGO},
-                                      {"Violet", WAVE_COLOR_VIOLET},
-                                      // { "Cycle", WAVE_COLOR_CYCLE },
+static const LabeledInt64 COLORS[] = {{"Normal", -1},
+                                      {"Red", GW_RAINBOW_COLOR_RED},
+                                      {"Orange", GW_RAINBOW_COLOR_ORANGE},
+                                      {"Yellow", GW_RAINBOW_COLOR_YELLOW},
+                                      {"Green", GW_RAINBOW_COLOR_GREEN},
+                                      {"Blue", GW_RAINBOW_COLOR_BLUE},
+                                      {"Indigo", GW_RAINBOW_COLOR_INDIGO},
+                                      {"Violet", GW_RAINBOW_COLOR_VIOLET},
                                       {}};
 
 static const LabeledUint64 ANALOG_FORMATS[] = {
@@ -141,11 +140,9 @@ static GtkListStore *color_list_store_new(void)
                            color->value,
                            -1);
 
-        if (color->value != WAVE_COLOR_NORMAL && color->value != WAVE_COLOR_CYCLE) {
-            const uint32_t RAINBOW_COLORS[] = WAVE_RAINBOW_RGB;
-
-            gchar *dot = g_strdup_printf("<span foreground=\"#%06X\">&#x2B24;</span>",
-                                         RAINBOW_COLORS[color->value - 1]);
+        if (color->value >= 0) {
+            gchar *hex = gw_color_to_hex(gw_rainbow_color_to_color(color->value));
+            gchar *dot = g_strdup_printf("<span foreground=\"%s\">&#x2B24;</span>", hex);
             gtk_list_store_set(list_store, &iter, COLUMN_COLORED_DOT, dot, -1);
             g_free(dot);
         }
