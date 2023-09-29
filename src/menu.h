@@ -82,7 +82,6 @@ enum WV_MenuItems
     WV_MENU_FONVT,
     WV_MENU_FRW,
     WV_MENU_WRVCD,
-    WV_MENU_WRLXT,
     WV_MENU_WRTIM,
     WV_MENU_WCLOSE,
     WV_MENU_SEP2VCD,
@@ -284,8 +283,6 @@ enum WV_MenuItems
     WV_MENU_USECOLOR,
     WV_MENU_USEBW,
     WV_MENU_SEP18,
-    WV_MENU_LXTCC2Z,
-    WV_MENU_SEP19,
     WV_MENU_TDSCALEX,
     WV_MENU_TDSCALES,
     WV_MENU_TDSCALEM,
@@ -309,7 +306,6 @@ enum WV_RecurseType
 
 void menu_new_viewer(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_write_vcd_file(gpointer null_data, guint callback_action, GtkWidget *widget);
-void menu_write_lxt_file(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_print(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_read_save_file(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_write_save_file(gpointer null_data, guint callback_action, GtkWidget *widget);

@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Removed
 
 - Removed support for GTK 2.
+- Removed support for LXT, LXT2 and VZT formats.
 - Removed "Signal Search Hierarchy" dialog.
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed rc variables:
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     - `hide_sst`
     - `hier_grouping`
     - `hpane_pack`
+    - `lxt_clock_compress_to_z`
     - `use_scrollbar_only`
     - `use_scrollwheel_as_y`
     - `use_standard_clicking`

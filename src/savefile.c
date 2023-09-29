@@ -11,6 +11,7 @@
 #include <config.h>
 #include "savefile.h"
 #include "hierpack.h"
+#include "lx2.h"
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif

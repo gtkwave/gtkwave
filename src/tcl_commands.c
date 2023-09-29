@@ -510,20 +510,12 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
         } else {
             reportString = "VCD";
         }
-    } else if (GLOBALS->is_lxt) {
-        reportString = "LXT";
     } else if (GLOBALS->is_ghw) {
         reportString = "GHW";
     } else if (GLOBALS->is_lx2) {
         switch (GLOBALS->is_lx2) {
-            case LXT2_IS_LXT2:
-                reportString = "LXT2";
-                break;
             case LXT2_IS_AET2:
                 reportString = "AET2";
-                break;
-            case LXT2_IS_VZT:
-                reportString = "VZT";
                 break;
             case LXT2_IS_VLIST:
                 reportString = "VCD";
@@ -2052,7 +2044,6 @@ static gint switch_to_tab_number(unsigned int i)
 
         set_GLOBALS((*GLOBALS->contexts)[i]);
 
-        GLOBALS->lxt_clock_compress_to_z = g_old->lxt_clock_compress_to_z;
         GLOBALS->autoname_bundles = g_old->autoname_bundles;
         GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
         GLOBALS->autocoalesce = g_old->autocoalesce;

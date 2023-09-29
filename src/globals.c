@@ -20,8 +20,6 @@
 #include "globals.h"
 #include "gnu-getopt.h"
 #include "gtk23compat.h"
-#include "lx2.h"
-#include "lxt.h"
 #include "main.h"
 #include "menu.h"
 #include "pipeio.h"
@@ -38,12 +36,10 @@
 #include "vcd.h"
 #include "vcd_saver.h"
 #include "vlist.h"
-#include "vzt.h"
+#include "lx2.h"
 #include "signal_list.h"
 #include "gw-time-display.h"
 
-#include "lxt2_read.h"
-#include "vzt_read.h"
 #include "fst.h"
 #include "hierpack.h"
 
@@ -380,76 +376,6 @@ static const struct Global globals_base_values = {
      * lx2.c
      */
     LXT2_IS_INACTIVE, /* is_lx2 139 */
-    NULL, /* lx2_lx2_c_1 140 */
-    0, /* first_cycle_lx2_c_1 141 */
-    0, /* last_cycle */
-    0, /* total_cycles */
-    NULL, /* lx2_table_lx2_c_1 142 */
-    NULL, /* mvlfacs_lx2_c_1 143 */
-    0, /* busycnt_lx2_c_1 144 */
-
-    /*
-     * lxt.c
-     */
-    NULL, /* mm_lxt_mmap_addr */
-    0, /* mm_lxt_mmap_len */
-#if defined __MINGW32__
-    NULL, /* HANDLE hIn */
-    NULL, /* HANDLE hInMap */
-    NULL, /* char *win_fname = NULL; */
-#endif
-    0, /* fpos_lxt_c_1 145 */
-    0, /* is_lxt 146 */
-    0, /* lxt_clock_compress_to_z 147 */
-    NULL, /* mm_lxt_c_1 148 */
-    NULL, /* mmcache_lxt_c_1 */
-    0, /* version_lxt_c_1 149 */
-    NULL, /* mvlfacs_lxt_c_2 150 */
-    0, /* first_cycle_lxt_c_2 151 */
-    0, /* last_cycle */
-    0, /* total_cycles */
-    0, /* maxchange_lxt_c_1 152 */
-    0, /* maxindex */
-    0, /* f_len_lxt_c_1 153 */
-    NULL, /* positional_information_lxt_c_1 154 */
-    NULL, /* time_information 155 */
-    0, /* change_field_offset_lxt_c_1 156 */
-    0, /* facname_offset_lxt_c_1 157 */
-    0, /* facgeometry_offset_lxt_c_1 158 */
-    0, /* time_table_offset_lxt_c_1 159 */
-    0, /* time_table_offset64_lxt_c_1 160 */
-    0, /* sync_table_offset_lxt_c_1 161 */
-    0, /* initial_value_offset_lxt_c_1 162 */
-    0, /* timescale_offset_lxt_c_1 163 */
-    0, /* double_test_offset_lxt_c_1 164 */
-    0, /* zdictionary_offset_lxt_c_1 165 */
-    0, /* zfacname_predec_size_lxt_c_1 166 */
-    0, /* zfacname_size_lxt_c_1 167 */
-    0, /* zfacgeometry_size_lxt_c_1 168 */
-    0, /* zsync_table_size_lxt_c_1 169 */
-    0, /* ztime_table_size_lxt_c_1 170 */
-    0, /* zchg_predec_size_lxt_c_1 171 */
-    0, /* zchg_size_lxt_c_1 172 */
-    0, /* zdictionary_predec_size_lxt_c_1 173 */
-    AN_X, /* initial_value_lxt_c_1 174 */
-    0, /* dict_num_entries_lxt_c_1 175 */
-    0, /* dict_string_mem_required_lxt_c_1 176 */
-    0, /* dict_16_offset_lxt_c_1 177 */
-    0, /* dict_24_offset_lxt_c_1 178 */
-    0, /* dict_32_offset_lxt_c_1 179 */
-    0, /* dict_width_lxt_c_1 180 */
-    NULL, /* dict_string_mem_array_lxt_c_1 181 */
-    0, /* exclude_offset_lxt_c_1 182 */
-    0, /* lxt_timezero_offset */
-    NULL, /* lt_buf_lxt_c_1 183 */
-    0, /* lt_len_lxt_c_1 184 */
-    -1, /* fd_lxt_c_1 185 */
-    {0, 0, 0, 0, 0, 0, 0, 0}, /* double_mask_lxt_c_1 186 */
-    0, /* double_is_native_lxt_c_1 187 */
-    0, /* max_compare_time_tc_lxt_c_2 189 */
-    0, /* max_compare_pos_tc_lxt_c_2 */
-    NULL, /* resolve_lxt_alias_to */
-    NULL, /* lastchange */
 
     /*
      * main.c
@@ -547,7 +473,6 @@ static const struct Global globals_base_values = {
     NULL, /* filesel_imagegrab */
     0, /* save_success_menu_c_1 248 */
     NULL, /* filesel_vcd_writesave 249 */
-    NULL, /* filesel_lxt_writesave 250 */
     NULL, /* filesel_tim_writesave */
     0, /* lock_menu_c_1 251 */
     0, /* lock_menu_c_2 252 */
@@ -1280,18 +1205,12 @@ static int handle_setjmp(void)
     {
         switch (GLOBALS->loaded_file_type) /* on fail, longjmp called in these loaders */
         {
-            case LXT_FILE:
-                lxt_main(GLOBALS->loaded_file_name);
-                break;
             case VCD_FILE:
                 vcd_main(GLOBALS->loaded_file_name);
                 break;
             case VCD_RECODER_FILE:
                 vcd_recoder_main(GLOBALS->loaded_file_name);
                 break;
-            case LX2_FILE:
-            case VZT_FILE:
-            case AE2_FILE:
             case GHW_FILE:
             case FST_FILE:
             case DUMPLESS_FILE:
@@ -1368,10 +1287,6 @@ static int handle_setjmp(void)
         if (GLOBALS->vlist_handle) {
             fclose(GLOBALS->vlist_handle);
             GLOBALS->vlist_handle = NULL;
-        }
-        if (GLOBALS->mm_lxt_mmap_addr) {
-            munmap(GLOBALS->mm_lxt_mmap_addr, GLOBALS->mm_lxt_mmap_len);
-            GLOBALS->mm_lxt_mmap_addr = NULL;
         }
         free_outstanding(); /* free anything allocated in loader ctx */
 
@@ -1508,12 +1423,6 @@ void reload_into_new_context_2(void)
 #if defined(HAVE_LIBTCL)
     new_globals->interp = GLOBALS->interp;
 #endif
-
-    /* lxt.c */
-    if (GLOBALS->fd_lxt_c_1 >= 0) {
-        close(GLOBALS->fd_lxt_c_1);
-        GLOBALS->fd_lxt_c_1 = -1;
-    }
 
     /* Marker positions */
     // TODO: fix
@@ -1685,7 +1594,6 @@ void reload_into_new_context_2(void)
     new_globals->hier_max_level_shadow = GLOBALS->hier_max_level_shadow;
     new_globals->paned_pack_semantics = GLOBALS->paned_pack_semantics;
     new_globals->left_justify_sigs = GLOBALS->left_justify_sigs;
-    new_globals->lxt_clock_compress_to_z = GLOBALS->lxt_clock_compress_to_z;
     new_globals->extload_max_tree = GLOBALS->extload_max_tree;
     new_globals->ps_maxveclen = GLOBALS->ps_maxveclen;
     new_globals->show_base = GLOBALS->show_base;
@@ -1791,9 +1699,6 @@ void reload_into_new_context_2(void)
     strcpy2_into_new_context(new_globals,
                              &new_globals->filesel_vcd_writesave,
                              &GLOBALS->filesel_vcd_writesave);
-    strcpy2_into_new_context(new_globals,
-                             &new_globals->filesel_lxt_writesave,
-                             &GLOBALS->filesel_lxt_writesave);
     strcpy2_into_new_context(new_globals,
                              &new_globals->filesel_tim_writesave,
                              &GLOBALS->filesel_tim_writesave);
@@ -1925,18 +1830,6 @@ void reload_into_new_context_2(void)
 
     /* deallocate any loader-related stuff */
     switch (GLOBALS->loaded_file_type) {
-        case LXT_FILE:
-            if (GLOBALS->mm_lxt_mmap_addr) {
-                munmap(GLOBALS->mm_lxt_mmap_addr, GLOBALS->mm_lxt_mmap_len);
-            }
-            break;
-
-        case LX2_FILE:
-            lxt2_rd_close(GLOBALS->lx2_lx2_c_1);
-            break;
-        case VZT_FILE:
-            vzt_rd_close(GLOBALS->vzt_vzt_c_1);
-            break;
         case FST_FILE:
             fstReaderClose(GLOBALS->fst_fst_c_1);
             GLOBALS->fst_fst_c_1 = NULL;
@@ -2121,16 +2014,6 @@ void reload_into_new_context_2(void)
                 break;
 #endif
 
-            case LX2_FILE:
-                lx2_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-                load_was_success = (GLOBALS->lx2_lx2_c_1 != NULL);
-                break;
-
-            case VZT_FILE:
-                vzt_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-                load_was_success = (GLOBALS->vzt_vzt_c_1 != NULL);
-                break;
-
             case FST_FILE:
                 fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
                 load_was_success = (GLOBALS->fst_fst_c_1 != NULL);
@@ -2149,7 +2032,6 @@ void reload_into_new_context_2(void)
                 load_was_success = (ghw_main(GLOBALS->loaded_file_name) != 0);
                 break;
 
-            case LXT_FILE:
             case VCD_FILE:
             case VCD_RECODER_FILE:
                 load_was_success = handle_setjmp();
@@ -2427,18 +2309,6 @@ void free_and_destroy_page_context(void)
 
     /* deallocate any loader-related stuff */
     switch (GLOBALS->loaded_file_type) {
-        case LXT_FILE:
-            if (GLOBALS->mm_lxt_mmap_addr) {
-                munmap(GLOBALS->mm_lxt_mmap_addr, GLOBALS->mm_lxt_mmap_len);
-            }
-            break;
-
-        case LX2_FILE:
-            lxt2_rd_close(GLOBALS->lx2_lx2_c_1);
-            break;
-        case VZT_FILE:
-            vzt_rd_close(GLOBALS->vzt_vzt_c_1);
-            break;
         case FST_FILE:
             fstReaderClose(GLOBALS->fst_fst_c_1);
             GLOBALS->fst_fst_c_1 = NULL;
@@ -2594,7 +2464,6 @@ static gint context_swapper(GtkWindow *w, GdkEvent *event, void *data)
 
                             set_GLOBALS((*GLOBALS->contexts)[i]);
 
-                            GLOBALS->lxt_clock_compress_to_z = g_old->lxt_clock_compress_to_z;
                             GLOBALS->autoname_bundles = g_old->autoname_bundles;
                             GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
                             GLOBALS->autocoalesce = g_old->autocoalesce;

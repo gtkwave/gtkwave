@@ -23,7 +23,6 @@
 #include <sys/stat.h>
 #include "symbol.h"
 #include "vcd.h"
-#include "lxt.h"
 #include "bsearch.h"
 #include "hierpack.h"
 

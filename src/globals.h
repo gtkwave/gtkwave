@@ -38,8 +38,6 @@
 #include "gconf.h"
 #include "ghw.h"
 #include "gtk23compat.h"
-#include "lx2.h"
-#include "lxt.h"
 #include "main.h"
 #include "memory.h"
 #include "menu.h"
@@ -59,7 +57,6 @@
 #include "vcd.h"
 #include "vcd_saver.h"
 #include "vlist.h"
-#include "vzt.h"
 #include "version.h"
 #include "extload.h"
 
@@ -394,75 +391,6 @@ struct Global
      * lx2.c
      */
     unsigned char is_lx2; /* from lx2.c 143 */
-    struct lxt2_rd_trace *lx2_lx2_c_1; /* from lx2.c 144 */
-    GwTime first_cycle_lx2_c_1; /* from lx2.c 145 */
-    GwTime last_cycle_lx2_c_1; /* from lx2.c 146 */
-    GwTime total_cycles_lx2_c_1; /* from lx2.c 147 */
-    struct lx2_entry *lx2_table_lx2_c_1; /* from lx2.c 148 */
-    struct fac *mvlfacs_lx2_c_1; /* from lx2.c 149 */
-    int busycnt_lx2_c_1; /* from lx2.c 150 */
-
-    /*
-     * lxt.c
-     */
-    char *mm_lxt_mmap_addr;
-    size_t mm_lxt_mmap_len;
-#if defined __MINGW32__
-    HANDLE hIn, hInMap;
-    char *win_fname;
-#endif
-    int fpos_lxt_c_1; /* from lxt.c 151 */
-    char is_lxt; /* from lxt.c 152 */
-    char lxt_clock_compress_to_z; /* from lxt.c 153 */
-    void *mm_lxt_c_1; /* from lxt.c 154 */
-    void *mmcache_lxt_c_1; /* from lxt.c 155 */
-    int version_lxt_c_1; /* from lxt.c 156 */
-    struct fac *mvlfacs_lxt_c_2; /* from lxt.c 157 */
-    GwTime first_cycle_lxt_c_2; /* from lxt.c 158 */
-    GwTime last_cycle_lxt_c_2; /* from lxt.c 159 */
-    GwTime total_cycles_lxt_c_2; /* from lxt.c 160 */
-    int maxchange_lxt_c_1; /* from lxt.c 161 */
-    int maxindex_lxt_c_1; /* from lxt.c 162 */
-    int f_len_lxt_c_1; /* from lxt.c 163 */
-    int *positional_information_lxt_c_1; /* from lxt.c 164 */
-    GwTime *time_information; /* from lxt.c 165 */
-    int change_field_offset_lxt_c_1; /* from lxt.c 166 */
-    int facname_offset_lxt_c_1; /* from lxt.c 167 */
-    int facgeometry_offset_lxt_c_1; /* from lxt.c 168 */
-    int time_table_offset_lxt_c_1; /* from lxt.c 169 */
-    int time_table_offset64_lxt_c_1; /* from lxt.c 170 */
-    int sync_table_offset_lxt_c_1; /* from lxt.c 171 */
-    int initial_value_offset_lxt_c_1; /* from lxt.c 172 */
-    int timescale_offset_lxt_c_1; /* from lxt.c 173 */
-    int double_test_offset_lxt_c_1; /* from lxt.c 174 */
-    int zdictionary_offset_lxt_c_1; /* from lxt.c 175 */
-    unsigned int zfacname_predec_size_lxt_c_1; /* from lxt.c 176 */
-    unsigned int zfacname_size_lxt_c_1; /* from lxt.c 177 */
-    unsigned int zfacgeometry_size_lxt_c_1; /* from lxt.c 178 */
-    unsigned int zsync_table_size_lxt_c_1; /* from lxt.c 179 */
-    unsigned int ztime_table_size_lxt_c_1; /* from lxt.c 180 */
-    unsigned int zchg_predec_size_lxt_c_1; /* from lxt.c 181 */
-    unsigned int zchg_size_lxt_c_1; /* from lxt.c 182 */
-    unsigned int zdictionary_predec_size_lxt_c_1; /* from lxt.c 183 */
-    unsigned char initial_value_lxt_c_1; /* from lxt.c 184 */
-    unsigned int dict_num_entries_lxt_c_1; /* from lxt.c 185 */
-    unsigned int dict_string_mem_required_lxt_c_1; /* from lxt.c 186 */
-    int dict_16_offset_lxt_c_1; /* from lxt.c 187 */
-    int dict_24_offset_lxt_c_1; /* from lxt.c 188 */
-    int dict_32_offset_lxt_c_1; /* from lxt.c 189 */
-    unsigned int dict_width_lxt_c_1; /* from lxt.c 190 */
-    char **dict_string_mem_array_lxt_c_1; /* from lxt.c 191 */
-    int exclude_offset_lxt_c_1; /* from lxt.c 192 */
-    int lxt_timezero_offset;
-    char *lt_buf_lxt_c_1; /* from lxt.c 193 */
-    int lt_len_lxt_c_1; /* from lxt.c 194 */
-    int fd_lxt_c_1; /* from lxt.c 195 */
-    unsigned char double_mask_lxt_c_1[8]; /* from lxt.c 196 */
-    char double_is_native_lxt_c_1; /* from lxt.c 197 */
-    int max_compare_time_tc_lxt_c_2; /* from lxt.c 199 */
-    int max_compare_pos_tc_lxt_c_2; /* from lxt.c 200 */
-    struct Node **resolve_lxt_alias_to;
-    unsigned int *lastchange;
 
     /*
      * main.c
@@ -568,7 +496,6 @@ struct Global
     char *filesel_imagegrab; /* from menu.c */
     char save_success_menu_c_1; /* from menu.c 265 */
     char *filesel_vcd_writesave; /* from menu.c 266 */
-    char *filesel_lxt_writesave; /* from menu.c 267 */
     char *filesel_tim_writesave; /* from menu.c */
     int lock_menu_c_1; /* from menu.c 268 */
     int lock_menu_c_2; /* from menu.c 269 */

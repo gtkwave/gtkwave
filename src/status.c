@@ -11,7 +11,6 @@
 #include <config.h>
 #include <gtk/gtk.h>
 #include "symbol.h"
-#include "lxt2_read.h"
 #include "lx2.h"
 
 /* Add some text to our text widget - this is a callback that is invoked
@@ -67,21 +66,10 @@ void realize_text(GtkWidget *text, gpointer data)
         } else {
             status_text("VCD loaded successfully.\n");
         }
-    } else if (GLOBALS->is_lxt) {
-        status_text("LXT loaded successfully.\n");
     } else if (GLOBALS->is_ghw) {
         status_text("GHW loaded successfully.\n");
     } else if (GLOBALS->is_lx2) {
         switch (GLOBALS->is_lx2) {
-            case LXT2_IS_LXT2:
-                status_text("LXT2 loaded successfully.\n");
-                break;
-            case LXT2_IS_AET2:
-                status_text("AET2 loaded successfully.\n");
-                break;
-            case LXT2_IS_VZT:
-                status_text("VZT loaded successfully.\n");
-                break;
             case LXT2_IS_VLIST:
                 status_text("VCD loaded successfully.\n");
                 break;

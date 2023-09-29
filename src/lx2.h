@@ -24,8 +24,6 @@
 enum LXT2_Loader_Type_Encodings
 {
     LXT2_IS_INACTIVE,
-    LXT2_IS_LXT2,
-    LXT2_IS_VZT,
     LXT2_IS_AET2,
     LXT2_IS_VLIST,
     LXT2_IS_FST,
@@ -48,9 +46,7 @@ struct lx2_entry
 #pragma pack(pop)
 #endif
 
-GwTime lx2_main(char *fname, char *skip_start, char *skip_end);
 void import_lx2_trace(nptr np);
-
 void lx2_set_fac_process_mask(nptr np);
 void lx2_import_masked(void);
 

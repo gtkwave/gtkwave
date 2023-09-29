@@ -1306,9 +1306,6 @@ GtkWidget *treeboxframe(const char *title)
                     gtk_tree_view_append_column(GTK_TREE_VIEW(sig_view), column);
                 }
                 break;
-            case LXT_FILE:
-            case LX2_FILE:
-            case VZT_FILE:
             case GHW_FILE:
             case MISSING_FILE:
             default:

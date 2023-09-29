@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symbol.h"
-#include "lxt.h"
 #include "debug.h"
 #include "bsearch.h"
 #include "strace.h"

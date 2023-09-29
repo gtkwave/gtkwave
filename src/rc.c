@@ -479,13 +479,6 @@ int f_left_justify_sigs(const char *str)
     return (0);
 }
 
-int f_lxt_clock_compress_to_z(const char *str)
-{
-    DEBUG(printf("f_lxt_clock_compress_to_z(\"%s\")\n", str));
-    GLOBALS->lxt_clock_compress_to_z = atoi_64(str) ? 1 : 0;
-    return (0);
-}
-
 int f_max_fsdb_trees(const char *str)
 {
     int val;
@@ -901,7 +894,6 @@ static struct rc_entry rcitems[] = {
     {"initial_window_ypos", f_initial_window_ypos},
     {"keep_xz_colors", f_keep_xz_colors},
     {"left_justify_sigs", f_left_justify_sigs},
-    {"lxt_clock_compress_to_z", f_lxt_clock_compress_to_z},
     {"lz_removal", f_lz_removal},
     {"max_fsdb_trees", f_max_fsdb_trees},
     {"page_divisor", f_page_divisor},

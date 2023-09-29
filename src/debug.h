@@ -154,9 +154,6 @@ struct gtkwave_dual_ipc_t
 enum GtkwaveFileTypes
 {
     G_FT_UNKNOWN,
-    G_FT_LXT,
-    G_FT_LXT2,
-    G_FT_VZT,
     G_FT_FST
 };
 

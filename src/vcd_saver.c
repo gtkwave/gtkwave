@@ -10,7 +10,6 @@
 #include <config.h>
 #include "globals.h"
 #include "vcd_saver.h"
-#include <lxt_write.h>
 #include "ghw.h"
 #include "hierpack.h"
 #include <time.h>
@@ -343,8 +342,6 @@ int save_nodes_to_export_generic(FILE *trans_file,
     int strace_append = 0;
     int max_len = 1;
     char *row_data = NULL;
-    struct lt_trace *lt = NULL;
-    int lxt = (export_typ == WAVE_EXPORT_LXT);
     int is_trans = (export_typ == WAVE_EXPORT_TRANS);
     int dumpvars_state = 0;
 
@@ -353,25 +350,18 @@ int save_nodes_to_export_generic(FILE *trans_file,
     }
 
     errno = 0;
-    if (lxt) {
-        lt = lt_init(fname);
-        if (!lt) {
-            return (VCDSAV_FILE_ERROR);
-        }
+    if (export_typ != WAVE_EXPORT_TRANS) {
+        GLOBALS->f_vcd_saver_c_1 = fopen(fname, "wb");
     } else {
-        if (export_typ != WAVE_EXPORT_TRANS) {
-            GLOBALS->f_vcd_saver_c_1 = fopen(fname, "wb");
-        } else {
-            if (!trans_head) /* scan-build : is programming error to get here */
-            {
-                return (VCDSAV_FILE_ERROR);
-            }
-            GLOBALS->f_vcd_saver_c_1 = trans_file;
-        }
-
-        if (!GLOBALS->f_vcd_saver_c_1) {
+        if (!trans_head) /* scan-build : is programming error to get here */
+        {
             return (VCDSAV_FILE_ERROR);
         }
+        GLOBALS->f_vcd_saver_c_1 = trans_file;
+    }
+
+    if (!GLOBALS->f_vcd_saver_c_1) {
+        return (VCDSAV_FILE_ERROR);
     }
 
     while (t) {
@@ -462,91 +452,58 @@ int save_nodes_to_export_generic(FILE *trans_file,
         return (VCDSAV_EMPTY);
 
     /* header */
-    if (lxt) {
-        int dim;
-
-        lt_set_chg_compress(lt);
-        lt_set_clock_compress(lt);
-        lt_set_initial_value(lt, 'x');
-        lt_set_time64(lt, 0);
-        lt_symbol_bracket_stripping(lt, 1);
-
-        switch (GLOBALS->time_dimension) {
-            case 'm':
-                dim = -3;
-                break;
-            case 'u':
-                dim = -6;
-                break;
-            case 'n':
-                dim = -9;
-                break;
-            case 'p':
-                dim = -12;
-                break;
-            case 'f':
-                dim = -15;
-                break;
-            default:
-                dim = 0;
-                break;
+    if (export_typ != WAVE_EXPORT_TRANS) {
+        time(&walltime);
+        w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$date\n");
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "\t%s",
+                            asctime(localtime(&walltime)));
+        w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$version\n\t" WAVE_VERSION_INFO "\n$end\n");
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$timescale\n\t%d%c%s\n$end\n",
+                            (int)GLOBALS->time_scale,
+                            GLOBALS->time_dimension,
+                            (GLOBALS->time_dimension == 's') ? "" : "s");
+        if (GLOBALS->global_time_offset) {
+            w32redirect_fprintf(is_trans,
+                                GLOBALS->f_vcd_saver_c_1,
+                                "$timezero\n\t%" GW_TIME_FORMAT "\n$end\n",
+                                GLOBALS->global_time_offset);
         }
-
-        lt_set_timescale(lt, dim);
     } else {
-        if (export_typ != WAVE_EXPORT_TRANS) {
-            time(&walltime);
-            w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$date\n");
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$comment data_start %p $end\n",
+                            (void *)trans_head); /* arbitrary hex identifier */
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$comment name %s $end\n",
+                            trans_head->name ? trans_head->name : "UNKNOWN");
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$timescale %d%c%s $end\n",
+                            (int)GLOBALS->time_scale,
+                            GLOBALS->time_dimension,
+                            (GLOBALS->time_dimension == 's') ? "" : "s");
+        if (GLOBALS->global_time_offset) {
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
-                                "\t%s",
-                                asctime(localtime(&walltime)));
-            w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$version\n\t" WAVE_VERSION_INFO "\n$end\n");
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$timescale\n\t%d%c%s\n$end\n",
-                                (int)GLOBALS->time_scale,
-                                GLOBALS->time_dimension,
-                                (GLOBALS->time_dimension == 's') ? "" : "s");
-            if (GLOBALS->global_time_offset) {
-                w32redirect_fprintf(is_trans,
-                                    GLOBALS->f_vcd_saver_c_1,
-                                    "$timezero\n\t%" GW_TIME_FORMAT "\n$end\n",
-                                    GLOBALS->global_time_offset);
-            }
-        } else {
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$comment data_start %p $end\n",
-                                (void *)trans_head); /* arbitrary hex identifier */
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$comment name %s $end\n",
-                                trans_head->name ? trans_head->name : "UNKNOWN");
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$timescale %d%c%s $end\n",
-                                (int)GLOBALS->time_scale,
-                                GLOBALS->time_dimension,
-                                (GLOBALS->time_dimension == 's') ? "" : "s");
-            if (GLOBALS->global_time_offset) {
-                w32redirect_fprintf(is_trans,
-                                    GLOBALS->f_vcd_saver_c_1,
-                                    "$timezero %" GW_TIME_FORMAT " $end\n",
-                                    GLOBALS->global_time_offset);
-            }
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$comment min_time %" GW_TIME_FORMAT " $end\n",
-                                GLOBALS->min_time / GLOBALS->time_scale);
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$comment max_time %" GW_TIME_FORMAT " $end\n",
-                                GLOBALS->max_time / GLOBALS->time_scale);
+                                "$timezero %" GW_TIME_FORMAT " $end\n",
+                                GLOBALS->global_time_offset);
         }
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$comment min_time %" GW_TIME_FORMAT " $end\n",
+                            GLOBALS->min_time / GLOBALS->time_scale);
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$comment max_time %" GW_TIME_FORMAT " $end\n",
+                            GLOBALS->max_time / GLOBALS->time_scale);
     }
 
     if (export_typ == WAVE_EXPORT_TRANS) {
@@ -570,7 +527,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
         int was_packed = HIER_DEPACK_STATIC;
         char *hname =
             hier_decompress_flagged(GLOBALS->hp_vcd_saver_c_1[i]->item->nname, &was_packed);
-        char *netname = lxt ? hname : output_hier(is_trans, hname);
+        char *netname = output_hier(is_trans, hname);
 
         if (export_typ == WAVE_EXPORT_TRANS) {
             w32redirect_fprintf(is_trans,
@@ -581,27 +538,16 @@ int save_nodes_to_export_generic(FILE *trans_file,
         }
 
         if (GLOBALS->hp_vcd_saver_c_1[i]->flags & (HIST_REAL | HIST_STRING)) {
-            if (lxt) {
-                GLOBALS->hp_vcd_saver_c_1[i]->handle.p = lt_symbol_add(
-                    lt,
-                    netname,
-                    0,
-                    0,
-                    0,
-                    GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING ? LT_SYM_F_STRING
-                                                                      : LT_SYM_F_DOUBLE);
-            } else {
-                const char *typ =
-                    (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? "string" : "real";
-                int tlen = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? 0 : 1;
-                w32redirect_fprintf(is_trans,
-                                    GLOBALS->f_vcd_saver_c_1,
-                                    "$var %s %d %s %s $end\n",
-                                    typ,
-                                    tlen,
-                                    vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
-                                    netname);
-            }
+            const char *typ =
+                (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? "string" : "real";
+            int tlen = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? 0 : 1;
+            w32redirect_fprintf(is_trans,
+                                GLOBALS->f_vcd_saver_c_1,
+                                "$var %s %d %s %s $end\n",
+                                typ,
+                                tlen,
+                                vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
+                                netname);
         } else {
             int msi = -1, lsi = -1;
 
@@ -611,37 +557,21 @@ int save_nodes_to_export_generic(FILE *trans_file,
             }
 
             if (msi == lsi) {
-                if (lxt) {
-                    int strand_idx = strand_pnt(netname);
-                    if (strand_idx >= 0) {
-                        msi = lsi = atoi(netname + strand_idx + 1);
-                    }
-                    GLOBALS->hp_vcd_saver_c_1[i]->handle.p =
-                        lt_symbol_add(lt, netname, 0, msi, lsi, LT_SYM_F_BITS);
-                } else {
-                    w32redirect_fprintf(
-                        is_trans,
-                        GLOBALS->f_vcd_saver_c_1,
-                        "$var %s 1 %s %s $end\n",
-                        vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype],
-                        vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
-                        netname);
-                }
+                w32redirect_fprintf(is_trans,
+                                    GLOBALS->f_vcd_saver_c_1,
+                                    "$var %s 1 %s %s $end\n",
+                                    vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype],
+                                    vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
+                                    netname);
             } else {
                 int len = (msi < lsi) ? (lsi - msi + 1) : (msi - lsi + 1);
-                if (lxt) {
-                    GLOBALS->hp_vcd_saver_c_1[i]->handle.p =
-                        lt_symbol_add(lt, netname, 0, msi, lsi, LT_SYM_F_BITS);
-                } else {
-                    w32redirect_fprintf(
-                        is_trans,
-                        GLOBALS->f_vcd_saver_c_1,
-                        "$var %s %d %s %s $end\n",
-                        vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype],
-                        len,
-                        vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
-                        netname);
-                }
+                w32redirect_fprintf(is_trans,
+                                    GLOBALS->f_vcd_saver_c_1,
+                                    "$var %s %d %s %s $end\n",
+                                    vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype],
+                                    len,
+                                    vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
+                                    netname);
                 GLOBALS->hp_vcd_saver_c_1[i]->len = len;
                 if (len > max_len)
                     max_len = len;
@@ -653,12 +583,10 @@ int save_nodes_to_export_generic(FILE *trans_file,
 
     row_data = malloc_2(max_len + 1);
 
-    if (!lxt) {
-        output_hier(is_trans, "");
-        free_hier();
+    output_hier(is_trans, "");
+    free_hier();
 
-        w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$enddefinitions $end\n");
-    }
+    w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$enddefinitions $end\n");
 
     /* value changes */
 
@@ -682,21 +610,17 @@ int save_nodes_to_export_generic(FILE *trans_file,
                 tnorm /= GLOBALS->time_scale;
             }
 
-            if (lxt) {
-                lt_set_time64(lt, tnorm);
-            } else {
-                if (dumpvars_state == 1) {
-                    w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
-                    dumpvars_state = 2;
-                }
-                w32redirect_fprintf(is_trans,
-                                    GLOBALS->f_vcd_saver_c_1,
-                                    "#%" GW_TIME_FORMAT "\n",
-                                    tnorm);
-                if (!dumpvars_state) {
-                    w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$dumpvars\n");
-                    dumpvars_state = 1;
-                }
+            if (dumpvars_state == 1) {
+                w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
+                dumpvars_state = 2;
+            }
+            w32redirect_fprintf(is_trans,
+                                GLOBALS->f_vcd_saver_c_1,
+                                "#%" GW_TIME_FORMAT "\n",
+                                tnorm);
+            if (!dumpvars_state) {
+                w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$dumpvars\n");
+                dumpvars_state = 1;
             }
             prevtime = GLOBALS->hp_vcd_saver_c_1[0]->hist->time;
         }
@@ -708,35 +632,26 @@ int save_nodes_to_export_generic(FILE *trans_file,
                                     ? GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
                                     : "UNDEF";
 
-                    if (lxt) {
-                        lt_emit_value_string(lt,
-                                             GLOBALS->hp_vcd_saver_c_1[0]->handle.p,
-                                             0,
-                                             (char *)vec);
-                    } else {
-                        int vec_slen = strlen(vec);
-                        char *vec_escaped = malloc_2(vec_slen * 4 + 1); /* worst case */
-                        int vlen = fstUtilityBinToEsc((unsigned char *)vec_escaped,
-                                                      (unsigned char *)vec,
-                                                      vec_slen);
+                    int vec_slen = strlen(vec);
+                    char *vec_escaped = malloc_2(vec_slen * 4 + 1); /* worst case */
+                    int vlen = fstUtilityBinToEsc((unsigned char *)vec_escaped,
+                                                  (unsigned char *)vec,
+                                                  vec_slen);
 
-                        vec_escaped[vlen] = 0;
-                        if (vlen) {
-                            w32redirect_fprintf(
-                                is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "s%s %s\n",
-                                vec_escaped,
-                                vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
-                        } else {
-                            w32redirect_fprintf(
-                                is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "s\\000 %s\n",
-                                vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
-                        }
-                        free_2(vec_escaped);
+                    vec_escaped[vlen] = 0;
+                    if (vlen) {
+                        w32redirect_fprintf(is_trans,
+                                            GLOBALS->f_vcd_saver_c_1,
+                                            "s%s %s\n",
+                                            vec_escaped,
+                                            vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
+                    } else {
+                        w32redirect_fprintf(is_trans,
+                                            GLOBALS->f_vcd_saver_c_1,
+                                            "s\\000 %s\n",
+                                            vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
                     }
+                    free_2(vec_escaped);
                 } else {
 #ifdef WAVE_HAS_H_DOUBLE
                     double *d = &GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_double;
@@ -751,21 +666,17 @@ int save_nodes_to_export_generic(FILE *trans_file,
                         value = *d;
                     }
 
-                    if (lxt) {
-                        lt_emit_value_double(lt, GLOBALS->hp_vcd_saver_c_1[0]->handle.p, 0, value);
-                    } else {
-                        w32redirect_fprintf(is_trans,
-                                            GLOBALS->f_vcd_saver_c_1,
-                                            "r%.16g %s\n",
-                                            value,
-                                            vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
-                    }
+                    w32redirect_fprintf(is_trans,
+                                        GLOBALS->f_vcd_saver_c_1,
+                                        "r%.16g %s\n",
+                                        value,
+                                        vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
                 }
             } else if (GLOBALS->hp_vcd_saver_c_1[0]->len) {
                 if (GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector) {
                     for (i = 0; i < GLOBALS->hp_vcd_saver_c_1[0]->len; i++) {
                         row_data[i] =
-                            analyzer_demang(lxt, GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector[i]);
+                            analyzer_demang(0, GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector[i]);
                     }
                 } else {
                     for (i = 0; i < GLOBALS->hp_vcd_saver_c_1[0]->len; i++) {
@@ -774,35 +685,17 @@ int save_nodes_to_export_generic(FILE *trans_file,
                 }
                 row_data[i] = 0;
 
-                if (lxt) {
-                    lt_emit_value_bit_string(lt,
-                                             GLOBALS->hp_vcd_saver_c_1[0]->handle.p,
-                                             0,
-                                             row_data);
-                } else {
-                    w32redirect_fprintf(is_trans,
-                                        GLOBALS->f_vcd_saver_c_1,
-                                        "b%s %s\n",
-                                        vcd_truncate_bitvec(row_data),
-                                        vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
-                }
+                w32redirect_fprintf(is_trans,
+                                    GLOBALS->f_vcd_saver_c_1,
+                                    "b%s %s\n",
+                                    vcd_truncate_bitvec(row_data),
+                                    vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
             } else {
-                if (lxt) {
-                    row_data[0] = analyzer_demang(lxt, GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_val);
-                    row_data[1] = 0;
-
-                    lt_emit_value_bit_string(lt,
-                                             GLOBALS->hp_vcd_saver_c_1[0]->handle.p,
-                                             0,
-                                             row_data);
-                } else {
-                    w32redirect_fprintf(
-                        is_trans,
-                        GLOBALS->f_vcd_saver_c_1,
-                        "%c%s\n",
-                        analyzer_demang(lxt, GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_val),
-                        vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
-                }
+                w32redirect_fprintf(is_trans,
+                                    GLOBALS->f_vcd_saver_c_1,
+                                    "%c%s\n",
+                                    analyzer_demang(0, GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_val),
+                                    vcdid(GLOBALS->hp_vcd_saver_c_1[0]->val, export_typ));
             }
         }
 
@@ -810,18 +703,14 @@ int save_nodes_to_export_generic(FILE *trans_file,
     }
 
     if (prevtime < GLOBALS->max_time) {
-        if (lxt) {
-            lt_set_time64(lt, GLOBALS->max_time / GLOBALS->time_scale);
-        } else {
-            if (dumpvars_state == 1) {
-                w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
-                dumpvars_state = 2;
-            }
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "#%" GW_TIME_FORMAT "\n",
-                                GLOBALS->max_time / GLOBALS->time_scale);
+        if (dumpvars_state == 1) {
+            w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
+            dumpvars_state = 2;
         }
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "#%" GW_TIME_FORMAT "\n",
+                            GLOBALS->max_time / GLOBALS->time_scale);
     }
 
     for (i = 0; i < nodecnt; i++) {
@@ -833,24 +722,19 @@ int save_nodes_to_export_generic(FILE *trans_file,
     free_2(row_data);
     row_data = NULL;
 
-    if (lxt) {
-        lt_close(lt);
-        lt = NULL;
+    if (export_typ != WAVE_EXPORT_TRANS) {
+        fclose(GLOBALS->f_vcd_saver_c_1);
     } else {
-        if (export_typ != WAVE_EXPORT_TRANS) {
-            fclose(GLOBALS->f_vcd_saver_c_1);
-        } else {
-            w32redirect_fprintf(is_trans,
-                                GLOBALS->f_vcd_saver_c_1,
-                                "$comment data_end %p $end\n",
-                                (void *)trans_head); /* arbitrary hex identifier */
+        w32redirect_fprintf(is_trans,
+                            GLOBALS->f_vcd_saver_c_1,
+                            "$comment data_end %p $end\n",
+                            (void *)trans_head); /* arbitrary hex identifier */
 #if !defined __MINGW32__
-            fflush(GLOBALS->f_vcd_saver_c_1);
+        fflush(GLOBALS->f_vcd_saver_c_1);
 #endif
-        }
-
-        GLOBALS->f_vcd_saver_c_1 = NULL;
     }
+
+    GLOBALS->f_vcd_saver_c_1 = NULL;
 
     return (VCDSAV_OK);
 }

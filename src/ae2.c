@@ -19,8 +19,6 @@
 #include "ae2.h"
 #include "symbol.h"
 #include "vcd.h"
-#include "lxt.h"
-#include "lxt2_read.h"
 #include "fgetdynamic.h"
 #include "debug.h"
 #include "busy.h"
