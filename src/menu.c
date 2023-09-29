@@ -406,69 +406,6 @@ void menu_dataformat_xlate_file_0(gpointer null_data, guint callback_action, Gtk
 
 /******************************************************************/
 
-void menu_write_lxt_file_cleanup(GtkWidget *widget, gpointer data)
-{
-    (void)widget;
-    (void)data;
-
-    int rc;
-
-    if (!GLOBALS->filesel_ok) {
-        return;
-    }
-
-    if (GLOBALS->lock_menu_c_1 == 1)
-        return; /* avoid recursion */
-    GLOBALS->lock_menu_c_1 = 1;
-
-    status_text("Saving LXT...\n");
-    gtkwave_main_iteration(); /* make requester disappear requester */
-
-    rc = save_nodes_to_export(*GLOBALS->fileselbox_text, WAVE_EXPORT_LXT);
-
-    GLOBALS->lock_menu_c_1 = 0;
-
-    switch (rc) {
-        case VCDSAV_EMPTY:
-            status_text("No traces onscreen to save!\n");
-            break;
-
-        case VCDSAV_FILE_ERROR:
-            status_text("Problem writing LXT: ");
-            status_text(strerror(errno));
-            break;
-
-        case VCDSAV_OK:
-            status_text("LXT written successfully.\n");
-        default:
-            break;
-    }
-}
-
-void menu_write_lxt_file(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->traces.first) {
-        if ((GLOBALS->is_ghw) && (0)) {
-            status_text("LXT export not supported for GHW.\n");
-        } else {
-            fileselbox("Write LXT File As",
-                       &GLOBALS->filesel_lxt_writesave,
-                       G_CALLBACK(menu_write_lxt_file_cleanup),
-                       G_CALLBACK(NULL),
-                       "*.lxt",
-                       1);
-        }
-    } else {
-        status_text("No traces onscreen to save!\n");
-    }
-}
-
-/******************************************************************/
-
 void menu_write_vcd_file_cleanup(GtkWidget *widget, gpointer data)
 {
     (void)widget;
@@ -964,33 +901,7 @@ void menu_use_roundcaps(gpointer null_data, guint callback_action, GtkWidget *wi
     }
 }
 
-/**/
-void menu_lxt_clk_compress(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
 
-    if (GLOBALS->tcl_menu_toggle_item) {
-        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-        if (menu_wlist[WV_MENU_LXTCC2Z]) {
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]),
-                GLOBALS->lxt_clock_compress_to_z =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->lxt_clock_compress_to_z));
-        }
-    } else {
-        GLOBALS->lxt_clock_compress_to_z =
-            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]));
-        if (!GLOBALS->lxt_clock_compress_to_z) {
-            status_text("LXT CC2Z Off.\n");
-        } else {
-            status_text("LXT CC2Z On.\n");
-        }
-    }
-}
 /**/
 void menu_use_full_precision(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
@@ -2820,10 +2731,6 @@ int menu_new_viewer_tab_cleanup_2(char *fname, int optimize_vcd)
         if (GLOBALS->vcd_handle_vcd_recoder_c_2) {
             fclose(GLOBALS->vcd_handle_vcd_recoder_c_2);
             GLOBALS->vcd_handle_vcd_recoder_c_2 = NULL;
-        }
-        if (GLOBALS->mm_lxt_mmap_addr) {
-            munmap(GLOBALS->mm_lxt_mmap_addr, GLOBALS->mm_lxt_mmap_len);
-            GLOBALS->mm_lxt_mmap_addr = NULL;
         }
         free_outstanding(); /* free anything allocated in loader ctx */
         free(GLOBALS);
@@ -5307,11 +5214,6 @@ static gtkwave_mlist_t menu_items[] = {
                 menu_write_vcd_file,
                 WV_MENU_WRVCD,
                 "<Item>"),
-    WAVE_GTKIFE("/File/Export/Write LXT File As",
-                NULL,
-                menu_write_lxt_file,
-                WV_MENU_WRLXT,
-                "<Item>"),
     WAVE_GTKIFE("/File/Export/Write TIM File As",
                 NULL,
                 menu_write_tim_file,
@@ -5903,13 +5805,6 @@ static gtkwave_mlist_t menu_items[] = {
     WAVE_GTKIFE("/View/Use Color", NULL, menu_use_color, WV_MENU_USECOLOR, "<Item>"),
     WAVE_GTKIFE("/View/Use Black and White", NULL, menu_use_bw, WV_MENU_USEBW, "<Item>"),
     WAVE_GTKIFE("/View/<separator>", NULL, NULL, WV_MENU_SEP18, "<Separator>"),
-    WAVE_GTKIFE("/View/LXT Clock Compress to Z",
-                NULL,
-                menu_lxt_clk_compress,
-                WV_MENU_LXTCC2Z,
-                "<ToggleItem>"),
-
-    WAVE_GTKIFE("/View/<separator>", NULL, NULL, WV_MENU_SEP19, "<Separator>"),
     WAVE_GTKIFE("/View/Scale To Time Dimension/None",
                 NULL,
                 menu_scale_to_td_x,
@@ -6049,11 +5944,6 @@ void set_menu_toggles(void)
                                        GLOBALS->zoom_dyn);
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]),
                                        GLOBALS->zoom_dyne);
-    }
-
-    if (GLOBALS->loaded_file_type == LXT_FILE) {
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_LXTCC2Z]),
-                                       GLOBALS->lxt_clock_compress_to_z);
     }
 
     set_scale_to_time_dimension_toggles();
@@ -6916,13 +6806,6 @@ GtkWidget *alt_menu_top(GtkWidget *window)
     if (GLOBALS->loaded_file_type == DUMPLESS_FILE) {
         gtk_widget_destroy(menu_wlist[WV_MENU_FRW]);
         menu_wlist[WV_MENU_FRW] = NULL;
-    }
-
-    if (GLOBALS->loaded_file_type != LXT_FILE) {
-        gtk_widget_destroy(menu_wlist[WV_MENU_SEP18]);
-        menu_wlist[WV_MENU_SEP18] = NULL;
-        gtk_widget_destroy(menu_wlist[WV_MENU_LXTCC2Z]);
-        menu_wlist[WV_MENU_LXTCC2Z] = NULL;
     }
 
     gtk_window_add_accel_group(GTK_WINDOW(window), global_accel);

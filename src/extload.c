@@ -10,7 +10,6 @@
 #include <config.h>
 #include "globals.h"
 #include <stdio.h>
-#include "vzt.h"
 #include "lx2.h"
 
 #include "fsdb_wrapper_api.h"
@@ -22,9 +21,6 @@
 #include <stdlib.h>
 #include "symbol.h"
 #include "vcd.h"
-#include "lxt2_read.h"
-#include "vzt_read.h"
-#include "lxt.h"
 #include "extload.h"
 #include "debug.h"
 #include "busy.h"

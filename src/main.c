@@ -52,17 +52,13 @@
 #endif
 
 #include "symbol.h"
-#include "lx2.h"
 #include "ae2.h"
-#include "vzt.h"
 #include "ghw.h"
 #include "fst.h"
 #include "main.h"
 #include "menu.h"
 #include "vcd.h"
-#include "lxt.h"
-#include "lxt2_read.h"
-#include "vzt_read.h"
+#include "lx2.h"
 #include "pixmaps.h"
 #include "currenttime.h"
 #include "fgetdynamic.h"
@@ -96,7 +92,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
 
     set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
-    GLOBALS->lxt_clock_compress_to_z = g_old->lxt_clock_compress_to_z;
     GLOBALS->autoname_bundles = g_old->autoname_bundles;
     GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
     GLOBALS->autocoalesce = g_old->autocoalesce;
@@ -630,13 +625,15 @@ static void add_custom_css(void)
 #ifdef EXPERIMENTAL_PLUGIN_SUPPORT
 #include <libpeas.h>
 
-static void on_activate(GtkMenuItem *menu_item, gpointer user_data) {
+static void on_activate(GtkMenuItem *menu_item, gpointer user_data)
+{
     GwPlugin *plugin = user_data;
     gw_plugin_activate(plugin, GLOBALS->project);
     g_printerr("activate\n");
 }
 
-static void add_plugins_to_menu(GtkWidget *widget) {
+static void add_plugins_to_menu(GtkWidget *widget)
+{
     GwPluginManager *manager = gw_plugin_manager_new();
 
     GtkWidget *plugins = gtk_menu_item_new_with_label("Plugins");
@@ -684,7 +681,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     int magic_word_filetype = G_FT_UNKNOWN;
 
-    int i;
     int c;
     char is_vcd = 0;
     char is_wish = 0;
@@ -832,7 +828,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->hier_max_level_shadow = old_g->hier_max_level_shadow;
         GLOBALS->paned_pack_semantics = old_g->paned_pack_semantics;
         GLOBALS->left_justify_sigs = old_g->left_justify_sigs;
-        GLOBALS->lxt_clock_compress_to_z = old_g->lxt_clock_compress_to_z;
         GLOBALS->ps_maxveclen = old_g->ps_maxveclen;
         GLOBALS->show_base = old_g->show_base;
         GLOBALS->display_grid = old_g->display_grid;
@@ -1599,43 +1594,13 @@ loader_check_head:
         }
     } else
 #endif
-        if ((magic_word_filetype == G_FT_LXT) || (magic_word_filetype == G_FT_LXT2) ||
-            suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
+        if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
             suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
             suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
-        FILE *f = fopen(GLOBALS->loaded_file_name, "rb");
-        int typ = 0;
-
-        if (f) {
-            char buf[2];
-            unsigned int matchword;
-
-            if (fread(buf, 2, 1, f)) {
-                matchword = (((unsigned int)buf[0]) << 8) | ((unsigned int)buf[1]);
-                if (matchword == LT_HDRID)
-                    typ = 1;
-            }
-
-            fclose(f);
-        }
-
-        if (typ) {
-            GLOBALS->loaded_file_type = LXT_FILE;
-            lxt_main(GLOBALS->loaded_file_name);
-        } else {
-            GLOBALS->stems_type = WAVE_ANNO_LXT2;
-            GLOBALS->aet_name = malloc_2(strlen(GLOBALS->loaded_file_name) + 1);
-            strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
-            GLOBALS->loaded_file_type = LX2_FILE;
-            lx2_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-            if (!GLOBALS->lx2_lx2_c_1) {
-                fprintf(stderr,
-                        "GTKWAVE | Could not initialize '%s'%s.\n",
-                        GLOBALS->loaded_file_name,
-                        GLOBALS->vcd_jmp_buf ? "" : ", exiting");
-                vcd_exit(255);
-            }
-        }
+        fprintf(
+            stderr,
+            "GTKWAVE | LXT and LXT2 files are no longer supported by this version of GTKWave.\n");
+        vcd_exit(255);
     } else if ((magic_word_filetype == G_FT_FST) ||
                suffix_check(GLOBALS->loaded_file_name, ".fst")) {
         GLOBALS->stems_type = WAVE_ANNO_FST;
@@ -1650,20 +1615,10 @@ loader_check_head:
                     GLOBALS->vcd_jmp_buf ? "" : ", exiting");
             vcd_exit(255);
         }
-    } else if ((magic_word_filetype == G_FT_VZT) ||
-               suffix_check(GLOBALS->loaded_file_name, ".vzt")) {
-        GLOBALS->stems_type = WAVE_ANNO_VZT;
-        GLOBALS->aet_name = malloc_2(strlen(GLOBALS->loaded_file_name) + 1);
-        strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
-        GLOBALS->loaded_file_type = VZT_FILE;
-        vzt_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if (!GLOBALS->vzt_vzt_c_1) {
-            fprintf(stderr,
-                    "GTKWAVE | Could not initialize '%s'%s.\n",
-                    GLOBALS->loaded_file_name,
-                    GLOBALS->vcd_jmp_buf ? "" : ", exiting");
-            vcd_exit(255);
-        }
+    } else if (suffix_check(GLOBALS->loaded_file_name, ".vzt")) {
+        fprintf(stderr,
+                "GTKWAVE | VZT files are no longer supported by this version of GTKWave.\n");
+        vcd_exit(255);
     } else if (suffix_check(GLOBALS->loaded_file_name, ".aet") ||
                suffix_check(GLOBALS->loaded_file_name, ".ae2")) {
         GLOBALS->stems_type = WAVE_ANNO_AE2;
@@ -1852,14 +1807,8 @@ loader_check_head:
                 }
 
                 switch (GLOBALS->is_lx2) {
-                    case LXT2_IS_LXT2:
-                        lx2_import_masked();
-                        break;
                     case LXT2_IS_AET2:
                         ae2_import_masked();
-                        break;
-                    case LXT2_IS_VZT:
-                        vzt_import_masked();
                         break;
                     case LXT2_IS_VLIST:
                         vcd_import_masked();

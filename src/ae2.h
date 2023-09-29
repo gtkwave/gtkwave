@@ -14,7 +14,6 @@
 #include <inttypes.h>
 #endif
 #include "vcd.h"
-#include "lx2.h"
 
 #ifdef AET2_IS_PRESENT
 #include <ae2rw.h>

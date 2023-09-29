@@ -11,7 +11,6 @@
 #include "globals.h"
 #include <stdio.h>
 #include "fstapi.h"
-#include "lx2.h"
 
 #include <unistd.h>
 
@@ -20,9 +19,7 @@
 #include <stdlib.h>
 #include "symbol.h"
 #include "vcd.h"
-#include "lxt.h"
-#include "lxt2_read.h"
-#include "vzt_read.h"
+#include "lx2.h"
 #include "fstapi.h"
 #include "debug.h"
 #include "busy.h"
@@ -30,6 +27,14 @@
 #include "fst.h"
 
 #define FST_RDLOAD "FSTLOAD | "
+
+#define VZT_RD_SYM_F_BITS (0)
+#define VZT_RD_SYM_F_INTEGER (1 << 0)
+#define VZT_RD_SYM_F_DOUBLE (1 << 1)
+#define VZT_RD_SYM_F_STRING (1 << 2)
+#define VZT_RD_SYM_F_ALIAS (1 << 3)
+#define VZT_RD_SYM_F_SYNVEC \
+    (1 << 17) /* reader synthesized vector in alias sec'n from non-adjacent vectorizing */
 
 /******************************************************************/
 

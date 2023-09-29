@@ -16,10 +16,7 @@
 #include <config.h>
 #include "analyzer.h"
 #include "symbol.h"
-#include "lxt.h"
 #include "lx2.h"
-#include "lxt2_read.h"
-#include "vcd.h"
 #include "extload.h"
 #include "debug.h"
 #include "bsearch.h"
@@ -195,11 +192,8 @@ void import_trace(nptr np)
 {
     set_window_busy(NULL);
 
-    if (GLOBALS->is_lxt) {
-        import_lxt_trace(np);
-    } else if (GLOBALS
-                   ->extload) /*needs to be ahead of is_lx2 as now can be is_lx2 with FsdbReader */
-    {
+    // needs to be ahead of is_lx2 as now can be is_lx2 with FsdbReader
+    if (GLOBALS->extload) {
         import_extload_trace(np);
     } else if (GLOBALS->is_lx2) {
         import_lx2_trace(np);

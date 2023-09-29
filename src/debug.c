@@ -25,9 +25,6 @@
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #include "fstapi.h"
-#include "lxt2_read.h"
-#include "lxt.h"
-#include "vzt_read.h"
 #endif
 
 #undef free_2
@@ -625,28 +622,10 @@ int determine_gtkwave_filetype(const char *path)
             FILE *f = fopen(path, "rb");
             if (f) {
                 int hdr[2] = {0, 0};
-                unsigned int magic_word;
-
                 hdr[0] = fgetc(f);
                 hdr[1] = fgetc(f);
 
                 if ((hdr[0] != EOF) && (hdr[1] != EOF)) {
-                    magic_word = (hdr[0] * 256) + hdr[1];
-
-                    switch (magic_word) {
-                        case LT_HDRID:
-                            rc = G_FT_LXT;
-                            break;
-                        case LXT2_RD_HDRID:
-                            rc = G_FT_LXT2;
-                            break;
-                        case VZT_RD_HDRID:
-                            rc = G_FT_VZT;
-                            break;
-                        default:
-                            break;
-                    }
-
                     if (rc == G_FT_UNKNOWN) {
                         if (hdr[0] == FST_BL_ZWRAPPER) {
                             rc = G_FT_FST;

@@ -18,7 +18,6 @@
 enum vcd_export_typ
 {
     WAVE_EXPORT_VCD,
-    WAVE_EXPORT_LXT,
     WAVE_EXPORT_TIM,
     WAVE_EXPORT_TRANS
 };
