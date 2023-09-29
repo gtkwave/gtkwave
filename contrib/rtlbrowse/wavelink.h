@@ -4,7 +4,7 @@
 /* kill the GLOBALS_H header inclusion as it's not needed here */
 #define GLOBALS_H
 
-#include "../../src/ae2.h"
+#include "../../src/tree.h"
 #include "../../src/debug.h"
 #include <vzt_read.h>
 #include <lxt2_read.h>

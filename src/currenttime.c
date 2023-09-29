@@ -314,13 +314,7 @@ void update_time_box(void)
             GwTime val = gw_marker_get_position(primary_marker);
 
             GLOBALS->anno_ctx->marker_set = 0; /* avoid race on update */
-
-            if (!GLOBALS->ae2_time_xlate) {
-                GLOBALS->anno_ctx->marker = val / GLOBALS->time_scale;
-            } else {
-                int rvs_xlate = bsearch_aetinfo_timechain(val);
-                GLOBALS->anno_ctx->marker = ((GwTime)rvs_xlate) + GLOBALS->ae2_start_cyc;
-            }
+            GLOBALS->anno_ctx->marker = val / GLOBALS->time_scale;
 
             reformat_time(GLOBALS->anno_ctx->time_string,
                           val + GLOBALS->global_time_offset,

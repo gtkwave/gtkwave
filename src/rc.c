@@ -145,13 +145,6 @@ int f_dbl_mant_dig_override(const char *str)
     return (0);
 }
 
-int f_disable_ae2_alias(const char *str)
-{
-    DEBUG(printf("f_disable_ae2_alias(\"%s\")\n", str));
-    GLOBALS->disable_ae2_alias = atoi_64(str) ? 1 : 0;
-    return (0);
-}
-
 int f_disable_antialiasing(const char *str)
 {
     DEBUG(printf("f_disable_antialiasing(\"%s\")\n", str));
@@ -860,7 +853,6 @@ static struct rc_entry rcitems[] = {
     {"convert_to_reals", f_convert_to_reals},
     {"cursor_snap", f_cursor_snap},
     {"dbl_mant_dig_override", f_dbl_mant_dig_override},
-    {"disable_ae2_alias", f_disable_ae2_alias},
     {"disable_antialiasing", f_disable_antialiasing},
     {"disable_auto_comphier", f_disable_auto_comphier},
     {"disable_empty_gui", f_disable_empty_gui},

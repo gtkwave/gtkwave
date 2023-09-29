@@ -15,6 +15,7 @@
 #include <config.h>
 #include "globals.h"
 #include "tree.h"
+#include "tree_component.h"
 #include "vcd.h"
 
 enum TreeBuildTypes

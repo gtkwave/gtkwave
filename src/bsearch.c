@@ -69,31 +69,6 @@ int bsearch_timechain(GwTime key)
 
 /*****************************************************************************************/
 
-int bsearch_aetinfo_timechain(GwTime key)
-{
-    GLOBALS->max_compare_time_tc_bsearch_c_1 = -2;
-    GLOBALS->max_compare_pos_tc_bsearch_c_1 = NULL;
-
-    if (!GLOBALS->ae2_time_xlate)
-        return (-1);
-
-    if (bsearch(&key,
-                GLOBALS->ae2_time_xlate,
-                GLOBALS->ae2_end_cyc - GLOBALS->ae2_start_cyc + 1,
-                sizeof(GwTime),
-                compar_timechain)) {
-        /* nothing, all side effects are in bsearch */
-    }
-
-    if (!GLOBALS->max_compare_pos_tc_bsearch_c_1) {
-        GLOBALS->max_compare_pos_tc_bsearch_c_1 = GLOBALS->ae2_time_xlate; /* aix bsearch fix */
-    }
-
-    return (GLOBALS->max_compare_pos_tc_bsearch_c_1 - GLOBALS->ae2_time_xlate);
-}
-
-/*****************************************************************************************/
-
 static int compar_histent(const void *s1, const void *s2)
 {
     GwTime key, obj, delta;

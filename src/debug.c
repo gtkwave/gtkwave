@@ -609,13 +609,6 @@ int determine_gtkwave_filetype(const char *path)
     }
 #endif
 
-#ifdef AET2_IS_PRESENT
-    if (suffix_check(GLOBALS->loaded_file_name, ".aet") ||
-        suffix_check(GLOBALS->loaded_file_name, ".ae2")) {
-        return (rc);
-    }
-#endif
-
     memset(&buf, 0, sizeof(struct stat));
     if (stat(path, &buf) == 0) {
         if (S_ISREG(buf.st_mode)) {

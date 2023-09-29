@@ -10,7 +10,7 @@
   <summary>Electronic waveform viewer for viewing simulation results</summary>
   <description>
     <p>
-      GTKWave is a fully featured GTK+ based waveform viewer which reads FST, LXT, LXT2, VZT, and
+      GTKWave is a fully featured GTK+ based waveform viewer which reads FST and
       GHW files as well as standard Verilog VCD/EVCD files and allows their viewing.
 </p>
     <p>

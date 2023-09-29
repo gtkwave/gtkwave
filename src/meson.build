@@ -27,7 +27,6 @@ gtkwave_resources = gnome.compile_resources(
 )
 
 gtkwave_sources = [
-    'ae2.c',
     'analyzer.c',
     'baseconvert.c',
     'bitvec.c',

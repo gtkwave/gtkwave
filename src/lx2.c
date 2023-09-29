@@ -30,11 +30,6 @@
 void import_lx2_trace(nptr np)
 {
     switch (GLOBALS->is_lx2) {
-#ifdef AET2_IS_PRESENT
-        case LXT2_IS_AET2:
-            import_ae2_trace(np);
-            return;
-#endif
         case LXT2_IS_VLIST:
             import_vcd_trace(np);
             return;
@@ -56,11 +51,6 @@ void import_lx2_trace(nptr np)
 void lx2_set_fac_process_mask(nptr np)
 {
     switch (GLOBALS->is_lx2) {
-#ifdef AET2_IS_PRESENT
-        case LXT2_IS_AET2:
-            ae2_set_fac_process_mask(np);
-            return;
-#endif
         case LXT2_IS_VLIST:
             vcd_set_fac_process_mask(np);
             return;
@@ -79,11 +69,6 @@ void lx2_set_fac_process_mask(nptr np)
 void lx2_import_masked(void)
 {
     switch (GLOBALS->is_lx2) {
-#ifdef AET2_IS_PRESENT
-        case LXT2_IS_AET2:
-            ae2_import_masked();
-            return;
-#endif
         case LXT2_IS_VLIST:
             vcd_import_masked();
             return;

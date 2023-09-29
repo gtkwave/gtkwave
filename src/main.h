@@ -54,7 +54,6 @@ void optimize_vcd_file(void);
 enum FileType
 {
     MISSING_FILE,
-    AE2_FILE,
     GHW_FILE,
     VCD_FILE,
     VCD_RECODER_FILE,
