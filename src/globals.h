@@ -639,7 +639,7 @@ struct Global
     /*
      * regex.c
      */
-    struct re_pattern_buffer *preg_regex_c_1; /* from regex.c 339 */
+    regex_t *preg_regex_c_1; /* from regex.c 339 */
     int *regex_ok_regex_c_1; /* from regex.c 340 */
 
 /*
