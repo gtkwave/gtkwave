@@ -52,7 +52,6 @@
 #endif
 
 #include "symbol.h"
-#include "ae2.h"
 #include "ghw.h"
 #include "fst.h"
 #include "main.h"
@@ -866,7 +865,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
         GLOBALS->ruler_origin = old_g->ruler_origin;
         GLOBALS->ruler_step = old_g->ruler_step;
-        GLOBALS->disable_ae2_alias = old_g->disable_ae2_alias;
 
         GLOBALS->vlist_spill_to_disk = old_g->vlist_spill_to_disk;
         GLOBALS->vlist_prepack = old_g->vlist_prepack;
@@ -1621,22 +1619,9 @@ loader_check_head:
         vcd_exit(255);
     } else if (suffix_check(GLOBALS->loaded_file_name, ".aet") ||
                suffix_check(GLOBALS->loaded_file_name, ".ae2")) {
-        GLOBALS->stems_type = WAVE_ANNO_AE2;
-        GLOBALS->aet_name = malloc_2(strlen(GLOBALS->loaded_file_name) + 1);
-        strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
-        GLOBALS->loaded_file_type = AE2_FILE;
-        ae2_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-#ifdef AET2_IS_PRESENT
-        if (!GLOBALS->ae2) {
-            fprintf(stderr,
-                    "GTKWAVE | Could not initialize '%s'%s.\n",
-                    GLOBALS->loaded_file_name,
-                    GLOBALS->vcd_jmp_buf ? "" : ", exiting");
-            vcd_exit(255);
-        }
-#else
-        /* fails in stubbed out ae2_main() */
-#endif
+        fprintf(stderr,
+                "GTKWAVE | AET2 files are no longer supported by this version of GTKWave.\n");
+        vcd_exit(255);
     } else if (suffix_check(GLOBALS->loaded_file_name, ".ghw") ||
                suffix_check(GLOBALS->loaded_file_name, ".ghw.gz") ||
                suffix_check(GLOBALS->loaded_file_name, ".ghw.bz2")) {
@@ -1652,22 +1637,9 @@ loader_check_head:
         sufbuf[4] = 0;
         if (!strcasecmp(sufbuf, ".aet")) /* strncasecmp() in windows? */
         {
-            GLOBALS->stems_type = WAVE_ANNO_AE2;
-            GLOBALS->aet_name = malloc_2(strlen(GLOBALS->loaded_file_name) + 1);
-            strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
-            GLOBALS->loaded_file_type = AE2_FILE;
-#ifdef AET2_IS_PRESENT
-            ae2_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-            if (!GLOBALS->ae2) {
-                fprintf(stderr,
-                        "GTKWAVE | Could not initialize '%s'%s.\n",
-                        GLOBALS->loaded_file_name,
-                        GLOBALS->vcd_jmp_buf ? "" : ", exiting");
-                vcd_exit(255);
-            }
-#else
-            /* fails in stubbed out ae2_main() */
-#endif
+            fprintf(stderr,
+                    "GTKWAVE | AET2 files are no longer supported by this version of GTKWave.\n");
+            vcd_exit(255);
         } else {
             goto load_vcd;
         }
@@ -1807,9 +1779,6 @@ loader_check_head:
                 }
 
                 switch (GLOBALS->is_lx2) {
-                    case LXT2_IS_AET2:
-                        ae2_import_masked();
-                        break;
                     case LXT2_IS_VLIST:
                         vcd_import_masked();
                         break;

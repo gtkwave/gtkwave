@@ -17,7 +17,6 @@
 #endif
 
 #include "vcd.h"
-#include "ae2.h"
 #include "tree_component.h"
 
 GwTime fst_main(char *fname, char *skip_start, char *skip_end);

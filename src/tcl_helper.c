@@ -2260,11 +2260,7 @@ static int determine_ftype(char *s, char **dotpnt)
                 (!strcasecmp(EXTLOAD_SUFFIX, dot + 1)) ||
 #endif
                 (!strcasecmp("vcd", dot + 1)) || (!strcasecmp("dmp", dot + 1)) ||
-                (!strcasecmp("lxt", dot + 1)) || (!strcasecmp("lx2", dot + 1)) ||
-                (!strcasecmp("lxt2", dot + 1)) || (!strcasecmp("vzt", dot + 1)) ||
-                (!strcasecmp("fst", dot + 1)) || (!strcasecmp("ghw", dot + 1)) ||
-                (!strcasecmp("aet", dot + 1)) || /* ignore .aet? filename types */
-                (!strcasecmp("ae2", dot + 1))) {
+                (!strcasecmp("fst", dot + 1)) || (!strcasecmp("ghw", dot + 1))) {
                 ftype = WAVE_FTYPE_DUMPFILE;
             } else if (dot2) {
                 if ((!strcasecmp("ghw.gz", dot2 + 1)) || (!strcasecmp("ghw.bz2", dot2 + 1)) ||

@@ -17,14 +17,12 @@
 #endif
 
 #include "vcd.h"
-#include "ae2.h"
 
 #define F_NAME_MODULUS (3)
 
 enum LXT2_Loader_Type_Encodings
 {
     LXT2_IS_INACTIVE,
-    LXT2_IS_AET2,
     LXT2_IS_VLIST,
     LXT2_IS_FST,
     LXT2_IS_FSDB

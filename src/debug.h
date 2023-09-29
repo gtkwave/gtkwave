@@ -87,9 +87,6 @@ enum WaveLoadingTitleType
 enum AnnotateAetType
 {
     WAVE_ANNO_NONE,
-    WAVE_ANNO_AE2,
-    WAVE_ANNO_VZT,
-    WAVE_ANNO_LXT2,
     WAVE_ANNO_FST,
     WAVE_ANNO_MAX
 };

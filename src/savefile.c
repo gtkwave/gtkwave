@@ -2424,18 +2424,10 @@ gboolean deal_with_rpc_open_2(const gchar *path, gpointer user_data, gboolean is
     const char *suffixes[] = {".vcd",
                               ".evcd",
                               ".dump",
-                              ".lxt",
-                              ".lxt2",
-                              ".lx2",
-                              ".vzt",
                               ".fst",
                               ".ghw",
 #ifdef EXTLOAD_SUFFIX
                               EXTLOAD_SUFFIX,
-#endif
-#ifdef AET2_IS_PRESENT
-                              ".aet",
-                              ".ae2",
 #endif
                               ".gtkw",
                               ".sav"};

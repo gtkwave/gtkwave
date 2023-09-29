@@ -578,36 +578,6 @@ if(anno_ctx)
 				}
 			break;
 
-		case WAVE_ANNO_VZT:
-			vzt=vzt_rd_init(anno_ctx->aet_name);
-			if(!vzt)
-			        {
-			        fprintf(stderr, "Could not initialize '%s', exiting.\n", anno_ctx->aet_name);
-			        exit(255);
-			        }
-			break;
-
-		case WAVE_ANNO_LXT2:
-			lx2=lxt2_rd_init(anno_ctx->aet_name);
-			if(!lx2)
-			        {
-			        fprintf(stderr, "Could not initialize '%s', exiting.\n", anno_ctx->aet_name);
-			        exit(255);
-			        }
-			break;
-
-		case WAVE_ANNO_AE2:
-#ifdef AET2_IS_PRESENT
-			ae2_initialize(error_fn, msg_fn, alloc_fn, free_fn);
-			if ( (!(aetf=fopen(anno_ctx->aet_name, "rb"))) || (!(ae2 = ae2_read_initialize(aetf))) )
-        			{
-        			fprintf(stderr, "Could not initialize '%s', exiting.\n", anno_ctx->aet_name);
-        			exit(255);
-        			}
-
-			break;
-
-#endif
 		default:
 			fprintf(stderr, "Unsupported wave file type %d encountered, exiting.\n", anno_ctx->aet_type);
 			exit(255);

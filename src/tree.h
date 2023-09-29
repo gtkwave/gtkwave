@@ -19,10 +19,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "debug.h"
-#include "symbol.h"
-#include "vcd.h"
-#include "tree_component.h"
 
 #define FST_TREE_SEARCH_NEXT_LIMIT (40)
 

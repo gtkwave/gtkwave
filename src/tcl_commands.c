@@ -514,9 +514,6 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
         reportString = "GHW";
     } else if (GLOBALS->is_lx2) {
         switch (GLOBALS->is_lx2) {
-            case LXT2_IS_AET2:
-                reportString = "AET2";
-                break;
             case LXT2_IS_VLIST:
                 reportString = "VCD";
                 break;

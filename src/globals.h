@@ -24,7 +24,6 @@
 
 #include <jrb.h>
 
-#include "ae2.h"
 #include "analyzer.h"
 #include "bsearch.h"
 #include "busy.h"
@@ -75,38 +74,6 @@
 struct Global
 {
     GwProject *project;
-
-/*
- * ae2.c
- */
-#ifdef AET2_IS_PRESENT
-#ifdef AET2_ALIASDB_IS_PRESENT
-    FILE *adb_alias_stream_file;
-    ADB_DB adb;
-    unsigned long adb_max_terms;
-    ADB_TERM *adb_terms;
-    ADB_TERM **adb_aliases;
-    unsigned short *adb_num_terms;
-    unsigned short *adb_idx_first;
-    unsigned short *adb_idx_last;
-    unsigned char *adb_alloc_pool_base;
-    size_t adb_alloc_idx;
-#endif
-    unsigned long ae2_num_facs;
-    unsigned long ae2_num_aliases;
-    unsigned long ae2_num_sections;
-    struct lx2_entry **ae2_lx2_table;
-    FILE *ae2_f;
-    AE2_HANDLE *ae2;
-    AE2_FACREF *ae2_fr;
-    GwTime ae2_start_limit_cyc;
-    GwTime ae2_end_limit_cyc;
-    char *ae2_process_mask;
-#endif
-    GwTime ae2_start_cyc;
-    GwTime ae2_end_cyc;
-    GwTime *ae2_time_xlate;
-    char disable_ae2_alias;
 
     /*
      * analyzer.c

@@ -27,12 +27,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Removed
 
 - Removed support for GTK 2.
-- Removed support for LXT, LXT2 and VZT formats.
+- Removed support for LXT, LXT2, VZT, and AET2 formats.
 - Removed "Signal Search Hierarchy" dialog.
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed rc variables:
     - `alt_wheel_mode`
     - `atomic_vectors`
+    - `disable_ae2_alias`
     - `force_toolbars`
     - `hide_sst`
     - `hier_grouping`

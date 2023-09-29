@@ -63,38 +63,6 @@ struct Global *GLOBALS = NULL;
 static const struct Global globals_base_values = {
     NULL, // project
 
-/*
- * ae2.c
- */
-#ifdef AET2_IS_PRESENT
-#ifdef AET2_ALIASDB_IS_PRESENT
-    NULL, /* adb_alias_stream_file */
-    0, /* adb */
-    0, /* adb_max_terms */
-    NULL, /* adb_terms */
-    NULL, /* adb_aliases */
-    NULL, /* adb_num_terms */
-    NULL, /* adb_idx_first */
-    NULL, /* adb_idx_last */
-    NULL, /* adb_alloc_pool_base */
-    0, /* adb_alloc_idx */
-#endif
-    0, /* ae2_num_facs */
-    0, /* ae2_num_aliases */
-    0, /* ae2_num_sections */
-    NULL, /* ae2_lx2_table */
-    NULL, /* ae2_f */
-    NULL, /* ae2 */
-    NULL, /* ae2_fr */
-    GW_TIME_CONSTANT(0), /* ae2_start_limit_cyc */
-    GW_TIME_CONSTANT(0), /* ae2_end_limit_cyc */
-    NULL, /* ae2_process_mask */
-#endif
-    GW_TIME_CONSTANT(0), /* ae2_start_cyc */
-    GW_TIME_CONSTANT(0), /* ae2_end_cyc */
-    NULL, /* ae2_time_xlate */
-    0, /* disable_ae2_alias */
-
     /*
      * analyzer.c
      */
@@ -1629,7 +1597,6 @@ void reload_into_new_context_2(void)
     new_globals->vector_padding = GLOBALS->vector_padding;
     new_globals->zoombase = GLOBALS->zoombase;
 
-    new_globals->disable_ae2_alias = GLOBALS->disable_ae2_alias;
     new_globals->hier_ignore_escapes = GLOBALS->hier_ignore_escapes;
 
     new_globals->splash_disable = 1; /* to disable splash for reload */
@@ -1834,20 +1801,6 @@ void reload_into_new_context_2(void)
             fstReaderClose(GLOBALS->fst_fst_c_1);
             GLOBALS->fst_fst_c_1 = NULL;
             break;
-        case AE2_FILE:
-#ifdef AET2_IS_PRESENT
-#ifdef AET2_ALIASDB_IS_PRESENT
-            if (GLOBALS->adb) {
-                adb_close_db(GLOBALS->adb);
-                GLOBALS->adb = 0;
-            }
-            /* if(GLOBALS->m_alias_stream_file) { fclose(GLOBALS->m_alias_stream_file);
-             * GLOBALS->m_alias_stream_file = NULL; } */
-            ae2_read_end(GLOBALS->ae2);
-            fclose(GLOBALS->ae2_f);
-#endif
-#endif
-            break;
 
 #ifdef EXTLOAD_SUFFIX
         case EXTLOAD_FILE:
@@ -2017,15 +1970,6 @@ void reload_into_new_context_2(void)
             case FST_FILE:
                 fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
                 load_was_success = (GLOBALS->fst_fst_c_1 != NULL);
-                break;
-
-            case AE2_FILE:
-#ifdef AET2_IS_PRESENT
-                ae2_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-                load_was_success = (GLOBALS->ae2 != NULL);
-#else
-                load_was_success = 0; /* never executes as AE2_FILE won't be set */
-#endif
                 break;
 
             case GHW_FILE:
@@ -2312,20 +2256,6 @@ void free_and_destroy_page_context(void)
         case FST_FILE:
             fstReaderClose(GLOBALS->fst_fst_c_1);
             GLOBALS->fst_fst_c_1 = NULL;
-            break;
-        case AE2_FILE:
-#ifdef AET2_IS_PRESENT
-#ifdef AET2_ALIASDB_IS_PRESENT
-            if (GLOBALS->adb) {
-                adb_close_db(GLOBALS->adb);
-                GLOBALS->adb = 0;
-            }
-            /* if(GLOBALS->adb_alias_stream_file) { fclose(GLOBALS->adb_alias_stream_file);
-             * GLOBALS->adb_alias_stream_file = NULL; } */
-            ae2_read_end(GLOBALS->ae2);
-            fclose(GLOBALS->ae2_f);
-#endif
-#endif
             break;
 
 #ifdef EXTLOAD_SUFFIX
