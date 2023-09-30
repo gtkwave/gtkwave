@@ -20,10 +20,9 @@
 
 void gtk_open_external_file(const char *fpath)
 {
-NSString *nspath = [NSString stringWithUTF8String:fpath];
-[[NSWorkspace sharedWorkspace] openFile:nspath];
+    NSString *nspath = [NSString stringWithUTF8String:fpath];
+    [[NSWorkspace sharedWorkspace] openFile:nspath];
 }
-
 
 /*************************/
 /* file.c                */
@@ -31,279 +30,265 @@ NSString *nspath = [NSString stringWithUTF8String:fpath];
 
 static char *gtk_open_file_req_bridge(const char *title, const char *fpath, const char *pattn)
 {
-        NSOpenPanel * zOpenPanel = [NSOpenPanel openPanel];
-	[zOpenPanel setCanChooseDirectories:NO];
-	[zOpenPanel setCanChooseFiles:YES];
-	[zOpenPanel setAllowsMultipleSelection:NO];
-	[zOpenPanel setTreatsFilePackagesAsDirectories:YES];
+    NSOpenPanel *zOpenPanel = [NSOpenPanel openPanel];
+    [zOpenPanel setCanChooseDirectories:NO];
+    [zOpenPanel setCanChooseFiles:YES];
+    [zOpenPanel setAllowsMultipleSelection:NO];
+    [zOpenPanel setTreatsFilePackagesAsDirectories:YES];
 
-	NSString *nstitle = [NSString stringWithUTF8String:title];
-	[zOpenPanel setTitle:nstitle];
+    NSString *nstitle = [NSString stringWithUTF8String:title];
+    [zOpenPanel setTitle:nstitle];
 
-        NSArray * zAryOfExtensions = nil;
+    NSArray *zAryOfExtensions = nil;
 
-	if(pattn)
-		{
-		const char *d = strchr(pattn, '.');
-		if(d)
-			{
-			const char *pattn2 = d+1;
-			if(!strcasecmp(pattn2, "sav") || !strcasecmp(pattn2, "gtkw"))
-				{
-			        zAryOfExtensions = [NSArray arrayWithObjects:@"gtkw", @"sav", nil];
-				}
-				else
-				{
-				NSString *s = [NSString stringWithUTF8String:pattn2];
-			        zAryOfExtensions = [NSArray arrayWithObjects:s,nil];
-				}
-			}
-		}
-
-	NSString *p_path = nil;
-	NSString *p_file = nil;
-
-	if(fpath)
-		{
-		char *s_temp = realpath(fpath,NULL);
-
-		if(s_temp)
-			{
-			struct stat sbuf;
-			if(!stat(s_temp,&sbuf))
-				{
-				if(S_ISDIR(sbuf.st_mode))
-					{
-					p_path = [NSString stringWithUTF8String:s_temp];
-					NSURL *URL = [NSURL URLWithString:p_path];
-					[zOpenPanel setDirectoryURL:URL];
-					}
-					else
-					{
-					p_path = [[NSString stringWithUTF8String:s_temp] stringByDeletingLastPathComponent];
-					p_file = [[NSString stringWithUTF8String:s_temp] lastPathComponent];
-					NSURL *URL = [NSURL URLWithString:p_path];
-					[zOpenPanel setDirectoryURL:URL];
-					}
-				}
-
-			free(s_temp);
-			}
-		}
-
-        NSInteger zIntResult = [zOpenPanel runModalForDirectory:p_path
-		file:p_file
-		types:zAryOfExtensions];
-
-        if (zIntResult == NSFileHandlingPanelCancelButton) {
-                return(NULL);
+    if (pattn) {
+        const char *d = strchr(pattn, '.');
+        if (d) {
+            const char *pattn2 = d + 1;
+            if (!strcasecmp(pattn2, "sav") || !strcasecmp(pattn2, "gtkw")) {
+                zAryOfExtensions = [NSArray arrayWithObjects:@"gtkw", @"sav", nil];
+            } else {
+                NSString *s = [NSString stringWithUTF8String:pattn2];
+                zAryOfExtensions = [NSArray arrayWithObjects:s, nil];
+            }
         }
+    }
 
-        NSURL *zUrl = [zOpenPanel URL];
-	NSString *us = [zUrl absoluteString];
-	const char *cst = [us UTF8String];
-	return(g_filename_from_uri(cst, NULL, NULL));
+    NSString *p_path = nil;
+    NSString *p_file = nil;
+
+    if (fpath) {
+        char *s_temp = realpath(fpath, NULL);
+
+        if (s_temp) {
+            struct stat sbuf;
+            if (!stat(s_temp, &sbuf)) {
+                if (S_ISDIR(sbuf.st_mode)) {
+                    p_path = [NSString stringWithUTF8String:s_temp];
+                    NSURL *URL = [NSURL URLWithString:p_path];
+                    [zOpenPanel setDirectoryURL:URL];
+                } else {
+                    p_path =
+                        [[NSString stringWithUTF8String:s_temp] stringByDeletingLastPathComponent];
+                    p_file = [[NSString stringWithUTF8String:s_temp] lastPathComponent];
+                    NSURL *URL = [NSURL URLWithString:p_path];
+                    [zOpenPanel setDirectoryURL:URL];
+                }
+            }
+
+            free(s_temp);
+        }
+    }
+
+    NSInteger zIntResult =
+        [zOpenPanel runModalForDirectory:p_path file:p_file types:zAryOfExtensions];
+
+    if (zIntResult == NSFileHandlingPanelCancelButton) {
+        return (NULL);
+    }
+
+    NSURL *zUrl = [zOpenPanel URL];
+    NSString *us = [zUrl absoluteString];
+    const char *cst = [us UTF8String];
+    return (g_filename_from_uri(cst, NULL, NULL));
 }
 
 static char *gtk_save_file_req_bridge(const char *title, const char *fpath, const char *pattn)
 {
-        NSSavePanel * zSavePanel = [NSSavePanel savePanel];
-	[zSavePanel setAllowsOtherFileTypes:YES];
-	[zSavePanel setTreatsFilePackagesAsDirectories:YES];
-	[zSavePanel setExtensionHidden:NO];
+    NSSavePanel *zSavePanel = [NSSavePanel savePanel];
+    [zSavePanel setAllowsOtherFileTypes:YES];
+    [zSavePanel setTreatsFilePackagesAsDirectories:YES];
+    [zSavePanel setExtensionHidden:NO];
 
-	NSString *nstitle = [NSString stringWithUTF8String:title];
-	[zSavePanel setTitle:nstitle];
+    NSString *nstitle = [NSString stringWithUTF8String:title];
+    [zSavePanel setTitle:nstitle];
 
-        NSArray * zAryOfExtensions = nil;
+    NSArray *zAryOfExtensions = nil;
 
-	if(pattn)
-		{
-		const char *d = strchr(pattn, '.');
-		if(d)
-			{
-			const char *pattn2 = d+1;
-			if(!strcasecmp(pattn2, "sav") || !strcasecmp(pattn2, "gtkw"))
-				{
-			        zAryOfExtensions = [NSArray arrayWithObjects:@"gtkw", @"sav", nil];
-				}
-				else
-				{
-				NSString *s = [NSString stringWithUTF8String:pattn2];
-			        zAryOfExtensions = [NSArray arrayWithObjects:s,nil];
-				}
-			}
-		}
-
-        [zSavePanel setAllowedFileTypes:zAryOfExtensions];
-
-	NSString *p_path = nil;
-	NSString *p_file = nil;
-
-	if(fpath)
-		{
-		char *s_temp = realpath(fpath,NULL);
-
-		if(s_temp)
-			{
-			struct stat sbuf;
-			if(!stat(s_temp,&sbuf))
-				{
-				if(S_ISDIR(sbuf.st_mode))
-					{
-					p_path = [NSString stringWithUTF8String:s_temp];
-					NSURL *URL = [NSURL URLWithString:p_path];
-					[zSavePanel setDirectoryURL:URL];
-					}
-					else
-					{
-					p_path = [[NSString stringWithUTF8String:s_temp] stringByDeletingLastPathComponent];
-					p_file = [[NSString stringWithUTF8String:s_temp] lastPathComponent];
-					NSURL *URL = [NSURL URLWithString:p_path];
-					[zSavePanel setDirectoryURL:URL];
-					[zSavePanel setNameFieldStringValue:p_file];
-					}
-				}
-
-			free(s_temp);
-			}
-		}
-
-
-        NSInteger zIntResult = [zSavePanel runModal];
-
-        if (zIntResult == NSFileHandlingPanelCancelButton) {
-                return(NULL);
+    if (pattn) {
+        const char *d = strchr(pattn, '.');
+        if (d) {
+            const char *pattn2 = d + 1;
+            if (!strcasecmp(pattn2, "sav") || !strcasecmp(pattn2, "gtkw")) {
+                zAryOfExtensions = [NSArray arrayWithObjects:@"gtkw", @"sav", nil];
+            } else {
+                NSString *s = [NSString stringWithUTF8String:pattn2];
+                zAryOfExtensions = [NSArray arrayWithObjects:s, nil];
+            }
         }
+    }
 
-        NSURL *zUrl = [zSavePanel URL];
-	NSString *us = [zUrl absoluteString];
-	const char *cst = [us UTF8String];
-	return(g_filename_from_uri(cst, NULL, NULL));
+    [zSavePanel setAllowedFileTypes:zAryOfExtensions];
+
+    NSString *p_path = nil;
+    NSString *p_file = nil;
+
+    if (fpath) {
+        char *s_temp = realpath(fpath, NULL);
+
+        if (s_temp) {
+            struct stat sbuf;
+            if (!stat(s_temp, &sbuf)) {
+                if (S_ISDIR(sbuf.st_mode)) {
+                    p_path = [NSString stringWithUTF8String:s_temp];
+                    NSURL *URL = [NSURL URLWithString:p_path];
+                    [zSavePanel setDirectoryURL:URL];
+                } else {
+                    p_path =
+                        [[NSString stringWithUTF8String:s_temp] stringByDeletingLastPathComponent];
+                    p_file = [[NSString stringWithUTF8String:s_temp] lastPathComponent];
+                    NSURL *URL = [NSURL URLWithString:p_path];
+                    [zSavePanel setDirectoryURL:URL];
+                    [zSavePanel setNameFieldStringValue:p_file];
+                }
+            }
+
+            free(s_temp);
+        }
+    }
+
+    NSInteger zIntResult = [zSavePanel runModal];
+
+    if (zIntResult == NSFileHandlingPanelCancelButton) {
+        return (NULL);
+    }
+
+    NSURL *zUrl = [zSavePanel URL];
+    NSString *us = [zUrl absoluteString];
+    const char *cst = [us UTF8String];
+    return (g_filename_from_uri(cst, NULL, NULL));
 }
-
 
 char *gtk_file_req_bridge(const char *title, const char *fpath, const char *pattn, int is_writemode)
 {
-char *rc;
+    char *rc;
 
-if(is_writemode)
-	{
-	rc = gtk_save_file_req_bridge(title, fpath, pattn);
-	}
-	else
-	{
-	rc = gtk_open_file_req_bridge(title, fpath, pattn);
-	}
+    if (is_writemode) {
+        rc = gtk_save_file_req_bridge(title, fpath, pattn);
+    } else {
+        rc = gtk_open_file_req_bridge(title, fpath, pattn);
+    }
 
-return(rc);
+    return (rc);
 }
-
 
 /*************************/
 /* simplereq.c / entry.c */
 /*************************/
 
-static int gtk_simplereqbox_req_bridge_2(const char *title, const char *default_text, const char *oktext, const char *canceltext,
-	int is_alert, int is_entry, const char *default_in_text_entry, char **out_text_entry, int width)
+static int gtk_simplereqbox_req_bridge_2(const char *title,
+                                         const char *default_text,
+                                         const char *oktext,
+                                         const char *canceltext,
+                                         int is_alert,
+                                         int is_entry,
+                                         const char *default_in_text_entry,
+                                         char **out_text_entry,
+                                         int width)
 {
-NSAlert *alert = [[[NSAlert alloc] init] autorelease];
-int rc = 0;
+    NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+    int rc = 0;
 
-if(oktext)
-	{
-	[alert addButtonWithTitle: [NSString stringWithUTF8String:oktext]];
+    if (oktext) {
+        [alert addButtonWithTitle:[NSString stringWithUTF8String:oktext]];
 
-	if(canceltext)
-		{
-		[alert addButtonWithTitle: [NSString stringWithUTF8String:canceltext]];
-		}
-	}
+        if (canceltext) {
+            [alert addButtonWithTitle:[NSString stringWithUTF8String:canceltext]];
+        }
+    }
 
-if(title)
-	{
-	[alert setMessageText: [NSString stringWithUTF8String:title]];
-	}
+    if (title) {
+        [alert setMessageText:[NSString stringWithUTF8String:title]];
+    }
 
-if(default_text)
-	{
-	[alert setInformativeText: [NSString stringWithUTF8String:default_text]];
-	}
+    if (default_text) {
+        [alert setInformativeText:[NSString stringWithUTF8String:default_text]];
+    }
 
-if(is_alert)
-	{
-	[alert setAlertStyle:NSCriticalAlertStyle];
-	}
-	else
-	{
-	[alert setAlertStyle:NSInformationalAlertStyle];
-	}
+    if (is_alert) {
+        [alert setAlertStyle:NSCriticalAlertStyle];
+    } else {
+        [alert setAlertStyle:NSInformationalAlertStyle];
+    }
 
-NSTextField *input = nil;
-if(is_entry && default_in_text_entry && out_text_entry)
-	{
-	input = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, width, 24)];
-	[input setSelectable:YES];
-	[input setEditable:YES];
-	[input setImportsGraphics:NO];
-	[[alert window] makeFirstResponder:input];
-	[input setStringValue:[NSString stringWithUTF8String:default_in_text_entry]];
-	[input selectText:input];
-	[alert setAccessoryView:input];
-	}
+    NSTextField *input = nil;
+    if (is_entry && default_in_text_entry && out_text_entry) {
+        input = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, width, 24)];
+        [input setSelectable:YES];
+        [input setEditable:YES];
+        [input setImportsGraphics:NO];
+        [[alert window] makeFirstResponder:input];
+        [input setStringValue:[NSString stringWithUTF8String:default_in_text_entry]];
+        [input selectText:input];
+        [alert setAccessoryView:input];
+    }
 
-NSInteger zIntResult = [alert runModalSheet];
-if(zIntResult == NSAlertFirstButtonReturn)
-	{
-	rc = 1;
-	if(is_entry && default_in_text_entry && out_text_entry)
-		{
-		[input validateEditing];
-		*out_text_entry = strdup([[input stringValue] UTF8String]);
-		}
-	}
-else
-if(zIntResult == NSAlertSecondButtonReturn)
-	{
-	rc = 2;
-	}
+    NSInteger zIntResult = [alert runModalSheet];
+    if (zIntResult == NSAlertFirstButtonReturn) {
+        rc = 1;
+        if (is_entry && default_in_text_entry && out_text_entry) {
+            [input validateEditing];
+            *out_text_entry = strdup([[input stringValue] UTF8String]);
+        }
+    } else if (zIntResult == NSAlertSecondButtonReturn) {
+        rc = 2;
+    }
 
-return(rc);
+    return (rc);
 }
 
-
-int gtk_simplereqbox_req_bridge(const char *title, const char *default_text, const char *oktext, const char *canceltext, int is_alert)
+int gtk_simplereqbox_req_bridge(const char *title,
+                                const char *default_text,
+                                const char *oktext,
+                                const char *canceltext,
+                                int is_alert)
 {
-return(gtk_simplereqbox_req_bridge_2(title, default_text, oktext, canceltext, is_alert, 0, NULL, 0, 0));
+    return (gtk_simplereqbox_req_bridge_2(title,
+                                          default_text,
+                                          oktext,
+                                          canceltext,
+                                          is_alert,
+                                          0,
+                                          NULL,
+                                          0,
+                                          0));
 }
 
-
-int entrybox_req_bridge(const char *title, int width, const char *dflt_text, const char *comment, int maxch, char **out_text_entry)
+int entrybox_req_bridge(const char *title,
+                        int width,
+                        const char *dflt_text,
+                        const char *comment,
+                        int maxch,
+                        char **out_text_entry)
 {
-int rc = gtk_simplereqbox_req_bridge_2(title, comment, "OK", "Cancel", 
-	0, 1, dflt_text, out_text_entry, width);
+    int rc = gtk_simplereqbox_req_bridge_2(title,
+                                           comment,
+                                           "OK",
+                                           "Cancel",
+                                           0,
+                                           1,
+                                           dflt_text,
+                                           out_text_entry,
+                                           width);
 
-if((rc == 1)&&(*out_text_entry))
-	{
-	int len = strlen(*out_text_entry);
-	if(len > maxch)
-		{
-		char *s2 = calloc(1, maxch+1);
-		memcpy(s2, *out_text_entry, maxch);
-		free(*out_text_entry);
-		*out_text_entry = s2;
-		}
-	}
+    if ((rc == 1) && (*out_text_entry)) {
+        int len = strlen(*out_text_entry);
+        if (len > maxch) {
+            char *s2 = calloc(1, maxch + 1);
+            memcpy(s2, *out_text_entry, maxch);
+            free(*out_text_entry);
+            *out_text_entry = s2;
+        }
+    }
 
-return(rc);
+    return (rc);
 }
-
 
 #else
 
 char *cocoa_misc_dummy_compilation_unit(void)
 {
-return(NULL); /* dummy compilation unit */
+    return (NULL); /* dummy compilation unit */
 }
 
 #endif
