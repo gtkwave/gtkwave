@@ -9,6 +9,7 @@ vcd_keywords_c = custom_target(
     command: [
         gperf,
         '-i', '1',
+        '-L', 'ANSI-C',
         '-C',
         '-k', '1,\044',
         '-H', 'keyword_hash',
