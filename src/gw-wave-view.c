@@ -671,6 +671,7 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
 static void gw_wave_view_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwWaveView *self = GW_WAVE_VIEW(widget);
+    int scale;
 
     GTK_WIDGET_CLASS(gw_wave_view_parent_class)->size_allocate(widget, allocation);
 
@@ -684,12 +685,14 @@ static void gw_wave_view_size_allocate(GtkWidget *widget, GtkAllocation *allocat
 
     g_clear_pointer(&self->traces_surface, cairo_surface_destroy);
 
+    scale = gtk_widget_get_scale_factor(widget);
+
     self->traces_surface =
         gdk_window_create_similar_image_surface(gtk_widget_get_window(widget),
                                                 CAIRO_FORMAT_ARGB32,
-                                                allocation->width,
-                                                allocation->height,
-                                                gtk_widget_get_scale_factor(widget));
+                                                allocation->width * scale,
+                                                allocation->height * scale,
+                                                scale);
 
     self->dirty = TRUE;
 }
