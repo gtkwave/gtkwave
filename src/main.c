@@ -702,9 +702,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     int splash_disable_rc_override = 0;
     int mainwindow_already_built = 0;
-#ifdef MAC_INTEGRATION
-    GdkPixbuf *dock_pb;
-#endif
 
     struct rc_override *rc_override_head = NULL, *rc_override_curr = NULL;
 
@@ -1904,7 +1901,6 @@ savefile_bail:
                 gtkosx_application_set_menu_bar(theApp, GTK_MENU_SHELL(menubar));
                 gtkosx_application_set_use_quartz_accelerators(theApp, TRUE);
                 gtkosx_application_ready(theApp);
-                gtkosx_application_set_dock_icon_pixbuf(theApp, dock_pb);
                 if (GLOBALS->loaded_file_type == MISSING_FILE) {
                     gtkosx_application_attention_request(theApp, INFO_REQUEST);
                 }
