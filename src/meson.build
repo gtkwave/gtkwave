@@ -97,11 +97,13 @@ gtkwave_sources = [
     'vlist.c',
     'wavewindow.c',
     'zoombuttons.c',
+    'cocoa/cocoa_misc.c',
 ]
 
 gtkwave_dependencies = [
     glib_dep,
     gtk_dep,
+    gtk_mac_integration_dep,
     gtk_unix_print_dep,
     m_dep,
     libfst_dep,
@@ -128,6 +130,7 @@ executable(
     dependencies: gtkwave_dependencies,
     include_directories: gtkwave_include_directories,
     c_args: warning_args,
+    link_args: link_args,
     install: true,
 )
 

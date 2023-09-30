@@ -19,6 +19,7 @@ gnome = import('gnome')
 
 cc = meson.get_compiler('c')
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
+link_args = []
 
 datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 
@@ -27,6 +28,7 @@ datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 glib_req = '>=2.64.0'
 glib_req_macro = 'GLIB_VERSION_2_64'
 gtk_req = '>=3.24.0'
+gtk_mac_integration_req = '>=3.0.0'
 zlib_req = '>=1.2.0'
 bzip2_req = '>=1.0.0'
 tcl_req = '>=8.6.0'
@@ -41,6 +43,11 @@ gtk_unix_print_dep = dependency(
     'gtk+-unix-print-3.0',
     version: gtk_req,
     required: false,
+)
+gtk_mac_integration_dep = dependency(
+    'gtk-mac-integration-gtk3',
+    version: gtk_mac_integration_req,
+    required: host_machine.system() == 'darwin',
 )
 zlib_dep = dependency('zlib', version: zlib_req)
 tcl_dep = dependency('tcl', version: tcl_req, required: get_option('tcl'))
@@ -79,6 +86,20 @@ add_project_arguments(
     '-DGLIB_VERSION_MAX_ALLOWED=' + glib_req_macro,
     language: 'c',
 )
+
+# Add build arguments needed for MacOS
+
+if host_machine.system() == 'darwin'
+    add_project_arguments(
+        '-xobjective-c',
+        '-DWAVE_COCOA_GTK',
+        language: 'c')
+    link_args = [
+        '-Wl,-lobjc',
+        '-framework', 'Cocoa',
+        '-framework', 'ApplicationServices',
+    ]
+endif
 
 # External programs
 
