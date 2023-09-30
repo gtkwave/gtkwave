@@ -1894,6 +1894,10 @@ savefile_bail:
             add_plugins_to_menu(menubar);
 #endif
 
+            {
+                gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, TRUE, 0);
+            }
+
 #ifdef MAC_INTEGRATION
             {
                 GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
@@ -1916,9 +1920,6 @@ savefile_bail:
             }
 #endif
 
-            {
-                gtk_box_pack_start(GTK_BOX(main_vbox), menubar, FALSE, TRUE, 0);
-            }
         }
 
         whole_table = gtk_grid_new();
