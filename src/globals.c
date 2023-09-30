@@ -18,7 +18,7 @@
 #include "fgetdynamic.h"
 #include "ghw.h"
 #include "globals.h"
-#include "gnu-getopt.h"
+#include <getopt.h>
 #include "gtk23compat.h"
 #include "main.h"
 #include "menu.h"
