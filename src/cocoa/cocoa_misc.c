@@ -89,7 +89,7 @@ static char *gtk_open_file_req_bridge(const char *title, const char *fpath, cons
 
 			free(s_temp);
 			}
-		}	
+		}
 
         NSInteger zIntResult = [zOpenPanel runModalForDirectory:p_path
 		file:p_file
@@ -97,7 +97,7 @@ static char *gtk_open_file_req_bridge(const char *title, const char *fpath, cons
 
         if (zIntResult == NSFileHandlingPanelCancelButton) {
                 return(NULL);
-        } 
+        }
 
         NSURL *zUrl = [zOpenPanel URL];
 	NSString *us = [zUrl absoluteString];
@@ -167,15 +167,15 @@ static char *gtk_save_file_req_bridge(const char *title, const char *fpath, cons
 
 			free(s_temp);
 			}
-		}	
+		}
 
 
         NSInteger zIntResult = [zSavePanel runModal];
 
         if (zIntResult == NSFileHandlingPanelCancelButton) {
                 return(NULL);
-        } 
-        
+        }
+
         NSURL *zUrl = [zSavePanel URL];
 	NSString *us = [zUrl absoluteString];
 	const char *cst = [us UTF8String];
@@ -190,7 +190,7 @@ char *rc;
 if(is_writemode)
 	{
 	rc = gtk_save_file_req_bridge(title, fpath, pattn);
-	}	
+	}
 	else
 	{
 	rc = gtk_open_file_req_bridge(title, fpath, pattn);
@@ -204,8 +204,8 @@ return(rc);
 /* simplereq.c / entry.c */
 /*************************/
 
-static int gtk_simplereqbox_req_bridge_2(char *title, char *default_text, char *oktext, char *canceltext, 
-	int is_alert, int is_entry, char *default_in_text_entry, char **out_text_entry, int width)
+static int gtk_simplereqbox_req_bridge_2(const char *title, const char *default_text, const char *oktext, const char *canceltext,
+	int is_alert, int is_entry, const char *default_in_text_entry, char **out_text_entry, int width)
 {
 NSAlert *alert = [[[NSAlert alloc] init] autorelease];
 int rc = 0;
@@ -272,13 +272,13 @@ return(rc);
 }
 
 
-int gtk_simplereqbox_req_bridge(char *title, char *default_text, char *oktext, char *canceltext, int is_alert)
+int gtk_simplereqbox_req_bridge(const char *title, const char *default_text, const char *oktext, const char *canceltext, int is_alert)
 {
 return(gtk_simplereqbox_req_bridge_2(title, default_text, oktext, canceltext, is_alert, 0, NULL, 0, 0));
 }
 
 
-int entrybox_req_bridge(char *title, int width, char *dflt_text, char *comment, int maxch, char **out_text_entry)
+int entrybox_req_bridge(const char *title, int width, const char *dflt_text, const char *comment, int maxch, char **out_text_entry)
 {
 int rc = gtk_simplereqbox_req_bridge_2(title, comment, "OK", "Cancel", 
 	0, 1, dflt_text, out_text_entry, width);
