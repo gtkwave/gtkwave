@@ -103,7 +103,6 @@ enum FastloadState
     VCD_FSL_READ
 };
 
-GwTime vcd_main(char *fname);
 GwTime vcd_recoder_main(char *fname);
 
 GwTime vcd_partial_main(char *fname);
@@ -167,5 +166,4 @@ void vcd_set_fac_process_mask(nptr np);
 void import_vcd_trace(nptr np);
 
 int vcd_keyword_code(const char *s, unsigned int len);
-
 #endif

@@ -1114,9 +1114,6 @@ static int handle_setjmp(void)
     {
         switch (GLOBALS->loaded_file_type) /* on fail, longjmp called in these loaders */
         {
-            case VCD_FILE:
-                vcd_main(GLOBALS->loaded_file_name);
-                break;
             case VCD_RECODER_FILE:
                 vcd_recoder_main(GLOBALS->loaded_file_name);
                 break;
@@ -1710,7 +1707,6 @@ void reload_into_new_context_2(void)
         case MISSING_FILE:
         case DUMPLESS_FILE:
         case GHW_FILE:
-        case VCD_FILE:
         case VCD_RECODER_FILE:
         default:
             /* do nothing */ break;
@@ -1870,7 +1866,6 @@ void reload_into_new_context_2(void)
                 load_was_success = (ghw_main(GLOBALS->loaded_file_name) != 0);
                 break;
 
-            case VCD_FILE:
             case VCD_RECODER_FILE:
                 load_was_success = handle_setjmp();
                 break;
@@ -2166,7 +2161,6 @@ void free_and_destroy_page_context(void)
         case MISSING_FILE:
         case DUMPLESS_FILE:
         case GHW_FILE:
-        case VCD_FILE:
         case VCD_RECODER_FILE:
         default:
             /* do nothing */ break;

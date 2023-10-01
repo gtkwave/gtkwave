@@ -36,7 +36,6 @@ $long_options=
                 ["interactive", 0, 0, 'I'],
                 ["giga", 0, 0, 'g'],
                 ["comphier", 0, 0, 'C'],
-                ["legacy", 0, 0, 'L'],
                 ["tcl_init", 1, 0, 'T'],
                 ["wish", 0, 0, 'W'],
                 ["repscript", 1, 0, 'R'],

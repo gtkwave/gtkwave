@@ -55,7 +55,6 @@ enum FileType
 {
     MISSING_FILE,
     GHW_FILE,
-    VCD_FILE,
     VCD_RECODER_FILE,
 #ifdef EXTLOAD_SUFFIX
     EXTLOAD_FILE,
