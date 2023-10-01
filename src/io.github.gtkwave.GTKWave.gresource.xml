@@ -3,6 +3,7 @@
     <gresource prefix="/io/github/gtkwave/GTKWave/ui">
         <file preprocess="xml-stripblanks">gw-named-marker-dialog.ui</file>
         <file preprocess="xml-stripblanks">gw-time-display.ui</file>
+        <file preprocess="xml-stripblanks">gw-mouseover.ui</file>
     </gresource>
     <gresource prefix="/io/github/gtkwave/GTKWave">
         <file>gtkwave.css</file>

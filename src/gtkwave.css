@@ -18,3 +18,18 @@
   color: alpha(@theme_unfocused_text_color, 0.4);
   margin: 0 8px;
 }
+
+GwMouseover {
+	background: black;
+	color: white;
+	font-family: monospace;
+	border: 1px solid grey;
+}
+
+GwMouseover .name {
+	font-weight: bold;
+}
+
+GwMouseover .flags {
+	font-style: italic;
+}

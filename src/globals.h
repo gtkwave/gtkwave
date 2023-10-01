@@ -440,15 +440,6 @@ struct Global
     char disable_mouseover; /* from mouseover.c 271 */
     char clipboard_mouseover; /* from mouseover.c */
     GtkWidget *mouseover_mouseover_c_1; /* from mouseover.c 272 */
-    GtkWidget *mo_area_mouseover_c_1; /* from mouseover.c 273 */
-    int mo_width_mouseover_c_1; /* from mouseover.c 277 */
-    int mo_height_mouseover_c_1; /* from mouseover.c 278 */
-
-    cairo_surface_t *surface_mo_pixmap_mouseover_c_1;
-    cairo_t *cr_mo_pixmap_mouseover_c_1;
-
-    GwColor rgb_mo_dk_gray_mouseover_c_1;
-    GwColor rgb_mo_black_mouseover_c_1;
 
     /*
      * pagebuttons.c

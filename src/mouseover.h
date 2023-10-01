@@ -11,5 +11,6 @@
 #define WAVE_MOUSEOVER_H
 
 void move_mouseover(Trptr t, gint xin, gint yin, GwTime tim);
+void move_mouseover_sigs(Trptr t, gint xin, gint yin, GwTime tim);
 
 #endif

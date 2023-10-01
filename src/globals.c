@@ -418,15 +418,6 @@ static const struct Global globals_base_values = {
     1, /* disable_mouseover 254 */
     0, /* clipboard_mouseover */
     NULL, /* mouseover_mouseover_c_1 255 */
-    NULL, /* mo_area_mouseover_c_1 256 */
-    0, /* mo_width_mouseover_c_1 260 */
-    0, /* mo_height_mouseover_c_1 260 */
-
-    NULL, /* surface_mo_pixmap_mouseover_c_1 */
-    NULL, /* cr_mo_pixmap_mouseover_c_1 */
-
-    {0.0, 0.0, 0.0, 0.0}, /* rgb_mo_dk_gray_mouseover_c_1 */
-    {0.0, 0.0, 0.0, 0.0}, /* mo_black_mouseover_c_1 */
 
     /*
      * pagebuttons.c
@@ -1741,15 +1732,6 @@ void reload_into_new_context_2(void)
     {
         gtk_widget_destroy(GLOBALS->mouseover_mouseover_c_1);
         GLOBALS->mouseover_mouseover_c_1 = NULL;
-
-        if (GLOBALS->cr_mo_pixmap_mouseover_c_1) {
-            cairo_destroy(GLOBALS->cr_mo_pixmap_mouseover_c_1);
-            GLOBALS->cr_mo_pixmap_mouseover_c_1 = NULL;
-        }
-        if (GLOBALS->surface_mo_pixmap_mouseover_c_1) {
-            cairo_surface_destroy(GLOBALS->surface_mo_pixmap_mouseover_c_1);
-            GLOBALS->surface_mo_pixmap_mouseover_c_1 = NULL;
-        }
     }
 
     if (GLOBALS->window_renderopt_c_6) {
@@ -2188,15 +2170,6 @@ void free_and_destroy_page_context(void)
     {
         gtk_widget_destroy(GLOBALS->mouseover_mouseover_c_1);
         GLOBALS->mouseover_mouseover_c_1 = NULL;
-
-        if (GLOBALS->cr_mo_pixmap_mouseover_c_1) {
-            cairo_destroy(GLOBALS->cr_mo_pixmap_mouseover_c_1);
-            GLOBALS->cr_mo_pixmap_mouseover_c_1 = NULL;
-        }
-        if (GLOBALS->surface_mo_pixmap_mouseover_c_1) {
-            cairo_surface_destroy(GLOBALS->surface_mo_pixmap_mouseover_c_1);
-            GLOBALS->surface_mo_pixmap_mouseover_c_1 = NULL;
-        }
     }
 
     widget_only_destroy(&GLOBALS->window_renderopt_c_6);

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+    <requires lib="gtk" version="3.24" />
+    <template class="GwMouseover" parent="GtkWindow">
+        <property name="border-width">6</property>
+        <property name="resizable">false</property>
+
+        <child>
+            <object class="GtkGrid">
+                <property name="row-spacing">6</property>
+                <property name="visible">1</property>
+
+                <child>
+                    <object class="GtkLabel" id="name_label">
+                        <property name="visible">1</property>
+                        <property name="halign">start</property>
+                        <property name="ellipsize">start</property>
+                        <property name="max-width-chars">40</property>
+                        <style>
+                            <class name="name" />
+                        </style>
+                    </object>
+                    <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">0</property>
+                    </packing>
+                </child>
+
+                <child>
+                    <object class="GtkLabel" id="flags_label">
+                        <property name="visible">1</property>
+                        <property name="halign">start</property>
+                        <property name="hexpand">true</property>
+                        <style>
+                            <class name="flags" />
+                        </style>
+                    </object>
+                    <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">0</property>
+                    </packing>
+                </child>
+
+                <child>
+                    <object class="GtkLabel" id="value_label">
+                        <property name="visible">1</property>
+                        <property name="halign">start</property>
+                        <property name="hexpand">true</property>
+                        <style>
+                            <class name="value" />
+                        </style>
+                    </object>
+                    <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">1</property>
+                        <property name="width">2</property>
+                    </packing>
+                </child>
+            </object>
+        </child>
+    </template>
+</interface>

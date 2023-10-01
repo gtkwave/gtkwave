@@ -1080,6 +1080,9 @@ static gboolean motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
         }
     }
 
+    GLOBALS->cached_mouseover_x = event->x;
+    GLOBALS->cached_mouseover_y = event->y;
+
     return GDK_EVENT_STOP;
 }
 
