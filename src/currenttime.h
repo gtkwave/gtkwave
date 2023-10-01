@@ -54,7 +54,6 @@ void exponent_to_time_scale(signed char scale);
 #include "markerbox.h"
 #include "menu.h"
 #include "mouseover.h"
-#include "mouseover_sigs.h"
 #include "pagebuttons.h"
 #include "renderopt.h"
 #include "search.h"

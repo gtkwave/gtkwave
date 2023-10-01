@@ -124,14 +124,15 @@ static gboolean mouseover_timer(gpointer dummy)
     WAVE_GDK_GET_POINTER(gtk_widget_get_window(GLOBALS->signalarea), &x, &y, &xi, &yi, &state);
     WAVE_GDK_GET_POINTER_COPY;
 
-    GLOBALS->mouseover_counter++;
+    GLOBALS->mouseover_counter = MIN(GLOBALS->mouseover_counter + 1, 10);
 
     GtkAllocation s_allocation;
     gtk_widget_get_allocation(GLOBALS->signalarea, &s_allocation);
 
     if (!((x >= 0) && (x < s_allocation.width) && (y >= 0) && (y < s_allocation.height))) {
         move_mouseover_sigs(NULL, 0, 0, GW_TIME_CONSTANT(0));
-    } else if (GLOBALS->mouseover_counter == 10) {
+        GLOBALS->mouseover_counter = 0;
+    } else if (GLOBALS->mouseover_counter >= 10) {
         GtkAllocation allocation;
         gtk_widget_get_allocation(GLOBALS->wavearea, &allocation);
         int num_traces_displayable = allocation.height / (GLOBALS->fontheight);
