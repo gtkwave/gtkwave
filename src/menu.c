@@ -3336,13 +3336,15 @@ void menu_write_screengrab_cleanup(GtkWidget *widget, gpointer data)
     gw = gtk_widget_get_window(GTK_WIDGET(GLOBALS->mainwindow));
     if (gw) {
         GtkAllocation allocation;
+        int scale = gtk_widget_get_scale_factor(GTK_WIDGET(GLOBALS->mainwindow));
         gtk_widget_get_allocation(GLOBALS->mainwindow, &allocation);
 
         pb = gdk_pixbuf_get_from_window(gw, 0, 0, allocation.width, allocation.height);
 
         if (pb) {
             cairo_surface_t *surface =
-                cairo_image_surface_create(CAIRO_FORMAT_RGB24, allocation.width, allocation.height);
+                cairo_image_surface_create(CAIRO_FORMAT_RGB24, allocation.width * scale,
+                                           allocation.height * scale);
             cairo_t *cr = cairo_create(surface);
 
             gdk_cairo_set_source_pixbuf(cr, pb, 0, 0);
