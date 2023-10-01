@@ -1282,7 +1282,6 @@ GtkWidget *treeboxframe(const char *title)
                     gtk_tree_view_append_column(GTK_TREE_VIEW(sig_view), column);
                 }
                 /* fallthrough */
-            case VCD_FILE:
             case VCD_RECODER_FILE:
             case DUMPLESS_FILE:
                 column = gtk_tree_view_column_new_with_attributes(
