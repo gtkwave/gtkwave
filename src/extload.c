@@ -48,7 +48,7 @@ GwTime extload_main(char *fname, char *skip_start, char *skip_end)
     return (0); /* for vc++ */
 }
 
-void import_extload_trace(nptr np)
+void import_extload_trace(GwNode *np)
 {
     (void)np;
 
@@ -62,7 +62,7 @@ void fsdb_import_masked(void)
     exit(255);
 }
 
-void fsdb_set_fac_process_mask(nptr np)
+void fsdb_set_fac_process_mask(GwNode *np)
 {
     (void)np;
 
@@ -623,11 +623,11 @@ static void process_extload_variable(void)
     int i;
     unsigned char vt, nvt;
     unsigned char vd;
-    struct Node *n;
+    GwNode *n;
     struct symbol *s;
     char buf[65537];
     char *str;
-    struct fac *f;
+    GwFac *f;
     char *fnam;
     int flen;
     int longest_nam_candidate = 0;
@@ -988,8 +988,8 @@ static void extload_hiertree_callback(void *pnt)
 
                         /* make sure these match the corresponding calloc_2 in extload_main_2! */
                         GLOBALS->mvlfacs_vzt_c_3 =
-                            (struct fac *)realloc_2(GLOBALS->mvlfacs_vzt_c_3,
-                                                    GLOBALS->numfacs * sizeof(struct fac));
+                            (GwFac *)realloc_2(GLOBALS->mvlfacs_vzt_c_3,
+                                                    GLOBALS->numfacs * sizeof(GwFac));
                         GLOBALS->vzt_table_vzt_c_1 = (struct lx2_entry *)realloc_2(
                             GLOBALS->vzt_table_vzt_c_1,
                             GLOBALS->numfacs * sizeof(struct lx2_entry));
@@ -997,8 +997,8 @@ static void extload_hiertree_callback(void *pnt)
                             (struct symbol *)realloc_2(GLOBALS->extload_sym_block,
                                                        GLOBALS->numfacs * sizeof(struct symbol));
                         GLOBALS->extload_node_block =
-                            (struct Node *)realloc_2(GLOBALS->extload_node_block,
-                                                     GLOBALS->numfacs * sizeof(struct Node));
+                            (GwNode *)realloc_2(GLOBALS->extload_node_block,
+                                                     GLOBALS->numfacs * sizeof(GwNode));
                         GLOBALS->extload_idcodes =
                             (unsigned int *)realloc_2(GLOBALS->extload_idcodes,
                                                       GLOBALS->numfacs * sizeof(unsigned int));
@@ -1331,11 +1331,11 @@ static void process_extload_variable2(struct fstHier *s_gv)
     int i;
     unsigned char vt, nvt;
     unsigned char vd;
-    struct Node *n;
+    GwNode *n;
     struct symbol *s;
     char buf[65537];
     char *str;
-    struct fac *f;
+    GwFac *f;
     char *fnam = NULL;
     int flen;
     int longest_nam_candidate = 0;
@@ -1705,8 +1705,8 @@ static void extload_hiertree_callback2(void *pnt)
 
                         /* make sure these match the corresponding calloc_2 in extload_main_2! */
                         GLOBALS->mvlfacs_vzt_c_3 =
-                            (struct fac *)realloc_2(GLOBALS->mvlfacs_vzt_c_3,
-                                                    GLOBALS->numfacs * sizeof(struct fac));
+                            (GwFac *)realloc_2(GLOBALS->mvlfacs_vzt_c_3,
+                                                    GLOBALS->numfacs * sizeof(GwFac));
                         GLOBALS->vzt_table_vzt_c_1 = (struct lx2_entry *)realloc_2(
                             GLOBALS->vzt_table_vzt_c_1,
                             GLOBALS->numfacs * sizeof(struct lx2_entry));
@@ -1714,8 +1714,8 @@ static void extload_hiertree_callback2(void *pnt)
                             (struct symbol *)realloc_2(GLOBALS->extload_sym_block,
                                                        GLOBALS->numfacs * sizeof(struct symbol));
                         GLOBALS->extload_node_block =
-                            (struct Node *)realloc_2(GLOBALS->extload_node_block,
-                                                     GLOBALS->numfacs * sizeof(struct Node));
+                            (GwNode *)realloc_2(GLOBALS->extload_node_block,
+                                                     GLOBALS->numfacs * sizeof(GwNode));
                         GLOBALS->extload_idcodes =
                             (unsigned int *)realloc_2(GLOBALS->extload_idcodes,
                                                       GLOBALS->numfacs * sizeof(unsigned int));
@@ -1934,7 +1934,7 @@ static GwTime extload_main_2(char *fname, char *skip_start, char *skip_end)
     GLOBALS->max_time *= GLOBALS->time_scale;
 
     /* make sure these match the corresponding realloc_2 in extload_hiertree_callback! */
-    GLOBALS->mvlfacs_vzt_c_3 = (struct fac *)calloc_2(GLOBALS->numfacs, sizeof(struct fac));
+    GLOBALS->mvlfacs_vzt_c_3 = (GwFac *)calloc_2(GLOBALS->numfacs, sizeof(GwFac));
     GLOBALS->vzt_table_vzt_c_1 =
         (struct lx2_entry *)calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
     GLOBALS->extload_namecache = (char **)calloc_2(F_NAME_MODULUS + 1, sizeof(char *));
@@ -1942,7 +1942,7 @@ static GwTime extload_main_2(char *fname, char *skip_start, char *skip_end)
     GLOBALS->extload_namecache_lens = (int *)calloc_2(F_NAME_MODULUS + 1, sizeof(int));
     GLOBALS->extload_namecache_patched = (int *)calloc_2(F_NAME_MODULUS + 1, sizeof(int));
     GLOBALS->extload_sym_block = (struct symbol *)calloc_2(GLOBALS->numfacs, sizeof(struct symbol));
-    GLOBALS->extload_node_block = (struct Node *)calloc_2(GLOBALS->numfacs, sizeof(struct Node));
+    GLOBALS->extload_node_block = (GwNode *)calloc_2(GLOBALS->numfacs, sizeof(GwNode));
     GLOBALS->extload_idcodes = (unsigned int *)calloc_2(GLOBALS->numfacs, sizeof(unsigned int));
     GLOBALS->extload_inv_idcodes = (int *)calloc_2(max_idcode + 1, sizeof(int));
 #ifdef WAVE_USE_FSDB_FST_BRIDGE
@@ -2168,7 +2168,7 @@ static void extload_callback(GwTime *tim, int *facidx, char **value)
 {
     struct GwHistEnt *htemp = histent_calloc();
     struct lx2_entry *l2e = GLOBALS->vzt_table_vzt_c_1 + (*facidx);
-    struct fac *f = GLOBALS->mvlfacs_vzt_c_3 + (*facidx);
+    GwFac *f = GLOBALS->mvlfacs_vzt_c_3 + (*facidx);
 
     GLOBALS->busycnt_vzt_c_2++;
     if (GLOBALS->busycnt_vzt_c_2 == WAVE_BUSY_ITER) {
@@ -2224,7 +2224,7 @@ static void extload_callback(GwTime *tim, int *facidx, char **value)
 /*
  * this is the black magic that handles aliased signals...
  */
-static void ext_resolver(nptr np, nptr resolve)
+static void ext_resolver(GwNode *np, GwNode *resolve)
 {
     np->extvals = resolve->extvals;
     np->msi = resolve->msi;
@@ -2239,13 +2239,13 @@ static void ext_resolver(nptr np, nptr resolve)
 /*
  * actually import a extload trace but don't do it if it's already been imported
  */
-void import_extload_trace(nptr np)
+void import_extload_trace(GwNode *np)
 {
     struct GwHistEnt *htemp, *htempx = NULL, *histent_tail;
     int len, i;
-    struct fac *f;
+    GwFac *f;
     int txidx, txidx_in_trace;
-    nptr nold = np;
+    GwNode *nold = np;
 
     if (!(f = np->mv.mvlfac))
         return; /* already imported */
@@ -2487,10 +2487,10 @@ void fsdb_import_masked(void)
 #endif
 }
 
-void fsdb_set_fac_process_mask(nptr np)
+void fsdb_set_fac_process_mask(GwNode *np)
 {
 #ifdef WAVE_FSDB_READER_IS_PRESENT
-    struct fac *f;
+    GwFac *f;
     int txidx, txidx_in_trace;
 
     if (!(f = np->mv.mvlfac))

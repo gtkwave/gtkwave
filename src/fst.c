@@ -586,13 +586,13 @@ static void fst_append_graft_chain(int len, char *nam, int which, struct tree *p
 GwTime fst_main(char *fname, char *skip_start, char *skip_end)
 {
     int i;
-    struct Node *n;
+    GwNode *n;
     struct symbol *s, *prevsymroot = NULL, *prevsym = NULL;
     signed char scale;
     int numalias = 0;
     int numvars = 0;
     struct symbol *sym_block = NULL;
-    struct Node *node_block = NULL;
+    GwNode *node_block = NULL;
     struct fstHier *h = NULL;
     int msb, lsb;
     char *nnam = NULL;
@@ -638,11 +638,11 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     GLOBALS->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
 
     GLOBALS->numfacs = fstReaderGetVarCount(GLOBALS->fst_fst_c_1);
-    GLOBALS->mvlfacs_fst_c_3 = (struct fac *)calloc_2(GLOBALS->numfacs, sizeof(struct fac));
+    GLOBALS->mvlfacs_fst_c_3 = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
     GLOBALS->fst_table_fst_c_1 =
         (struct lx2_entry *)calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
     sym_block = (struct symbol *)calloc_2(GLOBALS->numfacs, sizeof(struct symbol));
-    node_block = (struct Node *)calloc_2(GLOBALS->numfacs, sizeof(struct Node));
+    node_block = calloc_2(GLOBALS->numfacs, sizeof(GwNode));
     GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
     GLOBALS->mvlfacs_fst_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
     GLOBALS->mvlfacs_fst_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
@@ -717,7 +717,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     for (i = 0; i < GLOBALS->numfacs; i++) {
         char buf[65537];
         char *str;
-        struct fac *f;
+        GwFac *f;
         int hier_len, name_len, tlen;
         unsigned char nvt, nvd, ndt;
         int longest_nam_candidate = 0;
@@ -1417,7 +1417,7 @@ static void fst_callback2(void *user_callback_data_pointer,
     fstHandle facidx = GLOBALS->mvlfacs_fst_rvs_alias[--txidx];
     GwHistEnt *htemp;
     struct lx2_entry *l2e = GLOBALS->fst_table_fst_c_1 + facidx;
-    struct fac *f = GLOBALS->mvlfacs_fst_c_3 + facidx;
+    GwFac *f = GLOBALS->mvlfacs_fst_c_3 + facidx;
 
     GLOBALS->busycnt_fst_c_2++;
     if (GLOBALS->busycnt_fst_c_2 == WAVE_BUSY_ITER) {
@@ -1529,8 +1529,7 @@ static void fst_callback2(void *user_callback_data_pointer,
     } else if (f->flags & VZT_RD_SYM_F_DOUBLE) {
         if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
         {
-            if (!memcmp(&l2e->histent_curr->v.h_double, value, sizeof(double)))
-            {
+            if (!memcmp(&l2e->histent_curr->v.h_double, value, sizeof(double))) {
                 if ((!GLOBALS->vcd_preserve_glitches) && (!GLOBALS->vcd_preserve_glitches_real)) {
                     return;
                 }
@@ -1608,7 +1607,7 @@ static void fst_callback(void *user_callback_data_pointer,
 /*
  * this is the black magic that handles aliased signals...
  */
-static void fst_resolver(nptr np, nptr resolve)
+static void fst_resolver(GwNode *np, GwNode *resolve)
 {
     np->extvals = resolve->extvals;
     np->msi = resolve->msi;
@@ -1623,15 +1622,15 @@ static void fst_resolver(nptr np, nptr resolve)
 /*
  * actually import a fst trace but don't do it if it's already been imported
  */
-void import_fst_trace(nptr np)
+void import_fst_trace(GwNode *np)
 {
     GwHistEnt *htemp;
     GwHistEnt *htempx = NULL;
     GwHistEnt *histent_tail;
     int len, i;
-    struct fac *f;
+    GwFac *f;
     int txidx;
-    nptr nold = np;
+    GwNode *nold = np;
 
     if (!(f = np->mv.mvlfac))
         return; /* already imported */
@@ -1820,9 +1819,9 @@ static void expand_synvec(int txidx, const char *s)
 /*
  * pre-import many traces at once so function above doesn't have to iterate...
  */
-void fst_set_fac_process_mask(nptr np)
+void fst_set_fac_process_mask(GwNode *np)
 {
-    struct fac *f;
+    GwFac *f;
     int txidx;
 
     if (!(f = np->mv.mvlfac))
@@ -1885,9 +1884,9 @@ void fst_import_masked(void)
         if (fstReaderGetFacProcessMask(GLOBALS->fst_fst_c_1, txidxi + 1)) {
             int txidx = GLOBALS->mvlfacs_fst_rvs_alias[txidxi];
             GwHistEnt *htemp, *histent_tail;
-            struct fac *f = GLOBALS->mvlfacs_fst_c_3 + txidx;
+            GwFac *f = GLOBALS->mvlfacs_fst_c_3 + txidx;
             int len = f->len;
-            nptr np = GLOBALS->fst_table_fst_c_1[txidx].np;
+            GwNode *np = GLOBALS->fst_table_fst_c_1[txidx].np;
 
             histent_tail = htemp = histent_calloc();
             if (len > 1) {

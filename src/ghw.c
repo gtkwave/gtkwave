@@ -32,7 +32,7 @@
  * GHW's functions as an alias handle.  The following
  * (now global) vars are used to resolve those differences...
  *
- * static struct Node **nxp;
+ * static GwNode **nxp;
  * static struct symbol *sym_head = NULL, *sym_curr = NULL;
  * static int sym_which = 0;
  */
@@ -734,7 +734,7 @@ static struct tree *build_hierarchy(struct ghw_handler *h, struct ghw_hie *hie)
 void facs_debug(void)
 {
     int i;
-    struct Node *n;
+    GwNode *n;
 
     for (i = 0; i < GLOBALS->numfacs; i++) {
         GwHistEnt *h;
@@ -766,7 +766,7 @@ static void create_facs(struct ghw_handler *h)
     }
 
     for (i = 0; i < h->nbr_sigs; i++) {
-        struct Node *n = GLOBALS->nxp_ghw_c_1[i];
+        GwNode *n = GLOBALS->nxp_ghw_c_1[i];
 
         if (h->sigs[i].type)
             switch (h->sigs[i].type->kind) {
@@ -876,7 +876,7 @@ static void set_fac_name(struct ghw_handler *h)
     set_fac_name_1(GLOBALS->treeroot);
 }
 
-static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
+static void add_history(struct ghw_handler *h, GwNode *n, int sig_num)
 {
     GwHistEnt *he;
     struct ghw_sig *sig = &h->sigs[sig_num];
@@ -1049,7 +1049,7 @@ static void add_tail(struct ghw_handler *h)
     for (j = 1; j >= 0; j--) /* add two endcaps */
         for (i = 0; i < h->nbr_sigs; i++) {
             struct ghw_sig *sig = &h->sigs[i];
-            struct Node *n = GLOBALS->nxp_ghw_c_1[i];
+            GwNode *n = GLOBALS->nxp_ghw_c_1[i];
             GwHistEnt *he;
 
             if (sig->type == NULL || n == NULL || !n->curr)
@@ -1160,9 +1160,9 @@ GwTime ghw_main(char *fname)
 
     GLOBALS->nbr_sig_ref_ghw_c_1 = 0;
 
-    GLOBALS->nxp_ghw_c_1 = (struct Node **)calloc_2(handle.nbr_sigs, sizeof(struct Node *));
+    GLOBALS->nxp_ghw_c_1 = calloc_2(handle.nbr_sigs, sizeof(GwNode *));
     for (ui = 0; ui < handle.nbr_sigs; ui++) {
-        GLOBALS->nxp_ghw_c_1[ui] = (struct Node *)calloc_2(1, sizeof(struct Node));
+        GLOBALS->nxp_ghw_c_1[ui] = calloc_2(1, sizeof(GwNode));
     }
 
     GLOBALS->treeroot = build_hierarchy(&handle, handle.hie);
@@ -1180,8 +1180,8 @@ GwTime ghw_main(char *fname)
     /* fix up names on aliased nodes via cloning... */
     for (i = 0; i < GLOBALS->numfacs; i++) {
         if (strcmp(GLOBALS->facs[i]->name, GLOBALS->facs[i]->n->nname)) {
-            struct Node *n = malloc_2(sizeof(struct Node));
-            memcpy(n, GLOBALS->facs[i]->n, sizeof(struct Node));
+            GwNode *n = malloc_2(sizeof(GwNode));
+            memcpy(n, GLOBALS->facs[i]->n, sizeof(GwNode));
             GLOBALS->facs[i]->n = n;
             n->nname = GLOBALS->facs[i]->name;
         }

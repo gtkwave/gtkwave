@@ -20,8 +20,8 @@
 #include "tree_component.h"
 
 GwTime fst_main(char *fname, char *skip_start, char *skip_end);
-void import_fst_trace(nptr np);
-void fst_set_fac_process_mask(nptr np);
+void import_fst_trace(GwNode *np);
+void fst_set_fac_process_mask(GwNode *np);
 void fst_import_masked(void);
 
 #endif

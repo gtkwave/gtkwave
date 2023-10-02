@@ -38,15 +38,15 @@ struct lx2_entry
     GwHistEnt *histent_head;
     GwHistEnt *histent_curr;
     int numtrans;
-    nptr np;
+    GwNode *np;
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(pop)
 #endif
 
-void import_lx2_trace(nptr np);
-void lx2_set_fac_process_mask(nptr np);
+void import_lx2_trace(GwNode *np);
+void lx2_set_fac_process_mask(GwNode *np);
 void lx2_import_masked(void);
 
 #endif

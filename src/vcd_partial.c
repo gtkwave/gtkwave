@@ -48,7 +48,7 @@
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static GwHistEnt *add_histent_p(GwTime time, struct Node *n, char ch, int regadd, char *vector);
+static GwHistEnt *add_histent_p(GwTime time, GwNode *n, char ch, int regadd, char *vector);
 static void add_tail_histents(void);
 static void vcd_build_symbols(void);
 static void vcd_cleanup(void);
@@ -1636,7 +1636,7 @@ static void vcd_parse(void)
                     /* initial conditions */
                     v->value = (char *)malloc_2(v->size + 1);
                     v->value[v->size] = 0;
-                    v->narray = (struct Node **)calloc_2(v->size, sizeof(struct Node *));
+                    v->narray = calloc_2(v->size, sizeof(GwNode *));
                     v->tr_array = calloc_2(v->size, sizeof(GwHistEnt *));
                     v->app_array = calloc_2(v->size, sizeof(GwHistEnt *));
                     {
@@ -1644,7 +1644,7 @@ static void vcd_parse(void)
                         for (i = 0; i < v->size; i++) {
                             v->value[i] = 'x';
                         }
-                        v->narray[0] = (struct Node *)calloc_2(1, sizeof(struct Node));
+                        v->narray[0] = calloc_2(1, sizeof(GwNode));
                         v->narray[0]->head.time = -1;
                         v->narray[0]->head.v.h_val = AN_X;
                     }
@@ -1788,7 +1788,7 @@ static void vcd_parse(void)
 
 /*******************************************************************************/
 
-GwHistEnt *add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
+GwHistEnt *add_histent_p(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
 {
     GwHistEnt *he;
     GwHistEnt *rc;
@@ -2167,7 +2167,8 @@ static void vcd_build_symbols(void)
 #endif
                         s->n = v->narray[j];
                         if (substnode) {
-                            struct Node *n, *n2;
+                            GwNode *n;
+                            GwNode *n2;
 
                             n = s->n;
                             n2 = vprime->narray[j];
@@ -2264,7 +2265,8 @@ static void vcd_build_symbols(void)
 #endif
                     s->n = v->narray[0];
                     if (substnode) {
-                        struct Node *n, *n2;
+                        GwNode *n;
+                        GwNode *n2;
 
                         n = s->n;
                         n2 = vprime->narray[0];
@@ -2477,7 +2479,7 @@ GwTime vcd_partial_main(char *fname)
 
 /*******************************************************************************/
 
-static void regen_harray(Trptr t, nptr nd)
+static void regen_harray(Trptr t, GwNode *nd)
 {
     int i, histcount;
     GwHistEnt *histpnt;
@@ -2566,7 +2568,7 @@ static void regen_trace_sweep(Trptr t)
 
         for (i = 0; i < bts->nnbits; i++) {
             if (bts->nodes[i]->expansion) {
-                nptr parent = bts->nodes[i]->expansion->parent;
+                GwNode *parent = bts->nodes[i]->expansion->parent;
                 int parentbit = bts->nodes[i]->expansion->parentbit;
 
                 DeleteNode(bts->nodes[i]);
@@ -2682,7 +2684,7 @@ static void vcd_partial_regen_node_expansion(Trptr t)
 {
     if (!t->vector) {
         if (t->n.nd && t->n.nd->expansion) {
-            nptr np_ex =
+            GwNode *np_ex =
                 ExtractNodeSingleBit(t->n.nd->expansion->parent, t->n.nd->expansion->parentbit);
 
             DeleteNode(t->n.nd);

@@ -80,7 +80,7 @@ bot:
     return (rp);
 }
 
-char *append_array_row(nptr n)
+char *append_array_row(GwNode *n)
 {
     int was_packed = HIER_DEPACK_ALLOC;
     char *hname = hier_decompress_flagged(n->nname, &was_packed);
@@ -331,7 +331,7 @@ void write_save_helper(const char *savnam, FILE *wave)
             if (t->vector &&
                 !(t->n.vec->transaction_cache && t->n.vec->transaction_cache->transaction_nd)) {
                 int ix;
-                nptr *nodes;
+                GwNode **nodes;
                 bptr bits;
                 baptr ba;
 
@@ -366,10 +366,10 @@ void write_save_helper(const char *savnam, FILE *wave)
                 }
                 fprintf(wave, "\n");
             } else {
-                nptr nd = (t->vector && t->n.vec->transaction_cache &&
-                           t->n.vec->transaction_cache->transaction_nd)
-                              ? t->n.vec->transaction_cache->transaction_nd
-                              : t->n.nd;
+                GwNode *nd = (t->vector && t->n.vec->transaction_cache &&
+                              t->n.vec->transaction_cache->transaction_nd)
+                                 ? t->n.vec->transaction_cache->transaction_nd
+                                 : t->n.nd;
 
                 if (HasAlias(t)) {
                     if (nd->expansion) {
@@ -503,7 +503,7 @@ void write_save_helper(const char *savnam, FILE *wave)
                         if (t->vector && !(t->n.vec->transaction_cache &&
                                            t->n.vec->transaction_cache->transaction_nd)) {
                             int ix;
-                            nptr *nodes;
+                            GwNode **nodes;
                             bptr bits;
                             baptr ba;
 
@@ -540,10 +540,10 @@ void write_save_helper(const char *savnam, FILE *wave)
                             }
                             fprintf(wave, "\n");
                         } else {
-                            nptr nd = (t->vector && t->n.vec->transaction_cache &&
-                                       t->n.vec->transaction_cache->transaction_nd)
-                                          ? t->n.vec->transaction_cache->transaction_nd
-                                          : t->n.nd;
+                            GwNode *nd = (t->vector && t->n.vec->transaction_cache &&
+                                          t->n.vec->transaction_cache->transaction_nd)
+                                             ? t->n.vec->transaction_cache->transaction_nd
+                                             : t->n.nd;
 
                             if (HasAlias(t)) {
                                 if (nd->expansion) {
@@ -946,7 +946,7 @@ int parsewavline(char *w, char *alias, int depth)
     int i;
     int len;
     char *w2;
-    nptr nexp;
+    GwNode *nexp;
     unsigned int rows = 0;
     char *prefix, *suffix, *new;
     char *prefix_init, *w2_init;

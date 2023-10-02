@@ -172,7 +172,7 @@ struct Global
     int *extload_namecache_lens;
     int *extload_namecache_patched;
     struct symbol *extload_sym_block;
-    struct Node *extload_node_block;
+    GwNode *extload_node_block;
     void *extload_xc;
     struct symbol *extload_prevsymroot;
     struct symbol *extload_prevsym;
@@ -228,7 +228,7 @@ struct Global
     GwTime last_cycle_fst_c_3;
     GwTime total_cycles_fst_c_3;
     struct lx2_entry *fst_table_fst_c_1;
-    struct fac *mvlfacs_fst_c_3;
+    GwFac *mvlfacs_fst_c_3;
     fstHandle *mvlfacs_fst_alias;
     fstHandle *mvlfacs_fst_rvs_alias;
     fstHandle fst_maxhandle;
@@ -271,7 +271,7 @@ struct Global
     /*
      * ghw.c
      */
-    struct Node **nxp_ghw_c_1; /* from ghw.c 95 */
+    GwNode **nxp_ghw_c_1; /* from ghw.c 95 */
     int sym_which_ghw_c_1; /* from ghw.c 98 */
     struct ghw_tree_node *gwt_ghw_c_1; /* from ghw.c 99 */
     struct ghw_tree_node *gwt_corr_ghw_c_1; /* from ghw.c 100 */
@@ -907,7 +907,7 @@ struct Global
     GwTime last_cycle_vzt_c_3; /* from vzt.c 637 */
     GwTime total_cycles_vzt_c_3; /* from vzt.c 638 */
     struct lx2_entry *vzt_table_vzt_c_1; /* from vzt.c 639 */
-    struct fac *mvlfacs_vzt_c_3; /* from vzt.c 640 */
+    GwFac *mvlfacs_vzt_c_3; /* from vzt.c 640 */
     int busycnt_vzt_c_2; /* from vzt.c 641 */
 
     /*

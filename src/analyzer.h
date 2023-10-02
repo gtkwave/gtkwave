@@ -21,13 +21,6 @@
 #define WAVE_ARRAY_SUPPORT
 #endif
 
-/* struct Node bitfield widths */
-#define WAVE_VARXT_WIDTH (16)
-#define WAVE_VARXT_MAX_ID ((1 << WAVE_VARXT_WIDTH) - 1)
-#define WAVE_VARDT_WIDTH (6)
-#define WAVE_VARDIR_WIDTH (3)
-#define WAVE_VARTYPE_WIDTH (6)
-
 typedef struct _SearchProgressData
 {
     GtkWidget *window;
@@ -39,8 +32,6 @@ typedef struct _SearchProgressData
 #define BITATTRIBUTES_MAX 32768
 
 typedef struct ExpandInfo *eptr;
-typedef struct ExpandReferences *exptr;
-typedef struct Node *nptr;
 typedef struct Bits *bptr;
 typedef struct BitVector *bvptr;
 typedef struct BitAttributes *baptr;
@@ -127,63 +118,10 @@ enum AnalyzerBits
 
 typedef struct ExpandInfo /* only used when expanding atomic vex.. */
 {
-    nptr *narray;
+    GwNode **narray;
     int msb, lsb;
     int width;
 } ExpandInfo;
-
-typedef struct ExpandReferences
-{
-    nptr parent; /* which atomic vec we expanded from */
-    int parentbit; /* which bit from that atomic vec */
-    int actual; /* bit number to be used in [] */
-    int refcnt;
-} ExpandReferences;
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-struct Node
-{
-    exptr expansion; /* indicates which nptr this node was expanded from (if it was expanded at all)
-                        and (when implemented) refcnts */
-    char *nname; /* ascii name of node */
-    GwHistEnt head; /* first entry in transition history */
-    GwHistEnt *curr; /* ptr. to current history entry */
-
-    GwHistEnt **harray; /* fill this in when we make a trace.. contains  */
-    /*  a ptr to an array of histents for bsearching */
-    union
-    {
-        struct fac *mvlfac; /* for use with mvlsim aets */
-        struct vlist_packer_t *mvlfac_packer_vlist;
-        struct vlist_t *mvlfac_vlist;
-        char *value; /* for use when unrolling ae2 values */
-    } mv; /* anon union is a gcc extension so use mv instead.  using this union avoids crazy casting
-             warnings */
-
-    int msi, lsi; /* for 64-bit, more efficient than having as an external struct ExtNode*/
-
-    int numhist; /* number of elements in the harray */
-
-#ifdef WAVE_ARRAY_SUPPORT
-    unsigned int array_height, this_row;
-#endif
-
-    unsigned varxt : WAVE_VARXT_WIDTH; /* reference inside subvar_pnt[] */
-    unsigned vardt : WAVE_VARDT_WIDTH; /* see nodeVarDataType, this is an internal value */
-    unsigned vardir : WAVE_VARDIR_WIDTH; /* see nodeVarDir, this is an internal value (currently
-                                            used only by extload and FST) */
-    unsigned vartype : WAVE_VARTYPE_WIDTH; /* see nodeVarType, this is an internal value */
-
-    unsigned extvals : 1; /* was formerly a pointer to ExtNode "ext", now simply a flag */
-};
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
 
 #define WAVE_NODEVARTYPE_STR \
     static const char *vartype_strings[] = { \
@@ -326,7 +264,7 @@ typedef struct Bits
     int nnbits; /* number of bits in this vector */
     baptr attribs; /* for keeping track of combined timeshifts and inversions (and for savefile) */
 
-    nptr nodes[]; /* C99 pointers to the bits (nodes)  */
+    GwNode *nodes[]; /* C99 pointers to the bits (nodes)  */
 } Bits;
 
 #ifdef WAVE_USE_STRUCT_PACKING
@@ -342,7 +280,7 @@ typedef struct BitVector
 {
     bvptr transaction_cache; /* for TR_TTRANSLATED traces */
     bvptr transaction_chain; /* for TR_TTRANSLATED traces */
-    nptr transaction_nd; /* for TR_TTRANSLATED traces */
+    GwNode *transaction_nd; /* for TR_TTRANSLATED traces */
 
     char *bvname; /* name of this vector of bits           */
     int nbits; /* number of bits in this vector         */
@@ -413,7 +351,7 @@ typedef struct TraceEnt
 
     union
     {
-        nptr nd; /* what makes up this trace */
+        GwNode *nd; /* what makes up this trace */
         bvptr vec;
     } n;
 
@@ -543,13 +481,13 @@ Trptr GivePrevTrace(Trptr t);
 int UpdateTracesVisible(void);
 
 void DisplayTraces(int val);
-int AddNodeTraceReturn(nptr nd, char *aliasname, Trptr *tret);
-int AddNode(nptr nd, char *aliasname);
-int AddNodeUnroll(nptr nd, char *aliasname);
+int AddNodeTraceReturn(GwNode *nd, char *aliasname, Trptr *tret);
+int AddNode(GwNode *nd, char *aliasname);
+int AddNodeUnroll(GwNode *nd, char *aliasname);
 int AddVector(bvptr vec, char *aliasname);
 int AddBlankTrace(char *commentname);
 int InsertBlankTrace(char *comment, TraceFlagsType different_flags);
-void RemoveNode(nptr n);
+void RemoveNode(GwNode *n);
 void RemoveTrace(Trptr t, int dofree);
 void FreeTrace(Trptr t);
 Trptr CutBuffer(void);
@@ -559,11 +497,11 @@ Trptr PrependBuffer(void);
 int TracesReorder(int mode);
 int DeleteBuffer(void);
 
-void import_trace(nptr np);
+void import_trace(GwNode *np);
 
-eptr ExpandNode(nptr n);
-void DeleteNode(nptr n);
-nptr ExtractNodeSingleBit(nptr n, int bit);
+eptr ExpandNode(GwNode *n);
+void DeleteNode(GwNode *n);
+GwNode *ExtractNodeSingleBit(GwNode *n, int bit);
 
 /* hierarchy depths */
 char *hier_extract(char *pnt, int levels);

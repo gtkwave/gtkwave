@@ -25,7 +25,7 @@ int read_save_helper(char *wname,
                      off_t *dumpsiz,
                      time_t *dumptim,
                      int *opt_vcd); /* -1 = error, 0+ = number of lines read */
-char *append_array_row(nptr n);
+char *append_array_row(GwNode *n);
 
 int parsewavline(char *w, char *alias, int depth);
 int parsewavline_lx2(char *w, char *alias, int depth);

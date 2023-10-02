@@ -29,23 +29,6 @@
 #include <inttypes.h>
 #endif
 
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-struct fac
-{
-    struct Node *working_node;
-    int node_alias;
-    int len;
-    unsigned int flags;
-};
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
-
 struct symbol
 {
 #ifndef _WAVE_HAVE_JUDY
@@ -54,7 +37,7 @@ struct symbol
 
     struct symbol *vec_root, *vec_chain;
     char *name;
-    struct Node *n;
+    GwNode *n;
 
 #ifndef _WAVE_HAVE_JUDY
     char s_selected; /* for the clist object */

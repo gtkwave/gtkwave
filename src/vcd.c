@@ -150,7 +150,7 @@ void append_vcd_slisthier(const char *str)
     DEBUG(fprintf(stderr, "SCOPE: %s\n", GLOBALS->slisthier));
 }
 
-void set_vcd_vartype(struct vcdsymbol *v, nptr n)
+void set_vcd_vartype(struct vcdsymbol *v, GwNode *n)
 {
     unsigned char nvt;
 

@@ -128,7 +128,7 @@ typedef struct vcdsav_tree_node vcdsav_Tree;
 struct vcdsav_tree_node
 {
     vcdsav_Tree *left, *right;
-    nptr item;
+    GwNode *item;
     int val;
     GwHistEnt *hist;
     int len;
@@ -336,7 +336,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
     int nodecnt = 0;
     vcdsav_Tree *vt = NULL;
     vcdsav_Tree **hp_clone = GLOBALS->hp_vcd_saver_c_1;
-    nptr n;
+    GwNode *n;
     /* ExtNode *e; */
     /* int msi, lsi; */
     int i;
@@ -932,7 +932,7 @@ char *output_hier(int is_trans, const char *name)
 
 static void write_hptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
-    nptr n = t->n.nd;
+    GwNode *n = t->n.nd;
     GwHistEnt **ha = n->harray;
     int numhist = n->numhist;
     int i;
@@ -1101,7 +1101,7 @@ static int determine_trace_data_type(char *s, int curtype)
 
 static void write_hptr_trace_vector(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
-    nptr n = t->n.nd;
+    GwNode *n = t->n.nd;
     GwHistEnt **ha = n->harray;
     int numhist = n->numhist;
     int i;

@@ -291,7 +291,7 @@ Trptr is_signal_displayed(char *name)
 /* Create a Trptr structure for ND and return its value
  * This is based on the function AddNodeTraceReturn()
  */
-Trptr Node_to_Trptr(nptr nd)
+Trptr Node_to_Trptr(GwNode *nd)
 {
     Trptr t = NULL;
     GwHistEnt *histpnt;
@@ -445,7 +445,7 @@ Trptr sig_name_to_Trptr(char *name)
                     }
                 }
             } else {
-                nptr node = s->n;
+                GwNode *node = s->n;
                 t = Node_to_Trptr(node);
             }
         }
