@@ -1602,7 +1602,7 @@ static unsigned expand_trace(Trptr t_top)
         color = t->t_color;
 
         if (t->vector) {
-            bptr bits;
+            GwBits *bits;
             int i;
             Trptr tfix;
             GwTime otime = t->shift;
@@ -1938,8 +1938,8 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
     } else {
         int i, nodepnt = 0;
         GwNode *n[BITATTRIBUTES_MAX];
-        struct BitAttributes ba[BITATTRIBUTES_MAX];
-        struct Bits *b = NULL;
+        GwBitAttributes ba[BITATTRIBUTES_MAX];
+        GwBits *b = NULL;
         bvptr v = NULL;
 
         memset(n, 0, sizeof(n)); /* scan-build */
@@ -1966,8 +1966,8 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
                 } else {
                     if (t->vector) {
                         int ix;
-                        bptr bits = t->n.vec->bits;
-                        baptr oldba = bits ? bits->attribs : NULL;
+                        GwBits *bits = t->n.vec->bits;
+                        GwBitAttributes *oldba = bits ? bits->attribs : NULL;
 
                         bits = t->n.vec->bits;
 
@@ -2019,15 +2019,15 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
             t = t->t_next;
         }
 
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
+        b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
-        b->attribs = malloc_2(nodepnt * sizeof(struct BitAttributes));
+        b->attribs = malloc_2(nodepnt * sizeof(GwBitAttributes));
         for (i = 0; i < nodepnt; i++) /* for up combine we need to reverse the attribs list! */
         {
             if (direction) {
-                memcpy(b->attribs + i, ba + i, sizeof(struct BitAttributes));
+                memcpy(b->attribs + i, ba + i, sizeof(GwBitAttributes));
             } else {
-                memcpy(b->attribs + i, ba + (nodepnt - 1 - i), sizeof(struct BitAttributes));
+                memcpy(b->attribs + i, ba + (nodepnt - 1 - i), sizeof(GwBitAttributes));
             }
 
             if ((ba[i].shift) ||

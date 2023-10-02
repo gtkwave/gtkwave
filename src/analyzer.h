@@ -32,9 +32,7 @@ typedef struct _SearchProgressData
 #define BITATTRIBUTES_MAX 32768
 
 typedef struct ExpandInfo *eptr;
-typedef struct Bits *bptr;
 typedef struct BitVector *bvptr;
-typedef struct BitAttributes *baptr;
 
 typedef unsigned long Ulong;
 typedef unsigned int Uint;
@@ -247,30 +245,6 @@ typedef uint64_t TraceFlagsType;
 #define TRACEFLAGSPRIFMT PRIx64
 #define TRACEFLAGSPRIuFMT PRIu64
 
-typedef struct BitAttributes
-{
-    GwTime shift;
-    TraceFlagsType flags;
-} BitAttributes;
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-typedef struct Bits
-{
-    char *name; /* name of this vector of bits   */
-    int nnbits; /* number of bits in this vector */
-    baptr attribs; /* for keeping track of combined timeshifts and inversions (and for savefile) */
-
-    GwNode *nodes[]; /* C99 pointers to the bits (nodes)  */
-} Bits;
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
-
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(push)
 #pragma pack(1)
@@ -285,7 +259,7 @@ typedef struct BitVector
     char *bvname; /* name of this vector of bits           */
     int nbits; /* number of bits in this vector         */
     int numregions; /* number of regions that follow         */
-    bptr bits; /* pointer to Bits structs for save file */
+    GwBits *bits; /* pointer to Bits structs for save file */
     GwVectorEnt *vectors[]; /* C99 pointers to the vectors           */
 } BitVector;
 

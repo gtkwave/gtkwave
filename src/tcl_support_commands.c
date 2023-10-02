@@ -383,7 +383,7 @@ Trptr sig_name_to_Trptr(char *name)
     struct symbol *s = NULL, *s2;
     int len = 0;
     bvptr v = NULL;
-    bptr b = NULL;
+    GwBits *b = NULL;
     int pre_import = 0;
 
     if (name) {

@@ -77,16 +77,16 @@ void quicksort(struct symbol **, int, int);
 
 void wave_heapsort(struct symbol **a, int num);
 
-struct Bits *makevec(char *, char *);
-struct Bits *makevec_annotated(char *, char *);
+GwBits *makevec(char *, char *);
+GwBits *makevec_annotated(char *, char *);
 int maketraces(char *, char *, int);
 
 /* additions to bitvec.c because of search.c/menu.c ==> formerly in analyzer.h */
-bvptr bits2vector(struct Bits *b);
-struct Bits *makevec_selected(char *vec, int numrows, char direction);
-struct Bits *makevec_range(char *vec, int lo, int hi, char direction);
+bvptr bits2vector(GwBits *b);
+GwBits *makevec_selected(char *vec, int numrows, char direction);
+GwBits *makevec_range(char *vec, int lo, int hi, char direction);
 int add_vector_range(char *alias, int lo, int hi, char direction);
-struct Bits *makevec_chain(char *vec, struct symbol *sym, int len);
+GwBits *makevec_chain(char *vec, struct symbol *sym, int len);
 int add_vector_chain(struct symbol *s, int len);
 char *makename_chain(struct symbol *sym);
 

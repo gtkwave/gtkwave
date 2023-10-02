@@ -389,7 +389,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
         } else {
             bvptr b = t->n.vec;
             if (b) {
-                bptr bt = b->bits;
+                GwBits *bt = b->bits;
                 if (bt) {
                     for (i = 0; i < bt->nnbits; i++) {
                         if (bt->nodes[i]) {

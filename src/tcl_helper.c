@@ -2104,8 +2104,8 @@ char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr t, gboolean use_
                 !(t->n.vec->transaction_cache && t->n.vec->transaction_cache->transaction_nd)) {
                 int i;
                 GwNode **nodes;
-                bptr bits;
-                baptr ba;
+                GwBits *bits;
+                GwBitAttributes *ba;
 
                 if (HasAlias(t)) {
                     one_entry = make_message("+{%s} ", t->name_full);
