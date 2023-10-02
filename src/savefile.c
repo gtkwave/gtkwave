@@ -1166,7 +1166,7 @@ int parsewavline(char *w, char *alias, int depth)
         /* 		} */
     } else if ((*w2 == '#') || (*w2 == ':')) {
         /* handle bitvec */
-        bvptr v = NULL;
+        GwBitVector *v = NULL;
         GwBits *b = NULL;
         int maketyp = (*w2 == '#');
 

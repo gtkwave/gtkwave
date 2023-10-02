@@ -32,7 +32,6 @@ typedef struct _SearchProgressData
 #define BITATTRIBUTES_MAX 32768
 
 typedef struct ExpandInfo *eptr;
-typedef struct BitVector *bvptr;
 
 typedef unsigned long Ulong;
 typedef unsigned int Uint;
@@ -245,28 +244,6 @@ typedef uint64_t TraceFlagsType;
 #define TRACEFLAGSPRIFMT PRIx64
 #define TRACEFLAGSPRIuFMT PRIu64
 
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-typedef struct BitVector
-{
-    bvptr transaction_cache; /* for TR_TTRANSLATED traces */
-    bvptr transaction_chain; /* for TR_TTRANSLATED traces */
-    GwNode *transaction_nd; /* for TR_TTRANSLATED traces */
-
-    char *bvname; /* name of this vector of bits           */
-    int nbits; /* number of bits in this vector         */
-    int numregions; /* number of regions that follow         */
-    GwBits *bits; /* pointer to Bits structs for save file */
-    GwVectorEnt *vectors[]; /* C99 pointers to the vectors           */
-} BitVector;
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
-
 typedef struct
 {
     GwTime first; /* beginning time of trace */
@@ -326,7 +303,7 @@ typedef struct TraceEnt
     union
     {
         GwNode *nd; /* what makes up this trace */
-        bvptr vec;
+        GwBitVector *vec;
     } n;
 
     TraceFlagsType flags; /* see def below in TraceEntFlagBits */
@@ -458,7 +435,7 @@ void DisplayTraces(int val);
 int AddNodeTraceReturn(GwNode *nd, char *aliasname, Trptr *tret);
 int AddNode(GwNode *nd, char *aliasname);
 int AddNodeUnroll(GwNode *nd, char *aliasname);
-int AddVector(bvptr vec, char *aliasname);
+int AddVector(GwBitVector *vec, char *aliasname);
 int AddBlankTrace(char *commentname);
 int InsertBlankTrace(char *comment, TraceFlagsType different_flags);
 void RemoveNode(GwNode *n);

@@ -152,7 +152,7 @@ static int compar_vectorent(const void *s1, const void *s2)
     return (rv);
 }
 
-GwVectorEnt *bsearch_vector(bvptr b, GwTime key)
+GwVectorEnt *bsearch_vector(GwBitVector *b, GwTime key)
 {
     GLOBALS->vmax_compare_time_bsearch_c_1 = -2;
     GLOBALS->vmax_compare_pos_bsearch_c_1 = NULL;

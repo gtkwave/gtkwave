@@ -84,7 +84,10 @@ struct _GwSignalList
 G_DEFINE_TYPE(GwSignalList, gw_signal_list, GTK_TYPE_DRAWING_AREA)
 
 // Get the text and background colors for a trace
-static void get_trace_colors(Trptr t, GwSignalListColors *colors, GwColor *bg_color, GwColor *text_color)
+static void get_trace_colors(Trptr t,
+                             GwSignalListColors *colors,
+                             GwColor *bg_color,
+                             GwColor *text_color)
 {
     GwColor clr_comment = colors->brkred;
     GwColor clr_group = colors->gmstrd;
@@ -133,7 +136,7 @@ static void render_signal(cairo_t *cr, GwSignalListColors *colors, Trptr t, int 
 {
     char buf[2048];
     char *subname = NULL;
-    bvptr bv = NULL;
+    GwBitVector *bv = NULL;
 
     /* seek to real xact trace if present... */
     if (t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH)) {

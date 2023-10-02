@@ -156,7 +156,7 @@ GwTime cook_markertime(GwTime marker, gint x, gint y)
         }
 
         if ((tscan) && (tscan->vector)) {
-            bvptr bv = tscan->n.vec;
+            GwBitVector *bv = tscan->n.vec;
             do {
                 bv = bv->transaction_chain; /* correlate to blank trace */
             } while (bv && (bcnt--));
@@ -1848,7 +1848,7 @@ void MaxSignalLength(void)
     int vlen = 0, vmaxlen = 0;
     char buf[2048];
     char dirty_kick;
-    bvptr bv;
+    GwBitVector *bv;
     Trptr tscan;
 
     DEBUG(printf("signalwindow_width_dirty: %d\n", GLOBALS->signalwindow_width_dirty));
@@ -2111,7 +2111,7 @@ void MaxSignalLength_2(char dirty_kick)
 
 void UpdateSigValue(Trptr t)
 {
-    bvptr bv = NULL;
+    GwBitVector *bv = NULL;
     Trptr tscan = NULL;
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);

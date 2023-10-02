@@ -184,7 +184,7 @@ static gboolean mouseover_timer(gpointer dummy)
             }
 
             if ((tscan) && (tscan->vector)) {
-                bvptr bv = tscan->n.vec;
+                GwBitVector *bv = tscan->n.vec;
                 do {
                     bv = bv->transaction_chain; /* correlate to blank trace */
                 } while (bv && (bcnt--));

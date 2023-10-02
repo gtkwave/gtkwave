@@ -257,7 +257,7 @@ static void AddTrace(Trptr t)
         t->t_filter = GLOBALS->current_translate_ttrans;
         if (t->t_filter) {
             if (!t->vector) {
-                bvptr v;
+                GwBitVector *v;
                 TraceFlagsType cache_hi = t->flags & TR_HIGHLIGHT;
 
                 t->flags |= TR_HIGHLIGHT;
@@ -566,7 +566,7 @@ int AddNodeUnroll(GwNode *nd, char *aliasname)
 /*
  * Adds a vector to the display...
  */
-int AddVector(bvptr vec, char *aliasname)
+int AddVector(GwBitVector *vec, char *aliasname)
 {
     Trptr t;
     int n;
@@ -622,7 +622,8 @@ void FreeTrace(Trptr t)
     }
 
     if (t->vector) {
-        bvptr bv, bv2;
+        GwBitVector *bv;
+        GwBitVector *bv2;
         int i;
 
         bv = t->n.vec;
@@ -1352,7 +1353,7 @@ void UpdateTraceSelection(Trptr t)
             }
 
             if ((tscan) && (tscan->vector) && (IsSelected(tscan))) {
-                bvptr bv = tscan->n.vec;
+                GwBitVector *bv = tscan->n.vec;
                 do {
                     bv = bv->transaction_chain; /* correlate to blank trace */
                 } while (bv && (bcnt--));

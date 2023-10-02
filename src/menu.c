@@ -1887,7 +1887,7 @@ static void menu_rename(GtkWidget *widget, gpointer data)
     }
 }
 
-bvptr combine_traces(int direction, Trptr single_trace_only)
+GwBitVector *combine_traces(int direction, Trptr single_trace_only)
 {
     Trptr t, tmp;
     Trptr tfirst = NULL;
@@ -1940,7 +1940,7 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
         GwNode *n[BITATTRIBUTES_MAX];
         GwBitAttributes ba[BITATTRIBUTES_MAX];
         GwBits *b = NULL;
-        bvptr v = NULL;
+        GwBitVector *v = NULL;
 
         memset(n, 0, sizeof(n)); /* scan-build */
 
@@ -2397,7 +2397,7 @@ void menu_combine_down(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    bvptr v;
+    GwBitVector *v;
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -2434,7 +2434,7 @@ void menu_combine_up(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)callback_action;
     (void)widget;
 
-    bvptr v;
+    GwBitVector *v;
 
     if (GLOBALS->dnd_state) {
         dnd_error();

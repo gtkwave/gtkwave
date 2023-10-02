@@ -208,7 +208,7 @@ void import_trace(GwNode *np)
 /*
  * turn a Bits structure into a vector with deltas for faster displaying
  */
-bvptr bits2vector(GwBits *b)
+GwBitVector *bits2vector(GwBits *b)
 {
     int i;
     int regions = 0;
@@ -219,7 +219,7 @@ bvptr bits2vector(GwBits *b)
     GwVectorEnt *vadd;
     int numextrabytes;
     GwTime mintime, lasttime = -1;
-    bvptr bitvec = NULL;
+    GwBitVector *bitvec = NULL;
     GwTime tshift, tmod;
     int is_string;
     int string_len;
@@ -416,7 +416,7 @@ bvptr bits2vector(GwBits *b)
     } /* scan-build */
     regions++;
 
-    bitvec = (bvptr)calloc_2(1, sizeof(struct BitVector) + ((regions) * sizeof(GwVectorEnt *))); /* ajb : found "regions" by manual inspection, changed to "regions-1" as array is already [1] */ /* C99, back to regions with [] */
+    bitvec = calloc_2(1, sizeof(GwBitVector) + ((regions) * sizeof(GwVectorEnt *))); /* ajb : found "regions" by manual inspection, changed to "regions-1" as array is already [1] */ /* C99, back to regions with [] */
 
     strcpy(bitvec->bvname = (char *)malloc_2(strlen(b->name) + 1), b->name);
     bitvec->nbits = b->nnbits;
@@ -1060,7 +1060,7 @@ GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
  */
 int add_vector_chain(struct symbol *s, int len)
 {
-    bvptr v = NULL;
+    GwBitVector *v = NULL;
     GwBits *b = NULL;
 
     if (len > 1) {
@@ -1232,7 +1232,7 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
  */
 int add_vector_range(char *alias, int lo, int hi, char direction)
 {
-    bvptr v = NULL;
+    GwBitVector *v = NULL;
     GwBits *b = NULL;
 
     if (lo != hi) {
