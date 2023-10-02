@@ -262,11 +262,11 @@ GtkWidget *create_signalwindow(void)
     g_timeout_add(100, mouseover_timer, NULL);
 
     GtkAdjustment *hslider = gw_signal_list_get_hadjustment(GW_SIGNAL_LIST(GLOBALS->signalarea));
-    GLOBALS->hscroll_signalwindow_c_1 = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, hslider);
+    GtkWidget *hscroll = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, hslider);
 
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_box_pack_start(GTK_BOX(box), GLOBALS->signalarea, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(box), GLOBALS->hscroll_signalwindow_c_1, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), hscroll, FALSE, FALSE, 0);
 
     gtk_widget_show_all(box);
 
