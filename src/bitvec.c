@@ -188,7 +188,7 @@ char *attempt_vecmatch(char *s1, char *s2)
 /*
  * mvlfac resolution
  */
-void import_trace(nptr np)
+void import_trace(GwNode *np)
 {
     set_window_busy(NULL);
 
@@ -212,7 +212,7 @@ bvptr bits2vector(struct Bits *b)
 {
     int i;
     int regions = 0;
-    struct Node *n;
+    GwNode *n;
     GwHistEnt **h;
     GwVectorEnt *vhead = NULL;
     GwVectorEnt *vcurr = NULL;
@@ -416,7 +416,7 @@ bvptr bits2vector(struct Bits *b)
     } /* scan-build */
     regions++;
 
-    bitvec=(bvptr)calloc_2(1,sizeof(struct BitVector)+((regions)*sizeof(GwVectorEnt *))); /* ajb : found "regions" by manual inspection, changed to "regions-1" as array is already [1] */ /* C99, back to regions with [] */
+    bitvec = (bvptr)calloc_2(1, sizeof(struct BitVector) + ((regions) * sizeof(GwVectorEnt *))); /* ajb : found "regions" by manual inspection, changed to "regions-1" as array is already [1] */ /* C99, back to regions with [] */
 
     strcpy(bitvec->bvname = (char *)malloc_2(strlen(b->name) + 1), b->name);
     bitvec->nbits = b->nnbits;
@@ -457,7 +457,7 @@ int maketraces(char *str, char *alias, int quick_return)
     if (!wild_active) /* short circuit wildcard evaluation with bsearch */
     {
         struct symbol *s;
-        nptr nexp;
+        GwNode *nexp;
 
         if (str[0] == '(') {
             for (i = 1;; i++) {
@@ -546,7 +546,7 @@ struct Bits *makevec(char *vec, char *str)
     char ch, ch2, wild_active;
     int len, nodepnt = 0;
     int i;
-    struct Node *n[BITATTRIBUTES_MAX];
+    GwNode *n[BITATTRIBUTES_MAX];
     struct Bits *b = NULL;
     unsigned int rows = 0;
 
@@ -581,7 +581,7 @@ struct Bits *makevec(char *vec, char *str)
             {
                 struct symbol *s;
                 if (wild[0] == '(') {
-                    nptr nexp;
+                    GwNode *nexp;
 
                     for (i = 1;; i++) {
                         if (wild[i] == 0)
@@ -674,7 +674,7 @@ struct Bits *makevec(char *vec, char *str)
 
 ifnode:
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(struct Node *));
+        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -698,7 +698,7 @@ struct Bits *makevec_annotated(char *vec, char *str)
     char ch;
     int len, nodepnt = 0;
     int i;
-    struct Node *n[BITATTRIBUTES_MAX];
+    GwNode *n[BITATTRIBUTES_MAX];
     struct BitAttributes ba[BITATTRIBUTES_MAX];
     struct Bits *b = NULL;
     int state = 0;
@@ -745,7 +745,7 @@ struct Bits *makevec_annotated(char *vec, char *str)
                 }
 
                 if (wild[0] == '(') {
-                    nptr nexp;
+                    GwNode *nexp;
 
                     for (i = 1;; i++) {
                         if (wild[i] == 0)
@@ -824,7 +824,7 @@ struct Bits *makevec_annotated(char *vec, char *str)
 
 ifnode:
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(struct Node *));
+        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
 
         b->attribs = calloc_2(nodepnt, sizeof(struct BitAttributes));
 
@@ -851,7 +851,7 @@ struct Bits *makevec_selected(char *vec, int numrows, char direction)
 {
     int nodepnt = 0;
     int i;
-    struct Node *n[BITATTRIBUTES_MAX];
+    GwNode *n[BITATTRIBUTES_MAX];
     struct Bits *b = NULL;
 
     if (!direction)
@@ -874,7 +874,7 @@ struct Bits *makevec_selected(char *vec, int numrows, char direction)
         }
 
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(struct Node *));
+        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -900,13 +900,13 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
 {
     int nodepnt = 0, nodepnt_rev;
     int i;
-    struct Node **n;
+    GwNode **n;
     struct Bits *b = NULL;
     struct symbol *symhi = NULL, *symlo = NULL;
     char hier_delimeter2 = '[';
 
-    n = (struct Node **)g_alloca(len * sizeof(struct Node *));
-    memset(n, 0, len * sizeof(struct Node *)); /* scan-build */
+    n = g_alloca(len * sizeof(GwNode *));
+    memset(n, 0, len * sizeof(GwNode *)); /* scan-build */
 
     if (!GLOBALS->autocoalesce_reversal) /* normal case for MTI */
     {
@@ -929,7 +929,7 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
     }
 
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(struct Node *));
+        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -1095,7 +1095,7 @@ struct Bits *makevec_range(char *vec, int lo, int hi, char direction)
 {
     int nodepnt = 0;
     int i;
-    struct Node *n[BITATTRIBUTES_MAX];
+    GwNode *n[BITATTRIBUTES_MAX];
     struct Bits *b = NULL;
 
     if (!direction)
@@ -1114,7 +1114,7 @@ struct Bits *makevec_range(char *vec, int lo, int hi, char direction)
         }
 
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(struct Node *));
+        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -1638,7 +1638,7 @@ char *makename_chain(struct symbol *sym)
 
 /******************************************************************/
 
-eptr ExpandNode(nptr n)
+eptr ExpandNode(GwNode *n)
 {
     int width;
     int msb, lsb, delta;
@@ -1646,11 +1646,11 @@ eptr ExpandNode(nptr n)
     GwHistEnt *h;
     GwHistEnt *htemp;
     int i, j;
-    nptr *narray;
+    GwNode **narray;
     char *nam;
     int offset, len;
     eptr rc = NULL;
-    exptr exp1;
+    GwExpandReferences *exp1;
 
     int row_hi = 0, row_lo = 0, new_msi = 0, new_lsi = 0;
     int row_delta = 0, bit_delta = 0;
@@ -1677,7 +1677,7 @@ eptr ExpandNode(nptr n)
         }
         actual = msb;
 
-        narray = (nptr *)malloc_2(width * sizeof(nptr));
+        narray = malloc_2(width * sizeof(GwNode *));
         rc = malloc_2(sizeof(ExpandInfo));
         rc->narray = narray;
         rc->msb = msb;
@@ -1784,7 +1784,7 @@ eptr ExpandNode(nptr n)
                       n->numhist));
 
         for (i = 0; i < width; i++) {
-            narray[i] = (nptr)calloc_2(1, sizeof(struct Node));
+            narray[i] = calloc_2(1, sizeof(GwNode));
             if (!is_2d) {
                 sprintf(nam + offset, "[%d]", actual);
             } else {
@@ -1806,7 +1806,7 @@ eptr ExpandNode(nptr n)
             narray[i]->nname = (char *)malloc_2(len + 1);
             strcpy(narray[i]->nname, nam);
 
-            exp1 = (exptr)calloc_2(1, sizeof(struct ExpandReferences));
+            exp1 = calloc_2(1, sizeof(GwExpandReferences));
             exp1->parent = n; /* point to parent */
             exp1->parentbit = i;
             exp1->actual = actual;
@@ -1902,17 +1902,17 @@ eptr ExpandNode(nptr n)
 
 /******************************************************************/
 
-nptr ExtractNodeSingleBit(nptr n, int bit)
+GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
 {
     int lft, rgh;
     GwHistEnt *h;
     GwHistEnt *htemp;
     int i, j;
     int actual;
-    nptr np;
+    GwNode *np;
     char *nam;
     int offset, len, width;
-    exptr exp1;
+    GwExpandReferences *exp1;
 
     int row_hi = 0, row_lo = 0, new_msi = 0, new_lsi = 0;
     int row_delta = 0, bit_delta = 0;
@@ -2045,7 +2045,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
                       bit,
                       n->numhist));
 
-        np = (nptr)calloc_2(1, sizeof(struct Node));
+        np = calloc_2(1, sizeof(GwNode));
 
         if (!is_2d) {
             sprintf(nam + offset, "[%d]", actual);
@@ -2072,7 +2072,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
         np->nname = (char *)malloc_2(len + 1);
         strcpy(np->nname, nam);
 
-        exp1 = (exptr)calloc_2(1, sizeof(struct ExpandReferences));
+        exp1 = calloc_2(1, sizeof(GwExpandReferences));
         exp1->parent = n; /* point to parent */
         exp1->parentbit = bit;
         exp1->actual = actual; /* actual bitnum in [] */
@@ -2163,7 +2163,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
 /*
  * this only frees nodes created via expansion in ExpandNode() functions above!
  */
-void DeleteNode(nptr n)
+void DeleteNode(GwNode *n)
 {
     int i;
 

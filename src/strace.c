@@ -1566,7 +1566,7 @@ void cache_actual_pattern_mark_traces(void)
             if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
                 if (t->vector) {
                     int i;
-                    nptr *nodes;
+                    GwNode **nodes;
 
                     if (HasAlias(t)) {
                         mprintf("+{%s} ", t->name_full);

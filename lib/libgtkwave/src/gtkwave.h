@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gw-types.h"
 #include "gw-time.h"
 #include "gw-named-markers.h"
 #include "gw-marker.h"
@@ -10,3 +11,5 @@
 #include "gw-color-theme.h"
 #include "gw-hist-ent.h"
 #include "gw-vector-ent.h"
+#include "gw-node.h"
+#include "gw-fac.h"

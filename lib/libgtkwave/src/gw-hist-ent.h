@@ -1,13 +1,12 @@
 #pragma once
 
+#include "gw-types.h"
 #include "gw-time.h"
 
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(push)
 #pragma pack(1)
 #endif
-
-typedef struct _GwHistEnt GwHistEnt;
 
 struct _GwHistEnt
 {

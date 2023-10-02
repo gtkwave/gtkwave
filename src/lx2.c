@@ -27,7 +27,7 @@
 /*
  * actually import an lx2 trace but don't do it if it's already been imported
  */
-void import_lx2_trace(nptr np)
+void import_lx2_trace(GwNode *np)
 {
     switch (GLOBALS->is_lx2) {
         case LXT2_IS_VLIST:
@@ -48,7 +48,7 @@ void import_lx2_trace(nptr np)
 /*
  * pre-import many traces at once so function above doesn't have to iterate...
  */
-void lx2_set_fac_process_mask(nptr np)
+void lx2_set_fac_process_mask(GwNode *np)
 {
     switch (GLOBALS->is_lx2) {
         case LXT2_IS_VLIST:

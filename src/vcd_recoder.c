@@ -361,7 +361,7 @@ static void write_fastload_header(unsigned int finalize_cnt)
     vlist_packer_emit_uv64(&vlist_p, val);
     val = 0;
     while (v) {
-        nptr n = v->narray[0];
+        GwNode *n = v->narray[0];
         nval = (guint64)(uintptr_t)n->mv.mvlfac_vlist;
 
         vlist_packer_emit_uv64(&vlist_p, nval - val);
@@ -433,7 +433,7 @@ static int read_fastload_body(void)
 
     vs = GLOBALS->vcdsymroot_vcd_recoder_c_3;
     while (vs) {
-        nptr n = vs->narray[0];
+        GwNode *n = vs->narray[0];
 
         v = 0;
         shamt = 0;
@@ -614,7 +614,7 @@ bail:
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static void add_histent(GwTime time, struct Node *n, char ch, int regadd, char *vector);
+static void add_histent(GwTime time, GwNode *n, char ch, int regadd, char *vector);
 static void vcd_build_symbols(void);
 static void vcd_cleanup(void);
 static void evcd_strcpy(char *dst, char *src);
@@ -841,7 +841,7 @@ static unsigned int vlist_emit_finalize(void)
 
     v = GLOBALS->vcdsymroot_vcd_recoder_c_3;
     while (v) {
-        nptr n = v->narray[0];
+        GwNode *n = v->narray[0];
 
         set_vcd_vartype(v, n);
 
@@ -1338,7 +1338,7 @@ static void parse_valuechange(void)
                             GLOBALS->yytext_vcd_recoder_c_3 + 1);
                     malform_eof_fix();
                 } else {
-                    nptr n = v->narray[0];
+                    GwNode *n = v->narray[0];
                     unsigned int time_delta;
                     unsigned int rcv;
 
@@ -1439,7 +1439,7 @@ static void parse_valuechange(void)
                         GLOBALS->yytext_vcd_recoder_c_3 + 1);
                 malform_eof_fix();
             } else {
-                nptr n = v->narray[0];
+                GwNode *n = v->narray[0];
                 unsigned int time_delta;
 
                 if (!n->mv.mvlfac_vlist) /* overloaded for vlist, numhist = last position used */
@@ -2077,8 +2077,8 @@ static void vcd_parse(void)
                     }
 
                     /* initial conditions */
-                    v->narray = (struct Node **)calloc_2(1, sizeof(struct Node *));
-                    v->narray[0] = (struct Node *)calloc_2(1, sizeof(struct Node));
+                    v->narray = calloc_2(1, sizeof(GwNode *));
+                    v->narray[0] = calloc_2(1, sizeof(GwNode));
                     v->narray[0]->head.time = -1;
                     v->narray[0]->head.v.h_val = AN_X;
 
@@ -2304,7 +2304,7 @@ static void vcd_parse(void)
 
 /*******************************************************************************/
 
-void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
+void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
 {
     GwHistEnt *he;
     char heval;
@@ -2613,7 +2613,8 @@ static void vcd_build_symbols(void)
 #endif
                         s->n = v->narray[j];
                         if (substnode) {
-                            struct Node *n, *n2;
+                            GwNode *n;
+                            GwNode *n2;
 
                             n = s->n;
                             n2 = vprime->narray[j];
@@ -2711,7 +2712,8 @@ static void vcd_build_symbols(void)
 #endif
                     s->n = v->narray[0];
                     if (substnode) {
-                        struct Node *n, *n2;
+                        GwNode *n;
+                        GwNode *n2;
 
                         n = s->n;
                         n2 = vprime->narray[0];
@@ -3071,7 +3073,7 @@ void vcd_import_masked(void)
     /* nothing */
 }
 
-void vcd_set_fac_process_mask(nptr np)
+void vcd_set_fac_process_mask(GwNode *np)
 {
     if (np && np->mv.mvlfac_vlist) {
         import_vcd_trace(np);
@@ -3081,7 +3083,7 @@ void vcd_set_fac_process_mask(nptr np)
 #define vlist_locate_import(x, y) \
     ((GLOBALS->vlist_prepack) ? ((depacked) + (y)) : vlist_locate((x), (y)))
 
-void import_vcd_trace(nptr np)
+void import_vcd_trace(GwNode *np)
 {
     struct vlist_t *v = np->mv.mvlfac_vlist;
     int len = 1;
@@ -3434,7 +3436,7 @@ void import_vcd_trace(nptr np)
         free_2(sbuf);
     } else if (vlist_type == '!') /* error in loading */
     {
-        nptr n2 = (nptr)np->curr;
+        GwNode *n2 = (GwNode *)np->curr;
 
         if ((n2) &&
             (n2 != np)) /* keep out any possible infinite recursion from corrupt pointer bugs */

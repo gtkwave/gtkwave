@@ -901,7 +901,6 @@ void menu_use_roundcaps(gpointer null_data, guint callback_action, GtkWidget *wi
     }
 }
 
-
 /**/
 void menu_use_full_precision(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
@@ -1893,7 +1892,7 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
     Trptr t, tmp;
     Trptr tfirst = NULL;
     int tmpi, dirty = 0, attrib_reqd = 0;
-    nptr bitblast_parent;
+    GwNode *bitblast_parent;
     int bitblast_delta = 0;
 
     DEBUG(printf("Combine Traces\n"));
@@ -1938,7 +1937,7 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
         return NULL;
     } else {
         int i, nodepnt = 0;
-        struct Node *n[BITATTRIBUTES_MAX];
+        GwNode *n[BITATTRIBUTES_MAX];
         struct BitAttributes ba[BITATTRIBUTES_MAX];
         struct Bits *b = NULL;
         bvptr v = NULL;
@@ -2020,7 +2019,7 @@ bvptr combine_traces(int direction, Trptr single_trace_only)
             t = t->t_next;
         }
 
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(struct Node *));
+        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
 
         b->attribs = malloc_2(nodepnt * sizeof(struct BitAttributes));
         for (i = 0; i < nodepnt; i++) /* for up combine we need to reverse the attribs list! */
@@ -3342,9 +3341,9 @@ void menu_write_screengrab_cleanup(GtkWidget *widget, gpointer data)
         pb = gdk_pixbuf_get_from_window(gw, 0, 0, allocation.width, allocation.height);
 
         if (pb) {
-            cairo_surface_t *surface =
-                cairo_image_surface_create(CAIRO_FORMAT_RGB24, allocation.width * scale,
-                                           allocation.height * scale);
+            cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24,
+                                                                  allocation.width * scale,
+                                                                  allocation.height * scale);
             cairo_t *cr = cairo_create(surface);
 
             gdk_cairo_set_source_pixbuf(cr, pb, 0, 0);

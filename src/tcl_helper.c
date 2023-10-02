@@ -805,7 +805,7 @@ static char *make_net_name_from_tcl_list(char *s, char **unescaped_str)
 void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
 {
     Trptr t;
-    nptr nexp;
+    GwNode *nexp;
     int i;
     TraceFlagsType default_flags = GLOBALS->default_flags;
     bvptr v;
@@ -1166,7 +1166,7 @@ for (ii = 0; ii < c; ii++) {
         struct symbol *s = GLOBALS->facs[match_idx_list[ii]];
 
         if ((match_type_list[ii] >= 2) && (s->n->extvals)) {
-            nptr nexp;
+            GwNode *nexp;
 
             int bit_msb =
                 atoi(most_recent_lbrack_list[ii] + 1 +
@@ -1621,7 +1621,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
             ((t->flags & TR_HIGHLIGHT) || is_from_tcl_command)) {
             if (t->vector) {
                 int i;
-                nptr *nodes;
+                GwNode **nodes;
                 GwVectorEnt *v =
                     gw_marker_is_enabled(primary_marker)
                         ? bsearch_vector(t->n.vec,
@@ -1635,7 +1635,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
 
                 for (i = 0; i < t->n.vec->bits->nnbits; i++) {
                     if (!nodes[i]->expansion) {
-                        nptr n = nodes[i];
+                        GwNode *n = nodes[i];
                         char *str = append_array_row(n);
                         char *p = strrchr(str, '[');
                         if (p) {
@@ -1662,12 +1662,12 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
                     if (t->n.vec->bits->nnbits < 2) {
                         coalesce_pass = 0;
                     } else {
-                        nptr nl = nodes[0];
+                        GwNode *nl = nodes[0];
                         char *strl = append_array_row(nl);
                         char *pl = strrchr(strl, '[');
                         int lidx = atoi(pl + 1);
 
-                        nptr nr = nodes[t->n.vec->bits->nnbits - 1];
+                        GwNode *nr = nodes[t->n.vec->bits->nnbits - 1];
                         char *strr = append_array_row(nr);
                         char *pr = strrchr(strr, '[');
                         int ridx = atoi(pr + 1);
@@ -1715,7 +1715,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
                         if (nodes[i]->expansion) {
                             int which, cnt;
                             int bit = nodes[i]->expansion->parentbit;
-                            nptr n = nodes[i]->expansion->parent;
+                            GwNode *n = nodes[i]->expansion->parent;
                             char *str = append_array_row(n);
                             char *p = strrchr(str, '[');
                             if (p) {
@@ -1789,7 +1789,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
                 if (t->n.nd->expansion) {
                     int which, cnt;
                     int bit = t->n.nd->expansion->parentbit;
-                    nptr n = t->n.nd->expansion->parent;
+                    GwNode *n = t->n.nd->expansion->parent;
                     char *str = append_array_row(n);
                     char *p = strrchr(str, '[');
                     if (p) {
@@ -2103,7 +2103,7 @@ char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr t, gboolean use_
             if (t->vector &&
                 !(t->n.vec->transaction_cache && t->n.vec->transaction_cache->transaction_nd)) {
                 int i;
-                nptr *nodes;
+                GwNode **nodes;
                 bptr bits;
                 baptr ba;
 
@@ -2143,10 +2143,10 @@ char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr t, gboolean use_
                 one_entry = make_message("\n");
                 WAVE_OE_ME
             } else {
-                nptr nd = (t->vector && t->n.vec->transaction_cache &&
-                           t->n.vec->transaction_cache->transaction_nd)
-                              ? t->n.vec->transaction_cache->transaction_nd
-                              : t->n.nd;
+                GwNode *nd = (t->vector && t->n.vec->transaction_cache &&
+                              t->n.vec->transaction_cache->transaction_nd)
+                                 ? t->n.vec->transaction_cache->transaction_nd
+                                 : t->n.nd;
 
                 if (HasAlias(t)) {
                     if (nd->expansion) {

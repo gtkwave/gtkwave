@@ -137,7 +137,7 @@ struct vcdsymbol
     char *name;
     char *id;
     char *value;
-    struct Node **narray;
+    GwNode **narray;
     GwHistEnt **tr_array; /* points to synthesized trailers (which can move) */
     GwHistEnt **app_array; /* points to hptr to append to (which can move) */
 
@@ -159,11 +159,11 @@ GwHistEnt *histent_calloc(void);
 void strcpy_vcdalt(char *too, char *from, char delim);
 int strcpy_delimfix(char *too, char *from);
 void vcd_sortfacs(void);
-void set_vcd_vartype(struct vcdsymbol *v, nptr n);
+void set_vcd_vartype(struct vcdsymbol *v, GwNode *n);
 
 void vcd_import_masked(void);
-void vcd_set_fac_process_mask(nptr np);
-void import_vcd_trace(nptr np);
+void vcd_set_fac_process_mask(GwNode *np);
+void import_vcd_trace(GwNode *np);
 
 int vcd_keyword_code(const char *s, unsigned int len);
 #endif

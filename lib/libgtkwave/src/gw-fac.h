@@ -1,19 +1,18 @@
 #pragma once
 
 #include "gw-types.h"
-#include "gw-time.h"
 
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(push)
 #pragma pack(1)
 #endif
 
-struct _GwVectorEnt
+struct _GwFac
 {
-    GwTime time;
-    GwVectorEnt *next;
-    unsigned char flags; /* so far only set on strings */
-    unsigned char v[]; /* C99 */
+    GwNode *working_node;
+    int node_alias;
+    int len;
+    unsigned int flags;
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING

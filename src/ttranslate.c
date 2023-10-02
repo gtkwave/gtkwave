@@ -219,7 +219,7 @@ int install_ttrans_filter(int which)
                         int i;
                         bvptr bv = t->n.vec;
                         bvptr bv2;
-                        nptr ndcache = NULL;
+                        GwNode *ndcache = NULL;
 
                         t->n.vec = bv->transaction_cache;
                         if ((t->n.vec->transaction_nd) && (!which)) {
