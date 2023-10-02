@@ -1474,20 +1474,16 @@ static char *give_value_string(Trptr t)
                     bsearch_vector(t->n.vec, gw_marker_get_position(primary_marker) - t->shift);
                 rc = convert_ascii(t, v);
             } else {
-                hptr h_ptr =
+                GwHistEnt *h_ptr =
                     bsearch_node(t->n.nd, gw_marker_get_position(primary_marker) - t->shift);
                 if (h_ptr) {
                     if (!t->n.nd->extvals) {
                         rc = (char *)calloc_2(2, 2 * sizeof(char));
                         rc[0] = AN_STR[h_ptr->v.h_val];
                     } else {
-                        if (h_ptr->flags & HIST_REAL) {
-                            if (!(h_ptr->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                        if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
+                            if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
                                 rc = convert_ascii_real(t, &h_ptr->v.h_double);
-#else
-                                rc = convert_ascii_real(t, (double *)h_ptr->v.h_vector);
-#endif
                             } else {
                                 rc = convert_ascii_string((char *)h_ptr->v.h_vector);
                             }

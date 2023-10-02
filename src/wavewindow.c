@@ -206,8 +206,8 @@ process_trace:
         lft = v->time;
         rgh = v2->time;
     } else {
-        hptr h = bsearch_node(t->n.nd, marker - t->shift);
-        hptr h2 = h ? h->next : NULL;
+        GwHistEnt *h = bsearch_node(t->n.nd, marker - t->shift);
+        GwHistEnt *h2 = h ? h->next : NULL;
 
         if ((!h) || (!h2))
             goto bot; /* should never happen */
@@ -1164,9 +1164,7 @@ void wavearea_drag_end_event(GtkGestureDrag *gesture,
  */
 void force_screengrab_gcs(void)
 {
-
     g_error("disabled");
-
 }
 
 void force_normal_gcs(void)
@@ -1960,7 +1958,7 @@ void MaxSignalLength(void)
                     }
                 } else {
                     char *str;
-                    hptr h_ptr;
+                    GwHistEnt *h_ptr;
                     if ((h_ptr = bsearch_node(t->n.nd,
                                               gw_marker_get_position(primary_marker) - t->shift))) {
                         if (!t->n.nd->extvals) {
@@ -1986,13 +1984,9 @@ void MaxSignalLength(void)
                         } else {
                             char *str2;
 
-                            if (h_ptr->flags & HIST_REAL) {
-                                if (!(h_ptr->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                            if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
+                                if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
                                     str = convert_ascii_real(t, &h_ptr->v.h_double);
-#else
-                                    str = convert_ascii_real(t, (double *)h_ptr->v.h_vector);
-#endif
                                 } else {
                                     str = convert_ascii_string((char *)h_ptr->v.h_vector);
                                 }
@@ -2193,7 +2187,7 @@ void UpdateSigValue(Trptr t)
                 }
             } else {
                 char *str;
-                hptr h_ptr;
+                GwHistEnt *h_ptr;
                 if ((h_ptr = bsearch_node(t->n.nd,
                                           gw_marker_get_position(primary_marker) - t->shift))) {
                     if (!t->n.nd->extvals) {
@@ -2217,13 +2211,9 @@ void UpdateSigValue(Trptr t)
                     } else {
                         char *str2;
 
-                        if (h_ptr->flags & HIST_REAL) {
-                            if (!(h_ptr->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                        if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
+                            if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
                                 str = convert_ascii_real(t, &h_ptr->v.h_double);
-#else
-                                str = convert_ascii_real(t, (double *)h_ptr->v.h_vector);
-#endif
                             } else {
                                 str = convert_ascii_string((char *)h_ptr->v.h_vector);
                             }

@@ -77,16 +77,15 @@ int strcpy_delimfix(char *too, char *from)
  * debug.c--unless Judy, then can dispense with pointer subtraction)
  */
 #ifdef _WAVE_HAVE_JUDY
-#define VCD_HISTENT_GRANULARITY ((64 * 1024) / sizeof(HistEnt))
+#define VCD_HISTENT_GRANULARITY ((64 * 1024) / sizeof(GwHistEnt))
 #else
-#define VCD_HISTENT_GRANULARITY (((64 * 1024) - (2 * sizeof(void *))) / sizeof(HistEnt))
+#define VCD_HISTENT_GRANULARITY (((64 * 1024) - (2 * sizeof(void *))) / sizeof(GwHistEnt))
 #endif
 
-struct HistEnt *histent_calloc(void)
+GwHistEnt *histent_calloc(void)
 {
     if (GLOBALS->he_curr_vcd_c_1 == GLOBALS->he_fini_vcd_c_1) {
-        GLOBALS->he_curr_vcd_c_1 =
-            (struct HistEnt *)calloc_2(VCD_HISTENT_GRANULARITY, sizeof(struct HistEnt));
+        GLOBALS->he_curr_vcd_c_1 = calloc_2(VCD_HISTENT_GRANULARITY, sizeof(GwHistEnt));
         GLOBALS->he_fini_vcd_c_1 = GLOBALS->he_curr_vcd_c_1 + VCD_HISTENT_GRANULARITY;
     }
 

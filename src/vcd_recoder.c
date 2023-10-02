@@ -1570,7 +1570,9 @@ static void vcd_parse(void)
                     break;
                 GLOBALS->global_time_offset = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
 
-                DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n", GLOBALS->global_time_offset));
+                DEBUG(fprintf(stderr,
+                              "TIMEZERO: %" GW_TIME_FORMAT "\n",
+                              GLOBALS->global_time_offset));
                 sync_end(NULL);
             } break;
             case T_TIMESCALE: {
@@ -2304,7 +2306,7 @@ static void vcd_parse(void)
 
 void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
 {
-    struct HistEnt *he;
+    GwHistEnt *he;
     char heval;
 
     if (!vector) {
@@ -2355,8 +2357,8 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
                     n->curr->v.h_val = heval; /* we have a glitch! */
 
                     GLOBALS->num_glitches_vcd_recoder_c_4++;
-                    if (!(n->curr->flags & HIST_GLITCH)) {
-                        n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                    if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                         GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                     }
                 } else {
@@ -2366,7 +2368,7 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
 
                     n->curr->next = he;
                     if (n->curr->v.h_val == heval) {
-                        n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                         GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                     }
                     n->curr = he;
@@ -2380,7 +2382,7 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
             {
                 if (!n->curr) {
                     he = histent_calloc();
-                    he->flags = (HIST_STRING | HIST_REAL);
+                    he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
                     he->time = -1;
                     he->v.h_vector = NULL;
 
@@ -2394,7 +2396,8 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
                     }
 
                     if (n->curr->time == tim) {
-                        DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT "] Signal [%p].\n",
+                        DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT
+                                     "] Signal [%p].\n",
                                      tim,
                                      n));
                         if (n->curr->v.h_vector)
@@ -2402,13 +2405,13 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
                         n->curr->v.h_vector = vector; /* we have a glitch! */
 
                         GLOBALS->num_glitches_vcd_recoder_c_4++;
-                        if (!(n->curr->flags & HIST_GLITCH)) {
-                            n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                        if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                            n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                             GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                         }
                     } else {
                         he = histent_calloc();
-                        he->flags = (HIST_STRING | HIST_REAL);
+                        he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
                         he->time = tim;
                         he->v.h_vector = vector;
 
@@ -2423,13 +2426,9 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
             {
                 if (!n->curr) {
                     he = histent_calloc();
-                    he->flags = HIST_REAL;
+                    he->flags = GW_HIST_ENT_FLAG_REAL;
                     he->time = -1;
-#ifdef WAVE_HAS_H_DOUBLE
                     he->v.h_double = strtod("NaN", NULL);
-#else
-                    he->v.h_vector = NULL;
-#endif
 
                     n->curr = he;
                     n->head.next = he;
@@ -2440,18 +2439,9 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
                         tim *= (GLOBALS->time_scale);
                     }
 
-                    if (
-#ifdef WAVE_HAS_H_DOUBLE
-                        (vector && (n->curr->v.h_double != *(double *)vector))
-#else
-                        (n->curr->v.h_vector && vector &&
-                         (*(double *)n->curr->v.h_vector != *(double *)vector))
-#endif
-                        || (tim == GLOBALS->start_time_vcd_recoder_c_3)
-#ifndef WAVE_HAS_H_DOUBLE
-                        || (!n->curr->v.h_vector)
-#endif
-                        || (GLOBALS->vcd_preserve_glitches) ||
+                    if ((vector && (n->curr->v.h_double != *(double *)vector)) ||
+                        (tim == GLOBALS->start_time_vcd_recoder_c_3) ||
+                        (GLOBALS->vcd_preserve_glitches) ||
                         (GLOBALS->vcd_preserve_glitches_real)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
@@ -2459,39 +2449,24 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
                                          "] Signal [%p].\n",
                                          tim,
                                          n));
-#ifdef WAVE_HAS_H_DOUBLE
                             n->curr->v.h_double = *((double *)vector);
-#else
-                            if (n->curr->v.h_vector)
-                                free_2(n->curr->v.h_vector);
-                            n->curr->v.h_vector = vector; /* we have a glitch! */
-#endif
                             GLOBALS->num_glitches_vcd_recoder_c_4++;
-                            if (!(n->curr->flags & HIST_GLITCH)) {
-                                n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                                 GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                             }
                         } else {
                             he = histent_calloc();
-                            he->flags = HIST_REAL;
+                            he->flags = GW_HIST_ENT_FLAG_REAL;
                             he->time = tim;
-#ifdef WAVE_HAS_H_DOUBLE
                             he->v.h_double = *((double *)vector);
-#else
-                            he->v.h_vector = vector;
-#endif
                             n->curr->next = he;
                             n->curr = he;
                             GLOBALS->regions += regadd;
                         }
                     } else {
-#ifndef WAVE_HAS_H_DOUBLE
-                        free_2(vector);
-#endif
                     }
-#ifdef WAVE_HAS_H_DOUBLE
                     free_2(vector);
-#endif
                 }
                 break;
             }
@@ -2526,8 +2501,8 @@ void add_histent(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
                             n->curr->v.h_vector = vector; /* we have a glitch! */
 
                             GLOBALS->num_glitches_vcd_recoder_c_4++;
-                            if (!(n->curr->flags & HIST_GLITCH)) {
-                                n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                                 GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                             }
                         } else {
@@ -2645,7 +2620,7 @@ static void vcd_build_symbols(void)
                             /* nname stays same */
                             /* n->head=n2->head; */
                             /* n->curr=n2->curr; */
-                            n->curr = (hptr)n2;
+                            n->curr = (GwHistEnt *)n2;
                             /* harray calculated later */
                             n->numhist = n2->numhist;
                         }
@@ -2743,7 +2718,7 @@ static void vcd_build_symbols(void)
                         /* nname stays same */
                         /* n->head=n2->head; */
                         /* n->curr=n2->curr; */
-                        n->curr = (hptr)n2;
+                        n->curr = (GwHistEnt *)n2;
                         /* harray calculated later */
                         n->numhist = n2->numhist;
                         n->extvals = n2->extvals;

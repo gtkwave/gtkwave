@@ -35,7 +35,8 @@ enum LXT2_Loader_Type_Encodings
 
 struct lx2_entry
 {
-    struct HistEnt *histent_head, *histent_curr;
+    GwHistEnt *histent_head;
+    GwHistEnt *histent_curr;
     int numtrans;
     nptr np;
 };

@@ -431,8 +431,8 @@ int InsertBlankTrace(char *comment, TraceFlagsType different_flags)
 int AddNodeTraceReturn(nptr nd, char *aliasname, Trptr *tret)
 {
     Trptr t;
-    hptr histpnt;
-    hptr *harray;
+    GwHistEnt *histpnt;
+    GwHistEnt **harray;
     int histcount;
     int i;
 
@@ -461,7 +461,7 @@ int AddNodeTraceReturn(nptr nd, char *aliasname, Trptr *tret)
 
         nd->numhist = histcount;
 
-        if (!(nd->harray = harray = (hptr *)malloc_2(histcount * sizeof(hptr)))) {
+        if (!(nd->harray = harray = malloc_2(histcount * sizeof(GwHistEnt *)))) {
             fprintf(stderr, "Out of memory, can't add to analyzer\n");
             free_2(t);
             return (0);

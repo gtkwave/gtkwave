@@ -8,3 +8,4 @@
 #include "gw-plugin-manager.h"
 #include "gw-color.h"
 #include "gw-color-theme.h"
+#include "gw-hist-ent.h"

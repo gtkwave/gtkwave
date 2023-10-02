@@ -2166,7 +2166,7 @@ GwTime extload_main(char *fname, char *skip_start, char *skip_end)
  */
 static void extload_callback(GwTime *tim, int *facidx, char **value)
 {
-    struct HistEnt *htemp = histent_calloc();
+    struct GwHistEnt *htemp = histent_calloc();
     struct lx2_entry *l2e = GLOBALS->vzt_table_vzt_c_1 + (*facidx);
     struct fac *f = GLOBALS->mvlfacs_vzt_c_3 + (*facidx);
 
@@ -2199,20 +2199,14 @@ static void extload_callback(GwTime *tim, int *facidx, char **value)
             }
         }
     } else if (f->flags & VZT_RD_SYM_F_DOUBLE) {
-#ifdef WAVE_HAS_H_DOUBLE
         sscanf(*value, "%lg", &htemp->v.h_double);
-#else
-        double *d = malloc_2(sizeof(double));
-        sscanf(*value, "%lg", d);
-        htemp->v.h_vector = (char *)d;
-#endif
-        htemp->flags = HIST_REAL;
+        htemp->flags = GW_HIST_ENT_FLAG_REAL;
     } else /* string */
     {
         char *s = malloc_2(strlen(*value) + 1);
         strcpy(s, *value);
         htemp->v.h_vector = s;
-        htemp->flags = HIST_REAL | HIST_STRING;
+        htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
     }
 
     htemp->time = (*tim) * (GLOBALS->time_scale);
@@ -2235,7 +2229,7 @@ static void ext_resolver(nptr np, nptr resolve)
     np->extvals = resolve->extvals;
     np->msi = resolve->msi;
     np->lsi = resolve->lsi;
-    memcpy(&np->head, &resolve->head, sizeof(struct HistEnt));
+    memcpy(&np->head, &resolve->head, sizeof(GwHistEnt));
     np->curr = resolve->curr;
     np->harray = resolve->harray;
     np->numhist = resolve->numhist;
@@ -2247,7 +2241,7 @@ static void ext_resolver(nptr np, nptr resolve)
  */
 void import_extload_trace(nptr np)
 {
-    struct HistEnt *htemp, *htempx = NULL, *histent_tail;
+    struct GwHistEnt *htemp, *htempx = NULL, *histent_tail;
     int len, i;
     struct fac *f;
     int txidx, txidx_in_trace;
@@ -2396,9 +2390,9 @@ void import_extload_trace(nptr np)
     histent_tail = htemp = histent_calloc();
     if (f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING)) {
         htemp->v.h_vector = strdup_2((f->flags & VZT_RD_SYM_F_DOUBLE) ? "NaN" : "UNDEF");
-        htemp->flags = HIST_REAL;
+        htemp->flags = GW_HIST_ENT_FLAG_REAL;
         if (f->flags & VZT_RD_SYM_F_STRING)
-            htemp->flags |= HIST_STRING;
+            htemp->flags |= GW_HIST_ENT_FLAG_STRING;
     } else {
         if (len > 1) {
             htemp->v.h_vector = (char *)malloc_2(len);
@@ -2413,9 +2407,9 @@ void import_extload_trace(nptr np)
     htemp = histent_calloc();
     if (f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING)) {
         htemp->v.h_vector = strdup_2((f->flags & VZT_RD_SYM_F_DOUBLE) ? "NaN" : "UNDEF");
-        htemp->flags = HIST_REAL;
+        htemp->flags = GW_HIST_ENT_FLAG_REAL;
         if (f->flags & VZT_RD_SYM_F_STRING)
-            htemp->flags |= HIST_STRING;
+            htemp->flags |= GW_HIST_ENT_FLAG_STRING;
     } else {
         if (len > 1) {
             htemp->v.h_vector = (char *)malloc_2(len);
@@ -2443,22 +2437,22 @@ void import_extload_trace(nptr np)
             np->head.v.h_val = AN_X; /* x */
         }
     } else {
-        np->head.flags = HIST_REAL;
+        np->head.flags = GW_HIST_ENT_FLAG_REAL;
         if (f->flags & VZT_RD_SYM_F_STRING)
-            np->head.flags |= HIST_STRING;
+            np->head.flags |= GW_HIST_ENT_FLAG_STRING;
 
         np->head.v.h_vector = strdup_2((f->flags & VZT_RD_SYM_F_DOUBLE) ? "NaN" : "UNDEF");
     }
 
     {
-        struct HistEnt *htemp2 = histent_calloc();
+        struct GwHistEnt *htemp2 = histent_calloc();
         htemp2->time = -1;
 
         if (f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING)) {
             htemp2->v.h_vector = strdup_2((f->flags & VZT_RD_SYM_F_DOUBLE) ? "NaN" : "UNDEF");
-            htemp2->flags = HIST_REAL;
+            htemp2->flags = GW_HIST_ENT_FLAG_REAL;
             if (f->flags & VZT_RD_SYM_F_STRING)
-                htemp2->flags |= HIST_STRING;
+                htemp2->flags |= GW_HIST_ENT_FLAG_STRING;
         } else {
             if (len > 1) {
                 htemp2->v.h_vector = htempx->v.h_vector;

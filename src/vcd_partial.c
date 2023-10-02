@@ -48,7 +48,7 @@
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static hptr add_histent_p(GwTime time, struct Node *n, char ch, int regadd, char *vector);
+static GwHistEnt *add_histent_p(GwTime time, struct Node *n, char ch, int regadd, char *vector);
 static void add_tail_histents(void);
 static void vcd_build_symbols(void);
 static void vcd_cleanup(void);
@@ -1130,7 +1130,9 @@ static void vcd_parse(void)
                     break;
                 GLOBALS->global_time_offset = atoi_64(GLOBALS->yytext_vcd_partial_c_2);
 
-                DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n", GLOBALS->global_time_offset));
+                DEBUG(fprintf(stderr,
+                              "TIMEZERO: %" GW_TIME_FORMAT "\n",
+                              GLOBALS->global_time_offset));
                 sync_end(NULL);
             } break;
             case T_TIMESCALE: {
@@ -1635,8 +1637,8 @@ static void vcd_parse(void)
                     v->value = (char *)malloc_2(v->size + 1);
                     v->value[v->size] = 0;
                     v->narray = (struct Node **)calloc_2(v->size, sizeof(struct Node *));
-                    v->tr_array = (hptr *)calloc_2(v->size, sizeof(hptr));
-                    v->app_array = (hptr *)calloc_2(v->size, sizeof(hptr));
+                    v->tr_array = calloc_2(v->size, sizeof(GwHistEnt *));
+                    v->app_array = calloc_2(v->size, sizeof(GwHistEnt *));
                     {
                         int i;
                         for (i = 0; i < v->size; i++) {
@@ -1786,9 +1788,10 @@ static void vcd_parse(void)
 
 /*******************************************************************************/
 
-hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
+GwHistEnt *add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector)
 {
-    struct HistEnt *he, *rc;
+    GwHistEnt *he;
+    GwHistEnt *rc;
     char heval;
 
     if (!vector) {
@@ -1840,8 +1843,8 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
                     n->curr->v.h_val = heval; /* we have a glitch! */
 
                     GLOBALS->num_glitches_vcd_partial_c_3++;
-                    if (!(n->curr->flags & HIST_GLITCH)) {
-                        n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                    if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                         GLOBALS->num_glitch_regions_vcd_partial_c_3++;
                     }
                 } else {
@@ -1851,7 +1854,7 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
 
                     n->curr->next = he;
                     if (n->curr->v.h_val == heval) {
-                        n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                         GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                     }
                     n->curr = he;
@@ -1865,7 +1868,7 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
             {
                 if (!(rc = n->curr)) {
                     he = histent_calloc();
-                    he->flags = (HIST_STRING | HIST_REAL);
+                    he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
                     he->time = -1;
                     he->v.h_vector = NULL;
 
@@ -1880,7 +1883,8 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
                     }
 
                     if (n->curr->time == tim) {
-                        DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT "] Signal [%p].\n",
+                        DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT
+                                     "] Signal [%p].\n",
                                      tim,
                                      n));
                         if (n->curr->v.h_vector)
@@ -1888,13 +1892,13 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
                         n->curr->v.h_vector = vector; /* we have a glitch! */
 
                         GLOBALS->num_glitches_vcd_partial_c_3++;
-                        if (!(n->curr->flags & HIST_GLITCH)) {
-                            n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                        if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                            n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                             GLOBALS->num_glitch_regions_vcd_partial_c_3++;
                         }
                     } else {
                         he = histent_calloc();
-                        he->flags = (HIST_STRING | HIST_REAL);
+                        he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
                         he->time = tim;
                         he->v.h_vector = vector;
 
@@ -1909,13 +1913,9 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
             {
                 if (!(rc = n->curr)) {
                     he = histent_calloc();
-                    he->flags = HIST_REAL;
+                    he->flags = GW_HIST_ENT_FLAG_REAL;
                     he->time = -1;
-#ifdef WAVE_HAS_H_DOUBLE
                     he->v.h_double = strtod("NaN", NULL);
-#else
-                    he->v.h_vector = NULL;
-#endif
                     n->curr = he;
                     n->head.next = he;
 
@@ -1926,18 +1926,9 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
                         tim *= (GLOBALS->time_scale);
                     }
 
-                    if (
-#ifdef WAVE_HAS_H_DOUBLE
-                        (vector && (n->curr->v.h_double != *(double *)vector))
-#else
-                        (n->curr->v.h_vector && vector &&
-                         (*(double *)n->curr->v.h_vector != *(double *)vector))
-#endif
-                        || (tim == GLOBALS->start_time_vcd_partial_c_2)
-#ifndef WAVE_HAS_H_DOUBLE
-                        || (!n->curr->v.h_vector)
-#endif
-                        || (GLOBALS->vcd_preserve_glitches) ||
+                    if ((vector && (n->curr->v.h_double != *(double *)vector)) ||
+                        (tim == GLOBALS->start_time_vcd_partial_c_2) ||
+                        (GLOBALS->vcd_preserve_glitches) ||
                         (GLOBALS->vcd_preserve_glitches_real)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
@@ -1945,39 +1936,24 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
                                          "] Signal [%p].\n",
                                          tim,
                                          n));
-#ifdef WAVE_HAS_H_DOUBLE
                             n->curr->v.h_double = *((double *)vector);
-#else
-                            if (n->curr->v.h_vector)
-                                free_2(n->curr->v.h_vector);
-                            n->curr->v.h_vector = vector; /* we have a glitch! */
-#endif
                             GLOBALS->num_glitches_vcd_partial_c_3++;
-                            if (!(n->curr->flags & HIST_GLITCH)) {
-                                n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                                 GLOBALS->num_glitch_regions_vcd_partial_c_3++;
                             }
                         } else {
                             he = histent_calloc();
-                            he->flags = HIST_REAL;
+                            he->flags = GW_HIST_ENT_FLAG_REAL;
                             he->time = tim;
-#ifdef WAVE_HAS_H_DOUBLE
                             he->v.h_double = *((double *)vector);
-#else
-                            he->v.h_vector = vector;
-#endif
                             n->curr->next = he;
                             n->curr = he;
                             GLOBALS->regions += regadd;
                         }
                     } else {
-#ifndef WAVE_HAS_H_DOUBLE
-                        free_2(vector);
-#endif
                     }
-#ifdef WAVE_HAS_H_DOUBLE
                     free_2(vector);
-#endif
                 }
                 break;
             }
@@ -2013,8 +1989,8 @@ hptr add_histent_p(GwTime tim, struct Node *n, char ch, int regadd, char *vector
                             n->curr->v.h_vector = vector; /* we have a glitch! */
 
                             GLOBALS->num_glitches_vcd_partial_c_3++;
-                            if (!(n->curr->flags & HIST_GLITCH)) {
-                                n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                                 GLOBALS->num_glitch_regions_vcd_partial_c_3++;
                             }
                         } else {
@@ -2042,7 +2018,7 @@ static void add_tail_histents(void)
 {
     int j;
     struct vcdsymbol *v;
-    hptr rc;
+    GwHistEnt *rc;
 
     /* do 'x' trailers */
 
@@ -2504,8 +2480,8 @@ GwTime vcd_partial_main(char *fname)
 static void regen_harray(Trptr t, nptr nd)
 {
     int i, histcount;
-    hptr histpnt;
-    hptr *harray;
+    GwHistEnt *histpnt;
+    GwHistEnt **harray;
 
     if (!nd->harray) /* make quick array lookup for aet display */
     {
@@ -2519,7 +2495,7 @@ static void regen_harray(Trptr t, nptr nd)
 
         nd->numhist = histcount;
 
-        if (!(nd->harray = harray = (hptr *)malloc_2(histcount * sizeof(hptr)))) {
+        if (!(nd->harray = harray = malloc_2(histcount * sizeof(GwHistEnt *)))) {
             fprintf(stderr, "Out of memory, can't add %s to analyzer\n", nd->nname);
             free_2(t);
             return; /* scan-build : really can't do anything here */
@@ -2643,7 +2619,8 @@ void kick_partial_vcd(void)
         GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
         while (*GLOBALS->consume_ptr_vcd_partial_c_1) {
-            int old_maxtime_marker_conflict = (gw_marker_get_position(primary_marker) > GLOBALS->max_time);
+            int old_maxtime_marker_conflict =
+                (gw_marker_get_position(primary_marker) > GLOBALS->max_time);
 
             vcd_parse();
 

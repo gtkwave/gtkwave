@@ -72,16 +72,16 @@ int bsearch_timechain(GwTime key)
 static int compar_histent(const void *s1, const void *s2)
 {
     GwTime key, obj, delta;
-    hptr cpos;
+    GwHistEnt *cpos;
     int rv;
 
     key = *((GwTime *)s1);
-    obj = (cpos = (*((hptr *)s2)))->time;
+    obj = (cpos = (*((GwHistEnt **)s2)))->time;
 
     if ((obj <= key) && (obj > GLOBALS->max_compare_time_bsearch_c_1)) {
         GLOBALS->max_compare_time_bsearch_c_1 = obj;
         GLOBALS->max_compare_pos_bsearch_c_1 = cpos;
-        GLOBALS->max_compare_index = (hptr *)s2;
+        GLOBALS->max_compare_index = (GwHistEnt **)s2;
     }
 
     delta = key - obj;
@@ -95,13 +95,13 @@ static int compar_histent(const void *s1, const void *s2)
     return (rv);
 }
 
-hptr bsearch_node(nptr n, GwTime key)
+GwHistEnt *bsearch_node(nptr n, GwTime key)
 {
     GLOBALS->max_compare_time_bsearch_c_1 = -2;
     GLOBALS->max_compare_pos_bsearch_c_1 = NULL;
     GLOBALS->max_compare_index = NULL;
 
-    if (bsearch(&key, n->harray, n->numhist, sizeof(hptr), compar_histent)) {
+    if (bsearch(&key, n->harray, n->numhist, sizeof(GwHistEnt *), compar_histent)) {
         /* nothing, all side effects are in bsearch */
     }
 

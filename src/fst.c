@@ -50,18 +50,6 @@
 #define FST_DOUBLE_GRANULARITY (((4 * 1024) - (2 * sizeof(void *))) / sizeof(double))
 #endif
 
-#ifndef WAVE_HAS_H_DOUBLE
-static void *double_slab_calloc(void)
-{
-    if (GLOBALS->double_curr_fst == GLOBALS->double_fini_fst) {
-        GLOBALS->double_curr_fst = (double *)calloc_2(FST_DOUBLE_GRANULARITY, sizeof(double));
-        GLOBALS->double_fini_fst = GLOBALS->double_curr_fst + FST_DOUBLE_GRANULARITY;
-    }
-
-    return ((void *)(GLOBALS->double_curr_fst++));
-}
-#endif
-
 /*
  * reverse equality mem compare
  */
@@ -1427,7 +1415,7 @@ static void fst_callback2(void *user_callback_data_pointer,
     (void)user_callback_data_pointer;
 
     fstHandle facidx = GLOBALS->mvlfacs_fst_rvs_alias[--txidx];
-    struct HistEnt *htemp;
+    GwHistEnt *htemp;
     struct lx2_entry *l2e = GLOBALS->fst_table_fst_c_1 + facidx;
     struct fac *f = GLOBALS->mvlfacs_fst_c_3 + facidx;
 
@@ -1541,11 +1529,7 @@ static void fst_callback2(void *user_callback_data_pointer,
     } else if (f->flags & VZT_RD_SYM_F_DOUBLE) {
         if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
         {
-#ifdef WAVE_HAS_H_DOUBLE
             if (!memcmp(&l2e->histent_curr->v.h_double, value, sizeof(double)))
-#else
-            if (!memcmp(l2e->histent_curr->v.h_vector, value, sizeof(double)))
-#endif
             {
                 if ((!GLOBALS->vcd_preserve_glitches) && (!GLOBALS->vcd_preserve_glitches_real)) {
                     return;
@@ -1564,13 +1548,8 @@ static void fst_callback2(void *user_callback_data_pointer,
         */
 
         htemp = histent_calloc();
-#ifdef WAVE_HAS_H_DOUBLE
         memcpy(&htemp->v.h_double, value, sizeof(double));
-#else
-        htemp->v.h_vector = double_slab_calloc();
-        memcpy(htemp->v.h_vector, value, sizeof(double));
-#endif
-        htemp->flags = HIST_REAL;
+        htemp->flags = GW_HIST_ENT_FLAG_REAL;
     } else /* string */
     {
         unsigned char *s = malloc_2(plen + 1);
@@ -1602,7 +1581,7 @@ static void fst_callback2(void *user_callback_data_pointer,
 
         htemp = histent_calloc();
         htemp->v.h_vector = (char *)s;
-        htemp->flags = HIST_REAL | HIST_STRING;
+        htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
     }
 
     htemp->time = (tim) * (GLOBALS->time_scale);
@@ -1634,7 +1613,7 @@ static void fst_resolver(nptr np, nptr resolve)
     np->extvals = resolve->extvals;
     np->msi = resolve->msi;
     np->lsi = resolve->lsi;
-    memcpy(&np->head, &resolve->head, sizeof(struct HistEnt));
+    memcpy(&np->head, &resolve->head, sizeof(GwHistEnt));
     np->curr = resolve->curr;
     np->harray = resolve->harray;
     np->numhist = resolve->numhist;
@@ -1646,7 +1625,9 @@ static void fst_resolver(nptr np, nptr resolve)
  */
 void import_fst_trace(nptr np)
 {
-    hptr htemp, htempx = NULL, histent_tail;
+    GwHistEnt *htemp;
+    GwHistEnt *htempx = NULL;
+    GwHistEnt *histent_tail;
     int len, i;
     struct fac *f;
     int txidx;
@@ -1708,17 +1689,11 @@ void import_fst_trace(nptr np)
                     htemp->v.h_vector[i] = AN_X;
             } else {
                 htemp->v.h_vector = strdup_2("UNDEF");
-                htemp->flags = HIST_REAL | HIST_STRING;
+                htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
             }
         } else {
-#ifdef WAVE_HAS_H_DOUBLE
             htemp->v.h_double = strtod("NaN", NULL);
-#else
-            double *d = malloc_2(sizeof(double));
-            *d = strtod("NaN", NULL);
-            htemp->v.h_vector = (char *)d;
-#endif
-            htemp->flags = HIST_REAL;
+            htemp->flags = GW_HIST_ENT_FLAG_REAL;
         }
         htempx = htemp;
     } else {
@@ -1742,14 +1717,14 @@ void import_fst_trace(nptr np)
             np->head.v.h_val = AN_X; /* x */
         }
     } else {
-        np->head.flags = HIST_REAL;
+        np->head.flags = GW_HIST_ENT_FLAG_REAL;
         if (f->flags & VZT_RD_SYM_F_STRING) {
-            np->head.flags |= HIST_STRING;
+            np->head.flags |= GW_HIST_ENT_FLAG_STRING;
         }
     }
 
     {
-        struct HistEnt *htemp2 = histent_calloc();
+        GwHistEnt *htemp2 = histent_calloc();
         htemp2->time = -1;
         if (len > 1) {
             htemp2->v.h_vector = htempx->v.h_vector;
@@ -1885,7 +1860,7 @@ void fst_import_masked(void)
 {
     unsigned int txidxi;
     int i, cnt;
-    hptr htempx = NULL;
+    GwHistEnt *htempx = NULL;
 
     cnt = 0;
     for (txidxi = 0; txidxi < GLOBALS->fst_maxhandle; txidxi++) {
@@ -1909,7 +1884,7 @@ void fst_import_masked(void)
     for (txidxi = 0; txidxi < GLOBALS->fst_maxhandle; txidxi++) {
         if (fstReaderGetFacProcessMask(GLOBALS->fst_fst_c_1, txidxi + 1)) {
             int txidx = GLOBALS->mvlfacs_fst_rvs_alias[txidxi];
-            struct HistEnt *htemp, *histent_tail;
+            GwHistEnt *htemp, *histent_tail;
             struct fac *f = GLOBALS->mvlfacs_fst_c_3 + txidx;
             int len = f->len;
             nptr np = GLOBALS->fst_table_fst_c_1[txidx].np;
@@ -1933,19 +1908,12 @@ void fst_import_masked(void)
                             htemp->v.h_vector[i] = AN_X;
                     } else {
                         htemp->v.h_vector = strdup_2("UNDEF");
-                        htemp->flags = HIST_REAL | HIST_STRING;
+                        htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
                     }
                     htempx = htemp;
                 } else {
-#ifdef WAVE_HAS_H_DOUBLE
                     htemp->v.h_double = strtod("NaN", NULL);
-#else
-                    double *d = malloc_2(sizeof(double));
-
-                    *d = strtod("NaN", NULL);
-                    htemp->v.h_vector = (char *)d;
-#endif
-                    htemp->flags = HIST_REAL;
+                    htemp->flags = GW_HIST_ENT_FLAG_REAL;
                     htempx = htemp;
                 }
             } else {
@@ -1969,14 +1937,14 @@ void fst_import_masked(void)
                     np->head.v.h_val = AN_X; /* x */
                 }
             } else {
-                np->head.flags = HIST_REAL;
+                np->head.flags = GW_HIST_ENT_FLAG_REAL;
                 if (f->flags & VZT_RD_SYM_F_STRING) {
-                    np->head.flags |= HIST_STRING;
+                    np->head.flags |= GW_HIST_ENT_FLAG_STRING;
                 }
             }
 
             {
-                struct HistEnt *htemp2 = histent_calloc();
+                GwHistEnt *htemp2 = histent_calloc();
                 htemp2->time = -1;
                 if (len > 1) {
                     htemp2->v.h_vector = htempx->v.h_vector;
