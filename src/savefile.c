@@ -332,8 +332,8 @@ void write_save_helper(const char *savnam, FILE *wave)
                 !(t->n.vec->transaction_cache && t->n.vec->transaction_cache->transaction_nd)) {
                 int ix;
                 GwNode **nodes;
-                bptr bits;
-                baptr ba;
+                GwBits *bits;
+                GwBitAttributes *ba;
 
                 if (HasAlias(t)) {
                     fprintf(wave, "+{%s} ", t->name_full);
@@ -504,8 +504,8 @@ void write_save_helper(const char *savnam, FILE *wave)
                                            t->n.vec->transaction_cache->transaction_nd)) {
                             int ix;
                             GwNode **nodes;
-                            bptr bits;
-                            baptr ba;
+                            GwBits *bits;
+                            GwBitAttributes *ba;
 
                             if (HasAlias(t)) {
                                 fprintf(wave, "+{%s} ", t->name_full);
@@ -1167,7 +1167,7 @@ int parsewavline(char *w, char *alias, int depth)
     } else if ((*w2 == '#') || (*w2 == ':')) {
         /* handle bitvec */
         bvptr v = NULL;
-        bptr b = NULL;
+        GwBits *b = NULL;
         int maketyp = (*w2 == '#');
 
         w2 = w2 + strlen(prefix);

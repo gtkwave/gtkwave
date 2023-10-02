@@ -208,7 +208,7 @@ void import_trace(GwNode *np)
 /*
  * turn a Bits structure into a vector with deltas for faster displaying
  */
-bvptr bits2vector(struct Bits *b)
+bvptr bits2vector(GwBits *b)
 {
     int i;
     int regions = 0;
@@ -540,14 +540,14 @@ int maketraces(char *str, char *alias, int quick_return)
 /*
  * Create a vector from wildcarded signals...
  */
-struct Bits *makevec(char *vec, char *str)
+GwBits *makevec(char *vec, char *str)
 {
     char *pnt, *pnt2, *wild = NULL;
     char ch, ch2, wild_active;
     int len, nodepnt = 0;
     int i;
     GwNode *n[BITATTRIBUTES_MAX];
-    struct Bits *b = NULL;
+    GwBits *b = NULL;
     unsigned int rows = 0;
 
     while (1) {
@@ -674,7 +674,7 @@ struct Bits *makevec(char *vec, char *str)
 
 ifnode:
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
+        b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -692,15 +692,15 @@ ifnode:
 /*
  * Create an annotated (b->attribs) vector from stranded signals...
  */
-struct Bits *makevec_annotated(char *vec, char *str)
+GwBits *makevec_annotated(char *vec, char *str)
 {
     char *pnt, *wild = NULL;
     char ch;
     int len, nodepnt = 0;
     int i;
     GwNode *n[BITATTRIBUTES_MAX];
-    struct BitAttributes ba[BITATTRIBUTES_MAX];
-    struct Bits *b = NULL;
+    GwBitAttributes ba[BITATTRIBUTES_MAX];
+    GwBits *b = NULL;
     int state = 0;
     unsigned int rows = 0;
 
@@ -824,9 +824,9 @@ struct Bits *makevec_annotated(char *vec, char *str)
 
 ifnode:
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
+        b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
-        b->attribs = calloc_2(nodepnt, sizeof(struct BitAttributes));
+        b->attribs = calloc_2(nodepnt, sizeof(GwBitAttributes));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -847,12 +847,12 @@ ifnode:
 /*
  * Create a vector from selected_status signals...
  */
-struct Bits *makevec_selected(char *vec, int numrows, char direction)
+GwBits *makevec_selected(char *vec, int numrows, char direction)
 {
     int nodepnt = 0;
     int i;
     GwNode *n[BITATTRIBUTES_MAX];
-    struct Bits *b = NULL;
+    GwBits *b = NULL;
 
     if (!direction)
         for (i = GLOBALS->numfacs - 1; i >= 0; i--) /* to keep vectors in hi..lo order */
@@ -874,7 +874,7 @@ struct Bits *makevec_selected(char *vec, int numrows, char direction)
         }
 
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
+        b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -896,12 +896,12 @@ struct Bits *makevec_selected(char *vec, int numrows, char direction)
  * bit facility_name[x] case never gets hit, but may be used in the
  * future...
  */
-struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
+GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
 {
     int nodepnt = 0, nodepnt_rev;
     int i;
     GwNode **n;
-    struct Bits *b = NULL;
+    GwBits *b = NULL;
     struct symbol *symhi = NULL, *symlo = NULL;
     char hier_delimeter2 = '[';
 
@@ -929,7 +929,7 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
     }
 
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
+        b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -1061,7 +1061,7 @@ struct Bits *makevec_chain(char *vec, struct symbol *sym, int len)
 int add_vector_chain(struct symbol *s, int len)
 {
     bvptr v = NULL;
-    bptr b = NULL;
+    GwBits *b = NULL;
 
     if (len > 1) {
         if ((b = makevec_chain(NULL, s, len))) {
@@ -1091,12 +1091,12 @@ int add_vector_chain(struct symbol *s, int len)
  * bit facility_name[x] case never gets hit, but may be used in the
  * future...
  */
-struct Bits *makevec_range(char *vec, int lo, int hi, char direction)
+GwBits *makevec_range(char *vec, int lo, int hi, char direction)
 {
     int nodepnt = 0;
     int i;
     GwNode *n[BITATTRIBUTES_MAX];
-    struct Bits *b = NULL;
+    GwBits *b = NULL;
 
     if (!direction)
         for (i = hi; i >= lo; i--) /* to keep vectors in hi..lo order */
@@ -1114,7 +1114,7 @@ struct Bits *makevec_range(char *vec, int lo, int hi, char direction)
         }
 
     if (nodepnt) {
-        b = (struct Bits *)calloc_2(1, sizeof(struct Bits) + (nodepnt) * sizeof(GwNode *));
+        b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
         for (i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
@@ -1233,7 +1233,7 @@ struct Bits *makevec_range(char *vec, int lo, int hi, char direction)
 int add_vector_range(char *alias, int lo, int hi, char direction)
 {
     bvptr v = NULL;
-    bptr b = NULL;
+    GwBits *b = NULL;
 
     if (lo != hi) {
         if ((b = makevec_range(alias, lo, hi, direction))) {

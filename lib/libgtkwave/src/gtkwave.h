@@ -13,3 +13,4 @@
 #include "gw-vector-ent.h"
 #include "gw-node.h"
 #include "gw-fac.h"
+#include "gw-bits.h"
