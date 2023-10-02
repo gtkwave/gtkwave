@@ -14,3 +14,4 @@
 #include "gw-node.h"
 #include "gw-fac.h"
 #include "gw-bits.h"
+#include "gw-bit-vector.h"

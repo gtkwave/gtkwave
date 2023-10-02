@@ -202,7 +202,7 @@ int install_ttrans_filter(int which)
         while (t) {
             if (t->flags & TR_HIGHLIGHT) {
                 if ((!t->vector) && (which)) {
-                    bvptr v = combine_traces(1, t); /* down: make single signal a vector */
+                    GwBitVector *v = combine_traces(1, t); /* down: make single signal a vector */
                     if (v) {
                         v->transaction_nd = t->n.nd; /* cache for savefile, disable */
                         t->vector = 1;
@@ -217,8 +217,8 @@ int install_ttrans_filter(int which)
                     /* back out allocation to revert (if any) */
                     if (t->n.vec->transaction_cache) {
                         int i;
-                        bvptr bv = t->n.vec;
-                        bvptr bv2;
+                        GwBitVector *bv = t->n.vec;
+                        GwBitVector *bv2;
                         GwNode *ndcache = NULL;
 
                         t->n.vec = bv->transaction_cache;
@@ -562,14 +562,14 @@ int traverse_vector_nodes(Trptr t)
 
         if (rc == VCDSAV_OK) {
             int is_finish = 0;
-            bvptr prev_transaction_trace = NULL;
+            GwBitVector *prev_transaction_trace = NULL;
 
             while (!is_finish) {
                 GwVectorEnt *vt_head = NULL;
                 GwVectorEnt *vt_curr = NULL;
                 GwVectorEnt *vt;
                 GwVectorEnt *vprev;
-                bvptr bv;
+                GwBitVector *bv;
                 int regions = 2;
                 GwTime prev_tim = GW_TIME_CONSTANT(-1);
                 char *trace_name = NULL;
@@ -799,7 +799,7 @@ int traverse_vector_nodes(Trptr t)
                 vt->time = MAX_HISTENT_TIME;
                 regions++;
 
-                bv = calloc_2(1, sizeof(struct BitVector) + (sizeof(GwVectorEnt *) * (regions)));
+                bv = calloc_2(1, sizeof(GwBitVector) + (sizeof(GwVectorEnt *) * (regions)));
                 bv->bvname = strdup_2(trace_name ? trace_name : orig_name);
                 bv->nbits = 1;
                 bv->numregions = regions;

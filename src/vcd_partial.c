@@ -2520,7 +2520,7 @@ static void regen_harray(Trptr t, GwNode *nd)
 static void regen_trace_mark(Trptr t, int mandclear)
 {
     if (t->vector) {
-        bvptr b = t->n.vec;
+        GwBitVector *b = t->n.vec;
         GwBits *bts = b->bits;
         int i;
 
@@ -2561,10 +2561,10 @@ static void regen_trace_sweep(Trptr t)
                 regen_harray(t, t->n.nd);
             }
     } else if (t->interactive_vector_needs_regeneration) {
-        bvptr b = t->n.vec;
-        GwBits * bts = b->bits;
+        GwBitVector *b = t->n.vec;
+        GwBits *bts = b->bits;
         int i;
-        bvptr b2;
+        GwBitVector *b2;
 
         for (i = 0; i < bts->nnbits; i++) {
             if (bts->nodes[i]->expansion) {

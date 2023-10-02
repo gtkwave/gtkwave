@@ -208,7 +208,7 @@ void llist_free(llist_p *head, ll_elem_type type, void *f(void *))
 /* Create a Trptr structure that contains the bit-vector VEC
  * This is based on the function AddVector()
  */
-Trptr BitVector_to_Trptr(bvptr vec)
+Trptr BitVector_to_Trptr(GwBitVector *vec)
 {
     Trptr t;
     int n;
@@ -382,7 +382,7 @@ Trptr sig_name_to_Trptr(char *name)
     char *hfacname = NULL;
     struct symbol *s = NULL, *s2;
     int len = 0;
-    bvptr v = NULL;
+    GwBitVector *v = NULL;
     GwBits *b = NULL;
     int pre_import = 0;
 

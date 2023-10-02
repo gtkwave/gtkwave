@@ -196,7 +196,7 @@ void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
                     }
                 } else {
                     Trptr t_orig, tn;
-                    bvptr bv = t->n.vec;
+                    GwBitVector *bv = t->n.vec;
 
                     v = bsearch_vector(bv, GLOBALS->tims.start - t->shift);
                     DEBUG(printf("Vector Trace: %s, %s\n", t->name, bv->bvname));

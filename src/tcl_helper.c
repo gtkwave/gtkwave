@@ -808,7 +808,7 @@ void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
     GwNode *nexp;
     int i;
     TraceFlagsType default_flags = GLOBALS->default_flags;
-    bvptr v;
+    GwBitVector *v;
 
     Trptr buffer; /* cut/copy buffer of traces */
     Trptr bufferlast; /* last element of bufferchain */
