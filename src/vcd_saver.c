@@ -328,11 +328,11 @@ static void heapify(int i, int heap_size)
  * mainline
  */
 int save_nodes_to_export_generic(FILE *trans_file,
-                                 Trptr trans_head,
+                                 GwTrace *trans_head,
                                  const char *fname,
                                  int export_typ)
 {
-    Trptr t = trans_head ? trans_head : GLOBALS->traces.first;
+    GwTrace *t = trans_head ? trans_head : GLOBALS->traces.first;
     int nodecnt = 0;
     vcdsav_Tree *vt = NULL;
     vcdsav_Tree **hp_clone = GLOBALS->hp_vcd_saver_c_1;
@@ -746,7 +746,7 @@ int save_nodes_to_export(const char *fname, int export_typ)
     return (save_nodes_to_export_generic(NULL, NULL, fname, export_typ));
 }
 
-int save_nodes_to_trans(FILE *trans, Trptr t)
+int save_nodes_to_trans(FILE *trans, GwTrace *t)
 {
     return (save_nodes_to_export_generic(trans, t, NULL, WAVE_EXPORT_TRANS));
 }
@@ -930,7 +930,7 @@ char *output_hier(int is_trans, const char *name)
 /***                                  ***/
 /****************************************/
 
-static void write_hptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
+static void write_hptr_trace(GwTrace *t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     GwNode *n = t->n.nd;
     GwHistEnt **ha = n->harray;
@@ -1054,7 +1054,7 @@ static void format_value_string(char *s)
     }
 }
 
-static char *get_hptr_vector_val(Trptr t, GwHistEnt *h)
+static char *get_hptr_vector_val(GwTrace *t, GwHistEnt *h)
 {
     char *ascii = NULL;
 
@@ -1099,7 +1099,7 @@ static int determine_trace_data_type(char *s, int curtype)
     return (curtype);
 }
 
-static void write_hptr_trace_vector(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
+static void write_hptr_trace_vector(GwTrace *t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     GwNode *n = t->n.nd;
     GwHistEnt **ha = n->harray;
@@ -1211,7 +1211,7 @@ static void write_hptr_trace_vector(Trptr t, int *whichptr, GwTime tmin, GwTime 
 
 /***/
 
-static char *get_vptr_vector_val(Trptr t, GwVectorEnt *v)
+static char *get_vptr_vector_val(GwTrace *t, GwVectorEnt *v)
 {
     char *ascii = NULL;
 
@@ -1229,7 +1229,7 @@ static char *get_vptr_vector_val(Trptr t, GwVectorEnt *v)
     return (ascii);
 }
 
-static void write_vptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
+static void write_vptr_trace(GwTrace *t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     GwVectorEnt **ha = t->n.vec->vectors;
     int numhist = t->n.vec->numregions;
@@ -1338,7 +1338,7 @@ static void write_vptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
     (*whichptr)++;
 }
 
-static void write_tim_tracedata(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
+static void write_tim_tracedata(GwTrace *t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     if (!(t->flags & (TR_EXCLUDE | TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
         GLOBALS->shift_timebase = t->shift;
@@ -1360,7 +1360,7 @@ int do_timfile_save(const char *fname)
     const double negpow[] = {1.0, 1.0e-3, 1.0e-6, 1.0e-9, 1.0e-12, 1.0e-15, 1.0e-18, 1.0e-21};
     char *pnt;
     int offset;
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     int i = 1; /* trace index in the .tim file */
     GwTime tmin, tmax;
 

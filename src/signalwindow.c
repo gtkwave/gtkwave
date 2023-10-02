@@ -55,7 +55,7 @@ static gboolean mouseover_timer(gpointer dummy)
     static gboolean run_once = FALSE;
     gdouble x, y;
     GdkModifierType state;
-    TraceEnt t_trans;
+    GwTrace t_trans;
 
     gint xi, yi;
 
@@ -138,7 +138,7 @@ static gboolean mouseover_timer(gpointer dummy)
         int num_traces_displayable = allocation.height / (GLOBALS->fontheight);
         int yr = GLOBALS->cached_mouseover_y;
         int i;
-        Trptr t = NULL;
+        GwTrace *t = NULL;
 
         num_traces_displayable--; /* for the time trace that is always there */
 
@@ -169,7 +169,7 @@ static gboolean mouseover_timer(gpointer dummy)
         if (t->flags &
             (TR_BLANK | TR_ANALOG_BLANK_STRETCH)) /* seek to real xact trace if present... */
         {
-            Trptr tscan = t;
+            GwTrace *tscan = t;
             int bcnt = 0;
             while ((tscan) && (tscan = GivePrevTrace(tscan))) {
                 if (!(tscan->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -191,7 +191,7 @@ static gboolean mouseover_timer(gpointer dummy)
                 if (bv) {
                     memcpy(&t_trans,
                            tscan,
-                           sizeof(TraceEnt)); /* substitute into a synthetic trace */
+                           sizeof(GwTrace)); /* substitute into a synthetic trace */
                     t_trans.n.vec = bv;
                     t_trans.vector = 1;
 

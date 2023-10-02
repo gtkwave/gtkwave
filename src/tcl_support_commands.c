@@ -205,18 +205,18 @@ void llist_free(llist_p *head, ll_elem_type type, void *f(void *))
     }
 }
 /* ===================================================== */
-/* Create a Trptr structure that contains the bit-vector VEC
+/* Create a GwTrace structure that contains the bit-vector VEC
  * This is based on the function AddVector()
  */
-Trptr BitVector_to_Trptr(GwBitVector *vec)
+GwTrace *BitVector_to_Trptr(GwBitVector *vec)
 {
-    Trptr t;
+    GwTrace *t;
     int n;
 
     GLOBALS->signalwindow_width_dirty = 1;
 
     n = vec->nbits;
-    t = (Trptr)calloc_2(1, sizeof(TraceEnt));
+    t = calloc_2(1, sizeof(GwTrace));
     if (t == NULL) {
         fprintf(stderr, "Out of memory, can't add %s to analyzer\n", vec->bvname);
         return (0);
@@ -234,9 +234,9 @@ Trptr BitVector_to_Trptr(GwBitVector *vec)
     return (t);
 }
 
-Trptr find_first_highlighted_trace(void)
+GwTrace *find_first_highlighted_trace(void)
 {
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     while (t) {
         if (t->flags & TR_HIGHLIGHT) {
             if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -248,14 +248,14 @@ Trptr find_first_highlighted_trace(void)
     return (t);
 }
 
-/* Find is signal named NAME is on display and return is Trptr value
+/* Find is signal named NAME is on display and return is GwTrace * value
  * or NULL
  * NAME is a full hierarchical name, but may not in include range '[..:..]'
  *  information.
  */
-Trptr is_signal_displayed(char *name)
+GwTrace *is_signal_displayed(char *name)
 {
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     char *p = strchr(name, '['), *p1;
     unsigned int len, len1;
     if (p)
@@ -288,12 +288,12 @@ Trptr is_signal_displayed(char *name)
     return t;
 }
 
-/* Create a Trptr structure for ND and return its value
+/* Create a GwTrace * structure for ND and return its value
  * This is based on the function AddNodeTraceReturn()
  */
-Trptr Node_to_Trptr(GwNode *nd)
+GwTrace *Node_to_Trptr(GwNode *nd)
 {
-    Trptr t = NULL;
+    GwTrace *t = NULL;
     GwHistEnt *histpnt;
     GwHistEnt **harray;
     int histcount;
@@ -304,7 +304,7 @@ Trptr Node_to_Trptr(GwNode *nd)
 
     GLOBALS->signalwindow_width_dirty = 1;
 
-    if ((t = (Trptr)calloc_2(1, sizeof(TraceEnt))) == NULL) {
+    if ((t = calloc_2(1, sizeof(GwTrace *))) == NULL) {
         fprintf(stderr, "Out of memory, can't add to analyzer\n");
         return (0);
     }
@@ -370,13 +370,13 @@ Trptr Node_to_Trptr(GwNode *nd)
 }
 /*
  * Search for the signal named (full path) NAME in the signal data base and
- * create a Trptr structure for it
+ * create a GwTrace structure for it
  * NAME is a full hierarchy name, but may not include range information.
  * Return the structure created or NULL
  */
-Trptr sig_name_to_Trptr(char *name)
+GwTrace *sig_name_to_Trptr(char *name)
 {
-    Trptr t = NULL;
+    GwTrace *t = NULL;
     int was_packed = HIER_DEPACK_ALLOC;
     int i, name_len;
     char *hfacname = NULL;
@@ -478,12 +478,12 @@ llist_p *signal_change_list(char *sig_name,
     llist_p *l1_tail = NULL;
     char *s, s1[1024];
     GwHistEnt *h_ptr;
-    Trptr t = NULL;
-    Trptr t_created = NULL;
+    GwTrace *t = NULL;
+    GwTrace *t_created = NULL;
     if (!sig_name) {
-        t = (Trptr)find_first_highlighted_trace();
+        t = (GwTrace *)find_first_highlighted_trace();
     } else {
-        /* case of sig name, find the representing Trptr structure */
+        /* case of sig name, find the representing GwTrace structure */
         if (!(t = is_signal_displayed(sig_name)))
             t = t_created = sig_name_to_Trptr(sig_name);
     }

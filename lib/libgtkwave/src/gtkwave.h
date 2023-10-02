@@ -15,3 +15,4 @@
 #include "gw-fac.h"
 #include "gw-bits.h"
 #include "gw-bit-vector.h"
+#include "gw-trace.h"

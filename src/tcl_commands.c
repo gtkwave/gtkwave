@@ -186,7 +186,7 @@ static int gtkwavetcl_printString(ClientData clientData,
     return (TCL_OK);
 }
 
-static char *extractFullTraceName(Trptr t)
+static char *extractFullTraceName(GwTrace *t)
 {
     char *name = NULL;
 
@@ -651,7 +651,7 @@ static int gtkwavetcl_getTraceNameFromIndex(ClientData clientData,
         int which = atoi(s);
 
         if ((which >= 0) && (which < GLOBALS->traces.total)) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             int i = 0;
             while (t) {
                 if (i == which) {
@@ -683,7 +683,7 @@ static int gtkwavetcl_getTraceFlagsFromIndex(ClientData clientData,
         int which = atoi(s);
 
         if ((which >= 0) && (which < GLOBALS->traces.total)) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             int i = 0;
             while (t) {
                 if (i == which) {
@@ -712,7 +712,7 @@ static int gtkwavetcl_getTraceValueAtMarkerFromIndex(ClientData clientData,
         int which = atoi(s);
 
         if ((which >= 0) && (which < GLOBALS->traces.total)) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             int i = 0;
             while (t) {
                 if (i == which) {
@@ -745,7 +745,7 @@ static int gtkwavetcl_getTraceValueAtMarkerFromName(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        Trptr t = GLOBALS->traces.first;
+        GwTrace *t = GLOBALS->traces.first;
 
         while (t) {
             if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -800,7 +800,7 @@ static int gtkwavetcl_getTraceValueAtNamedMarkerFromName(ClientData clientData,
 
         if (marker != NULL) {
             char *s = get_Tcl_string(objv[2]);
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
 
             while (t) {
                 if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -1336,7 +1336,7 @@ static int gtkwavetcl_deleteSignalsFromList(ClientData clientData,
         elem = zSplitTclList(s, &l);
 
         if (elem) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             while (t) {
                 t->cached_flags = t->flags;
                 t->flags &= (~TR_HIGHLIGHT);
@@ -1415,7 +1415,7 @@ static int gtkwavetcl_deleteSignalsFromListIncludingDuplicates(ClientData client
         elem = zSplitTclList(s, &l);
 
         if (elem) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             while (t) {
                 t->cached_flags = t->flags;
                 t->flags &= (~TR_HIGHLIGHT);
@@ -1491,7 +1491,7 @@ static int gtkwavetcl_highlightSignalsFromList(ClientData clientData,
         elem = zSplitTclList(s, &l);
 
         if (elem) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             while (t) {
                 if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
                     char *name = extractFullTraceName(t);
@@ -1548,7 +1548,7 @@ static int gtkwavetcl_unhighlightSignalsFromList(ClientData clientData,
         elem = zSplitTclList(s, &l);
 
         if (elem) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             while (t) {
                 if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
                     char *name = extractFullTraceName(t);
@@ -1599,7 +1599,7 @@ static int gtkwavetcl_setTraceHighlightFromIndex(ClientData clientData,
         int onoff = atoi_64(ts);
 
         if ((which >= 0) && (which < GLOBALS->traces.total)) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             int i = 0;
             while (t) {
                 if (i == which) {
@@ -1637,7 +1637,7 @@ static int gtkwavetcl_setTraceHighlightFromNameMatch(ClientData clientData,
         int mat = 0;
 
         if ((which >= 0) && (which < GLOBALS->traces.total)) {
-            Trptr t = GLOBALS->traces.first;
+            GwTrace *t = GLOBALS->traces.first;
             while (t) {
                 if (t->name && !strcmp(t->name, s)) {
                     if (onoff) {
@@ -1921,7 +1921,7 @@ static int gtkwavetcl_getTraceFlagsFromName(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        Trptr t = GLOBALS->traces.first;
+        GwTrace *t = GLOBALS->traces.first;
 
         while (t) {
             if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {

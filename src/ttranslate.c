@@ -107,7 +107,7 @@ void remove_all_ttrans_filters(void)
     }
 }
 
-int traverse_vector_nodes(Trptr t);
+int traverse_vector_nodes(GwTrace *t);
 
 /*
  * this is likely obsolete
@@ -198,7 +198,7 @@ int install_ttrans_filter(int which)
     }
 
     if (GLOBALS->traces.first) {
-        Trptr t = GLOBALS->traces.first;
+        GwTrace *t = GLOBALS->traces.first;
         while (t) {
             if (t->flags & TR_HIGHLIGHT) {
                 if ((!t->vector) && (which)) {
@@ -269,7 +269,7 @@ int install_ttrans_filter(int which)
                     found++;
 
                     if (t->t_match) {
-                        Trptr curr_trace = t;
+                        GwTrace *curr_trace = t;
                         t = t->t_next;
                         while (t && (t->t_match != curr_trace)) {
                             t = t->t_next;
@@ -459,7 +459,7 @@ void ttrans_searchbox(const char *title)
 
     /* args entry box */
     {
-        Trptr t = GLOBALS->traces.first;
+        GwTrace *t = GLOBALS->traces.first;
         while (t) {
             if (t->flags & TR_HIGHLIGHT) {
                 if (t->transaction_args) {
@@ -546,7 +546,7 @@ void set_current_translate_ttrans(char *name)
     }
 }
 
-int traverse_vector_nodes(Trptr t)
+int traverse_vector_nodes(GwTrace *t)
 {
     int i;
     int cvt_ok = 0;

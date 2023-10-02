@@ -47,7 +47,7 @@ static char *lzremoval(char *s)
 /*
  * file/translate/process filters
  */
-static char *dofilter(Trptr t, char *s)
+static char *dofilter(GwTrace *t, char *s)
 {
     GLOBALS->xl_file_filter[t->f_filter] = xl_splay(s, GLOBALS->xl_file_filter[t->f_filter]);
 
@@ -72,7 +72,7 @@ static char *dofilter(Trptr t, char *s)
     return (s);
 }
 
-static char *edofilter(Trptr t, char *s)
+static char *edofilter(GwTrace *t, char *s)
 {
     if (t->flags & TR_ENUM) {
         int filt = t->e_filter - 1;
@@ -111,7 +111,7 @@ static char *edofilter(Trptr t, char *s)
     return (s);
 }
 
-static char *pdofilter(Trptr t, char *s)
+static char *pdofilter(GwTrace *t, char *s)
 {
     struct pipe_ctx *p = GLOBALS->proc_filter[t->p_filter];
     char buf[1025];
@@ -350,7 +350,7 @@ static void dpr_e16(char *str, double d)
     }
 }
 
-static void cvt_fpsdec(Trptr t, GwTime val, char *os, int len, int nbits)
+static void cvt_fpsdec(GwTrace *t, GwTime val, char *os, int len, int nbits)
 {
     (void)nbits; /* number of bits shouldn't be relevant here as we're going through a fraction */
 
@@ -392,7 +392,7 @@ static void cvt_fpsdec(Trptr t, GwTime val, char *os, int len, int nbits)
     }
 }
 
-static void cvt_fpsudec(Trptr t, GwTime val, char *os, int len)
+static void cvt_fpsudec(GwTrace *t, GwTime val, char *os, int len)
 {
     int shamt = t->t_fpdecshift;
     GwUTime lpart = ((GwUTime)val) >> shamt;
@@ -422,7 +422,7 @@ static void cvt_fpsudec(Trptr t, GwTime val, char *os, int len)
 /*
  * convert trptr+vptr into an ascii string
  */
-static char *convert_ascii_2(Trptr t, GwVectorEnt *v)
+static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
 {
     TraceFlagsType flags;
     int nbits;
@@ -940,14 +940,14 @@ static char *convert_ascii_2(Trptr t, GwVectorEnt *v)
 /*
  * convert trptr+hptr vectorstring into an ascii string
  */
-char *convert_ascii_real(Trptr t, double *d)
+char *convert_ascii_real(GwTrace *t, double *d)
 {
     char *rv;
 
     if (t && (t->flags & TR_REAL2BITS) &&
         d) /* "real2bits" also allows other filters such as "bits2real" on top of it */
     {
-        struct TraceEnt t2;
+        GwTrace t2;
         char vec[64];
         int i;
         guint64 swapmem;
@@ -961,7 +961,7 @@ char *convert_ascii_real(Trptr t, double *d)
             }
         }
 
-        memcpy(&t2, t, sizeof(struct TraceEnt));
+        memcpy(&t2, t, sizeof(GwTrace));
 
         t2.n.nd->msi = 63;
         t2.n.nd->lsi = 0;
@@ -1065,7 +1065,7 @@ static const unsigned char cvt_table[] = {
     AN_DASH /* . */
 };
 
-int vtype(Trptr t, char *vec)
+int vtype(GwTrace *t, char *vec)
 {
     int i, nbits;
     char pch, ch;
@@ -1102,7 +1102,7 @@ miscompare:
     return (AN_COUNT);
 }
 
-int vtype2(Trptr t, GwVectorEnt *v)
+int vtype2(GwTrace *t, GwVectorEnt *v)
 {
     int i, nbits;
     char pch, ch;
@@ -1145,7 +1145,7 @@ miscompare:
 /*
  * convert trptr+hptr vectorstring into an ascii string
  */
-char *convert_ascii_vec_2(Trptr t, char *vec)
+char *convert_ascii_vec_2(GwTrace *t, char *vec)
 {
     TraceFlagsType flags;
     int nbits;
@@ -1662,7 +1662,7 @@ char *convert_ascii_vec_2(Trptr t, char *vec)
     return (os);
 }
 
-char *convert_ascii_vec(Trptr t, char *vec)
+char *convert_ascii_vec(GwTrace *t, char *vec)
 {
     char *s = convert_ascii_vec_2(t, vec);
 
@@ -1682,7 +1682,7 @@ char *convert_ascii_vec(Trptr t, char *vec)
     return (s);
 }
 
-char *convert_ascii(Trptr t, GwVectorEnt *v)
+char *convert_ascii(GwTrace *t, GwVectorEnt *v)
 {
     char *s;
 
@@ -1723,7 +1723,7 @@ char *convert_ascii(Trptr t, GwVectorEnt *v)
 /*
  * convert trptr+hptr vectorstring into a real
  */
-double convert_real_vec(Trptr t, char *vec)
+double convert_real_vec(GwTrace *t, char *vec)
 {
     Ulong flags;
     int nbits;
@@ -1890,7 +1890,7 @@ double convert_real_vec(Trptr t, char *vec)
 /*
  * convert trptr+vptr into a real
  */
-double convert_real(Trptr t, GwVectorEnt *v)
+double convert_real(GwTrace *t, GwVectorEnt *v)
 {
     Ulong flags;
     int nbits;

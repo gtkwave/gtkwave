@@ -48,14 +48,14 @@ enum st_stype
 struct strace_defer_free
 {
     struct strace_defer_free *next;
-    Trptr defer;
+    GwTrace *defer;
 };
 
 struct strace
 {
     struct strace *next;
     char *string; /* unmalloc this when all's done! */
-    Trptr trace;
+    GwTrace *trace;
     char value;
     char search_result;
 

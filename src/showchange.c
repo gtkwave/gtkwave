@@ -220,7 +220,7 @@ static void add_labeled_widget(GtkWidget *grid, const gchar *text, GtkWidget *wi
     gtk_grid_attach_next_to(GTK_GRID(grid), widget, label, GTK_POS_RIGHT, 1, 1);
 }
 
-void showchange(const char *title, Trptr t, GCallback func)
+void showchange(const char *title, GwTrace *t, GCallback func)
 {
     (void)title;
 

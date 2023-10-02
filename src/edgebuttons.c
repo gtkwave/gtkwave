@@ -14,9 +14,9 @@
 #include "strace.h"
 #include "debug.h"
 
-static Trptr find_first_highlighted_trace(void)
+static GwTrace *find_first_highlighted_trace(void)
 {
-    Trptr t = NULL;
+    GwTrace *t = NULL;
 
     for (t = GLOBALS->traces.first; t; t = t->t_next) {
         if ((t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH)) || (!(t->flags & TR_HIGHLIGHT)) ||
@@ -30,7 +30,7 @@ static Trptr find_first_highlighted_trace(void)
     return (t);
 }
 
-static Trptr find_next_highlighted_trace(Trptr t)
+static GwTrace *find_next_highlighted_trace(GwTrace *t)
 {
     if (t) {
         t = t->t_next;
@@ -59,7 +59,7 @@ static void edge_search_2(int direction, int is_last_iteration)
     struct strace s_tmp;
     struct strace *s_head, *s;
     GwTime basetime, maxbase, sttim, fintim;
-    Trptr t = find_first_highlighted_trace();
+    GwTrace *t = find_first_highlighted_trace();
     int totaltraces;
 #ifdef DEBUG_PRINTF
     int passcount;

@@ -330,7 +330,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
     GtkWidget *button1, *button1a, *button1b, *button1c, *button2, *scrolled_win, *frame,
         *separator;
     GtkSizeGroup *label_group;
-    Trptr t;
+    GwTrace *t;
     int i;
     int numtraces;
 
@@ -581,7 +581,7 @@ static void strace_search_2(int direction, int is_last_iteration)
 {
     struct strace *s;
     GwTime basetime, maxbase, sttim, fintim;
-    Trptr t;
+    GwTrace *t;
     int totaltraces, passcount;
     int whichpass;
     GwTime middle = 0, width;
@@ -996,7 +996,7 @@ GwTime strace_timetrace(GwTime basetime, int notfirst)
 {
     struct strace *s;
     GwTime maxbase, fintim;
-    Trptr t;
+    GwTrace *t;
     int totaltraces, passcount;
     int whichpass;
 
@@ -1524,7 +1524,7 @@ void delete_mprintf(void)
  */
 void cache_actual_pattern_mark_traces(void)
 {
-    Trptr t;
+    GwTrace *t;
     TraceFlagsType def = 0;
     GwTime prevshift = GW_TIME_CONSTANT(0);
     struct strace *st;

@@ -16,7 +16,7 @@ struct _GwMouseover
 
 G_DEFINE_TYPE(GwMouseover, gw_mouseover, GTK_TYPE_WINDOW)
 
-static gchar *trace_flags_to_string(Trptr t)
+static gchar *trace_flags_to_string(GwTrace *t)
 {
     TraceFlagsType flags = t->flags;
 
@@ -108,7 +108,7 @@ static gchar *trace_flags_to_string(Trptr t)
     return g_string_free(str, FALSE);
 }
 
-static gchar *local_trace_asciival(Trptr t, GwTime tim)
+static gchar *local_trace_asciival(GwTrace *t, GwTime tim)
 {
     if (t->name == NULL) {
         return NULL;
@@ -163,7 +163,7 @@ static gchar *local_trace_asciival(Trptr t, GwTime tim)
     return NULL;
 }
 
-static char *get_fullname(Trptr t)
+static char *get_fullname(GwTrace *t)
 {
     char *s = NULL;
     if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -205,7 +205,7 @@ GtkWidget *gw_mouseover_new(void)
     return g_object_new(GW_TYPE_MOUSEOVER, "type", GTK_WINDOW_POPUP, NULL);
 }
 
-static void gw_mouseover_update_clipboard(GwMouseover *self, Trptr trace)
+static void gw_mouseover_update_clipboard(GwMouseover *self, GwTrace *trace)
 {
     GdkDisplay *g = gdk_display_get_default();
 
@@ -223,7 +223,7 @@ static void gw_mouseover_update_clipboard(GwMouseover *self, Trptr trace)
     }
 }
 
-static void gw_mouseover_update_common(GwMouseover *self, Trptr trace, GwTime t)
+static void gw_mouseover_update_common(GwMouseover *self, GwTrace *trace, GwTime t)
 {
     // Set width-chars to prevent that short names are ellipsized.
     guint name_len = trace->name != NULL ? strlen(trace->name) : 0;
@@ -239,7 +239,7 @@ static void gw_mouseover_update_common(GwMouseover *self, Trptr trace, GwTime t)
     }
 }
 
-void gw_mouseover_update(GwMouseover *self, Trptr trace, GwTime t)
+void gw_mouseover_update(GwMouseover *self, GwTrace *trace, GwTime t)
 {
     g_return_if_fail(GW_IS_MOUSEOVER(self));
     g_return_if_fail(trace != NULL);
@@ -254,7 +254,7 @@ void gw_mouseover_update(GwMouseover *self, Trptr trace, GwTime t)
     g_free(flags);
 }
 
-void gw_mouseover_update_signal_list(GwMouseover *self, Trptr trace, GwTime t)
+void gw_mouseover_update_signal_list(GwMouseover *self, GwTrace *trace, GwTime t)
 {
     g_return_if_fail(GW_IS_MOUSEOVER(self));
     g_return_if_fail(trace != NULL);

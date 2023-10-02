@@ -36,7 +36,7 @@ enum vcd_saver_tr_datatype
 
 int save_nodes_to_export(const char *fname, int export_typ);
 int do_timfile_save(const char *fname);
-int save_nodes_to_trans(FILE *trans, Trptr t);
+int save_nodes_to_trans(FILE *trans, GwTrace *t);
 
 /* from helpers/scopenav.c */
 extern void free_hier(void);

@@ -105,7 +105,7 @@ char *append_array_row(GwNode *n)
 
 void write_save_helper(const char *savnam, FILE *wave)
 {
-    Trptr t;
+    GwTrace *t;
     TraceFlagsType def = 0;
     int sz_x, sz_y;
     GwTime prevshift = GW_TIME_CONSTANT(0);

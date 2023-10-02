@@ -899,9 +899,10 @@ static void sig_selection_foreach_finalize(gpointer data)
 
     if (action == SST_ACTION_REPLACE || action == SST_ACTION_INSERT ||
         action == SST_ACTION_PREPEND) {
-        Trptr tfirst = NULL, tlast = NULL;
-        Trptr t;
-        Trptr *tp = NULL;
+        GwTrace *tfirst = NULL;
+        GwTrace *tlast = NULL;
+        GwTrace *t;
+        GwTrace **tp = NULL;
         int numhigh = 0;
         int it;
 
@@ -926,7 +927,7 @@ static void sig_selection_foreach_finalize(gpointer data)
                 t = t->t_next;
             }
             if (numhigh) {
-                tp = calloc_2(numhigh, sizeof(Trptr));
+                tp = calloc_2(numhigh, sizeof(GwTrace *));
                 t = GLOBALS->traces.first;
                 it = 0;
                 while (t) {
@@ -1753,7 +1754,8 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
 {
     Traces tcache;
     int i;
-    Trptr tfirst = NULL, tlast = NULL;
+    GwTrace *tfirst = NULL;
+    GwTrace *tlast = NULL;
 
     if (!GLOBALS->sst_sig_root_treesearch_gtk2_c_1 || !data)
         return;
@@ -1844,8 +1846,8 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
     GLOBALS->traces.total = tcache.total;
 
     {
-        Trptr t = GLOBALS->traces.first;
-        Trptr *tp = NULL;
+        GwTrace *t = GLOBALS->traces.first;
+        GwTrace **tp = NULL;
         int numhigh = 0;
         int it;
 
@@ -1856,7 +1858,7 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
             t = t->t_next;
         }
         if (numhigh) {
-            tp = calloc_2(numhigh, sizeof(Trptr));
+            tp = calloc_2(numhigh, sizeof(GwTrace *));
             t = GLOBALS->traces.first;
             it = 0;
             while (t) {

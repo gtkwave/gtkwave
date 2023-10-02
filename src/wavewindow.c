@@ -93,14 +93,14 @@ void XXX_gdk_draw_rectangle(cairo_t *cr,
 GwTime cook_markertime(GwTime marker, gint x, gint y)
 {
     int i, num_traces_displayable;
-    Trptr t = NULL;
+    GwTrace *t = NULL;
     GwTime lft, rgh;
     char lftinv, rghinv;
     gdouble xlft, xrgh;
     gdouble xlftd, xrghd;
     GwTime closest_named = MAX_HISTENT_TIME;
     gint xold = x, yold = y;
-    TraceEnt t_trans;
+    GwTrace t_trans;
 
     if (!GLOBALS->cursor_snap)
         return (marker);
@@ -141,7 +141,7 @@ GwTime cook_markertime(GwTime marker, gint x, gint y)
 
     if (t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH)) /* seek to real xact trace if present... */
     {
-        Trptr tscan = t;
+        GwTrace *tscan = t;
         int bcnt = 0;
         while ((tscan) && (tscan = GivePrevTrace(tscan))) {
             if (!(tscan->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -161,7 +161,7 @@ GwTime cook_markertime(GwTime marker, gint x, gint y)
                 bv = bv->transaction_chain; /* correlate to blank trace */
             } while (bv && (bcnt--));
             if (bv) {
-                memcpy(&t_trans, tscan, sizeof(TraceEnt)); /* substitute into a synthetic trace */
+                memcpy(&t_trans, tscan, sizeof(GwTrace)); /* substitute into a synthetic trace */
                 t_trans.n.vec = bv;
                 t_trans.vector = 1;
 
@@ -560,7 +560,7 @@ static gint motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
 #endif
         {
             int warp = 0;
-            Trptr t = (GLOBALS->use_gestures > 0) ? NULL : GLOBALS->traces.first;
+            GwTrace *t = (GLOBALS->use_gestures > 0) ? NULL : GLOBALS->traces.first;
             GwTime gt, delta;
 
             while (t) {
@@ -892,7 +892,7 @@ static gint button_press_event(GtkWidget *widget, GdkEventButton *event)
         if ((event->state & GDK_CONTROL_MASK) && (event->button == 1))
 #endif
         {
-            Trptr t = (GLOBALS->use_gestures > 0) ? NULL : GLOBALS->traces.first;
+            GwTrace *t = (GLOBALS->use_gestures > 0) ? NULL : GLOBALS->traces.first;
 
             while (t) {
                 if ((t->flags & TR_HIGHLIGHT) && (!t->shift_drag_valid)) {
@@ -928,7 +928,7 @@ static gint button_release_event(GtkWidget *widget, GdkEventButton *event)
         /* warp selected signals if CTRL is pressed */
         if (event->button == 1) {
             int warp = 0;
-            Trptr t = (GLOBALS->use_gestures > 0) ? NULL : GLOBALS->traces.first;
+            GwTrace *t = (GLOBALS->use_gestures > 0) ? NULL : GLOBALS->traces.first;
 #ifdef MAC_INTEGRATION
             if (event->state & GDK_MOD2_MASK)
 #else
@@ -1769,7 +1769,7 @@ GtkWidget *create_wavewindow(void)
 
 /**********************************************/
 
-void populateBuffer(Trptr t, char *altname, char *buf)
+void populateBuffer(GwTrace *t, char *altname, char *buf)
 {
     char *ptr = buf;
     char *tname = altname ? altname : t->name;
@@ -1843,13 +1843,13 @@ void populateBuffer(Trptr t, char *altname, char *buf)
 
 void MaxSignalLength(void)
 {
-    Trptr t;
+    GwTrace *t;
     int len = 0, maxlen = 0;
     int vlen = 0, vmaxlen = 0;
     char buf[2048];
     char dirty_kick;
     GwBitVector *bv;
-    Trptr tscan;
+    GwTrace *tscan;
 
     DEBUG(printf("signalwindow_width_dirty: %d\n", GLOBALS->signalwindow_width_dirty));
 
@@ -1929,12 +1929,12 @@ void MaxSignalLength(void)
                 if (bv || t->vector) {
                     char *str, *str2;
                     GwVectorEnt *v;
-                    Trptr ts;
-                    TraceEnt t_temp;
+                    GwTrace *ts;
+                    GwTrace t_temp;
 
                     if (bv) {
                         ts = &t_temp;
-                        memcpy(ts, tscan, sizeof(TraceEnt));
+                        memcpy(ts, tscan, sizeof(GwTrace));
                         ts->vector = 1;
                         ts->n.vec = bv;
                     } else {
@@ -2109,10 +2109,10 @@ void MaxSignalLength_2(char dirty_kick)
 
 /***************************************************************************/
 
-void UpdateSigValue(Trptr t)
+void UpdateSigValue(GwTrace *t)
 {
     GwBitVector *bv = NULL;
-    Trptr tscan = NULL;
+    GwTrace *tscan = NULL;
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
@@ -2160,12 +2160,12 @@ void UpdateSigValue(Trptr t)
             if (bv || t->vector) {
                 char *str, *str2;
                 GwVectorEnt *v;
-                Trptr ts;
-                TraceEnt t_temp;
+                GwTrace *ts;
+                GwTrace t_temp;
 
                 if (bv) {
                     ts = &t_temp;
-                    memcpy(ts, tscan, sizeof(TraceEnt));
+                    memcpy(ts, tscan, sizeof(GwTrace));
                     ts->vector = 1;
                     ts->n.vec = bv;
                 } else {

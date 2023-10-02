@@ -27,8 +27,8 @@
 #include "hierpack.h"
 #include "analyzer.h"
 
-void UpdateTraceSelection(Trptr t);
-int traverse_vector_nodes(Trptr t);
+void UpdateTraceSelection(GwTrace *t);
+int traverse_vector_nodes(GwTrace *t);
 
 /*
  * extract last n levels of hierarchy
@@ -79,14 +79,14 @@ char *hier_extract(char *pnt, int levels)
     return (pnt); /* not as many levels as max, so give the full name.. */
 }
 
-void updateTraceGroup(Trptr t)
+void updateTraceGroup(GwTrace *t)
 {
     /*  t->t_match = NULL; */
 
     if (t->t_prev) {
         if (IsGroupBegin(t->t_prev)) {
             if (IsGroupEnd(t)) { /* empty group */
-                Trptr g_begin = t->t_prev;
+                GwTrace *g_begin = t->t_prev;
                 t->t_grp = g_begin->t_grp;
                 t->t_match = g_begin;
                 g_begin->t_match = t;
@@ -95,7 +95,7 @@ void updateTraceGroup(Trptr t)
             }
         } else {
             if (IsGroupEnd(t)) {
-                Trptr g_begin = t->t_prev->t_grp;
+                GwTrace *g_begin = t->t_prev->t_grp;
                 if (g_begin) /* scan-build */
                 {
                     t->t_grp = g_begin->t_grp;
@@ -115,7 +115,7 @@ void updateTraceGroup(Trptr t)
     }
 }
 
-void CloseTrace(Trptr t)
+void CloseTrace(GwTrace *t)
 {
     GLOBALS->traces.dirty = 1;
 
@@ -154,7 +154,7 @@ void CloseTrace(Trptr t)
     }
 }
 
-void OpenTrace(Trptr t)
+void OpenTrace(GwTrace *t)
 {
     GLOBALS->traces.dirty = 1;
 
@@ -175,7 +175,7 @@ void OpenTrace(Trptr t)
 
 void ClearTraces(void)
 {
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     while (t) {
         t->flags &= ~TR_HIGHLIGHT;
         t = t->t_next;
@@ -183,10 +183,10 @@ void ClearTraces(void)
     GLOBALS->traces.dirty = 1;
 }
 
-void ClearGroupTraces(Trptr t_grp)
+void ClearGroupTraces(GwTrace *t_grp)
 {
     if (IsGroupBegin(t_grp)) {
-        Trptr t = t_grp;
+        GwTrace *t = t_grp;
         while (t) {
             t->flags &= ~TR_HIGHLIGHT;
             if (t->t_match == t_grp)
@@ -200,10 +200,10 @@ void ClearGroupTraces(Trptr t_grp)
     }
 }
 
-void MarkTraceCursor(Trptr t_curs)
+void MarkTraceCursor(GwTrace *t_curs)
 {
     if (t_curs) {
-        Trptr t = GLOBALS->traces.first;
+        GwTrace *t = GLOBALS->traces.first;
 
         while (t) {
             t->is_cursor = 0;
@@ -217,7 +217,7 @@ void MarkTraceCursor(Trptr t_curs)
 /*
  * Add a trace to the display...
  */
-static void AddTrace(Trptr t)
+static void AddTrace(GwTrace *t)
 {
     GLOBALS->traces.dirty = 1;
 
@@ -352,11 +352,11 @@ static char *precondition_string(char *s)
 
 int AddBlankTrace(char *commentname)
 {
-    Trptr t;
+    GwTrace *t;
     char *comment;
     TraceFlagsType flags_filtered;
 
-    if ((t = (Trptr)calloc_2(1, sizeof(TraceEnt))) == NULL) {
+    if ((t = calloc_2(1, sizeof(GwTrace))) == NULL) {
         fprintf(stderr, "Out of memory, can't add blank trace to analyzer\n");
         return (0);
     }
@@ -385,9 +385,9 @@ int InsertBlankTrace(char *comment, TraceFlagsType different_flags)
 {
     TempBuffer tb;
     char *comm;
-    Trptr t;
+    GwTrace *t;
 
-    if ((t = (Trptr)calloc_2(1, sizeof(TraceEnt))) == NULL) {
+    if ((t = calloc_2(1, sizeof(GwTrace))) == NULL) {
         fprintf(stderr, "Out of memory, can't insert blank trace to analyzer\n");
         return (0);
     }
@@ -428,9 +428,9 @@ int InsertBlankTrace(char *comment, TraceFlagsType different_flags)
 /*
  * Adds a single bit signal to the display...
  */
-int AddNodeTraceReturn(GwNode *nd, char *aliasname, Trptr *tret)
+int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret)
 {
-    Trptr t;
+    GwTrace *t;
     GwHistEnt *histpnt;
     GwHistEnt **harray;
     int histcount;
@@ -444,7 +444,7 @@ int AddNodeTraceReturn(GwNode *nd, char *aliasname, Trptr *tret)
     GLOBALS->signalwindow_width_dirty = 1;
     GLOBALS->traces.dirty = 1;
 
-    if ((t = (Trptr)calloc_2(1, sizeof(TraceEnt))) == NULL) {
+    if ((t = calloc_2(1, sizeof(GwTrace))) == NULL) {
         fprintf(stderr, "Out of memory, can't add to analyzer\n");
         return (0);
     }
@@ -568,7 +568,7 @@ int AddNodeUnroll(GwNode *nd, char *aliasname)
  */
 int AddVector(GwBitVector *vec, char *aliasname)
 {
-    Trptr t;
+    GwTrace *t;
     int n;
 
     if (!vec)
@@ -578,7 +578,7 @@ int AddVector(GwBitVector *vec, char *aliasname)
     GLOBALS->traces.dirty = 1;
 
     n = vec->nbits;
-    t = (Trptr)calloc_2(1, sizeof(TraceEnt));
+    t = calloc_2(1, sizeof(GwTrace));
     if (t == NULL) {
         fprintf(stderr, "Out of memory, can't add %s to analyzer\n", vec->bvname);
         return (0);
@@ -604,7 +604,7 @@ int AddVector(GwBitVector *vec, char *aliasname)
 /*
  * Free up a trace's mallocs...
  */
-void FreeTrace(Trptr t)
+void FreeTrace(GwTrace *t)
 {
     GLOBALS->traces.dirty = 1;
 
@@ -690,7 +690,7 @@ void FreeTrace(Trptr t)
  * Remove a trace from the display and optionally
  * deallocate its memory usage...
  */
-void RemoveTrace(Trptr t, int dofree)
+void RemoveTrace(GwTrace *t, int dofree)
 {
     GLOBALS->traces.dirty = 1;
     GLOBALS->traces.total--;
@@ -708,7 +708,7 @@ void RemoveTrace(Trptr t, int dofree)
              * should catch this */
             /* there is likely a problem elsewhere in the code! */
 
-            Trptr t2 = GLOBALS->traces.first = t->t_next;
+            GwTrace *t2 = GLOBALS->traces.first = t->t_next;
             GLOBALS->traces.total = 0;
             while (t2) {
                 t2 = t2->t_next;
@@ -732,7 +732,8 @@ void RemoveTrace(Trptr t, int dofree)
  */
 void FreeCutBuffer(void)
 {
-    Trptr t, t2;
+    GwTrace *t;
+    GwTrace *t2;
 
     t = GLOBALS->traces.buffer;
 
@@ -751,10 +752,12 @@ void FreeCutBuffer(void)
  * and throw them in the cut buffer.  If anything's
  * in the cut buffer, deallocate it first...
  */
-Trptr CutBuffer(void)
+GwTrace *CutBuffer(void)
 {
-    Trptr t, tnext;
-    Trptr first = NULL, current = NULL;
+    GwTrace *t;
+    GwTrace *tnext;
+    GwTrace *first = NULL;
+    GwTrace *current = NULL;
 
     GLOBALS->shift_click_trace = NULL; /* so shift-clicking doesn't explode */
 
@@ -807,10 +810,11 @@ Trptr CutBuffer(void)
  */
 int DeleteBuffer(void)
 {
-    Trptr t, tnext;
-    Trptr current = NULL;
-    Trptr buffer; /* cut/copy buffer of traces */
-    Trptr bufferlast; /* last element of bufferchain */
+    GwTrace *t;
+    GwTrace *tnext;
+    GwTrace *current = NULL;
+    GwTrace *buffer; /* cut/copy buffer of traces */
+    GwTrace *bufferlast; /* last element of bufferchain */
     int buffercount; /* number of traces in buffer */
     int num_deleted;
 
@@ -876,11 +880,13 @@ int DeleteBuffer(void)
  * Paste the cut buffer into the main display one and
  * mark the cut buffer empty...
  */
-Trptr PasteBuffer(void)
+GwTrace *PasteBuffer(void)
 {
-    Trptr t, tinsert = NULL, tinsertnext;
+    GwTrace *t;
+    GwTrace *tinsert = NULL;
+    GwTrace *tinsertnext;
     int count;
-    Trptr prev;
+    GwTrace *prev;
 
     if (!GLOBALS->traces.buffer)
         return (NULL);
@@ -973,9 +979,10 @@ Trptr PasteBuffer(void)
  * Prepend the cut buffer into the main display one and
  * mark the cut buffer empty...
  */
-Trptr PrependBuffer(void)
+GwTrace *PrependBuffer(void)
 {
-    Trptr t, prev = NULL;
+    GwTrace *t;
+    GwTrace *prev = NULL;
     int count;
 
     if (!GLOBALS->traces.buffer)
@@ -1047,7 +1054,7 @@ Trptr PrependBuffer(void)
  */
 static int groupsArePresent(void)
 {
-    Trptr t;
+    GwTrace *t;
     int i, rc = 0;
 
     t = GLOBALS->traces.first;
@@ -1077,8 +1084,8 @@ static int tracenamecompare(const void *s1, const void *s2)
 {
     char *str1, *str2;
 
-    str1 = (*((Trptr *)s1))->name;
-    str2 = (*((Trptr *)s2))->name;
+    str1 = (*((GwTrace **)s1))->name;
+    str2 = (*((GwTrace **)s2))->name;
 
     if ((!str1) || (!*str1)) /* force blank lines to go to bottom */
     {
@@ -1098,8 +1105,8 @@ static int traceinamecompare(const void *s1, const void *s2)
 {
     char *str1, *str2;
 
-    str1 = (*((Trptr *)s1))->name;
-    str2 = (*((Trptr *)s2))->name;
+    str1 = (*((GwTrace **)s1))->name;
+    str2 = (*((GwTrace **)s2))->name;
 
     if ((!str1) || (!*str1)) /* force blank lines to go to bottom */
     {
@@ -1119,8 +1126,8 @@ static int tracesignamecompare(const void *s1, const void *s2)
 {
     char *str1, *str2;
 
-    str1 = (*((Trptr *)s1))->name;
-    str2 = (*((Trptr *)s2))->name;
+    str1 = (*((GwTrace **)s1))->name;
+    str2 = (*((GwTrace **)s2))->name;
 
     if ((!str1) || (!*str1)) /* force blank lines to go to bottom */
     {
@@ -1141,8 +1148,10 @@ static int tracesignamecompare(const void *s1, const void *s2)
  */
 int TracesReorder(int mode)
 {
-    Trptr t, prev = NULL;
-    Trptr *tsort, *tsort_pnt;
+    GwTrace *t;
+    GwTrace *prev = NULL;
+    GwTrace **tsort;
+    GwTrace **tsort_pnt;
     int i;
     int (*cptr)(const void *, const void *);
 
@@ -1151,8 +1160,8 @@ int TracesReorder(int mode)
     GLOBALS->traces.dirty = 1;
 
     t = GLOBALS->traces.first;
-    tsort = tsort_pnt = g_alloca(sizeof(Trptr) * GLOBALS->traces.total);
-    memset(tsort_pnt, 0, sizeof(Trptr) * GLOBALS->traces.total);
+    tsort = tsort_pnt = g_alloca(sizeof(GwTrace *) * GLOBALS->traces.total);
+    memset(tsort_pnt, 0, sizeof(GwTrace *) * GLOBALS->traces.total);
 
     for (i = 0; i < GLOBALS->traces.total; i++) {
         if (!t) {
@@ -1180,15 +1189,15 @@ int TracesReorder(int mode)
     }
 
     if ((cptr) && (!groupsArePresent())) {
-        qsort(tsort, GLOBALS->traces.total, sizeof(Trptr), cptr);
+        qsort(tsort, GLOBALS->traces.total, sizeof(GwTrace *), cptr);
     } else /* keep groups segregated off on the side and sort names + (indirect pointer to)
               top-level groups */
     {
-        Trptr *tsort_reduced = g_alloca(sizeof(Trptr) * GLOBALS->traces.total);
+        GwTrace **tsort_reduced = g_alloca(sizeof(GwTrace *) * GLOBALS->traces.total);
         int num_reduced = 0;
         int j;
 
-        memset(tsort_reduced, 0, sizeof(Trptr) * GLOBALS->traces.total);
+        memset(tsort_reduced, 0, sizeof(GwTrace *) * GLOBALS->traces.total);
 
         for (i = 0; i < GLOBALS->traces.total; i++) {
             if (tsort[i]->flags & TR_GRP_BEGIN) {
@@ -1202,7 +1211,7 @@ int TracesReorder(int mode)
                     }
 
                     if (!cnt) {
-                        tsort_reduced[num_reduced] = calloc_2(1, sizeof(struct TraceEnt));
+                        tsort_reduced[num_reduced] = calloc_2(1, sizeof(GwTrace));
                         tsort_reduced[num_reduced]->name = tsort[i]->name;
                         tsort_reduced[num_reduced]->is_sort_group = 1;
                         tsort_reduced[num_reduced]->t_grp = tsort[i];
@@ -1223,7 +1232,7 @@ int TracesReorder(int mode)
             if (mode == TR_SORT_RVS) /* reverse of current order */
             {
                 for (i = 0; i <= (num_reduced / 2); i++) {
-                    Trptr t_tmp = tsort_reduced[i];
+                    GwTrace *t_tmp = tsort_reduced[i];
 
                     j = num_reduced - i - 1;
                     tsort_reduced[i] = tsort_reduced[j];
@@ -1231,7 +1240,7 @@ int TracesReorder(int mode)
                 }
             } else {
                 if (cptr) {
-                    qsort(tsort_reduced, num_reduced, sizeof(Trptr), cptr);
+                    qsort(tsort_reduced, num_reduced, sizeof(GwTrace *), cptr);
                 }
             }
         }
@@ -1241,7 +1250,7 @@ int TracesReorder(int mode)
             if (!tsort_reduced[j]->is_sort_group) {
                 tsort[i++] = tsort_reduced[j];
             } else {
-                Trptr trav = tsort_reduced[j]->t_grp;
+                GwTrace *trav = tsort_reduced[j]->t_grp;
                 free_2(tsort_reduced[j]);
                 while (trav) {
                     tsort[i++] = trav;
@@ -1274,7 +1283,7 @@ int TracesReorder(int mode)
     return (1);
 }
 
-Trptr GiveNextTrace(Trptr t)
+GwTrace *GiveNextTrace(GwTrace *t)
 {
     if (!t)
         return (t); /* should not happen */
@@ -1282,19 +1291,19 @@ Trptr GiveNextTrace(Trptr t)
     /* if(t->name) { printf("NEXT: %s %x\n", t->name, t->flags); } */
     UpdateTraceSelection(t);
     if (IsGroupBegin(t) && IsClosed(t)) {
-        Trptr next = t->t_match;
+        GwTrace *next = t->t_match;
         if (next)
             return (IsCollapsed(next) ? GiveNextTrace(next) : next);
         return NULL;
     } else {
-        Trptr next = t->t_next;
+        GwTrace *next = t->t_next;
         if (next)
             return (IsCollapsed(next) ? GiveNextTrace(next) : next);
         return NULL;
     }
 }
 
-static Trptr GivePrevTraceSkipUpdate(Trptr t, int skip)
+static GwTrace *GivePrevTraceSkipUpdate(GwTrace *t, int skip)
 {
     if (!t)
         return (t); /* should not happen */
@@ -1304,25 +1313,25 @@ static Trptr GivePrevTraceSkipUpdate(Trptr t, int skip)
         UpdateTraceSelection(t);
     }
     if (IsGroupEnd(t) && IsClosed(t)) {
-        Trptr prev = t->t_match;
+        GwTrace *prev = t->t_match;
         if (prev)
             return (IsCollapsed(prev) ? GivePrevTrace(prev) : prev);
         return NULL;
     } else {
-        Trptr prev = t->t_prev;
+        GwTrace *prev = t->t_prev;
         if (prev)
             return (IsCollapsed(prev) ? GivePrevTrace(prev) : prev);
         return NULL;
     }
 }
 
-Trptr GivePrevTrace(Trptr t)
+GwTrace *GivePrevTrace(GwTrace *t)
 {
     return (GivePrevTraceSkipUpdate(t, 0));
 }
 
 /* propogate selection info down into groups */
-void UpdateTraceSelection(Trptr t)
+void UpdateTraceSelection(GwTrace *t)
 {
     if ((t->t_match) && (IsGroupBegin(t) || IsGroupEnd(t)) &&
         (IsSelected(t) || IsSelected(t->t_match))) {
@@ -1334,7 +1343,7 @@ void UpdateTraceSelection(Trptr t)
                (GLOBALS->num_ttrans_filters)) /* seek to real xact trace if present... */
     {
         if (!(t->flags & TR_HIGHLIGHT)) {
-            Trptr tscan = t;
+            GwTrace *tscan = t;
             int bcnt = 0;
             while ((tscan) &&
                    (tscan = tscan->t_prev)) /* && branch formerly was (tscan =
@@ -1367,7 +1376,7 @@ void UpdateTraceSelection(Trptr t)
 
 int UpdateTracesVisible(void)
 {
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     int cnt = 0;
 
     while (t) {
@@ -1380,9 +1389,9 @@ int UpdateTracesVisible(void)
 }
 
 /* where is trace t_in in the list of displayable traces */
-int GetTraceNumber(Trptr t_in)
+int GetTraceNumber(GwTrace *t_in)
 {
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     int i = 0;
     int num = -1;
 
@@ -1398,7 +1407,7 @@ int GetTraceNumber(Trptr t_in)
     return (num);
 }
 
-unsigned IsShadowed(Trptr t)
+unsigned IsShadowed(GwTrace *t)
 {
     if (t->t_grp) {
         if (HasWave(t->t_grp)) {
@@ -1411,7 +1420,7 @@ unsigned IsShadowed(Trptr t)
     return 0;
 }
 
-char *GetFullName(Trptr t, int *was_packed)
+char *GetFullName(GwTrace *t, int *was_packed)
 {
     if (HasAlias(t) || !HasWave(t)) {
         return (t->name_full);
@@ -1428,12 +1437,12 @@ char *GetFullName(Trptr t, int *was_packed)
  */
 void EnsureGroupsMatch(void)
 {
-    Trptr t = GLOBALS->traces.first;
-    Trptr last_good = t;
-    Trptr t2;
+    GwTrace *t = GLOBALS->traces.first;
+    GwTrace *last_good = t;
+    GwTrace *t2;
     int oc_cnt = 0;
     int underflow_sticky = 0;
-    /* Trptr tkill_undeflow = NULL; */ /* scan-build */
+    /* GwTrace * tkill_undeflow = NULL; */ /* scan-build */
 
     while (t) {
         if (t->flags & TR_GRP_MASK) {

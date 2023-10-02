@@ -2259,7 +2259,7 @@ savefile_bail:
                              : -1)) {
                         if (gw_marker_is_enabled(primary_marker) &&
                             (GLOBALS->dual_ctx[GLOBALS->dual_id].marker == -1)) {
-                            Trptr t;
+                            GwTrace *t;
 
                             for (t = GLOBALS->traces.first; t; t = t->t_next) {
                                 if (t->asciivalue) {
@@ -2295,7 +2295,7 @@ savefile_bail:
                                     : -1)) {
                         if (gw_marker_is_enabled(primary_marker) &&
                             (GLOBALS->dual_ctx[GLOBALS->dual_id].marker == -1)) {
-                            Trptr t;
+                            GwTrace *t;
 
                             for (t = GLOBALS->traces.first; t; t = t->t_next) {
                                 if (t->asciivalue) {
