@@ -9,12 +9,18 @@ libgtkwave_public_sources = [
 
 libgtkwave_public_headers = [
     'gtkwave.h',
+    'gw-types.h',
+    'gw-bit-vector.h',
+    'gw-bits.h',
     'gw-color-theme.h',
     'gw-color.h',
+    'gw-fac.h',
+    'gw-hist-ent.h',
     'gw-marker.h',
     'gw-named-markers.h',
     'gw-project.h',
     'gw-time.h',
+    'gw-vector-ent.h',
 ]
 
 libgtkwave_private_sources = [
