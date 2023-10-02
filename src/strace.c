@@ -609,8 +609,8 @@ static void strace_search_2(int direction, int is_last_iteration)
                 t = s->trace;
                 GLOBALS->shift_timebase = t->shift;
                 if (!(t->vector)) {
-                    hptr h;
-                    hptr *hp;
+                    GwHistEnt *h;
+                    GwHistEnt **hp;
                     GwUTime utt;
                     GwTime tt;
 
@@ -656,7 +656,7 @@ static void strace_search_2(int direction, int is_last_iteration)
                 t = s->trace;
                 GLOBALS->shift_timebase = t->shift;
                 if (!(t->vector)) {
-                    hptr h;
+                    GwHistEnt *h;
                     GwUTime utt;
                     GwTime tt;
 
@@ -798,13 +798,9 @@ static void strace_search_2(int direction, int is_last_iteration)
                             s->his.h = s->his.h->next;
                         }
                     }
-                    if (s->his.h->flags & HIST_REAL) {
-                        if (!(s->his.h->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                    if (s->his.h->flags & GW_HIST_ENT_FLAG_REAL) {
+                        if (!(s->his.h->flags & GW_HIST_ENT_FLAG_STRING)) {
                             chval = convert_ascii_real(t, &s->his.h->v.h_double);
-#else
-                            chval = convert_ascii_real(t, (double *)s->his.h->v.h_vector);
-#endif
                         } else {
                             chval = convert_ascii_string((char *)s->his.h->v.h_vector);
                             chval2 = chval;
@@ -1013,7 +1009,7 @@ GwTime strace_timetrace(GwTime basetime, int notfirst)
             t = s->trace;
             GLOBALS->shift_timebase = t->shift;
             if (!(t->vector)) {
-                hptr h;
+                GwHistEnt *h;
                 GwUTime utt;
                 GwTime tt;
 
@@ -1161,13 +1157,9 @@ GwTime strace_timetrace(GwTime basetime, int notfirst)
                             s->his.h = s->his.h->next;
                         }
                     }
-                    if (s->his.h->flags & HIST_REAL) {
-                        if (!(s->his.h->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                    if (s->his.h->flags & GW_HIST_ENT_FLAG_REAL) {
+                        if (!(s->his.h->flags & GW_HIST_ENT_FLAG_STRING)) {
                             chval = convert_ascii_real(t, &s->his.h->v.h_double);
-#else
-                            chval = convert_ascii_real(t, (double *)s->his.h->v.h_vector);
-#endif
                         } else {
                             chval = convert_ascii_string((char *)s->his.h->v.h_vector);
                             chval2 = chval;

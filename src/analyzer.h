@@ -41,7 +41,6 @@ typedef struct _SearchProgressData
 typedef struct ExpandInfo *eptr;
 typedef struct ExpandReferences *exptr;
 typedef struct Node *nptr;
-typedef struct HistEnt *hptr;
 typedef struct Bits *bptr;
 typedef struct VectorEnt *vptr;
 typedef struct BitVector *bvptr;
@@ -125,45 +124,6 @@ enum AnalyzerBits
 
 /* ^^^   Bit representation   ^^^ */
 
-#define WAVE_HAS_H_DOUBLE
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-typedef struct HistEnt
-{
-    hptr next; /* next transition in history */
-
-    union
-    {
-        unsigned char h_val; /* value: AN_STR[val] or AnalyzerBits which correspond */
-        char *h_vector; /* pointer to a whole vector of h_val type bits */
-#ifdef WAVE_HAS_H_DOUBLE
-        double h_double;
-#endif
-    } v;
-
-    GwTime time; /* time of transition */
-    unsigned char flags; /* so far only set on glitch/real condition */
-} HistEnt;
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
-
-enum HistEntFlagBits
-{
-    HIST_GLITCH_B,
-    HIST_REAL_B,
-    HIST_STRING_B
-};
-
-#define HIST_GLITCH (1 << HIST_GLITCH_B)
-#define HIST_REAL (1 << HIST_REAL_B)
-#define HIST_STRING (1 << HIST_STRING_B)
-
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(push)
 #pragma pack(1)
@@ -208,10 +168,10 @@ struct Node
     exptr expansion; /* indicates which nptr this node was expanded from (if it was expanded at all)
                         and (when implemented) refcnts */
     char *nname; /* ascii name of node */
-    HistEnt head; /* first entry in transition history */
-    hptr curr; /* ptr. to current history entry */
+    GwHistEnt head; /* first entry in transition history */
+    GwHistEnt *curr; /* ptr. to current history entry */
 
-    hptr *harray; /* fill this in when we make a trace.. contains  */
+    GwHistEnt **harray; /* fill this in when we make a trace.. contains  */
     /*  a ptr to an array of histents for bsearching */
     union
     {

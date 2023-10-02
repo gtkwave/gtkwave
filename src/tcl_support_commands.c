@@ -294,8 +294,8 @@ Trptr is_signal_displayed(char *name)
 Trptr Node_to_Trptr(nptr nd)
 {
     Trptr t = NULL;
-    hptr histpnt;
-    hptr *harray;
+    GwHistEnt *histpnt;
+    GwHistEnt **harray;
     int histcount;
     int i;
 
@@ -320,7 +320,7 @@ Trptr Node_to_Trptr(nptr nd)
 
         nd->numhist = histcount;
 
-        if (!(nd->harray = harray = (hptr *)malloc_2(histcount * sizeof(hptr)))) {
+        if (!(nd->harray = harray = malloc_2(histcount * sizeof(GwHistEnt *)))) {
             fprintf(stderr, "Out of memory, can't add to analyzer\n");
             free_2(t);
             return (0);
@@ -477,7 +477,7 @@ llist_p *signal_change_list(char *sig_name,
     llist_p *l0_head = NULL, *l0_tail = NULL, *l1_head = NULL, *l_elem, *lp;
     llist_p *l1_tail = NULL;
     char *s, s1[1024];
-    hptr h_ptr;
+    GwHistEnt *h_ptr;
     Trptr t = NULL;
     Trptr t_created = NULL;
     if (!sig_name) {
@@ -496,7 +496,8 @@ llist_p *signal_change_list(char *sig_name,
             max_elements++;
         }
         if (!t->vector) {
-            hptr h, h1;
+            GwHistEnt *h;
+            GwHistEnt *h1;
             int len = 0;
             /* scan-build :
             if(t->n.nd->extvals) {
@@ -556,14 +557,14 @@ llist_p *signal_change_list(char *sig_name,
         /* now create a linked list of time,value.. */
         while (lp && (nelem++ < max_elements)) {
             llist_u llp;
-            llp.tt = ((t->vector) ? ((vptr)lp->u.p)->time : ((hptr)lp->u.p)->time);
+            llp.tt = ((t->vector) ? ((vptr)lp->u.p)->time : ((GwHistEnt *)lp->u.p)->time);
             l_elem = llist_new(llp, LL_TIMETYPE, -1);
             l1_head = llist_append(l1_head, l_elem, &l1_tail);
             if (!l1_tail)
                 l1_tail = l1_head;
             if (t->vector == 0) {
                 if (!t->n.nd->extvals) { /* really single bit */
-                    switch (((hptr)lp->u.p)->v.h_val) {
+                    switch (((GwHistEnt *)lp->u.p)->v.h_val) {
                         case '0':
                         case AN_0:
                             llp.str = (char *)"0";
@@ -630,14 +631,10 @@ llist_p *signal_change_list(char *sig_name,
                             break; /* ...added for GHW */
                     }
                 } else { /* this is still an array */
-                    h_ptr = (hptr)lp->u.p;
-                    if (h_ptr->flags & HIST_REAL) {
-                        if (!(h_ptr->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                    h_ptr = (GwHistEnt *)lp->u.p;
+                    if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
+                        if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
                             s = convert_ascii_real(t, &h_ptr->v.h_double);
-#else
-                            s = convert_ascii_real(t, (double *)h_ptr->v.h_vector);
-#endif
                         } else {
                             s = convert_ascii_string((char *)h_ptr->v.h_vector);
                         }

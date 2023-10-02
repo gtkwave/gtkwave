@@ -138,8 +138,8 @@ struct vcdsymbol
     char *id;
     char *value;
     struct Node **narray;
-    hptr *tr_array; /* points to synthesized trailers (which can move) */
-    hptr *app_array; /* points to hptr to append to (which can move) */
+    GwHistEnt **tr_array; /* points to synthesized trailers (which can move) */
+    GwHistEnt **app_array; /* points to hptr to append to (which can move) */
 
     unsigned int nid;
     int msi, lsi;
@@ -155,7 +155,7 @@ struct vcdsymbol
 char *build_slisthier(void);
 void append_vcd_slisthier(const char *str);
 
-struct HistEnt *histent_calloc(void);
+GwHistEnt *histent_calloc(void);
 void strcpy_vcdalt(char *too, char *from, char delim);
 int strcpy_delimfix(char *too, char *from);
 void vcd_sortfacs(void);

@@ -737,14 +737,17 @@ void facs_debug(void)
     struct Node *n;
 
     for (i = 0; i < GLOBALS->numfacs; i++) {
-        hptr h;
+        GwHistEnt *h;
 
         n = GLOBALS->facs[i]->n;
         printf("%d: %s\n", i, n->nname);
         if (n->extvals)
             printf("  ext: %d - %d\n", n->msi, n->lsi);
         for (h = &n->head; h; h = h->next)
-            printf("  time:%" GW_TIME_FORMAT " flags:%02x vect:%p\n", h->time, h->flags, h->v.h_vector);
+            printf("  time:%" GW_TIME_FORMAT " flags:%02x vect:%p\n",
+                   h->time,
+                   h->flags,
+                   h->v.h_vector);
     }
 }
 
@@ -875,14 +878,12 @@ static void set_fac_name(struct ghw_handler *h)
 
 static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
 {
-    struct HistEnt *he;
+    GwHistEnt *he;
     struct ghw_sig *sig = &h->sigs[sig_num];
     union ghw_type *sig_type = sig->type;
     int flags;
     int is_vector = 0;
-#ifdef WAVE_HAS_H_DOUBLE
     int is_double = 0;
-#endif
 
     if (sig_type == NULL)
         return;
@@ -910,8 +911,8 @@ static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
             }
             /* FALLTHROUGH */
         case ghdl_rtik_type_e32:
-            flags = HIST_STRING | HIST_REAL;
-            if (HIST_STRING == 0) {
+            flags = GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL;
+            if (GW_HIST_ENT_FLAG_STRING == 0) {
                 if (!GLOBALS->warned_ghw_c_1)
                     fprintf(stderr, "warning: do not compile with STRICT_VCD\n");
                 GLOBALS->warned_ghw_c_1 = 1;
@@ -919,7 +920,7 @@ static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
             }
             break;
         case ghdl_rtik_type_f64:
-            flags = HIST_REAL;
+            flags = GW_HIST_ENT_FLAG_REAL;
             break;
         default:
             fprintf(stderr, "ghw:add_history: unhandled kind %d\n", sig->type->kind);
@@ -969,15 +970,8 @@ static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
             }
             break;
         case ghdl_rtik_type_f64: {
-#ifdef WAVE_HAS_H_DOUBLE
             he->v.h_double = sig->val->f64;
             is_double = 1;
-#else
-            double *d = malloc_2(sizeof(double));
-            *d = sig->val->f64;
-            he->v.h_vector = (char *)d;
-            is_vector = 1;
-#endif
         } break;
         case ghdl_rtik_type_i32:
         case ghdl_rtik_type_p32: {
@@ -1014,19 +1008,16 @@ static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
 
         GLOBALS->num_glitches_ghw_c_1 += gl_add;
 
-        if (!(n->curr->flags & HIST_GLITCH)) {
+        if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
             if (gl_add) {
-                n->curr->flags |= HIST_GLITCH; /* set the glitch flag */
+                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                 GLOBALS->num_glitch_regions_ghw_c_1++;
             }
         }
 
-#ifdef WAVE_HAS_H_DOUBLE
         if (is_double) {
             n->curr->v.h_double = he->v.h_double;
-        } else
-#endif
-            if (is_vector) {
+        } else if (is_vector) {
             if (n->curr->v.h_vector && sig_type->kind != ghdl_rtik_type_b2 &&
                 sig_type->kind != ghdl_rtik_type_e8)
                 free_2(n->curr->v.h_vector);
@@ -1038,11 +1029,7 @@ static void add_history(struct ghw_handler *h, struct Node *n, int sig_num)
         return;
     } else /* look for duplicate dumps of same value at adjacent times */
     {
-        if (!is_vector
-#ifdef WAVE_HAS_H_DOUBLE
-            & !is_double
-#endif
-        ) {
+        if (!is_vector & !is_double) {
             if (n->curr->v.h_val == he->v.h_val) {
                 return;
                 /* can't free up this "he" because of block allocation so assume it's dead */
@@ -1063,7 +1050,7 @@ static void add_tail(struct ghw_handler *h)
         for (i = 0; i < h->nbr_sigs; i++) {
             struct ghw_sig *sig = &h->sigs[i];
             struct Node *n = GLOBALS->nxp_ghw_c_1[i];
-            struct HistEnt *he;
+            GwHistEnt *he;
 
             if (sig->type == NULL || n == NULL || !n->curr)
                 continue;

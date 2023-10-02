@@ -213,7 +213,7 @@ bvptr bits2vector(struct Bits *b)
     int i;
     int regions = 0;
     struct Node *n;
-    hptr *h;
+    GwHistEnt **h;
     vptr vhead = NULL, vcurr = NULL, vadd;
     int numextrabytes;
     GwTime mintime, lasttime = -1;
@@ -225,7 +225,7 @@ bvptr bits2vector(struct Bits *b)
     if (!b)
         return (NULL);
 
-    h = (hptr *)calloc_2(b->nnbits, sizeof(hptr));
+    h = calloc_2(b->nnbits, sizeof(GwHistEnt *));
 
     numextrabytes = b->nnbits;
 
@@ -270,7 +270,7 @@ bvptr bits2vector(struct Bits *b)
         is_string = 1;
         string_len = 0;
         for (i = 0; i < b->nnbits; i++) {
-            if ((h[i]->flags & HIST_STRING)) {
+            if ((h[i]->flags & GW_HIST_ENT_FLAG_STRING)) {
                 if (h[i]->time >= 0) {
                     if (h[i]->v.h_vector) {
                         if ((GLOBALS->loaded_file_type == GHW_FILE) &&
@@ -289,7 +289,7 @@ bvptr bits2vector(struct Bits *b)
         }
 
         if (is_string) {
-            vadd->flags |= HIST_STRING;
+            vadd->flags |= GW_HIST_ENT_FLAG_STRING;
             vadd = (vptr)realloc_2(vadd, sizeof(struct VectorEnt) + string_len + 1);
             vadd->v[0] = 0;
         }
@@ -1641,7 +1641,8 @@ eptr ExpandNode(nptr n)
     int width;
     int msb, lsb, delta;
     int actual;
-    hptr h, htemp;
+    GwHistEnt *h;
+    GwHistEnt *htemp;
     int i, j;
     nptr *narray;
     char *nam;
@@ -1739,9 +1740,9 @@ eptr ExpandNode(nptr n)
         if (!n->harray) /* make quick array lookup for aet display--normally this is done in addnode
                          */
         {
-            hptr histpnt;
+            GwHistEnt *histpnt;
             int histcount;
-            hptr *harray;
+            GwHistEnt **harray;
 
             histpnt = &(n->head);
             histcount = 0;
@@ -1753,7 +1754,7 @@ eptr ExpandNode(nptr n)
 
             n->numhist = histcount;
 
-            if (!(n->harray = harray = (hptr *)malloc_2(histcount * sizeof(hptr)))) {
+            if (!(n->harray = harray = malloc_2(histcount * sizeof(GwHistEnt *)))) {
                 fprintf(stderr, "Out of memory, can't add to analyzer\n");
                 return (NULL);
             }
@@ -1768,7 +1769,7 @@ eptr ExpandNode(nptr n)
 
         h = &(n->head);
         while (h) {
-            if (h->flags & (HIST_REAL | HIST_STRING))
+            if (h->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING))
                 return (NULL);
             h = h->next;
         }
@@ -1816,7 +1817,7 @@ eptr ExpandNode(nptr n)
             if ((h->time < GLOBALS->min_time) || (h->time > GLOBALS->max_time)) {
                 for (j = 0; j < width; j++) {
                     if (narray[j]->curr) {
-                        htemp = (hptr)calloc_2(1, sizeof(struct HistEnt));
+                        htemp = calloc_2(1, sizeof(GwHistEnt));
                         htemp->v.h_val = AN_X; /* 'x' */
                         htemp->time = h->time;
                         narray[j]->curr->next = htemp;
@@ -1873,7 +1874,7 @@ eptr ExpandNode(nptr n)
                     if (narray[j]->curr->v.h_val !=
                         val) /* curr will have been established already by 'x' at time: -1 */
                     {
-                        htemp = (hptr)calloc_2(1, sizeof(struct HistEnt));
+                        htemp = calloc_2(1, sizeof(GwHistEnt));
                         htemp->v.h_val = val;
                         htemp->time = h->time;
                         narray[j]->curr->next = htemp;
@@ -1885,7 +1886,7 @@ eptr ExpandNode(nptr n)
         }
 
         for (i = 0; i < width; i++) {
-            narray[i]->harray = (hptr *)calloc_2(narray[i]->numhist, sizeof(hptr));
+            narray[i]->harray = calloc_2(narray[i]->numhist, sizeof(GwHistEnt *));
             htemp = &(narray[i]->head);
             for (j = 0; j < narray[i]->numhist; j++) {
                 narray[i]->harray[j] = htemp;
@@ -1902,7 +1903,8 @@ eptr ExpandNode(nptr n)
 nptr ExtractNodeSingleBit(nptr n, int bit)
 {
     int lft, rgh;
-    hptr h, htemp;
+    GwHistEnt *h;
+    GwHistEnt *htemp;
     int i, j;
     int actual;
     nptr np;
@@ -2000,9 +2002,9 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
         if (!n->harray) /* make quick array lookup for aet display--normally this is done in addnode
                          */
         {
-            hptr histpnt;
+            GwHistEnt *histpnt;
             int histcount;
-            hptr *harray;
+            GwHistEnt **harray;
 
             histpnt = &(n->head);
             histcount = 0;
@@ -2014,7 +2016,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
 
             n->numhist = histcount;
 
-            if (!(n->harray = harray = (hptr *)malloc_2(histcount * sizeof(hptr)))) {
+            if (!(n->harray = harray = malloc_2(histcount * sizeof(GwHistEnt *)))) {
                 DEBUG(fprintf(stderr, "Out of memory, can't add to analyzer\n"));
                 return (NULL);
             }
@@ -2029,7 +2031,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
 
         h = &(n->head);
         while (h) {
-            if (h->flags & (HIST_REAL | HIST_STRING))
+            if (h->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING))
                 return (NULL);
             h = h->next;
         }
@@ -2078,7 +2080,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
             h = n->harray[i];
             if ((h->time < GLOBALS->min_time) || (h->time > GLOBALS->max_time)) {
                 if (np->curr) {
-                    htemp = (hptr)calloc_2(1, sizeof(struct HistEnt));
+                    htemp = calloc_2(1, sizeof(GwHistEnt));
                     htemp->v.h_val = AN_X; /* 'x' */
                     htemp->time = h->time;
                     np->curr->next = htemp;
@@ -2133,7 +2135,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
                 if (np->curr->v.h_val !=
                     val) /* curr will have been established already by 'x' at time: -1 */
                 {
-                    htemp = (hptr)calloc_2(1, sizeof(struct HistEnt));
+                    htemp = calloc_2(1, sizeof(GwHistEnt));
                     htemp->v.h_val = val;
                     htemp->time = h->time;
                     np->curr->next = htemp;
@@ -2143,7 +2145,7 @@ nptr ExtractNodeSingleBit(nptr n, int bit)
             }
         }
 
-        np->harray = (hptr *)calloc_2(np->numhist, sizeof(hptr));
+        np->harray = calloc_2(np->numhist, sizeof(GwHistEnt *));
         htemp = &(np->head);
         for (j = 0; j < np->numhist; j++) {
             np->harray[j] = htemp;

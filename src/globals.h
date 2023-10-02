@@ -102,8 +102,8 @@ struct Global
     GwTime max_compare_time_tc_bsearch_c_1; /* from bsearch.c 12 */
     GwTime *max_compare_pos_tc_bsearch_c_1; /* from bsearch.c 13 */
     GwTime max_compare_time_bsearch_c_1; /* from bsearch.c 14 */
-    struct HistEnt *max_compare_pos_bsearch_c_1; /* from bsearch.c 15 */
-    struct HistEnt **max_compare_index; /* from bsearch.c 16 */
+    GwHistEnt *max_compare_pos_bsearch_c_1; /* from bsearch.c 15 */
+    GwHistEnt **max_compare_index; /* from bsearch.c 16 */
     GwTime vmax_compare_time_bsearch_c_1; /* from bsearch.c 17 */
     struct VectorEnt *vmax_compare_pos_bsearch_c_1; /* from bsearch.c 18 */
     struct VectorEnt **vmax_compare_index; /* from bsearch.c 19 */
@@ -790,8 +790,8 @@ struct Global
     struct vcdsymbol **sorted_vcd_c_1; /* from vcd.c 540 */
     struct vcdsymbol **indexed_vcd_c_1; /* from vcd.c 541 */
     int numsyms_vcd_c_1; /* from vcd.c 542 */
-    struct HistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
-    struct HistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
+    GwHistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
+    GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
     unsigned int vcd_minid_vcd_c_1; /* from vcd.c 546 */
     unsigned int vcd_maxid_vcd_c_1; /* from vcd.c 547 */
     int err_vcd_c_1; /* from vcd.c 548 */

@@ -130,7 +130,7 @@ struct vcdsav_tree_node
     vcdsav_Tree *left, *right;
     nptr item;
     int val;
-    hptr hist;
+    GwHistEnt *hist;
     int len;
 
     union
@@ -202,7 +202,11 @@ static vcdsav_Tree *vcdsav_splay(void *i, vcdsav_Tree *t)
     return t;
 }
 
-static vcdsav_Tree *vcdsav_insert(void *i, vcdsav_Tree *t, int val, unsigned char flags, hptr h)
+static vcdsav_Tree *vcdsav_insert(void *i,
+                                  vcdsav_Tree *t,
+                                  int val,
+                                  unsigned char flags,
+                                  GwHistEnt *h)
 {
     /* Insert i into the tree t, unless it's already there.    */
     /* Return a pointer to the resulting tree.                 */
@@ -245,8 +249,8 @@ static vcdsav_Tree *vcdsav_insert(void *i, vcdsav_Tree *t, int val, unsigned cha
 
 static int hpcmp(vcdsav_Tree *hp1, vcdsav_Tree *hp2)
 {
-    hptr n1 = hp1->hist;
-    hptr n2 = hp2->hist;
+    GwHistEnt *n1 = hp1->hist;
+    GwHistEnt *n2 = hp2->hist;
     GwTime t1, t2;
 
     if (n1)
@@ -537,10 +541,10 @@ int save_nodes_to_export_generic(FILE *trans_file,
                                 hname);
         }
 
-        if (GLOBALS->hp_vcd_saver_c_1[i]->flags & (HIST_REAL | HIST_STRING)) {
+        if (GLOBALS->hp_vcd_saver_c_1[i]->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)) {
             const char *typ =
-                (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? "string" : "real";
-            int tlen = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? 0 : 1;
+                (GLOBALS->hp_vcd_saver_c_1[i]->flags & GW_HIST_ENT_FLAG_STRING) ? "string" : "real";
+            int tlen = (GLOBALS->hp_vcd_saver_c_1[i]->flags & GW_HIST_ENT_FLAG_STRING) ? 0 : 1;
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
                                 "$var %s %d %s %s $end\n",
@@ -626,8 +630,8 @@ int save_nodes_to_export_generic(FILE *trans_file,
         }
 
         if (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= GW_TIME_CONSTANT(0)) {
-            if (GLOBALS->hp_vcd_saver_c_1[0]->flags & (HIST_REAL | HIST_STRING)) {
-                if (GLOBALS->hp_vcd_saver_c_1[0]->flags & HIST_STRING) {
+            if (GLOBALS->hp_vcd_saver_c_1[0]->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)) {
+                if (GLOBALS->hp_vcd_saver_c_1[0]->flags & GW_HIST_ENT_FLAG_STRING) {
                     char *vec = GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
                                     ? GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
                                     : "UNDEF";
@@ -653,11 +657,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
                     }
                     free_2(vec_escaped);
                 } else {
-#ifdef WAVE_HAS_H_DOUBLE
                     double *d = &GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_double;
-#else
-                    double *d = (double *)GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector;
-#endif
                     double value;
 
                     if (!d) {
@@ -931,7 +931,7 @@ char *output_hier(int is_trans, const char *name)
 static void write_hptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     nptr n = t->n.nd;
-    hptr *ha = n->harray;
+    GwHistEnt **ha = n->harray;
     int numhist = n->numhist;
     int i;
     unsigned char h_val = AN_X;
@@ -1052,19 +1052,15 @@ static void format_value_string(char *s)
     }
 }
 
-static char *get_hptr_vector_val(Trptr t, hptr h)
+static char *get_hptr_vector_val(Trptr t, GwHistEnt *h)
 {
     char *ascii = NULL;
 
     if (h->time < GW_TIME_CONSTANT(0)) {
         ascii = strdup_2("X");
-    } else if (h->flags & HIST_REAL) {
-        if (!(h->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+    } else if (h->flags & GW_HIST_ENT_FLAG_REAL) {
+        if (!(h->flags & GW_HIST_ENT_FLAG_STRING)) {
             ascii = convert_ascii_real(t, &h->v.h_double);
-#else
-            ascii = convert_ascii_real(t, (double *)h->v.h_vector);
-#endif
         } else {
             ascii = convert_ascii_string((char *)h->v.h_vector);
         }
@@ -1104,7 +1100,7 @@ static int determine_trace_data_type(char *s, int curtype)
 static void write_hptr_trace_vector(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
     nptr n = t->n.nd;
-    hptr *ha = n->harray;
+    GwHistEnt **ha = n->harray;
     int numhist = n->numhist;
     int i;
     char *h_val = NULL;

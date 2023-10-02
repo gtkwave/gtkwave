@@ -116,7 +116,7 @@ static void draw_hptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
                             Trptr t,
-                            hptr h,
+                            GwHistEnt *h,
                             int which,
                             int dodraw,
                             int kill_grid);
@@ -124,7 +124,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                                    cairo_t *cr,
                                    GwWaveformColors *colors,
                                    Trptr t,
-                                   hptr h,
+                                   GwHistEnt *h,
                                    int which);
 static void draw_vptr_trace(GwWaveView *self,
                             cairo_t *cr,
@@ -138,7 +138,7 @@ void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
     Trptr t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
     if (t) {
         Trptr tback = t;
-        hptr h;
+        GwHistEnt *h;
         vptr v;
         int i = 0, num_traces_displayable;
         int iback = 0;
@@ -270,7 +270,7 @@ static void draw_hptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
                             Trptr t,
-                            hptr h,
+                            GwHistEnt *h,
                             int which,
                             int dodraw,
                             int kill_grid)
@@ -278,7 +278,8 @@ static void draw_hptr_trace(GwWaveView *self,
     GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, ytext;
     GwTime tim, h2tim;
-    hptr h2, h3;
+    GwHistEnt *h2;
+    GwHistEnt *h3;
     char hval, h2val, invert;
     LineColor c;
     GwColor gcx, gcxf;
@@ -614,7 +615,7 @@ static void draw_hptr_trace(GwWaveView *self,
                 }
             }
 
-            if ((h->flags & HIST_GLITCH) && (GLOBALS->vcd_preserve_glitches)) {
+            if ((h->flags & GW_HIST_ENT_FLAG_GLITCH) && (GLOBALS->vcd_preserve_glitches)) {
                 XXX_gdk_draw_rectangle(cr, colors->stroke_z, TRUE, _x1 - 1, yu - 1, 3, 3);
             }
 
@@ -634,14 +635,15 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
                                           cairo_t *cr,
                                           GwWaveformColors *colors,
                                           Trptr t,
-                                          hptr h,
+                                          GwHistEnt *h,
                                           int which,
                                           int num_extension)
 {
     GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, yt0, yt1;
     GwTime tim, h2tim;
-    hptr h2, h3;
+    GwHistEnt *h2;
+    GwHistEnt *h3;
     int endcnt = 0;
     int type;
     /* int lasttype=-1; */ /* scan-build */
@@ -672,14 +674,9 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
 
                 if ((h3->time >= GLOBALS->tims.first) && (h3->time <= GLOBALS->tims.last)) {
                     tv = mynan;
-                    if (h3->flags & HIST_REAL) {
-#ifdef WAVE_HAS_H_DOUBLE
-                        if (!(h3->flags & HIST_STRING))
+                    if (h3->flags & GW_HIST_ENT_FLAG_REAL) {
+                        if (!(h3->flags & GW_HIST_ENT_FLAG_STRING))
                             tv = h3->v.h_double;
-#else
-                        if (!(h3->flags & HIST_STRING) && h3->v.h_vector)
-                            tv = *(double *)h3->v.h_vector;
-#endif
                     } else {
                         if (h3->time <= GLOBALS->tims.last)
                             tv = convert_real_vec(t, h3->v.h_vector);
@@ -751,14 +748,9 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
             }
 
             tv = mynan;
-            if (h3->flags & HIST_REAL) {
-#ifdef WAVE_HAS_H_DOUBLE
-                if (!(h3->flags & HIST_STRING))
+            if (h3->flags & GW_HIST_ENT_FLAG_REAL) {
+                if (!(h3->flags & GW_HIST_ENT_FLAG_STRING))
                     tv = h3->v.h_double;
-#else
-                if (!(h3->flags & HIST_STRING) && h3->v.h_vector)
-                    tv = *(double *)h3->v.h_vector;
-#endif
             } else {
                 if (h3->time <= GLOBALS->tims.last)
                     tv = convert_real_vec(t, h3->v.h_vector);
@@ -852,30 +844,22 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
         */
 
         /* draw trans */
-        type = (!(h->flags & (HIST_REAL | HIST_STRING))) ? vtype(t, h->v.h_vector) : AN_COUNT;
+        type = (!(h->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)))
+                   ? vtype(t, h->v.h_vector)
+                   : AN_COUNT;
         tv = tv2 = mynan;
 
-        if (h->flags & HIST_REAL) {
-#ifdef WAVE_HAS_H_DOUBLE
-            if (!(h->flags & HIST_STRING))
+        if (h->flags & GW_HIST_ENT_FLAG_REAL) {
+            if (!(h->flags & GW_HIST_ENT_FLAG_STRING))
                 tv = h->v.h_double;
-#else
-            if (!(h->flags & HIST_STRING) && h->v.h_vector)
-                tv = *(double *)h->v.h_vector;
-#endif
         } else {
             if (h->time <= GLOBALS->tims.last)
                 tv = convert_real_vec(t, h->v.h_vector);
         }
 
-        if (h2->flags & HIST_REAL) {
-#ifdef WAVE_HAS_H_DOUBLE
-            if (!(h2->flags & HIST_STRING))
+        if (h2->flags & GW_HIST_ENT_FLAG_REAL) {
+            if (!(h2->flags & GW_HIST_ENT_FLAG_STRING))
                 tv2 = h2->v.h_double;
-#else
-            if (!(h2->flags & HIST_STRING) && h2->v.h_vector)
-                tv2 = *(double *)h2->v.h_vector;
-#endif
         } else {
             if (h2->time <= GLOBALS->tims.last)
                 tv2 = convert_real_vec(t, h2->v.h_vector);
@@ -1086,13 +1070,14 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                                    cairo_t *cr,
                                    GwWaveformColors *colors,
                                    Trptr t,
-                                   hptr h,
+                                   GwHistEnt *h,
                                    int which)
 {
     GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, ytext;
     GwTime tim /* , h2tim */; /* scan-build */
-    hptr h2, h3;
+    GwHistEnt *h2;
+    GwHistEnt *h3;
     char *ascii = NULL;
     int type;
 
@@ -1142,7 +1127,8 @@ static void draw_hptr_trace_vector(GwWaveView *self,
         }
     }
 
-    if ((t->flags & TR_ANALOGMASK) && (!(h->flags & HIST_STRING) || !(h->flags & HIST_REAL))) {
+    if ((t->flags & TR_ANALOGMASK) &&
+        (!(h->flags & GW_HIST_ENT_FLAG_STRING) || !(h->flags & GW_HIST_ENT_FLAG_REAL))) {
         Trptr te = GiveNextTrace(t);
         int ext = 0;
 
@@ -1204,13 +1190,13 @@ static void draw_hptr_trace_vector(GwWaveView *self,
         }
 
         /* draw trans */
-        if (!(h->flags & (HIST_REAL | HIST_STRING))) {
+        if (!(h->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING))) {
             type = vtype(t, h->v.h_vector);
         } else {
             /* s\000 ID is special "z" case */
             type = AN_COUNT;
 
-            if (h->flags & HIST_STRING) {
+            if (h->flags & GW_HIST_ENT_FLAG_STRING) {
                 if (h->v.h_vector) {
                     if (!h->v.h_vector[0]) {
                         type = AN_Z;
@@ -1224,7 +1210,8 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                 }
             }
         }
-        /* type = (!(h->flags&(HIST_REAL|HIST_STRING))) ? vtype(t,h->v.h_vector) : AN_COUNT; */
+        /* type = (!(h->flags&(GW_HIST_ENT_FLAG_REAL|GW_HIST_ENT_FLAG_STRING))) ?
+         * vtype(t,h->v.h_vector) : AN_COUNT; */
 
         if (_x0 != _x1) {
             if (type == AN_Z) {
@@ -1317,13 +1304,9 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                 if ((width = _x1 - _x0) > GLOBALS->vector_padding) {
                     char *ascii2;
 
-                    if (h->flags & HIST_REAL) {
-                        if (!(h->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                    if (h->flags & GW_HIST_ENT_FLAG_REAL) {
+                        if (!(h->flags & GW_HIST_ENT_FLAG_STRING)) {
                             ascii = convert_ascii_real(t, &h->v.h_double);
-#else
-                            ascii = convert_ascii_real(t, (double *)h->v.h_vector);
-#endif
                         } else {
                             ascii = convert_ascii_string((char *)h->v.h_vector);
                         }
@@ -1386,13 +1369,9 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                 } else if (GLOBALS->fill_in_smaller_rgb_areas_wavewindow_c_1) {
                     /* char *ascii2; */ /* scan-build */
 
-                    if (h->flags & HIST_REAL) {
-                        if (!(h->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                    if (h->flags & GW_HIST_ENT_FLAG_REAL) {
+                        if (!(h->flags & GW_HIST_ENT_FLAG_STRING)) {
                             ascii = convert_ascii_real(t, &h->v.h_double);
-#else
-                            ascii = convert_ascii_real(t, (double *)h->v.h_vector);
-#endif
                         } else {
                             ascii = convert_ascii_string((char *)h->v.h_vector);
                         }

@@ -1686,7 +1686,7 @@ char *convert_ascii(Trptr t, vptr v)
 {
     char *s;
 
-    if ((!t->t_filter_converted) && (!(v->flags & HIST_STRING))) {
+    if ((!t->t_filter_converted) && (!(v->flags & GW_HIST_ENT_FLAG_STRING))) {
         s = convert_ascii_2(t, v);
     } else {
         s = strdup_2((char *)v->v);

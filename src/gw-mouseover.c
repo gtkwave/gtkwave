@@ -122,7 +122,7 @@ static gchar *local_trace_asciival(Trptr t, GwTime tim)
             return convert_ascii(t, v);
         } else {
             char *str;
-            hptr h_ptr;
+            GwHistEnt *h_ptr;
             if ((h_ptr = bsearch_node(t->n.nd, tim - t->shift))) {
                 if (!t->n.nd->extvals) {
                     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
@@ -144,13 +144,9 @@ static gchar *local_trace_asciival(Trptr t, GwTime tim)
                     }
                     return str;
                 } else {
-                    if (h_ptr->flags & HIST_REAL) {
-                        if (!(h_ptr->flags & HIST_STRING)) {
-#ifdef WAVE_HAS_H_DOUBLE
+                    if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
+                        if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
                             str = convert_ascii_real(t, &h_ptr->v.h_double);
-#else
-                            str = convert_ascii_real(t, (double *)h_ptr->v.h_vector);
-#endif
                         } else {
                             str = convert_ascii_string((char *)h_ptr->v.h_vector);
                         }

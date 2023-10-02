@@ -61,7 +61,7 @@ struct strace
 
     union
     {
-        hptr h; /* what makes up this trace */
+        GwHistEnt *h; /* what makes up this trace */
         vptr v;
     } his;
 };
