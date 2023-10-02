@@ -540,7 +540,8 @@ llist_p *signal_change_list(char *sig_name,
                 }
             }
         } else {
-            vptr v, v1;
+            GwVectorEnt *v;
+            GwVectorEnt *v1;
             v = bsearch_vector(t->n.vec, tstart - t->shift);
             for (v1 = v; v1; v1 = v1->next) {
                 if (v1->time <= tend) {
@@ -557,7 +558,7 @@ llist_p *signal_change_list(char *sig_name,
         /* now create a linked list of time,value.. */
         while (lp && (nelem++ < max_elements)) {
             llist_u llp;
-            llp.tt = ((t->vector) ? ((vptr)lp->u.p)->time : ((GwHistEnt *)lp->u.p)->time);
+            llp.tt = ((t->vector) ? ((GwVectorEnt *)lp->u.p)->time : ((GwHistEnt *)lp->u.p)->time);
             l_elem = llist_new(llp, LL_TIMETYPE, -1);
             l1_head = llist_append(l1_head, l_elem, &l1_tail);
             if (!l1_tail)
@@ -650,7 +651,10 @@ llist_p *signal_change_list(char *sig_name,
                     }
                 }
             } else {
-                sprintf(s1, "%s%s", signal_value_prefix(t->flags), convert_ascii(t, (vptr)lp->u.p));
+                sprintf(s1,
+                        "%s%s",
+                        signal_value_prefix(t->flags),
+                        convert_ascii(t, (GwVectorEnt *)lp->u.p));
                 llp.str = s1;
                 l_elem = llist_new(llp, LL_STR, -1);
             }

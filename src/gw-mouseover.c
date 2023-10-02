@@ -118,7 +118,7 @@ static gchar *local_trace_asciival(Trptr t, GwTime tim)
         GLOBALS->shift_timebase = t->shift;
 
         if (t->vector) {
-            vptr v = bsearch_vector(t->n.vec, tim - t->shift);
+            GwVectorEnt *v = bsearch_vector(t->n.vec, tim - t->shift);
             return convert_ascii(t, v);
         } else {
             char *str;
@@ -223,7 +223,8 @@ static void gw_mouseover_update_clipboard(GwMouseover *self, Trptr trace)
     }
 }
 
-static void gw_mouseover_update_common(GwMouseover *self, Trptr trace, GwTime t) {
+static void gw_mouseover_update_common(GwMouseover *self, Trptr trace, GwTime t)
+{
     // Set width-chars to prevent that short names are ellipsized.
     guint name_len = trace->name != NULL ? strlen(trace->name) : 0;
     name_len = MIN(name_len, gtk_label_get_max_width_chars(self->name_label));
@@ -253,7 +254,8 @@ void gw_mouseover_update(GwMouseover *self, Trptr trace, GwTime t)
     g_free(flags);
 }
 
-void gw_mouseover_update_signal_list(GwMouseover *self, Trptr trace, GwTime t) {
+void gw_mouseover_update_signal_list(GwMouseover *self, Trptr trace, GwTime t)
+{
     g_return_if_fail(GW_IS_MOUSEOVER(self));
     g_return_if_fail(trace != NULL);
 

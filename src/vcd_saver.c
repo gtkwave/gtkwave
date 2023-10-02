@@ -541,7 +541,8 @@ int save_nodes_to_export_generic(FILE *trans_file,
                                 hname);
         }
 
-        if (GLOBALS->hp_vcd_saver_c_1[i]->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)) {
+        if (GLOBALS->hp_vcd_saver_c_1[i]->flags &
+            (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)) {
             const char *typ =
                 (GLOBALS->hp_vcd_saver_c_1[i]->flags & GW_HIST_ENT_FLAG_STRING) ? "string" : "real";
             int tlen = (GLOBALS->hp_vcd_saver_c_1[i]->flags & GW_HIST_ENT_FLAG_STRING) ? 0 : 1;
@@ -630,7 +631,8 @@ int save_nodes_to_export_generic(FILE *trans_file,
         }
 
         if (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= GW_TIME_CONSTANT(0)) {
-            if (GLOBALS->hp_vcd_saver_c_1[0]->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)) {
+            if (GLOBALS->hp_vcd_saver_c_1[0]->flags &
+                (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)) {
                 if (GLOBALS->hp_vcd_saver_c_1[0]->flags & GW_HIST_ENT_FLAG_STRING) {
                     char *vec = GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
                                     ? GLOBALS->hp_vcd_saver_c_1[0]->hist->v.h_vector
@@ -1209,7 +1211,7 @@ static void write_hptr_trace_vector(Trptr t, int *whichptr, GwTime tmin, GwTime 
 
 /***/
 
-static char *get_vptr_vector_val(Trptr t, vptr v)
+static char *get_vptr_vector_val(Trptr t, GwVectorEnt *v)
 {
     char *ascii = NULL;
 
@@ -1229,7 +1231,7 @@ static char *get_vptr_vector_val(Trptr t, vptr v)
 
 static void write_vptr_trace(Trptr t, int *whichptr, GwTime tmin, GwTime tmax)
 {
-    vptr *ha = t->n.vec->vectors;
+    GwVectorEnt **ha = t->n.vec->vectors;
     int numhist = t->n.vec->numregions;
     int i;
     char *h_val = NULL;

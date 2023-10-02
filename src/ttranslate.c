@@ -565,9 +565,10 @@ int traverse_vector_nodes(Trptr t)
             bvptr prev_transaction_trace = NULL;
 
             while (!is_finish) {
-                struct VectorEnt *vt_head = NULL, *vt_curr = NULL;
-                struct VectorEnt *vt;
-                struct VectorEnt *vprev;
+                GwVectorEnt *vt_head = NULL;
+                GwVectorEnt *vt_curr = NULL;
+                GwVectorEnt *vt;
+                GwVectorEnt *vprev;
                 bvptr bv;
                 int regions = 2;
                 GwTime prev_tim = GW_TIME_CONSTANT(-1);
@@ -576,11 +577,11 @@ int traverse_vector_nodes(Trptr t)
 
                 cvt_ok = 1;
 
-                vt_head = vt_curr = vt = calloc_2(1, sizeof(struct VectorEnt) + 1);
+                vt_head = vt_curr = vt = calloc_2(1, sizeof(GwVectorEnt) + 1);
                 vt->time = GW_TIME_CONSTANT(-2);
                 vprev = vt; /* for duplicate removal */
 
-                vt_curr = vt_curr->next = vt = calloc_2(1, sizeof(struct VectorEnt) + 1);
+                vt_curr = vt_curr->next = vt = calloc_2(1, sizeof(GwVectorEnt) + 1);
                 vt->time = GW_TIME_CONSTANT(-1);
 
                 for (;;) {
@@ -670,7 +671,7 @@ int traverse_vector_nodes(Trptr t)
                             } while (pnt != (sp - 1));
                         }
 
-                        vt = calloc_2(1, sizeof(struct VectorEnt) + slen + 1);
+                        vt = calloc_2(1, sizeof(GwVectorEnt) + slen + 1);
                         if (sp)
                             strcpy((char *)vt->v, sp);
 
@@ -697,7 +698,8 @@ int traverse_vector_nodes(Trptr t)
                         if (mlen) {
                             int which_marker = bijective_marker_id_string_hash(pnt);
 
-                            GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+                            GwNamedMarkers *markers =
+                                gw_project_get_named_markers(GLOBALS->project);
                             GwMarker *marker = gw_named_markers_get(markers, which_marker);
 
                             if (marker != NULL) {
@@ -707,7 +709,7 @@ int traverse_vector_nodes(Trptr t)
 
                                 if (tim < GW_TIME_CONSTANT(0))
                                     tim = GW_TIME_CONSTANT(-1);
-                                
+
                                 gw_marker_set_position(marker, tim);
                                 gw_marker_set_enabled(marker, tim >= 0);
 
@@ -788,16 +790,16 @@ int traverse_vector_nodes(Trptr t)
                     }
                 }
 
-                vt_curr = vt_curr->next = vt = calloc_2(1, sizeof(struct VectorEnt) + 1);
+                vt_curr = vt_curr->next = vt = calloc_2(1, sizeof(GwVectorEnt) + 1);
                 vt->time = MAX_HISTENT_TIME - 1;
                 regions++;
 
                 /* vt_curr = */ vt_curr->next = vt =
-                    calloc_2(1, sizeof(struct VectorEnt) + 1); /* scan-build */
+                    calloc_2(1, sizeof(GwVectorEnt) + 1); /* scan-build */
                 vt->time = MAX_HISTENT_TIME;
                 regions++;
 
-                bv = calloc_2(1, sizeof(struct BitVector) + (sizeof(vptr) * (regions)));
+                bv = calloc_2(1, sizeof(struct BitVector) + (sizeof(GwVectorEnt *) * (regions)));
                 bv->bvname = strdup_2(trace_name ? trace_name : orig_name);
                 bv->nbits = 1;
                 bv->numregions = regions;

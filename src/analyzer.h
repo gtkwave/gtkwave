@@ -42,7 +42,6 @@ typedef struct ExpandInfo *eptr;
 typedef struct ExpandReferences *exptr;
 typedef struct Node *nptr;
 typedef struct Bits *bptr;
-typedef struct VectorEnt *vptr;
 typedef struct BitVector *bvptr;
 typedef struct BitAttributes *baptr;
 
@@ -123,23 +122,6 @@ enum AnalyzerBits
 /*               01234567 */
 
 /* ^^^   Bit representation   ^^^ */
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-typedef struct VectorEnt
-{
-    GwTime time;
-    vptr next;
-    unsigned char flags; /* so far only set on strings */
-    unsigned char v[]; /* C99 */
-} VectorEnt;
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
 
 #define MAX_HISTENT_TIME ((GwTime)(~((GW_UTIME_CONSTANT(-1)) << (sizeof(GwTime) * 8 - 1))))
 
@@ -366,7 +348,7 @@ typedef struct BitVector
     int nbits; /* number of bits in this vector         */
     int numregions; /* number of regions that follow         */
     bptr bits; /* pointer to Bits structs for save file */
-    vptr vectors[]; /* C99 pointers to the vectors           */
+    GwVectorEnt *vectors[]; /* C99 pointers to the vectors           */
 } BitVector;
 
 #ifdef WAVE_USE_STRUCT_PACKING

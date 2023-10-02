@@ -126,8 +126,8 @@ static void edge_search_2(int direction, int is_last_iteration)
                     if (tt > maxbase)
                         maxbase = tt;
                 } else {
-                    vptr v;
-                    vptr *vp;
+                    GwVectorEnt *v;
+                    GwVectorEnt **vp;
                     GwUTime utt;
                     GwTime tt;
 
@@ -172,7 +172,7 @@ static void edge_search_2(int direction, int is_last_iteration)
                     if (tt < maxbase)
                         maxbase = tt;
                 } else {
-                    vptr v;
+                    GwVectorEnt *v;
                     GwUTime utt;
                     GwTime tt;
 

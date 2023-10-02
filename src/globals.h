@@ -105,8 +105,8 @@ struct Global
     GwHistEnt *max_compare_pos_bsearch_c_1; /* from bsearch.c 15 */
     GwHistEnt **max_compare_index; /* from bsearch.c 16 */
     GwTime vmax_compare_time_bsearch_c_1; /* from bsearch.c 17 */
-    struct VectorEnt *vmax_compare_pos_bsearch_c_1; /* from bsearch.c 18 */
-    struct VectorEnt **vmax_compare_index; /* from bsearch.c 19 */
+    GwVectorEnt *vmax_compare_pos_bsearch_c_1; /* from bsearch.c 18 */
+    GwVectorEnt **vmax_compare_index; /* from bsearch.c 19 */
     int maxlen_trunc; /* from bsearch.c 20 */
     char *maxlen_trunc_pos_bsearch_c_1; /* from bsearch.c 21 */
     char *trunc_asciibase_bsearch_c_1; /* from bsearch.c 22 */
