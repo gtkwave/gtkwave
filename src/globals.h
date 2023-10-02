@@ -549,21 +549,8 @@ struct Global
     struct font_engine_font_t *signalfont; /* from signalwindow.c 397 */
     int max_signal_name_pixel_width; /* from signalwindow.c 399 */
     int signal_pixmap_width; /* from signalwindow.c 400 */
-    int signal_fill_width; /* from signalwindow.c 401 */
-    int old_signal_fill_width; /* from signalwindow.c 402 */
-    int old_signal_fill_height; /* from signalwindow.c 403 */
-    int right_align_active; /* from signalwindow.c */
     int fontheight; /* from signalwindow.c 404 */
     char dnd_state; /* from signalwindow.c 405 */
-    GtkWidget *hscroll_signalwindow_c_1; /* from signalwindow.c 406 */
-    unsigned int cachedhiflag_signalwindow_c_1; /* from signalwindow.c 408 */
-    int cachedwhich_signalwindow_c_1; /* from signalwindow.c 409 */
-    GwTrace *cachedtrace; /* from signalwindow.c 410 */
-    GwTrace *shift_click_trace; /* from signalwindow.c 411 */
-    int trtarget_signalwindow_c_1; /* from signalwindow.c 412 */
-    GwTrace *starting_unshifted_trace; /* from signalwindow.c */
-    unsigned char std_collapse_pressed; /* from signalwindow.c */
-    gint keypress_handler_id; /* from signalwindow.c */
     gint cached_mouseover_x; /* from signalwindow.c */
     gint cached_mouseover_y; /* from signalwindow.c */
     gint mouseover_counter; /* from signalwindow.c */

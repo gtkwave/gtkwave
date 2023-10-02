@@ -608,10 +608,6 @@ void FreeTrace(GwTrace *t)
 {
     GLOBALS->traces.dirty = 1;
 
-    if (GLOBALS->starting_unshifted_trace == t) {
-        GLOBALS->starting_unshifted_trace = NULL; /* for new "standard" clicking routines */
-    }
-
     if (GLOBALS->strace_ctx->straces) {
         struct strace_defer_free *sd = calloc_2(1, sizeof(struct strace_defer_free));
         sd->next = GLOBALS->strace_ctx->strace_defer_free_head;
@@ -759,8 +755,6 @@ GwTrace *CutBuffer(void)
     GwTrace *first = NULL;
     GwTrace *current = NULL;
 
-    GLOBALS->shift_click_trace = NULL; /* so shift-clicking doesn't explode */
-
     t = GLOBALS->traces.first;
     while (t) {
         if ((t->flags) & (TR_HIGHLIGHT))
@@ -817,8 +811,6 @@ int DeleteBuffer(void)
     GwTrace *bufferlast; /* last element of bufferchain */
     int buffercount; /* number of traces in buffer */
     int num_deleted;
-
-    GLOBALS->shift_click_trace = NULL; /* so shift-clicking doesn't explode */
 
     t = GLOBALS->traces.first;
     while (t) {

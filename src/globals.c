@@ -527,21 +527,8 @@ static const struct Global globals_base_values = {
     NULL, /* signalfont 370 */
     0, /* max_signal_name_pixel_width 372 */
     0, /* signal_pixmap_width 373 */
-    0, /* signal_fill_width 374 */
-    0, /* old_signal_fill_width 375 */
-    0, /* old_signal_fill_height */
-    1, /* right_align_active */
     1, /* fontheight 376 */
     0, /* dnd_state 377 */
-    NULL, /* hscroll_signalwindow_c_1 378 */
-    0, /* cachedhiflag_signalwindow_c_1 380 */
-    -1, /* cachedwhich_signalwindow_c_1 381 */
-    NULL, /* cachedtrace 382 */
-    NULL, /* shift_click_trace 383 */
-    0, /* trtarget_signalwindow_c_1 384 */
-    NULL, /* starting_unshifted_trace */
-    0, /* std_collapse_pressed */
-    0, /* keypress_handler_id */
     0, /* cached_mouseover_x */
     0, /* cached_mouseover_y */
     0, /* mouseover_counter */
@@ -1349,16 +1336,12 @@ void reload_into_new_context_2(void)
     /* Default colors, X contexts, pixmaps, drawables, etc from signalwindow.c and wavewindow.c */
     new_globals->possibly_use_rc_defaults = GLOBALS->possibly_use_rc_defaults;
 
-    new_globals->keypress_handler_id = GLOBALS->keypress_handler_id;
     new_globals->signalarea = GLOBALS->signalarea;
     new_globals->wavearea = GLOBALS->wavearea;
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
     new_globals->wavearea_gesture_swipe = GLOBALS->wavearea_gesture_swipe;
 #endif
     new_globals->wave_splash_pixbuf = GLOBALS->wave_splash_pixbuf;
-    new_globals->hscroll_signalwindow_c_1 =
-        GLOBALS->hscroll_signalwindow_c_1; /* only was used for obsolete
-                                              XXX_resize_sstpane_y_hack_for_gtk3() */
 
     new_globals->black_and_white = GLOBALS->black_and_white;
 

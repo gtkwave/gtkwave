@@ -134,8 +134,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
 
     update_time_box();
 
-    GLOBALS->keypress_handler_id = g_old->keypress_handler_id;
-
     if (GLOBALS->second_page_created) {
         wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow),
                                   GLOBALS->winname,
