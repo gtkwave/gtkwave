@@ -530,7 +530,7 @@ void menu_unwarp_traces_all(gpointer null_data, guint callback_action, GtkWidget
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
     int found = 0;
 
     t = GLOBALS->traces.first;
@@ -554,7 +554,7 @@ void menu_unwarp_traces(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
     int found = 0;
 
     t = GLOBALS->traces.first;
@@ -580,7 +580,7 @@ void warp_cleanup(GtkWidget *widget, gpointer data)
 
     if (GLOBALS->entrybox_text) {
         GwTime gt, delta;
-        Trptr t;
+        GwTrace *t;
 
         gt = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension);
         free_2(GLOBALS->entrybox_text);
@@ -623,7 +623,7 @@ void menu_warp_traces(gpointer null_data, guint callback_action, GtkWidget *widg
     (void)widget;
 
     char gt[32];
-    Trptr t;
+    GwTrace *t;
     int found = 0;
 
     t = GLOBALS->traces.first;
@@ -774,7 +774,7 @@ void set_hier_cleanup(GtkWidget *widget, gpointer data, int level)
     (void)data;
 
     char update_string[128];
-    Trptr t;
+    GwTrace *t;
     int i;
 
     GLOBALS->hier_max_level = level;
@@ -1392,7 +1392,7 @@ static void menu_open_group(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
-    Trptr t;
+    GwTrace *t;
     unsigned dirty = 0;
 
     /* currently only called by toggle menu option, so no help menu text */
@@ -1425,7 +1425,7 @@ static void menu_close_group(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
-    Trptr t;
+    GwTrace *t;
     unsigned dirty = 0;
 
     /* currently only called by toggle menu option, so no help menu text */
@@ -1453,9 +1453,12 @@ static void menu_close_group(GtkWidget *widget, gpointer data)
     }
 }
 
-unsigned create_group(const char *name, Trptr t_composite)
+unsigned create_group(const char *name, GwTrace *t_composite)
 {
-    Trptr t, t_prev, t_begin, t_end;
+    GwTrace *t;
+    GwTrace *t_prev;
+    GwTrace *t_begin;
+    GwTrace *t_end;
     unsigned dirty = 0;
 
     if (!name)
@@ -1479,7 +1482,7 @@ unsigned create_group(const char *name, Trptr t_composite)
             t_begin = t_composite;
             t_begin->flags |= TR_GRP_BEGIN;
         } else {
-            if ((t_begin = (Trptr)calloc_2(1, sizeof(TraceEnt))) == NULL) {
+            if ((t_begin = calloc_2(1, sizeof(GwTrace))) == NULL) {
                 fprintf(stderr, "Out of memory, can't add trace.\n");
                 return (0);
             }
@@ -1494,7 +1497,7 @@ unsigned create_group(const char *name, Trptr t_composite)
         GLOBALS->traces.buffer = t_begin;
         GLOBALS->traces.buffercount++;
 
-        if ((t_end = (Trptr)calloc_2(1, sizeof(TraceEnt))) == NULL) {
+        if ((t_end = calloc_2(1, sizeof(GwTrace))) == NULL) {
             fprintf(stderr, "Out of memory, can't add trace.\n");
             return (0);
         }
@@ -1552,7 +1555,7 @@ void menu_create_group(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
     unsigned dirty = 0;
 
     t = GLOBALS->traces.first;
@@ -1581,9 +1584,10 @@ void menu_create_group(gpointer null_data, guint callback_action, GtkWidget *wid
     }
 }
 
-static unsigned expand_trace(Trptr t_top)
+static unsigned expand_trace(GwTrace *t_top)
 {
-    Trptr t, tmp;
+    GwTrace *t;
+    GwTrace *tmp;
     int tmpi;
     unsigned dirty = 0;
     int color;
@@ -1604,7 +1608,7 @@ static unsigned expand_trace(Trptr t_top)
         if (t->vector) {
             GwBits *bits;
             int i;
-            Trptr tfix;
+            GwTrace *tfix;
             GwTime otime = t->shift;
 
             bits = t->n.vec->bits;
@@ -1686,7 +1690,8 @@ void menu_expand(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)callback_action;
     (void)widget;
 
-    Trptr t, t_next;
+    GwTrace *t;
+    GwTrace *t_next;
     int dirty = 0;
 
     if (GLOBALS->dnd_state) {
@@ -1754,7 +1759,7 @@ void menu_toggle_group(gpointer null_data, guint callback_action, GtkWidget *wid
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
     unsigned dirty_group = 0;
     unsigned dirty_signal = 0;
 
@@ -1807,7 +1812,7 @@ static void rename_cleanup(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
-    Trptr t = GLOBALS->trace_to_alias_menu_c_1;
+    GwTrace *t = GLOBALS->trace_to_alias_menu_c_1;
 
     if (GLOBALS->entrybox_text) {
         char *efix;
@@ -1853,7 +1858,7 @@ static void menu_rename(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
-    Trptr t;
+    GwTrace *t;
     /* currently only called by various combine menu options, so no help menu text */
 
     GLOBALS->trace_to_alias_menu_c_1 = NULL;
@@ -1887,10 +1892,11 @@ static void menu_rename(GtkWidget *widget, gpointer data)
     }
 }
 
-GwBitVector *combine_traces(int direction, Trptr single_trace_only)
+GwBitVector *combine_traces(int direction, GwTrace *single_trace_only)
 {
-    Trptr t, tmp;
-    Trptr tfirst = NULL;
+    GwTrace *t;
+    GwTrace *tmp;
+    GwTrace *tfirst = NULL;
     int tmpi, dirty = 0, attrib_reqd = 0;
     GwNode *bitblast_parent;
     int bitblast_delta = 0;
@@ -2406,7 +2412,7 @@ void menu_combine_down(gpointer null_data, guint callback_action, GtkWidget *wid
     v = combine_traces(1, NULL); /* down */
 
     if (v) {
-        Trptr t;
+        GwTrace *t;
 
         AddVector(v, NULL);
         free_2(v->bits->name);
@@ -2443,7 +2449,7 @@ void menu_combine_up(gpointer null_data, guint callback_action, GtkWidget *widge
     v = combine_traces(0, NULL); /* up */
 
     if (v) {
-        Trptr t;
+        GwTrace *t;
 
         AddVector(v, NULL);
         free_2(v->bits->name);
@@ -2479,7 +2485,7 @@ void menu_tracesearchbox(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
 
     for (t = GLOBALS->traces.first; t; t = t->t_next) {
         if ((t->flags & TR_HIGHLIGHT) && HasWave(t)) {
@@ -2887,7 +2893,7 @@ void delete_unnamed_marker(gpointer null_data, guint callback_action, GtkWidget 
         return;
     }
 
-    Trptr t;
+    GwTrace *t;
 
     for (t = GLOBALS->traces.first; t; t = t->t_next) {
         if (t->asciivalue) {
@@ -2989,7 +2995,7 @@ void menu_showchangeall_cleanup(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
-    Trptr t;
+    GwTrace *t;
     TraceFlagsType flags;
     unsigned int t_color;
 
@@ -3019,7 +3025,7 @@ void menu_showchangeall(gpointer null_data, guint callback_action, GtkWidget *wi
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
 
     DEBUG(printf("menu_showchangeall()\n"));
 
@@ -3056,7 +3062,7 @@ void menu_showchange(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
 
     DEBUG(printf("menu_showchange()\n"));
 
@@ -3079,7 +3085,7 @@ void menu_remove_aliases(gpointer null_data, guint callback_action, GtkWidget *w
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
     int dirty = 0, none_selected = 1;
 
     if (GLOBALS->dnd_state) {
@@ -3137,7 +3143,7 @@ static void alias_cleanup(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
-    Trptr t = GLOBALS->trace_to_alias_menu_c_1;
+    GwTrace *t = GLOBALS->trace_to_alias_menu_c_1;
 
     if (GLOBALS->entrybox_text) {
         char *efix;
@@ -3178,7 +3184,7 @@ void menu_alias(gpointer null_data, guint callback_action, GtkWidget *widget)
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
 
     GLOBALS->trace_to_alias_menu_c_1 = NULL;
 
@@ -3238,7 +3244,7 @@ void menu_signalsearch(gpointer null_data, guint callback_action, GtkWidget *wid
 static void regexp_highlight_generic(int mode)
 {
     if (GLOBALS->entrybox_text) {
-        Trptr t;
+        GwTrace *t;
         Ulong modebits;
         char dirty = 0;
 
@@ -3905,7 +3911,7 @@ void menu_zoombase(gpointer null_data, guint callback_action, GtkWidget *widget)
 /**/
 static void colorformat(int color)
 {
-    Trptr t;
+    GwTrace *t;
     int fix = 0;
     int color_prev = WAVE_COLOR_NORMAL;
     int is_first = 0;
@@ -4142,7 +4148,7 @@ static void menu_open_hierarchy_2(gpointer null_data,
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
     int fix = 0;
     struct tree *t_forced = NULL;
 
@@ -4307,7 +4313,7 @@ void menu_recurse_import(gpointer null_data, guint callback_action, GtkWidget *w
 
 static void dataformat(TraceFlagsType mask, TraceFlagsType patch)
 {
-    Trptr t;
+    GwTrace *t;
     int fix = 0;
 
     if ((t = GLOBALS->traces.first)) {
@@ -4529,7 +4535,7 @@ static void menu_dataformat_fpshift_specify_cleanup(GtkWidget *widget, gpointer 
     (void)widget;
     (void)data;
 
-    Trptr t;
+    GwTrace *t;
     int fix = 0;
     int shamt = GLOBALS->entrybox_text ? atoi(GLOBALS->entrybox_text) : 0;
     TraceFlagsType mask = ~(TR_FPDECSHIFT);
@@ -4726,7 +4732,7 @@ void menu_dataformat_highlight_all(gpointer null_data, guint callback_action, Gt
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -4748,7 +4754,7 @@ void menu_dataformat_unhighlight_all(gpointer null_data, guint callback_action, 
     (void)callback_action;
     (void)widget;
 
-    Trptr t;
+    GwTrace *t;
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -4842,7 +4848,7 @@ void menu_cut_traces(gpointer null_data, guint callback_action, GtkWidget *widge
     (void)callback_action;
     (void)widget;
 
-    Trptr cutbuffer = NULL;
+    GwTrace *cutbuffer = NULL;
 
     if (GLOBALS->dnd_state) {
         dnd_error();
@@ -4895,7 +4901,7 @@ void menu_copy_traces(gpointer null_data, guint callback_action, GtkWidget *widg
     (void)callback_action;
     (void)widget;
 
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     gboolean highlighted = FALSE;
 
     if (GLOBALS->dnd_state) {

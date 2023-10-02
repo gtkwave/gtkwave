@@ -804,14 +804,14 @@ static char *make_net_name_from_tcl_list(char *s, char **unescaped_str)
 
 void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
 {
-    Trptr t;
+    GwTrace *t;
     GwNode *nexp;
     int i;
     TraceFlagsType default_flags = GLOBALS->default_flags;
     GwBitVector *v;
 
-    Trptr buffer; /* cut/copy buffer of traces */
-    Trptr bufferlast; /* last element of bufferchain */
+    GwTrace *buffer; /* cut/copy buffer of traces */
+    GwTrace *bufferlast; /* last element of bufferchain */
     int buffercount; /* number of traces in buffer */
 
     GLOBALS->default_flags = TR_HIGHLIGHT;
@@ -905,7 +905,7 @@ int process_tcl_list(const char *sl, gboolean prepend)
     char **most_recent_colon_list;
     int *match_idx_list;
     int *match_type_list;
-    Trptr t = NULL;
+    GwTrace *t = NULL;
     int found = 0;
     int lbrack_adj;
     int net_processing_is_off = 0;
@@ -1450,7 +1450,7 @@ char *make_single_tcl_list_name(char *s, char *opt_value, int promote_to_bus, in
  *      flags so it is always TR_RJUSTIFY | TR_HEX
  * ----------------------------------------------------------------------------
  */
-static char *give_value_string(Trptr t)
+static char *give_value_string(GwTrace *t)
 {
     char *rc = NULL;
     TraceFlagsType flags;
@@ -1601,7 +1601,7 @@ char *add_dnd_from_signal_window(void)
 
 char *add_traces_from_signal_window(gboolean is_from_tcl_command)
 {
-    Trptr t;
+    GwTrace *t;
     char *one_entry = NULL, *mult_entry = NULL;
     unsigned int mult_len = 0;
     const char *netoff = "{gtkwave NET OFF} ";
@@ -2000,7 +2000,7 @@ static char *make_message(const char *fmt, ...)
  * ----------------------------------------------------------------------------
  */
 
-char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr t, gboolean use_tcl_mode)
+char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(GwTrace *t, gboolean use_tcl_mode)
 {
     char *one_entry, *mult_entry = NULL;
     unsigned int mult_len = 0;

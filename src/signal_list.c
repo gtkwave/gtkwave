@@ -71,7 +71,7 @@ struct _GwSignalList
     gboolean dirty;
 
     // Cursor trace or NULL if the cursor isn't active
-    Trptr cursor;
+    GwTrace *cursor;
 
     Drag drag;
     Drop drop;
@@ -84,7 +84,7 @@ struct _GwSignalList
 G_DEFINE_TYPE(GwSignalList, gw_signal_list, GTK_TYPE_DRAWING_AREA)
 
 // Get the text and background colors for a trace
-static void get_trace_colors(Trptr t,
+static void get_trace_colors(GwTrace *t,
                              GwSignalListColors *colors,
                              GwColor *bg_color,
                              GwColor *text_color)
@@ -132,7 +132,11 @@ int gw_signal_list_get_num_traces_displayable(GwSignalList *signal_list)
 //
 // The signal is always rendered at the origin. The cairo context needs to be
 // translated to the correct position before calling this function.
-static void render_signal(cairo_t *cr, GwSignalListColors *colors, Trptr t, int width, int text_dx)
+static void render_signal(cairo_t *cr,
+                          GwSignalListColors *colors,
+                          GwTrace *t,
+                          int width,
+                          int text_dx)
 {
     char buf[2048];
     char *subname = NULL;
@@ -140,7 +144,7 @@ static void render_signal(cairo_t *cr, GwSignalListColors *colors, Trptr t, int 
 
     /* seek to real xact trace if present... */
     if (t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH)) {
-        Trptr tscan = t;
+        GwTrace *tscan = t;
         int bcnt = 0;
         while (tscan && (tscan = GivePrevTrace(tscan))) {
             if (!(tscan->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {
@@ -224,7 +228,7 @@ static void render_signals(GwSignalList *signal_list, GwSignalListColors *colors
     int width = gtk_widget_get_allocated_width(GTK_WIDGET(signal_list));
     int text_dx = -gtk_adjustment_get_value(signal_list->hadjustment);
 
-    Trptr t = gw_signal_list_get_trace(signal_list, 0);
+    GwTrace *t = gw_signal_list_get_trace(signal_list, 0);
     if (t) {
         int i;
         for (i = 0; i < num_traces_displayable && t; i++) {
@@ -366,14 +370,14 @@ static gboolean draw(GtkWidget *widget, cairo_t *cr)
 }
 
 // Return the nth trace from the top.
-Trptr gw_signal_list_get_trace(GwSignalList *signal_list, guint index)
+GwTrace *gw_signal_list_get_trace(GwSignalList *signal_list, guint index)
 {
     g_return_val_if_fail(GW_IS_SIGNAL_LIST(signal_list), NULL);
 
     guint which = (guint)gtk_adjustment_get_value(signal_list->vadjustment) + index;
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     while (which > 0 && t != NULL) {
-        Trptr t_next = GiveNextTrace(t);
+        GwTrace *t_next = GiveNextTrace(t);
         if (t_next == NULL) {
             return NULL;
         }
@@ -388,7 +392,7 @@ Trptr gw_signal_list_get_trace(GwSignalList *signal_list, guint index)
 // Return the trace at the given y position
 //
 // Returns NULL if there is no trace at that y position.
-static Trptr get_trace_for_y(GwSignalList *signal_list, int y)
+static GwTrace *get_trace_for_y(GwSignalList *signal_list, int y)
 {
     g_return_val_if_fail(GW_IS_SIGNAL_LIST(signal_list), NULL);
 
@@ -399,7 +403,7 @@ static Trptr get_trace_for_y(GwSignalList *signal_list, int y)
 
     if (which >= 0 && which < num_traces_displayable) {
         // Get topmost trace
-        Trptr t = gw_signal_list_get_trace(signal_list, 0);
+        GwTrace *t = gw_signal_list_get_trace(signal_list, 0);
 
         while (t != NULL && which > 0) {
             t = GiveNextTrace(t);
@@ -415,12 +419,12 @@ static Trptr get_trace_for_y(GwSignalList *signal_list, int y)
 }
 
 // Selects all traces between a and b (inclusive).
-static void select_range(Trptr a, Trptr b)
+static void select_range(GwTrace *a, GwTrace *b)
 {
     // Determine the order of trace a and trace b.
-    Trptr from = NULL;
-    Trptr to = NULL;
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *from = NULL;
+    GwTrace *to = NULL;
+    GwTrace *t = GLOBALS->traces.first;
     while (t) {
         if (t == a) {
             from = a;
@@ -467,7 +471,7 @@ static gboolean button_press_event(GtkWidget *widget, GdkEventButton *event)
     gtk_widget_grab_focus(widget);
 
     if (gdk_event_triggers_context_menu((GdkEvent *)event)) {
-        Trptr t = get_trace_for_y(signal_list, (int)event->y);
+        GwTrace *t = get_trace_for_y(signal_list, (int)event->y);
         if (t != NULL) {
             if (IsSelected(t)) {
                 // Keep current selection if click was on an already selected trace
@@ -485,7 +489,7 @@ static gboolean button_press_event(GtkWidget *widget, GdkEventButton *event)
         if (event->type == GDK_BUTTON_PRESS) {
             // Single primary press -> select trace or start DnD
 
-            Trptr t = get_trace_for_y(signal_list, (int)event->y);
+            GwTrace *t = get_trace_for_y(signal_list, (int)event->y);
 
             gboolean selected = t != NULL && IsSelected(t) ? TRUE : FALSE;
 
@@ -528,7 +532,7 @@ static gboolean button_press_event(GtkWidget *widget, GdkEventButton *event)
             // the release handler doesn't cause unwanted selection changes.
             signal_list->drag.pending = FALSE;
 
-            Trptr t = get_trace_for_y(signal_list, (int)event->y);
+            GwTrace *t = get_trace_for_y(signal_list, (int)event->y);
             if (t != NULL) {
                 if (IsGroupBegin(t) || IsGroupEnd(t)) {
                     if (IsClosed(t)) {
@@ -571,7 +575,7 @@ static gboolean button_release_event(GtkWidget *widget, GdkEventButton *event)
         // distance threshold for a drag gesture wasn't reached.
         // This should be handled by selecting the trace under the cursor.
 
-        Trptr t = get_trace_for_y(signal_list, (int)event->y);
+        GwTrace *t = get_trace_for_y(signal_list, (int)event->y);
         if (t != NULL) {
             if (event->state & GW_CONTROL_MASK) {
                 t->flags ^= TR_HIGHLIGHT;
@@ -617,7 +621,7 @@ void gw_signal_list_scroll(GwSignalList *signal_list, int index)
 }
 
 // Scroll the list vertically to show the given trace.
-void gw_signal_list_scroll_to_trace(GwSignalList *signal_list, Trptr trace)
+void gw_signal_list_scroll_to_trace(GwSignalList *signal_list, GwTrace *trace)
 {
     g_return_if_fail(GW_IS_SIGNAL_LIST(signal_list));
 
@@ -626,7 +630,7 @@ void gw_signal_list_scroll_to_trace(GwSignalList *signal_list, Trptr trace)
     }
 
     int which = 0;
-    Trptr t = GLOBALS->traces.first;
+    GwTrace *t = GLOBALS->traces.first;
     while (t != NULL && t != trace) {
         t = GiveNextTrace(t);
         which++;
@@ -721,7 +725,7 @@ static gboolean scroll_timeout(GwSignalList *signal_list)
 }
 
 // Sets the cursor trace and make sure the trace is visible.
-static void set_cursor(GwSignalList *signal_list, Trptr cursor)
+static void set_cursor(GwSignalList *signal_list, GwTrace *cursor)
 {
     if (signal_list->cursor != NULL) {
         signal_list->cursor->flags &= ~TR_HIGHLIGHT;
@@ -748,7 +752,7 @@ static gboolean key_press_event(GtkWidget *widget, GdkEventKey *event)
         if (event->keyval == GDK_KEY_Up || event->keyval == GDK_KEY_KP_Up) {
             // Shift + Up: Move cursor up one trace
             if (signal_list->cursor != NULL) {
-                Trptr cursor = GivePrevTrace(signal_list->cursor);
+                GwTrace *cursor = GivePrevTrace(signal_list->cursor);
                 if (cursor != NULL) {
                     set_cursor(signal_list, cursor);
                 }
@@ -759,7 +763,7 @@ static gboolean key_press_event(GtkWidget *widget, GdkEventKey *event)
         } else if (event->keyval == GDK_KEY_Down || event->keyval == GDK_KEY_KP_Down) {
             // Shift + Down: Move cursor down one trace
             if (signal_list->cursor != NULL) {
-                Trptr cursor = GiveNextTrace(signal_list->cursor);
+                GwTrace *cursor = GiveNextTrace(signal_list->cursor);
                 if (cursor != NULL) {
                     set_cursor(signal_list, cursor);
                 }
@@ -943,7 +947,7 @@ static void drag_data_received(GtkWidget *widget,
                 CutBuffer();
                 PrependBuffer();
             } else {
-                Trptr t = gw_signal_list_get_trace(signal_list, drop_position - 1);
+                GwTrace *t = gw_signal_list_get_trace(signal_list, drop_position - 1);
 
                 // Search upward for the first non selected trace.
                 // CutBuffer would otherwise remove the trace that determines the
@@ -979,7 +983,7 @@ static void drag_data_received(GtkWidget *widget,
 
                 ClearTraces();
 
-                Trptr t;
+                GwTrace *t;
                 gboolean prepend;
                 if (drop_position > 0) {
                     t = gw_signal_list_get_trace(signal_list, drop_position - 1);

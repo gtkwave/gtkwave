@@ -11,12 +11,12 @@
 #define WAVE_WAVEWINDOW_H
 
 void button_press_release_common(void);
-void UpdateSigValue(Trptr t);
+void UpdateSigValue(GwTrace *t);
 void MaxSignalLength(void);
 void MaxSignalLength_2(
     char dirty_kick); /* used to resize but not fully recalculate like MaxSignalLength() */
 
-void populateBuffer(Trptr t, char *altname, char *buf);
+void populateBuffer(GwTrace *t, char *altname, char *buf);
 void calczoom(double z0);
 void make_sigarea_gcs(GtkWidget *widget);
 

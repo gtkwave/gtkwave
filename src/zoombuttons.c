@@ -289,7 +289,7 @@ void service_dragzoom(GwTime time1, GwTime time2) /* the function you've been wa
     int fixedwidth;
     GwTime temp;
     GtkAdjustment *hadj;
-    Trptr t;
+    GwTrace *t;
     int dragzoom_ok = 1;
 
     if (time2 < time1) {

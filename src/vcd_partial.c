@@ -2479,7 +2479,7 @@ GwTime vcd_partial_main(char *fname)
 
 /*******************************************************************************/
 
-static void regen_harray(Trptr t, GwNode *nd)
+static void regen_harray(GwTrace *t, GwNode *nd)
 {
     int i, histcount;
     GwHistEnt *histpnt;
@@ -2517,7 +2517,7 @@ static void regen_harray(Trptr t, GwNode *nd)
 }
 
 /* mark vectors that need to be regenerated */
-static void regen_trace_mark(Trptr t, int mandclear)
+static void regen_trace_mark(GwTrace *t, int mandclear)
 {
     if (t->vector) {
         GwBitVector *b = t->n.vec;
@@ -2553,7 +2553,7 @@ static void regen_trace_mark(Trptr t, int mandclear)
 }
 
 /* sweep through and regen nodes/dirty vectors */
-static void regen_trace_sweep(Trptr t)
+static void regen_trace_sweep(GwTrace *t)
 {
     if (!t->vector) {
         if (t->n.nd) /* comment and blank traces don't have a valid node */
@@ -2680,7 +2680,7 @@ void kick_partial_vcd(void)
     gtkwave_main_iteration();
 }
 
-static void vcd_partial_regen_node_expansion(Trptr t)
+static void vcd_partial_regen_node_expansion(GwTrace *t)
 {
     if (!t->vector) {
         if (t->n.nd && t->n.nd->expansion) {
@@ -2699,7 +2699,7 @@ static void vcd_partial_regen_node_expansion(Trptr t)
 
 void vcd_partial_mark_and_sweep(int mandclear)
 {
-    Trptr t;
+    GwTrace *t;
 
     /* node */
     t = GLOBALS->traces.first;

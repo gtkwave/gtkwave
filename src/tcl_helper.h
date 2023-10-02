@@ -25,7 +25,10 @@
      (TCL_MAJOR_VERSION == (major) && TCL_MINOR_VERSION == (minor) && \
       TCL_RELEASE_SERIAL >= (micro)))
 
-typedef int (*tcl_cmd_func)(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]);
+typedef int (*tcl_cmd_func)(ClientData clientData,
+                            Tcl_Interp *interp,
+                            int objc,
+                            Tcl_Obj *CONST objv[]);
 
 typedef struct
 {
@@ -94,7 +97,7 @@ char *add_dnd_from_searchbox(void);
 char *add_dnd_from_signal_window(void);
 char *add_traces_from_signal_window(gboolean is_from_tcl_command);
 char *add_dnd_from_tree_window(void);
-char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(Trptr trhead, gboolean use_tcl_mode);
+char *emit_gtkwave_savefile_formatted_entries_in_tcl_list(GwTrace *trhead, gboolean use_tcl_mode);
 
 char *zMergeTclList(int argc, const char **argv);
 char **zSplitTclList(const char *list, int *argcPtr);

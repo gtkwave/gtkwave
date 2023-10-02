@@ -105,7 +105,11 @@ static void destroy_callback_e(GtkWidget *widget, GtkWidget *nothing)
     GLOBALS->window1_search_c_2 = NULL;
 }
 
-static void entrybox_local(const char *title, int width, const char *default_text, int maxch, GCallback func)
+static void entrybox_local(const char *title,
+                           int width,
+                           const char *default_text,
+                           int maxch,
+                           GCallback func)
 {
     GtkWidget *vbox, *hbox;
     GtkWidget *button1, *button2;
@@ -354,7 +358,8 @@ static void replace_callback(GtkWidget *widget, GtkWidget *nothing)
 
     Traces tcache;
     int i;
-    Trptr tfirst, tlast;
+    GwTrace *tfirst;
+    GwTrace *tlast;
     struct symchain *symc, *symc_current;
 
     gfloat interval;
@@ -477,8 +482,8 @@ static void replace_callback(GtkWidget *widget, GtkWidget *nothing)
     GLOBALS->traces.total = tcache.total;
 
     {
-        Trptr t = GLOBALS->traces.first;
-        Trptr *tp = NULL;
+        GwTrace *t = GLOBALS->traces.first;
+        GwTrace **tp = NULL;
         int numhigh = 0;
         int it;
 
@@ -489,7 +494,7 @@ static void replace_callback(GtkWidget *widget, GtkWidget *nothing)
             t = t->t_next;
         }
         if (numhigh) {
-            tp = calloc_2(numhigh, sizeof(Trptr));
+            tp = calloc_2(numhigh, sizeof(GwTrace *));
             t = GLOBALS->traces.first;
             it = 0;
             while (t) {

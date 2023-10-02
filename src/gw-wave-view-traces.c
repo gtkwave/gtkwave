@@ -115,7 +115,7 @@ static void line_buffer_draw(LineBuffer *self, cairo_t *cr)
 static void draw_hptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
-                            Trptr t,
+                            GwTrace *t,
                             GwHistEnt *h,
                             int which,
                             int dodraw,
@@ -123,21 +123,21 @@ static void draw_hptr_trace(GwWaveView *self,
 static void draw_hptr_trace_vector(GwWaveView *self,
                                    cairo_t *cr,
                                    GwWaveformColors *colors,
-                                   Trptr t,
+                                   GwTrace *t,
                                    GwHistEnt *h,
                                    int which);
 static void draw_vptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
-                            Trptr t,
+                            GwTrace *t,
                             GwVectorEnt *v,
                             int which);
 
 void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
 {
-    Trptr t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
+    GwTrace *t = gw_signal_list_get_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), 0);
     if (t) {
-        Trptr tback = t;
+        GwTrace *tback = t;
         GwHistEnt *h;
         GwVectorEnt *v;
         int i = 0, num_traces_displayable;
@@ -195,7 +195,8 @@ void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
                         }
                     }
                 } else {
-                    Trptr t_orig, tn;
+                    GwTrace *t_orig;
+                    GwTrace *tn;
                     GwBitVector *bv = t->n.vec;
 
                     v = bsearch_vector(bv, GLOBALS->tims.start - t->shift);
@@ -233,7 +234,7 @@ void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
                 int kill_dodraw_grid = t->flags & TR_ANALOG_BLANK_STRETCH;
 
                 if (kill_dodraw_grid) {
-                    Trptr tn = GiveNextTrace(t);
+                    GwTrace *tn = GiveNextTrace(t);
                     if (!tn) {
                         kill_dodraw_grid = 0;
                     } else if (!(tn->flags & TR_ANALOG_BLANK_STRETCH)) {
@@ -269,7 +270,7 @@ void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
 static void draw_hptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
-                            Trptr t,
+                            GwTrace *t,
                             GwHistEnt *h,
                             int which,
                             int dodraw,
@@ -634,7 +635,7 @@ static void draw_hptr_trace(GwWaveView *self,
 static void draw_hptr_trace_vector_analog(GwWaveView *self,
                                           cairo_t *cr,
                                           GwWaveformColors *colors,
-                                          Trptr t,
+                                          GwTrace *t,
                                           GwHistEnt *h,
                                           int which,
                                           int num_extension)
@@ -1069,7 +1070,7 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
 static void draw_hptr_trace_vector(GwWaveView *self,
                                    cairo_t *cr,
                                    GwWaveformColors *colors,
-                                   Trptr t,
+                                   GwTrace *t,
                                    GwHistEnt *h,
                                    int which)
 {
@@ -1092,7 +1093,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
 
     if ((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) &&
         (!GLOBALS->black_and_white)) {
-        Trptr tn = GiveNextTrace(t);
+        GwTrace *tn = GiveNextTrace(t);
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
             XXX_gdk_draw_rectangle(cr,
                                    colors->grid,
@@ -1111,7 +1112,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                                    GLOBALS->fontheight);
         }
     } else if ((GLOBALS->display_grid) && (GLOBALS->enable_horiz_grid)) {
-        Trptr tn = GiveNextTrace(t);
+        GwTrace *tn = GiveNextTrace(t);
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
         } else {
             XXX_gdk_draw_line(cr,
@@ -1129,7 +1130,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
 
     if ((t->flags & TR_ANALOGMASK) &&
         (!(h->flags & GW_HIST_ENT_FLAG_STRING) || !(h->flags & GW_HIST_ENT_FLAG_REAL))) {
-        Trptr te = GiveNextTrace(t);
+        GwTrace *te = GiveNextTrace(t);
         int ext = 0;
 
         while (te) {
@@ -1433,7 +1434,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
 static void draw_vptr_trace_analog(GwWaveView *self,
                                    cairo_t *cr,
                                    GwWaveformColors *colors,
-                                   Trptr t,
+                                   GwTrace *t,
                                    GwVectorEnt *v,
                                    int which,
                                    int num_extension)
@@ -1840,7 +1841,7 @@ static void draw_vptr_trace_analog(GwWaveView *self,
 static void draw_vptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
-                            Trptr t,
+                            GwTrace *t,
                             GwVectorEnt *v,
                             int which)
 {
@@ -1866,7 +1867,7 @@ static void draw_vptr_trace(GwWaveView *self,
 
     if ((GLOBALS->highlight_wavewindow) && (t) && (t->flags & TR_HIGHLIGHT) &&
         (!GLOBALS->black_and_white)) {
-        Trptr tn = GiveNextTrace(t);
+        GwTrace *tn = GiveNextTrace(t);
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
             XXX_gdk_draw_rectangle(cr,
                                    colors->grid,
@@ -1885,7 +1886,7 @@ static void draw_vptr_trace(GwWaveView *self,
                                    GLOBALS->fontheight);
         }
     } else if ((GLOBALS->display_grid) && (GLOBALS->enable_horiz_grid)) {
-        Trptr tn = GiveNextTrace(t);
+        GwTrace *tn = GiveNextTrace(t);
         if ((t->flags & TR_ANALOGMASK) && (tn) && (tn->flags & TR_ANALOG_BLANK_STRETCH)) {
         } else {
             XXX_gdk_draw_line(cr,
@@ -1915,7 +1916,7 @@ static void draw_vptr_trace(GwWaveView *self,
     */
 
     if (t->flags & TR_ANALOGMASK) {
-        Trptr te = GiveNextTrace(t);
+        GwTrace *te = GiveNextTrace(t);
         int ext = 0;
 
         while (te) {

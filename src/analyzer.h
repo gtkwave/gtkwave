@@ -260,16 +260,14 @@ typedef struct
     gdouble prevzoom; /* for zoom undo */
 } Times;
 
-typedef struct TraceEnt *Trptr;
-
 typedef struct
 {
     int total; /* total number of traces */
     int visible; /* total number of (uncollapsed) traces */
-    Trptr first; /* ptr. to first trace in list */
-    Trptr last; /* end of list of traces */
-    Trptr buffer; /* cut/copy buffer of traces */
-    Trptr bufferlast; /* last element of bufferchain */
+    GwTrace *first; /* ptr. to first trace in list */
+    GwTrace *last; /* end of list of traces */
+    GwTrace *buffer; /* cut/copy buffer of traces */
+    GwTrace *bufferlast; /* last element of bufferchain */
     int buffercount; /* number of traces in buffer */
 
     unsigned dirty : 1; /* to notify Tcl that traces were added/deleted/moved */
@@ -277,58 +275,10 @@ typedef struct
 
 typedef struct
 {
-    Trptr buffer; /* cut/copy buffer of traces */
-    Trptr bufferlast; /* last element of bufferchain */
+    GwTrace *buffer; /* cut/copy buffer of traces */
+    GwTrace *bufferlast; /* last element of bufferchain */
     int buffercount; /* number of traces in buffer */
 } TempBuffer;
-
-typedef struct TraceEnt
-{
-    Trptr t_next; /* doubly linked list of traces */
-    Trptr t_prev;
-    Trptr t_grp; /* pointer to group I'm in */
-    Trptr t_match; /* If group begin pointer to group end and visa versa */
-
-    char *name; /* current name */
-    char *name_full; /* full name */
-    char *asciivalue; /* value that marker points to */
-    char *transaction_args; /* for TR_TTRANSLATED traces */
-    GwTime asciitime; /* time this value corresponds with */
-    GwTime shift; /* offset added to all entries in the trace */
-    GwTime shift_drag; /* cached initial offset for CTRL+LMB drag on highlighted */
-
-    double d_minval, d_maxval; /* cached value for when auto scaling is turned off */
-    int d_num_ext; /* need to regen if differs from current in analog! */
-
-    union
-    {
-        GwNode *nd; /* what makes up this trace */
-        GwBitVector *vec;
-    } n;
-
-    TraceFlagsType flags; /* see def below in TraceEntFlagBits */
-    TraceFlagsType cached_flags; /* used for tcl for saving flags during cut and paste */
-
-    int f_filter; /* file filter */
-    int p_filter; /* process filter */
-    int t_filter; /* transaction process filter */
-    int e_filter; /* enum filter (from FST) */
-
-    unsigned int t_color; /* trace color index */
-    unsigned char t_fpdecshift; /* for fixed point decimal */
-
-    unsigned is_cursor : 1; /* set to mark a cursor trace */
-    unsigned is_alias : 1; /* set when it's an alias (safe to free t->name then) */
-    unsigned is_depacked : 1; /* set when it's been depacked from a compressed entry (safe to free
-                                 t->name then) */
-    unsigned vector : 1; /* 1 if bit vector, 0 if node */
-    unsigned shift_drag_valid : 1; /* qualifies shift_drag above */
-    unsigned interactive_vector_needs_regeneration : 1; /* for interactive VCDs */
-    unsigned minmax_valid : 1; /* for d_minval, d_maxval */
-    unsigned is_sort_group : 1; /* only used for sorting purposes */
-    unsigned t_filter_converted : 1; /* used to mark that data conversion already occurred if
-                                        t_filter != 0*/
-} TraceEnt;
 
 enum TraceEntFlagBits
 {
@@ -427,24 +377,24 @@ enum TraceEntFlagBits
 
 #define TR_RSVD (UINT64_C(1) << TR_RSVD_B)
 
-Trptr GiveNextTrace(Trptr t);
-Trptr GivePrevTrace(Trptr t);
+GwTrace *GiveNextTrace(GwTrace *t);
+GwTrace *GivePrevTrace(GwTrace *t);
 int UpdateTracesVisible(void);
 
 void DisplayTraces(int val);
-int AddNodeTraceReturn(GwNode *nd, char *aliasname, Trptr *tret);
+int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret);
 int AddNode(GwNode *nd, char *aliasname);
 int AddNodeUnroll(GwNode *nd, char *aliasname);
 int AddVector(GwBitVector *vec, char *aliasname);
 int AddBlankTrace(char *commentname);
 int InsertBlankTrace(char *comment, TraceFlagsType different_flags);
 void RemoveNode(GwNode *n);
-void RemoveTrace(Trptr t, int dofree);
-void FreeTrace(Trptr t);
-Trptr CutBuffer(void);
+void RemoveTrace(GwTrace *t, int dofree);
+void FreeTrace(GwTrace *t);
+GwTrace *CutBuffer(void);
 void FreeCutBuffer(void);
-Trptr PasteBuffer(void);
-Trptr PrependBuffer(void);
+GwTrace *PasteBuffer(void);
+GwTrace *PrependBuffer(void);
 int TracesReorder(int mode);
 int DeleteBuffer(void);
 
@@ -460,8 +410,8 @@ char *hier_extract(char *pnt, int levels);
 /* vector matching */
 char *attempt_vecmatch(char *s1, char *s2);
 
-void updateTraceGroup(Trptr t);
-int GetTraceNumber(Trptr t);
+void updateTraceGroup(GwTrace *t);
+int GetTraceNumber(GwTrace *t);
 void EnsureGroupsMatch(void);
 
 #define IsSelected(t) (t->flags & TR_HIGHLIGHT)
@@ -473,14 +423,14 @@ void EnsureGroupsMatch(void);
 #define HasAlias(t) (t->name_full && HasWave(t))
 #define IsCollapsed(t) (t->flags & TR_COLLAPSED)
 
-unsigned IsShadowed(Trptr t);
-char *GetFullName(Trptr t, int *was_packed);
+unsigned IsShadowed(GwTrace *t);
+char *GetFullName(GwTrace *t, int *was_packed);
 
-void OpenTrace(Trptr t);
-void CloseTrace(Trptr t);
+void OpenTrace(GwTrace *t);
+void CloseTrace(GwTrace *t);
 void ClearTraces(void);
-void ClearGroupTraces(Trptr t);
-void MarkTraceCursor(Trptr t);
+void ClearGroupTraces(GwTrace *t);
+void MarkTraceCursor(GwTrace *t);
 
 char *varxt_fix(char *s);
 

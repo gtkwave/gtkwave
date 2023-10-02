@@ -418,8 +418,8 @@ struct Global
     char ignore_savefile_pos; /* from menu.c 255 */
     char ignore_savefile_size; /* from menu.c 256 */
     char *regexp_string_menu_c_1; /* from menu.c 259 */
-    struct TraceEnt *trace_to_alias_menu_c_1; /* from menu.c 260 */
-    struct TraceEnt *showchangeall_menu_c_1; /* from menu.c 261 */
+    GwTrace *trace_to_alias_menu_c_1; /* from menu.c 260 */
+    GwTrace *showchangeall_menu_c_1; /* from menu.c 261 */
     char *filesel_newviewer_menu_c_1; /* from menu.c 262 */
     char *filesel_logfile_menu_c_1; /* from menu.c 263 */
     char *filesel_scriptfile_menu; /* from menu.c */
@@ -558,10 +558,10 @@ struct Global
     GtkWidget *hscroll_signalwindow_c_1; /* from signalwindow.c 406 */
     unsigned int cachedhiflag_signalwindow_c_1; /* from signalwindow.c 408 */
     int cachedwhich_signalwindow_c_1; /* from signalwindow.c 409 */
-    struct TraceEnt *cachedtrace; /* from signalwindow.c 410 */
-    struct TraceEnt *shift_click_trace; /* from signalwindow.c 411 */
+    GwTrace *cachedtrace; /* from signalwindow.c 410 */
+    GwTrace *shift_click_trace; /* from signalwindow.c 411 */
     int trtarget_signalwindow_c_1; /* from signalwindow.c 412 */
-    Trptr starting_unshifted_trace; /* from signalwindow.c */
+    GwTrace *starting_unshifted_trace; /* from signalwindow.c */
     unsigned char std_collapse_pressed; /* from signalwindow.c */
     gint keypress_handler_id; /* from signalwindow.c */
     gint cached_mouseover_x; /* from signalwindow.c */

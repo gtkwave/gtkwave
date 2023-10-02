@@ -294,7 +294,7 @@ int install_file_filter(int which)
     }
 
     if (GLOBALS->traces.first) {
-        Trptr t = GLOBALS->traces.first;
+        GwTrace *t = GLOBALS->traces.first;
         while (t) {
             if (t->flags & TR_HIGHLIGHT) {
                 if (!(t->flags & (TR_BLANK | TR_ANALOG_BLANK_STRETCH))) {

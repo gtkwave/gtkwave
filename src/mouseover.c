@@ -11,9 +11,10 @@
 #include <config.h>
 #include <gw-mouseover.h>
 
-void move_mouseover(Trptr t, gint xin, gint yin, GwTime tim)
+void move_mouseover(GwTrace *t, gint xin, gint yin, GwTime tim)
 {
-    if (t == NULL || GLOBALS->disable_mouseover || xin <= 0 || yin <= 0 || yin > GLOBALS->waveheight) {
+    if (t == NULL || GLOBALS->disable_mouseover || xin <= 0 || yin <= 0 ||
+        yin > GLOBALS->waveheight) {
         g_clear_pointer(&GLOBALS->mouseover_mouseover_c_1, gtk_widget_destroy);
         return;
     }
@@ -34,7 +35,7 @@ void move_mouseover(Trptr t, gint xin, gint yin, GwTime tim)
     gtk_window_move(GTK_WINDOW(GLOBALS->mouseover_mouseover_c_1), xin + xd + 8, yin + yd + 20);
 }
 
-void move_mouseover_sigs(Trptr t, gint xin, gint yin, GwTime tim)
+void move_mouseover_sigs(GwTrace *t, gint xin, gint yin, GwTime tim)
 {
     if (t == NULL || GLOBALS->disable_mouseover) {
         g_clear_pointer(&GLOBALS->mouseover_mouseover_c_1, gtk_widget_destroy);
