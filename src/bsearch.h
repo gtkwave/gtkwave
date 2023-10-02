@@ -14,7 +14,7 @@
 
 int bsearch_timechain(GwTime key);
 GwHistEnt *bsearch_node(nptr n, GwTime key);
-vptr bsearch_vector(bvptr b, GwTime key);
+GwVectorEnt *bsearch_vector(bvptr b, GwTime key);
 char *bsearch_trunc(char *ascii, int maxlen);
 char *bsearch_trunc_print(char *ascii, int maxlen);
 struct symbol *bsearch_facs(char *ascii, unsigned int *rows_return);

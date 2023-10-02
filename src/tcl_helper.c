@@ -1470,7 +1470,7 @@ static char *give_value_string(Trptr t)
         if (gw_marker_is_enabled(primary_marker)) {
             if (t->vector) {
                 /* this is currently unused as vectors are exploded into single bits */
-                vptr v =
+                GwVectorEnt *v =
                     bsearch_vector(t->n.vec, gw_marker_get_position(primary_marker) - t->shift);
                 rc = convert_ascii(t, v);
             } else {
@@ -1622,10 +1622,11 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
             if (t->vector) {
                 int i;
                 nptr *nodes;
-                vptr v = gw_marker_is_enabled(primary_marker)
-                             ? bsearch_vector(t->n.vec,
-                                              gw_marker_get_position(primary_marker) - t->shift)
-                             : NULL;
+                GwVectorEnt *v =
+                    gw_marker_is_enabled(primary_marker)
+                        ? bsearch_vector(t->n.vec,
+                                         gw_marker_get_position(primary_marker) - t->shift)
+                        : NULL;
                 unsigned char *bits = v ? (v->v) : NULL;
                 char *first_str = NULL;
                 int coalesce_pass = 1;

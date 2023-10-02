@@ -130,7 +130,7 @@ static void draw_vptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
                             Trptr t,
-                            vptr v,
+                            GwVectorEnt *v,
                             int which);
 
 void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
@@ -139,7 +139,7 @@ void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
     if (t) {
         Trptr tback = t;
         GwHistEnt *h;
-        vptr v;
+        GwVectorEnt *v;
         int i = 0, num_traces_displayable;
         int iback = 0;
 
@@ -1434,14 +1434,16 @@ static void draw_vptr_trace_analog(GwWaveView *self,
                                    cairo_t *cr,
                                    GwWaveformColors *colors,
                                    Trptr t,
-                                   vptr v,
+                                   GwVectorEnt *v,
                                    int which,
                                    int num_extension)
 {
     GwTime _x0, _x1, newtime;
     int _y0, _y1, yu, liney, yt0, yt1;
     GwTime tim, h2tim;
-    vptr h, h2, h3;
+    GwVectorEnt *h;
+    GwVectorEnt *h2;
+    GwVectorEnt *h3;
     int endcnt = 0;
     int type;
     /* int lasttype=-1; */ /* scan-build */
@@ -1839,13 +1841,15 @@ static void draw_vptr_trace(GwWaveView *self,
                             cairo_t *cr,
                             GwWaveformColors *colors,
                             Trptr t,
-                            vptr v,
+                            GwVectorEnt *v,
                             int which)
 {
     GwTime _x0, _x1, newtime, width;
     int _y0, _y1, yu, liney, ytext;
     GwTime tim /* , h2tim */; /* scan-build */
-    vptr h, h2, h3;
+    GwVectorEnt *h;
+    GwVectorEnt *h2;
+    GwVectorEnt *h3;
     char *ascii = NULL;
     int type;
     int lasttype = -1;

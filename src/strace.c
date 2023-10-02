@@ -627,8 +627,8 @@ static void strace_search_2(int direction, int is_last_iteration)
                     if (tt > maxbase)
                         maxbase = tt;
                 } else {
-                    vptr v;
-                    vptr *vp;
+                    GwVectorEnt *v;
+                    GwVectorEnt **vp;
                     GwUTime utt;
                     GwTime tt;
 
@@ -673,7 +673,7 @@ static void strace_search_2(int direction, int is_last_iteration)
                     if (tt < maxbase)
                         maxbase = tt;
                 } else {
-                    vptr v;
+                    GwVectorEnt *v;
                     GwUTime utt;
                     GwTime tt;
 
@@ -1029,7 +1029,7 @@ GwTime strace_timetrace(GwTime basetime, int notfirst)
                 if (tt < maxbase)
                     maxbase = tt;
             } else {
-                vptr v;
+                GwVectorEnt *v;
                 GwUTime utt;
                 GwTime tt;
 

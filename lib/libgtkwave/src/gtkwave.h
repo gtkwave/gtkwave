@@ -9,3 +9,4 @@
 #include "gw-color.h"
 #include "gw-color-theme.h"
 #include "gw-hist-ent.h"
+#include "gw-vector-ent.h"

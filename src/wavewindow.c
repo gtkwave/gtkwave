@@ -197,8 +197,8 @@ GwTime cook_markertime(GwTime marker, gint x, gint y)
 
 process_trace:
     if (t->vector) {
-        vptr v = bsearch_vector(t->n.vec, marker - t->shift);
-        vptr v2 = v ? v->next : NULL;
+        GwVectorEnt *v = bsearch_vector(t->n.vec, marker - t->shift);
+        GwVectorEnt *v2 = v ? v->next : NULL;
 
         if ((!v) || (!v2))
             goto bot; /* should never happen */
@@ -1928,7 +1928,7 @@ void MaxSignalLength(void)
 
                 if (bv || t->vector) {
                     char *str, *str2;
-                    vptr v;
+                    GwVectorEnt *v;
                     Trptr ts;
                     TraceEnt t_temp;
 
@@ -2159,7 +2159,7 @@ void UpdateSigValue(Trptr t)
 
             if (bv || t->vector) {
                 char *str, *str2;
-                vptr v;
+                GwVectorEnt *v;
                 Trptr ts;
                 TraceEnt t_temp;
 

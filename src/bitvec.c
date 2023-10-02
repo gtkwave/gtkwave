@@ -214,7 +214,9 @@ bvptr bits2vector(struct Bits *b)
     int regions = 0;
     struct Node *n;
     GwHistEnt **h;
-    vptr vhead = NULL, vcurr = NULL, vadd;
+    GwVectorEnt *vhead = NULL;
+    GwVectorEnt *vcurr = NULL;
+    GwVectorEnt *vadd;
     int numextrabytes;
     GwTime mintime, lasttime = -1;
     bvptr bitvec = NULL;
@@ -239,7 +241,7 @@ bvptr bits2vector(struct Bits *b)
     {
         mintime = MAX_HISTENT_TIME;
 
-        vadd = (vptr)calloc_2(1, sizeof(struct VectorEnt) + numextrabytes);
+        vadd = calloc_2(1, sizeof(GwVectorEnt) + numextrabytes);
 
         for (i = 0; i < b->nnbits; i++) /* was 1...big mistake */
         {
@@ -290,7 +292,7 @@ bvptr bits2vector(struct Bits *b)
 
         if (is_string) {
             vadd->flags |= GW_HIST_ENT_FLAG_STRING;
-            vadd = (vptr)realloc_2(vadd, sizeof(struct VectorEnt) + string_len + 1);
+            vadd = realloc_2(vadd, sizeof(GwVectorEnt) + string_len + 1);
             vadd->v[0] = 0;
         }
 
@@ -405,7 +407,7 @@ bvptr bits2vector(struct Bits *b)
             break; /* normal bail part */
     }
 
-    vadd = (vptr)calloc_2(1, sizeof(struct VectorEnt) + numextrabytes);
+    vadd = calloc_2(1, sizeof(GwVectorEnt) + numextrabytes);
     vadd->time = MAX_HISTENT_TIME;
     for (i = 0; i < numextrabytes; i++)
         vadd->v[i] = AN_U; /* formerly 0x55 */
@@ -414,7 +416,7 @@ bvptr bits2vector(struct Bits *b)
     } /* scan-build */
     regions++;
 
-    bitvec=(bvptr)calloc_2(1,sizeof(struct BitVector)+((regions)*sizeof(vptr))); /* ajb : found "regions" by manual inspection, changed to "regions-1" as array is already [1] */ /* C99, back to regions with [] */
+    bitvec=(bvptr)calloc_2(1,sizeof(struct BitVector)+((regions)*sizeof(GwVectorEnt *))); /* ajb : found "regions" by manual inspection, changed to "regions-1" as array is already [1] */ /* C99, back to regions with [] */
 
     strcpy(bitvec->bvname = (char *)malloc_2(strlen(b->name) + 1), b->name);
     bitvec->nbits = b->nnbits;

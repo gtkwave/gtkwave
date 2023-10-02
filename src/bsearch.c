@@ -127,18 +127,18 @@ GwHistEnt *bsearch_node(nptr n, GwTime key)
 static int compar_vectorent(const void *s1, const void *s2)
 {
     GwTime key, obj, delta;
-    vptr cpos;
+    GwVectorEnt *cpos;
     int rv;
 
     key = *((GwTime *)s1);
-    /* obj=(cpos=(*((vptr *)s2)))->time+GLOBALS->shift_timebase; */
+    /* obj=(cpos=(*((GwVectorEnt **)s2)))->time+GLOBALS->shift_timebase; */
 
-    obj = (cpos = (*((vptr *)s2)))->time;
+    obj = (cpos = (*((GwVectorEnt **)s2)))->time;
 
     if ((obj <= key) && (obj > GLOBALS->vmax_compare_time_bsearch_c_1)) {
         GLOBALS->vmax_compare_time_bsearch_c_1 = obj;
         GLOBALS->vmax_compare_pos_bsearch_c_1 = cpos;
-        GLOBALS->vmax_compare_index = (vptr *)s2;
+        GLOBALS->vmax_compare_index = (GwVectorEnt **)s2;
     }
 
     delta = key - obj;
@@ -152,13 +152,13 @@ static int compar_vectorent(const void *s1, const void *s2)
     return (rv);
 }
 
-vptr bsearch_vector(bvptr b, GwTime key)
+GwVectorEnt *bsearch_vector(bvptr b, GwTime key)
 {
     GLOBALS->vmax_compare_time_bsearch_c_1 = -2;
     GLOBALS->vmax_compare_pos_bsearch_c_1 = NULL;
     GLOBALS->vmax_compare_index = NULL;
 
-    if (bsearch(&key, b->vectors, b->numregions, sizeof(vptr), compar_vectorent)) {
+    if (bsearch(&key, b->vectors, b->numregions, sizeof(GwVectorEnt *), compar_vectorent)) {
         /* nothing, all side effects are in bsearch */
     }
 

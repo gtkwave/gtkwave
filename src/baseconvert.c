@@ -422,7 +422,7 @@ static void cvt_fpsudec(Trptr t, GwTime val, char *os, int len)
 /*
  * convert trptr+vptr into an ascii string
  */
-static char *convert_ascii_2(Trptr t, vptr v)
+static char *convert_ascii_2(Trptr t, GwVectorEnt *v)
 {
     TraceFlagsType flags;
     int nbits;
@@ -1102,7 +1102,7 @@ miscompare:
     return (AN_COUNT);
 }
 
-int vtype2(Trptr t, vptr v)
+int vtype2(Trptr t, GwVectorEnt *v)
 {
     int i, nbits;
     char pch, ch;
@@ -1682,7 +1682,7 @@ char *convert_ascii_vec(Trptr t, char *vec)
     return (s);
 }
 
-char *convert_ascii(Trptr t, vptr v)
+char *convert_ascii(Trptr t, GwVectorEnt *v)
 {
     char *s;
 
@@ -1816,10 +1816,8 @@ double convert_real_vec(Trptr t, char *vec)
 
             if (!fail) {
                 if (nbits == 64) {
-                    memcpy(&retval,
-                           &val,
-                           sizeof(double)); /* otherwise strict-aliasing rules problem if retval =
-                                               *(double *)&val; */
+                    memcpy(&retval, &val, sizeof(double)); /* otherwise strict-aliasing rules
+                                                            *problem if retval = (double *)&val; */
                 } else {
                     float f;
                     val_32 = val;
@@ -1892,7 +1890,7 @@ double convert_real_vec(Trptr t, char *vec)
 /*
  * convert trptr+vptr into a real
  */
-double convert_real(Trptr t, vptr v)
+double convert_real(Trptr t, GwVectorEnt *v)
 {
     Ulong flags;
     int nbits;

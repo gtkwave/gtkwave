@@ -62,7 +62,7 @@ struct strace
     union
     {
         GwHistEnt *h; /* what makes up this trace */
-        vptr v;
+        GwVectorEnt *v;
     } his;
 };
 
