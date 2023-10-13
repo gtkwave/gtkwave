@@ -7,9 +7,8 @@ typedef struct
 } X11Color;
 
 #define X11_CONST(name, r, g, b) \
-    (X11Color) \
     { \
-        name, (GwColor) \
+        name, \
         { \
             r / 255.0, g / 255.0, b / 255.0, 1.0 \
         } \
