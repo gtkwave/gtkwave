@@ -225,15 +225,15 @@ static struct fstHier *extractNextVar(void *xc,
                         break;
                 }
 
-                allocate_and_decorate_module_tree_node(
-                    ttype,
-                    h->u.scope.name,
-                    h->u.scope.component,
-                    h->u.scope.name_length,
-                    h->u.scope.component_length,
-                    GLOBALS->stem_valid ? GLOBALS->stem_struct_base_siz : 0,
-                    GLOBALS->istem_valid ? GLOBALS->istem_struct_base_siz : 0);
-                GLOBALS->stem_valid = GLOBALS->istem_valid = 0;
+                allocate_and_decorate_module_tree_node(ttype,
+                                                       h->u.scope.name,
+                                                       h->u.scope.component,
+                                                       h->u.scope.name_length,
+                                                       h->u.scope.component_length,
+                                                       GLOBALS->next_var_stem,
+                                                       GLOBALS->next_var_istem);
+                GLOBALS->next_var_stem = 0;
+                GLOBALS->next_var_istem = 0;
                 break;
             case FST_HT_UPSCOPE:
                 GLOBALS->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(xc);
@@ -401,89 +401,23 @@ static struct fstHier *extractNextVar(void *xc,
                         uint32_t istem_path_number = (uint32_t)h->u.attr.arg_from_name;
                         uint32_t istem_line_number = (uint32_t)h->u.attr.arg;
 
-                        if (istem_path_number <=
-                            GLOBALS->stem_path_string_table_siz) /* prevent overflows from malformed
-                                                                    writers */
-                        {
-                            GLOBALS->istem_valid = 1;
-                            if (!GLOBALS->istem_struct_base) {
-                                GLOBALS->istem_struct_base_siz_alloc = 1;
-                                GLOBALS->istem_struct_base_siz = 0;
-                                GLOBALS->istem_struct_base =
-                                    malloc_2(GLOBALS->istem_struct_base_siz_alloc *
-                                             sizeof(struct stem_struct_t));
-                            }
-
-                            if (GLOBALS->istem_struct_base_siz ==
-                                GLOBALS->istem_struct_base_siz_alloc) {
-                                GLOBALS->istem_struct_base_siz_alloc *= 2;
-                                GLOBALS->istem_struct_base =
-                                    realloc_2(GLOBALS->istem_struct_base,
-                                              GLOBALS->istem_struct_base_siz_alloc *
-                                                  sizeof(struct stem_struct_t));
-                            }
-
-                            GLOBALS->istem_struct_base[GLOBALS->istem_struct_base_siz].stem_idx =
-                                istem_path_number - 1;
-                            GLOBALS->istem_struct_base[GLOBALS->istem_struct_base_siz]
-                                .stem_line_number = istem_line_number;
-                            GLOBALS->istem_struct_base_siz++;
-                        }
+                        GLOBALS->next_var_istem = gw_stems_add_istem(GLOBALS->stems,
+                                                                     istem_path_number,
+                                                                     istem_line_number);
                     } else if (h->u.attr.subtype == FST_MT_SOURCESTEM) {
                         uint32_t stem_path_number = (uint32_t)h->u.attr.arg_from_name;
                         uint32_t stem_line_number = (uint32_t)h->u.attr.arg;
 
-                        if (stem_path_number <=
-                            GLOBALS->stem_path_string_table_siz) /* prevent overflows from malformed
-                                                                    writers */
-                        {
-                            GLOBALS->stem_valid = 1;
-                            if (!GLOBALS->stem_struct_base) {
-                                GLOBALS->stem_struct_base_siz_alloc = 1;
-                                GLOBALS->stem_struct_base_siz = 0;
-                                GLOBALS->stem_struct_base =
-                                    malloc_2(GLOBALS->stem_struct_base_siz_alloc *
-                                             sizeof(struct stem_struct_t));
-                            }
-
-                            if (GLOBALS->stem_struct_base_siz ==
-                                GLOBALS->stem_struct_base_siz_alloc) {
-                                GLOBALS->stem_struct_base_siz_alloc *= 2;
-                                GLOBALS->stem_struct_base =
-                                    realloc_2(GLOBALS->stem_struct_base,
-                                              GLOBALS->stem_struct_base_siz_alloc *
-                                                  sizeof(struct stem_struct_t));
-                            }
-
-                            GLOBALS->stem_struct_base[GLOBALS->stem_struct_base_siz].stem_idx =
-                                stem_path_number - 1;
-                            GLOBALS->stem_struct_base[GLOBALS->stem_struct_base_siz]
-                                .stem_line_number = stem_line_number;
-                            GLOBALS->stem_struct_base_siz++;
-                        }
+                        GLOBALS->next_var_stem =
+                            gw_stems_add_stem(GLOBALS->stems, stem_path_number, stem_line_number);
                     } else if (h->u.attr.subtype == FST_MT_PATHNAME) {
-                        if (h->u.attr.name &&
-                            ((GLOBALS->stem_path_string_table_siz + 1) == h->u.attr.arg)) {
-                            /* == check against h->u.attr.arg is a sanity check against the writer
-                             */
-                            if (!GLOBALS->stem_path_string_table) {
-                                GLOBALS->stem_path_string_table_alloc = 1;
-                                GLOBALS->stem_path_string_table_siz = 0;
-                                GLOBALS->stem_path_string_table = malloc_2(
-                                    GLOBALS->stem_path_string_table_alloc * sizeof(char *));
-                            }
+                        const gchar *path = h->u.attr.name;
+                        guint64 index = h->u.attr.arg;
 
-                            if (GLOBALS->stem_path_string_table_siz ==
-                                GLOBALS->stem_path_string_table_alloc) {
-                                GLOBALS->stem_path_string_table_alloc *= 2;
-                                GLOBALS->stem_path_string_table = realloc_2(
-                                    GLOBALS->stem_path_string_table,
-                                    GLOBALS->stem_path_string_table_alloc * sizeof(char *));
-                            }
-
-                            GLOBALS->stem_path_string_table[GLOBALS->stem_path_string_table_siz] =
-                                strdup_2(h->u.attr.name);
-                            GLOBALS->stem_path_string_table_siz++;
+                        // Check that path index has the expected value.
+                        // TODO: add warnings
+                        if (path != NULL && index == gw_stems_get_next_path_index(GLOBALS->stems)) {
+                            gw_stems_add_path(GLOBALS->stems, path);
                         }
                     } else if (h->u.attr.subtype == FST_MT_VALUELIST) {
                         if (h->u.attr.name) {
@@ -646,6 +580,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
     GLOBALS->mvlfacs_fst_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
     GLOBALS->mvlfacs_fst_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
+    GLOBALS->stems = gw_stems_new();
 
     hier_auto_enable(); /* enable if greater than threshold */
 
@@ -1256,32 +1191,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
         }
     }
 
-    if (GLOBALS->istem_struct_base) {
-        if (GLOBALS->istem_struct_base_siz != GLOBALS->istem_struct_base_siz_alloc) {
-            GLOBALS->istem_struct_base_siz_alloc = GLOBALS->istem_struct_base_siz;
-            GLOBALS->istem_struct_base =
-                realloc_2(GLOBALS->istem_struct_base,
-                          GLOBALS->istem_struct_base_siz_alloc * sizeof(struct stem_struct_t));
-        }
-    }
-
-    if (GLOBALS->stem_struct_base) {
-        if (GLOBALS->stem_struct_base_siz != GLOBALS->stem_struct_base_siz_alloc) {
-            GLOBALS->stem_struct_base_siz_alloc = GLOBALS->stem_struct_base_siz;
-            GLOBALS->stem_struct_base =
-                realloc_2(GLOBALS->stem_struct_base,
-                          GLOBALS->stem_struct_base_siz_alloc * sizeof(struct stem_struct_t));
-        }
-    }
-
-    if (GLOBALS->stem_path_string_table) {
-        if (GLOBALS->stem_path_string_table_siz != GLOBALS->stem_path_string_table_alloc) {
-            GLOBALS->stem_path_string_table_alloc = GLOBALS->stem_path_string_table_siz;
-            GLOBALS->stem_path_string_table =
-                realloc_2(GLOBALS->stem_path_string_table,
-                          GLOBALS->stem_path_string_table_alloc * sizeof(char *));
-        }
-    }
+    gw_stems_shrink_to_fit(GLOBALS->stems);
 
     decorated_module_cleanup(); /* ...also now in gtk2_treesearch.c */
     freeze_facility_pack();

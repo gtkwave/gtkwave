@@ -74,6 +74,7 @@
 struct Global
 {
     GwProject *project;
+    GwStems *stems;
 
     /*
      * analyzer.c
@@ -244,19 +245,8 @@ struct Global
     char **subvar_pnt;
     unsigned char fst_filetype;
     unsigned subvar_jrb_count_locked : 1;
-    uint32_t stem_file_idx;
-    uint32_t stem_line_number;
-    char **stem_path_string_table;
-    struct stem_struct_t *stem_struct_base;
-    struct stem_struct_t *istem_struct_base;
-    uint32_t stem_path_string_table_siz;
-    uint32_t stem_path_string_table_alloc;
-    uint32_t stem_struct_base_siz;
-    uint32_t stem_struct_base_siz_alloc;
-    uint32_t istem_struct_base_siz;
-    uint32_t istem_struct_base_siz_alloc;
-    unsigned stem_valid : 1;
-    unsigned istem_valid : 1;
+    guint32 next_var_stem;
+    guint32 next_var_istem;
     char *fst_synclock_str;
     JRB synclock_jrb;
 #ifdef _WAVE_HAVE_JUDY

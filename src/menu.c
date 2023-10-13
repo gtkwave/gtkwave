@@ -4055,33 +4055,28 @@ static void open_index_in_forked_editor(uint32_t idx, int typ)
         return;
     }
 
-    int lineno = 1;
-    char *fname = NULL;
-
-    idx--;
+    GwStem stem;
     if (typ == FST_MT_SOURCESTEM) {
-        lineno = GLOBALS->stem_struct_base[idx].stem_line_number;
-        fname = g_strdup(GLOBALS->stem_path_string_table[GLOBALS->stem_struct_base[idx].stem_idx]);
+        stem = gw_stems_get_stem(GLOBALS->stems, idx);
     } else {
-        lineno = GLOBALS->istem_struct_base[idx].stem_line_number;
-        fname = g_strdup(GLOBALS->stem_path_string_table[GLOBALS->istem_struct_base[idx].stem_idx]);
+        stem = gw_stems_get_istem(GLOBALS->stems, idx);
     }
 
-    g_return_if_fail(fname != NULL);
+    char *path = g_strdup(stem.path);
 
-    if (!g_file_test(fname, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)) {
+    if (!g_file_test(stem.path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)) {
         char *rp =
-            get_relative_adjusted_name(GLOBALS->loaded_file_name, fname, GLOBALS->loaded_file_name);
+            get_relative_adjusted_name(GLOBALS->loaded_file_name, path, GLOBALS->loaded_file_name);
         if (!rp) {
-            int clen = strlen(fname);
+            int clen = strlen(stem.path);
             int wid = MIN(clen * 10, 400);
 
-            simplereqbox("Could not open file!", wid, fname, "OK", NULL, NULL, 1);
+            simplereqbox("Could not open file!", wid, stem.path, "OK", NULL, NULL, 1);
             return;
         }
 
-        g_free(fname);
-        fname = g_strdup(rp);
+        g_free(path);
+        path = g_strdup(rp);
         free_2(rp);
     }
 
@@ -4093,7 +4088,7 @@ static void open_index_in_forked_editor(uint32_t idx, int typ)
     if (editor_name != NULL) {
         gchar *editor_command;
         if (strstr(editor_name, "%s") != NULL) {
-            char *lineno_str = g_strdup_printf("%d", lineno);
+            char *lineno_str = g_strdup_printf("%d", stem.line_number);
 
             GRegex *d_re = g_regex_new("%d", 0, 0, NULL);
             GRegex *s_re = g_regex_new("%s", 0, 0, NULL);
@@ -4101,12 +4096,12 @@ static void open_index_in_forked_editor(uint32_t idx, int typ)
             g_assert_nonnull(s_re);
 
             gchar *t = g_regex_replace_literal(d_re, editor_name, -1, 0, lineno_str, 0, NULL);
-            editor_command = g_regex_replace_literal(s_re, t, -1, 0, fname, 0, NULL);
+            editor_command = g_regex_replace_literal(s_re, t, -1, 0, path, 0, NULL);
             g_free(t);
         } else if (g_strv_contains(EDITORS_WITH_LINE_NUMBER_SUPPORT, editor_name)) {
-            editor_command = g_strdup_printf("%s %s +%d", editor_name, fname, lineno);
+            editor_command = g_strdup_printf("%s %s +%d", editor_name, path, stem.line_number);
         } else {
-            editor_command = g_strdup_printf("%s %s", editor_name, fname);
+            editor_command = g_strdup_printf("%s %s", editor_name, path);
         }
 
         GdkDisplay *display = gtk_widget_get_display(GLOBALS->mainwindow);
@@ -4127,16 +4122,18 @@ static void open_index_in_forked_editor(uint32_t idx, int typ)
         g_object_unref(app_info);
         g_object_unref(app_launch_context);
     } else {
-        GFile *file = g_file_new_for_path(fname);
+        GFile *file = g_file_new_for_path(path);
         gchar *uri = g_file_get_uri(file);
 
         if (!gtk_show_uri_on_window(GTK_WINDOW(GLOBALS->mainwindow), uri, GDK_CURRENT_TIME, NULL)) {
-            simplereqbox("Could not launch default editor!", 400, fname, "OK", NULL, NULL, 1);
+            simplereqbox("Could not launch default editor!", 400, path, "OK", NULL, NULL, 1);
         }
 
         g_free(uri);
         g_object_unref(file);
     }
+
+    g_free(path);
 }
 
 static void menu_open_hierarchy_2(gpointer null_data,
@@ -4215,10 +4212,10 @@ static void menu_open_hierarchy_2(gpointer null_data,
     if (((typ == FST_MT_SOURCESTEM) || (typ == FST_MT_SOURCEISTEM)) && t_forced) {
         uint32_t idx = (typ == FST_MT_SOURCESTEM) ? t_forced->t_stem : t_forced->t_istem;
 
-        if (!GLOBALS->stem_path_string_table) {
+        if (GLOBALS->stems == NULL || gw_stems_is_empty(GLOBALS->stems)) {
             fprintf(stderr, "GTKWAVE | Could not find stems information in this file!\n");
         } else {
-            if (!idx && (typ == FST_MT_SOURCEISTEM) && GLOBALS->istem_struct_base) {
+            if (!idx && (typ == FST_MT_SOURCEISTEM) && gw_stems_has_istems(GLOBALS->stems)) {
                 /* handle top level where istem == stem and istem is deliberately not specified */
                 typ = FST_MT_SOURCESTEM;
                 idx = t_forced->t_stem;
@@ -4244,10 +4241,10 @@ static void menu_open_hierarchy_2a(gpointer null_data,
         if (t_forced) {
             uint32_t idx = (typ == FST_MT_SOURCESTEM) ? t_forced->t_stem : t_forced->t_istem;
 
-            if (!GLOBALS->stem_path_string_table) {
+            if (GLOBALS->stems == NULL || gw_stems_is_empty(GLOBALS->stems)) {
                 fprintf(stderr, "GTKWAVE | Could not find stems information in this file!\n");
             } else {
-                if (!idx && (typ == FST_MT_SOURCEISTEM) && GLOBALS->istem_struct_base) {
+                if (!idx && (typ == FST_MT_SOURCEISTEM) && gw_stems_has_istems(GLOBALS->stems)) {
                     /* handle top level where istem == stem and istem is deliberately not specified
                      */
                     typ = FST_MT_SOURCESTEM;
@@ -6412,16 +6409,18 @@ void do_popup_menu(GtkWidget *my_widget, GdkEventButton *event)
     if (!GLOBALS->signal_popup_menu) {
         int nmenu_items = sizeof(popmenu_items) / sizeof(popmenu_items[0]);
 
-#if !defined __MINGW32__
-        if (!GLOBALS->stem_path_string_table) {
-            nmenu_items = nmenu_items -
-                          2; /* to remove WV_MENU_OPENHS, WV_MENU_OPENIHS -> keep at end of list! */
-        } else {
-            if (!GLOBALS->istem_struct_base) {
-                nmenu_items--; /* remove "/Open Source Instantiation" if not present */
-            }
-        }
-#endif
+        // TODO: disable menu items instead
+        // #if !defined __MINGW32__
+        //         if (!GLOBALS->stem_path_string_table) {
+        //             nmenu_items = nmenu_items -
+        //                           2; /* to remove WV_MENU_OPENHS, WV_MENU_OPENIHS -> keep at end
+        //                           of list! */
+        //         } else {
+        //             if (!GLOBALS->istem_struct_base) {
+        //                 nmenu_items--; /* remove "/Open Source Instantiation" if not present */
+        //             }
+        //         }
+        // #endif
 
         GLOBALS->signal_popup_menu = menu = alt_menu(popmenu_items, nmenu_items, NULL, NULL, FALSE);
     } else {
@@ -6463,14 +6462,15 @@ void do_sst_popup_menu(GtkWidget *my_widget, GdkEventButton *event)
     if (!GLOBALS->sst_signal_popup_menu) {
         int nmenu_items = sizeof(sst_popmenu_items) / sizeof(sst_popmenu_items[0]);
 
-#if !defined __MINGW32__
-        if (!GLOBALS->stem_path_string_table) {
-            nmenu_items -= 2; /* remove all stems popups */
-        } else if (!GLOBALS->istem_struct_base) {
-            nmenu_items--; /* remove "/Open Source Instantiation" if not present */
-        }
-        /* still have recurse import popup */
-#endif
+        // TODO: disable menu items instead
+        // #if !defined __MINGW32__
+        //         if (!GLOBALS->stem_path_string_table) {
+        //             nmenu_items -= 2; /* remove all stems popups */
+        //         } else if (!GLOBALS->istem_struct_base) {
+        //             nmenu_items--; /* remove "/Open Source Instantiation" if not present */
+        //         }
+        //         /* still have recurse import popup */
+        // #endif
 
         GLOBALS->sst_signal_popup_menu = menu =
             alt_menu(sst_popmenu_items, nmenu_items, NULL, NULL, FALSE);
