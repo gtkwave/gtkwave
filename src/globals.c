@@ -62,6 +62,7 @@ struct Global *GLOBALS = NULL;
 /* make this const so if we try to write to it we coredump */
 static const struct Global globals_base_values = {
     NULL, // project
+    NULL, // stems
 
     /*
      * analyzer.c
@@ -236,19 +237,8 @@ static const struct Global globals_base_values = {
     NULL, /* subvar_pnt */
     0, /* fst_filetype */
     0, /* subvar_jrb_count_locked */
-    0, /* stem_file_idx */
-    0, /* stem_line_number */
-    NULL, /* stem_path_string_table */
-    NULL, /* stem_struct_base */
-    NULL, /* istem_struct_base */
-    0, /* stem_path_string_table_siz */
-    0, /* stem_path_string_table_alloc */
-    0, /* stem_struct_base_siz */
-    0, /* stem_struct_base_siz_alloc */
-    0, /* istem_struct_base_siz */
-    0, /* istem_struct_base_siz_alloc */
-    0, /* stem_valid  */
-    0, /* istem_valid */
+    0, /* next_var_stem */
+    0, /* next_var_istem */
     NULL, /* fst_synclock_str */
     NULL, /* synclock_jrb */
     NULL, /* xl_enum_filter */

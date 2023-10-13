@@ -4,6 +4,7 @@ libgtkwave_public_sources = [
     'gw-marker.c',
     'gw-named-markers.c',
     'gw-project.c',
+    'gw-stems.c',
     'gw-time.c',
 ]
 
@@ -19,6 +20,7 @@ libgtkwave_public_headers = [
     'gw-marker.h',
     'gw-named-markers.h',
     'gw-project.h',
+    'gw-stems.h',
     'gw-time.h',
     'gw-vector-ent.h',
 ]
