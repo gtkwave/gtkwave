@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: sudo apt-get -y install gperf desktop-file-utils libgtk-3-dev libjudy-dev libgirepository1.0-dev
+      - name: Install meson
+        run: pip install meson ninja
+      - name: Setup meson build
+        run: meson setup build
+      - name: Compile GTKWave
+        run: meson compile -C build
+      - name: Run tests
+        run: meson test -C build -v
+
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' 
+      - name: Install dependencies
+        run: brew install meson ninja gtk+3 gtk-mac-integration gobject-introspection shared-mime-info desktop-file-utils
+      - name: Setup meson build
+        run: meson setup build
+      - name: Compile GTKWave
+        run: meson compile -C build
+      - name: Run tests
+        run: meson test -C build -v
