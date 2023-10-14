@@ -3048,39 +3048,39 @@ GdkPixbuf *gw_hierarchy_icons_get(GwHierarchyIcons *self, guint tree_kind)
 
     // clang-format off
     switch (tree_kind) {
-        case TREE_VCD_ST_MODULE:    return self->module;
-        case TREE_VCD_ST_TASK:      return self->task;
-        case TREE_VCD_ST_FUNCTION:  return self->function;
-        case TREE_VCD_ST_BEGIN:     return self->begin;
-        case TREE_VCD_ST_FORK:      return self->fork;
-        case TREE_VCD_ST_GENERATE:  return self->generatefor; // same as TREE_VHDL_ST_GENFOR
-        case TREE_VCD_ST_STRUCT:    return self->block;       // same as TREE_VHDL_ST_BLOCK
-        case TREE_VCD_ST_UNION:     return self->instance;    // same as TREE_VHDL_ST_INSTANCE
-        case TREE_VCD_ST_CLASS:     return self->class;
-        case TREE_VCD_ST_INTERFACE: return self->interface;
-        case TREE_VCD_ST_PACKAGE:   return self->svpackage;
-        case TREE_VCD_ST_PROGRAM:   return self->program;
+        case GW_TREE_KIND_VCD_ST_MODULE:    return self->module;
+        case GW_TREE_KIND_VCD_ST_TASK:      return self->task;
+        case GW_TREE_KIND_VCD_ST_FUNCTION:  return self->function;
+        case GW_TREE_KIND_VCD_ST_BEGIN:     return self->begin;
+        case GW_TREE_KIND_VCD_ST_FORK:      return self->fork;
+        case GW_TREE_KIND_VCD_ST_GENERATE:  return self->generatefor; // same as GW_TREE_KIND_VHDL_ST_GENFOR
+        case GW_TREE_KIND_VCD_ST_STRUCT:    return self->block;       // same as GW_TREE_KIND_VHDL_ST_BLOCK
+        case GW_TREE_KIND_VCD_ST_UNION:     return self->instance;    // same as GW_TREE_KIND_VHDL_ST_INSTANCE
+        case GW_TREE_KIND_VCD_ST_CLASS:     return self->class;
+        case GW_TREE_KIND_VCD_ST_INTERFACE: return self->interface;
+        case GW_TREE_KIND_VCD_ST_PACKAGE:   return self->svpackage;
+        case GW_TREE_KIND_VCD_ST_PROGRAM:   return self->program;
 
-        case TREE_VHDL_ST_DESIGN:   return self->design;
-        case TREE_VHDL_ST_BLOCK:    return self->block;
-        case TREE_VHDL_ST_GENIF:    return self->generateif;
-        case TREE_VHDL_ST_GENFOR:   return self->generatefor;
-        case TREE_VHDL_ST_INSTANCE: return self->instance;
-        case TREE_VHDL_ST_PACKAGE:  return self->package;
+        case GW_TREE_KIND_VHDL_ST_DESIGN:   return self->design;
+        case GW_TREE_KIND_VHDL_ST_BLOCK:    return self->block;
+        case GW_TREE_KIND_VHDL_ST_GENIF:    return self->generateif;
+        case GW_TREE_KIND_VHDL_ST_GENFOR:   return self->generatefor;
+        case GW_TREE_KIND_VHDL_ST_INSTANCE: return self->instance;
+        case GW_TREE_KIND_VHDL_ST_PACKAGE:  return self->package;
 
-        case TREE_VHDL_ST_SIGNAL:    return self->signal;
-        case TREE_VHDL_ST_PORTIN:    return self->portin;
-        case TREE_VHDL_ST_PORTOUT:   return self->portout;
-        case TREE_VHDL_ST_PORTINOUT: return self->portinout;
-        case TREE_VHDL_ST_BUFFER:    return self->buffer;
-        case TREE_VHDL_ST_LINKAGE:   return self->linkage;
+        case GW_TREE_KIND_VHDL_ST_SIGNAL:    return self->signal;
+        case GW_TREE_KIND_VHDL_ST_PORTIN:    return self->portin;
+        case GW_TREE_KIND_VHDL_ST_PORTOUT:   return self->portout;
+        case GW_TREE_KIND_VHDL_ST_PORTINOUT: return self->portinout;
+        case GW_TREE_KIND_VHDL_ST_BUFFER:    return self->buffer;
+        case GW_TREE_KIND_VHDL_ST_LINKAGE:   return self->linkage;
 
-        case TREE_VHDL_ST_ARCHITECTURE: return self->module; // same as TREE_VCD_ST_MODULE
-        case TREE_VHDL_ST_FUNCTION:     return self->function; // same as TREE_VCD_ST_FUNCTION
-        case TREE_VHDL_ST_PROCESS:      return self->task; // same as TREE_VCD_ST_TASK
-        case TREE_VHDL_ST_PROCEDURE:    return self->class; // same as TREE_VCD_ST_CLASS
-        case TREE_VHDL_ST_RECORD:       return self->record;
-        case TREE_VHDL_ST_GENERATE:     return self->generate;
+        case GW_TREE_KIND_VHDL_ST_ARCHITECTURE: return self->module; // same as GW_TREE_KIND_VCD_ST_MODULE
+        case GW_TREE_KIND_VHDL_ST_FUNCTION:     return self->function; // same as GW_TREE_KIND_VCD_ST_FUNCTION
+        case GW_TREE_KIND_VHDL_ST_PROCESS:      return self->task; // same as GW_TREE_KIND_VCD_ST_TASK
+        case GW_TREE_KIND_VHDL_ST_PROCEDURE:    return self->class; // same as GW_TREE_KIND_VCD_ST_CLASS
+        case GW_TREE_KIND_VHDL_ST_RECORD:       return self->record;
+        case GW_TREE_KIND_VHDL_ST_GENERATE:     return self->generate;
 
         default:
             return NULL;

@@ -153,75 +153,75 @@ static struct fstHier *extractNextVar(void *xc,
 
                 switch (h->u.scope.typ) {
                     case FST_ST_VCD_MODULE:
-                        ttype = TREE_VCD_ST_MODULE;
+                        ttype = GW_TREE_KIND_VCD_ST_MODULE;
                         break;
                     case FST_ST_VCD_TASK:
-                        ttype = TREE_VCD_ST_TASK;
+                        ttype = GW_TREE_KIND_VCD_ST_TASK;
                         break;
                     case FST_ST_VCD_FUNCTION:
-                        ttype = TREE_VCD_ST_FUNCTION;
+                        ttype = GW_TREE_KIND_VCD_ST_FUNCTION;
                         break;
                     case FST_ST_VCD_BEGIN:
-                        ttype = TREE_VCD_ST_BEGIN;
+                        ttype = GW_TREE_KIND_VCD_ST_BEGIN;
                         break;
                     case FST_ST_VCD_FORK:
-                        ttype = TREE_VCD_ST_FORK;
+                        ttype = GW_TREE_KIND_VCD_ST_FORK;
                         break;
                     case FST_ST_VCD_GENERATE:
-                        ttype = TREE_VCD_ST_GENERATE;
+                        ttype = GW_TREE_KIND_VCD_ST_GENERATE;
                         break;
                     case FST_ST_VCD_STRUCT:
-                        ttype = TREE_VCD_ST_STRUCT;
+                        ttype = GW_TREE_KIND_VCD_ST_STRUCT;
                         break;
                     case FST_ST_VCD_UNION:
-                        ttype = TREE_VCD_ST_UNION;
+                        ttype = GW_TREE_KIND_VCD_ST_UNION;
                         break;
                     case FST_ST_VCD_CLASS:
-                        ttype = TREE_VCD_ST_CLASS;
+                        ttype = GW_TREE_KIND_VCD_ST_CLASS;
                         break;
                     case FST_ST_VCD_INTERFACE:
-                        ttype = TREE_VCD_ST_INTERFACE;
+                        ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
                         break;
                     case FST_ST_VCD_PACKAGE:
-                        ttype = TREE_VCD_ST_PACKAGE;
+                        ttype = GW_TREE_KIND_VCD_ST_PACKAGE;
                         break;
                     case FST_ST_VCD_PROGRAM:
-                        ttype = TREE_VCD_ST_PROGRAM;
+                        ttype = GW_TREE_KIND_VCD_ST_PROGRAM;
                         break;
 
                     case FST_ST_VHDL_ARCHITECTURE:
-                        ttype = TREE_VHDL_ST_ARCHITECTURE;
+                        ttype = GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
                         break;
                     case FST_ST_VHDL_PROCEDURE:
-                        ttype = TREE_VHDL_ST_PROCEDURE;
+                        ttype = GW_TREE_KIND_VHDL_ST_PROCEDURE;
                         break;
                     case FST_ST_VHDL_FUNCTION:
-                        ttype = TREE_VHDL_ST_FUNCTION;
+                        ttype = GW_TREE_KIND_VHDL_ST_FUNCTION;
                         break;
                     case FST_ST_VHDL_RECORD:
-                        ttype = TREE_VHDL_ST_RECORD;
+                        ttype = GW_TREE_KIND_VHDL_ST_RECORD;
                         break;
                     case FST_ST_VHDL_PROCESS:
-                        ttype = TREE_VHDL_ST_PROCESS;
+                        ttype = GW_TREE_KIND_VHDL_ST_PROCESS;
                         break;
                     case FST_ST_VHDL_BLOCK:
-                        ttype = TREE_VHDL_ST_BLOCK;
+                        ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
                         break;
                     case FST_ST_VHDL_FOR_GENERATE:
-                        ttype = TREE_VHDL_ST_GENFOR;
+                        ttype = GW_TREE_KIND_VHDL_ST_GENFOR;
                         break;
                     case FST_ST_VHDL_IF_GENERATE:
-                        ttype = TREE_VHDL_ST_GENIF;
+                        ttype = GW_TREE_KIND_VHDL_ST_GENIF;
                         break;
                     case FST_ST_VHDL_GENERATE:
-                        ttype = TREE_VHDL_ST_GENERATE;
+                        ttype = GW_TREE_KIND_VHDL_ST_GENERATE;
                         break;
                     case FST_ST_VHDL_PACKAGE:
-                        ttype = TREE_VHDL_ST_PACKAGE;
+                        ttype = GW_TREE_KIND_VHDL_ST_PACKAGE;
                         break;
 
                     default:
-                        ttype = TREE_UNKNOWN;
+                        ttype = GW_TREE_KIND_UNKNOWN;
                         break;
                 }
 
@@ -502,9 +502,9 @@ static struct fstHier *extractNextVar(void *xc,
     return (NULL);
 }
 
-static void fst_append_graft_chain(int len, char *nam, int which, struct tree *par)
+static void fst_append_graft_chain(int len, char *nam, int which, GwTree *par)
 {
-    struct tree *t = talloc_2(sizeof(struct tree) + len + 1);
+    GwTree *t = talloc_2(sizeof(GwTree) + len + 1);
 
     memcpy(t->name, nam, len + 1);
     t->t_which = which;
@@ -531,7 +531,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     int msb, lsb;
     char *nnam = NULL;
     uint32_t activity_idx, num_activity_changes;
-    struct tree *npar = NULL;
+    GwTree *npar = NULL;
     char **f_name = NULL;
     int *f_name_len = NULL, *f_name_max_len = NULL;
     int allowed_to_autocoalesce;

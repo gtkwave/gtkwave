@@ -26,13 +26,13 @@ enum TreeBuildTypes
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING
-struct tree *talloc_2(size_t siz)
+GwTree *talloc_2(size_t siz)
 {
     if (GLOBALS->talloc_pool_base) {
         if ((siz + GLOBALS->talloc_idx) <= WAVE_TALLOC_POOL_SIZE) {
             unsigned char *m = GLOBALS->talloc_pool_base + GLOBALS->talloc_idx;
             GLOBALS->talloc_idx += siz;
-            return ((struct tree *)m);
+            return ((GwTree *)m);
         } else if (siz >= WAVE_TALLOC_ALTREQ_SIZE) {
             return (calloc_2(1, siz));
         }
@@ -118,7 +118,7 @@ int decorated_module_cleanup(void)
 
         for (rcValue = Judy1First(GLOBALS->sym_tree_addresses, &Index, PJE0); rcValue != 0;
              rcValue = Judy1Next(GLOBALS->sym_tree_addresses, &Index, PJE0)) {
-            ((struct tree *)Index)->children_in_gui = 0;
+            ((GwTree *)Index)->children_in_gui = 0;
         }
 
         Judy1FreeArray(&GLOBALS->sym_tree_addresses, PJE0);
@@ -139,7 +139,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                                             uint32_t t_stem,
                                             uint32_t t_istem)
 {
-    struct tree *t;
+    GwTree *t;
     int mtyp = WAVE_T_WHICH_UNDEFINED_COMPNAME;
 #ifdef _WAVE_HAVE_JUDY
     char str[2048];
@@ -167,7 +167,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                     return;
                 }
 
-                t = talloc_2(sizeof(struct tree) + scopename_len + 1);
+                t = talloc_2(sizeof(GwTree) + scopename_len + 1);
                 *PPValue = t;
                 goto t_allocated;
             } else {
@@ -206,14 +206,14 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
 
                     strcpy(str + len, scopename);
                     PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                    t = talloc_2(sizeof(struct tree) + scopename_len + 1);
+                    t = talloc_2(sizeof(GwTree) + scopename_len + 1);
                     *PPValue = t;
                     goto t_allocated;
                 }
             }
 #endif
 
-            t = talloc_2(sizeof(struct tree) + scopename_len + 1);
+            t = talloc_2(sizeof(GwTree) + scopename_len + 1);
 #ifdef _WAVE_HAVE_JUDY
         t_allocated:
 #endif
@@ -238,7 +238,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                 t = t->next;
             }
 
-            t = talloc_2(sizeof(struct tree) + scopename_len + 1);
+            t = talloc_2(sizeof(GwTree) + scopename_len + 1);
             strcpy(t->name, scopename);
             t->kind = ttype;
             t->t_which = mtyp;
@@ -249,7 +249,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
             GLOBALS->mod_tree_parent = GLOBALS->treeroot = t;
         }
     } else {
-        t = talloc_2(sizeof(struct tree) + scopename_len + 1);
+        t = talloc_2(sizeof(GwTree) + scopename_len + 1);
         strcpy(t->name, scopename);
         t->kind = ttype;
         t->t_which = mtyp;
@@ -263,11 +263,11 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
 /*
  * adds back netnames
  */
-int treegraft(struct tree **t)
+int treegraft(GwTree **t)
 {
-    struct tree *tx = GLOBALS->terminals_tchain_tree_c_1;
-    struct tree *t2;
-    struct tree *par;
+    GwTree *tx = GLOBALS->terminals_tchain_tree_c_1;
+    GwTree *t2;
+    GwTree *par;
 
     while (tx) {
         t2 = tx->next;
@@ -311,9 +311,9 @@ void treenamefix_str(char *s)
     }
 }
 
-void treenamefix(struct tree *t)
+void treenamefix(GwTree *t)
 {
-    struct tree *tnext;
+    GwTree *tnext;
     if (t->child)
         treenamefix(t->child);
 
@@ -332,7 +332,7 @@ void treenamefix(struct tree *t)
 /*
  * for debugging purposes only
  */
-void treedebug(struct tree *t, char *s)
+void treedebug(GwTree *t, char *s)
 {
     while (t) {
         char *s2;
@@ -393,16 +393,16 @@ char *leastsig_hiername(char *nam)
 
 static int tree_qsort_cmp(const void *v1, const void *v2)
 {
-    struct tree *t1 = *(struct tree **)v1;
-    struct tree *t2 = *(struct tree **)v2;
+    GwTree *t1 = *(GwTree **)v1;
+    GwTree *t2 = *(GwTree **)v2;
 
     return (sigcmp(t2->name, t1->name)); /* because list must be in rvs */
 }
 
-static void treesort_2(struct tree *t, struct tree *p, struct tree ***tm, int *tm_siz)
+static void treesort_2(GwTree *t, GwTree *p, GwTree ***tm, int *tm_siz)
 {
-    struct tree *it;
-    struct tree **srt;
+    GwTree *it;
+    GwTree **srt;
     int cnt;
     int i;
 
@@ -419,7 +419,7 @@ static void treesort_2(struct tree *t, struct tree *p, struct tree ***tm, int *t
             if (*tm) {
                 free_2(*tm);
             }
-            *tm = malloc_2((cnt + 1) * sizeof(struct tree *));
+            *tm = malloc_2((cnt + 1) * sizeof(GwTree *));
         }
         srt = *tm;
 
@@ -429,7 +429,7 @@ static void treesort_2(struct tree *t, struct tree *p, struct tree ***tm, int *t
         }
         srt[i] = NULL;
 
-        qsort((void *)srt, cnt, sizeof(struct tree *), tree_qsort_cmp);
+        qsort((void *)srt, cnt, sizeof(GwTree *), tree_qsort_cmp);
 
         if (p) {
             p->child = srt[0];
@@ -453,9 +453,9 @@ static void treesort_2(struct tree *t, struct tree *p, struct tree ***tm, int *t
     }
 }
 
-void treesort(struct tree *t, struct tree *p)
+void treesort(GwTree *t, GwTree *p)
 {
-    struct tree **tm = NULL;
+    GwTree **tm = NULL;
     int tm_siz = 0;
 
     treesort_2(t, p, &tm, &tm_siz);
@@ -464,7 +464,7 @@ void treesort(struct tree *t, struct tree *p)
     }
 }
 
-void order_facs_from_treesort_2(struct tree *t)
+void order_facs_from_treesort_2(GwTree *t)
 {
     while (t) {
         if (t->child) {
@@ -483,7 +483,7 @@ void order_facs_from_treesort_2(struct tree *t)
     }
 }
 
-void order_facs_from_treesort(struct tree *t, void *v)
+void order_facs_from_treesort(GwTree *t, void *v)
 {
     struct symbol ***f =
         (struct symbol ***)v; /* eliminate compiler warning in tree.h as symbol.h refs tree.h */
@@ -510,9 +510,9 @@ void order_facs_from_treesort(struct tree *t, void *v)
 
 void build_tree_from_name(const char *s, int which)
 {
-    struct tree *t, *nt;
-    struct tree *tchain = NULL, *tchain_iter;
-    struct tree *prevt;
+    GwTree *t, *nt;
+    GwTree *tchain = NULL, *tchain_iter;
+    GwTree *prevt;
 #ifdef _WAVE_HAVE_JUDY
     PPvoid_t PPValue = NULL;
     char str[2048];
@@ -609,7 +609,7 @@ void build_tree_from_name(const char *s, int which)
 #ifdef _WAVE_HAVE_JUDY
         construct:
 #endif
-            nt = (struct tree *)talloc_2(sizeof(struct tree) + GLOBALS->module_len_tree_c_1 + 1);
+            nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
             memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
             if (s) {
@@ -644,7 +644,7 @@ void build_tree_from_name(const char *s, int which)
                 s = get_module_name(s);
 
                 nt =
-                    (struct tree *)talloc_2(sizeof(struct tree) + GLOBALS->module_len_tree_c_1 + 1);
+                    (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
                 memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
                 if (s) {
@@ -664,7 +664,7 @@ void build_tree_from_name(const char *s, int which)
         while (s) {
             s = get_module_name(s);
 
-            nt = (struct tree *)talloc_2(sizeof(struct tree) + GLOBALS->module_len_tree_c_1 + 1);
+            nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
             memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
             if (!s)
@@ -696,7 +696,7 @@ void build_tree_from_name(const char *s, int which)
 /*
  * GTK2: build the tree.
  */
-static void XXX_maketree_nodes(struct tree *t2, GtkTreeIter *iter)
+static void XXX_maketree_nodes(GwTree *t2, GtkTreeIter *iter)
 {
     char *tmp, *tmp2, *tmp3;
     gchar *text[1];
@@ -758,9 +758,9 @@ static void XXX_maketree_nodes(struct tree *t2, GtkTreeIter *iter)
                        -1);
 }
 
-void XXX_maketree2(GtkTreeIter *subtree, struct tree *t, int depth)
+void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth)
 {
-    struct tree *t2;
+    GwTree *t2;
 
 #ifndef WAVE_DISABLE_FAST_TREE
     if (depth > 1)
@@ -815,7 +815,7 @@ void XXX_maketree2(GtkTreeIter *subtree, struct tree *t, int depth)
     }
 }
 
-void XXX_maketree(GtkTreeIter *subtree, struct tree *t)
+void XXX_maketree(GtkTreeIter *subtree, GwTree *t)
 {
     GtkCellRenderer *renderer_t;
     GtkCellRenderer *renderer_p;
@@ -930,69 +930,69 @@ void sst_exclusion_loader(void)
                             case SST_EXCL_HIER: /* this if/else chain is good enough for an init
                                                    script */
                                 if (!strcmp(p, "VCD_ST_MODULE")) {
-                                    exclhier |= exclone << TREE_VCD_ST_MODULE;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_MODULE;
                                 } else if (!strcmp(p, "VCD_ST_TASK")) {
-                                    exclhier |= exclone << TREE_VCD_ST_TASK;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_TASK;
                                 } else if (!strcmp(p, "VCD_ST_FUNCTION")) {
-                                    exclhier |= exclone << TREE_VCD_ST_FUNCTION;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_FUNCTION;
                                 } else if (!strcmp(p, "VCD_ST_BEGIN")) {
-                                    exclhier |= exclone << TREE_VCD_ST_BEGIN;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_BEGIN;
                                 } else if (!strcmp(p, "VCD_ST_FORK")) {
-                                    exclhier |= exclone << TREE_VCD_ST_FORK;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_FORK;
                                 } else if (!strcmp(p, "VCD_ST_GENERATE")) {
-                                    exclhier |= exclone << TREE_VCD_ST_GENERATE;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_GENERATE;
                                 } else if (!strcmp(p, "VCD_ST_STRUCT")) {
-                                    exclhier |= exclone << TREE_VCD_ST_STRUCT;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_STRUCT;
                                 } else if (!strcmp(p, "VCD_ST_UNION")) {
-                                    exclhier |= exclone << TREE_VCD_ST_UNION;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_UNION;
                                 } else if (!strcmp(p, "VCD_ST_CLASS")) {
-                                    exclhier |= exclone << TREE_VCD_ST_CLASS;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_CLASS;
                                 } else if (!strcmp(p, "VCD_ST_INTERFACE")) {
-                                    exclhier |= exclone << TREE_VCD_ST_INTERFACE;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_INTERFACE;
                                 } else if (!strcmp(p, "VCD_ST_PACKAGE")) {
-                                    exclhier |= exclone << TREE_VCD_ST_PACKAGE;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_PACKAGE;
                                 } else if (!strcmp(p, "VCD_ST_PROGRAM")) {
-                                    exclhier |= exclone << TREE_VCD_ST_PROGRAM;
+                                    exclhier |= exclone << GW_TREE_KIND_VCD_ST_PROGRAM;
                                 } else if (!strcmp(p, "VHDL_ST_DESIGN")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_DESIGN;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_DESIGN;
                                 } else if (!strcmp(p, "VHDL_ST_BLOCK")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_BLOCK;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_BLOCK;
                                 } else if (!strcmp(p, "VHDL_ST_GENIF")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_GENIF;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_GENIF;
                                 } else if (!strcmp(p, "VHDL_ST_GENFOR")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_GENFOR;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_GENFOR;
                                 } else if (!strcmp(p, "VHDL_ST_INSTANCE")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_INSTANCE;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_INSTANCE;
                                 } else if (!strcmp(p, "VHDL_ST_PACKAGE")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_PACKAGE;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_PACKAGE;
                                 }
 
                                 else if (!strcmp(p, "VHDL_ST_SIGNAL")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_SIGNAL;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_SIGNAL;
                                 } else if (!strcmp(p, "VHDL_ST_PORTIN")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_PORTIN;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_PORTIN;
                                 } else if (!strcmp(p, "VHDL_ST_PORTOUT")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_PORTOUT;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_PORTOUT;
                                 } else if (!strcmp(p, "VHDL_ST_PORTINOUT")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_PORTINOUT;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_PORTINOUT;
                                 } else if (!strcmp(p, "VHDL_ST_BUFFER")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_BUFFER;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_BUFFER;
                                 } else if (!strcmp(p, "VHDL_ST_LINKAGE")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_LINKAGE;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_LINKAGE;
                                 }
 
                                 else if (!strcmp(p, "VHDL_ST_ARCHITECTURE")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_ARCHITECTURE;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
                                 } else if (!strcmp(p, "VHDL_ST_FUNCTION")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_FUNCTION;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_FUNCTION;
                                 } else if (!strcmp(p, "VHDL_ST_PROCEDURE")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_PROCEDURE;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_PROCEDURE;
                                 } else if (!strcmp(p, "VHDL_ST_RECORD")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_RECORD;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_RECORD;
                                 } else if (!strcmp(p, "VHDL_ST_PROCESS")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_PROCESS;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_PROCESS;
                                 } else if (!strcmp(p, "VHDL_ST_GENERATE")) {
-                                    exclhier |= exclone << TREE_VHDL_ST_GENERATE;
+                                    exclhier |= exclone << GW_TREE_KIND_VHDL_ST_GENERATE;
                                 }
                                 break;
 
@@ -1033,7 +1033,7 @@ void sst_exclusion_loader(void)
 }
 
 /* Get the highest signal from T.  */
-struct tree *fetchhigh(struct tree *t)
+GwTree *fetchhigh(GwTree *t)
 {
     while (t->child)
         t = t->child;
@@ -1041,7 +1041,7 @@ struct tree *fetchhigh(struct tree *t)
 }
 
 /* Get the lowest signal from T.  */
-struct tree *fetchlow(struct tree *t)
+GwTree *fetchlow(GwTree *t)
 {
     if (t->child) {
         t = t->child;
@@ -1058,7 +1058,7 @@ struct tree *fetchlow(struct tree *t)
     return (t);
 }
 
-void recurse_fetch_high_low(struct tree *t)
+void recurse_fetch_high_low(GwTree *t)
 {
 top:
     if (t->t_which >= 0) {

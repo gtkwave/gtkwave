@@ -119,7 +119,7 @@ struct slist
 {
     struct slist *next;
     char *str;
-    struct tree *mod_tree_parent;
+    GwTree *mod_tree_parent;
     int len;
 };
 

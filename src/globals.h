@@ -177,7 +177,7 @@ struct Global
     void *extload_xc;
     struct symbol *extload_prevsymroot;
     struct symbol *extload_prevsym;
-    struct tree **extload_npar;
+    GwTree **extload_npar;
     int extload_i;
     int extload_hlen;
     unsigned char extload_vt_prev;
@@ -639,11 +639,11 @@ struct Global
     Pvoid_t sym_tree;
     Pvoid_t sym_tree_addresses;
 #endif
-    struct tree *treeroot; /* from tree.c 473 */
-    struct tree *mod_tree_parent; /* from tree.c */
+    GwTree *treeroot; /* from tree.c 473 */
+    GwTree *mod_tree_parent; /* from tree.c */
     char *module_tree_c_1; /* from tree.c 474 */
     int module_len_tree_c_1; /* from tree.c 475 */
-    struct tree *terminals_tchain_tree_c_1; /* from tree.c 476 */
+    GwTree *terminals_tchain_tree_c_1; /* from tree.c 476 */
     char hier_delimeter; /* from tree.c 477 */
     char hier_was_explicitly_set; /* from tree.c 478 */
     char alt_hier_delimeter; /* from tree.c 479 */
@@ -686,8 +686,8 @@ struct Global
     GtkWidget *entry_a_treesearch_gtk2_c_2; /* from treesearch_gtk2.c 485 */
     char *entrybox_text_local_treesearch_gtk2_c_3; /* from treesearch_gtk2.c 486 */
     void (*cleanup_e_treesearch_gtk2_c_3)(void); /* from treesearch_gtk2.c 487 */
-    struct tree *sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 488 */
-    struct tree *sst_sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c */
+    GwTree *sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 488 */
+    GwTree *sst_sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c */
     char *filter_str_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 489 */
     int filter_typ_treesearch_gtk2_c_1;
     int filter_typ_polarity_treesearch_gtk2_c_1;
