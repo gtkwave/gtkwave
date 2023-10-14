@@ -14,8 +14,6 @@
 #include "hierpack.h"
 #include <time.h>
 
-WAVE_NODEVARTYPE_STR
-
 static void w32redirect_fprintf(int is_trans, FILE *sfd, const char *format, ...)
     G_GNUC_PRINTF(3, 4);
 
@@ -562,21 +560,23 @@ int save_nodes_to_export_generic(FILE *trans_file,
             }
 
             if (msi == lsi) {
-                w32redirect_fprintf(is_trans,
-                                    GLOBALS->f_vcd_saver_c_1,
-                                    "$var %s 1 %s %s $end\n",
-                                    vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype],
-                                    vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
-                                    netname);
+                w32redirect_fprintf(
+                    is_trans,
+                    GLOBALS->f_vcd_saver_c_1,
+                    "$var %s 1 %s %s $end\n",
+                    gw_var_type_to_string(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype),
+                    vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
+                    netname);
             } else {
                 int len = (msi < lsi) ? (lsi - msi + 1) : (msi - lsi + 1);
-                w32redirect_fprintf(is_trans,
-                                    GLOBALS->f_vcd_saver_c_1,
-                                    "$var %s %d %s %s $end\n",
-                                    vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype],
-                                    len,
-                                    vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
-                                    netname);
+                w32redirect_fprintf(
+                    is_trans,
+                    GLOBALS->f_vcd_saver_c_1,
+                    "$var %s %d %s %s $end\n",
+                    gw_var_type_to_string(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype),
+                    len,
+                    vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ),
+                    netname);
                 GLOBALS->hp_vcd_saver_c_1[i]->len = len;
                 if (len > max_len)
                     max_len = len;

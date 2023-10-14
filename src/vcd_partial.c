@@ -1830,7 +1830,7 @@ GwHistEnt *add_histent_p(GwTime tim, GwNode *n, char ch, int regadd, char *vecto
                 /* if(ch=='-') */ heval = AN_DASH; /* default */
 
             if ((n->curr->v.h_val != heval) || (tim == GLOBALS->start_time_vcd_partial_c_2) ||
-                (n->vartype == ND_VCD_EVENT) ||
+                (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
                 (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
             {
                 if (n->curr->time == tim) {

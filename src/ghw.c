@@ -788,14 +788,14 @@ static void create_facs(struct ghw_handler *h)
                     n->extvals = 1;
                     n->msi = 31;
                     n->lsi = 0;
-                    n->vartype = ND_VCD_INTEGER;
+                    n->vartype = GW_VAR_TYPE_VCD_INTEGER;
                     break;
                 case ghdl_rtik_type_i64:
                 case ghdl_rtik_type_p64:
                     n->extvals = 1;
                     n->msi = 63;
                     n->lsi = 0;
-                    n->vartype = ND_VCD_INTEGER;
+                    n->vartype = GW_VAR_TYPE_VCD_INTEGER;
                     break;
                 case ghdl_rtik_type_e32: /* ajb: what is e32? */
                 case ghdl_rtik_type_f64:

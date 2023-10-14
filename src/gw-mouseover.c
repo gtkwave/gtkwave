@@ -3,8 +3,6 @@
 #include "analyzer.h"
 #include "hierpack.h"
 
-WAVE_NODEVARTYPE_STR
-
 struct _GwMouseover
 {
     GtkWindow parent_instance;
@@ -129,7 +127,7 @@ static gchar *local_trace_asciival(GwTrace *t, GwTime tim)
                     GwTime primary_pos = gw_marker_get_position(primary_marker);
 
                     unsigned char h_val = h_ptr->v.h_val;
-                    if (t->n.nd->vartype == ND_VCD_EVENT) {
+                    if (t->n.nd->vartype == GW_VAR_TYPE_VCD_EVENT) {
                         h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                         ((primary_pos - GLOBALS->shift_timebase) == h_ptr->time)
                                     ? AN_1
@@ -268,10 +266,10 @@ void gw_mouseover_update_signal_list(GwMouseover *self, GwTrace *trace, GwTime t
         flags_text = g_strdup_printf(" | %s", flags);
     } else {
         gint vartype = trace->n.nd->vartype;
-        if (vartype < 0 || vartype > ND_VARTYPE_MAX) {
+        if (vartype < 0 || vartype > GW_VAR_TYPE_MAX) {
             vartype = 0;
         }
-        const gchar *vartype_str = vartype_strings[vartype];
+        const gchar *vartype_str = gw_var_type_to_string(vartype);
         flags_text = g_strdup_printf(" | %s:%s", flags, vartype_str);
     }
     gtk_label_set_text(GTK_LABEL(self->flags_label), flags_text);

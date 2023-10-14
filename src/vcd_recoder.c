@@ -2344,7 +2344,7 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                 /* if(ch=='-') */ heval = AN_DASH; /* default */
 
             if ((n->curr->v.h_val != heval) || (tim == GLOBALS->start_time_vcd_recoder_c_3) ||
-                (n->vartype == ND_VCD_EVENT) ||
+                (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
                 (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
             {
                 if (n->curr->time == tim) {

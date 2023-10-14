@@ -25,10 +25,6 @@
 #include "tcl_support_commands.h"
 #include "signal_list.h"
 
-WAVE_NODEVARTYPE_STR
-WAVE_NODEVARDIR_STR
-WAVE_NODEVARDATATYPE_STR
-
 /* Treesearch is a pop-up window used to select signals.
    It is composed of two main areas:
    * A tree area to select the hierarchy [tree area]
@@ -166,18 +162,18 @@ void fill_sig_store(void)
         varxt_pnt = varxt ? varxt_fix(GLOBALS->subvar_pnt[varxt]) : NULL;
 
         vartype = GLOBALS->facs[i]->n->vartype;
-        if ((vartype < 0) || (vartype > ND_VARTYPE_MAX)) {
+        if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
             vartype = 0;
         }
 
         vardir = GLOBALS->facs[i]
                      ->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
-        if ((vardir < 0) || (vardir > ND_DIR_MAX)) {
+        if ((vardir < 0) || (vardir > GW_VAR_DIR_MAX)) {
             vardir = 0;
         }
 
         vardt = GLOBALS->facs[i]->n->vardt;
-        if ((vardt < 0) || (vardt > ND_VDT_MAX)) {
+        if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
             vardt = 0;
         }
 
@@ -227,12 +223,12 @@ void fill_sig_store(void)
                                    TYPE_COLUMN,
                                    (((GLOBALS->supplemental_datatypes_encountered) &&
                                      (!GLOBALS->supplemental_vartypes_encountered))
-                                        ? (varxt ? varxt_pnt : vardatatype_strings[vardt])
-                                        : vartype_strings[vartype]),
+                                        ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
+                                        : gw_var_type_to_string(vartype)),
                                    DIR_COLUMN,
-                                   vardir_strings[vardir],
+                                   gw_var_dir_to_string(vardir),
                                    DTYPE_COLUMN,
-                                   varxt ? varxt_pnt : vardatatype_strings[vardt],
+                                   varxt ? varxt_pnt : gw_var_data_type_to_string(vardt),
                                    -1);
 
                 if (s != t->name) {
@@ -254,12 +250,12 @@ void fill_sig_store(void)
                                    TYPE_COLUMN,
                                    (((GLOBALS->supplemental_datatypes_encountered) &&
                                      (!GLOBALS->supplemental_vartypes_encountered))
-                                        ? (varxt ? varxt_pnt : vardatatype_strings[vardt])
-                                        : vartype_strings[vartype]),
+                                        ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
+                                        : gw_var_type_to_string(vartype)),
                                    DIR_COLUMN,
-                                   vardir_strings[vardir],
+                                   gw_var_dir_to_string(vardir),
                                    DTYPE_COLUMN,
-                                   varxt ? varxt_pnt : vardatatype_strings[vardt],
+                                   varxt ? varxt_pnt : gw_var_data_type_to_string(vardt),
                                    -1);
             }
         } else {
@@ -618,15 +614,15 @@ static gboolean filter_edit_cb(GtkWidget *widget, GdkEventKey *ev, gpointer *dat
             GLOBALS->filter_str_treesearch_gtk2_c_1 = malloc_2(strlen(t) + 1);
             strcpy(GLOBALS->filter_str_treesearch_gtk2_c_1, t);
 
-            GLOBALS->filter_typ_treesearch_gtk2_c_1 = ND_DIR_UNSPECIFIED;
+            GLOBALS->filter_typ_treesearch_gtk2_c_1 = GW_VAR_DIR_UNSPECIFIED;
             GLOBALS->filter_typ_polarity_treesearch_gtk2_c_1 = 0;
             GLOBALS->filter_matlen_treesearch_gtk2_c_1 = 0;
             GLOBALS->filter_noregex_treesearch_gtk2_c_1 = 0;
 
             if (GLOBALS->filter_str_treesearch_gtk2_c_1[0] == '+') {
-                for (i = 0; i <= ND_DIR_MAX; i++) {
-                    int tlen = strlen(vardir_strings[i]);
-                    if (!strncasecmp(vardir_strings[i],
+                for (i = 0; i <= GW_VAR_DIR_MAX; i++) {
+                    int tlen = strlen(gw_var_dir_to_string(i));
+                    if (!strncasecmp(gw_var_dir_to_string(i),
                                      GLOBALS->filter_str_treesearch_gtk2_c_1 + 1,
                                      tlen)) {
                         if (GLOBALS->filter_str_treesearch_gtk2_c_1[tlen + 1] == '+') {
@@ -639,9 +635,9 @@ static gboolean filter_edit_cb(GtkWidget *widget, GdkEventKey *ev, gpointer *dat
                     }
                 }
             } else if (GLOBALS->filter_str_treesearch_gtk2_c_1[0] == '-') {
-                for (i = 0; i <= ND_DIR_MAX; i++) {
-                    int tlen = strlen(vardir_strings[i]);
-                    if (!strncasecmp(vardir_strings[i],
+                for (i = 0; i <= GW_VAR_DIR_MAX; i++) {
+                    int tlen = strlen(gw_var_dir_to_string(i));
+                    if (!strncasecmp(gw_var_dir_to_string(i),
                                      GLOBALS->filter_str_treesearch_gtk2_c_1 + 1,
                                      tlen)) {
                         if (GLOBALS->filter_str_treesearch_gtk2_c_1[tlen + 1] == '-') {
