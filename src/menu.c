@@ -4147,7 +4147,7 @@ static void menu_open_hierarchy_2(gpointer null_data,
 
     GwTrace *t;
     int fix = 0;
-    struct tree *t_forced = NULL;
+    GwTree *t_forced = NULL;
 
     if ((t = GLOBALS->traces.first)) {
         while (t) {
@@ -4236,7 +4236,7 @@ static void menu_open_hierarchy_2a(gpointer null_data,
     (void)widget;
 
     if ((typ == FST_MT_SOURCESTEM) || (typ == FST_MT_SOURCEISTEM)) {
-        struct tree *t_forced = GLOBALS->sst_sig_root_treesearch_gtk2_c_1;
+        GwTree *t_forced = GLOBALS->sst_sig_root_treesearch_gtk2_c_1;
 
         if (t_forced) {
             uint32_t idx = (typ == FST_MT_SOURCESTEM) ? t_forced->t_stem : t_forced->t_istem;

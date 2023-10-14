@@ -122,8 +122,8 @@ char *varxt_fix(char *s)
 /* Fill the store model using current SIG_ROOT and FILTER_STR.  */
 void fill_sig_store(void)
 {
-    struct tree *t;
-    struct tree *t_prev = NULL;
+    GwTree *t;
+    GwTree *t_prev = NULL;
     GtkTreeIter iter;
 
     if (GLOBALS->selected_sig_name) {
@@ -275,7 +275,7 @@ static void XXX_create_sst_nodes_if_necessary(GtkTreeModel *model,
 {
 #ifndef WAVE_DISABLE_FAST_TREE
 
-    struct tree *t;
+    GwTree *t;
 
     gtk_tree_model_get(model, iter, XXX_TREE_COLUMN, &t, -1);
 
@@ -312,7 +312,7 @@ static void XXX_create_sst_nodes_if_necessary(GtkTreeModel *model,
 #endif
 }
 
-int force_open_tree_node(char *name, int keep_path_nodes_open, struct tree **t_pnt)
+int force_open_tree_node(char *name, int keep_path_nodes_open, GwTree **t_pnt)
 {
     GtkTreeModel *model = GTK_TREE_MODEL(GLOBALS->treestore_main);
     GtkTreeIter iter;
@@ -328,7 +328,7 @@ int force_open_tree_node(char *name, int keep_path_nodes_open, struct tree **t_p
 
             strcpy(namecache, name);
             for (;;) {
-                struct tree *t;
+                GwTree *t;
                 gtk_tree_model_get(model, &iter, XXX_TREE_COLUMN, &t, -1);
                 if (t_pnt) {
                     *t_pnt = t;
@@ -447,7 +447,7 @@ void select_tree_node(char *name)
 
             strcpy(namecache, name);
             for (;;) {
-                struct tree *t;
+                GwTree *t;
                 gtk_tree_model_get(model, &iter, XXX_TREE_COLUMN, &t, -1);
                 while (*zap) {
                     if (*zap != GLOBALS->hier_delimeter) {
@@ -506,8 +506,8 @@ void select_tree_node(char *name)
 static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
 {
     GtkTreeIter iter;
-    struct tree *t;
-    struct tree **gctr;
+    GwTree *t;
+    GwTree **gctr;
     int depth, i;
     int len = 1;
     char *tstring;
@@ -526,7 +526,7 @@ static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
 
     path2 = gtk_tree_path_copy(path);
 
-    gctr = g_alloca(depth * sizeof(struct tree *));
+    gctr = g_alloca(depth * sizeof(GwTree *));
     for (i = depth - 1; i >= 0; i--) {
         gtk_tree_model_get_iter(model, &iter, path2);
         gtk_tree_model_get(model, &iter, XXX_TREE_COLUMN, &gctr[i], -1);
@@ -565,7 +565,7 @@ static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
 static void XXX_unselect_row_callback(GtkTreeModel *model, GtkTreePath *path)
 {
     GtkTreeIter iter;
-    struct tree *t;
+    GwTree *t;
 
     if (!gtk_tree_model_get_iter(model, &iter, path)) {
         return; /* path describes a non-existing row - should not happen */
@@ -685,8 +685,8 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
                                                       GtkTreeIter *iter,
                                                       GtkTreePath *path)
 {
-    struct tree *t;
-    struct tree **gctr;
+    GwTree *t;
+    GwTree **gctr;
     int depth, i;
     int len = 1;
     char *tstring;
@@ -706,7 +706,7 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
 
     path2 = gtk_tree_path_copy(path);
 
-    gctr = g_alloca(depth * sizeof(struct tree *));
+    gctr = g_alloca(depth * sizeof(GwTree *));
     for (i = depth - 1; i >= 0; i--) {
         gtk_tree_model_get_iter(model, iter, path2);
         gtk_tree_model_get(model, iter, XXX_TREE_COLUMN, &gctr[i], -1);
@@ -852,7 +852,7 @@ static void sig_selection_foreach(GtkTreeModel *model,
     (void)path;
     (void)data;
 
-    struct tree *sel;
+    GwTree *sel;
     /* const enum sst_cb_action action = (enum sst_cb_action)data; */
     int i;
     int low, high;
@@ -982,7 +982,7 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
     (void)path;
     (void)data;
 
-    struct tree *sel;
+    GwTree *sel;
     /* const enum sst_cb_action action = (enum sst_cb_action)data; */
     int i;
     int low, high;

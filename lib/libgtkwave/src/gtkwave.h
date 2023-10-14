@@ -18,3 +18,4 @@
 #include "gw-trace.h"
 #include "gw-stems.h"
 #include "gw-var-enums.h"
+#include "gw-tree.h"

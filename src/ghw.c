@@ -223,19 +223,19 @@ void rechain_facs(void)
 
 /* limited recursive version */
 
-static void recurse_tree_build_whichcache(struct tree *t)
+static void recurse_tree_build_whichcache(GwTree *t)
 {
     if (t) {
-        struct tree *t2 = t;
+        GwTree *t2 = t;
         int i;
         int cnt = 1;
-        struct tree **ar;
+        GwTree **ar;
 
         while ((t2 = t2->next)) {
             cnt++;
         }
 
-        ar = malloc_2(cnt * sizeof(struct tree *));
+        ar = malloc_2(cnt * sizeof(GwTree *));
         t2 = t;
         for (i = 0; i < cnt; i++) {
             ar[i] = t2;
@@ -257,19 +257,19 @@ static void recurse_tree_build_whichcache(struct tree *t)
     }
 }
 
-static void recurse_tree_fix_from_whichcache(struct tree *t)
+static void recurse_tree_fix_from_whichcache(GwTree *t)
 {
     if (t) {
-        struct tree *t2 = t;
+        GwTree *t2 = t;
         int i;
         int cnt = 1;
-        struct tree **ar;
+        GwTree **ar;
 
         while ((t2 = t2->next)) {
             cnt++;
         }
 
-        ar = malloc_2(cnt * sizeof(struct tree *));
+        ar = malloc_2(cnt * sizeof(GwTree *));
         t2 = t;
         for (i = 0; i < cnt; i++) {
             ar[i] = t2;
@@ -299,7 +299,7 @@ static void recurse_tree_fix_from_whichcache(struct tree *t)
 
 /* original fully-recursive version */
 
-static void recurse_tree_build_whichcache(struct tree *t)
+static void recurse_tree_build_whichcache(GwTree *t)
 {
     if (t) {
         if (t->child) {
@@ -315,7 +315,7 @@ static void recurse_tree_build_whichcache(struct tree *t)
     }
 }
 
-static void recurse_tree_fix_from_whichcache(struct tree *t)
+static void recurse_tree_fix_from_whichcache(GwTree *t)
 {
     if (t) {
         if (t->child) {
@@ -349,7 +349,7 @@ static void incinerate_whichcache_tree(ghw_Tree *t)
 }
 
 /*
- * sort facs and also cache/reconstruct tree->t_which pointers
+ * sort facs and also cache/reconGwTree->t_which pointers
  */
 static void ghw_sortfacs(void)
 {
@@ -389,23 +389,23 @@ static void ghw_sortfacs(void)
 
 /*******************************************************************************/
 
-static struct tree *build_hierarchy_type(struct ghw_handler *h,
+static GwTree *build_hierarchy_type(struct ghw_handler *h,
                                          union ghw_type *t,
                                          const char *pfx,
                                          unsigned int **sig);
 
-static struct tree *build_hierarchy_record(struct ghw_handler *h,
+static GwTree *build_hierarchy_record(struct ghw_handler *h,
                                            const char *pfx,
                                            unsigned nbr_els,
                                            struct ghw_record_element *els,
                                            unsigned int **sig)
 {
-    struct tree *res;
-    struct tree *last;
-    struct tree *c;
+    GwTree *res;
+    GwTree *last;
+    GwTree *c;
     unsigned int i;
 
-    res = (struct tree *)calloc_2(1, sizeof(struct tree) + strlen(pfx) + 1);
+    res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
     strcpy(res->name, (char *)pfx);
     res->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
 
@@ -425,7 +425,7 @@ static void build_hierarchy_array(struct ghw_handler *h,
                                   union ghw_type *arr,
                                   int dim,
                                   const char *pfx,
-                                  struct tree **res,
+                                  GwTree **res,
                                   unsigned int **sig)
 {
     union ghw_type *idx;
@@ -433,7 +433,7 @@ static void build_hierarchy_array(struct ghw_handler *h,
     char *name = NULL;
 
     if ((unsigned int)dim == base->nbr_dim) {
-        struct tree *t;
+        GwTree *t;
         sprintf(GLOBALS->asbuf, "%s]", pfx);
         name = strdup_2(GLOBALS->asbuf);
 
@@ -451,7 +451,7 @@ static void build_hierarchy_array(struct ghw_handler *h,
             int32_t v;
             char *nam;
             struct ghw_range_i32 *r;
-            /* struct tree *last; */
+            /* GwTree *last; */
             int len;
 
             /* last = NULL; */
@@ -479,7 +479,7 @@ static void build_hierarchy_array(struct ghw_handler *h,
             int32_t v;
             char *nam;
             struct ghw_range_e8 *r;
-            /* struct tree *last; */
+            /* GwTree *last; */
             int len;
 
             /* last = NULL; */
@@ -507,7 +507,7 @@ static void build_hierarchy_array(struct ghw_handler *h,
             int32_t v;
             char *nam;
             struct ghw_range_b2 *r;
-            /* struct tree *last; */
+            /* GwTree *last; */
             int len;
 
             /* last = NULL; */
@@ -537,12 +537,12 @@ static void build_hierarchy_array(struct ghw_handler *h,
     }
 }
 
-static struct tree *build_hierarchy_type(struct ghw_handler *h,
+static GwTree *build_hierarchy_type(struct ghw_handler *h,
                                          union ghw_type *t,
                                          const char *pfx,
                                          unsigned int **sig)
 {
-    struct tree *res;
+    GwTree *res;
     struct symbol *s;
 
     switch (t->kind) {
@@ -567,7 +567,7 @@ static struct tree *build_hierarchy_type(struct ghw_handler *h,
             GLOBALS->curnode->symbol = s;
 
             GLOBALS->nbr_sig_ref_ghw_c_1++;
-            res = (struct tree *)calloc_2(1, sizeof(struct tree) + strlen(pfx) + 1);
+            res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
             res->t_which = *(*sig)++;
 
@@ -575,8 +575,8 @@ static struct tree *build_hierarchy_type(struct ghw_handler *h,
             return res;
         case ghdl_rtik_subtype_array:
         case ghdl_rtik_subtype_array_ptr: {
-            struct tree *r;
-            res = (struct tree *)calloc_2(1, sizeof(struct tree) + strlen(pfx) + 1);
+            GwTree *r;
+            res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
             res->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
             r = res;
@@ -597,11 +597,11 @@ static struct tree *build_hierarchy_type(struct ghw_handler *h,
 
 /* Create the gtkwave tree from the GHW hierarchy.  */
 
-static struct tree *build_hierarchy(struct ghw_handler *h, struct ghw_hie *hie)
+static GwTree *build_hierarchy(struct ghw_handler *h, struct ghw_hie *hie)
 {
-    struct tree *t;
-    struct tree *t_ch;
-    struct tree *prev;
+    GwTree *t;
+    GwTree *t_ch;
+    GwTree *prev;
     struct ghw_hie *ch;
     unsigned char ttype;
 
@@ -616,23 +616,23 @@ static struct tree *build_hierarchy(struct ghw_handler *h, struct ghw_hie *hie)
             /* Convert kind.  */
             switch (hie->kind) {
                 case ghw_hie_design:
-                    ttype = TREE_VHDL_ST_DESIGN;
+                    ttype = GW_TREE_KIND_VHDL_ST_DESIGN;
                     break;
                 case ghw_hie_block:
-                    ttype = TREE_VHDL_ST_BLOCK;
+                    ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
                     break;
                 case ghw_hie_instance:
-                    ttype = TREE_VHDL_ST_INSTANCE;
+                    ttype = GW_TREE_KIND_VHDL_ST_INSTANCE;
                     break;
                 case ghw_hie_generate_for:
-                    ttype = TREE_VHDL_ST_GENFOR;
+                    ttype = GW_TREE_KIND_VHDL_ST_GENFOR;
                     break;
                 case ghw_hie_generate_if:
-                    ttype = TREE_VHDL_ST_GENIF;
+                    ttype = GW_TREE_KIND_VHDL_ST_GENIF;
                     break;
                 case ghw_hie_package:
                 default:
-                    ttype = TREE_VHDL_ST_PACKAGE;
+                    ttype = GW_TREE_KIND_VHDL_ST_PACKAGE;
                     break;
             }
 
@@ -646,7 +646,7 @@ static struct tree *build_hierarchy(struct ghw_handler *h, struct ghw_hie *hie)
                 name_len = strlen(hie->name);
                 buf_len = strlen(buf);
 
-                t = (struct tree *)calloc_2(1, sizeof(struct tree) + (2 + buf_len + name_len + 1));
+                t = (GwTree *)calloc_2(1, sizeof(GwTree) + (2 + buf_len + name_len + 1));
                 t->kind = ttype;
                 n = t->name;
 
@@ -659,11 +659,11 @@ static struct tree *build_hierarchy(struct ghw_handler *h, struct ghw_hie *hie)
                 *n = 0;
             } else {
                 if (hie->name) {
-                    t = (struct tree *)calloc_2(1, sizeof(struct tree) + strlen(hie->name) + 1);
+                    t = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(hie->name) + 1);
                     t->kind = ttype;
                     strcpy(t->name, (char *)hie->name);
                 } else {
-                    t = (struct tree *)calloc_2(1, sizeof(struct tree) + 1);
+                    t = (GwTree *)calloc_2(1, sizeof(GwTree) + 1);
                     t->kind = ttype;
                 }
             }
@@ -696,23 +696,23 @@ static struct tree *build_hierarchy(struct ghw_handler *h, struct ghw_hie *hie)
             /* Convert kind.  */
             switch (hie->kind) {
                 case ghw_hie_signal:
-                    ttype = TREE_VHDL_ST_SIGNAL;
+                    ttype = GW_TREE_KIND_VHDL_ST_SIGNAL;
                     break;
                 case ghw_hie_port_in:
-                    ttype = TREE_VHDL_ST_PORTIN;
+                    ttype = GW_TREE_KIND_VHDL_ST_PORTIN;
                     break;
                 case ghw_hie_port_out:
-                    ttype = TREE_VHDL_ST_PORTOUT;
+                    ttype = GW_TREE_KIND_VHDL_ST_PORTOUT;
                     break;
                 case ghw_hie_port_inout:
-                    ttype = TREE_VHDL_ST_PORTINOUT;
+                    ttype = GW_TREE_KIND_VHDL_ST_PORTINOUT;
                     break;
                 case ghw_hie_port_buffer:
-                    ttype = TREE_VHDL_ST_BUFFER;
+                    ttype = GW_TREE_KIND_VHDL_ST_BUFFER;
                     break;
                 case ghw_hie_port_linkage:
                 default:
-                    ttype = TREE_VHDL_ST_LINKAGE;
+                    ttype = GW_TREE_KIND_VHDL_ST_LINKAGE;
                     break;
             }
 
@@ -809,7 +809,7 @@ static void create_facs(struct ghw_handler *h)
     }
 }
 
-static void set_fac_name_1(struct tree *t)
+static void set_fac_name_1(GwTree *t)
 {
     for (; t != NULL; t = t->next) {
         int prev_len = GLOBALS->fac_name_len_ghw_c_1;
@@ -1191,8 +1191,8 @@ GwTime ghw_main(char *fname)
     {
         const char *base_hier = "top";
 
-        struct tree *t = calloc_2(1, sizeof(struct tree) + strlen(base_hier) + 1);
-        memcpy(t, GLOBALS->treeroot, sizeof(struct tree));
+        GwTree *t = calloc_2(1, sizeof(GwTree) + strlen(base_hier) + 1);
+        memcpy(t, GLOBALS->treeroot, sizeof(GwTree));
         strcpy(t->name,
                base_hier); /* scan-build false warning here, thinks name[1] is total length */
 #ifndef WAVE_TALLOC_POOL_SIZE

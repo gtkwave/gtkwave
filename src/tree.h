@@ -19,77 +19,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <gtkwave.h>
 
 #define FST_TREE_SEARCH_NEXT_LIMIT (40)
-
-/* Kind of the tree.  */
-enum tree_kind
-{
-    /* Unknown.  */
-    TREE_UNKNOWN,
-
-    /* An internal signal.  */
-    TREE_SIGNAL,
-
-    /* An in/out/inout signal.  */
-    TREE_IN,
-    TREE_OUT,
-    TREE_INOUT,
-
-    /* An element of a vector.  */
-    TREE_VECTOREL,
-    /* An element of a record.  */
-    TREE_RECORDEL,
-
-    /* A Subinstance.  */
-    TREE_INSTANCE,
-
-    /* A package (somewhat VHDL specific ?).  */
-    TREE_PACKAGE,
-
-    /* A base (source file).  Not yet implemented.  */
-    TREE_BASE,
-
-    /* Verilog/SV scope types */
-    TREE_VCD_ST_MODULE,
-    TREE_VCD_ST_TASK,
-    TREE_VCD_ST_FUNCTION,
-    TREE_VCD_ST_BEGIN,
-    TREE_VCD_ST_FORK,
-    TREE_VCD_ST_GENERATE,
-    TREE_VCD_ST_STRUCT,
-    TREE_VCD_ST_UNION,
-    TREE_VCD_ST_CLASS,
-    TREE_VCD_ST_INTERFACE,
-    TREE_VCD_ST_PACKAGE,
-    TREE_VCD_ST_PROGRAM,
-
-    /* GHW VHDL scope types */
-    TREE_VHDL_ST_DESIGN,
-    TREE_VHDL_ST_BLOCK,
-    TREE_VHDL_ST_GENIF,
-    TREE_VHDL_ST_GENFOR,
-    TREE_VHDL_ST_INSTANCE,
-    TREE_VHDL_ST_PACKAGE,
-
-    /* GHW VHDL signal types (still as part of scope in GHW) */
-    TREE_VHDL_ST_SIGNAL,
-    TREE_VHDL_ST_PORTIN,
-    TREE_VHDL_ST_PORTOUT,
-    TREE_VHDL_ST_PORTINOUT,
-    TREE_VHDL_ST_BUFFER,
-    TREE_VHDL_ST_LINKAGE,
-
-    /* FSDB VHDL scope types: FSDB also reuses/defines GHW's TREE_VHDL_ST_BLOCK,
-       TREE_VHDL_ST_GENFOR, TREE_VHDL_ST_GENIF */
-    /* FST reuses TREE_VHDL_ST_PACKAGE */
-    TREE_VHDL_ST_ARCHITECTURE,
-    TREE_VHDL_ST_FUNCTION,
-    TREE_VHDL_ST_PROCEDURE,
-    TREE_VHDL_ST_RECORD,
-    TREE_VHDL_ST_PROCESS,
-    TREE_VHDL_ST_GENERATE
-};
 
 #define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
 #define WAVE_T_WHICH_COMPNAME_START (-2)
@@ -105,20 +37,6 @@ struct stem_struct_t
     uint32_t stem_line_number;
 };
 
-struct tree
-{
-    struct tree *next;
-    struct tree *child;
-    int t_which; /* 'i' for facs[i] table, value of < 0 means not a full signame */
-    uint32_t t_stem; /* source stem (if >0) for Open Hierarchy Source Def,  see stem_struct_t */
-    uint32_t t_istem; /* source stem (if >0) for Open Hierarchy Source Inst, see stem_struct_t */
-
-    unsigned kind : 7; /* Kind of the leaf: libghw reads this as val & 0x7f so only 7 bits needed */
-    unsigned children_in_gui : 1; /* indicates that the child nodes are in the gtk2 tree, but gets
-                                     borrowed during tree creation for fast judy sort */
-    char name[]; /* C99 */
-};
-
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(pop)
 #endif
@@ -127,8 +45,8 @@ struct tree
 
 struct treechain
 {
-    struct tree *tree; /* top of list of selected item in hierarchy */
-    struct tree *label; /* actual selected item in hierarchy */
+    GwTree *tree; /* top of list of selected item in hierarchy */
+    GwTree *label; /* actual selected item in hierarchy */
     struct treechain *next;
 };
 
@@ -141,8 +59,8 @@ struct autocoalesce_free_list
 
 void init_tree(void);
 void build_tree_from_name(const char *s, int which);
-int treegraft(struct tree **t);
-void treedebug(struct tree *t, char *s);
+int treegraft(GwTree **t);
+void treedebug(GwTree *t, char *s);
 
 char *leastsig_hiername(char *nam);
 void allocate_and_decorate_module_tree_node(unsigned char ttype,
@@ -154,15 +72,15 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                                             uint32_t t_istem);
 int decorated_module_cleanup(void);
 
-void treesort(struct tree *t, struct tree *p);
-void order_facs_from_treesort(struct tree *t, void *v);
+void treesort(GwTree *t, GwTree *p);
+void order_facs_from_treesort(GwTree *t, void *v);
 
-void treenamefix(struct tree *t);
+void treenamefix(GwTree *t);
 
 #ifdef WAVE_USE_STRUCT_PACKING
 #define WAVE_TALLOC_POOL_SIZE (64 * 1024)
 #define WAVE_TALLOC_ALTREQ_SIZE (4 * 1024)
-struct tree *talloc_2(size_t siz);
+GwTree *talloc_2(size_t siz);
 #else
 #define talloc_2(x) calloc_2(1, (x))
 #endif
@@ -177,13 +95,13 @@ enum treeview_columns
     XXX_NUM_COLUMNS
 };
 
-void XXX_maketree(GtkTreeIter *subtree, struct tree *t);
-void XXX_maketree2(GtkTreeIter *subtree, struct tree *t, int depth);
+void XXX_maketree(GtkTreeIter *subtree, GwTree *t);
+void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth);
 
 void sst_exclusion_loader(void);
 
-struct tree *fetchhigh(struct tree *t);
-struct tree *fetchlow(struct tree *t);
-void recurse_fetch_high_low(struct tree *t);
+GwTree *fetchhigh(GwTree *t);
+GwTree *fetchlow(GwTree *t);
+void recurse_fetch_high_low(GwTree *t);
 
 #endif

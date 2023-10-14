@@ -1630,38 +1630,38 @@ static void vcd_parse(void)
                 {
                     switch (GLOBALS->yytext_vcd_recoder_c_3[0]) {
                         case 'm':
-                            ttype = TREE_VCD_ST_MODULE;
+                            ttype = GW_TREE_KIND_VCD_ST_MODULE;
                             break;
                         case 't':
-                            ttype = TREE_VCD_ST_TASK;
+                            ttype = GW_TREE_KIND_VCD_ST_TASK;
                             break;
                         case 'f':
                             ttype = (GLOBALS->yytext_vcd_recoder_c_3[1] == 'u')
-                                        ? TREE_VCD_ST_FUNCTION
-                                        : TREE_VCD_ST_FORK;
+                                        ? GW_TREE_KIND_VCD_ST_FUNCTION
+                                        : GW_TREE_KIND_VCD_ST_FORK;
                             break;
                         case 'b':
-                            ttype = TREE_VCD_ST_BEGIN;
+                            ttype = GW_TREE_KIND_VCD_ST_BEGIN;
                             break;
                         case 'g':
-                            ttype = TREE_VCD_ST_GENERATE;
+                            ttype = GW_TREE_KIND_VCD_ST_GENERATE;
                             break;
                         case 's':
-                            ttype = TREE_VCD_ST_STRUCT;
+                            ttype = GW_TREE_KIND_VCD_ST_STRUCT;
                             break;
                         case 'u':
-                            ttype = TREE_VCD_ST_UNION;
+                            ttype = GW_TREE_KIND_VCD_ST_UNION;
                             break;
                         case 'c':
-                            ttype = TREE_VCD_ST_CLASS;
+                            ttype = GW_TREE_KIND_VCD_ST_CLASS;
                             break;
                         case 'i':
-                            ttype = TREE_VCD_ST_INTERFACE;
+                            ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
                             break;
                         case 'p':
                             ttype = (GLOBALS->yytext_vcd_recoder_c_3[1] == 'r')
-                                        ? TREE_VCD_ST_PROGRAM
-                                        : TREE_VCD_ST_PACKAGE;
+                                        ? GW_TREE_KIND_VCD_ST_PROGRAM
+                                        : GW_TREE_KIND_VCD_ST_PACKAGE;
                             break;
 
                         case 'v': {
@@ -1669,40 +1669,40 @@ static void vcd_parse(void)
                             if (!strncmp(vht, "vhdl_", 5)) {
                                 switch (vht[5]) {
                                     case 'a':
-                                        ttype = TREE_VHDL_ST_ARCHITECTURE;
+                                        ttype = GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
                                         break;
                                     case 'r':
-                                        ttype = TREE_VHDL_ST_RECORD;
+                                        ttype = GW_TREE_KIND_VHDL_ST_RECORD;
                                         break;
                                     case 'b':
-                                        ttype = TREE_VHDL_ST_BLOCK;
+                                        ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
                                         break;
                                     case 'g':
-                                        ttype = TREE_VHDL_ST_GENERATE;
+                                        ttype = GW_TREE_KIND_VHDL_ST_GENERATE;
                                         break;
                                     case 'i':
-                                        ttype = TREE_VHDL_ST_GENIF;
+                                        ttype = GW_TREE_KIND_VHDL_ST_GENIF;
                                         break;
                                     case 'f':
-                                        ttype = (vht[6] == 'u') ? TREE_VHDL_ST_FUNCTION
-                                                                : TREE_VHDL_ST_GENFOR;
+                                        ttype = (vht[6] == 'u') ? GW_TREE_KIND_VHDL_ST_FUNCTION
+                                                                : GW_TREE_KIND_VHDL_ST_GENFOR;
                                         break;
                                     case 'p':
                                         ttype = (!strncmp(vht + 6, "roces", 5))
-                                                    ? TREE_VHDL_ST_PROCESS
-                                                    : TREE_VHDL_ST_PROCEDURE;
+                                                    ? GW_TREE_KIND_VHDL_ST_PROCESS
+                                                    : GW_TREE_KIND_VHDL_ST_PROCEDURE;
                                         break;
                                     default:
-                                        ttype = TREE_UNKNOWN;
+                                        ttype = GW_TREE_KIND_UNKNOWN;
                                         break;
                                 }
                             } else {
-                                ttype = TREE_UNKNOWN;
+                                ttype = GW_TREE_KIND_UNKNOWN;
                             }
                         } break;
 
                         default:
-                            ttype = TREE_UNKNOWN;
+                            ttype = GW_TREE_KIND_UNKNOWN;
                             break;
                     }
                 }

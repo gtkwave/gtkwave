@@ -533,66 +533,66 @@ static char *get_varname(unsigned char *vtp, unsigned char *vdp, int i, int *pat
                 if (!strncmp(vht, "vcd_", 4)) {
                     switch (vht[4]) {
                         case 'm':
-                            ttype = TREE_VCD_ST_MODULE;
+                            ttype = GW_TREE_KIND_VCD_ST_MODULE;
                             break;
                         case 't':
-                            ttype = TREE_VCD_ST_TASK;
+                            ttype = GW_TREE_KIND_VCD_ST_TASK;
                             break;
                         case 'f':
-                            ttype = (vht[5] == 'u') ? TREE_VCD_ST_FUNCTION : TREE_VCD_ST_FORK;
+                            ttype = (vht[5] == 'u') ? GW_TREE_KIND_VCD_ST_FUNCTION : GW_TREE_KIND_VCD_ST_FORK;
                             break;
                         case 'b':
-                            ttype = TREE_VCD_ST_BEGIN;
+                            ttype = GW_TREE_KIND_VCD_ST_BEGIN;
                             break;
                         case 'g':
-                            ttype = TREE_VCD_ST_GENERATE;
+                            ttype = GW_TREE_KIND_VCD_ST_GENERATE;
                             break;
                         case 's':
-                            ttype = TREE_VCD_ST_STRUCT;
+                            ttype = GW_TREE_KIND_VCD_ST_STRUCT;
                             break;
                         default:
-                            ttype = TREE_UNKNOWN;
+                            ttype = GW_TREE_KIND_UNKNOWN;
                             break;
                     }
                 } else if (!strncmp(vht, "sv_", 3)) {
                     switch (vht[3]) {
                         case 'i':
-                            ttype = TREE_VCD_ST_INTERFACE;
+                            ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
                             break;
                         default:
-                            ttype = TREE_UNKNOWN;
+                            ttype = GW_TREE_KIND_UNKNOWN;
                             break;
                     }
                 } else if (!strncmp(vht, "vhdl_", 5)) {
                     switch (vht[5]) {
                         case 'a':
-                            ttype = TREE_VHDL_ST_ARCHITECTURE;
+                            ttype = GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
                             break;
                         case 'r':
-                            ttype = TREE_VHDL_ST_RECORD;
+                            ttype = GW_TREE_KIND_VHDL_ST_RECORD;
                             break;
                         case 'b':
-                            ttype = TREE_VHDL_ST_BLOCK;
+                            ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
                             break;
                         case 'g':
-                            ttype = TREE_VHDL_ST_GENERATE;
+                            ttype = GW_TREE_KIND_VHDL_ST_GENERATE;
                             break;
                         case 'i':
-                            ttype = TREE_VHDL_ST_GENIF;
+                            ttype = GW_TREE_KIND_VHDL_ST_GENIF;
                             break;
                         case 'f':
-                            ttype = (vht[6] == 'u') ? TREE_VHDL_ST_FUNCTION : TREE_VHDL_ST_GENFOR;
+                            ttype = (vht[6] == 'u') ? GW_TREE_KIND_VHDL_ST_FUNCTION : GW_TREE_KIND_VHDL_ST_GENFOR;
                             break;
                         case 'p':
-                            ttype = (!strncmp(vht + 6, "roces", 5)) ? TREE_VHDL_ST_PROCESS
-                                                                    : TREE_VHDL_ST_PROCEDURE;
+                            ttype = (!strncmp(vht + 6, "roces", 5)) ? GW_TREE_KIND_VHDL_ST_PROCESS
+                                                                    : GW_TREE_KIND_VHDL_ST_PROCEDURE;
                             break;
                         default:
-                            ttype = TREE_UNKNOWN;
+                            ttype = GW_TREE_KIND_UNKNOWN;
                             break;
                     }
                 } else {
-                    ttype = TREE_UNKNOWN;
+                    ttype = GW_TREE_KIND_UNKNOWN;
                 }
 
                 allocate_and_decorate_module_tree_node(ttype,
@@ -1242,58 +1242,58 @@ static char *get_varname2(struct fstHier *fh,
 
                 switch (fh->u.scope.typ) {
                     case FST_ST_VCD_MODULE:
-                        ttype = TREE_VCD_ST_MODULE;
+                        ttype = GW_TREE_KIND_VCD_ST_MODULE;
                         break;
                     case FST_ST_VCD_TASK:
-                        ttype = TREE_VCD_ST_TASK;
+                        ttype = GW_TREE_KIND_VCD_ST_TASK;
                         break;
                     case FST_ST_VCD_FUNCTION:
-                        ttype = TREE_VCD_ST_FUNCTION;
+                        ttype = GW_TREE_KIND_VCD_ST_FUNCTION;
                         break;
                     case FST_ST_VCD_FORK:
-                        ttype = TREE_VCD_ST_FORK;
+                        ttype = GW_TREE_KIND_VCD_ST_FORK;
                         break;
                     case FST_ST_VCD_BEGIN:
-                        ttype = TREE_VCD_ST_BEGIN;
+                        ttype = GW_TREE_KIND_VCD_ST_BEGIN;
                         break;
                     case FST_ST_VCD_GENERATE:
-                        ttype = TREE_VCD_ST_GENERATE;
+                        ttype = GW_TREE_KIND_VCD_ST_GENERATE;
                         break;
                     case FST_ST_VCD_STRUCT:
-                        ttype = TREE_VCD_ST_STRUCT;
+                        ttype = GW_TREE_KIND_VCD_ST_STRUCT;
                         break;
                     case FST_ST_VCD_INTERFACE:
-                        ttype = TREE_VCD_ST_INTERFACE;
+                        ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
                         break;
                     case FST_ST_VHDL_ARCHITECTURE:
-                        ttype = TREE_VHDL_ST_ARCHITECTURE;
+                        ttype = GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
                         break;
                     case FST_ST_VHDL_RECORD:
-                        ttype = TREE_VHDL_ST_RECORD;
+                        ttype = GW_TREE_KIND_VHDL_ST_RECORD;
                         break;
                     case FST_ST_VHDL_BLOCK:
-                        ttype = TREE_VHDL_ST_BLOCK;
+                        ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
                         break;
                     case FST_ST_VHDL_GENERATE:
-                        ttype = TREE_VHDL_ST_GENERATE;
+                        ttype = GW_TREE_KIND_VHDL_ST_GENERATE;
                         break;
                     case FST_ST_VHDL_IF_GENERATE:
-                        ttype = TREE_VHDL_ST_GENIF;
+                        ttype = GW_TREE_KIND_VHDL_ST_GENIF;
                         break;
                     case FST_ST_VHDL_FUNCTION:
-                        ttype = TREE_VHDL_ST_FUNCTION;
+                        ttype = GW_TREE_KIND_VHDL_ST_FUNCTION;
                         break;
                     case FST_ST_VHDL_FOR_GENERATE:
-                        ttype = TREE_VHDL_ST_GENFOR;
+                        ttype = GW_TREE_KIND_VHDL_ST_GENFOR;
                         break;
                     case FST_ST_VHDL_PROCEDURE:
-                        ttype = TREE_VHDL_ST_PROCEDURE;
+                        ttype = GW_TREE_KIND_VHDL_ST_PROCEDURE;
                         break;
                     case FST_ST_VHDL_PROCESS:
-                        ttype = TREE_VHDL_ST_PROCESS;
+                        ttype = GW_TREE_KIND_VHDL_ST_PROCESS;
                         break;
                     default:
-                        ttype = TREE_UNKNOWN;
+                        ttype = GW_TREE_KIND_UNKNOWN;
                         break;
                 }
 
@@ -1314,9 +1314,9 @@ static char *get_varname2(struct fstHier *fh,
     return (NULL);
 }
 
-static void fsdb_append_graft_chain(int len, char *nam, int which, struct tree *par)
+static void fsdb_append_graft_chain(int len, char *nam, int which, GwTree *par)
 {
-    struct tree *t = talloc_2(sizeof(struct tree) + len + 1);
+    GwTree *t = talloc_2(sizeof(GwTree) + len + 1);
 
     memcpy(t->name, nam, len + 1);
     t->t_which = which;
@@ -1340,7 +1340,7 @@ static void process_extload_variable2(struct fstHier *s_gv)
     int flen;
     int longest_nam_candidate = 0;
     int patched_len = 0;
-    struct tree *npar;
+    GwTree *npar;
 
     static char fnam_prev[65537]; /* OK as this does not need to be re-entrant */
 
@@ -1946,7 +1946,7 @@ static GwTime extload_main_2(char *fname, char *skip_start, char *skip_end)
     GLOBALS->extload_idcodes = (unsigned int *)calloc_2(GLOBALS->numfacs, sizeof(unsigned int));
     GLOBALS->extload_inv_idcodes = (int *)calloc_2(max_idcode + 1, sizeof(int));
 #ifdef WAVE_USE_FSDB_FST_BRIDGE
-    GLOBALS->extload_npar = (struct tree **)calloc_2(F_NAME_MODULUS + 1, sizeof(struct tree *));
+    GLOBALS->extload_npar = (GwTree **)calloc_2(F_NAME_MODULUS + 1, sizeof(GwTree *));
 #endif
 
     hier_auto_enable(); /* enable if greater than threshold */
