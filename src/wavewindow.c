@@ -1966,7 +1966,7 @@ void MaxSignalLength(void)
 
                             str = (char *)calloc_2(1, 3 * sizeof(char));
                             str[0] = '=';
-                            if (t->n.nd->vartype == ND_VCD_EVENT) {
+                            if (t->n.nd->vartype == GW_VAR_TYPE_VCD_EVENT) {
                                 h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                                 ((gw_marker_get_position(primary_marker) -
                                                   GLOBALS->shift_timebase) == h_ptr->time)
@@ -2192,7 +2192,7 @@ void UpdateSigValue(GwTrace *t)
                                           gw_marker_get_position(primary_marker) - t->shift))) {
                     if (!t->n.nd->extvals) {
                         unsigned char h_val = h_ptr->v.h_val;
-                        if (t->n.nd->vartype == ND_VCD_EVENT) {
+                        if (t->n.nd->vartype == GW_VAR_TYPE_VCD_EVENT) {
                             h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                             ((gw_marker_get_position(primary_marker) -
                                               GLOBALS->shift_timebase) == h_ptr->time)

@@ -6,6 +6,7 @@ libgtkwave_public_sources = [
     'gw-project.c',
     'gw-stems.c',
     'gw-time.c',
+    'gw-var-enums.c',
 ]
 
 libgtkwave_public_headers = [
@@ -22,6 +23,7 @@ libgtkwave_public_headers = [
     'gw-project.h',
     'gw-stems.h',
     'gw-time.h',
+    'gw-var-enums.h',
     'gw-vector-ent.h',
 ]
 

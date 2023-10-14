@@ -285,7 +285,7 @@ static void draw_hptr_trace(GwWaveView *self,
     LineColor c;
     GwColor gcx, gcxf;
     char identifier_str[2];
-    int is_event = t && t->n.nd && (t->n.nd->vartype == ND_VCD_EVENT);
+    int is_event = t && t->n.nd && (t->n.nd->vartype == GW_VAR_TYPE_VCD_EVENT);
 
     LineBuffer *lines = line_buffer_new(colors);
 

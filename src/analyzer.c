@@ -512,11 +512,11 @@ int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret)
         n++;
 
         switch (nd->vartype) {
-            case ND_VCD_INTEGER:
-            case ND_VCD_PARAMETER:
-            case ND_SV_INT:
-            case ND_SV_SHORTINT:
-            case ND_SV_LONGINT:
+            case GW_VAR_TYPE_VCD_INTEGER:
+            case GW_VAR_TYPE_VCD_PARAMETER:
+            case GW_VAR_TYPE_SV_INT:
+            case GW_VAR_TYPE_SV_SHORTINT:
+            case GW_VAR_TYPE_SV_LONGINT:
                 t->flags = TR_SIGNED | TR_RJUSTIFY;
                 break;
 

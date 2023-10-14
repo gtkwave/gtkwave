@@ -156,86 +156,86 @@ void set_vcd_vartype(struct vcdsymbol *v, GwNode *n)
 
     switch (v->vartype) {
         case V_EVENT:
-            nvt = ND_VCD_EVENT;
+            nvt = GW_VAR_TYPE_VCD_EVENT;
             break;
         case V_PARAMETER:
-            nvt = ND_VCD_PARAMETER;
+            nvt = GW_VAR_TYPE_VCD_PARAMETER;
             break;
         case V_INTEGER:
-            nvt = ND_VCD_INTEGER;
+            nvt = GW_VAR_TYPE_VCD_INTEGER;
             break;
         case V_REAL:
-            nvt = ND_VCD_REAL;
+            nvt = GW_VAR_TYPE_VCD_REAL;
             break;
         case V_REG:
-            nvt = ND_VCD_REG;
+            nvt = GW_VAR_TYPE_VCD_REG;
             break;
         case V_SUPPLY0:
-            nvt = ND_VCD_SUPPLY0;
+            nvt = GW_VAR_TYPE_VCD_SUPPLY0;
             break;
         case V_SUPPLY1:
-            nvt = ND_VCD_SUPPLY1;
+            nvt = GW_VAR_TYPE_VCD_SUPPLY1;
             break;
         case V_TIME:
-            nvt = ND_VCD_TIME;
+            nvt = GW_VAR_TYPE_VCD_TIME;
             break;
         case V_TRI:
-            nvt = ND_VCD_TRI;
+            nvt = GW_VAR_TYPE_VCD_TRI;
             break;
         case V_TRIAND:
-            nvt = ND_VCD_TRIAND;
+            nvt = GW_VAR_TYPE_VCD_TRIAND;
             break;
         case V_TRIOR:
-            nvt = ND_VCD_TRIOR;
+            nvt = GW_VAR_TYPE_VCD_TRIOR;
             break;
         case V_TRIREG:
-            nvt = ND_VCD_TRIREG;
+            nvt = GW_VAR_TYPE_VCD_TRIREG;
             break;
         case V_TRI0:
-            nvt = ND_VCD_TRI0;
+            nvt = GW_VAR_TYPE_VCD_TRI0;
             break;
         case V_TRI1:
-            nvt = ND_VCD_TRI1;
+            nvt = GW_VAR_TYPE_VCD_TRI1;
             break;
         case V_WAND:
-            nvt = ND_VCD_WAND;
+            nvt = GW_VAR_TYPE_VCD_WAND;
             break;
         case V_WIRE:
-            nvt = ND_VCD_WIRE;
+            nvt = GW_VAR_TYPE_VCD_WIRE;
             break;
         case V_WOR:
-            nvt = ND_VCD_WOR;
+            nvt = GW_VAR_TYPE_VCD_WOR;
             break;
         case V_PORT:
-            nvt = ND_VCD_PORT;
+            nvt = GW_VAR_TYPE_VCD_PORT;
             break;
         case V_STRINGTYPE:
-            nvt = ND_GEN_STRING;
+            nvt = GW_VAR_TYPE_GEN_STRING;
             break;
         case V_BIT:
-            nvt = ND_SV_BIT;
+            nvt = GW_VAR_TYPE_SV_BIT;
             break;
         case V_LOGIC:
-            nvt = ND_SV_LOGIC;
+            nvt = GW_VAR_TYPE_SV_LOGIC;
             break;
         case V_INT:
-            nvt = ND_SV_INT;
+            nvt = GW_VAR_TYPE_SV_INT;
             break;
         case V_SHORTINT:
-            nvt = ND_SV_SHORTINT;
+            nvt = GW_VAR_TYPE_SV_SHORTINT;
             break;
         case V_LONGINT:
-            nvt = ND_SV_LONGINT;
+            nvt = GW_VAR_TYPE_SV_LONGINT;
             break;
         case V_BYTE:
-            nvt = ND_SV_BYTE;
+            nvt = GW_VAR_TYPE_SV_BYTE;
             break;
         case V_ENUM:
-            nvt = ND_SV_ENUM;
+            nvt = GW_VAR_TYPE_SV_ENUM;
             break;
         /* V_SHORTREAL as a type does not exist for VCD: is cast to V_REAL */
         default:
-            nvt = ND_UNSPECIFIED_DEFAULT;
+            nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
             break;
     }
     n->vartype = nvt;

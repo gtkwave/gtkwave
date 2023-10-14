@@ -286,15 +286,14 @@ static int gtkwavetcl_getFacDir(ClientData clientData,
         int which = atoi(s);
 
         if ((which >= 0) && (which < GLOBALS->numfacs)) {
-            WAVE_NODEVARDIR_STR
             int vardir =
                 GLOBALS->facs[which]
                     ->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
-            if ((vardir < 0) || (vardir > ND_DIR_MAX)) {
+            if ((vardir < 0) || (vardir > GW_VAR_DIR_MAX)) {
                 vardir = 0;
             }
 
-            aobj = Tcl_NewStringObj(vardir_strings[vardir], -1);
+            aobj = Tcl_NewStringObj(gw_var_dir_to_string(vardir), -1);
             Tcl_SetObjResult(interp, aobj);
         }
     } else {
@@ -316,8 +315,6 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
         int which = atoi(s);
 
         if ((which >= 0) && (which < GLOBALS->numfacs)) {
-            WAVE_NODEVARTYPE_STR
-            WAVE_NODEVARDATATYPE_STR
             unsigned int varxt;
             char *varxt_pnt;
             int vartype;
@@ -327,19 +324,19 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
             varxt_pnt = varxt ? varxt_fix(GLOBALS->subvar_pnt[varxt]) : NULL;
 
             vartype = GLOBALS->facs[which]->n->vartype;
-            if ((vartype < 0) || (vartype > ND_VARTYPE_MAX)) {
+            if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
                 vartype = 0;
             }
 
             vardt = GLOBALS->facs[which]->n->vardt;
-            if ((vardt < 0) || (vardt > ND_VDT_MAX)) {
+            if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
                 vardt = 0;
             }
 
             aobj = Tcl_NewStringObj((((GLOBALS->supplemental_datatypes_encountered) &&
                                       (!GLOBALS->supplemental_vartypes_encountered))
-                                         ? (varxt ? varxt_pnt : vardatatype_strings[vardt])
-                                         : vartype_strings[vartype]),
+                                         ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
+                                         : gw_var_type_to_string(vartype)),
                                     -1);
             Tcl_SetObjResult(interp, aobj);
         }
@@ -362,7 +359,6 @@ static int gtkwavetcl_getFacDtype(ClientData clientData,
         int which = atoi(s);
 
         if ((which >= 0) && (which < GLOBALS->numfacs)) {
-            WAVE_NODEVARDATATYPE_STR
             unsigned int varxt;
             char *varxt_pnt;
             int vardt;
@@ -371,11 +367,11 @@ static int gtkwavetcl_getFacDtype(ClientData clientData,
             varxt_pnt = varxt ? varxt_fix(GLOBALS->subvar_pnt[varxt]) : NULL;
 
             vardt = GLOBALS->facs[which]->n->vardt;
-            if ((vardt < 0) || (vardt > ND_VDT_MAX)) {
+            if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
                 vardt = 0;
             }
 
-            aobj = Tcl_NewStringObj(varxt ? varxt_pnt : vardatatype_strings[vardt], -1);
+            aobj = Tcl_NewStringObj(varxt ? varxt_pnt : gw_var_data_type_to_string(vardt), -1);
             Tcl_SetObjResult(interp, aobj);
         }
     } else {

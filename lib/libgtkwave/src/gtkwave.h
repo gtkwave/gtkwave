@@ -17,3 +17,4 @@
 #include "gw-bit-vector.h"
 #include "gw-trace.h"
 #include "gw-stems.h"
+#include "gw-var-enums.h"

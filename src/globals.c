@@ -710,7 +710,7 @@ static const struct Global globals_base_values = {
     NULL, /* sig_root_treesearch_gtk2_c_1 458 */
     NULL, /* sst_sig_root_treesearch_gtk2_c_1 */
     NULL, /* filter_str_treesearch_gtk2_c_1 459 */
-    ND_DIR_UNSPECIFIED, /* filter_typ_treesearch_gtk2_c_1 */
+    GW_VAR_DIR_UNSPECIFIED, /* filter_typ_treesearch_gtk2_c_1 */
     0, /* filter_typ_polarity_treesearch_gtk2_c_1 */
     0, /* filter_matlen_treesearch_gtk2_c_1 */
     0, /* filter_noregex_treesearch_gtk2_c_1 */

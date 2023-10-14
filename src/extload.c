@@ -399,16 +399,16 @@ static char *get_varname(unsigned char *vtp, unsigned char *vdp, int i, int *pat
                 pntd = strrchr(last_l ? last_l : pnt, ':');
 
                 if (pntd) {
-                    unsigned char vd = ND_DIR_IMPLICIT;
+                    unsigned char vd = GW_VAR_DIR_IMPLICIT;
 
                     pntd = strchr(pntd, ' ');
                     if (pntd) {
                         pntd++;
                         if (*pntd == 'o') {
-                            vd = ND_DIR_OUT;
+                            vd = GW_VAR_DIR_OUT;
                             GLOBALS->nonimplicit_direction_encountered = 1;
                         } else if (!strncmp(pntd, "in", 2)) {
-                            vd = (pntd[2] == 'p') ? ND_DIR_IN : ND_DIR_INOUT;
+                            vd = (pntd[2] == 'p') ? GW_VAR_DIR_IN : GW_VAR_DIR_INOUT;
                             GLOBALS->nonimplicit_direction_encountered = 1;
                         }
                     }
@@ -882,64 +882,64 @@ static void process_extload_variable(void)
 
         switch (vt) {
             case V_EVENT:
-                nvt = ND_VCD_EVENT;
+                nvt = GW_VAR_TYPE_VCD_EVENT;
                 break;
             case V_PARAMETER:
-                nvt = ND_VCD_PARAMETER;
+                nvt = GW_VAR_TYPE_VCD_PARAMETER;
                 break;
             case V_INTEGER:
-                nvt = ND_VCD_INTEGER;
+                nvt = GW_VAR_TYPE_VCD_INTEGER;
                 break;
             case V_REAL:
-                nvt = ND_VCD_REAL;
+                nvt = GW_VAR_TYPE_VCD_REAL;
                 break;
             case V_REG:
-                nvt = ND_VCD_REG;
+                nvt = GW_VAR_TYPE_VCD_REG;
                 break;
             case V_SUPPLY0:
-                nvt = ND_VCD_SUPPLY0;
+                nvt = GW_VAR_TYPE_VCD_SUPPLY0;
                 break;
             case V_SUPPLY1:
-                nvt = ND_VCD_SUPPLY1;
+                nvt = GW_VAR_TYPE_VCD_SUPPLY1;
                 break;
             case V_TIME:
-                nvt = ND_VCD_TIME;
+                nvt = GW_VAR_TYPE_VCD_TIME;
                 break;
             case V_TRI:
-                nvt = ND_VCD_TRI;
+                nvt = GW_VAR_TYPE_VCD_TRI;
                 break;
             case V_TRIAND:
-                nvt = ND_VCD_TRIAND;
+                nvt = GW_VAR_TYPE_VCD_TRIAND;
                 break;
             case V_TRIOR:
-                nvt = ND_VCD_TRIOR;
+                nvt = GW_VAR_TYPE_VCD_TRIOR;
                 break;
             case V_TRIREG:
-                nvt = ND_VCD_TRIREG;
+                nvt = GW_VAR_TYPE_VCD_TRIREG;
                 break;
             case V_TRI0:
-                nvt = ND_VCD_TRI0;
+                nvt = GW_VAR_TYPE_VCD_TRI0;
                 break;
             case V_TRI1:
-                nvt = ND_VCD_TRI1;
+                nvt = GW_VAR_TYPE_VCD_TRI1;
                 break;
             case V_WAND:
-                nvt = ND_VCD_WAND;
+                nvt = GW_VAR_TYPE_VCD_WAND;
                 break;
             case V_WIRE:
-                nvt = ND_VCD_WIRE;
+                nvt = GW_VAR_TYPE_VCD_WIRE;
                 break;
             case V_WOR:
-                nvt = ND_VCD_WOR;
+                nvt = GW_VAR_TYPE_VCD_WOR;
                 break;
             case V_PORT:
-                nvt = ND_VCD_PORT;
+                nvt = GW_VAR_TYPE_VCD_PORT;
                 break;
             case V_STRINGTYPE:
-                nvt = ND_GEN_STRING;
+                nvt = GW_VAR_TYPE_GEN_STRING;
                 break;
             default:
-                nvt = ND_UNSPECIFIED_DEFAULT;
+                nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
                 break;
         }
         n->vartype = nvt;
@@ -1152,20 +1152,20 @@ static char *get_varname2(struct fstHier *fh,
                 if (vdp) {
                     switch (fh->u.var.direction) {
                         case FST_VD_INPUT:
-                            *vdp = ND_DIR_IN;
+                            *vdp = GW_VAR_DIR_IN;
                             GLOBALS->nonimplicit_direction_encountered = 1;
                             break;
                         case FST_VD_OUTPUT:
-                            *vdp = ND_DIR_OUT;
+                            *vdp = GW_VAR_DIR_OUT;
                             GLOBALS->nonimplicit_direction_encountered = 1;
                             break;
                         case FST_VD_INOUT:
-                            *vdp = ND_DIR_INOUT;
+                            *vdp = GW_VAR_DIR_INOUT;
                             GLOBALS->nonimplicit_direction_encountered = 1;
                             break;
                         case FST_VD_IMPLICIT:
                         default:
-                            *vdp = ND_DIR_IMPLICIT;
+                            *vdp = GW_VAR_DIR_IMPLICIT;
                             break;
                     }
                 }
@@ -1602,64 +1602,64 @@ static void process_extload_variable2(struct fstHier *s_gv)
 
         switch (vt) {
             case FST_VT_VCD_EVENT:
-                nvt = ND_VCD_EVENT;
+                nvt = GW_VAR_TYPE_VCD_EVENT;
                 break;
             case FST_VT_VCD_PARAMETER:
-                nvt = ND_VCD_PARAMETER;
+                nvt = GW_VAR_TYPE_VCD_PARAMETER;
                 break;
             case FST_VT_VCD_INTEGER:
-                nvt = ND_VCD_INTEGER;
+                nvt = GW_VAR_TYPE_VCD_INTEGER;
                 break;
             case FST_VT_VCD_REAL:
-                nvt = ND_VCD_REAL;
+                nvt = GW_VAR_TYPE_VCD_REAL;
                 break;
             case FST_VT_VCD_REG:
-                nvt = ND_VCD_REG;
+                nvt = GW_VAR_TYPE_VCD_REG;
                 break;
             case FST_VT_VCD_SUPPLY0:
-                nvt = ND_VCD_SUPPLY0;
+                nvt = GW_VAR_TYPE_VCD_SUPPLY0;
                 break;
             case FST_VT_VCD_SUPPLY1:
-                nvt = ND_VCD_SUPPLY1;
+                nvt = GW_VAR_TYPE_VCD_SUPPLY1;
                 break;
             case FST_VT_VCD_TIME:
-                nvt = ND_VCD_TIME;
+                nvt = GW_VAR_TYPE_VCD_TIME;
                 break;
             case FST_VT_VCD_TRI:
-                nvt = ND_VCD_TRI;
+                nvt = GW_VAR_TYPE_VCD_TRI;
                 break;
             case FST_VT_VCD_TRIAND:
-                nvt = ND_VCD_TRIAND;
+                nvt = GW_VAR_TYPE_VCD_TRIAND;
                 break;
             case FST_VT_VCD_TRIOR:
-                nvt = ND_VCD_TRIOR;
+                nvt = GW_VAR_TYPE_VCD_TRIOR;
                 break;
             case FST_VT_VCD_TRIREG:
-                nvt = ND_VCD_TRIREG;
+                nvt = GW_VAR_TYPE_VCD_TRIREG;
                 break;
             case FST_VT_VCD_TRI0:
-                nvt = ND_VCD_TRI0;
+                nvt = GW_VAR_TYPE_VCD_TRI0;
                 break;
             case FST_VT_VCD_TRI1:
-                nvt = ND_VCD_TRI1;
+                nvt = GW_VAR_TYPE_VCD_TRI1;
                 break;
             case FST_VT_VCD_WAND:
-                nvt = ND_VCD_WAND;
+                nvt = GW_VAR_TYPE_VCD_WAND;
                 break;
             case FST_VT_VCD_WIRE:
-                nvt = ND_VCD_WIRE;
+                nvt = GW_VAR_TYPE_VCD_WIRE;
                 break;
             case FST_VT_VCD_WOR:
-                nvt = ND_VCD_WOR;
+                nvt = GW_VAR_TYPE_VCD_WOR;
                 break;
             case FST_VT_VCD_PORT:
-                nvt = ND_VCD_PORT;
+                nvt = GW_VAR_TYPE_VCD_PORT;
                 break;
             case FST_VT_GEN_STRING:
-                nvt = ND_GEN_STRING;
+                nvt = GW_VAR_TYPE_GEN_STRING;
                 break;
             default:
-                nvt = ND_UNSPECIFIED_DEFAULT;
+                nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
                 break;
         }
         n->vartype = nvt;
