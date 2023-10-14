@@ -43,6 +43,7 @@ gtkwave_sources = [
     'fgetdynamic.c',
     'file.c',
     'fonts.c',
+    'fst_util.c',
     'fst.c',
     'gconf.c',
     'ghw.c',

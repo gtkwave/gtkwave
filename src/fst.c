@@ -25,6 +25,7 @@
 #include "busy.h"
 #include "hierpack.h"
 #include "fst.h"
+#include "fst_util.h"
 
 #define FST_RDLOAD "FSTLOAD | "
 
@@ -151,79 +152,7 @@ static struct fstHier *extractNextVar(void *xc,
                     fstReaderPushScope(xc, h->u.scope.name, GLOBALS->mod_tree_parent);
                 GLOBALS->fst_scope_name_len = fstReaderGetCurrentScopeLen(xc);
 
-                switch (h->u.scope.typ) {
-                    case FST_ST_VCD_MODULE:
-                        ttype = GW_TREE_KIND_VCD_ST_MODULE;
-                        break;
-                    case FST_ST_VCD_TASK:
-                        ttype = GW_TREE_KIND_VCD_ST_TASK;
-                        break;
-                    case FST_ST_VCD_FUNCTION:
-                        ttype = GW_TREE_KIND_VCD_ST_FUNCTION;
-                        break;
-                    case FST_ST_VCD_BEGIN:
-                        ttype = GW_TREE_KIND_VCD_ST_BEGIN;
-                        break;
-                    case FST_ST_VCD_FORK:
-                        ttype = GW_TREE_KIND_VCD_ST_FORK;
-                        break;
-                    case FST_ST_VCD_GENERATE:
-                        ttype = GW_TREE_KIND_VCD_ST_GENERATE;
-                        break;
-                    case FST_ST_VCD_STRUCT:
-                        ttype = GW_TREE_KIND_VCD_ST_STRUCT;
-                        break;
-                    case FST_ST_VCD_UNION:
-                        ttype = GW_TREE_KIND_VCD_ST_UNION;
-                        break;
-                    case FST_ST_VCD_CLASS:
-                        ttype = GW_TREE_KIND_VCD_ST_CLASS;
-                        break;
-                    case FST_ST_VCD_INTERFACE:
-                        ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
-                        break;
-                    case FST_ST_VCD_PACKAGE:
-                        ttype = GW_TREE_KIND_VCD_ST_PACKAGE;
-                        break;
-                    case FST_ST_VCD_PROGRAM:
-                        ttype = GW_TREE_KIND_VCD_ST_PROGRAM;
-                        break;
-
-                    case FST_ST_VHDL_ARCHITECTURE:
-                        ttype = GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
-                        break;
-                    case FST_ST_VHDL_PROCEDURE:
-                        ttype = GW_TREE_KIND_VHDL_ST_PROCEDURE;
-                        break;
-                    case FST_ST_VHDL_FUNCTION:
-                        ttype = GW_TREE_KIND_VHDL_ST_FUNCTION;
-                        break;
-                    case FST_ST_VHDL_RECORD:
-                        ttype = GW_TREE_KIND_VHDL_ST_RECORD;
-                        break;
-                    case FST_ST_VHDL_PROCESS:
-                        ttype = GW_TREE_KIND_VHDL_ST_PROCESS;
-                        break;
-                    case FST_ST_VHDL_BLOCK:
-                        ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
-                        break;
-                    case FST_ST_VHDL_FOR_GENERATE:
-                        ttype = GW_TREE_KIND_VHDL_ST_GENFOR;
-                        break;
-                    case FST_ST_VHDL_IF_GENERATE:
-                        ttype = GW_TREE_KIND_VHDL_ST_GENIF;
-                        break;
-                    case FST_ST_VHDL_GENERATE:
-                        ttype = GW_TREE_KIND_VHDL_ST_GENERATE;
-                        break;
-                    case FST_ST_VHDL_PACKAGE:
-                        ttype = GW_TREE_KIND_VHDL_ST_PACKAGE;
-                        break;
-
-                    default:
-                        ttype = GW_TREE_KIND_UNKNOWN;
-                        break;
-                }
+                ttype = fst_scope_type_to_gw_tree_kind(h->u.scope.typ);
 
                 allocate_and_decorate_module_tree_node(ttype,
                                                        h->u.scope.name,
@@ -723,129 +652,12 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
         GLOBALS->mvlfacs_fst_c_3[i].len = h->u.var.length;
 
         if (h->u.var.length) {
-            switch (h->u.var.direction) {
-                case FST_VD_INPUT:
-                    nvd = GW_VAR_DIR_IN;
-                    GLOBALS->nonimplicit_direction_encountered = 1;
-                    break;
-                case FST_VD_OUTPUT:
-                    nvd = GW_VAR_DIR_OUT;
-                    GLOBALS->nonimplicit_direction_encountered = 1;
-                    break;
-                case FST_VD_INOUT:
-                    nvd = GW_VAR_DIR_INOUT;
-                    GLOBALS->nonimplicit_direction_encountered = 1;
-                    break;
-                case FST_VD_BUFFER:
-                    nvd = GW_VAR_DIR_BUFFER;
-                    GLOBALS->nonimplicit_direction_encountered = 1;
-                    break;
-                case FST_VD_LINKAGE:
-                    nvd = GW_VAR_DIR_LINKAGE;
-                    GLOBALS->nonimplicit_direction_encountered = 1;
-                    break;
-
-                case FST_VD_IMPLICIT:
-                default:
-                    nvd = GW_VAR_DIR_IMPLICIT;
-                    break;
+            nvd = fst_var_dir_to_gw_var_dir(h->u.var.direction);
+            if (nvd != GW_VAR_DIR_IMPLICIT) {
+                GLOBALS->nonimplicit_direction_encountered = 1;
             }
 
-            switch (h->u.var.typ) {
-                case FST_VT_VCD_EVENT:
-                    nvt = GW_VAR_TYPE_VCD_EVENT;
-                    break;
-                case FST_VT_VCD_INTEGER:
-                    nvt = GW_VAR_TYPE_VCD_INTEGER;
-                    break;
-                case FST_VT_VCD_PARAMETER:
-                    nvt = GW_VAR_TYPE_VCD_PARAMETER;
-                    break;
-                case FST_VT_VCD_REAL:
-                    nvt = GW_VAR_TYPE_VCD_REAL;
-                    break;
-                case FST_VT_VCD_REAL_PARAMETER:
-                    nvt = GW_VAR_TYPE_VCD_REAL_PARAMETER;
-                    break;
-                case FST_VT_VCD_REALTIME:
-                    nvt = GW_VAR_TYPE_VCD_REALTIME;
-                    break;
-                case FST_VT_VCD_REG:
-                    nvt = GW_VAR_TYPE_VCD_REG;
-                    break;
-                case FST_VT_VCD_SUPPLY0:
-                    nvt = GW_VAR_TYPE_VCD_SUPPLY0;
-                    break;
-                case FST_VT_VCD_SUPPLY1:
-                    nvt = GW_VAR_TYPE_VCD_SUPPLY1;
-                    break;
-                case FST_VT_VCD_TIME:
-                    nvt = GW_VAR_TYPE_VCD_TIME;
-                    break;
-                case FST_VT_VCD_TRI:
-                    nvt = GW_VAR_TYPE_VCD_TRI;
-                    break;
-                case FST_VT_VCD_TRIAND:
-                    nvt = GW_VAR_TYPE_VCD_TRIAND;
-                    break;
-                case FST_VT_VCD_TRIOR:
-                    nvt = GW_VAR_TYPE_VCD_TRIOR;
-                    break;
-                case FST_VT_VCD_TRIREG:
-                    nvt = GW_VAR_TYPE_VCD_TRIREG;
-                    break;
-                case FST_VT_VCD_TRI0:
-                    nvt = GW_VAR_TYPE_VCD_TRI0;
-                    break;
-                case FST_VT_VCD_TRI1:
-                    nvt = GW_VAR_TYPE_VCD_TRI1;
-                    break;
-                case FST_VT_VCD_WAND:
-                    nvt = GW_VAR_TYPE_VCD_WAND;
-                    break;
-                case FST_VT_VCD_WIRE:
-                    nvt = GW_VAR_TYPE_VCD_WIRE;
-                    break;
-                case FST_VT_VCD_WOR:
-                    nvt = GW_VAR_TYPE_VCD_WOR;
-                    break;
-                case FST_VT_VCD_PORT:
-                    nvt = GW_VAR_TYPE_VCD_PORT;
-                    break;
-
-                case FST_VT_GEN_STRING:
-                    nvt = GW_VAR_TYPE_GEN_STRING;
-                    break;
-
-                case FST_VT_SV_BIT:
-                    nvt = GW_VAR_TYPE_SV_BIT;
-                    break;
-                case FST_VT_SV_LOGIC:
-                    nvt = GW_VAR_TYPE_SV_LOGIC;
-                    break;
-                case FST_VT_SV_INT:
-                    nvt = GW_VAR_TYPE_SV_INT;
-                    break;
-                case FST_VT_SV_SHORTINT:
-                    nvt = GW_VAR_TYPE_SV_SHORTINT;
-                    break;
-                case FST_VT_SV_LONGINT:
-                    nvt = GW_VAR_TYPE_SV_LONGINT;
-                    break;
-                case FST_VT_SV_BYTE:
-                    nvt = GW_VAR_TYPE_SV_BYTE;
-                    break;
-                case FST_VT_SV_ENUM:
-                    nvt = GW_VAR_TYPE_SV_ENUM;
-                    break;
-                case FST_VT_SV_SHORTREAL:
-                    nvt = GW_VAR_TYPE_SV_SHORTREAL;
-                    break;
-
-                default:
-                    nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
-                    break;
-            }
+            nvt = fst_var_type_to_gw_var_type(h->u.var.typ);
 
             switch (h->u.var.typ) {
                 case FST_VT_VCD_PARAMETER:
@@ -1084,59 +896,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
             }
             n->vartype = nvt;
 
-            switch (h->u.var.sdt_workspace) {
-                case FST_SDT_VHDL_BOOLEAN:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_BOOLEAN;
-                    break;
-                case FST_SDT_VHDL_BIT:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_BIT;
-                    break;
-                case FST_SDT_VHDL_BIT_VECTOR:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_BIT_VECTOR;
-                    break;
-                case FST_SDT_VHDL_STD_ULOGIC:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_STD_ULOGIC;
-                    break;
-                case FST_SDT_VHDL_STD_ULOGIC_VECTOR:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_STD_ULOGIC_VECTOR;
-                    break;
-                case FST_SDT_VHDL_STD_LOGIC:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_STD_LOGIC;
-                    break;
-                case FST_SDT_VHDL_STD_LOGIC_VECTOR:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_STD_LOGIC_VECTOR;
-                    break;
-                case FST_SDT_VHDL_UNSIGNED:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_UNSIGNED;
-                    break;
-                case FST_SDT_VHDL_SIGNED:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_SIGNED;
-                    break;
-                case FST_SDT_VHDL_INTEGER:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_INTEGER;
-                    break;
-                case FST_SDT_VHDL_REAL:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_REAL;
-                    break;
-                case FST_SDT_VHDL_NATURAL:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_NATURAL;
-                    break;
-                case FST_SDT_VHDL_POSITIVE:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_POSITIVE;
-                    break;
-                case FST_SDT_VHDL_TIME:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_TIME;
-                    break;
-                case FST_SDT_VHDL_CHARACTER:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_CHARACTER;
-                    break;
-                case FST_SDT_VHDL_STRING:
-                    ndt = GW_VAR_DATA_TYPE_VHDL_STRING;
-                    break;
-                default:
-                    ndt = GW_VAR_DATA_TYPE_NONE;
-                    break;
-            }
+            ndt = fst_supplemental_data_type_to_gw_var_data_type(h->u.var.sdt_workspace);
 
             n->vardt = ndt;
         }
