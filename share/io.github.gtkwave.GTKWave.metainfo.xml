@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2014 Tony Bybell <bybell@rocketmail.com> -->
-<component type="desktop-application">
+<component type="desktop">
   <id>io.github.gtkwave.GTKWave</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0-or-later</project_license>
@@ -12,11 +12,11 @@
     <p>
       GTKWave is a fully featured GTK+ based waveform viewer which reads FST and
       GHW files as well as standard Verilog VCD/EVCD files and allows their viewing.
-</p>
+    </p>
     <p>
       The viewer supports both post-mortem viewing of VCD files and interactive viewing of VCD data.
       Tcl scripting and callback capability allow for remote control by other applications.
-</p>
+    </p>
   </description>
 
   <url type="homepage">http://gtkwave.sourceforge.net/</url>
@@ -32,20 +32,27 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.117" date="2023-08-14">
+    </release>
+    <release version="3.3.116" date="2023-07-23">
+    </release>
+    <release version="3.3.115" date="2023-06-26">
+    </release>
+    <release version="3.3.114" date="2023-03-22">
+    </release>
     <release version="3.3.111" date="2021-09-02">
       <description>
         <ul>
-          <li>Rendering fix for filled rectangles and line caps in Cairo.</li>
-          <li>Fix in fstapi for read start limit time.</li>
-          <li>Use GtkSearchEntry in SST.</li>
-          <li>Convert entrybox to use dialog box.</li>
-          <li>Entrybox: use default response instead of signal handler.</li>
-          <li>Updated show-change widget.</li>
-          <li>Fix xml2stems when begin blocks are in functions.</li>
-          <li>Skip over decimal point in timescale in viewer.</li>
+            <li>Rendering fix for filled rectangles and line caps in Cairo.</li>
+            <li>Fix in fstapi for read start limit time.</li>
+            <li>Use GtkSearchEntry in SST.</li>
+            <li>Convert entrybox to use dialog box.</li>
+            <li>Entrybox: use default response instead of signal handler.</li>
+            <li>Updated show-change widget.</li>
+            <li>Fix xml2stems when begin blocks are in functions.</li>
+            <li>Skip over decimal point in timescale in viewer.</li>
         </ul>
       </description>
     </release>
-  </releases>
-
+   </releases>
 </component>
