@@ -4,10 +4,13 @@ GTKWave is a fully featured GTK+ based wave viewer for Unix and Win32 which read
 
 ## Installation
 
-2) If you compile a GIT version: Type `./autogen.sh`
-2) Type `./configure --enable-gtk3` (or `./configure` for GTK+ 2)
-3) `make`
-4) `make install` (as root)
+Meson is now used to build gtkwave:
+
+1( meson setup build
+2) cd build
+3) meson compile
+
+The below build information may be applicable.
 
 Make sure you copy the `.gtkwaverc` file to your home directory or to your
 VCD project directory.  It contains the prefs for a good configuration
