@@ -1954,6 +1954,10 @@ void reload_into_new_context_2(void)
         GLOBALS->is_gtkw_save_file = is_gtkw_save_file_cached;
     }
 
+    GLOBALS->wavewidth = gtk_widget_get_allocated_width(GTK_WIDGET(GLOBALS->wavearea));
+    GLOBALS->waveheight = gtk_widget_get_allocated_height(GTK_WIDGET(GLOBALS->wavearea));
+    calczoom(GLOBALS->tims.zoom);
+
     /* again doing this here (read_save_helper does it) seems to be necessary in order to keep
      * display in sync */
     GLOBALS->signalwindow_width_dirty = 1;
