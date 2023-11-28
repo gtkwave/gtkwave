@@ -1864,25 +1864,11 @@ static void vcd_parse(void)
                 break; /* just loop through..                 */
             case T_DUMPOFF:
             case T_DUMPPORTSOFF:
-                GLOBALS->dumping_off_vcd_recoder_c_3 = 1;
-                /* if((!GLOBALS->blackout_regions)||((GLOBALS->blackout_regions)&&(GLOBALS->blackout_regions->bstart<=GLOBALS->blackout_regions->bend)))
-                 * : remove redundant condition */
-                if ((!GLOBALS->blackout_regions) ||
-                    (GLOBALS->blackout_regions->bstart <= GLOBALS->blackout_regions->bend)) {
-                    struct blackout_region_t *bt = calloc_2(1, sizeof(struct blackout_region_t));
-
-                    bt->bstart = GLOBALS->current_time_vcd_recoder_c_3;
-                    bt->next = GLOBALS->blackout_regions;
-                    GLOBALS->blackout_regions = bt;
-                }
+                gw_blackout_regions_add_dumpoff(GLOBALS->blackout_regions, GLOBALS->current_time_vcd_recoder_c_3);
                 break;
             case T_DUMPON:
             case T_DUMPPORTSON:
-                GLOBALS->dumping_off_vcd_recoder_c_3 = 0;
-                if ((GLOBALS->blackout_regions) &&
-                    (GLOBALS->blackout_regions->bstart > GLOBALS->blackout_regions->bend)) {
-                    GLOBALS->blackout_regions->bend = GLOBALS->current_time_vcd_recoder_c_3;
-                }
+                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, GLOBALS->current_time_vcd_recoder_c_3);
                 break;
             case T_DUMPVARS:
             case T_DUMPPORTS:
@@ -1900,10 +1886,7 @@ static void vcd_parse(void)
                 sync_end(NULL); /* skip over unknown keywords */
                 break;
             case T_EOF:
-                if ((GLOBALS->blackout_regions) &&
-                    (GLOBALS->blackout_regions->bstart > GLOBALS->blackout_regions->bend)) {
-                    GLOBALS->blackout_regions->bend = GLOBALS->current_time_vcd_recoder_c_3;
-                }
+                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, GLOBALS->current_time_vcd_recoder_c_3);
 
                 GLOBALS->pv_vcd_recoder_c_3 = NULL;
                 if (GLOBALS->prev_hier_uncompressed_name) {
@@ -2610,14 +2593,7 @@ GwTime vcd_recoder_main(char *fname)
 
     getch_free(); /* free membuff for vcd getch buffer */
 
-    if (GLOBALS->blackout_regions) {
-        struct blackout_region_t *bt = GLOBALS->blackout_regions;
-        while (bt) {
-            bt->bstart *= GLOBALS->time_scale;
-            bt->bend *= GLOBALS->time_scale;
-            bt = bt->next;
-        }
-    }
+    gw_blackout_regions_scale(GLOBALS->blackout_regions, GLOBALS->time_scale);
 
     /* is_vcd=~0; */
     GLOBALS->is_lx2 = LXT2_IS_VLIST;

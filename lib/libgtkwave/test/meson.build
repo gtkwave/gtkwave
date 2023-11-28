@@ -1,4 +1,5 @@
 libgtkwave_tests = [
+    'gw-blackout-regions',
     'gw-color-theme',
     'gw-color',
     'gw-marker',

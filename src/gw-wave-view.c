@@ -448,49 +448,51 @@ static void rendertimebar(GwWaveView *self, cairo_t *cr, GwWaveformColors *color
     rendertimes(self, cr, colors);
 }
 
-static void renderblackout(cairo_t *cr, GwWaveformColors *colors)
+typedef struct
 {
-    gfloat pageinc;
-    GwTime lhs, rhs, lclip, rclip;
-    struct blackout_region_t *bt = GLOBALS->blackout_regions;
+    cairo_t *cr;
+    GwWaveformColors *colors;
+} RenderBlackoutData;
 
-    if (bt) {
-        pageinc = (gfloat)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
-        lhs = GLOBALS->tims.start;
-        rhs = pageinc + lhs;
+static void renderblackout(GwTime start, GwTime end, gpointer user_data)
+{
+    RenderBlackoutData *data = user_data;
 
-        while (bt) {
-            if ((bt->bend < lhs) || (bt->bstart > rhs)) {
-                /* nothing, out of bounds */
-            } else {
-                lclip = bt->bstart;
-                rclip = bt->bend;
+    gdouble pageinc = GLOBALS->wavewidth * GLOBALS->nspx;
+    GwTime lhs = GLOBALS->tims.start;
+    GwTime rhs = pageinc + lhs;
 
-                if (lclip < lhs)
-                    lclip = lhs;
-                else if (lclip > rhs)
-                    lclip = rhs;
-
-                if (rclip < lhs)
-                    rclip = lhs;
-
-                lclip -= lhs;
-                rclip -= lhs;
-                if (rclip > ((GLOBALS->wavewidth + 1) * GLOBALS->nspx))
-                    rclip = (GLOBALS->wavewidth + 1) * (GLOBALS->nspx);
-
-                XXX_gdk_draw_rectangle(cr,
-                                       colors->fill_x,
-                                       TRUE,
-                                       (((gdouble)lclip) * GLOBALS->pxns),
-                                       GLOBALS->fontheight,
-                                       (((gdouble)(rclip - lclip)) * GLOBALS->pxns),
-                                       GLOBALS->waveheight - GLOBALS->fontheight);
-            }
-
-            bt = bt->next;
-        }
+    if (start > rhs || end < lhs) {
+        // skip out of bounds regions
+        return;
     }
+
+    GwTime lclip = start;
+    GwTime rclip = end;
+
+    if (lclip < lhs) {
+        lclip = lhs;
+    } else if (lclip > rhs) {
+        lclip = rhs;
+    }
+
+    if (rclip < lhs) {
+        rclip = lhs;
+    }
+
+    lclip -= lhs;
+    rclip -= lhs;
+    if (rclip > ((GLOBALS->wavewidth + 1) * GLOBALS->nspx)) {
+        rclip = (GLOBALS->wavewidth + 1) * (GLOBALS->nspx);
+    }
+
+    XXX_gdk_draw_rectangle(data->cr,
+                           data->colors->fill_x,
+                           TRUE,
+                           (((gdouble)lclip) * GLOBALS->pxns),
+                           GLOBALS->fontheight,
+                           (((gdouble)(rclip - lclip)) * GLOBALS->pxns),
+                           GLOBALS->waveheight - GLOBALS->fontheight);
 }
 
 typedef struct
@@ -622,7 +624,11 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         cairo_set_line_width(traces_cr, GLOBALS->cr_line_width);
         cairo_set_line_cap(traces_cr, CAIRO_LINE_CAP_SQUARE);
 
-        renderblackout(traces_cr, colors);
+        if (GLOBALS->blackout_regions != NULL) {
+            RenderBlackoutData data = {.cr = traces_cr, .colors = colors};
+
+            gw_blackout_regions_foreach(GLOBALS->blackout_regions, renderblackout, &data);
+        }
 
         if (GLOBALS->disable_antialiasing) {
             cairo_set_antialias(traces_cr, CAIRO_ANTIALIAS_NONE);
@@ -638,7 +644,11 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         self->dirty = FALSE;
     }
 
-    cairo_set_source_rgba(cr, colors->background.r, colors->background.g, colors->background.b, colors->background.a);
+    cairo_set_source_rgba(cr,
+                          colors->background.r,
+                          colors->background.g,
+                          colors->background.b,
+                          colors->background.a);
     cairo_paint(cr);
 
     rendertimebar(self, cr, colors);
@@ -662,7 +672,7 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
     //     gesture_filter_set = 0;
 
     if (GLOBALS->black_and_white) {
-        g_free(colors );
+        g_free(colors);
     }
 
     return FALSE;
@@ -687,12 +697,11 @@ static void gw_wave_view_size_allocate(GtkWidget *widget, GtkAllocation *allocat
 
     scale = gtk_widget_get_scale_factor(widget);
 
-    self->traces_surface =
-        gdk_window_create_similar_image_surface(gtk_widget_get_window(widget),
-                                                CAIRO_FORMAT_ARGB32,
-                                                allocation->width * scale,
-                                                allocation->height * scale,
-                                                scale);
+    self->traces_surface = gdk_window_create_similar_image_surface(gtk_widget_get_window(widget),
+                                                                   CAIRO_FORMAT_ARGB32,
+                                                                   allocation->width * scale,
+                                                                   allocation->height * scale,
+                                                                   scale);
 
     self->dirty = TRUE;
 }

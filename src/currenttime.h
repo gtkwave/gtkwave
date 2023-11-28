@@ -24,12 +24,6 @@
 #define WAVE_INF_SCALING (0.5)
 #define WAVE_SI_UNITS " munpfaz"
 
-struct blackout_region_t
-{
-    struct blackout_region_t *next;
-    GwTime bstart, bend;
-};
-
 /* currenttime.c protos */
 
 void fractional_timescale_fix(char *);

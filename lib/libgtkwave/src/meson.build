@@ -1,4 +1,5 @@
 libgtkwave_public_sources = [
+    'gw-blackout-regions.c',
     'gw-color-theme.c',
     'gw-color.c',
     'gw-marker.c',
@@ -12,6 +13,7 @@ libgtkwave_public_sources = [
 libgtkwave_public_headers = [
     'gtkwave.h',
     'gw-types.h',
+    'gw-blackout-regions.h',
     'gw-bit-vector.h',
     'gw-bits.h',
     'gw-color-theme.h',

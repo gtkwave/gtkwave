@@ -119,17 +119,6 @@ static gchar *reformat_time_as_frequency(GwTime val, char dim)
     }
 }
 
-static gboolean is_in_blackout_region(GwTime val)
-{
-    for (struct blackout_region_t *bt = GLOBALS->blackout_regions; bt != NULL; bt = bt->next) {
-        if (val >= bt->bstart && val < bt->bend) {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
 struct _GwTimeDisplay
 {
     GtkBox parent_instance;
@@ -225,7 +214,8 @@ static void gw_time_display_update(GwTimeDisplay *self)
 
         gchar *text = reformat_time_2(cursor_pos, GLOBALS->time_dimension, FALSE);
 
-        if (is_in_blackout_region(cursor_pos)) {
+        if (GLOBALS->blackout_regions != NULL &&
+            gw_blackout_regions_contains(GLOBALS->blackout_regions, cursor_pos)) {
             gchar *last_space = g_strrstr(text, " ");
             if (last_space != NULL) {
                 *last_space = '*';
