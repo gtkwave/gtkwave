@@ -19,3 +19,4 @@
 #include "gw-stems.h"
 #include "gw-var-enums.h"
 #include "gw-tree.h"
+#include "gw-blackout-regions.h"

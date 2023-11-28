@@ -1737,26 +1737,15 @@ static void vcd_parse(void)
                 break; /* just loop through..                 */
             case T_DUMPOFF:
             case T_DUMPPORTSOFF:
-                GLOBALS->dumping_off_vcd_partial_c_2 = 1;
-                /* if((!GLOBALS->blackout_regions)||((GLOBALS->blackout_regions)&&(GLOBALS->blackout_regions->bstart<=GLOBALS->blackout_regions->bend)))
-                 * : remove redundant condition */
-                if ((!GLOBALS->blackout_regions) ||
-                    (GLOBALS->blackout_regions->bstart <= GLOBALS->blackout_regions->bend)) {
-                    struct blackout_region_t *bt = calloc_2(1, sizeof(struct blackout_region_t));
-
-                    bt->bstart = GLOBALS->current_time_vcd_partial_c_2 * GLOBALS->time_scale;
-                    bt->next = GLOBALS->blackout_regions;
-                    GLOBALS->blackout_regions = bt;
-                }
+                gw_blackout_regions_add_dumpoff(GLOBALS->blackout_regions,
+                                                GLOBALS->current_time_vcd_partial_c_2 *
+                                                    GLOBALS->time_scale);
                 break;
             case T_DUMPON:
             case T_DUMPPORTSON:
-                GLOBALS->dumping_off_vcd_partial_c_2 = 0;
-                if ((GLOBALS->blackout_regions) &&
-                    (GLOBALS->blackout_regions->bstart > GLOBALS->blackout_regions->bend)) {
-                    GLOBALS->blackout_regions->bend =
-                        GLOBALS->current_time_vcd_partial_c_2 * GLOBALS->time_scale;
-                }
+                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions,
+                                               GLOBALS->current_time_vcd_partial_c_2 *
+                                                   GLOBALS->time_scale);
                 break;
             case T_DUMPVARS:
             case T_DUMPPORTS:
@@ -1774,11 +1763,9 @@ static void vcd_parse(void)
                 sync_end(NULL); /* skip over unknown keywords */
                 break;
             case T_EOF:
-                if ((GLOBALS->blackout_regions) &&
-                    (GLOBALS->blackout_regions->bstart > GLOBALS->blackout_regions->bend)) {
-                    GLOBALS->blackout_regions->bend =
-                        GLOBALS->current_time_vcd_partial_c_2 * GLOBALS->time_scale;
-                }
+                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions,
+                                               GLOBALS->current_time_vcd_partial_c_2 *
+                                                   GLOBALS->time_scale);
                 return;
             default:
                 DEBUG(fprintf(stderr, "UNKNOWN TOKEN\n"));
@@ -2435,6 +2422,7 @@ GwTime vcd_partial_main(char *fname)
     sym_hash_initialize(GLOBALS);
     getch_alloc(); /* alloc membuff for vcd getch buffer */
     build_slisthier();
+    GLOBALS->blackout_regions = gw_blackout_regions_new();
 
     GLOBALS->vcd_preserve_glitches = 1; /* splicing dictates that we override */
     while (!GLOBALS->header_over_vcd_partial_c_2) {

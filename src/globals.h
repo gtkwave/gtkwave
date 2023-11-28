@@ -784,7 +784,6 @@ struct Global
     off_t vcdbyteno_vcd_partial_c_2; /* from vcd_partial.c 555 */
     int error_count_vcd_partial_c_2; /* from vcd_partial.c 556 */
     int header_over_vcd_partial_c_2; /* from vcd_partial.c 557 */
-    int dumping_off_vcd_partial_c_2; /* from vcd_partial.c 558 */
     GwTime start_time_vcd_partial_c_2; /* from vcd_partial.c 559 */
     GwTime end_time_vcd_partial_c_2; /* from vcd_partial.c 560 */
     GwTime current_time_vcd_partial_c_2; /* from vcd_partial.c 561 */
@@ -907,7 +906,7 @@ struct Global
     char zoom_dyne; /* from menu.c */
     int cursor_snap; /* from wavewindow.c 659 */
     float old_wvalue; /* from wavewindow.c 660 */
-    struct blackout_region_t *blackout_regions; /* from wavewindow.c 661 */
+    GwBlackoutRegions *blackout_regions; /* from wavewindow.c 661 */
     GwTime zoom; /* from wavewindow.c 662 */
     GwTime scale; /* from wavewindow.c 663 */
     GwTime nsperframe; /* from wavewindow.c 664 */

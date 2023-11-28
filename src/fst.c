@@ -443,6 +443,29 @@ static void fst_append_graft_chain(int len, char *nam, int which, GwTree *par)
     GLOBALS->terminals_tchain_tree_c_1 = t;
 }
 
+static GwBlackoutRegions *load_blackout_regions(void)
+{
+    GwBlackoutRegions *blackout_regions = gw_blackout_regions_new();
+
+    guint32 num_activity_changes = fstReaderGetNumberDumpActivityChanges(GLOBALS->fst_fst_c_1);
+    for (guint32 activity_idx = 0; activity_idx < num_activity_changes; activity_idx++) {
+        GwTime ct = fstReaderGetDumpActivityChangeTime(GLOBALS->fst_fst_c_1, activity_idx) *
+                    GLOBALS->time_scale;
+        unsigned char ac = fstReaderGetDumpActivityChangeValue(GLOBALS->fst_fst_c_1, activity_idx);
+
+        if (ac == 1) {
+            gw_blackout_regions_add_dumpon(blackout_regions, ct);
+        } else {
+            gw_blackout_regions_add_dumpoff(blackout_regions, ct);
+        }
+    }
+
+    // Ensure that final blackout region is finished.
+    gw_blackout_regions_add_dumpon(blackout_regions, GLOBALS->last_cycle_fst_c_3);
+
+    return blackout_regions;
+}
+
 /*
  * mainline
  */
@@ -459,7 +482,6 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     struct fstHier *h = NULL;
     int msb, lsb;
     char *nnam = NULL;
-    uint32_t activity_idx, num_activity_changes;
     GwTree *npar = NULL;
     char **f_name = NULL;
     int *f_name_len = NULL, *f_name_max_len = NULL;
@@ -525,51 +547,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     GLOBALS->total_cycles_fst_c_3 = GLOBALS->last_cycle_fst_c_3 - GLOBALS->first_cycle_fst_c_3 + 1;
     GLOBALS->global_time_offset = fstReaderGetTimezero(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
 
-    /* blackout region processing */
-    num_activity_changes = fstReaderGetNumberDumpActivityChanges(GLOBALS->fst_fst_c_1);
-    for (activity_idx = 0; activity_idx < num_activity_changes; activity_idx++) {
-        uint32_t activity_idx2;
-        uint64_t ct = fstReaderGetDumpActivityChangeTime(GLOBALS->fst_fst_c_1, activity_idx);
-        unsigned char ac = fstReaderGetDumpActivityChangeValue(GLOBALS->fst_fst_c_1, activity_idx);
-
-        if (ac == 1)
-            continue;
-        if ((activity_idx + 1) == num_activity_changes) {
-            struct blackout_region_t *bt = calloc_2(1, sizeof(struct blackout_region_t));
-            bt->bstart = (GwTime)(ct * GLOBALS->time_scale);
-            bt->bend = (GwTime)(GLOBALS->last_cycle_fst_c_3 * GLOBALS->time_scale);
-            bt->next = GLOBALS->blackout_regions;
-
-            GLOBALS->blackout_regions = bt;
-
-            /* activity_idx = activity_idx2; */ /* scan-build says is dead + assigned garbage value
-                                                   , which is true : code does not need to mirror
-                                                   for() loop below */
-            break;
-        }
-
-        for (activity_idx2 = activity_idx + 1; activity_idx2 < num_activity_changes;
-             activity_idx2++) {
-            uint64_t ct2 = fstReaderGetDumpActivityChangeTime(GLOBALS->fst_fst_c_1, activity_idx2);
-            ac = fstReaderGetDumpActivityChangeValue(GLOBALS->fst_fst_c_1, activity_idx2);
-            if ((ac == 0) && (activity_idx2 == (num_activity_changes - 1))) {
-                ac = 1;
-                ct2 = GLOBALS->last_cycle_fst_c_3;
-            }
-
-            if (ac == 1) {
-                struct blackout_region_t *bt = calloc_2(1, sizeof(struct blackout_region_t));
-                bt->bstart = (GwTime)(ct * GLOBALS->time_scale);
-                bt->bend = (GwTime)(ct2 * GLOBALS->time_scale);
-                bt->next = GLOBALS->blackout_regions;
-
-                GLOBALS->blackout_regions = bt;
-
-                activity_idx = activity_idx2;
-                break;
-            }
-        }
-    }
+    GLOBALS->blackout_regions = load_blackout_regions();
 
     /* do your stuff here..all useful info has been initialized by now */
 

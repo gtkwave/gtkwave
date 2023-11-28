@@ -805,7 +805,6 @@ static const struct Global globals_base_values = {
     0, /* vcdbyteno_vcd_partial_c_2 516 */
     0, /* error_count_vcd_partial_c_2 517 */
     0, /* header_over_vcd_partial_c_2 518 */
-    0, /* dumping_off_vcd_partial_c_2 519 */
     -1, /* start_time_vcd_partial_c_2 520 */
     -1, /* end_time_vcd_partial_c_2 521 */
     -1, /* current_time_vcd_partial_c_2 522 */
