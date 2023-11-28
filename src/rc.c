@@ -685,13 +685,6 @@ int f_vlist_prepack(const char *str)
     return (0);
 }
 
-int f_vlist_spill(const char *str)
-{
-    DEBUG(printf("f_vlist_spill(\"%s\")\n", str));
-    GLOBALS->vlist_spill_to_disk = atoi_64(str);
-    return (0);
-}
-
 int f_wave_scrolling(const char *str)
 {
     DEBUG(printf("f_wave_scrolling(\"%s\")\n", str));
@@ -934,7 +927,6 @@ static struct rc_entry rcitems[] = {
     {"vector_padding", f_vector_padding},
     {"vlist_compression", f_vlist_compression},
     {"vlist_prepack", f_vlist_prepack},
-    {"vlist_spill", f_vlist_spill},
     {"wave_scrolling", f_wave_scrolling},
     {"zoom_base", f_zoom_base},
     {"zoom_center", f_zoom_center},

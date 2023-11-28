@@ -95,14 +95,6 @@ enum VarTypes
 };
 #endif
 
-/* for vcd_recoder.c */
-enum FastloadState
-{
-    VCD_FSL_NONE,
-    VCD_FSL_WRITE,
-    VCD_FSL_READ
-};
-
 GwTime vcd_recoder_main(char *fname);
 
 GwTime vcd_partial_main(char *fname);

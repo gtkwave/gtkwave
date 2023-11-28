@@ -819,13 +819,9 @@ struct Global
      * vcd_recoder.c
      */
     struct vlist_t *time_vlist_vcd_recoder_c_1; /* from vcd_recoder.c 593 */
-    struct vlist_t *time_vlist_vcd_recoder_write; /* from vcd_recoder.c */
-    char *fastload_depacked; /* from vcd_recoder.c */
-    char *fastload_current; /* from vcd_recoder.c */
     unsigned int time_vlist_count_vcd_recoder_c_1; /* from vcd_recoder.c 594 */
     FILE *vcd_handle_vcd_recoder_c_2; /* from vcd_recoder.c 595 */
     char vcd_is_compressed_vcd_recoder_c_2; /* from vcd_recoder.c 596 */
-    char use_fastload;
     off_t vcdbyteno_vcd_recoder_c_3; /* from vcd_recoder.c 597 */
     int error_count_vcd_recoder_c_3; /* from vcd_recoder.c 598 */
     int header_over_vcd_recoder_c_3; /* from vcd_recoder.c 599 */
@@ -870,9 +866,7 @@ struct Global
     /*
      * vlist.c
      */
-    char vlist_spill_to_disk;
     char vlist_prepack;
-    FILE *vlist_handle;
     off_t vlist_bytes_written;
     int vlist_compression_depth; /* from vlist.c 634 */
 

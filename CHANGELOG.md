@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Removed "Signal Search Hierarchy" dialog.
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed legacy VCD loader.
+- Removed VCD fastload and support for vlist spillfiles.
 - Removed rc variables:
     - `alt_wheel_mode`
     - `atomic_vectors`
@@ -46,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     - `use_standard_trace_select`
     - `use_toolbutton_interface`
     - `vcd_explicit_zero_subscripts`
+    - `vlist_spill`
 
 ### Fixed
 

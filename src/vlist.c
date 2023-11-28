@@ -28,173 +28,6 @@
 #include <zlib.h>
 #include <string.h>
 
-void vlist_init_spillfile(void)
-{
-    if (GLOBALS->use_fastload) {
-        char *fname = malloc_2(strlen(GLOBALS->loaded_file_name) + 4 + 1);
-        sprintf(fname, "%s.idx", GLOBALS->loaded_file_name);
-
-        GLOBALS->vlist_handle = fopen(fname, "w+b");
-
-        free_2(fname);
-
-        fputc('!', GLOBALS->vlist_handle);
-        GLOBALS->vlist_bytes_written = 1;
-    } else {
-#if defined __MINGW32__
-        GLOBALS->vlist_handle = tmpfile();
-        fputc('!', GLOBALS->vlist_handle);
-        GLOBALS->vlist_bytes_written = 1;
-#else
-        int fd_dummy;
-        char *nam = tmpnam_2(NULL, &fd_dummy);
-
-        GLOBALS->vlist_handle = fopen(nam, "w+b");
-
-        unlink(nam);
-        if (fd_dummy >= 0) {
-            close(fd_dummy);
-            free_2(nam);
-        }
-
-        fputc('!', GLOBALS->vlist_handle);
-        GLOBALS->vlist_bytes_written = 1;
-#endif
-    }
-}
-
-void vlist_kill_spillfile(void)
-{
-    if (GLOBALS->vlist_handle) {
-        fclose(GLOBALS->vlist_handle);
-        GLOBALS->vlist_handle = NULL;
-    }
-}
-
-/* machine-independent header i/o
- */
-static int vlist_fread_hdr(struct vlist_t *vl, FILE *f)
-{
-    uintptr_t val;
-    unsigned int vali;
-    int ch, shamt, rc = 0;
-
-    val = 0;
-    shamt = 0;
-    do {
-        ch = fgetc(f);
-        if (ch == EOF)
-            goto bail;
-
-        val |= ((unsigned long)(ch & 0x7f)) << shamt;
-        shamt += 7;
-    } while (!(ch & 0x80));
-    vl->next = (struct vlist_t *)val;
-
-    vali = 0;
-    shamt = 0;
-    do {
-        ch = fgetc(f);
-        if (ch == EOF)
-            goto bail;
-
-        vali |= ((unsigned int)(ch & 0x7f)) << shamt;
-        shamt += 7;
-    } while (!(ch & 0x80));
-    vl->siz = (unsigned int)vali;
-
-    vali = 0;
-    shamt = 0;
-    do {
-        ch = fgetc(f);
-        if (ch == EOF)
-            goto bail;
-
-        vali |= ((unsigned int)(ch & 0x7f)) << shamt;
-        shamt += 7;
-    } while (!(ch & 0x80));
-    vl->offs = (vali & 1) ? (unsigned int)(-(int)(vali >> 1)) : (vali >> 1);
-
-    vali = 0;
-    shamt = 0;
-    do {
-        ch = fgetc(f);
-        if (ch == EOF)
-            goto bail;
-
-        vali |= ((unsigned int)(ch & 0x7f)) << shamt;
-        shamt += 7;
-    } while (!(ch & 0x80));
-    vl->elem_siz = (unsigned int)vali;
-
-    rc = 1;
-
-bail:
-    return (rc);
-}
-
-static int vlist_fwrite(struct vlist_t *vl, unsigned int rsiz, FILE *f)
-{
-    unsigned char mem[4 * sizeof(long) * 2];
-    unsigned char *pnt = mem;
-    uintptr_t val, nxt;
-    unsigned int vali, nxti;
-    int offs_as_int;
-    int rc;
-    int len = 0;
-
-    val = (uintptr_t)(vl->next);
-    while ((nxt = val >> 7)) {
-        *(pnt++) = (val & 0x7f);
-        val = nxt;
-    }
-    *(pnt++) = (val & 0x7f) | 0x80;
-
-    vali = (vl->siz);
-    while ((nxti = vali >> 7)) {
-        *(pnt++) = (vali & 0x7f);
-        vali = nxti;
-    }
-    *(pnt++) = (vali & 0x7f) | 0x80;
-
-    offs_as_int = (int)(vl->offs);
-    if (offs_as_int < 0) {
-        offs_as_int = -offs_as_int; /* reduce number of one bits propagating left by making sign bit
-                                       the lsb */
-        offs_as_int <<= 1;
-        offs_as_int |= 1;
-    } else {
-        offs_as_int <<= 1;
-    }
-
-    vali = (unsigned int)(offs_as_int);
-    while ((nxti = vali >> 7)) {
-        *(pnt++) = (vali & 0x7f);
-        vali = nxti;
-    }
-    *(pnt++) = (vali & 0x7f) | 0x80;
-
-    vali = (unsigned int)(vl->elem_siz);
-    while ((nxti = vali >> 7)) {
-        *(pnt++) = (vali & 0x7f);
-        vali = nxti;
-    }
-    *(pnt++) = (vali & 0x7f) | 0x80;
-
-    rc = fwrite(mem, 1, (len = (pnt - mem)), f);
-    if (rc) {
-        unsigned int wrlen = (rsiz - sizeof(struct vlist_t));
-        len += wrlen;
-
-        rc = fwrite(vl + 1, 1, wrlen, f);
-        if (rc) {
-            rc = len;
-        }
-    }
-
-    return (rc);
-}
-
 /* create / destroy
  */
 struct vlist_t *vlist_create(unsigned int elem_siz)
@@ -262,54 +95,6 @@ void vlist_uncompress(struct vlist_t **v)
     struct vlist_t *vl = *v;
     struct vlist_t *vprev = NULL;
 
-    if (GLOBALS->vlist_handle) {
-        while (vl) {
-            struct vlist_t vhdr;
-            struct vlist_t *vrebuild;
-            uintptr_t vl_offs = (uintptr_t)vl;
-            int rc;
-
-            off_t seekpos =
-                (off_t)vl_offs; /* possible overflow conflicts were already handled in the writer */
-
-            fseeko(GLOBALS->vlist_handle, seekpos, SEEK_SET);
-
-            if (GLOBALS->use_fastload) {
-                rc = vlist_fread_hdr(&vhdr, GLOBALS->vlist_handle);
-            } else {
-                rc = fread(&vhdr, sizeof(struct vlist_t), 1, GLOBALS->vlist_handle);
-            }
-
-            if (!rc) {
-                printf("Error in reading from VList spill file!\n");
-                exit(255);
-            }
-
-            /* args are reversed to fread (compared to above) to handle short read at end of file!
-             */
-            /* (this can happen because of how we write out only the used size of a block) */
-            vrebuild = malloc_2(sizeof(struct vlist_t) + vhdr.siz);
-            memcpy(vrebuild, &vhdr, sizeof(struct vlist_t));
-            rc = fread(vrebuild + 1, 1, vrebuild->siz, GLOBALS->vlist_handle);
-            if (!rc) {
-                printf("Error in reading from VList spill file!\n");
-                exit(255);
-            }
-
-            if (vprev) {
-                vprev->next = vrebuild;
-            } else {
-                *v = vrebuild;
-            }
-
-            vprev = vrebuild;
-            vl = vhdr.next;
-        }
-
-        vl = *v;
-        vprev = NULL;
-    }
-
     while (vl) {
         if ((int)vl->offs < 0) {
             struct vlist_t *vz = malloc_2(sizeof(struct vlist_t) + vl->siz);
@@ -373,55 +158,12 @@ void *vlist_alloc(struct vlist_t **v, int compressable)
             }
         }
 
-        if (compressable && GLOBALS->vlist_handle) {
-            size_t rc;
-            intptr_t write_cnt;
-
-            fseeko(GLOBALS->vlist_handle, GLOBALS->vlist_bytes_written, SEEK_SET);
-
-            if (GLOBALS->use_fastload) {
-                rc = vlist_fwrite(vl, rsiz, GLOBALS->vlist_handle);
-            } else {
-                rc = fwrite(vl, rsiz, 1, GLOBALS->vlist_handle);
-            }
-
-            if (!rc) {
-                fprintf(stderr, "Error in writing to VList spill file!\n");
-                perror("Why");
-                exit(255);
-            }
-
-            write_cnt = GLOBALS->vlist_bytes_written;
-            if (sizeof(uintptr_t) != sizeof(off_t)) /* optimizes in or out at compile time */
-            {
-                if (write_cnt != GLOBALS->vlist_bytes_written) {
-                    fprintf(stderr, "VList spill file pointer-file overflow!\n");
-                    exit(255);
-                }
-            }
-
-            v2 = calloc_2(1, sizeof(struct vlist_t) + (vl->siz * vl->elem_siz));
-            v2->siz = siz;
-            v2->elem_siz = vl->elem_siz;
-            v2->next = (struct vlist_t *)write_cnt;
-            free_2(vl);
-
-            *v = v2;
-            vl = *v;
-
-            if (GLOBALS->use_fastload) {
-                GLOBALS->vlist_bytes_written += rc;
-            } else {
-                GLOBALS->vlist_bytes_written += rsiz;
-            }
-        } else {
-            v2 = calloc_2(1, sizeof(struct vlist_t) + (vl->siz * vl->elem_siz));
-            v2->siz = siz;
-            v2->elem_siz = vl->elem_siz;
-            v2->next = vl;
-            *v = v2;
-            vl = *v;
-        }
+        v2 = calloc_2(1, sizeof(struct vlist_t) + (vl->siz * vl->elem_siz));
+        v2->siz = siz;
+        v2->elem_siz = vl->elem_siz;
+        v2->next = vl;
+        *v = v2;
+        vl = *v;
     } else if (vl->offs * 2 == vl->siz) {
         v2 = calloc_2(1, sizeof(struct vlist_t) + (vl->siz * vl->elem_siz));
         memcpy(v2, vl, sizeof(struct vlist_t) + (vl->siz / 2 * vl->elem_siz));
@@ -488,50 +230,11 @@ void vlist_freeze(struct vlist_t **v)
 
         w = vlist_compress_block(vl, &rsiz);
         *v = w;
-    } else if ((siz != vl->siz) && (!GLOBALS->vlist_handle)) {
+    } else if (siz != vl->siz) {
         struct vlist_t *w = malloc_2(rsiz);
         memcpy(w, vl, rsiz);
         free_2(vl);
         *v = w;
-    }
-
-    if (GLOBALS->vlist_handle) {
-        size_t rc;
-        intptr_t write_cnt;
-
-        vl = *v;
-        fseeko(GLOBALS->vlist_handle, GLOBALS->vlist_bytes_written, SEEK_SET);
-
-        if (GLOBALS->use_fastload) {
-            rc = vlist_fwrite(vl, rsiz, GLOBALS->vlist_handle);
-        } else {
-            rc = fwrite(vl, rsiz, 1, GLOBALS->vlist_handle);
-        }
-
-        if (!rc) {
-            fprintf(stderr, "Error in writing to VList spill file!\n");
-            perror("Why");
-            exit(255);
-        }
-
-        write_cnt = GLOBALS->vlist_bytes_written;
-        if (sizeof(uintptr_t) != sizeof(off_t)) /* optimizes in or out at compile time */
-        {
-            if (write_cnt != GLOBALS->vlist_bytes_written) {
-                fprintf(stderr, "VList spill file pointer-file overflow!\n");
-                exit(255);
-            }
-        }
-
-        *v = (struct vlist_t *)write_cnt;
-
-        if (GLOBALS->use_fastload) {
-            GLOBALS->vlist_bytes_written += rc;
-        } else {
-            GLOBALS->vlist_bytes_written += rsiz;
-        }
-
-        free_2(vl);
     }
 }
 
