@@ -840,13 +840,9 @@ static const struct Global globals_base_values = {
      * vcd_recoder.c
      */
     NULL, /* time_vlist_vcd_recoder_c_1 548 */
-    NULL, /* time_vlist_vcd_recoder_write */
-    NULL, /* fastload_depacked */
-    NULL, /* fastload_current */
     0, /* time_vlist_count_vcd_recoder_c_1 549 */
     NULL, /* vcd_handle_vcd_recoder_c_2 550 */
     0, /* vcd_is_compressed_vcd_recoder_c_2 551 */
-    VCD_FSL_NONE, /* use_fastload */
     0, /* vcdbyteno_vcd_recoder_c_3 552 */
     0, /* error_count_vcd_recoder_c_3 553 */
     0, /* header_over_vcd_recoder_c_3 554 */
@@ -891,9 +887,7 @@ static const struct Global globals_base_values = {
     /*
      * vlist.c
      */
-    0, /* vlist_spill_to_disk */
     0, /* vlist_prepack */
-    NULL, /* vlist_handle */
     0, /* vlist_bytes_written */
     4, /* vlist_compression_depth 583 */
 
@@ -1158,10 +1152,6 @@ static int handle_setjmp(void)
             }
         }
 
-        if (GLOBALS->vlist_handle) {
-            fclose(GLOBALS->vlist_handle);
-            GLOBALS->vlist_handle = NULL;
-        }
         free_outstanding(); /* free anything allocated in loader ctx */
 
         memcpy(GLOBALS, setjmp_globals, sizeof(struct Global)); /* copy over old ctx */
@@ -1438,7 +1428,6 @@ void reload_into_new_context_2(void)
     new_globals->vcd_warning_filesize = GLOBALS->vcd_warning_filesize;
     new_globals->vector_padding = GLOBALS->vector_padding;
     new_globals->vlist_prepack = GLOBALS->vlist_prepack;
-    new_globals->vlist_spill_to_disk = GLOBALS->vlist_spill_to_disk;
     new_globals->vlist_compression_depth = GLOBALS->vlist_compression_depth;
     new_globals->wave_scrolling = GLOBALS->wave_scrolling;
     new_globals->do_zoom_center = GLOBALS->do_zoom_center;
@@ -1489,13 +1478,6 @@ void reload_into_new_context_2(void)
 
     /* ttranslate.c */
     strcpy2_into_new_context(new_globals, &new_globals->ttranslate_args, &GLOBALS->ttranslate_args);
-
-    /* vlist.c */
-    if (GLOBALS->vlist_handle) {
-        vlist_kill_spillfile();
-        new_globals->use_fastload =
-            (GLOBALS->use_fastload != VCD_FSL_NONE) ? VCD_FSL_WRITE : VCD_FSL_NONE;
-    }
 
     /* lxt2.c / vzt.c / ae2.c */
     strcpy2_into_new_context(new_globals, &new_globals->skip_start, &GLOBALS->skip_start);

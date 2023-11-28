@@ -50,9 +50,6 @@ struct vlist_packer_t
     unsigned char repdist, repdist2, repdist3, repdist4;
 };
 
-void vlist_init_spillfile(void);
-void vlist_kill_spillfile(void);
-
 struct vlist_t *vlist_create(unsigned int elem_siz);
 void vlist_destroy(struct vlist_t *v);
 void *vlist_alloc(struct vlist_t **v, int compressable);

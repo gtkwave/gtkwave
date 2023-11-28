@@ -327,8 +327,7 @@ static void print_help(char *nam)
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
         "  -n, --nocli=DIRPATH        use file requester for dumpfile name\n"
-        "  -f, --dump=FILE            specify dumpfile name\n"
-        "  -F, --fastload             generate/use VCD recoder fastload files\n" VCD_GETOPT
+        "  -f, --dump=FILE            specify dumpfile name\n" VCD_GETOPT
         "  -a, --save=FILE            specify savefile name\n"
         "  -A, --autosavename         assume savefile is suffix modified dumpfile name\n"
         "  -r, --rcfile=FILE          specify override .rcfile name\n"
@@ -682,7 +681,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
     char is_wish = 0;
     char is_interactive = 0;
     char is_smartsave = 0;
-    char is_fastload = VCD_FSL_NONE;
     char is_giga = 0;
     char fast_exit = 0;
     char opt_errors_encountered = 0;
@@ -823,7 +821,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->ruler_origin = old_g->ruler_origin;
         GLOBALS->ruler_step = old_g->ruler_step;
 
-        GLOBALS->vlist_spill_to_disk = old_g->vlist_spill_to_disk;
         GLOBALS->vlist_prepack = old_g->vlist_prepack;
         GLOBALS->do_dynamic_treefilter = old_g->do_dynamic_treefilter;
         GLOBALS->dragzoom_threshold = old_g->dragzoom_threshold;
@@ -923,19 +920,25 @@ do_primary_inits:
             int option_index = 0;
 
             static struct option long_options[] = {
-                {"dump", 1, 0, 'f'},        {"fastload", 0, 0, 'F'},    {"optimize", 0, 0, 'o'},
-                {"nocli", 1, 0, 'n'},       {"save", 1, 0, 'a'},        {"autosavename", 0, 0, 'A'},
-                {"rcfile", 1, 0, 'r'},      {"defaultskip", 0, 0, 'd'}, {"logfile", 1, 0, 'l'},
-                {"start", 1, 0, 's'},       {"end", 1, 0, 'e'},         {"cpus", 1, 0, 'c'},
-                {"stems", 1, 0, 't'},       {"nowm", 0, 0, 'N'},        {"script", 1, 0, 'S'},
-                {"vcd", 0, 0, 'v'},         {"version", 0, 0, 'V'},     {"help", 0, 0, 'h'},
-                {"exit", 0, 0, 'x'},        {"xid", 1, 0, 'X'},         {"nomenus", 0, 0, 'M'},
-                {"dualid", 1, 0, 'D'},      {"interactive", 0, 0, 'I'}, {"giga", 0, 0, 'g'},
-                {"comphier", 0, 0, 'C'},    {"tcl_init", 1, 0, 'T'},    {"wish", 0, 0, 'W'},
-                {"repscript", 1, 0, 'R'},   {"repperiod", 1, 0, 'P'},   {"output", 1, 0, 'O'},
-                {"slider-zoom", 0, 0, 'z'}, {"rpcid", 1, 0, '1'},       {"chdir", 1, 0, '2'},
-                {"restore", 0, 0, '3'},     {"rcvar", 1, 0, '4'},       {"sstexclude", 1, 0, '5'},
-                {"dark", 0, 0, '6'},        {"saveonexit", 0, 0, '7'},  {0, 0, 0, 0}};
+                {"dump", 1, 0, 'f'},         {"optimize", 0, 0, 'o'},
+                {"nocli", 1, 0, 'n'},        {"save", 1, 0, 'a'},
+                {"autosavename", 0, 0, 'A'}, {"rcfile", 1, 0, 'r'},
+                {"defaultskip", 0, 0, 'd'},  {"logfile", 1, 0, 'l'},
+                {"start", 1, 0, 's'},        {"end", 1, 0, 'e'},
+                {"cpus", 1, 0, 'c'},         {"stems", 1, 0, 't'},
+                {"nowm", 0, 0, 'N'},         {"script", 1, 0, 'S'},
+                {"vcd", 0, 0, 'v'},          {"version", 0, 0, 'V'},
+                {"help", 0, 0, 'h'},         {"exit", 0, 0, 'x'},
+                {"xid", 1, 0, 'X'},          {"nomenus", 0, 0, 'M'},
+                {"dualid", 1, 0, 'D'},       {"interactive", 0, 0, 'I'},
+                {"giga", 0, 0, 'g'},         {"comphier", 0, 0, 'C'},
+                {"tcl_init", 1, 0, 'T'},     {"wish", 0, 0, 'W'},
+                {"repscript", 1, 0, 'R'},    {"repperiod", 1, 0, 'P'},
+                {"output", 1, 0, 'O'},       {"slider-zoom", 0, 0, 'z'},
+                {"rpcid", 1, 0, '1'},        {"chdir", 1, 0, '2'},
+                {"restore", 0, 0, '3'},      {"rcvar", 1, 0, '4'},
+                {"sstexclude", 1, 0, '5'},   {"dark", 0, 0, '6'},
+                {"saveonexit", 0, 0, '7'},   {0, 0, 0, 0}};
 
             c = getopt_long(argc,
                             argv,
@@ -1107,11 +1110,6 @@ do_primary_inits:
                         free_2(GLOBALS->loaded_file_name);
                     GLOBALS->loaded_file_name = malloc_2(strlen(optarg) + 1);
                     strcpy(GLOBALS->loaded_file_name, optarg);
-                    break;
-
-                case 'F':
-                    is_fastload = VCD_FSL_WRITE;
-                    is_giga = 1;
                     break;
 
                 case 'a':
@@ -1413,7 +1411,6 @@ do_primary_inits:
     }
 
     if (is_giga) {
-        GLOBALS->vlist_spill_to_disk = 1;
         GLOBALS->vlist_prepack = 1;
     }
 
@@ -1610,10 +1607,8 @@ loader_check_head:
         } else {
             if (strcmp(GLOBALS->loaded_file_name, "-vcd")) {
                 GLOBALS->loaded_file_type = VCD_RECODER_FILE;
-                GLOBALS->use_fastload = is_fastload;
             } else {
                 GLOBALS->loaded_file_type = DUMPLESS_FILE;
-                GLOBALS->use_fastload = VCD_FSL_NONE;
             }
             vcd_recoder_main(GLOBALS->loaded_file_name);
         }
@@ -1919,7 +1914,6 @@ savefile_bail:
                                  NULL);
             }
 #endif
-
         }
 
         whole_table = gtk_grid_new();
