@@ -720,43 +720,14 @@ static const struct Global globals_base_values = {
     0, /* vcd_preserve_glitches 478 */
     0, /* vcd_preserve_glitches_real */
     NULL, /* vcd_save_handle 479 */
-    0, /* vcd_is_compressed_vcd_c_1 481 */
-    0, /* dumping_off_vcd_c_1 485 */
-    -1, /* start_time_vcd_c_1 486 */
-    -1, /* end_time_vcd_c_1 487 */
-    -1, /* current_time_vcd_c_1 488 */
-    0, /* num_glitches_vcd_c_2 489 */
-    0, /* num_glitch_regions_vcd_c_2 490 */
     {0, 0}, /* vcd_hier_delimeter 491 */
-    NULL, /* pv_vcd_c_1 492 */
-    NULL, /* rootv_vcd_c_1 */
-    NULL, /* vcdbuf_vcd_c_1 493 */
-    NULL, /* vst */
-    NULL, /* vend */
     0, /* escaped_names_found_vcd_c_1 494 */
     NULL, /* slistroot 495 */
     NULL, /* slistcurr */
     NULL, /* slisthier 496 */
     0, /* slisthier_len 497x */
-    1024, /* T_MAX_STR_vcd_c_1 499 */
-    NULL, /* yytext_vcd_c_1 500 */
-    0, /* yylen_vcd_c_1 501 */
-    0, /* yylen_cache */
-    NULL, /* vcdsymroot_vcd_c_1 502 */
-    NULL, /* vcdsymcurr */
-    NULL, /* sorted_vcd_c_1 503 */
-    NULL, /* indexed_vcd_c_1 504 */
-    0, /* numsyms_vcd_c_1 505 */
     NULL, /* he_curr_vcd_c_1 506 */
     NULL, /* he_fini */
-    ~0, /* vcd_minid_vcd_c_1 508 */
-    0, /* vcd_maxid_vcd_c_1 509 */
-    0, /* err_vcd_c_1 510 */
-    0, /* vcd_fsiz_vcd_c_1 511 */
-    NULL, /* varsplit_vcd_c_1 512 */
-    NULL, /* varsplitcurr */
-    0, /* var_prevch_vcd_c_1 513 */
-    0, /* vcd_already_backtracked */
 
     /*
      * vcd_partial.c
