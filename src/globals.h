@@ -700,43 +700,14 @@ struct Global
     char vcd_preserve_glitches; /* from vcd.c 509 */
     char vcd_preserve_glitches_real;
     FILE *vcd_save_handle; /* from vcd.c 510 */
-    char vcd_is_compressed_vcd_c_1; /* from vcd.c 512 */
-    int dumping_off_vcd_c_1; /* from vcd.c 516 */
-    GwTime start_time_vcd_c_1; /* from vcd.c 517 */
-    GwTime end_time_vcd_c_1; /* from vcd.c 518 */
-    GwTime current_time_vcd_c_1; /* from vcd.c 519 */
-    int num_glitches_vcd_c_2; /* from vcd.c 520 */
-    int num_glitch_regions_vcd_c_2; /* from vcd.c 521 */
     char vcd_hier_delimeter[2]; /* from vcd.c 522 */
-    struct vcdsymbol *pv_vcd_c_1; /* from vcd.c 523 */
-    struct vcdsymbol *rootv_vcd_c_1; /* from vcd.c 524 */
-    char *vcdbuf_vcd_c_1; /* from vcd.c 525 */
-    char *vst_vcd_c_1; /* from vcd.c 526 */
-    char *vend_vcd_c_1; /* from vcd.c 527 */
     int escaped_names_found_vcd_c_1; /* from vcd.c 528 */
     struct slist *slistroot; /* from vcd.c 529 */
     struct slist *slistcurr; /* from vcd.c 530 */
     char *slisthier; /* from vcd.c 531 */
     int slisthier_len; /* from vcd.c 532 */
-    int T_MAX_STR_vcd_c_1; /* from vcd.c 534 */
-    char *yytext_vcd_c_1; /* from vcd.c 535 */
-    int yylen_vcd_c_1; /* from vcd.c 536 */
-    int yylen_cache_vcd_c_1; /* from vcd.c 537 */
-    struct vcdsymbol *vcdsymroot_vcd_c_1; /* from vcd.c 538 */
-    struct vcdsymbol *vcdsymcurr_vcd_c_1; /* from vcd.c 539 */
-    struct vcdsymbol **sorted_vcd_c_1; /* from vcd.c 540 */
-    struct vcdsymbol **indexed_vcd_c_1; /* from vcd.c 541 */
-    int numsyms_vcd_c_1; /* from vcd.c 542 */
     GwHistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
     GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
-    unsigned int vcd_minid_vcd_c_1; /* from vcd.c 546 */
-    unsigned int vcd_maxid_vcd_c_1; /* from vcd.c 547 */
-    int err_vcd_c_1; /* from vcd.c 548 */
-    off_t vcd_fsiz_vcd_c_1; /* from vcd.c 549 */
-    char *varsplit_vcd_c_1; /* from vcd.c 550 */
-    char *vsplitcurr_vcd_c_1; /* from vcd.c 551 */
-    int var_prevch_vcd_c_1; /* from vcd.c 552 */
-    char vcd_already_backtracked;
 
     /*
      * vcd_partial.c

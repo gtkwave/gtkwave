@@ -91,6 +91,8 @@ typedef struct
     char *varsplit;
     char *vsplitcurr;
     int var_prevch;
+
+    gboolean already_backtracked;
 } VcdLoader;
 
 /**/
@@ -1817,8 +1819,8 @@ static void vcd_parse(VcdLoader *self)
                         } else {
                             /* backtracking fix */
                             if (tim < self->current_time) {
-                                if (!GLOBALS->vcd_already_backtracked) {
-                                    GLOBALS->vcd_already_backtracked = 1;
+                                if (!self->already_backtracked) {
+                                    self->already_backtracked = TRUE;
                                     fprintf(stderr,
                                             "VCDLOAD | Time backtracking detected in VCD file!\n");
                                 }
