@@ -215,35 +215,12 @@ static const struct Global globals_base_values = {
      * fst.c
      */
     NULL, /* fst_fst_c_1 */
-    NULL, /* fst_scope_name */
-    0, /* fst_scope_name_len */
-    0, /* first_cycle_fst_c_3 */
-    0, /* last_cycle_fst_c_3 */
-    0, /* total_cycles_fst_c_3 */
-    NULL, /* fst_table_fst_c_1 */
-    NULL, /* mvlfacs_fst_c_3 */
-    NULL, /* mvlfacs_fst_alias */
-    NULL, /* mvlfacs_fst_rvs_alias */
-    0, /* fst_maxhandle */
-    0, /* busycnt_fst_c_2 */
-    NULL, /* double_curr_fst */
-    NULL, /* double_fini_fst */
     0, /* nonimplicit_direction_encountered */
     0, /* supplemental_datatypes_encountered */
     0, /* supplemental_vartypes_encountered */
     0, /* is_vhdl_component_format */
-    NULL, /* subvar_jrb */
-    0, /* subvar_jrb_count */
-    NULL, /* subvar_pnt */
-    0, /* fst_filetype */
-    0, /* subvar_jrb_count_locked */
-    0, /* next_var_stem */
-    0, /* next_var_istem */
-    NULL, /* fst_synclock_str */
-    NULL, /* synclock_jrb */
     NULL, /* xl_enum_filter */
     0, /* num_xl_enum_filter */
-    0, /* queued_xl_enum_filter */
     NULL, /* enum_nptrs_jrb */
 
     /*
@@ -1603,18 +1580,6 @@ void reload_into_new_context_2(void)
                                  &GLOBALS->unoptimized_vcd_file_name);
     }
 
-    /* fst.c, though might be others later */
-    if (GLOBALS->subvar_jrb) {
-        jrb_free_tree(GLOBALS->subvar_jrb);
-        GLOBALS->subvar_jrb = NULL;
-        GLOBALS->subvar_jrb_count = 0;
-    }
-
-    if (GLOBALS->synclock_jrb) {
-        jrb_free_tree(GLOBALS->synclock_jrb);
-        GLOBALS->synclock_jrb = NULL;
-    }
-
     if (GLOBALS->enum_nptrs_jrb) {
         jrb_free_tree(GLOBALS->enum_nptrs_jrb);
         GLOBALS->enum_nptrs_jrb = NULL;
@@ -1634,8 +1599,7 @@ void reload_into_new_context_2(void)
     /* deallocate any loader-related stuff */
     switch (GLOBALS->loaded_file_type) {
         case FST_FILE:
-            fstReaderClose(GLOBALS->fst_fst_c_1);
-            GLOBALS->fst_fst_c_1 = NULL;
+            g_clear_pointer(&GLOBALS->fst_file, fst_file_close);
             break;
 
 #ifdef EXTLOAD_SUFFIX
@@ -1795,7 +1759,7 @@ void reload_into_new_context_2(void)
 
             case FST_FILE:
                 fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-                load_was_success = (GLOBALS->fst_fst_c_1 != NULL);
+                load_was_success = (GLOBALS->fst_file != NULL);
                 break;
 
             case GHW_FILE:
@@ -2083,8 +2047,7 @@ void free_and_destroy_page_context(void)
     /* deallocate any loader-related stuff */
     switch (GLOBALS->loaded_file_type) {
         case FST_FILE:
-            fstReaderClose(GLOBALS->fst_fst_c_1);
-            GLOBALS->fst_fst_c_1 = NULL;
+            g_clear_pointer(&GLOBALS->fst_file, fst_file_close);
             break;
 
 #ifdef EXTLOAD_SUFFIX

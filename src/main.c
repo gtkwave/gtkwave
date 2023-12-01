@@ -1549,7 +1549,7 @@ loader_check_head:
         strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
         GLOBALS->loaded_file_type = FST_FILE;
         fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if (!GLOBALS->fst_fst_c_1) {
+        if (GLOBALS->fst_file == NULL) {
             fprintf(stderr,
                     "GTKWAVE | Could not initialize '%s'%s.\n",
                     GLOBALS->loaded_file_name,
@@ -1718,7 +1718,7 @@ loader_check_head:
                         vcd_import_masked();
                         break;
                     case LXT2_IS_FST:
-                        fst_import_masked();
+                        fst_import_masked(GLOBALS->fst_file);
                         break;
                     case LXT2_IS_FSDB:
                         fsdb_import_masked();
