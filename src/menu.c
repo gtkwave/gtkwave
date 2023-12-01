@@ -2727,14 +2727,6 @@ int menu_new_viewer_tab_cleanup_2(char *fname, int optimize_vcd)
 
         rc = 1;
     } else {
-        if (GLOBALS->vcd_handle_vcd_c_1) {
-            fclose(GLOBALS->vcd_handle_vcd_c_1);
-            GLOBALS->vcd_handle_vcd_c_1 = NULL;
-        }
-        if (GLOBALS->vcd_handle_vcd_recoder_c_2) {
-            fclose(GLOBALS->vcd_handle_vcd_recoder_c_2);
-            GLOBALS->vcd_handle_vcd_recoder_c_2 = NULL;
-        }
         free_outstanding(); /* free anything allocated in loader ctx */
         free(GLOBALS);
         GLOBALS = NULL; /* valgrind fix */

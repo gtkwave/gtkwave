@@ -292,7 +292,7 @@ static void create_sorted_table(void)
     if (GLOBALS->numsyms_vcd_partial_c_2) {
         vcd_distance = GLOBALS->vcd_maxid_vcd_partial_c_2 - GLOBALS->vcd_minid_vcd_partial_c_2 + 1;
 
-        if ((vcd_distance <= VCD_INDEXSIZ) || (!GLOBALS->vcd_hash_kill)) {
+        if ((vcd_distance <= VCD_INDEXSIZ) || (!GLOBALS->vcd_hash_kill_partial)) {
             GLOBALS->indexed_vcd_partial_c_2 =
                 (struct vcdsymbol **)calloc_2(vcd_distance, sizeof(struct vcdsymbol *));
 
@@ -1394,12 +1394,12 @@ static void vcd_parse(void)
                         v->nid = vcdid_hash(GLOBALS->yytext_vcd_partial_c_2,
                                             GLOBALS->yylen_vcd_partial_c_2);
 
-                        if (v->nid == (GLOBALS->vcd_hash_max + 1)) {
-                            GLOBALS->vcd_hash_max = v->nid;
-                        } else if ((v->nid > 0) && (v->nid <= GLOBALS->vcd_hash_max)) {
+                        if (v->nid == (GLOBALS->vcd_hash_max_partial + 1)) {
+                            GLOBALS->vcd_hash_max_partial = v->nid;
+                        } else if ((v->nid > 0) && (v->nid <= GLOBALS->vcd_hash_max_partial)) {
                             /* general case with aliases */
                         } else {
-                            GLOBALS->vcd_hash_kill = 1;
+                            GLOBALS->vcd_hash_kill_partial = 1;
                         }
 
                         if (v->nid < GLOBALS->vcd_minid_vcd_partial_c_2)
@@ -1482,12 +1482,12 @@ static void vcd_parse(void)
                         v->nid = vcdid_hash(GLOBALS->yytext_vcd_partial_c_2,
                                             GLOBALS->yylen_vcd_partial_c_2);
 
-                        if (v->nid == (GLOBALS->vcd_hash_max + 1)) {
-                            GLOBALS->vcd_hash_max = v->nid;
-                        } else if ((v->nid > 0) && (v->nid <= GLOBALS->vcd_hash_max)) {
+                        if (v->nid == (GLOBALS->vcd_hash_max_partial + 1)) {
+                            GLOBALS->vcd_hash_max_partial = v->nid;
+                        } else if ((v->nid > 0) && (v->nid <= GLOBALS->vcd_hash_max_partial)) {
                             /* general case with aliases */
                         } else {
-                            GLOBALS->vcd_hash_kill = 1;
+                            GLOBALS->vcd_hash_kill_partial = 1;
                         }
 
                         if (v->nid < GLOBALS->vcd_minid_vcd_partial_c_2)
@@ -1842,7 +1842,7 @@ GwHistEnt *add_histent_p(GwTime tim, GwNode *n, char ch, int regadd, char *vecto
                     n->curr->next = he;
                     if (n->curr->v.h_val == heval) {
                         n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                        GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
+                        GLOBALS->num_glitch_regions_vcd_partial_c_3++;
                     }
                     n->curr = he;
                     GLOBALS->regions += regadd;

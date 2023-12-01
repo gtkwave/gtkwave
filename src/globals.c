@@ -720,11 +720,7 @@ static const struct Global globals_base_values = {
     0, /* vcd_preserve_glitches 478 */
     0, /* vcd_preserve_glitches_real */
     NULL, /* vcd_save_handle 479 */
-    NULL, /* vcd_handle_vcd_c_1 480 */
     0, /* vcd_is_compressed_vcd_c_1 481 */
-    0, /* vcdbyteno_vcd_c_1 482 */
-    0, /* error_count_vcd_c_1 483 */
-    0, /* header_over_vcd_c_1 484 */
     0, /* dumping_off_vcd_c_1 485 */
     -1, /* start_time_vcd_c_1 486 */
     -1, /* end_time_vcd_c_1 487 */
@@ -797,46 +793,13 @@ static const struct Global globals_base_values = {
     NULL, /* vsplitcurr */
     0, /* var_prevch_vcd_partial_c_2 544 */
     0, /* timeset_vcd_partial_c_1 547 */
+    0, /* vcd_hash_max_partial */
+    0, /* vcd_hash_kill_partial */
 
     /*
      * vcd_recoder.c
      */
-    NULL, /* time_vlist_vcd_recoder_c_1 548 */
-    0, /* time_vlist_count_vcd_recoder_c_1 549 */
-    NULL, /* vcd_handle_vcd_recoder_c_2 550 */
-    0, /* vcd_is_compressed_vcd_recoder_c_2 551 */
-    0, /* vcdbyteno_vcd_recoder_c_3 552 */
-    0, /* error_count_vcd_recoder_c_3 553 */
-    0, /* header_over_vcd_recoder_c_3 554 */
-    0, /* dumping_off_vcd_recoder_c_3 555 */
-    -1, /* start_time_vcd_recoder_c_3 556 */
-    -1, /* end_time_vcd_recoder_c_3 557 */
-    -1, /* current_time_vcd_recoder_c_3 558 */
-    0, /* num_glitches_vcd_recoder_c_4 559 */
-    0, /* num_glitch_regions_vcd_recoder_c_4 560 */
-    NULL, /* pv_vcd_recoder_c_3 561 */
-    NULL, /* rootv */
-    NULL, /* vcdbuf_vcd_recoder_c_3 562 */
-    NULL, /* vst */
-    NULL, /* vend */
-    1024, /* T_MAX_STR_vcd_recoder_c_3 564 */
-    NULL, /* yytext_vcd_recoder_c_3 565 */
-    0, /* yylen_vcd_recoder_c_3 566 */
-    0, /* yylen_cache */
-    NULL, /* vcdsymroot_vcd_recoder_c_3 567 */
-    NULL, /* vcdsymcurr */
-    NULL, /* sorted_vcd_recoder_c_3 568 */
-    NULL, /* indexed_vcd_recoder_c_3 569 */
-    0, /* numsyms_vcd_recoder_c_3 570 */
-    ~0, /* vcd_minid_vcd_recoder_c_3 571 */
-    0, /* vcd_maxid_vcd_recoder_c_3 572 */
-    0, /* err_vcd_recoder_c_3 573 */
-    0, /* vcd_fsiz_vcd_recoder_c_2 574 */
-    NULL, /* varsplit_vcd_recoder_c_3 575 */
-    NULL, /* vsplitcurr */
-    0, /* var_prevch_vcd_recoder_c_3 576 */
-    0, /* vcd_hash_max */
-    0, /* vcd_hash_kill */
+    NULL, /* vcd_file */
 
     /*
      * vcd_saver.c
@@ -1084,24 +1047,6 @@ static int handle_setjmp(void)
     } else {
         free(GLOBALS->vcd_jmp_buf);
         GLOBALS->vcd_jmp_buf = NULL;
-        if (GLOBALS->vcd_handle_vcd_c_1) {
-            if (GLOBALS->vcd_is_compressed_vcd_c_1) {
-                pclose(GLOBALS->vcd_handle_vcd_c_1);
-                GLOBALS->vcd_handle_vcd_c_1 = NULL;
-            } else {
-                fclose(GLOBALS->vcd_handle_vcd_c_1);
-                GLOBALS->vcd_handle_vcd_c_1 = NULL;
-            }
-        }
-        if (GLOBALS->vcd_handle_vcd_recoder_c_2) {
-            if (GLOBALS->vcd_is_compressed_vcd_recoder_c_2) {
-                pclose(GLOBALS->vcd_handle_vcd_recoder_c_2);
-                GLOBALS->vcd_handle_vcd_recoder_c_2 = NULL;
-            } else {
-                fclose(GLOBALS->vcd_handle_vcd_recoder_c_2);
-                GLOBALS->vcd_handle_vcd_recoder_c_2 = NULL;
-            }
-        }
 
         free_outstanding(); /* free anything allocated in loader ctx */
 
