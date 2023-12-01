@@ -226,21 +226,7 @@ static const struct Global globals_base_values = {
     /*
      * ghw.c
      */
-    0, /* nxp_ghw_c_1 93 */
-    0, /* sym_which_ghw_c_1 95 */
-    NULL, /* gwt_ghw_c_1 96 */
-    NULL, /* gwt_corr_ghw_c_1 97 */
-    1, /* xlat_1164_ghw_c_1 98 */
     0, /* is_ghw 99 */
-    NULL, /* asbuf */
-    0, /* nbr_sig_ref_ghw_c_1 101 */
-    0, /* num_glitches_ghw_c_1 102 */
-    0, /*  num_glitch_regions_ghw_c_1 */
-    0, /* fac_name_ghw_c_1 104 */
-    0, /* fac_name_len_ghw_c_1 105 */
-    0, /* fac_name_max_ghw_c_1 106 */
-    0, /* last_fac_ghw_c_1 107 */
-    0, /* warned_ghw_c_1 108 */
 
     /*
      * globals.c

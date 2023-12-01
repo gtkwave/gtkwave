@@ -239,21 +239,7 @@ struct Global
     /*
      * ghw.c
      */
-    GwNode **nxp_ghw_c_1; /* from ghw.c 95 */
-    int sym_which_ghw_c_1; /* from ghw.c 98 */
-    struct ghw_tree_node *gwt_ghw_c_1; /* from ghw.c 99 */
-    struct ghw_tree_node *gwt_corr_ghw_c_1; /* from ghw.c 100 */
-    int xlat_1164_ghw_c_1; /* from ghw.c 101 */
     char is_ghw; /* from ghw.c 102 */
-    char *asbuf; /* from ghw.c 103 */
-    int nbr_sig_ref_ghw_c_1; /* from ghw.c 104 */
-    int num_glitches_ghw_c_1; /* from ghw.c 105 */
-    int num_glitch_regions_ghw_c_1; /* from ghw.c 106 */
-    char *fac_name_ghw_c_1; /* from ghw.c 108 */
-    int fac_name_len_ghw_c_1; /* from ghw.c 109 */
-    int fac_name_max_ghw_c_1; /* from ghw.c 110 */
-    int last_fac_ghw_c_1; /* from ghw.c 111 */
-    int warned_ghw_c_1; /* from ghw.c 112 */
 
     /*
      * globals.c
