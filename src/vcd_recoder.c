@@ -39,13 +39,67 @@
 #include "lx2.h"
 #include "hierpack.h"
 
+struct _VcdFile
+{
+    struct vlist_t *time_vlist;
+
+    GwTime start_time;
+    GwTime end_time;
+};
+
+typedef struct
+{
+    VcdFile *file;
+
+    FILE *vcd_handle;
+    gboolean is_compressed;
+    off_t vcd_fsiz;
+
+    gboolean header_over;
+
+    unsigned int time_vlist_count;
+
+    off_t vcdbyteno;
+    char *vcdbuf;
+    char *vst;
+    char *vend;
+
+    int error_count;
+    gboolean err;
+
+    GwTime current_time;
+
+    struct vcdsymbol *pv;
+    struct vcdsymbol *rootv;
+
+    int T_MAX_STR;
+    char *yytext;
+    int yylen;
+
+    struct vcdsymbol *vcdsymroot;
+    struct vcdsymbol *vcdsymcurr;
+
+    int numsyms;
+    struct vcdsymbol **symbols_sorted;
+    struct vcdsymbol **symbols_indexed;
+
+    guint vcd_minid;
+    guint vcd_maxid;
+    guint vcd_hash_max;
+    gboolean vcd_hash_kill;
+
+    char *varsplit;
+    char *vsplitcurr;
+    int var_prevch;
+} VcdLoader;
+
 /**/
 
-static void malform_eof_fix(void)
+static void malform_eof_fix(VcdLoader *self)
 {
-    if (feof(GLOBALS->vcd_handle_vcd_recoder_c_2)) {
-        memset(GLOBALS->vcdbuf_vcd_recoder_c_3, ' ', VCD_BSIZ);
-        GLOBALS->vst_vcd_recoder_c_3 = GLOBALS->vend_vcd_recoder_c_3;
+    if (feof(self->vcd_handle)) {
+        memset(self->vcdbuf, ' ', VCD_BSIZ);
+        self->vst = self->vend;
     }
 }
 
@@ -254,9 +308,9 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s)
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static void add_histent(GwTime time, GwNode *n, char ch, int regadd, char *vector);
-static void vcd_build_symbols(void);
-static void vcd_cleanup(void);
+static void add_histent(VcdFile *self, GwTime time, GwNode *n, char ch, int regadd, char *vector);
+static void vcd_build_symbols(VcdLoader *self);
+static void vcd_cleanup(VcdLoader *self);
 static void evcd_strcpy(char *dst, char *src);
 
 /******************************************************************/
@@ -313,7 +367,7 @@ static const char *tokens[] = {"var",
 #define NUM_TOKENS 19
 
 #define T_GET \
-    tok = get_token(); \
+    tok = get_token(self); \
     if ((tok == T_END) || (tok == T_EOF)) \
         break;
 
@@ -354,25 +408,24 @@ static int vcdsymbsearchcompare(const void *s1, const void *s2)
 /*
  * actual bsearch
  */
-static struct vcdsymbol *bsearch_vcd(char *key, int len)
+static struct vcdsymbol *bsearch_vcd(VcdLoader *self, char *key, int len)
 {
     struct vcdsymbol **v;
     struct vcdsymbol *t;
 
-    if (GLOBALS->indexed_vcd_recoder_c_3) {
+    if (self->symbols_indexed != NULL) {
         unsigned int hsh = vcdid_hash(key, len);
-        if ((hsh >= GLOBALS->vcd_minid_vcd_recoder_c_3) &&
-            (hsh <= GLOBALS->vcd_maxid_vcd_recoder_c_3)) {
-            return (GLOBALS->indexed_vcd_recoder_c_3[hsh - GLOBALS->vcd_minid_vcd_recoder_c_3]);
+        if (hsh >= self->vcd_minid && hsh <= self->vcd_maxid) {
+            return (self->symbols_indexed[hsh - self->vcd_minid]);
         }
 
-        return (NULL);
+        return NULL;
     }
 
-    if (GLOBALS->sorted_vcd_recoder_c_3) {
+    if (self->symbols_sorted != NULL) {
         v = (struct vcdsymbol **)bsearch(key,
-                                         GLOBALS->sorted_vcd_recoder_c_3,
-                                         GLOBALS->numsyms_vcd_recoder_c_3,
+                                         self->symbols_sorted,
+                                         self->numsyms,
                                          sizeof(struct vcdsymbol *),
                                          vcdsymbsearchcompare);
 
@@ -381,7 +434,7 @@ static struct vcdsymbol *bsearch_vcd(char *key, int len)
             for (;;) {
                 t = *v;
 
-                if ((v == GLOBALS->sorted_vcd_recoder_c_3) || (strcmp((*(--v))->id, key))) {
+                if ((v == self->symbols_sorted) || (strcmp((*(--v))->id, key))) {
                     return (t);
                 }
             }
@@ -392,12 +445,11 @@ static struct vcdsymbol *bsearch_vcd(char *key, int len)
             return (NULL);
         }
     } else {
-        if (!GLOBALS->err_vcd_recoder_c_3) {
+        if (!self->err) {
             fprintf(stderr,
                     "Near byte %d, VCD search table NULL..is this a VCD file?\n",
-                    (int)(GLOBALS->vcdbyteno_vcd_recoder_c_3 +
-                          (GLOBALS->vst_vcd_recoder_c_3 - GLOBALS->vcdbuf_vcd_recoder_c_3)));
-            GLOBALS->err_vcd_recoder_c_3 = 1;
+                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
+            self->err = TRUE;
         }
         return (NULL);
     }
@@ -419,67 +471,54 @@ static int vcdsymcompare(const void *s1, const void *s2)
 /*
  * create sorted (by id) table
  */
-static void create_sorted_table(void)
+static void create_sorted_table(VcdLoader *self)
 {
     struct vcdsymbol *v;
     struct vcdsymbol **pnt;
     unsigned int vcd_distance;
 
-    if (GLOBALS->sorted_vcd_recoder_c_3) {
-        free_2(GLOBALS->sorted_vcd_recoder_c_3); /* this means we saw a 2nd enddefinition chunk! */
-        GLOBALS->sorted_vcd_recoder_c_3 = NULL;
-    }
+    g_clear_pointer(&self->symbols_sorted, free_2);
+    g_clear_pointer(&self->symbols_indexed, free_2);
 
-    if (GLOBALS->indexed_vcd_recoder_c_3) {
-        free_2(GLOBALS->indexed_vcd_recoder_c_3);
-        GLOBALS->indexed_vcd_recoder_c_3 = NULL;
-    }
+    if (self->numsyms > 0) {
+        vcd_distance = self->vcd_maxid - self->vcd_minid + 1;
 
-    if (GLOBALS->numsyms_vcd_recoder_c_3) {
-        vcd_distance = GLOBALS->vcd_maxid_vcd_recoder_c_3 - GLOBALS->vcd_minid_vcd_recoder_c_3 + 1;
-
-        if ((vcd_distance <= VCD_INDEXSIZ) || (!GLOBALS->vcd_hash_kill)) {
-            GLOBALS->indexed_vcd_recoder_c_3 =
-                (struct vcdsymbol **)calloc_2(vcd_distance, sizeof(struct vcdsymbol *));
+        if ((vcd_distance <= VCD_INDEXSIZ) || !self->vcd_hash_kill) {
+            self->symbols_indexed = calloc_2(vcd_distance, sizeof(struct vcdsymbol *));
 
             /* printf("%d symbols span ID range of %d, using indexing... hash_kill = %d\n",
-             * GLOBALS->numsyms_vcd_recoder_c_3, vcd_distance, GLOBALS->vcd_hash_kill);  */
+             * self->numsyms, vcd_distance, GLOBALS->vcd_hash_kill);  */
 
-            v = GLOBALS->vcdsymroot_vcd_recoder_c_3;
+            v = self->vcdsymroot;
             while (v) {
-                if (!GLOBALS->indexed_vcd_recoder_c_3[v->nid - GLOBALS->vcd_minid_vcd_recoder_c_3])
-                    GLOBALS->indexed_vcd_recoder_c_3[v->nid - GLOBALS->vcd_minid_vcd_recoder_c_3] =
-                        v;
+                if (self->symbols_indexed[v->nid - self->vcd_minid] == NULL) {
+                    self->symbols_indexed[v->nid - self->vcd_minid] = v;
+                }
                 v = v->next;
             }
         } else {
-            pnt = GLOBALS->sorted_vcd_recoder_c_3 =
-                (struct vcdsymbol **)calloc_2(GLOBALS->numsyms_vcd_recoder_c_3,
-                                              sizeof(struct vcdsymbol *));
-            v = GLOBALS->vcdsymroot_vcd_recoder_c_3;
+            pnt = self->symbols_sorted = calloc_2(self->numsyms, sizeof(struct vcdsymbol *));
+            v = self->vcdsymroot;
             while (v) {
                 *(pnt++) = v;
                 v = v->next;
             }
 
-            qsort(GLOBALS->sorted_vcd_recoder_c_3,
-                  GLOBALS->numsyms_vcd_recoder_c_3,
-                  sizeof(struct vcdsymbol *),
-                  vcdsymcompare);
+            qsort(self->symbols_sorted, self->numsyms, sizeof(struct vcdsymbol *), vcdsymcompare);
         }
     }
 }
 
 /******************************************************************/
 
-static unsigned int vlist_emit_finalize(void)
+static unsigned int vlist_emit_finalize(VcdLoader *self)
 {
     struct vcdsymbol *v /* , *vprime */; /* scan-build */
     struct vlist_t *vlist;
     char vlist_prepack = GLOBALS->vlist_prepack;
     int cnt = 0;
 
-    v = GLOBALS->vcdsymroot_vcd_recoder_c_3;
+    v = self->vcdsymroot;
     while (v) {
         GwNode *n = v->narray[0];
 
@@ -499,7 +538,7 @@ static unsigned int vlist_emit_finalize(void)
             n->mv.mvlfac_vlist = vlist_prepack ? ((struct vlist_t *)vlist_packer_create())
                                                : vlist_create(sizeof(char));
 
-            if ((/* vprime= */ bsearch_vcd(v->id, strlen(v->id))) ==
+            if ((/* vprime= */ bsearch_vcd(self, v->id, strlen(v->id))) ==
                 v) /* hash mish means dup net */ /* scan-build */
             {
                 switch (v->vartype) {
@@ -557,75 +596,67 @@ static unsigned int vlist_emit_finalize(void)
 /*
  * single char get inlined/optimized
  */
-static void getch_alloc(void)
+static void getch_alloc(VcdLoader *self)
 {
-    GLOBALS->vend_vcd_recoder_c_3 = GLOBALS->vst_vcd_recoder_c_3 = GLOBALS->vcdbuf_vcd_recoder_c_3 =
-        (char *)calloc_2(1, VCD_BSIZ);
+    self->vcdbuf = calloc_2(1, VCD_BSIZ);
+    self->vst = self->vcdbuf;
+    self->vend = self->vcdbuf;
 }
 
-static void getch_free(void)
+static void getch_free(VcdLoader *self)
 {
-    free_2(GLOBALS->vcdbuf_vcd_recoder_c_3);
-    GLOBALS->vcdbuf_vcd_recoder_c_3 = GLOBALS->vst_vcd_recoder_c_3 = GLOBALS->vend_vcd_recoder_c_3 =
-        NULL;
+    free_2(self->vcdbuf);
+    self->vcdbuf = NULL;
+    self->vst = NULL;
+    self->vend = NULL;
 }
 
-static int getch_fetch(void)
+static int getch_fetch(VcdLoader *self)
 {
     size_t rd;
 
     errno = 0;
-    if (feof(GLOBALS->vcd_handle_vcd_recoder_c_2))
+    if (feof(self->vcd_handle))
         return (-1);
 
-    GLOBALS->vcdbyteno_vcd_recoder_c_3 +=
-        (GLOBALS->vend_vcd_recoder_c_3 - GLOBALS->vcdbuf_vcd_recoder_c_3);
-    rd = fread(GLOBALS->vcdbuf_vcd_recoder_c_3,
-               sizeof(char),
-               VCD_BSIZ,
-               GLOBALS->vcd_handle_vcd_recoder_c_2);
-    GLOBALS->vend_vcd_recoder_c_3 =
-        (GLOBALS->vst_vcd_recoder_c_3 = GLOBALS->vcdbuf_vcd_recoder_c_3) + rd;
+    self->vcdbyteno += (self->vend - self->vcdbuf);
+    rd = fread(self->vcdbuf, sizeof(char), VCD_BSIZ, self->vcd_handle);
+    self->vend = (self->vst = self->vcdbuf) + rd;
 
     if ((!rd) || (errno))
         return (-1);
 
-    if (GLOBALS->vcd_fsiz_vcd_recoder_c_2) {
-        splash_sync(GLOBALS->vcdbyteno_vcd_recoder_c_3,
-                    GLOBALS->vcd_fsiz_vcd_recoder_c_2); /* gnome 2.18 seems to set errno so splash
-                                                           moved here... */
+    if (self->vcd_fsiz > 0) {
+        splash_sync(self->vcdbyteno, self->vcd_fsiz); /* gnome 2.18 seems to set errno so splash
+                                                                            moved here... */
     }
 
-    return ((int)(*GLOBALS->vst_vcd_recoder_c_3));
+    return ((int)(*self->vst));
 }
 
-static inline signed char getch(void)
+static inline signed char getch(VcdLoader *self)
 {
-    signed char ch = (GLOBALS->vst_vcd_recoder_c_3 != GLOBALS->vend_vcd_recoder_c_3)
-                         ? ((int)(*GLOBALS->vst_vcd_recoder_c_3))
-                         : (getch_fetch());
-    GLOBALS->vst_vcd_recoder_c_3++;
+    signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
+    self->vst++;
     return (ch);
 }
 
-static inline signed char getch_peek(void)
+static inline signed char getch_peek(VcdLoader *self)
 {
-    signed char ch = (GLOBALS->vst_vcd_recoder_c_3 != GLOBALS->vend_vcd_recoder_c_3)
-                         ? ((int)(*GLOBALS->vst_vcd_recoder_c_3))
-                         : (getch_fetch());
+    signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
     /* no increment */
     return (ch);
 }
 
-static int getch_patched(void)
+static int getch_patched(VcdLoader *self)
 {
     char ch;
 
-    ch = *GLOBALS->vsplitcurr_vcd_recoder_c_3;
+    ch = *self->vsplitcurr;
     if (!ch) {
         return (-1);
     } else {
-        GLOBALS->vsplitcurr_vcd_recoder_c_3++;
+        self->vsplitcurr++;
         return ((int)ch);
     }
 }
@@ -633,7 +664,7 @@ static int getch_patched(void)
 /*
  * simple tokenizer
  */
-static int get_token(void)
+static int get_token(VcdLoader *self)
 {
     int ch;
     int i, len = 0;
@@ -641,7 +672,7 @@ static int get_token(void)
     char *yyshadow;
 
     for (;;) {
-        ch = getch();
+        ch = getch(self);
         if (ch < 0)
             return (T_EOF);
         if (ch <= ' ')
@@ -649,9 +680,9 @@ static int get_token(void)
         break; /* (take advantage of fact that vcd is text) */
     }
     if (ch == '$') {
-        GLOBALS->yytext_vcd_recoder_c_3[len++] = ch;
+        self->yytext[len++] = ch;
         for (;;) {
-            ch = getch();
+            ch = getch(self);
             if (ch < 0)
                 return (T_EOF);
             if (ch <= ' ')
@@ -662,25 +693,23 @@ static int get_token(void)
         is_string = 1;
     }
 
-    for (GLOBALS->yytext_vcd_recoder_c_3[len++] = ch;;
-         GLOBALS->yytext_vcd_recoder_c_3[len++] = ch) {
-        if (len == GLOBALS->T_MAX_STR_vcd_recoder_c_3) {
-            GLOBALS->yytext_vcd_recoder_c_3 = (char *)realloc_2(
-                GLOBALS->yytext_vcd_recoder_c_3,
-                (GLOBALS->T_MAX_STR_vcd_recoder_c_3 = GLOBALS->T_MAX_STR_vcd_recoder_c_3 * 2) + 1);
+    for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
+        if (len == self->T_MAX_STR) {
+            self->T_MAX_STR *= 2;
+            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
         }
-        ch = getch();
+        ch = getch(self);
         if (ch <= ' ')
             break;
     }
-    GLOBALS->yytext_vcd_recoder_c_3[len] = 0; /* terminator */
-    GLOBALS->yylen_vcd_recoder_c_3 = len;
+    self->yytext[len] = 0; /* terminator */
+    self->yylen = len;
 
     if (is_string) {
         return (T_STRING);
     }
 
-    yyshadow = GLOBALS->yytext_vcd_recoder_c_3;
+    yyshadow = self->yytext;
     do {
         yyshadow++;
         for (i = 0; i < NUM_TOKENS; i++) {
@@ -691,20 +720,20 @@ static int get_token(void)
 
     } while (*yyshadow == '$'); /* fix for RCS ids in version strings */
 
-    return (T_UNKNOWN_KEY);
+    return T_UNKNOWN_KEY;
 }
 
-static int get_vartoken_patched(int match_kw)
+static int get_vartoken_patched(VcdLoader *self, int match_kw)
 {
     int ch;
     int len = 0;
 
-    if (!GLOBALS->var_prevch_vcd_recoder_c_3) {
+    if (!self->var_prevch) {
         for (;;) {
-            ch = getch_patched();
+            ch = getch_patched(self);
             if (ch < 0) {
-                free_2(GLOBALS->varsplit_vcd_recoder_c_3);
-                GLOBALS->varsplit_vcd_recoder_c_3 = NULL;
+                free_2(self->varsplit);
+                self->varsplit = NULL;
                 return (V_END);
             }
             if ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r'))
@@ -712,8 +741,8 @@ static int get_vartoken_patched(int match_kw)
             break;
         }
     } else {
-        ch = GLOBALS->var_prevch_vcd_recoder_c_3;
-        GLOBALS->var_prevch_vcd_recoder_c_3 = 0;
+        ch = self->var_prevch;
+        self->var_prevch = 0;
     }
 
     if (ch == '[')
@@ -723,60 +752,58 @@ static int get_vartoken_patched(int match_kw)
     if (ch == ']')
         return (V_RB);
 
-    for (GLOBALS->yytext_vcd_recoder_c_3[len++] = ch;;
-         GLOBALS->yytext_vcd_recoder_c_3[len++] = ch) {
-        if (len == GLOBALS->T_MAX_STR_vcd_recoder_c_3) {
-            GLOBALS->yytext_vcd_recoder_c_3 = (char *)realloc_2(
-                GLOBALS->yytext_vcd_recoder_c_3,
-                (GLOBALS->T_MAX_STR_vcd_recoder_c_3 = GLOBALS->T_MAX_STR_vcd_recoder_c_3 * 2) + 1);
+    for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
+        if (len == self->T_MAX_STR) {
+            self->T_MAX_STR *= 2;
+            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
         }
-        ch = getch_patched();
+        ch = getch_patched(self);
         if (ch < 0) {
-            free_2(GLOBALS->varsplit_vcd_recoder_c_3);
-            GLOBALS->varsplit_vcd_recoder_c_3 = NULL;
+            free_2(self->varsplit);
+            self->varsplit = NULL;
             break;
         }
         if ((ch == ':') || (ch == ']')) {
-            GLOBALS->var_prevch_vcd_recoder_c_3 = ch;
+            self->var_prevch = ch;
             break;
         }
     }
-    GLOBALS->yytext_vcd_recoder_c_3[len] = 0; /* terminator */
+    self->yytext[len] = 0; /* terminator */
 
     if (match_kw) {
-        int vr = vcd_keyword_code(GLOBALS->yytext_vcd_recoder_c_3, len);
+        int vr = vcd_keyword_code(self->yytext, len);
         if (vr != V_STRING) {
             if (ch < 0) {
-                free_2(GLOBALS->varsplit_vcd_recoder_c_3);
-                GLOBALS->varsplit_vcd_recoder_c_3 = NULL;
+                free_2(self->varsplit);
+                self->varsplit = NULL;
             }
             return (vr);
         }
     }
 
-    GLOBALS->yylen_vcd_recoder_c_3 = len;
+    self->yylen = len;
     if (ch < 0) {
-        free_2(GLOBALS->varsplit_vcd_recoder_c_3);
-        GLOBALS->varsplit_vcd_recoder_c_3 = NULL;
+        free_2(self->varsplit);
+        self->varsplit = NULL;
     }
-    return (V_STRING);
+    return V_STRING;
 }
 
-static int get_vartoken(int match_kw)
+static int get_vartoken(VcdLoader *self, int match_kw)
 {
     int ch;
     int len = 0;
 
-    if (GLOBALS->varsplit_vcd_recoder_c_3) {
-        int rc = get_vartoken_patched(match_kw);
+    if (self->varsplit) {
+        int rc = get_vartoken_patched(self, match_kw);
         if (rc != V_END)
             return (rc);
-        GLOBALS->var_prevch_vcd_recoder_c_3 = 0;
+        self->var_prevch = 0;
     }
 
-    if (!GLOBALS->var_prevch_vcd_recoder_c_3) {
+    if (!self->var_prevch) {
         for (;;) {
-            ch = getch();
+            ch = getch(self);
             if (ch < 0)
                 return (V_END);
             if ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r'))
@@ -784,8 +811,8 @@ static int get_vartoken(int match_kw)
             break;
         }
     } else {
-        ch = GLOBALS->var_prevch_vcd_recoder_c_3;
-        GLOBALS->var_prevch_vcd_recoder_c_3 = 0;
+        ch = self->var_prevch;
+        self->var_prevch = 0;
     }
 
     if (ch == '[')
@@ -798,75 +825,70 @@ static int get_vartoken(int match_kw)
     if (ch == '#') /* for MTI System Verilog '$var reg 64 >w #implicit-var###VarElem:ram_di[0.0]
                       [63:0] $end' style declarations */
     { /* debussy simply escapes until the space */
-        GLOBALS->yytext_vcd_recoder_c_3[len++] = '\\';
+        self->yytext[len++] = '\\';
     }
 
-    for (GLOBALS->yytext_vcd_recoder_c_3[len++] = ch;;
-         GLOBALS->yytext_vcd_recoder_c_3[len++] = ch) {
-        if (len == GLOBALS->T_MAX_STR_vcd_recoder_c_3) {
-            GLOBALS->yytext_vcd_recoder_c_3 = (char *)realloc_2(
-                GLOBALS->yytext_vcd_recoder_c_3,
-                (GLOBALS->T_MAX_STR_vcd_recoder_c_3 = GLOBALS->T_MAX_STR_vcd_recoder_c_3 * 2) + 1);
+    for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
+        if (len == self->T_MAX_STR) {
+            self->T_MAX_STR *= 2;
+            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
         }
 
-        ch = getch();
+        ch = getch(self);
         if (ch == ' ') {
             if (match_kw)
                 break;
-            if (getch_peek() == '[') {
-                ch = getch();
-                GLOBALS->varsplit_vcd_recoder_c_3 = GLOBALS->yytext_vcd_recoder_c_3 +
-                                                    len; /* keep looping so we get the *last* one */
+            if (getch_peek(self) == '[') {
+                ch = getch(self);
+                self->varsplit = self->yytext + len; /* keep looping so we get the *last* one */
                 continue;
             }
         }
 
         if ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r') || (ch < 0))
             break;
-        if ((ch == '[') && (GLOBALS->yytext_vcd_recoder_c_3[0] != '\\')) {
-            GLOBALS->varsplit_vcd_recoder_c_3 =
-                GLOBALS->yytext_vcd_recoder_c_3 + len; /* keep looping so we get the *last* one */
-        } else if (((ch == ':') || (ch == ']')) && (!GLOBALS->varsplit_vcd_recoder_c_3) &&
-                   (GLOBALS->yytext_vcd_recoder_c_3[0] != '\\')) {
-            GLOBALS->var_prevch_vcd_recoder_c_3 = ch;
+        if ((ch == '[') && (self->yytext[0] != '\\')) {
+            self->varsplit = self->yytext + len; /* keep looping so we get the *last* one */
+        } else if (((ch == ':') || (ch == ']')) && (!self->varsplit) && (self->yytext[0] != '\\')) {
+            self->var_prevch = ch;
             break;
         }
     }
 
-    GLOBALS->yytext_vcd_recoder_c_3[len] = 0; /* absolute terminator */
-    if ((GLOBALS->varsplit_vcd_recoder_c_3) && (GLOBALS->yytext_vcd_recoder_c_3[len - 1] == ']')) {
+    self->yytext[len] = 0; /* absolute terminator */
+    if ((self->varsplit) && (self->yytext[len - 1] == ']')) {
         char *vst;
-        vst = malloc_2(strlen(GLOBALS->varsplit_vcd_recoder_c_3) + 1);
-        strcpy(vst, GLOBALS->varsplit_vcd_recoder_c_3);
+        vst = malloc_2(strlen(self->varsplit) + 1);
+        strcpy(vst, self->varsplit);
 
-        *GLOBALS->varsplit_vcd_recoder_c_3 = 0x00; /* zero out var name at the left bracket */
-        len = GLOBALS->varsplit_vcd_recoder_c_3 - GLOBALS->yytext_vcd_recoder_c_3;
+        *self->varsplit = 0x00; /* zero out var name at the left bracket */
+        len = self->varsplit - self->yytext;
 
-        GLOBALS->varsplit_vcd_recoder_c_3 = GLOBALS->vsplitcurr_vcd_recoder_c_3 = vst;
-        GLOBALS->var_prevch_vcd_recoder_c_3 = 0;
+        self->varsplit = self->vsplitcurr = vst;
+        self->var_prevch = 0;
     } else {
-        GLOBALS->varsplit_vcd_recoder_c_3 = NULL;
+        self->varsplit = NULL;
     }
 
     if (match_kw) {
-        int vr = vcd_keyword_code(GLOBALS->yytext_vcd_recoder_c_3, len);
+        int vr = vcd_keyword_code(self->yytext, len);
         if (vr != V_STRING) {
             return (vr);
         }
     }
 
-    GLOBALS->yylen_vcd_recoder_c_3 = len;
-    return (V_STRING);
+    self->yylen = len;
+    return V_STRING;
 }
 
-static int get_strtoken(void)
+static int get_strtoken(VcdLoader *self)
 {
     int ch;
     int len = 0;
 
-    if (!GLOBALS->var_prevch_vcd_recoder_c_3) {
+    if (!self->var_prevch) {
         for (;;) {
-            ch = getch();
+            ch = getch(self);
             if (ch < 0)
                 return (V_END);
             if ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r'))
@@ -874,28 +896,26 @@ static int get_strtoken(void)
             break;
         }
     } else {
-        ch = GLOBALS->var_prevch_vcd_recoder_c_3;
-        GLOBALS->var_prevch_vcd_recoder_c_3 = 0;
+        ch = self->var_prevch;
+        self->var_prevch = 0;
     }
 
-    for (GLOBALS->yytext_vcd_recoder_c_3[len++] = ch;;
-         GLOBALS->yytext_vcd_recoder_c_3[len++] = ch) {
-        if (len == GLOBALS->T_MAX_STR_vcd_recoder_c_3) {
-            GLOBALS->yytext_vcd_recoder_c_3 = (char *)realloc_2(
-                GLOBALS->yytext_vcd_recoder_c_3,
-                (GLOBALS->T_MAX_STR_vcd_recoder_c_3 = GLOBALS->T_MAX_STR_vcd_recoder_c_3 * 2) + 1);
+    for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
+        if (len == self->T_MAX_STR) {
+            self->T_MAX_STR *= 2;
+            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
         }
-        ch = getch();
+        ch = getch(self);
         if ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r') || (ch < 0))
             break;
     }
-    GLOBALS->yytext_vcd_recoder_c_3[len] = 0; /* terminator */
+    self->yytext[len] = 0; /* terminator */
 
-    GLOBALS->yylen_vcd_recoder_c_3 = len;
-    return (V_STRING);
+    self->yylen = len;
+    return V_STRING;
 }
 
-static void sync_end(const char *hdr)
+static void sync_end(VcdLoader *self, const char *hdr)
 {
     int tok;
 
@@ -903,7 +923,7 @@ static void sync_end(const char *hdr)
         DEBUG(fprintf(stderr, "%s", hdr));
     }
     for (;;) {
-        tok = get_token();
+        tok = get_token(self);
         if ((tok == T_END) || (tok == T_EOF))
             break;
         if (hdr) {
@@ -915,7 +935,7 @@ static void sync_end(const char *hdr)
     }
 }
 
-static int version_sync_end(const char *hdr)
+static int version_sync_end(VcdLoader *self, const char *hdr)
 {
     int tok;
     int rc = 0;
@@ -924,15 +944,14 @@ static int version_sync_end(const char *hdr)
         DEBUG(fprintf(stderr, "%s", hdr));
     }
     for (;;) {
-        tok = get_token();
+        tok = get_token(self);
         if ((tok == T_END) || (tok == T_EOF))
             break;
         if (hdr) {
             DEBUG(fprintf(stderr, " %s", GLOBALS->yytext_vcd_recoder_c_3));
         }
-        if (strstr(GLOBALS->yytext_vcd_recoder_c_3,
-                   "Icarus")) /* turn off autocoalesce for Icarus */
-        {
+        /* turn off autocoalesce for Icarus */
+        if (strstr(self->yytext, "Icarus") != NULL) {
             GLOBALS->autocoalesce = 0;
             rc = 1;
         }
@@ -943,14 +962,14 @@ static int version_sync_end(const char *hdr)
     return (rc);
 }
 
-static void parse_valuechange(void)
+static void parse_valuechange(VcdLoader *self)
 {
     struct vcdsymbol *v;
     char *vector;
     int vlen;
     unsigned char typ;
 
-    switch ((typ = GLOBALS->yytext_vcd_recoder_c_3[0])) {
+    switch ((typ = self->yytext[0])) {
         /* encode bits as (time delta<<4) + (enum AnalyzerBits value) */
         case '0':
         case '1':
@@ -967,16 +986,14 @@ static void parse_valuechange(void)
         case 'l':
         case 'L':
         case '-':
-            if (GLOBALS->yylen_vcd_recoder_c_3 > 1) {
-                v = bsearch_vcd(GLOBALS->yytext_vcd_recoder_c_3 + 1,
-                                GLOBALS->yylen_vcd_recoder_c_3 - 1);
+            if (self->yylen > 1) {
+                v = bsearch_vcd(self, self->yytext + 1, self->yylen - 1);
                 if (!v) {
                     fprintf(stderr,
                             "Near byte %d, Unknown VCD identifier: '%s'\n",
-                            (int)(GLOBALS->vcdbyteno_vcd_recoder_c_3 +
-                                  (GLOBALS->vst_vcd_recoder_c_3 - GLOBALS->vcdbuf_vcd_recoder_c_3)),
-                            GLOBALS->yytext_vcd_recoder_c_3 + 1);
-                    malform_eof_fix();
+                            (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
+                            self->yytext + 1);
+                    malform_eof_fix(self);
                 } else {
                     GwNode *n = v->narray[0];
                     unsigned int time_delta;
@@ -994,15 +1011,13 @@ static void parse_valuechange(void)
                         vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype);
                     }
 
-                    time_delta =
-                        GLOBALS->time_vlist_count_vcd_recoder_c_1 - (unsigned int)n->numhist;
-                    n->numhist = GLOBALS->time_vlist_count_vcd_recoder_c_1;
+                    time_delta = self->time_vlist_count - (unsigned int)n->numhist;
+                    n->numhist = self->time_vlist_count;
 
-                    switch (GLOBALS->yytext_vcd_recoder_c_3[0]) {
+                    switch (self->yytext[0]) {
                         case '0':
                         case '1':
-                            rcv =
-                                ((GLOBALS->yytext_vcd_recoder_c_3[0] & 1) << 1) | (time_delta << 2);
+                            rcv = ((self->yytext[0] & 1) << 1) | (time_delta << 2);
                             break; /* pack more delta bits in for 0/1 vchs */
 
                         case 'x':
@@ -1039,9 +1054,8 @@ static void parse_valuechange(void)
             } else {
                 fprintf(stderr,
                         "Near byte %d, Malformed VCD identifier\n",
-                        (int)(GLOBALS->vcdbyteno_vcd_recoder_c_3 +
-                              (GLOBALS->vst_vcd_recoder_c_3 - GLOBALS->vcdbuf_vcd_recoder_c_3)));
-                malform_eof_fix();
+                        (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
+                malform_eof_fix(self);
             }
             break;
 
@@ -1049,35 +1063,32 @@ static void parse_valuechange(void)
 #ifndef STRICT_VCD_ONLY
         case 's':
         case 'S':
-            vector =
-                g_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3 = GLOBALS->yylen_vcd_recoder_c_3);
+            vector = g_alloca(self->yylen);
             vlen = fstUtilityEscToBin((unsigned char *)vector,
-                                      (unsigned char *)(GLOBALS->yytext_vcd_recoder_c_3 + 1),
-                                      GLOBALS->yylen_vcd_recoder_c_3 - 1);
+                                      (unsigned char *)(self->yytext + 1),
+                                      self->yylen - 1);
             vector[vlen] = 0;
 
-            get_strtoken();
+            get_strtoken(self);
             goto process_binary;
 #endif
         case 'b':
         case 'B':
         case 'r':
         case 'R':
-            vector =
-                g_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3 = GLOBALS->yylen_vcd_recoder_c_3);
-            strcpy(vector, GLOBALS->yytext_vcd_recoder_c_3 + 1);
-            vlen = GLOBALS->yylen_vcd_recoder_c_3 - 1;
+            vector = g_alloca(self->yylen);
+            strcpy(vector, self->yytext + 1);
+            vlen = self->yylen - 1;
 
-            get_strtoken();
+            get_strtoken(self);
         process_binary:
-            v = bsearch_vcd(GLOBALS->yytext_vcd_recoder_c_3, GLOBALS->yylen_vcd_recoder_c_3);
+            v = bsearch_vcd(self, self->yytext, self->yylen);
             if (!v) {
                 fprintf(stderr,
                         "Near byte %d, Unknown VCD identifier: '%s'\n",
-                        (int)(GLOBALS->vcdbyteno_vcd_recoder_c_3 +
-                              (GLOBALS->vst_vcd_recoder_c_3 - GLOBALS->vcdbuf_vcd_recoder_c_3)),
-                        GLOBALS->yytext_vcd_recoder_c_3 + 1);
-                malform_eof_fix();
+                        (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
+                        self->yytext + 1);
+                malform_eof_fix(self);
             } else {
                 GwNode *n = v->narray[0];
                 unsigned int time_delta;
@@ -1106,8 +1117,8 @@ static void parse_valuechange(void)
                     vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size);
                 }
 
-                time_delta = GLOBALS->time_vlist_count_vcd_recoder_c_1 - (unsigned int)n->numhist;
-                n->numhist = GLOBALS->time_vlist_count_vcd_recoder_c_1;
+                time_delta = self->time_vlist_count - (unsigned int)n->numhist;
+                n->numhist = self->time_vlist_count;
 
                 vlist_emit_uv32(&n->mv.mvlfac_vlist, time_delta);
 
@@ -1145,14 +1156,13 @@ static void parse_valuechange(void)
         case 'p':
         case 'P':
             /* extract port dump value.. */
-            vector =
-                g_alloca(GLOBALS->yylen_cache_vcd_recoder_c_3 = GLOBALS->yylen_vcd_recoder_c_3);
-            evcd_strcpy(vector, GLOBALS->yytext_vcd_recoder_c_3 + 1); /* convert to regular vcd */
-            vlen = GLOBALS->yylen_vcd_recoder_c_3 - 1;
+            vector = g_alloca(self->yylen);
+            evcd_strcpy(vector, self->yytext + 1); /* convert to regular vcd */
+            vlen = self->yylen - 1;
 
-            get_strtoken(); /* throw away 0_strength_component */
-            get_strtoken(); /* throw away 0_strength_component */
-            get_strtoken(); /* this is the id                  */
+            get_strtoken(self); /* throw away 0_strength_component */
+            get_strtoken(self); /* throw away 0_strength_component */
+            get_strtoken(self); /* this is the id                  */
 
             typ = 'b'; /* convert to regular vcd */
             goto process_binary; /* store string literally */
@@ -1187,58 +1197,57 @@ static void evcd_strcpy(char *dst, char *src)
     *dst = 0; /* null terminate destination */
 }
 
-static void vcd_parse(void)
+static void vcd_parse(VcdLoader *self)
 {
     int tok;
     unsigned char ttype;
     int disable_autocoalesce = 0;
 
     for (;;) {
-        switch (get_token()) {
+        switch (get_token(self)) {
             case T_COMMENT:
-                sync_end("COMMENT:");
+                sync_end(self, "COMMENT:");
                 break;
             case T_DATE:
-                sync_end("DATE:");
+                sync_end(self, "DATE:");
                 break;
             case T_VERSION:
-                disable_autocoalesce = version_sync_end("VERSION:");
+                disable_autocoalesce = version_sync_end(self, "VERSION:");
                 break;
             case T_TIMEZERO: {
-                int vtok = get_token();
+                int vtok = get_token(self);
                 if ((vtok == T_END) || (vtok == T_EOF))
                     break;
-                GLOBALS->global_time_offset = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
+                GLOBALS->global_time_offset = atoi_64(self->yytext);
 
                 DEBUG(fprintf(stderr,
                               "TIMEZERO: %" GW_TIME_FORMAT "\n",
                               GLOBALS->global_time_offset));
-                sync_end(NULL);
+                sync_end(self, NULL);
             } break;
             case T_TIMESCALE: {
                 int vtok;
                 int i;
                 char prefix = ' ';
 
-                vtok = get_token();
+                vtok = get_token(self);
                 if ((vtok == T_END) || (vtok == T_EOF))
                     break;
-                fractional_timescale_fix(GLOBALS->yytext_vcd_recoder_c_3);
-                GLOBALS->time_scale = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
+                fractional_timescale_fix(self->yytext);
+                GLOBALS->time_scale = atoi_64(self->yytext);
                 if (!GLOBALS->time_scale)
                     GLOBALS->time_scale = 1;
-                for (i = 0; i < GLOBALS->yylen_vcd_recoder_c_3; i++) {
-                    if ((GLOBALS->yytext_vcd_recoder_c_3[i] < '0') ||
-                        (GLOBALS->yytext_vcd_recoder_c_3[i] > '9')) {
-                        prefix = GLOBALS->yytext_vcd_recoder_c_3[i];
+                for (i = 0; i < self->yylen; i++) {
+                    if (self->yytext[i] < '0' || self->yytext[i] > '9') {
+                        prefix = self->yytext[i];
                         break;
                     }
                 }
                 if (prefix == ' ') {
-                    vtok = get_token();
+                    vtok = get_token(self);
                     if ((vtok == T_END) || (vtok == T_EOF))
                         break;
-                    prefix = GLOBALS->yytext_vcd_recoder_c_3[0];
+                    prefix = self->yytext[0];
                 }
                 switch (prefix) {
                     case ' ':
@@ -1263,12 +1272,12 @@ static void vcd_parse(void)
                               "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
                               GLOBALS->time_scale,
                               GLOBALS->time_dimension));
-                sync_end(NULL);
+                sync_end(self, NULL);
             } break;
             case T_SCOPE:
                 T_GET;
                 {
-                    switch (GLOBALS->yytext_vcd_recoder_c_3[0]) {
+                    switch (self->yytext[0]) {
                         case 'm':
                             ttype = GW_TREE_KIND_VCD_ST_MODULE;
                             break;
@@ -1276,9 +1285,8 @@ static void vcd_parse(void)
                             ttype = GW_TREE_KIND_VCD_ST_TASK;
                             break;
                         case 'f':
-                            ttype = (GLOBALS->yytext_vcd_recoder_c_3[1] == 'u')
-                                        ? GW_TREE_KIND_VCD_ST_FUNCTION
-                                        : GW_TREE_KIND_VCD_ST_FORK;
+                            ttype = (self->yytext[1] == 'u') ? GW_TREE_KIND_VCD_ST_FUNCTION
+                                                             : GW_TREE_KIND_VCD_ST_FORK;
                             break;
                         case 'b':
                             ttype = GW_TREE_KIND_VCD_ST_BEGIN;
@@ -1299,13 +1307,12 @@ static void vcd_parse(void)
                             ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
                             break;
                         case 'p':
-                            ttype = (GLOBALS->yytext_vcd_recoder_c_3[1] == 'r')
-                                        ? GW_TREE_KIND_VCD_ST_PROGRAM
-                                        : GW_TREE_KIND_VCD_ST_PACKAGE;
+                            ttype = (self->yytext[1] == 'r') ? GW_TREE_KIND_VCD_ST_PROGRAM
+                                                             : GW_TREE_KIND_VCD_ST_PACKAGE;
                             break;
 
                         case 'v': {
-                            char *vht = GLOBALS->yytext_vcd_recoder_c_3;
+                            char *vht = self->yytext;
                             if (!strncmp(vht, "vhdl_", 5)) {
                                 switch (vht[5]) {
                                     case 'a':
@@ -1350,15 +1357,15 @@ static void vcd_parse(void)
                 if (tok != T_END && tok != T_EOF) {
                     struct slist *s;
                     s = (struct slist *)calloc_2(1, sizeof(struct slist));
-                    s->len = GLOBALS->yylen_vcd_recoder_c_3;
-                    s->str = (char *)malloc_2(GLOBALS->yylen_vcd_recoder_c_3 + 1);
-                    strcpy(s->str, GLOBALS->yytext_vcd_recoder_c_3);
+                    s->len = self->yylen;
+                    s->str = (char *)malloc_2(self->yylen + 1);
+                    strcpy(s->str, self->yytext);
                     s->mod_tree_parent = GLOBALS->mod_tree_parent;
 
                     allocate_and_decorate_module_tree_node(ttype,
-                                                           GLOBALS->yytext_vcd_recoder_c_3,
+                                                           self->yytext,
                                                            NULL,
-                                                           GLOBALS->yylen_vcd_recoder_c_3,
+                                                           self->yylen,
                                                            0,
                                                            0,
                                                            0);
@@ -1373,7 +1380,7 @@ static void vcd_parse(void)
                     build_slisthier();
                     DEBUG(fprintf(stderr, "SCOPE: %s\n", GLOBALS->slisthier));
                 }
-                sync_end(NULL);
+                sync_end(self, NULL);
                 break;
             case T_UPSCOPE:
                 if (GLOBALS->slistroot) {
@@ -1401,27 +1408,26 @@ static void vcd_parse(void)
                 } else {
                     GLOBALS->mod_tree_parent = NULL;
                 }
-                sync_end(NULL);
+                sync_end(self, NULL);
                 break;
             case T_VAR:
-                if ((GLOBALS->header_over_vcd_recoder_c_3) && (0)) {
+                if ((self->header_over) && (0)) {
                     fprintf(
                         stderr,
                         "$VAR encountered after $ENDDEFINITIONS near byte %d.  VCD is malformed, "
                         "exiting.\n",
-                        (int)(GLOBALS->vcdbyteno_vcd_recoder_c_3 +
-                              (GLOBALS->vst_vcd_recoder_c_3 - GLOBALS->vcdbuf_vcd_recoder_c_3)));
+                        (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
                     vcd_exit(255);
                 } else {
                     int vtok;
                     struct vcdsymbol *v = NULL;
 
-                    GLOBALS->var_prevch_vcd_recoder_c_3 = 0;
-                    if (GLOBALS->varsplit_vcd_recoder_c_3) {
-                        free_2(GLOBALS->varsplit_vcd_recoder_c_3);
-                        GLOBALS->varsplit_vcd_recoder_c_3 = NULL;
+                    self->var_prevch = 0;
+                    if (self->varsplit) {
+                        free_2(self->varsplit);
+                        self->varsplit = NULL;
                     }
-                    vtok = get_vartoken(1);
+                    vtok = get_vartoken(self, 1);
                     if (vtok > V_STRINGTYPE)
                         goto bail;
 
@@ -1430,30 +1436,30 @@ static void vcd_parse(void)
                     v->msi = v->lsi = -1;
 
                     if (vtok == V_PORT) {
-                        vtok = get_vartoken(1);
+                        vtok = get_vartoken(self, 1);
                         if (vtok == V_STRING) {
-                            v->size = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
+                            v->size = atoi_64(self->yytext);
                             if (!v->size)
                                 v->size = 1;
                         } else if (vtok == V_LB) {
-                            vtok = get_vartoken(1);
+                            vtok = get_vartoken(self, 1);
                             if (vtok == V_END)
                                 goto err;
                             if (vtok != V_STRING)
                                 goto err;
-                            v->msi = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
-                            vtok = get_vartoken(0);
+                            v->msi = atoi_64(self->yytext);
+                            vtok = get_vartoken(self, 0);
                             if (vtok == V_RB) {
                                 v->lsi = v->msi;
                                 v->size = 1;
                             } else {
                                 if (vtok != V_COLON)
                                     goto err;
-                                vtok = get_vartoken(0);
+                                vtok = get_vartoken(self, 0);
                                 if (vtok != V_STRING)
                                     goto err;
-                                v->lsi = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
-                                vtok = get_vartoken(0);
+                                v->lsi = atoi_64(self->yytext);
+                                vtok = get_vartoken(self, 0);
                                 if (vtok != V_RB)
                                     goto err;
 
@@ -1466,45 +1472,46 @@ static void vcd_parse(void)
                         } else
                             goto err;
 
-                        vtok = get_strtoken();
+                        vtok = get_strtoken(self);
                         if (vtok == V_END)
                             goto err;
-                        v->id = (char *)malloc_2(GLOBALS->yylen_vcd_recoder_c_3 + 1);
-                        strcpy(v->id, GLOBALS->yytext_vcd_recoder_c_3);
-                        v->nid = vcdid_hash(GLOBALS->yytext_vcd_recoder_c_3,
-                                            GLOBALS->yylen_vcd_recoder_c_3);
+                        v->id = (char *)malloc_2(self->yylen + 1);
+                        strcpy(v->id, self->yytext);
+                        v->nid = vcdid_hash(self->yytext, self->yylen);
 
-                        if (v->nid == (GLOBALS->vcd_hash_max + 1)) {
-                            GLOBALS->vcd_hash_max = v->nid;
-                        } else if ((v->nid > 0) && (v->nid <= GLOBALS->vcd_hash_max)) {
+                        if (v->nid == (self->vcd_hash_max + 1)) {
+                            self->vcd_hash_max = v->nid;
+                        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
                             /* general case with aliases */
                         } else {
-                            GLOBALS->vcd_hash_kill = 1;
+                            self->vcd_hash_kill = TRUE;
                         }
 
-                        if (v->nid < GLOBALS->vcd_minid_vcd_recoder_c_3)
-                            GLOBALS->vcd_minid_vcd_recoder_c_3 = v->nid;
-                        if (v->nid > GLOBALS->vcd_maxid_vcd_recoder_c_3)
-                            GLOBALS->vcd_maxid_vcd_recoder_c_3 = v->nid;
+                        if (v->nid < self->vcd_minid) {
+                            self->vcd_minid = v->nid;
+                        }
+                        if (v->nid > self->vcd_maxid) {
+                            self->vcd_maxid = v->nid;
+                        }
 
-                        vtok = get_vartoken(0);
+                        vtok = get_vartoken(self, 0);
                         if (vtok != V_STRING)
                             goto err;
                         if (GLOBALS->slisthier_len) {
-                            v->name = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
-                                                       GLOBALS->yylen_vcd_recoder_c_3 + 1);
+                            v->name =
+                                (char *)malloc_2(GLOBALS->slisthier_len + 1 + self->yylen + 1);
                             strcpy(v->name, GLOBALS->slisthier);
                             strcpy(v->name + GLOBALS->slisthier_len, GLOBALS->vcd_hier_delimeter);
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name + GLOBALS->slisthier_len + 1,
-                                              GLOBALS->yytext_vcd_recoder_c_3,
+                                              self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
                                 if ((strcpy_delimfix(v->name + GLOBALS->slisthier_len + 1,
-                                                     GLOBALS->yytext_vcd_recoder_c_3)) &&
-                                    (GLOBALS->yytext_vcd_recoder_c_3[0] != '\\')) {
+                                                     self->yytext)) &&
+                                    (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
-                                                                GLOBALS->yylen_vcd_recoder_c_3 + 2);
+                                                                self->yylen + 2);
                                     strcpy(sd, GLOBALS->slisthier);
                                     strcpy(sd + GLOBALS->slisthier_len,
                                            GLOBALS->vcd_hier_delimeter);
@@ -1516,15 +1523,13 @@ static void vcd_parse(void)
                                 }
                             }
                         } else {
-                            v->name = (char *)malloc_2(GLOBALS->yylen_vcd_recoder_c_3 + 1);
+                            v->name = (char *)malloc_2(self->yylen + 1);
                             if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name,
-                                              GLOBALS->yytext_vcd_recoder_c_3,
-                                              GLOBALS->alt_hier_delimeter);
+                                strcpy_vcdalt(v->name, self->yytext, GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name, GLOBALS->yytext_vcd_recoder_c_3)) &&
-                                    (GLOBALS->yytext_vcd_recoder_c_3[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(GLOBALS->yylen_vcd_recoder_c_3 + 2);
+                                if ((strcpy_delimfix(v->name, self->yytext)) &&
+                                    (self->yytext[0] != '\\')) {
+                                    char *sd = (char *)malloc_2(self->yylen + 2);
                                     sd[0] = '\\';
                                     strcpy(sd + 1, v->name);
                                     free_2(v->name);
@@ -1533,71 +1538,72 @@ static void vcd_parse(void)
                             }
                         }
 
-                        if (GLOBALS->pv_vcd_recoder_c_3) {
+                        if (self->pv != NULL) {
                             if (!strcmp(GLOBALS->prev_hier_uncompressed_name, v->name) &&
                                 !disable_autocoalesce && (!strchr(v->name, '\\'))) {
-                                GLOBALS->pv_vcd_recoder_c_3->chain = v;
-                                v->root = GLOBALS->rootv_vcd_recoder_c_3;
-                                if (GLOBALS->pv_vcd_recoder_c_3 == GLOBALS->rootv_vcd_recoder_c_3)
-                                    GLOBALS->pv_vcd_recoder_c_3->root =
-                                        GLOBALS->rootv_vcd_recoder_c_3;
+                                self->pv->chain = v;
+                                v->root = self->rootv;
+                                if (self->pv == self->rootv) {
+                                    self->pv->root = self->rootv;
+                                }
                             } else {
-                                GLOBALS->rootv_vcd_recoder_c_3 = v;
+                                self->rootv = v;
                             }
 
                             free_2(GLOBALS->prev_hier_uncompressed_name);
                         } else {
-                            GLOBALS->rootv_vcd_recoder_c_3 = v;
+                            self->rootv = v;
                         }
 
-                        GLOBALS->pv_vcd_recoder_c_3 = v;
+                        self->pv = v;
                         GLOBALS->prev_hier_uncompressed_name = strdup_2(v->name);
                     } else /* regular vcd var, not an evcd port var */
                     {
-                        vtok = get_vartoken(1);
+                        vtok = get_vartoken(self, 1);
                         if (vtok == V_END)
                             goto err;
-                        v->size = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
-                        vtok = get_strtoken();
+                        v->size = atoi_64(self->yytext);
+                        vtok = get_strtoken(self);
                         if (vtok == V_END)
                             goto err;
-                        v->id = (char *)malloc_2(GLOBALS->yylen_vcd_recoder_c_3 + 1);
-                        strcpy(v->id, GLOBALS->yytext_vcd_recoder_c_3);
-                        v->nid = vcdid_hash(GLOBALS->yytext_vcd_recoder_c_3,
-                                            GLOBALS->yylen_vcd_recoder_c_3);
+                        v->id = (char *)malloc_2(self->yylen + 1);
+                        strcpy(v->id, self->yytext);
+                        v->nid = vcdid_hash(self->yytext, self->yylen);
 
-                        if (v->nid == (GLOBALS->vcd_hash_max + 1)) {
-                            GLOBALS->vcd_hash_max = v->nid;
-                        } else if ((v->nid > 0) && (v->nid <= GLOBALS->vcd_hash_max)) {
+                        if (v->nid == (self->vcd_hash_max + 1)) {
+                            self->vcd_hash_max = v->nid;
+                        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
                             /* general case with aliases */
                         } else {
-                            GLOBALS->vcd_hash_kill = 1;
+                            self->vcd_hash_kill = 1;
                         }
 
-                        if (v->nid < GLOBALS->vcd_minid_vcd_recoder_c_3)
-                            GLOBALS->vcd_minid_vcd_recoder_c_3 = v->nid;
-                        if (v->nid > GLOBALS->vcd_maxid_vcd_recoder_c_3)
-                            GLOBALS->vcd_maxid_vcd_recoder_c_3 = v->nid;
+                        if (v->nid < self->vcd_minid) {
+                            self->vcd_minid = v->nid;
+                        }
+                        if (v->nid > self->vcd_maxid) {
+                            self->vcd_maxid = v->nid;
+                        }
 
-                        vtok = get_vartoken(0);
+                        vtok = get_vartoken(self, 0);
                         if (vtok != V_STRING)
                             goto err;
 
                         if (GLOBALS->slisthier_len) {
-                            v->name = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
-                                                       GLOBALS->yylen_vcd_recoder_c_3 + 1);
+                            v->name =
+                                (char *)malloc_2(GLOBALS->slisthier_len + 1 + self->yylen + 1);
                             strcpy(v->name, GLOBALS->slisthier);
                             strcpy(v->name + GLOBALS->slisthier_len, GLOBALS->vcd_hier_delimeter);
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name + GLOBALS->slisthier_len + 1,
-                                              GLOBALS->yytext_vcd_recoder_c_3,
+                                              self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
                                 if ((strcpy_delimfix(v->name + GLOBALS->slisthier_len + 1,
-                                                     GLOBALS->yytext_vcd_recoder_c_3)) &&
-                                    (GLOBALS->yytext_vcd_recoder_c_3[0] != '\\')) {
+                                                     self->yytext)) &&
+                                    (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
-                                                                GLOBALS->yylen_vcd_recoder_c_3 + 2);
+                                                                self->yylen + 2);
                                     strcpy(sd, GLOBALS->slisthier);
                                     strcpy(sd + GLOBALS->slisthier_len,
                                            GLOBALS->vcd_hier_delimeter);
@@ -1609,15 +1615,13 @@ static void vcd_parse(void)
                                 }
                             }
                         } else {
-                            v->name = (char *)malloc_2(GLOBALS->yylen_vcd_recoder_c_3 + 1);
+                            v->name = (char *)malloc_2(self->yylen + 1);
                             if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name,
-                                              GLOBALS->yytext_vcd_recoder_c_3,
-                                              GLOBALS->alt_hier_delimeter);
+                                strcpy_vcdalt(v->name, self->yytext, GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name, GLOBALS->yytext_vcd_recoder_c_3)) &&
-                                    (GLOBALS->yytext_vcd_recoder_c_3[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(GLOBALS->yylen_vcd_recoder_c_3 + 2);
+                                if ((strcpy_delimfix(v->name, self->yytext)) &&
+                                    (self->yytext[0] != '\\')) {
+                                    char *sd = (char *)malloc_2(self->yylen + 2);
                                     sd[0] = '\\';
                                     strcpy(sd + 1, v->name);
                                     free_2(v->name);
@@ -1626,45 +1630,45 @@ static void vcd_parse(void)
                             }
                         }
 
-                        if (GLOBALS->pv_vcd_recoder_c_3) {
+                        if (self->pv != NULL) {
                             if (!strcmp(GLOBALS->prev_hier_uncompressed_name, v->name)) {
-                                GLOBALS->pv_vcd_recoder_c_3->chain = v;
-                                v->root = GLOBALS->rootv_vcd_recoder_c_3;
-                                if (GLOBALS->pv_vcd_recoder_c_3 == GLOBALS->rootv_vcd_recoder_c_3)
-                                    GLOBALS->pv_vcd_recoder_c_3->root =
-                                        GLOBALS->rootv_vcd_recoder_c_3;
+                                self->pv->chain = v;
+                                v->root = self->rootv;
+                                if (self->pv == self->rootv) {
+                                    self->pv->root = self->rootv;
+                                }
                             } else {
-                                GLOBALS->rootv_vcd_recoder_c_3 = v;
+                                self->rootv = v;
                             }
 
                             free_2(GLOBALS->prev_hier_uncompressed_name);
                         } else {
-                            GLOBALS->rootv_vcd_recoder_c_3 = v;
+                            self->rootv = v;
                         }
-                        GLOBALS->pv_vcd_recoder_c_3 = v;
+                        self->pv = v;
                         GLOBALS->prev_hier_uncompressed_name = strdup_2(v->name);
 
-                        vtok = get_vartoken(1);
+                        vtok = get_vartoken(self, 1);
                         if (vtok == V_END)
                             goto dumpv;
                         if (vtok != V_LB)
                             goto err;
-                        vtok = get_vartoken(0);
+                        vtok = get_vartoken(self, 0);
                         if (vtok != V_STRING)
                             goto err;
-                        v->msi = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
-                        vtok = get_vartoken(0);
+                        v->msi = atoi_64(self->yytext);
+                        vtok = get_vartoken(self, 0);
                         if (vtok == V_RB) {
                             v->lsi = v->msi;
                             goto dumpv;
                         }
                         if (vtok != V_COLON)
                             goto err;
-                        vtok = get_vartoken(0);
+                        vtok = get_vartoken(self, 0);
                         if (vtok != V_STRING)
                             goto err;
-                        v->lsi = atoi_64(GLOBALS->yytext_vcd_recoder_c_3);
-                        vtok = get_vartoken(0);
+                        v->lsi = atoi_64(self->yytext);
+                        vtok = get_vartoken(self, 0);
                         if (vtok != V_RB)
                             goto err;
                     }
@@ -1722,14 +1726,13 @@ static void vcd_parse(void)
                     v->narray[0]->head.time = -1;
                     v->narray[0]->head.v.h_val = AN_X;
 
-                    if (!GLOBALS->vcdsymroot_vcd_recoder_c_3) {
-                        GLOBALS->vcdsymroot_vcd_recoder_c_3 = GLOBALS->vcdsymcurr_vcd_recoder_c_3 =
-                            v;
+                    if (self->vcdsymroot == NULL) {
+                        self->vcdsymroot = self->vcdsymcurr = v;
                     } else {
-                        GLOBALS->vcdsymcurr_vcd_recoder_c_3->next = v;
-                        GLOBALS->vcdsymcurr_vcd_recoder_c_3 = v;
+                        self->vcdsymcurr->next = v;
                     }
-                    GLOBALS->numsyms_vcd_recoder_c_3++;
+                    self->vcdsymcurr = v;
+                    self->numsyms++;
 
                     if (GLOBALS->vcd_save_handle) {
                         if (v->msi == v->lsi) {
@@ -1754,69 +1757,66 @@ static void vcd_parse(void)
                     goto bail;
                 err:
                     if (v) {
-                        GLOBALS->error_count_vcd_recoder_c_3++;
+                        self->error_count++;
                         if (v->name) {
                             fprintf(stderr,
                                     "Near byte %d, $VAR parse error encountered with '%s'\n",
-                                    (int)(GLOBALS->vcdbyteno_vcd_recoder_c_3 +
-                                          (GLOBALS->vst_vcd_recoder_c_3 -
-                                           GLOBALS->vcdbuf_vcd_recoder_c_3)),
+                                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
                                     v->name);
                             free_2(v->name);
                         } else {
                             fprintf(stderr,
                                     "Near byte %d, $VAR parse error encountered\n",
-                                    (int)(GLOBALS->vcdbyteno_vcd_recoder_c_3 +
-                                          (GLOBALS->vst_vcd_recoder_c_3 -
-                                           GLOBALS->vcdbuf_vcd_recoder_c_3)));
+                                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
                         }
                         if (v->id)
                             free_2(v->id);
                         free_2(v);
                         v = NULL;
-                        GLOBALS->pv_vcd_recoder_c_3 = NULL;
+                        self->pv = NULL;
                     }
 
                 bail:
                     if (vtok != V_END)
-                        sync_end(NULL);
+                        sync_end(self, NULL);
                     break;
                 }
             case T_ENDDEFINITIONS:
-                GLOBALS->header_over_vcd_recoder_c_3 = 1; /* do symbol table management here */
-                create_sorted_table();
-                if ((!GLOBALS->sorted_vcd_recoder_c_3) && (!GLOBALS->indexed_vcd_recoder_c_3)) {
+                self->header_over = TRUE; /* do symbol table management here */
+                create_sorted_table(self);
+                if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
                     fprintf(stderr, "No symbols in VCD file..nothing to do!\n");
                     vcd_exit(255);
                 }
-                if (GLOBALS->error_count_vcd_recoder_c_3) {
+                if (self->error_count > 0) {
                     fprintf(stderr,
                             "\n%d VCD parse errors encountered, exiting.\n",
-                            GLOBALS->error_count_vcd_recoder_c_3);
+                            self->error_count);
                     vcd_exit(255);
                 }
 
                 break;
             case T_STRING:
-                if (!GLOBALS->header_over_vcd_recoder_c_3) {
-                    GLOBALS->header_over_vcd_recoder_c_3 = 1; /* do symbol table management here */
-                    create_sorted_table();
-                    if ((!GLOBALS->sorted_vcd_recoder_c_3) && (!GLOBALS->indexed_vcd_recoder_c_3))
+                if (!self->header_over) {
+                    self->header_over = TRUE; /* do symbol table management here */
+                    create_sorted_table(self);
+                    if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
                         break;
+                    }
                 }
                 {
                     /* catchall for events when header over */
-                    if (GLOBALS->yytext_vcd_recoder_c_3[0] == '#') {
+                    if (self->yytext[0] == '#') {
                         GwTime tim;
                         GwTime *tt;
 
-                        tim = atoi_64(GLOBALS->yytext_vcd_recoder_c_3 + 1);
+                        tim = atoi_64(self->yytext + 1);
 
-                        if (GLOBALS->start_time_vcd_recoder_c_3 < 0) {
-                            GLOBALS->start_time_vcd_recoder_c_3 = tim;
+                        if (self->file->start_time < 0) {
+                            self->file->start_time = tim;
                         } else {
                             /* backtracking fix */
-                            if (tim < GLOBALS->current_time_vcd_recoder_c_3) {
+                            if (tim < self->current_time) {
                                 if (!GLOBALS->vcd_already_backtracked) {
                                     GLOBALS->vcd_already_backtracked = 1;
                                     fprintf(stderr,
@@ -1831,31 +1831,29 @@ static void vcd_parse(void)
 #endif
                         }
 
-                        GLOBALS->current_time_vcd_recoder_c_3 = tim;
-                        if (GLOBALS->end_time_vcd_recoder_c_3 < tim)
-                            GLOBALS->end_time_vcd_recoder_c_3 =
-                                tim; /* in case of malformed vcd files */
+                        self->current_time = tim;
+                        if (self->file->end_time < tim)
+                            self->file->end_time = tim; /* in case of malformed vcd files */
                         DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
 
-                        tt = vlist_alloc(&GLOBALS->time_vlist_vcd_recoder_c_1, 0);
+                        tt = vlist_alloc(&self->file->time_vlist, 0);
                         *tt = tim;
-                        GLOBALS->time_vlist_count_vcd_recoder_c_1++;
+                        self->time_vlist_count++;
                     } else {
-                        if (GLOBALS->time_vlist_count_vcd_recoder_c_1) {
+                        if (self->time_vlist_count) {
                             /* OK, otherwise fix for System C which doesn't emit time zero... */
                         } else {
                             GwTime tim = GW_TIME_CONSTANT(0);
                             GwTime *tt;
 
-                            GLOBALS->start_time_vcd_recoder_c_3 =
-                                GLOBALS->current_time_vcd_recoder_c_3 =
-                                    GLOBALS->end_time_vcd_recoder_c_3 = tim;
+                            self->file->start_time = self->current_time = self->file->end_time =
+                                tim;
 
-                            tt = vlist_alloc(&GLOBALS->time_vlist_vcd_recoder_c_1, 0);
+                            tt = vlist_alloc(&self->file->time_vlist, 0);
                             *tt = tim;
-                            GLOBALS->time_vlist_count_vcd_recoder_c_1 = 1;
+                            self->time_vlist_count = 1;
                         }
-                        parse_valuechange();
+                        parse_valuechange(self);
                     }
                 }
                 break;
@@ -1864,31 +1862,30 @@ static void vcd_parse(void)
                 break; /* just loop through..                 */
             case T_DUMPOFF:
             case T_DUMPPORTSOFF:
-                gw_blackout_regions_add_dumpoff(GLOBALS->blackout_regions, GLOBALS->current_time_vcd_recoder_c_3);
+                gw_blackout_regions_add_dumpoff(GLOBALS->blackout_regions, self->current_time);
                 break;
             case T_DUMPON:
             case T_DUMPPORTSON:
-                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, GLOBALS->current_time_vcd_recoder_c_3);
+                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, self->current_time);
                 break;
             case T_DUMPVARS:
             case T_DUMPPORTS:
-                if (GLOBALS->current_time_vcd_recoder_c_3 < 0) {
-                    GLOBALS->start_time_vcd_recoder_c_3 = GLOBALS->current_time_vcd_recoder_c_3 =
-                        GLOBALS->end_time_vcd_recoder_c_3 = 0;
+                if (self->current_time < 0) {
+                    self->file->start_time = self->current_time = self->file->end_time = 0;
                 }
                 break;
             case T_VCDCLOSE:
-                sync_end("VCDCLOSE:");
+                sync_end(self, "VCDCLOSE:");
                 break; /* next token will be '#' time related followed by $end */
             case T_END: /* either closure for dump commands or */
                 break; /* it's spurious                       */
             case T_UNKNOWN_KEY:
-                sync_end(NULL); /* skip over unknown keywords */
+                sync_end(self, NULL); /* skip over unknown keywords */
                 break;
             case T_EOF:
-                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, GLOBALS->current_time_vcd_recoder_c_3);
+                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, self->current_time);
 
-                GLOBALS->pv_vcd_recoder_c_3 = NULL;
+                self->pv = NULL;
                 if (GLOBALS->prev_hier_uncompressed_name) {
                     free_2(GLOBALS->prev_hier_uncompressed_name);
                     GLOBALS->prev_hier_uncompressed_name = NULL;
@@ -1903,7 +1900,7 @@ static void vcd_parse(void)
 
 /*******************************************************************************/
 
-void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
+void add_histent(VcdFile *self, GwTime tim, GwNode *n, char ch, int regadd, char *vector)
 {
     GwHistEnt *he;
     char heval;
@@ -1917,7 +1914,7 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
             n->curr = he;
             n->head.next = he;
 
-            add_histent(tim, n, ch, regadd, vector);
+            add_histent(self, tim, n, ch, regadd, vector);
         } else {
             if (regadd) {
                 tim *= (GLOBALS->time_scale);
@@ -1942,7 +1939,7 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
             else
                 /* if(ch=='-') */ heval = AN_DASH; /* default */
 
-            if ((n->curr->v.h_val != heval) || (tim == GLOBALS->start_time_vcd_recoder_c_3) ||
+            if ((n->curr->v.h_val != heval) || (tim == self->start_time) ||
                 (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
                 (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
             {
@@ -1955,10 +1952,8 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                                  ch));
                     n->curr->v.h_val = heval; /* we have a glitch! */
 
-                    GLOBALS->num_glitches_vcd_recoder_c_4++;
                     if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
                         n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                        GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                     }
                 } else {
                     he = histent_calloc();
@@ -1968,7 +1963,6 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                     n->curr->next = he;
                     if (n->curr->v.h_val == heval) {
                         n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                        GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                     }
                     n->curr = he;
                     GLOBALS->regions += regadd;
@@ -1988,7 +1982,7 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                     n->curr = he;
                     n->head.next = he;
 
-                    add_histent(tim, n, ch, regadd, vector);
+                    add_histent(self, tim, n, ch, regadd, vector);
                 } else {
                     if (regadd) {
                         tim *= (GLOBALS->time_scale);
@@ -2003,10 +1997,8 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                             free_2(n->curr->v.h_vector);
                         n->curr->v.h_vector = vector; /* we have a glitch! */
 
-                        GLOBALS->num_glitches_vcd_recoder_c_4++;
                         if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
                             n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                            GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                         }
                     } else {
                         he = histent_calloc();
@@ -2032,15 +2024,14 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                     n->curr = he;
                     n->head.next = he;
 
-                    add_histent(tim, n, ch, regadd, vector);
+                    add_histent(self, tim, n, ch, regadd, vector);
                 } else {
                     if (regadd) {
                         tim *= (GLOBALS->time_scale);
                     }
 
                     if ((vector && (n->curr->v.h_double != *(double *)vector)) ||
-                        (tim == GLOBALS->start_time_vcd_recoder_c_3) ||
-                        (GLOBALS->vcd_preserve_glitches) ||
+                        (tim == self->start_time) || (GLOBALS->vcd_preserve_glitches) ||
                         (GLOBALS->vcd_preserve_glitches_real)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
@@ -2049,10 +2040,8 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                                          tim,
                                          n));
                             n->curr->v.h_double = *((double *)vector);
-                            GLOBALS->num_glitches_vcd_recoder_c_4++;
                             if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
                                 n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                                GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                             }
                         } else {
                             he = histent_calloc();
@@ -2078,14 +2067,14 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                     n->curr = he;
                     n->head.next = he;
 
-                    add_histent(tim, n, ch, regadd, vector);
+                    add_histent(self, tim, n, ch, regadd, vector);
                 } else {
                     if (regadd) {
                         tim *= (GLOBALS->time_scale);
                     }
 
                     if ((n->curr->v.h_vector && vector && (strcmp(n->curr->v.h_vector, vector))) ||
-                        (tim == GLOBALS->start_time_vcd_recoder_c_3) || (!n->curr->v.h_vector) ||
+                        (tim == self->start_time) || (!n->curr->v.h_vector) ||
                         (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
@@ -2099,10 +2088,8 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
                                 free_2(n->curr->v.h_vector);
                             n->curr->v.h_vector = vector; /* we have a glitch! */
 
-                            GLOBALS->num_glitches_vcd_recoder_c_4++;
                             if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
                                 n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                                GLOBALS->num_glitch_regions_vcd_recoder_c_4++;
                             }
                         } else {
                             he = histent_calloc();
@@ -2125,7 +2112,7 @@ void add_histent(GwTime tim, GwNode *n, char ch, int regadd, char *vector)
 
 /*******************************************************************************/
 
-static void vcd_build_symbols(void)
+static void vcd_build_symbols(VcdLoader *self)
 {
     int j;
     int max_slen = -1;
@@ -2138,7 +2125,7 @@ static void vcd_build_symbols(void)
     int ss_len, longest = 0;
 #endif
 
-    v = GLOBALS->vcdsymroot_vcd_recoder_c_3;
+    v = self->vcdsymroot;
     while (v) {
         int msi;
         int delta;
@@ -2161,7 +2148,8 @@ static void vcd_build_symbols(void)
                 slen++;
             }
 
-            if ((vprime = bsearch_vcd(v->id, strlen(v->id))) != v) /* hash mish means dup net */
+            if ((vprime = bsearch_vcd(self, v->id, strlen(v->id))) !=
+                v) /* hash mish means dup net */
             {
                 if (v->size != vprime->size) {
                     fprintf(stderr,
@@ -2393,22 +2381,15 @@ static void vcd_build_symbols(void)
 
 /*******************************************************************************/
 
-static void vcd_cleanup(void)
+static void vcd_cleanup(VcdLoader *self)
 {
     struct slist *s, *s2;
     struct vcdsymbol *v, *vt;
 
-    if (GLOBALS->indexed_vcd_recoder_c_3) {
-        free_2(GLOBALS->indexed_vcd_recoder_c_3);
-        GLOBALS->indexed_vcd_recoder_c_3 = NULL;
-    }
+    g_clear_pointer(&self->symbols_indexed, free_2);
+    g_clear_pointer(&self->symbols_sorted, free_2);
 
-    if (GLOBALS->sorted_vcd_recoder_c_3) {
-        free_2(GLOBALS->sorted_vcd_recoder_c_3);
-        GLOBALS->sorted_vcd_recoder_c_3 = NULL;
-    }
-
-    v = GLOBALS->vcdsymroot_vcd_recoder_c_3;
+    v = self->vcdsymroot;
     while (v) {
         if (v->name)
             free_2(v->name);
@@ -2420,7 +2401,8 @@ static void vcd_cleanup(void)
         v = v->next;
         free_2(vt);
     }
-    GLOBALS->vcdsymroot_vcd_recoder_c_3 = GLOBALS->vcdsymcurr_vcd_recoder_c_3 = NULL;
+    self->vcdsymroot = NULL;
+    self->vcdsymcurr = NULL;
 
     if (GLOBALS->slisthier) {
         free_2(GLOBALS->slisthier);
@@ -2438,41 +2420,41 @@ static void vcd_cleanup(void)
     GLOBALS->slistroot = GLOBALS->slistcurr = NULL;
     GLOBALS->slisthier_len = 0;
 
-    if (GLOBALS->vcd_is_compressed_vcd_recoder_c_2) {
-        pclose(GLOBALS->vcd_handle_vcd_recoder_c_2);
-        GLOBALS->vcd_handle_vcd_recoder_c_2 = NULL;
+    if (self->is_compressed) {
+        pclose(self->vcd_handle);
     } else {
-        fclose(GLOBALS->vcd_handle_vcd_recoder_c_2);
-        GLOBALS->vcd_handle_vcd_recoder_c_2 = NULL;
+        fclose(self->vcd_handle);
     }
+    self->vcd_handle = NULL;
 
-    if (GLOBALS->yytext_vcd_recoder_c_3) {
-        free_2(GLOBALS->yytext_vcd_recoder_c_3);
-        GLOBALS->yytext_vcd_recoder_c_3 = NULL;
-    }
+    g_clear_pointer(&self->yytext, free_2);
 }
 
 /*******************************************************************************/
 
 GwTime vcd_recoder_main(char *fname)
 {
-    unsigned int finalize_cnt = 0;
-#ifdef HAVE_SYS_STAT_H
-    struct stat mystat;
-    int stat_rc = stat(fname, &mystat);
-#endif
-
-    GLOBALS->pv_vcd_recoder_c_3 = GLOBALS->rootv_vcd_recoder_c_3 = NULL;
     GLOBALS->vcd_hier_delimeter[0] = GLOBALS->hier_delimeter;
 
-    errno = 0; /* reset in case it's set for some reason */
+    GLOBALS->blackout_regions = gw_blackout_regions_new();
 
-    GLOBALS->yytext_vcd_recoder_c_3 = (char *)malloc_2(GLOBALS->T_MAX_STR_vcd_recoder_c_3 + 1);
+    errno = 0; /* reset in case it's set for some reason */
 
     if (!GLOBALS->hier_was_explicitly_set) /* set default hierarchy split char */
     {
         GLOBALS->hier_delimeter = '.';
     }
+
+    VcdLoader loader = {0};
+    VcdLoader *self = &loader;
+    self->current_time = -1;
+    self->file = g_new0(VcdFile, 1);
+    self->file->start_time = -1;
+    self->file->end_time = -1;
+
+    self->T_MAX_STR = 1024;
+    self->yytext = malloc_2(self->T_MAX_STR + 1);
+    self->vcd_minid = G_MAXUINT;
 
     if (suffix_check(fname, ".gz") || suffix_check(fname, ".zip")) {
         char *str;
@@ -2481,26 +2463,23 @@ GwTime vcd_recoder_main(char *fname)
         str = g_alloca(strlen(fname) + dlen + 1);
         strcpy(str, WAVE_DECOMPRESSOR);
         strcpy(str + dlen, fname);
-        GLOBALS->vcd_handle_vcd_recoder_c_2 = popen(str, "r");
-        GLOBALS->vcd_is_compressed_vcd_recoder_c_2 = ~0;
+        self->vcd_handle = popen(str, "r");
+        self->is_compressed = ~0;
     } else {
         if (strcmp("-vcd", fname)) {
-            GLOBALS->vcd_handle_vcd_recoder_c_2 = fopen(fname, "rb");
+            self->vcd_handle = fopen(fname, "rb");
 
-            if (GLOBALS->vcd_handle_vcd_recoder_c_2) {
-                fseeko(GLOBALS->vcd_handle_vcd_recoder_c_2,
-                       0,
-                       SEEK_END); /* do status bar for vcd load */
-                GLOBALS->vcd_fsiz_vcd_recoder_c_2 = ftello(GLOBALS->vcd_handle_vcd_recoder_c_2);
-                fseeko(GLOBALS->vcd_handle_vcd_recoder_c_2, 0, SEEK_SET);
+            if (self->vcd_handle) {
+                fseeko(self->vcd_handle, 0, SEEK_END); /* do status bar for vcd load */
+                self->vcd_fsiz = ftello(self->vcd_handle);
+                fseeko(self->vcd_handle, 0, SEEK_SET);
             }
 
             if (GLOBALS->vcd_warning_filesize < 0)
                 GLOBALS->vcd_warning_filesize = VCD_SIZE_WARN;
 
             if (GLOBALS->vcd_warning_filesize)
-                if (GLOBALS->vcd_fsiz_vcd_recoder_c_2 >
-                    (GLOBALS->vcd_warning_filesize * (1024 * 1024))) {
+                if (self->vcd_fsiz > (GLOBALS->vcd_warning_filesize * (1024 * 1024))) {
                     if (!GLOBALS->vlist_prepack) {
                         fprintf(
                             stderr,
@@ -2513,24 +2492,24 @@ GwTime vcd_recoder_main(char *fname)
                             "to FST\n"
                             "or the -g, --giga command line option to use dynamically compressed "
                             "memory.\n\n",
-                            (int)(GLOBALS->vcd_fsiz_vcd_recoder_c_2 / (1024 * 1024)));
+                            (int)(self->vcd_fsiz / (1024 * 1024)));
                     } else {
                         fprintf(stderr,
                                 "VCDLOAD | File size is %d MB, using vlist prepacking.\n\n",
-                                (int)(GLOBALS->vcd_fsiz_vcd_recoder_c_2 / (1024 * 1024)));
+                                (int)(self->vcd_fsiz / (1024 * 1024)));
                     }
                 }
         } else {
             GLOBALS->splash_disable = 1;
-            GLOBALS->vcd_handle_vcd_recoder_c_2 = stdin;
+            self->vcd_handle = stdin;
         }
-        GLOBALS->vcd_is_compressed_vcd_recoder_c_2 = 0;
+        self->is_compressed = 0;
     }
 
-    if (!GLOBALS->vcd_handle_vcd_recoder_c_2) {
+    if (self->vcd_handle == NULL) {
         fprintf(stderr,
                 "Error opening %s .vcd file '%s'.\n",
-                GLOBALS->vcd_is_compressed_vcd_recoder_c_2 ? "compressed" : "",
+                self->is_compressed ? "compressed" : "",
                 fname);
         perror("Why");
         vcd_exit(255);
@@ -2539,23 +2518,23 @@ GwTime vcd_recoder_main(char *fname)
     /* SPLASH */ splash_create();
 
     sym_hash_initialize(GLOBALS);
-    getch_alloc(); /* alloc membuff for vcd getch buffer */
+    getch_alloc(self); /* alloc membuff for vcd getch buffer */
 
     build_slisthier();
 
-    GLOBALS->time_vlist_vcd_recoder_c_1 = vlist_create(sizeof(GwTime));
+    self->file->time_vlist = vlist_create(sizeof(GwTime));
 
-    vcd_parse();
-    if (GLOBALS->varsplit_vcd_recoder_c_3) {
-        free_2(GLOBALS->varsplit_vcd_recoder_c_3);
-        GLOBALS->varsplit_vcd_recoder_c_3 = NULL;
+    vcd_parse(self);
+    if (self->varsplit) {
+        free_2(self->varsplit);
+        self->varsplit = NULL;
     }
 
-    vlist_freeze(&GLOBALS->time_vlist_vcd_recoder_c_1);
+    vlist_freeze(&self->file->time_vlist);
 
-        finalize_cnt = vlist_emit_finalize();
+    vlist_emit_finalize(self);
 
-    if ((!GLOBALS->sorted_vcd_recoder_c_3) && (!GLOBALS->indexed_vcd_recoder_c_3)) {
+    if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
         fprintf(stderr, "No symbols in VCD file..is it malformed?  Exiting!\n");
         vcd_exit(255);
     }
@@ -2567,19 +2546,18 @@ GwTime vcd_recoder_main(char *fname)
 
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
-            GLOBALS->start_time_vcd_recoder_c_3 * GLOBALS->time_scale,
-            GLOBALS->end_time_vcd_recoder_c_3 * GLOBALS->time_scale);
+            self->file->start_time * GLOBALS->time_scale,
+            self->file->end_time * GLOBALS->time_scale);
 
-    if (GLOBALS->vcd_fsiz_vcd_recoder_c_2) {
-        splash_sync(GLOBALS->vcd_fsiz_vcd_recoder_c_2, GLOBALS->vcd_fsiz_vcd_recoder_c_2);
-        GLOBALS->vcd_fsiz_vcd_recoder_c_2 = 0;
-    } else if (GLOBALS->vcd_is_compressed_vcd_recoder_c_2) {
+    if (self->vcd_fsiz > 0) {
+        splash_sync(self->vcd_fsiz, self->vcd_fsiz);
+    } else if (self->is_compressed) {
         splash_sync(1, 1);
-        GLOBALS->vcd_fsiz_vcd_recoder_c_2 = 0;
     }
+    self->vcd_fsiz = 0;
 
-    GLOBALS->min_time = GLOBALS->start_time_vcd_recoder_c_3 * GLOBALS->time_scale;
-    GLOBALS->max_time = GLOBALS->end_time_vcd_recoder_c_3 * GLOBALS->time_scale;
+    GLOBALS->min_time = self->file->start_time * GLOBALS->time_scale;
+    GLOBALS->max_time = self->file->end_time * GLOBALS->time_scale;
     GLOBALS->global_time_offset = GLOBALS->global_time_offset * GLOBALS->time_scale;
 
     if ((GLOBALS->min_time == GLOBALS->max_time) && (GLOBALS->max_time == GW_TIME_CONSTANT(-1))) {
@@ -2587,16 +2565,17 @@ GwTime vcd_recoder_main(char *fname)
         vcd_exit(255);
     }
 
-    vcd_build_symbols();
+    vcd_build_symbols(self);
     vcd_sortfacs();
-    vcd_cleanup();
+    vcd_cleanup(self);
 
-    getch_free(); /* free membuff for vcd getch buffer */
+    getch_free(self); /* free membuff for vcd getch buffer */
 
     gw_blackout_regions_scale(GLOBALS->blackout_regions, GLOBALS->time_scale);
 
     /* is_vcd=~0; */
     GLOBALS->is_lx2 = LXT2_IS_VLIST;
+    GLOBALS->vcd_file = self->file;
 
     /* SPLASH */ splash_finalize();
     return (GLOBALS->max_time);
@@ -2604,22 +2583,23 @@ GwTime vcd_recoder_main(char *fname)
 
 /*******************************************************************************/
 
-void vcd_import_masked(void)
+void vcd_import_masked(VcdFile *self)
 {
     /* nothing */
+    (void)self;
 }
 
-void vcd_set_fac_process_mask(GwNode *np)
+void vcd_set_fac_process_mask(VcdFile *self, GwNode *np)
 {
     if (np && np->mv.mvlfac_vlist) {
-        import_vcd_trace(np);
+        import_vcd_trace(self, np);
     }
 }
 
 #define vlist_locate_import(x, y) \
     ((GLOBALS->vlist_prepack) ? ((depacked) + (y)) : vlist_locate((x), (y)))
 
-void import_vcd_trace(GwNode *np)
+void import_vcd_trace(VcdFile *self, GwNode *np)
 {
     struct vlist_t *v = np->mv.mvlfac_vlist;
     int len = 1;
@@ -2745,8 +2725,7 @@ void import_vcd_trace(GwNode *np)
             }
             time_idx += delta;
 
-            curtime_pnt =
-                vlist_locate(GLOBALS->time_vlist_vcd_recoder_c_1, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed bitwise signal data for '%s' after time_idx = %d\n",
@@ -2755,11 +2734,11 @@ void import_vcd_trace(GwNode *np)
                 exit(255);
             }
 
-            add_histent(*curtime_pnt, np, ascval, 1, NULL);
+            add_histent(self, *curtime_pnt, np, ascval, 1, NULL);
         }
 
-        add_histent(MAX_HISTENT_TIME - 1, np, 'x', 0, NULL);
-        add_histent(MAX_HISTENT_TIME, np, 'z', 0, NULL);
+        add_histent(self, MAX_HISTENT_TIME - 1, np, 'x', 0, NULL);
+        add_histent(self, MAX_HISTENT_TIME, np, 'z', 0, NULL);
     } else if (vlist_type == 'B') /* bit vector, port type was converted to bit vector already */
     {
         char *sbuf = malloc_2(len + 1);
@@ -2788,8 +2767,7 @@ void import_vcd_trace(GwNode *np)
             delta = accum;
             time_idx += delta;
 
-            curtime_pnt =
-                vlist_locate(GLOBALS->time_vlist_vcd_recoder_c_1, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed 'b' signal data for '%s' after time_idx = %d\n",
@@ -2823,7 +2801,7 @@ void import_vcd_trace(GwNode *np)
             }
 
             if (len == 1) {
-                add_histent(*curtime_pnt, np, sbuf[0], 1, NULL);
+                add_histent(self, *curtime_pnt, np, sbuf[0], 1, NULL);
             } else {
                 vector = malloc_2(len + 1);
                 if (dst_len < len) {
@@ -2835,16 +2813,16 @@ void import_vcd_trace(GwNode *np)
                 }
 
                 vector[len] = 0;
-                add_histent(*curtime_pnt, np, 0, 1, vector);
+                add_histent(self, *curtime_pnt, np, 0, 1, vector);
             }
         }
 
         if (len == 1) {
-            add_histent(MAX_HISTENT_TIME - 1, np, 'x', 0, NULL);
-            add_histent(MAX_HISTENT_TIME, np, 'z', 0, NULL);
+            add_histent(self, MAX_HISTENT_TIME - 1, np, 'x', 0, NULL);
+            add_histent(self, MAX_HISTENT_TIME, np, 'z', 0, NULL);
         } else {
-            add_histent(MAX_HISTENT_TIME - 1, np, 'x', 0, (char *)calloc_2(1, sizeof(char)));
-            add_histent(MAX_HISTENT_TIME, np, 'z', 0, (char *)calloc_2(1, sizeof(char)));
+            add_histent(self, MAX_HISTENT_TIME - 1, np, 'x', 0, (char *)calloc_2(1, sizeof(char)));
+            add_histent(self, MAX_HISTENT_TIME, np, 'z', 0, (char *)calloc_2(1, sizeof(char)));
         }
 
         free_2(sbuf);
@@ -2876,8 +2854,7 @@ void import_vcd_trace(GwNode *np)
             delta = accum;
             time_idx += delta;
 
-            curtime_pnt =
-                vlist_locate(GLOBALS->time_vlist_vcd_recoder_c_1, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed 'r' signal data for '%s' after time_idx = %d\n",
@@ -2897,16 +2874,16 @@ void import_vcd_trace(GwNode *np)
 
             vector = malloc_2(sizeof(double));
             sscanf(sbuf, "%lg", (double *)vector);
-            add_histent(*curtime_pnt, np, 'g', 1, (char *)vector);
+            add_histent(self, *curtime_pnt, np, 'g', 1, (char *)vector);
         }
 
         d = malloc_2(sizeof(double));
         *d = 1.0;
-        add_histent(MAX_HISTENT_TIME - 1, np, 'g', 0, (char *)d);
+        add_histent(self, MAX_HISTENT_TIME - 1, np, 'g', 0, (char *)d);
 
         d = malloc_2(sizeof(double));
         *d = 0.0;
-        add_histent(MAX_HISTENT_TIME, np, 'g', 0, (char *)d);
+        add_histent(self, MAX_HISTENT_TIME, np, 'g', 0, (char *)d);
 
         free_2(sbuf);
     } else if (vlist_type == 'S') /* string */
@@ -2937,8 +2914,7 @@ void import_vcd_trace(GwNode *np)
             delta = accum;
             time_idx += delta;
 
-            curtime_pnt =
-                vlist_locate(GLOBALS->time_vlist_vcd_recoder_c_1, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed 's' signal data for '%s' after time_idx = %d\n",
@@ -2958,16 +2934,16 @@ void import_vcd_trace(GwNode *np)
 
             vector = malloc_2(dst_len + 1);
             strcpy(vector, sbuf);
-            add_histent(*curtime_pnt, np, 's', 1, (char *)vector);
+            add_histent(self, *curtime_pnt, np, 's', 1, (char *)vector);
         }
 
         d = malloc_2(sizeof(double));
         *d = 1.0;
-        add_histent(MAX_HISTENT_TIME - 1, np, 'g', 0, (char *)d);
+        add_histent(self, MAX_HISTENT_TIME - 1, np, 'g', 0, (char *)d);
 
         d = malloc_2(sizeof(double));
         *d = 0.0;
-        add_histent(MAX_HISTENT_TIME, np, 'g', 0, (char *)d);
+        add_histent(self, MAX_HISTENT_TIME, np, 'g', 0, (char *)d);
 
         free_2(sbuf);
     } else if (vlist_type == '!') /* error in loading */
@@ -2977,7 +2953,7 @@ void import_vcd_trace(GwNode *np)
         if ((n2) &&
             (n2 != np)) /* keep out any possible infinite recursion from corrupt pointer bugs */
         {
-            import_vcd_trace(n2);
+            import_vcd_trace(self, n2);
 
             if (GLOBALS->vlist_prepack) {
                 vlist_packer_decompress_destroy((char *)depacked);

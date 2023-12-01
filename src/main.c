@@ -1715,7 +1715,7 @@ loader_check_head:
 
                 switch (GLOBALS->is_lx2) {
                     case LXT2_IS_VLIST:
-                        vcd_import_masked();
+                        vcd_import_masked(GLOBALS->vcd_file);
                         break;
                     case LXT2_IS_FST:
                         fst_import_masked(GLOBALS->fst_file);
