@@ -27,6 +27,47 @@
 #include "fst.h"
 #include "fst_util.h"
 
+struct _FstFile
+{
+    void *fst_reader;
+
+    fstHandle fst_maxhandle;
+
+    struct lx2_entry *fst_table;
+
+    GwFac *mvlfacs;
+    fstHandle *mvlfacs_alias;
+    fstHandle *mvlfacs_rvs_alias;
+
+    JRB subvar_jrb;
+    unsigned int subvar_jrb_count;
+    char **subvar_pnt;
+    unsigned subvar_jrb_count_locked : 1;
+
+    int busycnt;
+
+    JRB synclock_jrb;
+};
+
+typedef struct
+{
+    FstFile *file;
+
+    const char *scope_name;
+    int scope_name_len;
+
+    guint32 next_var_stem;
+    guint32 next_var_istem;
+
+    GwTime first_cycle;
+    GwTime last_cycle;
+    GwTime total_cycles;
+
+    char *synclock_str;
+
+    fstEnumHandle queued_xl_enum_filter;
+} FstLoader;
+
 #define FST_RDLOAD "FSTLOAD | "
 
 #define VZT_RD_SYM_F_BITS (0)
@@ -128,7 +169,7 @@ static int sprintf_2_sdd(char *s, char *c, int d, int d2)
 
 /******************************************************************/
 
-static struct fstHier *extractNextVar(void *xc,
+static struct fstHier *extractNextVar(FstLoader *self,
                                       int *msb,
                                       int *lsb,
                                       char **nam,
@@ -145,12 +186,14 @@ static struct fstHier *extractNextVar(void *xc,
     int svt = FST_SVT_NONE;
     long sxt = 0;
 
-    while ((h = fstReaderIterateHier(xc))) {
+    void *fst_reader = self->file->fst_reader;
+
+    while ((h = fstReaderIterateHier(fst_reader))) {
         switch (h->htyp) {
             case FST_HT_SCOPE:
-                GLOBALS->fst_scope_name =
-                    fstReaderPushScope(xc, h->u.scope.name, GLOBALS->mod_tree_parent);
-                GLOBALS->fst_scope_name_len = fstReaderGetCurrentScopeLen(xc);
+                self->scope_name =
+                    fstReaderPushScope(fst_reader, h->u.scope.name, GLOBALS->mod_tree_parent);
+                self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
 
                 ttype = fst_scope_type_to_gw_tree_kind(h->u.scope.typ);
 
@@ -159,15 +202,16 @@ static struct fstHier *extractNextVar(void *xc,
                                                        h->u.scope.component,
                                                        h->u.scope.name_length,
                                                        h->u.scope.component_length,
-                                                       GLOBALS->next_var_stem,
-                                                       GLOBALS->next_var_istem);
-                GLOBALS->next_var_stem = 0;
-                GLOBALS->next_var_istem = 0;
+                                                       self->next_var_stem,
+                                                       self->next_var_istem);
+                self->next_var_stem = 0;
+                self->next_var_istem = 0;
                 break;
+
             case FST_HT_UPSCOPE:
-                GLOBALS->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(xc);
-                GLOBALS->fst_scope_name = fstReaderPopScope(xc);
-                GLOBALS->fst_scope_name_len = fstReaderGetCurrentScopeLen(xc);
+                GLOBALS->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(fst_reader);
+                self->scope_name = fstReaderPopScope(fst_reader);
+                self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
                 break;
 
             case FST_HT_VAR:
@@ -277,7 +321,7 @@ static struct fstHier *extractNextVar(void *xc,
                             JRB subvar_jrb_node;
                             char *attr_pnt;
 
-                            if (GLOBALS->fst_filetype == FST_FT_VHDL) {
+                            if (fstReaderGetFileType(fst_reader) == FST_FT_VHDL) {
                                 char *lc_p = attr_pnt = strdup_2(h->u.attr.name);
 
                                 while (*lc_p) {
@@ -290,28 +334,28 @@ static struct fstHier *extractNextVar(void *xc,
                             }
 
                             /* sxt points to actual type name specified in FST file */
-                            subvar_jrb_node = jrb_find_str(GLOBALS->subvar_jrb,
+                            subvar_jrb_node = jrb_find_str(self->file->subvar_jrb,
                                                            attr_pnt ? attr_pnt : h->u.attr.name);
                             if (subvar_jrb_node) {
                                 sxt = subvar_jrb_node->val.ui;
                             } else {
                                 Jval jv;
 
-                                if (GLOBALS->subvar_jrb_count != WAVE_VARXT_MAX_ID) {
-                                    sxt = jv.ui = ++GLOBALS->subvar_jrb_count;
+                                if (self->file->subvar_jrb_count != WAVE_VARXT_MAX_ID) {
+                                    sxt = jv.ui = ++self->file->subvar_jrb_count;
                                     /* subvar_jrb_node = */ jrb_insert_str(
-                                        GLOBALS->subvar_jrb,
+                                        self->file->subvar_jrb,
                                         strdup_2(attr_pnt ? attr_pnt : h->u.attr.name),
                                         jv);
                                 } else {
                                     sxt = 0;
-                                    if (!GLOBALS->subvar_jrb_count_locked) {
+                                    if (!self->file->subvar_jrb_count_locked) {
                                         fprintf(stderr,
                                                 FST_RDLOAD
                                                 "Max number (%d) of type attributes reached, "
                                                 "please increase WAVE_VARXT_MAX_ID.\n",
                                                 WAVE_VARXT_MAX_ID);
-                                        GLOBALS->subvar_jrb_count_locked = 1;
+                                        self->file->subvar_jrb_count_locked = 1;
                                     }
                                 }
                             }
@@ -330,14 +374,14 @@ static struct fstHier *extractNextVar(void *xc,
                         uint32_t istem_path_number = (uint32_t)h->u.attr.arg_from_name;
                         uint32_t istem_line_number = (uint32_t)h->u.attr.arg;
 
-                        GLOBALS->next_var_istem = gw_stems_add_istem(GLOBALS->stems,
-                                                                     istem_path_number,
-                                                                     istem_line_number);
+                        self->next_var_istem = gw_stems_add_istem(GLOBALS->stems,
+                                                                  istem_path_number,
+                                                                  istem_line_number);
                     } else if (h->u.attr.subtype == FST_MT_SOURCESTEM) {
                         uint32_t stem_path_number = (uint32_t)h->u.attr.arg_from_name;
                         uint32_t stem_line_number = (uint32_t)h->u.attr.arg;
 
-                        GLOBALS->next_var_stem =
+                        self->next_var_stem =
                             gw_stems_add_stem(GLOBALS->stems, stem_path_number, stem_line_number);
                     } else if (h->u.attr.subtype == FST_MT_PATHNAME) {
                         const gchar *path = h->u.attr.name;
@@ -351,15 +395,15 @@ static struct fstHier *extractNextVar(void *xc,
                     } else if (h->u.attr.subtype == FST_MT_VALUELIST) {
                         if (h->u.attr.name) {
                             /* format is concatenations of [m b xs xe valstring] */
-                            if (GLOBALS->fst_synclock_str) {
-                                free_2(GLOBALS->fst_synclock_str);
+                            if (self->synclock_str) {
+                                free_2(self->synclock_str);
                             }
-                            GLOBALS->fst_synclock_str = strdup_2(h->u.attr.name);
+                            self->synclock_str = strdup_2(h->u.attr.name);
                         }
                     } else if (h->u.attr.subtype == FST_MT_ENUMTABLE) {
                         if (h->u.attr.name) {
-                            GLOBALS->queued_xl_enum_filter =
-                                h->u.attr.arg; /* consumed by next enum variable definition */
+                            /* consumed by next enum variable definition */
+                            self->queued_xl_enum_filter = h->u.attr.arg;
 
                             if (h->u.attr.name_length) {
                                 struct fstETab *fe =
@@ -443,15 +487,17 @@ static void fst_append_graft_chain(int len, char *nam, int which, GwTree *par)
     GLOBALS->terminals_tchain_tree_c_1 = t;
 }
 
-static GwBlackoutRegions *load_blackout_regions(void)
+static GwBlackoutRegions *load_blackout_regions(FstLoader *self)
 {
+    void *fst_reader = self->file->fst_reader;
+
     GwBlackoutRegions *blackout_regions = gw_blackout_regions_new();
 
-    guint32 num_activity_changes = fstReaderGetNumberDumpActivityChanges(GLOBALS->fst_fst_c_1);
+    guint32 num_activity_changes = fstReaderGetNumberDumpActivityChanges(fst_reader);
     for (guint32 activity_idx = 0; activity_idx < num_activity_changes; activity_idx++) {
-        GwTime ct = fstReaderGetDumpActivityChangeTime(GLOBALS->fst_fst_c_1, activity_idx) *
-                    GLOBALS->time_scale;
-        unsigned char ac = fstReaderGetDumpActivityChangeValue(GLOBALS->fst_fst_c_1, activity_idx);
+        GwTime ct =
+            fstReaderGetDumpActivityChangeTime(fst_reader, activity_idx) * GLOBALS->time_scale;
+        unsigned char ac = fstReaderGetDumpActivityChangeValue(fst_reader, activity_idx);
 
         if (ac == 1) {
             gw_blackout_regions_add_dumpon(blackout_regions, ct);
@@ -461,7 +507,7 @@ static GwBlackoutRegions *load_blackout_regions(void)
     }
 
     // Ensure that final blackout region is finished.
-    gw_blackout_regions_add_dumpon(blackout_regions, GLOBALS->last_cycle_fst_c_3);
+    gw_blackout_regions_add_dumpon(blackout_regions, self->last_cycle);
 
     return blackout_regions;
 }
@@ -491,20 +537,26 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     int f_name_build_buf_len = 128;
     char *f_name_build_buf = malloc_2(f_name_build_buf_len + 1);
 
-    GLOBALS->fst_fst_c_1 = fstReaderOpen(fname);
-    if (!GLOBALS->fst_fst_c_1) {
-        return (
-            GW_TIME_CONSTANT(0)); /* look at GLOBALS->fst_fst_c_1 in caller for success status... */
+    void *fst_reader = fstReaderOpen(fname);
+    if (fst_reader == NULL) {
+        /* look at self->fst_reader in caller for success status... */
+        return GW_TIME_CONSTANT(0);
     }
     /* SPLASH */ splash_create();
 
-    allowed_to_autocoalesce =
-        (strstr(fstReaderGetVersionString(GLOBALS->fst_fst_c_1), "Icarus") == NULL);
+    GLOBALS->fst_file = g_new0(FstFile, 1);
+    GLOBALS->fst_file->fst_reader = fst_reader;
+
+    FstLoader loader = {0};
+    FstLoader *self = &loader;
+    self->file = GLOBALS->fst_file;
+
+    allowed_to_autocoalesce = (strstr(fstReaderGetVersionString(fst_reader), "Icarus") == NULL);
     if (!allowed_to_autocoalesce) {
         GLOBALS->autocoalesce = 0;
     }
 
-    scale = (signed char)fstReaderGetTimescale(GLOBALS->fst_fst_c_1);
+    scale = (signed char)fstReaderGetTimescale(fst_reader);
     exponent_to_time_scale(scale);
 
     f_name = calloc_2(F_NAME_MODULUS + 1, sizeof(char *));
@@ -514,23 +566,22 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     nnam_max = 16;
     nnam = malloc_2(nnam_max + 1);
 
-    GLOBALS->fst_filetype = fstReaderGetFileType(GLOBALS->fst_fst_c_1);
-    if (GLOBALS->fst_filetype == FST_FT_VHDL) {
+    if (fstReaderGetFileType(fst_reader) == FST_FT_VHDL) {
         GLOBALS->is_vhdl_component_format = 1;
     }
 
-    GLOBALS->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
-    GLOBALS->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
+    self->file->subvar_jrb =
+        make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
+    self->file->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
 
-    GLOBALS->numfacs = fstReaderGetVarCount(GLOBALS->fst_fst_c_1);
-    GLOBALS->mvlfacs_fst_c_3 = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
-    GLOBALS->fst_table_fst_c_1 =
-        (struct lx2_entry *)calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
+    GLOBALS->numfacs = fstReaderGetVarCount(fst_reader);
+    self->file->mvlfacs = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
+    self->file->fst_table = calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
     sym_block = (struct symbol *)calloc_2(GLOBALS->numfacs, sizeof(struct symbol));
     node_block = calloc_2(GLOBALS->numfacs, sizeof(GwNode));
     GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
-    GLOBALS->mvlfacs_fst_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
-    GLOBALS->mvlfacs_fst_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
+    self->file->mvlfacs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
+    self->file->mvlfacs_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
     GLOBALS->stems = gw_stems_new();
 
     hier_auto_enable(); /* enable if greater than threshold */
@@ -540,14 +591,12 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     fprintf(stderr, FST_RDLOAD "Processing %d facs.\n", GLOBALS->numfacs);
     /* SPLASH */ splash_sync(1, 5);
 
-    GLOBALS->first_cycle_fst_c_3 =
-        (GwTime)fstReaderGetStartTime(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
-    GLOBALS->last_cycle_fst_c_3 =
-        (GwTime)fstReaderGetEndTime(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
-    GLOBALS->total_cycles_fst_c_3 = GLOBALS->last_cycle_fst_c_3 - GLOBALS->first_cycle_fst_c_3 + 1;
-    GLOBALS->global_time_offset = fstReaderGetTimezero(GLOBALS->fst_fst_c_1) * GLOBALS->time_scale;
+    self->first_cycle = fstReaderGetStartTime(fst_reader) * GLOBALS->time_scale;
+    self->last_cycle = fstReaderGetEndTime(fst_reader) * GLOBALS->time_scale;
+    self->total_cycles = self->last_cycle - self->first_cycle + 1;
+    GLOBALS->global_time_offset = fstReaderGetTimezero(fst_reader) * GLOBALS->time_scale;
 
-    GLOBALS->blackout_regions = load_blackout_regions();
+    GLOBALS->blackout_regions = load_blackout_regions(self);
 
     /* do your stuff here..all useful info has been initialized by now */
 
@@ -566,11 +615,11 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
         char *fnam;
         int len_subst = 0;
 
-        h = extractNextVar(GLOBALS->fst_fst_c_1, &msb, &lsb, &nnam, &name_len, &nnam_max);
+        h = extractNextVar(self, &msb, &lsb, &nnam, &name_len, &nnam_max);
         if (!h) {
             /* this should never happen */
-            fstReaderIterateHierRewind(GLOBALS->fst_fst_c_1);
-            h = extractNextVar(GLOBALS->fst_fst_c_1, &msb, &lsb, &nnam, &name_len, &nnam_max);
+            fstReaderIterateHierRewind(fst_reader);
+            h = extractNextVar(self, &msb, &lsb, &nnam, &name_len, &nnam_max);
             if (!h) {
                 fprintf(stderr,
                         FST_RDLOAD "Exiting, missing or malformed names table encountered.\n");
@@ -579,7 +628,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
         }
 
         npar = GLOBALS->mod_tree_parent;
-        hier_len = GLOBALS->fst_scope_name ? GLOBALS->fst_scope_name_len : 0;
+        hier_len = self->scope_name ? self->scope_name_len : 0;
         if (hier_len) {
             tlen = hier_len + 1 + name_len;
             if (tlen > f_name_max_len[i & F_NAME_MODULUS]) {
@@ -591,7 +640,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
                 fnam = f_name[i & F_NAME_MODULUS];
             }
 
-            memcpy(fnam, GLOBALS->fst_scope_name, hier_len);
+            memcpy(fnam, self->scope_name, hier_len);
             fnam[hier_len] = GLOBALS->hier_delimeter;
             memcpy(fnam + hier_len + 1, nnam, name_len + 1);
         } else {
@@ -627,7 +676,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
             node_block[i].msi = msb;
             node_block[i].lsi = lsb;
         }
-        GLOBALS->mvlfacs_fst_c_3[i].len = h->u.var.length;
+        self->file->mvlfacs[i].len = h->u.var.length;
 
         if (h->u.var.length) {
             nvd = fst_var_dir_to_gw_var_dir(h->u.var.direction);
@@ -643,63 +692,62 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
                 case FST_VT_SV_INT:
                 case FST_VT_SV_SHORTINT:
                 case FST_VT_SV_LONGINT:
-                    GLOBALS->mvlfacs_fst_c_3[i].flags = VZT_RD_SYM_F_INTEGER;
+                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_INTEGER;
                     break;
 
                 case FST_VT_VCD_REAL:
                 case FST_VT_VCD_REAL_PARAMETER:
                 case FST_VT_VCD_REALTIME:
                 case FST_VT_SV_SHORTREAL:
-                    GLOBALS->mvlfacs_fst_c_3[i].flags = VZT_RD_SYM_F_DOUBLE;
+                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_DOUBLE;
                     break;
 
                 case FST_VT_GEN_STRING:
-                    GLOBALS->mvlfacs_fst_c_3[i].flags = VZT_RD_SYM_F_STRING;
-                    GLOBALS->mvlfacs_fst_c_3[i].len = 2;
+                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
+                    self->file->mvlfacs[i].len = 2;
                     break;
 
                 default:
-                    GLOBALS->mvlfacs_fst_c_3[i].flags = VZT_RD_SYM_F_BITS;
+                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_BITS;
                     break;
             }
         } else /* convert any variable length records into strings */
         {
             nvt = GW_VAR_TYPE_GEN_STRING;
             nvd = GW_VAR_DIR_IMPLICIT;
-            GLOBALS->mvlfacs_fst_c_3[i].flags = VZT_RD_SYM_F_STRING;
-            GLOBALS->mvlfacs_fst_c_3[i].len = 2;
+            self->file->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
+            self->file->mvlfacs[i].len = 2;
         }
 
-        if (GLOBALS->fst_synclock_str) {
-            if (GLOBALS->mvlfacs_fst_c_3[i].len == 1) /* currently only for single bit signals */
+        if (self->synclock_str != NULL) {
+            if (self->file->mvlfacs[i].len == 1) /* currently only for single bit signals */
             {
                 Jval syn_jv;
 
-                GLOBALS->mvlfacs_fst_c_3[i].flags |=
-                    VZT_RD_SYM_F_SYNVEC; /* special meaning for this in FST loader--means synthetic
-                                            signal! */
-                syn_jv.s = GLOBALS->fst_synclock_str;
-                jrb_insert_int(GLOBALS->synclock_jrb, i, syn_jv);
+                /* special meaning for this in FST loader--means synthetic signal! */
+                self->file->mvlfacs[i].flags |= VZT_RD_SYM_F_SYNVEC;
+                syn_jv.s = self->synclock_str;
+                jrb_insert_int(self->file->synclock_jrb, i, syn_jv);
             } else {
-                free_2(GLOBALS->fst_synclock_str);
+                free_2(self->synclock_str);
             }
 
-            GLOBALS->fst_synclock_str =
-                NULL; /* under malloc_2() control for true if() branch, so not lost */
+            /* under malloc_2() control for true if() branch, so not lost */
+            self->synclock_str = NULL;
         }
 
         if (h->u.var.is_alias) {
-            GLOBALS->mvlfacs_fst_c_3[i].node_alias =
+            self->file->mvlfacs[i].node_alias =
                 h->u.var.handle - 1; /* subtract 1 to scale it with gtkwave-style numbering */
-            GLOBALS->mvlfacs_fst_c_3[i].flags |= VZT_RD_SYM_F_ALIAS;
+            self->file->mvlfacs[i].flags |= VZT_RD_SYM_F_ALIAS;
             numalias++;
         } else {
-            GLOBALS->mvlfacs_fst_rvs_alias[numvars] = i;
-            GLOBALS->mvlfacs_fst_c_3[i].node_alias = numvars;
+            self->file->mvlfacs_rvs_alias[numvars] = i;
+            self->file->mvlfacs[i].node_alias = numvars;
             numvars++;
         }
 
-        f = GLOBALS->mvlfacs_fst_c_3 + i;
+        f = &self->file->mvlfacs[i];
 
         if ((f->len > 1) &&
             (!(f->flags & (VZT_RD_SYM_F_INTEGER | VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING)))) {
@@ -810,11 +858,11 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
                     if (f->len != 0) {
                         node_block[i].msi = f->len - 1;
                         node_block[i].lsi = 0;
-                        GLOBALS->mvlfacs_fst_c_3[i].len = f->len;
+                        self->file->mvlfacs[i].len = f->len;
                     } else {
                         node_block[i].msi = 31;
                         node_block[i].lsi = 0;
-                        GLOBALS->mvlfacs_fst_c_3[i].len = 32;
+                        self->file->mvlfacs[i].len = 32;
                     }
                 }
 
@@ -828,10 +876,10 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
         GLOBALS->facs[i] = &sym_block[i];
         n = &node_block[i];
 
-        if (GLOBALS->queued_xl_enum_filter) {
+        if (self->queued_xl_enum_filter != 0) {
             Jval jv;
-            jv.ui = GLOBALS->queued_xl_enum_filter;
-            GLOBALS->queued_xl_enum_filter = 0;
+            jv.ui = self->queued_xl_enum_filter;
+            self->queued_xl_enum_filter = 0;
 
             if (!GLOBALS->enum_nptrs_jrb)
                 GLOBALS->enum_nptrs_jrb = make_jrb();
@@ -846,8 +894,8 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
             n->nname = s->name;
         }
 
-        n->mv.mvlfac = GLOBALS->mvlfacs_fst_c_3 + i;
-        GLOBALS->mvlfacs_fst_c_3[i].working_node = n;
+        n->mv.mvlfac = &self->file->mvlfacs[i];
+        self->file->mvlfacs[i].working_node = n;
         n->vardir = nvd;
         n->varxt = h->u.var.sxt_workspace;
         if ((h->u.var.svt_workspace == FST_SVT_NONE) && (h->u.var.sdt_workspace == FST_SDT_NONE)) {
@@ -913,19 +961,18 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     f_name_len = NULL;
 
     if (numvars != GLOBALS->numfacs) {
-        GLOBALS->mvlfacs_fst_rvs_alias =
-            realloc_2(GLOBALS->mvlfacs_fst_rvs_alias, numvars * sizeof(fstHandle));
+        self->file->mvlfacs_rvs_alias =
+            realloc_2(self->file->mvlfacs_rvs_alias, numvars * sizeof(fstHandle));
     }
 
-    if (GLOBALS->subvar_jrb_count) /* generate lookup table for typenames explicitly given as
-                                      attributes */
-    {
+    /* generate lookup table for typenames explicitly given as attributes */
+    if (self->file->subvar_jrb_count > 0) {
         JRB subvar_jrb_node = NULL;
-        GLOBALS->subvar_pnt = calloc_2(GLOBALS->subvar_jrb_count + 1, sizeof(char *));
+        self->file->subvar_pnt = calloc_2(self->file->subvar_jrb_count + 1, sizeof(char *));
 
-        jrb_traverse(subvar_jrb_node, GLOBALS->subvar_jrb)
+        jrb_traverse(subvar_jrb_node, self->file->subvar_jrb)
         {
-            GLOBALS->subvar_pnt[subvar_jrb_node->val.ui] = subvar_jrb_node->key.s;
+            self->file->subvar_pnt[subvar_jrb_node->val.ui] = subvar_jrb_node->key.s;
         }
     }
 
@@ -942,7 +989,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
             numalias,
             (numalias == 1) ? "" : "es");
 
-    GLOBALS->fst_maxhandle = numvars;
+    self->file->fst_maxhandle = numvars;
 
     /* SPLASH */ splash_sync(2, 5);
     fprintf(stderr, FST_RDLOAD "Building facility hierarchy tree.\n");
@@ -980,8 +1027,8 @@ if(num_dups)
 }
 #endif
 
-    GLOBALS->min_time = GLOBALS->first_cycle_fst_c_3;
-    GLOBALS->max_time = GLOBALS->last_cycle_fst_c_3;
+    GLOBALS->min_time = self->first_cycle;
+    GLOBALS->max_time = self->last_cycle;
     GLOBALS->is_lx2 = LXT2_IS_FST;
 
     if (skip_start || skip_end) {
@@ -1012,13 +1059,13 @@ if(num_dups)
             b_end = tmp_time;
         }
 
-        fstReaderSetLimitTimeRange(GLOBALS->fst_fst_c_1, b_start, b_end);
+        fstReaderSetLimitTimeRange(fst_reader, b_start, b_end);
         GLOBALS->min_time = b_start;
         GLOBALS->max_time = b_end;
     }
 
-    fstReaderIterBlocksSetNativeDoublesOnCallback(GLOBALS->fst_fst_c_1,
-                                                  1); /* to avoid bin -> ascii -> bin double swap */
+    /* to avoid bin -> ascii -> bin double swap */
+    fstReaderIterBlocksSetNativeDoublesOnCallback(fst_reader, 1);
 
     /* SPLASH */ splash_finalize();
     return (GLOBALS->max_time);
@@ -1060,17 +1107,17 @@ static void fst_callback2(void *user_callback_data_pointer,
                           const unsigned char *value,
                           uint32_t plen)
 {
-    (void)user_callback_data_pointer;
+    FstFile *self = user_callback_data_pointer;
 
-    fstHandle facidx = GLOBALS->mvlfacs_fst_rvs_alias[--txidx];
+    fstHandle facidx = self->mvlfacs_rvs_alias[--txidx];
     GwHistEnt *htemp;
-    struct lx2_entry *l2e = GLOBALS->fst_table_fst_c_1 + facidx;
-    GwFac *f = GLOBALS->mvlfacs_fst_c_3 + facidx;
+    struct lx2_entry *l2e = &self->fst_table[facidx];
+    GwFac *f = &self->mvlfacs[facidx];
 
-    GLOBALS->busycnt_fst_c_2++;
-    if (GLOBALS->busycnt_fst_c_2 == WAVE_BUSY_ITER) {
+    self->busycnt++;
+    if (self->busycnt == WAVE_BUSY_ITER) {
         busy_window_refresh();
-        GLOBALS->busycnt_fst_c_2 = 0;
+        self->busycnt = 0;
     }
 
     /* fprintf(stderr, "%lld %d '%s'\n", tim, facidx, value); */
@@ -1270,7 +1317,7 @@ static void fst_resolver(GwNode *np, GwNode *resolve)
 /*
  * actually import a fst trace but don't do it if it's already been imported
  */
-void import_fst_trace(GwNode *np)
+void import_fst_trace(FstFile *self, GwNode *np)
 {
     GwHistEnt *htemp;
     GwHistEnt *htempx = NULL;
@@ -1283,13 +1330,12 @@ void import_fst_trace(GwNode *np)
     if (!(f = np->mv.mvlfac))
         return; /* already imported */
 
-    txidx = f - GLOBALS->mvlfacs_fst_c_3;
+    txidx = f - self->mvlfacs;
     if (np->mv.mvlfac->flags & VZT_RD_SYM_F_ALIAS) {
-        txidx =
-            GLOBALS->mvlfacs_fst_c_3[txidx]
-                .node_alias; /* this is to map to fstHandles, so even non-aliased are remapped */
-        txidx = GLOBALS->mvlfacs_fst_rvs_alias[txidx];
-        np = GLOBALS->mvlfacs_fst_c_3[txidx].working_node;
+        /* this is to map to fstHandles, so even non-aliased are remapped */
+        txidx = self->mvlfacs[txidx].node_alias;
+        txidx = self->mvlfacs_rvs_alias[txidx];
+        np = self->mvlfacs[txidx].working_node;
 
         if (!(f = np->mv.mvlfac)) {
             fst_resolver(nold, np);
@@ -1310,11 +1356,9 @@ void import_fst_trace(GwNode *np)
     /* check here for array height in future */
 
     if (!(f->flags & VZT_RD_SYM_F_SYNVEC)) {
-        fstReaderSetFacProcessMask(GLOBALS->fst_fst_c_1,
-                                   GLOBALS->mvlfacs_fst_c_3[txidx].node_alias + 1);
-        fstReaderIterBlocks2(GLOBALS->fst_fst_c_1, fst_callback, fst_callback2, NULL, NULL);
-        fstReaderClrFacProcessMask(GLOBALS->fst_fst_c_1,
-                                   GLOBALS->mvlfacs_fst_c_3[txidx].node_alias + 1);
+        fstReaderSetFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
+        fstReaderIterBlocks2(self->fst_reader, fst_callback, fst_callback2, self, NULL);
+        fstReaderClrFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
     }
 
     histent_tail = htemp = histent_calloc();
@@ -1350,9 +1394,9 @@ void import_fst_trace(GwNode *np)
     htemp->time = MAX_HISTENT_TIME - 1;
     htemp->next = histent_tail;
 
-    if (GLOBALS->fst_table_fst_c_1[txidx].histent_curr) {
-        GLOBALS->fst_table_fst_c_1[txidx].histent_curr->next = htemp;
-        htemp = GLOBALS->fst_table_fst_c_1[txidx].histent_head;
+    if (self->fst_table[txidx].histent_curr) {
+        self->fst_table[txidx].histent_curr->next = htemp;
+        htemp = self->fst_table[txidx].histent_head;
     }
 
     if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
@@ -1381,14 +1425,14 @@ void import_fst_trace(GwNode *np)
         }
         htemp2->next = htemp;
         htemp = htemp2;
-        GLOBALS->fst_table_fst_c_1[txidx].numtrans++;
+        self->fst_table[txidx].numtrans++;
     }
 
     np->head.time = -2;
     np->head.next = htemp;
-    np->numhist = GLOBALS->fst_table_fst_c_1[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
+    np->numhist = self->fst_table[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
 
-    memset(GLOBALS->fst_table_fst_c_1 + txidx, 0, sizeof(struct lx2_entry)); /* zero it out */
+    memset(&self->fst_table[txidx], 0, sizeof(struct lx2_entry)); /* zero it out */
 
     np->curr = histent_tail;
     np->mv.mvlfac = NULL; /* it's imported and cached so we can forget it's an mvlfac now */
@@ -1401,7 +1445,7 @@ void import_fst_trace(GwNode *np)
 /*
  * decompress [m b xs xe valstring]... format string into trace
  */
-static void expand_synvec(int txidx, const char *s)
+static void expand_synvec(FstFile *self, int txidx, const char *s)
 {
     char *scopy = NULL;
     char *pnt, *pnt2;
@@ -1445,7 +1489,7 @@ static void expand_synvec(int txidx, const char *s)
                 if (value[0] != pval) /* collapse new == old value transitions so new is ignored */
                 {
                     if ((tim >= tim_max) || (xi == xs)) {
-                        fst_callback2(NULL, tim, txidx, value, 0);
+                        fst_callback2(self, tim, txidx, value, 0);
                         tim_max = tim;
                     }
                     pval = value[0];
@@ -1467,7 +1511,7 @@ static void expand_synvec(int txidx, const char *s)
 /*
  * pre-import many traces at once so function above doesn't have to iterate...
  */
-void fst_set_fac_process_mask(GwNode *np)
+void fst_set_fac_process_mask(FstFile *self, GwNode *np)
 {
     GwFac *f;
     int txidx;
@@ -1475,43 +1519,42 @@ void fst_set_fac_process_mask(GwNode *np)
     if (!(f = np->mv.mvlfac))
         return; /* already imported */
 
-    txidx = f - GLOBALS->mvlfacs_fst_c_3;
+    txidx = f - self->mvlfacs;
 
     if (np->mv.mvlfac->flags & VZT_RD_SYM_F_ALIAS) {
-        txidx = GLOBALS->mvlfacs_fst_c_3[txidx].node_alias;
-        txidx = GLOBALS->mvlfacs_fst_rvs_alias[txidx];
-        np = GLOBALS->mvlfacs_fst_c_3[txidx].working_node;
+        txidx = self->mvlfacs[txidx].node_alias;
+        txidx = self->mvlfacs_rvs_alias[txidx];
+        np = self->mvlfacs[txidx].working_node;
 
         if (!(np->mv.mvlfac))
             return; /* already imported */
     }
 
     if (np->mv.mvlfac->flags & VZT_RD_SYM_F_SYNVEC) {
-        JRB fi = jrb_find_int(GLOBALS->synclock_jrb, txidx);
+        JRB fi = jrb_find_int(self->synclock_jrb, txidx);
         if (fi) {
-            expand_synvec(GLOBALS->mvlfacs_fst_c_3[txidx].node_alias + 1, fi->val.s);
-            import_fst_trace(np);
+            expand_synvec(self, self->mvlfacs[txidx].node_alias + 1, fi->val.s);
+            import_fst_trace(self, np);
             return; /* import_fst_trace() will construct the trailer */
         }
     }
 
     /* check here for array height in future */
     {
-        fstReaderSetFacProcessMask(GLOBALS->fst_fst_c_1,
-                                   GLOBALS->mvlfacs_fst_c_3[txidx].node_alias + 1);
-        GLOBALS->fst_table_fst_c_1[txidx].np = np;
+        fstReaderSetFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
+        self->fst_table[txidx].np = np;
     }
 }
 
-void fst_import_masked(void)
+void fst_import_masked(FstFile *self)
 {
     unsigned int txidxi;
     int i, cnt;
     GwHistEnt *htempx = NULL;
 
     cnt = 0;
-    for (txidxi = 0; txidxi < GLOBALS->fst_maxhandle; txidxi++) {
-        if (fstReaderGetFacProcessMask(GLOBALS->fst_fst_c_1, txidxi + 1)) {
+    for (txidxi = 0; txidxi < self->fst_maxhandle; txidxi++) {
+        if (fstReaderGetFacProcessMask(self->fst_reader, txidxi + 1)) {
             cnt++;
         }
     }
@@ -1525,16 +1568,16 @@ void fst_import_masked(void)
     }
 
     set_window_busy(NULL);
-    fstReaderIterBlocks2(GLOBALS->fst_fst_c_1, fst_callback, fst_callback2, NULL, NULL);
+    fstReaderIterBlocks2(self->fst_reader, fst_callback, fst_callback2, self, NULL);
     set_window_idle(NULL);
 
-    for (txidxi = 0; txidxi < GLOBALS->fst_maxhandle; txidxi++) {
-        if (fstReaderGetFacProcessMask(GLOBALS->fst_fst_c_1, txidxi + 1)) {
-            int txidx = GLOBALS->mvlfacs_fst_rvs_alias[txidxi];
+    for (txidxi = 0; txidxi < self->fst_maxhandle; txidxi++) {
+        if (fstReaderGetFacProcessMask(self->fst_reader, txidxi + 1)) {
+            int txidx = self->mvlfacs_rvs_alias[txidxi];
             GwHistEnt *htemp, *histent_tail;
-            GwFac *f = GLOBALS->mvlfacs_fst_c_3 + txidx;
+            GwFac *f = &self->mvlfacs[txidx];
             int len = f->len;
-            GwNode *np = GLOBALS->fst_table_fst_c_1[txidx].np;
+            GwNode *np = self->fst_table[txidx].np;
 
             histent_tail = htemp = histent_calloc();
             if (len > 1) {
@@ -1570,9 +1613,9 @@ void fst_import_masked(void)
             htemp->time = MAX_HISTENT_TIME - 1;
             htemp->next = histent_tail;
 
-            if (GLOBALS->fst_table_fst_c_1[txidx].histent_curr) {
-                GLOBALS->fst_table_fst_c_1[txidx].histent_curr->next = htemp;
-                htemp = GLOBALS->fst_table_fst_c_1[txidx].histent_head;
+            if (self->fst_table[txidx].histent_curr) {
+                self->fst_table[txidx].histent_curr->next = htemp;
+                htemp = self->fst_table[txidx].histent_head;
             }
 
             if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
@@ -1601,21 +1644,43 @@ void fst_import_masked(void)
                 }
                 htemp2->next = htemp;
                 htemp = htemp2;
-                GLOBALS->fst_table_fst_c_1[txidx].numtrans++;
+                self->fst_table[txidx].numtrans++;
             }
 
             np->head.time = -2;
             np->head.next = htemp;
-            np->numhist =
-                GLOBALS->fst_table_fst_c_1[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
+            np->numhist = self->fst_table[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
 
-            memset(GLOBALS->fst_table_fst_c_1 + txidx,
-                   0,
-                   sizeof(struct lx2_entry)); /* zero it out */
+            memset(&self->fst_table[txidx], 0, sizeof(struct lx2_entry)); /* zero it out */
 
             np->curr = histent_tail;
             np->mv.mvlfac = NULL; /* it's imported and cached so we can forget it's an mvlfac now */
-            fstReaderClrFacProcessMask(GLOBALS->fst_fst_c_1, txidxi + 1);
+            fstReaderClrFacProcessMask(self->fst_reader, txidxi + 1);
         }
     }
+}
+
+void fst_file_close(FstFile *self)
+{
+    g_return_if_fail(self != NULL);
+
+    g_clear_pointer(&self->fst_reader, fstReaderClose);
+
+    if (self->subvar_jrb != NULL) {
+        jrb_free_tree(self->subvar_jrb);
+        self->subvar_jrb = NULL;
+        self->subvar_jrb_count = 0;
+    }
+
+    if (self->synclock_jrb) {
+        jrb_free_tree(self->synclock_jrb);
+        self->synclock_jrb = NULL;
+    }
+}
+
+gchar *fst_file_get_subvar(FstFile *self, gint index)
+{
+    g_return_val_if_fail(self != NULL, NULL);
+
+    return self->subvar_pnt[index];
 }

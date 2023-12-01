@@ -58,6 +58,7 @@
 #include "vlist.h"
 #include "version.h"
 #include "extload.h"
+#include "fst.h"
 
 #ifdef _WAVE_HAVE_JUDY
 #include <Judy.h>
@@ -222,40 +223,17 @@ struct Global
     /*
      * fst.c
      */
-    void *fst_fst_c_1;
-    const char *fst_scope_name;
-    int fst_scope_name_len;
-    GwTime first_cycle_fst_c_3;
-    GwTime last_cycle_fst_c_3;
-    GwTime total_cycles_fst_c_3;
-    struct lx2_entry *fst_table_fst_c_1;
-    GwFac *mvlfacs_fst_c_3;
-    fstHandle *mvlfacs_fst_alias;
-    fstHandle *mvlfacs_fst_rvs_alias;
-    fstHandle fst_maxhandle;
-    int busycnt_fst_c_2;
-    double *double_curr_fst;
-    double *double_fini_fst;
+    FstFile *fst_file;
     char nonimplicit_direction_encountered;
     char supplemental_datatypes_encountered;
     char supplemental_vartypes_encountered;
     char is_vhdl_component_format;
-    JRB subvar_jrb;
-    unsigned int subvar_jrb_count;
-    char **subvar_pnt;
-    unsigned char fst_filetype;
-    unsigned subvar_jrb_count_locked : 1;
-    guint32 next_var_stem;
-    guint32 next_var_istem;
-    char *fst_synclock_str;
-    JRB synclock_jrb;
 #ifdef _WAVE_HAVE_JUDY
     Pvoid_t *xl_enum_filter;
 #else
     struct xl_tree_node **xl_enum_filter;
 #endif
     int num_xl_enum_filter;
-    fstEnumHandle queued_xl_enum_filter;
     JRB enum_nptrs_jrb;
 
     /*

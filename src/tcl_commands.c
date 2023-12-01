@@ -321,7 +321,7 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
             int vardt;
 
             varxt = GLOBALS->facs[which]->n->varxt;
-            varxt_pnt = varxt ? varxt_fix(GLOBALS->subvar_pnt[varxt]) : NULL;
+            varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
 
             vartype = GLOBALS->facs[which]->n->vartype;
             if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
@@ -364,7 +364,7 @@ static int gtkwavetcl_getFacDtype(ClientData clientData,
             int vardt;
 
             varxt = GLOBALS->facs[which]->n->varxt;
-            varxt_pnt = varxt ? varxt_fix(GLOBALS->subvar_pnt[varxt]) : NULL;
+            varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
 
             vardt = GLOBALS->facs[which]->n->vardt;
             if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
