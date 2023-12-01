@@ -834,17 +834,6 @@ struct Global
     int vlist_compression_depth; /* from vlist.c 634 */
 
     /*
-     * vzt.c
-     */
-    struct vzt_rd_trace *vzt_vzt_c_1; /* from vzt.c 635 */
-    GwTime first_cycle_vzt_c_3; /* from vzt.c 636 */
-    GwTime last_cycle_vzt_c_3; /* from vzt.c 637 */
-    GwTime total_cycles_vzt_c_3; /* from vzt.c 638 */
-    struct lx2_entry *vzt_table_vzt_c_1; /* from vzt.c 639 */
-    GwFac *mvlfacs_vzt_c_3; /* from vzt.c 640 */
-    int busycnt_vzt_c_2; /* from vzt.c 641 */
-
-    /*
      * wavewindow.c
      */
     char highlight_wavewindow; /* from wavewindow.c */

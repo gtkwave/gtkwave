@@ -854,17 +854,6 @@ static const struct Global globals_base_values = {
     4, /* vlist_compression_depth 583 */
 
     /*
-     * vzt.c
-     */
-    NULL, /* vzt_vzt_c_1 584 */
-    0, /* first_cycle_vzt_c_3 585 */
-    0, /* last_cycle */
-    0, /* total_cycles */
-    NULL, /* vzt_table_vzt_c_1 586 */
-    NULL, /* mvlfacs_vzt_c_3 587 */
-    0, /* busycnt_vzt_c_2 588 */
-
-    /*
      * wavewindow.c
      */
     0, /* highlight_wavewindow */
