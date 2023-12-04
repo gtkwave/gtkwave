@@ -728,45 +728,6 @@ static const struct Global globals_base_values = {
     NULL, /* he_fini */
 
     /*
-     * vcd_partial.c
-     */
-    0, /* vcdbyteno_vcd_partial_c_2 516 */
-    0, /* error_count_vcd_partial_c_2 517 */
-    0, /* header_over_vcd_partial_c_2 518 */
-    -1, /* start_time_vcd_partial_c_2 520 */
-    -1, /* end_time_vcd_partial_c_2 521 */
-    -1, /* current_time_vcd_partial_c_2 522 */
-    0, /* num_glitches_vcd_partial_c_3 523 */
-    0, /* num_glitch_regions_vcd_partial_c_3 524 */
-    NULL, /* pv_vcd_partial_c_2 525 */
-    NULL, /* rootv */
-    NULL, /* vcdbuf_vcd_partial_c_2 526 */
-    NULL, /* vst */
-    NULL, /* vend */
-    NULL, /* consume_ptr_vcd_partial_c_1 527 */
-    NULL, /* buf_vcd_partial_c_2 528 */
-    100000, /* consume_countdown_vcd_partial_c_1 529 */
-    1024, /* T_MAX_STR_vcd_partial_c_2 531 */
-    NULL, /* yytext_vcd_partial_c_2 532 */
-    0, /* yylen_vcd_partial_c_2 533 */
-    0, /* yylen_cache */
-    NULL, /* vcdsymroot_vcd_partial_c_2 534 */
-    NULL, /* vcdsymcurr */
-    NULL, /* sorted_vcd_partial_c_2 535 */
-    NULL, /* indexed_vcd_partial_c_2 536 */
-    0, /* numsyms_vcd_partial_c_2 538 */
-    ~0, /* vcd_minid_vcd_partial_c_2 540 */
-    0, /* vcd_maxid_vcd_partial_c_2 541 */
-    0, /* err_vcd_partial_c_2 542 */
-    NULL, /* varsplit_vcd_partial_c_2 543 */
-    NULL, /* vsplitcurr */
-    0, /* var_prevch_vcd_partial_c_2 544 */
-    0, /* timeset_vcd_partial_c_1 547 */
-    0, /* vcd_hash_max_partial */
-    0, /* vcd_hash_kill_partial */
-    NULL, /* sym_chain_partial */
-
-    /*
      * vcd_recoder.c
      */
     NULL, /* vcd_file */
