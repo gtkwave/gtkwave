@@ -241,26 +241,24 @@ void set_vcd_vartype(struct vcdsymbol *v, GwNode *n)
     n->vartype = nvt;
 }
 
-void vcd_sortfacs(void)
+void vcd_sortfacs(GSList *sym_chain)
 {
     int i;
 
     GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
-    GLOBALS->curnode = GLOBALS->firstnode;
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        char *subst;
-        int len;
-        struct symchain *sc;
 
-        GLOBALS->facs[i] = GLOBALS->curnode->symbol;
-        subst = GLOBALS->facs[i]->name;
-        if ((len = strlen(subst)) > GLOBALS->longestname)
+    GSList *iter = sym_chain;
+    for (i = 0; i < GLOBALS->numfacs; i++) {
+        GLOBALS->facs[i] = iter->data;
+
+        char *subst = GLOBALS->facs[i]->name;
+        int len = strlen(subst);
+        if (len > GLOBALS->longestname) {
             GLOBALS->longestname = len;
-        sc = GLOBALS->curnode;
-        GLOBALS->curnode = GLOBALS->curnode->next;
-        free_2(sc);
+        }
+
+        iter = g_slist_delete_link(iter, iter);
     }
-    GLOBALS->firstnode = GLOBALS->curnode = NULL;
 
     /* quicksort(facs,0,numfacs-1); */ /* quicksort deprecated because it degenerates on sorted
                                           traces..badly.  very badly. */

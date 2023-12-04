@@ -93,6 +93,8 @@ typedef struct
     int var_prevch;
 
     gboolean already_backtracked;
+
+    GSList *sym_chain;
 } VcdLoader;
 
 /**/
@@ -2118,7 +2120,7 @@ static void vcd_build_symbols(VcdLoader *self)
 {
     int j;
     int max_slen = -1;
-    struct sym_chain *sym_chain = NULL, *sym_curr = NULL;
+    GSList *sym_chain = NULL;
     int duphier = 0;
     char hashdirty;
     struct vcdsymbol *v, *vprime;
@@ -2218,14 +2220,7 @@ static void vcd_build_symbols(VcdLoader *self)
 #ifndef _WAVE_HAVE_JUDY
                         s->n->nname = s->name;
 #endif
-                        if (!GLOBALS->firstnode) {
-                            GLOBALS->firstnode = GLOBALS->curnode =
-                                calloc_2(1, sizeof(struct symchain));
-                        } else {
-                            GLOBALS->curnode->next = calloc_2(1, sizeof(struct symchain));
-                            GLOBALS->curnode = GLOBALS->curnode->next;
-                        }
-                        GLOBALS->curnode->symbol = s;
+                        self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
                         GLOBALS->numfacs++;
                         DEBUG(fprintf(stderr, "Added: %s\n", str));
@@ -2238,14 +2233,7 @@ static void vcd_build_symbols(VcdLoader *self)
                     s->vec_chain = (struct symbol *)v->chain; /* these will get patched over */
                     v->sym_chain = s;
 
-                    if (!sym_chain) {
-                        sym_curr = (struct sym_chain *)calloc_2(1, sizeof(struct sym_chain));
-                        sym_chain = sym_curr;
-                    } else {
-                        sym_curr->next = (struct sym_chain *)calloc_2(1, sizeof(struct sym_chain));
-                        sym_curr = sym_curr->next;
-                    }
-                    sym_curr->val = s;
+                    sym_chain = g_slist_prepend(sym_chain, s);
                 }
             } else /* atomic vector */
             {
@@ -2325,14 +2313,7 @@ static void vcd_build_symbols(VcdLoader *self)
 #ifndef _WAVE_HAVE_JUDY
                     s->n->nname = s->name;
 #endif
-                    if (!GLOBALS->firstnode) {
-                        GLOBALS->firstnode = GLOBALS->curnode =
-                            calloc_2(1, sizeof(struct symchain));
-                    } else {
-                        GLOBALS->curnode->next = calloc_2(1, sizeof(struct symchain));
-                        GLOBALS->curnode = GLOBALS->curnode->next;
-                    }
-                    GLOBALS->curnode->symbol = s;
+                    self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
                     GLOBALS->numfacs++;
                     DEBUG(fprintf(stderr, "Added: %s\n", str));
@@ -2360,24 +2341,22 @@ static void vcd_build_symbols(VcdLoader *self)
     }
 #endif
 
-    if (sym_chain) {
-        sym_curr = sym_chain;
-        while (sym_curr) {
-            sym_curr->val->vec_root = ((struct vcdsymbol *)sym_curr->val->vec_root)->sym_chain;
+    if (sym_chain != NULL) {
+        for (GSList *iter = sym_chain; iter != NULL; iter = iter->next) {
+            struct symbol *s = iter->data;
 
-            if ((struct vcdsymbol *)sym_curr->val->vec_chain)
-                sym_curr->val->vec_chain =
-                    ((struct vcdsymbol *)sym_curr->val->vec_chain)->sym_chain;
+            s->vec_root = ((struct vcdsymbol *)s->vec_root)->sym_chain;
+            if ((struct vcdsymbol *)s->vec_chain != NULL) {
+                s->vec_chain = ((struct vcdsymbol *)s->vec_chain)->sym_chain;
+            }
 
             DEBUG(printf("Link: ('%s') '%s' -> '%s'\n",
                          sym_curr->val->vec_root->name,
                          sym_curr->val->name,
                          sym_curr->val->vec_chain ? sym_curr->val->vec_chain->name : "(END)"));
-
-            sym_chain = sym_curr;
-            sym_curr = sym_curr->next;
-            free_2(sym_chain);
         }
+
+        g_slist_free(sym_chain);
     }
 }
 
@@ -2568,7 +2547,7 @@ GwTime vcd_recoder_main(char *fname)
     }
 
     vcd_build_symbols(self);
-    vcd_sortfacs();
+    vcd_sortfacs(self->sym_chain);
     vcd_cleanup(self);
 
     getch_free(self); /* free membuff for vcd getch buffer */

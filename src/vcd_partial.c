@@ -2071,7 +2071,7 @@ static void vcd_build_symbols(void)
 {
     int j;
     int max_slen = -1;
-    struct sym_chain *sym_chain = NULL, *sym_curr = NULL;
+    GSList *sym_chain = NULL;
     int duphier = 0;
     char hashdirty;
     struct vcdsymbol *v, *vprime;
@@ -2169,14 +2169,7 @@ static void vcd_build_symbols(void)
 #ifndef _WAVE_HAVE_JUDY
                         s->n->nname = s->name;
 #endif
-                        if (!GLOBALS->firstnode) {
-                            GLOBALS->firstnode = GLOBALS->curnode =
-                                calloc_2(1, sizeof(struct symchain));
-                        } else {
-                            GLOBALS->curnode->next = calloc_2(1, sizeof(struct symchain));
-                            GLOBALS->curnode = GLOBALS->curnode->next;
-                        }
-                        GLOBALS->curnode->symbol = s;
+                        GLOBALS->sym_chain_partial = g_slist_prepend(GLOBALS->sym_chain_partial, s);
 
                         GLOBALS->numfacs++;
                         DEBUG(fprintf(stderr, "Added: %s\n", str));
@@ -2189,14 +2182,7 @@ static void vcd_build_symbols(void)
                     s->vec_chain = (struct symbol *)v->chain; /* these will get patched over */
                     v->sym_chain = s;
 
-                    if (!sym_chain) {
-                        sym_curr = (struct sym_chain *)calloc_2(1, sizeof(struct sym_chain));
-                        sym_chain = sym_curr;
-                    } else {
-                        sym_curr->next = (struct sym_chain *)calloc_2(1, sizeof(struct sym_chain));
-                        sym_curr = sym_curr->next;
-                    }
-                    sym_curr->val = s;
+                    sym_chain = g_slist_prepend(sym_chain, s);
                 }
             } else /* atomic vector */
             {
@@ -2275,14 +2261,7 @@ static void vcd_build_symbols(void)
 #ifndef _WAVE_HAVE_JUDY
                     s->n->nname = s->name;
 #endif
-                    if (!GLOBALS->firstnode) {
-                        GLOBALS->firstnode = GLOBALS->curnode =
-                            calloc_2(1, sizeof(struct symchain));
-                    } else {
-                        GLOBALS->curnode->next = calloc_2(1, sizeof(struct symchain));
-                        GLOBALS->curnode = GLOBALS->curnode->next;
-                    }
-                    GLOBALS->curnode->symbol = s;
+                    GLOBALS->sym_chain_partial = g_slist_prepend(GLOBALS->sym_chain_partial, s);
 
                     GLOBALS->numfacs++;
                     DEBUG(fprintf(stderr, "Added: %s\n", str));
@@ -2310,24 +2289,22 @@ static void vcd_build_symbols(void)
     }
 #endif
 
-    if (sym_chain) {
-        sym_curr = sym_chain;
-        while (sym_curr) {
-            sym_curr->val->vec_root = ((struct vcdsymbol *)sym_curr->val->vec_root)->sym_chain;
+    if (sym_chain != NULL) {
+        for (GSList *iter = sym_chain; iter != NULL; iter = iter->next) {
+            struct symbol *s = iter->data;
 
-            if ((struct vcdsymbol *)sym_curr->val->vec_chain)
-                sym_curr->val->vec_chain =
-                    ((struct vcdsymbol *)sym_curr->val->vec_chain)->sym_chain;
+            s->vec_root = ((struct vcdsymbol *)s->vec_root)->sym_chain;
+            if ((struct vcdsymbol *)s->vec_chain != NULL) {
+                s->vec_chain = ((struct vcdsymbol *)s->vec_chain)->sym_chain;
+            }
 
             DEBUG(printf("Link: ('%s') '%s' -> '%s'\n",
                          sym_curr->val->vec_root->name,
                          sym_curr->val->name,
                          sym_curr->val->vec_chain ? sym_curr->val->vec_chain->name : "(END)"));
-
-            sym_chain = sym_curr;
-            sym_curr = sym_curr->next;
-            free_2(sym_chain);
         }
+
+        g_slist_free(sym_chain);
     }
 }
 
@@ -2441,7 +2418,7 @@ GwTime vcd_partial_main(char *fname)
 
     add_tail_histents();
     vcd_build_symbols();
-    vcd_sortfacs();
+    vcd_sortfacs(GLOBALS->sym_chain_partial);
     vcd_cleanup();
 
     GLOBALS->min_time = GLOBALS->start_time_vcd_partial_c_2 * GLOBALS->time_scale;

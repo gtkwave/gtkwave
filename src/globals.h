@@ -561,8 +561,6 @@ struct Global
     int numfacs; /* from symbol.c 456 */
     int regions; /* from symbol.c 457 */
     int longestname; /* from symbol.c 458 */
-    struct symchain *firstnode; /* from symbol.c 459 */
-    struct symchain *curnode; /* from symbol.c 460 */
     int hashcache; /* from symbol.c 461 */
 
     /*
@@ -746,6 +744,7 @@ struct Global
     int timeset_vcd_partial_c_1; /* from vcd_partial.c 592 */
     unsigned int vcd_hash_max_partial; 
     int vcd_hash_kill_partial;
+    GSList *sym_chain_partial;
 
     /*
      * vcd_recoder.c
