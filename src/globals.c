@@ -581,8 +581,6 @@ static const struct Global globals_base_values = {
     0, /* numfacs 427 */
     0, /* regions 428 */
     0, /* longestname 429 */
-    NULL, /* firstnode 430 */
-    NULL, /* curnode 431 */
     0, /* hashcache 432 */
 
     /*
@@ -766,6 +764,7 @@ static const struct Global globals_base_values = {
     0, /* timeset_vcd_partial_c_1 547 */
     0, /* vcd_hash_max_partial */
     0, /* vcd_hash_kill_partial */
+    NULL, /* sym_chain_partial */
 
     /*
      * vcd_recoder.c

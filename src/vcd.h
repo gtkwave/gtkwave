@@ -103,12 +103,6 @@ GwTime vcd_partial_main(char *fname);
 void vcd_partial_mark_and_sweep(int mandclear);
 void kick_partial_vcd(void);
 
-struct sym_chain
-{
-    struct sym_chain *next;
-    struct symbol *val;
-};
-
 struct slist
 {
     struct slist *next;
@@ -152,7 +146,7 @@ void append_vcd_slisthier(const char *str);
 GwHistEnt *histent_calloc(void);
 void strcpy_vcdalt(char *too, char *from, char delim);
 int strcpy_delimfix(char *too, char *from);
-void vcd_sortfacs(void);
+void vcd_sortfacs(GSList *sym_chain);
 void set_vcd_vartype(struct vcdsymbol *v, GwNode *n);
 
 void vcd_import_masked(VcdFile *self);

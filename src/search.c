@@ -211,6 +211,12 @@ static void insert_callback(GtkWidget *widget, GtkWidget *nothing)
     search_insert_callback(widget, 0); /* native to search */
 }
 
+struct symchain /* for restoring state of ->selected in signal regex search */
+{
+    struct symchain *next;
+    struct symbol *symbol;
+};
+
 void search_insert_callback(GtkWidget *widget, char is_prepend)
 {
     Traces tcache;

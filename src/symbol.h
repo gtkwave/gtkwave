@@ -44,12 +44,6 @@ struct symbol
 #endif
 };
 
-struct symchain /* for restoring state of ->selected in signal regex search */
-{
-    struct symchain *next;
-    struct symbol *symbol;
-};
-
 struct string_chain_t
 {
     struct string_chain_t *next;

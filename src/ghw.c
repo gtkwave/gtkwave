@@ -38,6 +38,8 @@ typedef struct
     int fac_name_len;
     int fac_name_max;
     gboolean warned;
+
+    GSList *sym_chain;
 } GhwLoader;
 
 /************************ splay ************************/
@@ -557,9 +559,6 @@ static GwTree *build_hierarchy_type(GhwLoader *self,
                                     const char *pfx,
                                     unsigned int **sig)
 {
-    GwTree *res;
-    struct symbol *s;
-
     switch (t->kind) {
         case ghdl_rtik_subtype_scalar:
             return build_hierarchy_type(self, t->ss.base, pfx, sig);
@@ -570,32 +569,25 @@ static GwTree *build_hierarchy_type(GhwLoader *self,
         case ghdl_rtik_type_i32:
         case ghdl_rtik_type_i64:
         case ghdl_rtik_type_p32:
-        case ghdl_rtik_type_p64:
-            s = calloc_2(1, sizeof(struct symbol));
-
-            if (!GLOBALS->firstnode) {
-                GLOBALS->firstnode = GLOBALS->curnode = calloc_2(1, sizeof(struct symchain));
-            } else {
-                GLOBALS->curnode->next = calloc_2(1, sizeof(struct symchain));
-                GLOBALS->curnode = GLOBALS->curnode->next;
-            }
-            GLOBALS->curnode->symbol = s;
+        case ghdl_rtik_type_p64: {
+            struct symbol *s = calloc_2(1, sizeof(struct symbol));
+            self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
             self->nbr_sig_ref++;
-            res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
+            GwTree *res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
             res->t_which = *(*sig)++;
 
             s->n = self->nxp[res->t_which];
             return res;
+        }
 
         case ghdl_rtik_subtype_array:
         case ghdl_rtik_subtype_array_ptr: {
-            GwTree *r;
-            res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
+            GwTree *res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
             res->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-            r = res;
+            GwTree *r = res;
             build_hierarchy_array(self, t, 0, "", &res, sig);
             r->child = r->next;
             r->next = NULL;
@@ -772,16 +764,13 @@ void facs_debug(void)
 
 static void create_facs(GhwLoader *self)
 {
-    unsigned int i;
-    struct symchain *sc = GLOBALS->firstnode;
-
     GLOBALS->numfacs = self->nbr_sig_ref;
     GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
 
-    i = 0;
-    while (sc) {
-        GLOBALS->facs[i++] = sc->symbol;
-        sc = sc->next;
+    guint i = 0;
+    for (GSList *iter = self->sym_chain; iter != NULL; iter = iter->next, i++) {
+        struct symbol *symbol = iter->data;
+        GLOBALS->facs[i] = symbol;
     }
 
     struct ghw_handler *h = self->h;
@@ -858,8 +847,7 @@ static void set_fac_name_1(GhwLoader *self, GwTree *t)
         }
 
         if (t->t_which >= 0) {
-            struct symchain *sc = GLOBALS->firstnode;
-            struct symbol *s = sc->symbol;
+            struct symbol *s = self->sym_chain->data;
 
             s->name = strdup_2(self->fac_name);
             s->n = self->nxp[t->t_which];
@@ -868,9 +856,7 @@ static void set_fac_name_1(GhwLoader *self, GwTree *t)
 
             t->t_which = self->sym_which++; /* patch in gtkwave "which" as node is correct */
 
-            GLOBALS->curnode = GLOBALS->firstnode->next;
-            free_2(GLOBALS->firstnode);
-            GLOBALS->firstnode = GLOBALS->curnode;
+            self->sym_chain = g_slist_delete_link(self->sym_chain, self->sym_chain);
         }
 
         if (t->child != NULL) {
