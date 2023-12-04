@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Removed VCD fastload and support for vlist spillfiles.
 - Removed rc variables:
     - `alt_wheel_mode`
+    - `append_vcd_hier`
     - `atomic_vectors`
     - `disable_ae2_alias`
     - `force_toolbars`

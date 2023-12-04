@@ -80,13 +80,6 @@ int f_analog_redraw_skip_count(const char *str)
     return (0);
 }
 
-int f_append_vcd_hier(const char *str)
-{
-    DEBUG(printf("f_append_vcd_hier(\"%s\")\n", str));
-    append_vcd_slisthier(str);
-    return (0);
-}
-
 int f_autoname_bundles(const char *str)
 {
     DEBUG(printf("f_autoname_bundles(\"%s\")\n", str));
@@ -819,7 +812,6 @@ static struct rc_entry rcitems[] = {
     {"accel", f_accel},
     {"alt_hier_delimeter", f_alt_hier_delimeter},
     {"analog_redraw_skip_count", f_analog_redraw_skip_count},
-    {"append_vcd_hier", f_append_vcd_hier},
     {"autocoalesce", f_autocoalesce},
     {"autocoalesce_reversal", f_autocoalesce_reversal},
     {"autoname_bundles", f_autoname_bundles},
