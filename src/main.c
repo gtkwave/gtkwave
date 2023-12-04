@@ -278,8 +278,6 @@ static void print_help(char *nam)
 
 #define STEMS_GETOPT "  -t, --stems=FILE           specify stems file for source code annotation\n"
 #define DUAL_GETOPT "  -D, --dualid=WHICH         specify multisession identifier\n"
-#define INTR_GETOPT \
-    "  -I, --interactive          interactive VCD mode (filename is shared mem ID)\n"
 
 #ifdef WAVE_USE_XID
 #define XID_GETOPT "  -X, --xid=XID              specify XID of window for GtkPlug to connect to\n"
@@ -343,7 +341,7 @@ static void print_help(char *nam)
         "  -4, --rcvar                specify single rc variable values individually\n"
         "  -5, --sstexclude           specify sst exclusion filter filename\n"
         "  -6, --dark                 set gtk-application-prefer-dark-theme = TRUE\n"
-        "  -7, --saveonexit           prompt user to write save file at exit\n" INTR_GETOPT
+        "  -7, --saveonexit           prompt user to write save file at exit\n"
         "  -C, --comphier             use compressed hierarchy names (slower)\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
@@ -679,7 +677,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
     int c;
     char is_vcd = 0;
     char is_wish = 0;
-    char is_interactive = 0;
     char is_smartsave = 0;
     char is_giga = 0;
     char fast_exit = 0;
@@ -919,26 +916,43 @@ do_primary_inits:
         while (1) {
             int option_index = 0;
 
-            static struct option long_options[] = {
-                {"dump", 1, 0, 'f'},         {"optimize", 0, 0, 'o'},
-                {"nocli", 1, 0, 'n'},        {"save", 1, 0, 'a'},
-                {"autosavename", 0, 0, 'A'}, {"rcfile", 1, 0, 'r'},
-                {"defaultskip", 0, 0, 'd'},  {"logfile", 1, 0, 'l'},
-                {"start", 1, 0, 's'},        {"end", 1, 0, 'e'},
-                {"cpus", 1, 0, 'c'},         {"stems", 1, 0, 't'},
-                {"nowm", 0, 0, 'N'},         {"script", 1, 0, 'S'},
-                {"vcd", 0, 0, 'v'},          {"version", 0, 0, 'V'},
-                {"help", 0, 0, 'h'},         {"exit", 0, 0, 'x'},
-                {"xid", 1, 0, 'X'},          {"nomenus", 0, 0, 'M'},
-                {"dualid", 1, 0, 'D'},       {"interactive", 0, 0, 'I'},
-                {"giga", 0, 0, 'g'},         {"comphier", 0, 0, 'C'},
-                {"tcl_init", 1, 0, 'T'},     {"wish", 0, 0, 'W'},
-                {"repscript", 1, 0, 'R'},    {"repperiod", 1, 0, 'P'},
-                {"output", 1, 0, 'O'},       {"slider-zoom", 0, 0, 'z'},
-                {"rpcid", 1, 0, '1'},        {"chdir", 1, 0, '2'},
-                {"restore", 0, 0, '3'},      {"rcvar", 1, 0, '4'},
-                {"sstexclude", 1, 0, '5'},   {"dark", 0, 0, '6'},
-                {"saveonexit", 0, 0, '7'},   {0, 0, 0, 0}};
+            static struct option long_options[] = {{"dump", 1, 0, 'f'},
+                                                   {"optimize", 0, 0, 'o'},
+                                                   {"nocli", 1, 0, 'n'},
+                                                   {"save", 1, 0, 'a'},
+                                                   {"autosavename", 0, 0, 'A'},
+                                                   {"rcfile", 1, 0, 'r'},
+                                                   {"defaultskip", 0, 0, 'd'},
+                                                   {"logfile", 1, 0, 'l'},
+                                                   {"start", 1, 0, 's'},
+                                                   {"end", 1, 0, 'e'},
+                                                   {"cpus", 1, 0, 'c'},
+                                                   {"stems", 1, 0, 't'},
+                                                   {"nowm", 0, 0, 'N'},
+                                                   {"script", 1, 0, 'S'},
+                                                   {"vcd", 0, 0, 'v'},
+                                                   {"version", 0, 0, 'V'},
+                                                   {"help", 0, 0, 'h'},
+                                                   {"exit", 0, 0, 'x'},
+                                                   {"xid", 1, 0, 'X'},
+                                                   {"nomenus", 0, 0, 'M'},
+                                                   {"dualid", 1, 0, 'D'},
+                                                   {"giga", 0, 0, 'g'},
+                                                   {"comphier", 0, 0, 'C'},
+                                                   {"tcl_init", 1, 0, 'T'},
+                                                   {"wish", 0, 0, 'W'},
+                                                   {"repscript", 1, 0, 'R'},
+                                                   {"repperiod", 1, 0, 'P'},
+                                                   {"output", 1, 0, 'O'},
+                                                   {"slider-zoom", 0, 0, 'z'},
+                                                   {"rpcid", 1, 0, '1'},
+                                                   {"chdir", 1, 0, '2'},
+                                                   {"restore", 0, 0, '3'},
+                                                   {"rcvar", 1, 0, '4'},
+                                                   {"sstexclude", 1, 0, '5'},
+                                                   {"dark", 0, 0, '6'},
+                                                   {"saveonexit", 0, 0, '7'},
+                                                   {0, 0, 0, 0}};
 
             c = getopt_long(argc,
                             argv,
@@ -969,10 +983,6 @@ do_primary_inits:
                             "GTKWAVE | Tcl support not compiled into this executable, exiting.\n");
                     exit(255);
 #endif
-                    break;
-
-                case 'I':
-                    is_interactive = 1;
                     break;
 
                 case 'D': {
@@ -1491,14 +1501,8 @@ do_primary_inits:
         GLOBALS->winname = malloc_2(strlen(winstd) + 4 + 1);
         strcpy(GLOBALS->winname, winstd);
     } else {
-        if (!is_interactive) {
-            GLOBALS->winname = malloc_2(strlen(GLOBALS->loaded_file_name) + strlen(winprefix) + 1);
-            strcpy(GLOBALS->winname, winprefix);
-        } else {
-            const char *iact = "GTKWave - Interactive Shared Memory ID ";
-            GLOBALS->winname = malloc_2(strlen(GLOBALS->loaded_file_name) + strlen(iact) + 1);
-            strcpy(GLOBALS->winname, iact);
-        }
+        GLOBALS->winname = malloc_2(strlen(GLOBALS->loaded_file_name) + strlen(winprefix) + 1);
+        strcpy(GLOBALS->winname, winprefix);
     }
 
     strcat(GLOBALS->winname, GLOBALS->loaded_file_name);
@@ -1601,17 +1605,12 @@ loader_check_head:
 
 #endif
 
-        if (is_interactive) {
-            GLOBALS->loaded_file_type = DUMPLESS_FILE;
-            vcd_partial_main(GLOBALS->loaded_file_name);
+        if (strcmp(GLOBALS->loaded_file_name, "-vcd")) {
+            GLOBALS->loaded_file_type = VCD_RECODER_FILE;
         } else {
-            if (strcmp(GLOBALS->loaded_file_name, "-vcd")) {
-                GLOBALS->loaded_file_type = VCD_RECODER_FILE;
-            } else {
-                GLOBALS->loaded_file_type = DUMPLESS_FILE;
-            }
-            vcd_recoder_main(GLOBALS->loaded_file_name);
+            GLOBALS->loaded_file_type = DUMPLESS_FILE;
         }
+        vcd_recoder_main(GLOBALS->loaded_file_name);
     }
 
     /* deallocate the symbol hash table */
@@ -2335,12 +2334,8 @@ savefile_bail:
                     time_update();
                 }
 
-                if (is_interactive) {
-                    kick_partial_vcd();
-                } else {
-                    while (gtk_events_pending())
-                        gtk_main_iteration();
-                }
+                while (gtk_events_pending())
+                    gtk_main_iteration();
 
                 GLOBALS->dual_race_lock = 0;
 
@@ -2357,10 +2352,6 @@ savefile_bail:
                     "Could not attach to %08X, exiting.\n",
                     GLOBALS->dual_attach_id_main_c_1);
             exit(255);
-        }
-    } else if (is_interactive) {
-        for (;;) {
-            kick_partial_vcd();
         }
     } else {
 #if defined(HAVE_LIBTCL)

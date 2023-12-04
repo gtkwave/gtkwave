@@ -123,12 +123,6 @@ Set gtk-application-prefer-dark-theme = TRUE.
 \fB\-7\fR,\fB\-\-saveonexit\fR
 At exit, a requester is brought up to prompt user to write a save file.  Canceling the requester prevents from writing the file.
 .TP
-\fB\-I\fR,\fB\-\-interactive\fR
-Specifies that "interactive" VCD mode is to be used which allows a viewer to navigate a VCD trace while GTKWave is processing the VCD file.
-When this option is used, the filename is overloaded such that it is the hexadecimal value for the shared memory ID of a writer.
-Note that the shared memory ID can be passed straight from stdin by using the \fB\-\-vcd\fR option; see the manpage for
-\fIshmidcat\fP(1) for more details.
-.TP
 \fB\-g\fR,\fB\-\-giga\fR
 Specifies that the viewer should use gigabyte mempacking when recoding (possibly slower).  This is equivalent to setting
 the vlist_spill and vlist_prepack flags in the rc file.

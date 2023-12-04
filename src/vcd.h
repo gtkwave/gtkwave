@@ -99,10 +99,6 @@ enum VarTypes
 
 GwTime vcd_recoder_main(char *fname);
 
-GwTime vcd_partial_main(char *fname);
-void vcd_partial_mark_and_sweep(int mandclear);
-void kick_partial_vcd(void);
-
 struct slist
 {
     struct slist *next;

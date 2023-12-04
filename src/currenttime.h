@@ -60,7 +60,6 @@ void exponent_to_time_scale(signed char scale);
 #include "timeentry.h"
 #include "tree.h"
 #include "treesearch.h"
-#include "vcd_partial.h"
 #include "wavewindow.h"
 #include "zoombuttons.h"
 

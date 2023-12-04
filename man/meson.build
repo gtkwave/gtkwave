@@ -6,7 +6,6 @@ install_man(
     'lxt2miner.1',
     'lxt2vcd.1',
     'rtlbrowse.1',
-    'shmidcat.1',
     'twinwave.1',
     'vcd2fst.1',
     'vcd2lxt.1',

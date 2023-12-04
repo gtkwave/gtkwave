@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Current limitations compared to GTKWave LTS 3.3
+
+Some features have been removed in this version of GTKWave to make the codebase
+easier to refactor. These features might be restored in future versions of GTKWave,
+if there is enough interest by users. Please notify us on GitHub if you require any
+of these features.
+
+- Removed the interactive VCD mode.
+- Removed support for LXT, LXT2, VZT, and AET2 formats.
+
 ### Changed
 
 - Merged in major GUI widget refactoring.
@@ -27,7 +37,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Removed
 
 - Removed support for GTK 2.
-- Removed support for LXT, LXT2, VZT, and AET2 formats.
 - Removed "Signal Search Hierarchy" dialog.
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed legacy VCD loader.

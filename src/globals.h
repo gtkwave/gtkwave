@@ -708,45 +708,6 @@ struct Global
     GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
 
     /*
-     * vcd_partial.c
-     */
-    off_t vcdbyteno_vcd_partial_c_2; /* from vcd_partial.c 555 */
-    int error_count_vcd_partial_c_2; /* from vcd_partial.c 556 */
-    int header_over_vcd_partial_c_2; /* from vcd_partial.c 557 */
-    GwTime start_time_vcd_partial_c_2; /* from vcd_partial.c 559 */
-    GwTime end_time_vcd_partial_c_2; /* from vcd_partial.c 560 */
-    GwTime current_time_vcd_partial_c_2; /* from vcd_partial.c 561 */
-    int num_glitches_vcd_partial_c_3; /* from vcd_partial.c 562 */
-    int num_glitch_regions_vcd_partial_c_3; /* from vcd_partial.c 563 */
-    struct vcdsymbol *pv_vcd_partial_c_2; /* from vcd_partial.c 564 */
-    struct vcdsymbol *rootv_vcd_partial_c_2; /* from vcd_partial.c 565 */
-    char *vcdbuf_vcd_partial_c_2; /* from vcd_partial.c 566 */
-    char *vst_vcd_partial_c_2; /* from vcd_partial.c 567 */
-    char *vend_vcd_partial_c_2; /* from vcd_partial.c 568 */
-    char *consume_ptr_vcd_partial_c_1; /* from vcd_partial.c 569 */
-    char *buf_vcd_partial_c_2; /* from vcd_partial.c 570 */
-    int consume_countdown_vcd_partial_c_1; /* from vcd_partial.c 571 */
-    int T_MAX_STR_vcd_partial_c_2; /* from vcd_partial.c 573 */
-    char *yytext_vcd_partial_c_2; /* from vcd_partial.c 574 */
-    int yylen_vcd_partial_c_2; /* from vcd_partial.c 575 */
-    int yylen_cache_vcd_partial_c_2; /* from vcd_partial.c 576 */
-    struct vcdsymbol *vcdsymroot_vcd_partial_c_2; /* from vcd_partial.c 577 */
-    struct vcdsymbol *vcdsymcurr_vcd_partial_c_2; /* from vcd_partial.c 578 */
-    struct vcdsymbol **sorted_vcd_partial_c_2; /* from vcd_partial.c 579 */
-    struct vcdsymbol **indexed_vcd_partial_c_2; /* from vcd_partial.c 580 */
-    int numsyms_vcd_partial_c_2; /* from vcd_partial.c 582 */
-    unsigned int vcd_minid_vcd_partial_c_2; /* from vcd_partial.c 584 */
-    unsigned int vcd_maxid_vcd_partial_c_2; /* from vcd_partial.c 585 */
-    int err_vcd_partial_c_2; /* from vcd_partial.c 586 */
-    char *varsplit_vcd_partial_c_2; /* from vcd_partial.c 587 */
-    char *vsplitcurr_vcd_partial_c_2; /* from vcd_partial.c 588 */
-    int var_prevch_vcd_partial_c_2; /* from vcd_partial.c 589 */
-    int timeset_vcd_partial_c_1; /* from vcd_partial.c 592 */
-    unsigned int vcd_hash_max_partial; 
-    int vcd_hash_kill_partial;
-    GSList *sym_chain_partial;
-
-    /*
      * vcd_recoder.c
      */
     VcdFile *vcd_file;
