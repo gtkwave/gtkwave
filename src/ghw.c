@@ -40,6 +40,12 @@ typedef struct
     gboolean warned;
 
     GSList *sym_chain;
+
+    GPtrArray *facs;
+    GwTree *treeroot;
+    int longestname;
+    int regions;
+    GwTime max_time;
 } GhwLoader;
 
 /************************ splay ************************/
@@ -187,37 +193,40 @@ int strand_pnt(char *s)
     return (rc);
 }
 
-void rechain_facs(void)
+void rechain_facs(GhwLoader *self)
 {
-    int i;
     struct symbol *psr = NULL;
     struct symbol *root = NULL;
 
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        if (psr) {
-            int ev1 = GLOBALS->facs[i - 1]->n->extvals;
-            int ev2 = GLOBALS->facs[i]->n->extvals;
+    for (guint i = 0; i < self->facs->len; i++) {
+        struct symbol *fac = g_ptr_array_index(self->facs, i);
+
+        if (psr != NULL) {
+            struct symbol *prev_fac = g_ptr_array_index(self->facs, i - 1);
+
+            int ev1 = prev_fac->n->extvals;
+            int ev2 = fac->n->extvals;
 
             if (!ev1 && !ev2) {
-                char *fstr1 = GLOBALS->facs[i - 1]->name;
-                char *fstr2 = GLOBALS->facs[i]->name;
+                char *fstr1 = prev_fac->name;
+                char *fstr2 = fac->name;
                 int p1 = strand_pnt(fstr1);
                 int p2 = strand_pnt(fstr2);
 
                 if (!root) {
                     if ((p1 >= 0) && (p1 == p2)) {
                         if (!strncmp(fstr1, fstr2, p1)) {
-                            root = GLOBALS->facs[i - 1];
+                            root = prev_fac;
                             root->vec_root = root;
-                            root->vec_chain = GLOBALS->facs[i];
-                            GLOBALS->facs[i]->vec_root = root;
+                            root->vec_chain = fac;
+                            fac->vec_root = root;
                         }
                     }
                 } else {
                     if ((p1 >= 0) && (p1 == p2)) {
                         if (!strncmp(fstr1, fstr2, p1)) {
-                            psr->vec_chain = GLOBALS->facs[i];
-                            GLOBALS->facs[i]->vec_root = root;
+                            psr->vec_chain = fac;
+                            fac->vec_root = root;
                         } else {
                             root = NULL;
                         }
@@ -230,7 +239,7 @@ void rechain_facs(void)
             }
         }
 
-        psr = GLOBALS->facs[i];
+        psr = fac;
     }
 }
 
@@ -238,41 +247,42 @@ void rechain_facs(void)
  * preserve tree->t_which ordering so hierarchy children index pointers don't get corrupted
  */
 
-#if 1
-
 /* limited recursive version */
 
 static void recurse_tree_build_whichcache(GhwLoader *self, GwTree *t)
 {
-    if (t) {
-        GwTree *t2 = t;
-        int i;
-        int cnt = 1;
-        GwTree **ar;
-
-        while ((t2 = t2->next)) {
-            cnt++;
-        }
-
-        ar = malloc_2(cnt * sizeof(GwTree *));
-        t2 = t;
-        for (i = 0; i < cnt; i++) {
-            ar[i] = t2;
-            if (t2->child) {
-                recurse_tree_build_whichcache(self, t2->child);
-            }
-            t2 = t2->next;
-        }
-
-        for (i = cnt - 1; i >= 0; i--) {
-            t = ar[i];
-            if (t->t_which >= 0) {
-                self->gwt = ghw_insert(t, self->gwt, t->t_which, GLOBALS->facs[t->t_which]);
-            }
-        }
-
-        free_2(ar);
+    if (t == NULL) {
+        return;
     }
+
+    GwTree *t2 = t;
+    int i;
+    int cnt = 1;
+    GwTree **ar;
+
+    while ((t2 = t2->next)) {
+        cnt++;
+    }
+
+    ar = malloc_2(cnt * sizeof(GwTree *));
+    t2 = t;
+    for (i = 0; i < cnt; i++) {
+        ar[i] = t2;
+        if (t2->child) {
+            recurse_tree_build_whichcache(self, t2->child);
+        }
+        t2 = t2->next;
+    }
+
+    for (i = cnt - 1; i >= 0; i--) {
+        t = ar[i];
+        if (t->t_which >= 0) {
+            struct symbol *fac = g_ptr_array_index(self->facs, t->t_which);
+            self->gwt = ghw_insert(t, self->gwt, t->t_which, fac);
+        }
+    }
+
+    free_2(ar);
 }
 
 static void recurse_tree_fix_from_whichcache(GhwLoader *self, GwTree *t)
@@ -313,49 +323,6 @@ static void recurse_tree_fix_from_whichcache(GhwLoader *self, GwTree *t)
     }
 }
 
-#else
-
-/* original fully-recursive version */
-
-static void recurse_tree_build_whichcache(GwTree *t)
-{
-    if (t) {
-        if (t->child) {
-            recurse_tree_build_whichcache(t->child);
-        }
-        if (t->next) {
-            recurse_tree_build_whichcache(t->next);
-        }
-
-        if (t->t_which >= 0)
-            GLOBALS->gwt_ghw_c_1 =
-                ghw_insert(t, GLOBALS->gwt_ghw_c_1, t->t_which, GLOBALS->facs[t->t_which]);
-    }
-}
-
-static void recurse_tree_fix_from_whichcache(GwTree *t)
-{
-    if (t) {
-        if (t->child) {
-            recurse_tree_fix_from_whichcache(t->child);
-        }
-        if (t->next) {
-            recurse_tree_fix_from_whichcache(t->next);
-        }
-
-        if (t->t_which >= 0) {
-            GLOBALS->gwt_ghw_c_1 = ghw_splay(t, GLOBALS->gwt_ghw_c_1);
-            GLOBALS->gwt_corr_ghw_c_1 =
-                ghw_splay(GLOBALS->gwt_ghw_c_1->sym,
-                          GLOBALS->gwt_corr_ghw_c_1); /* all facs are in this tree so this is OK */
-
-            t->t_which = GLOBALS->gwt_corr_ghw_c_1->val_old;
-        }
-    }
-}
-
-#endif
-
 static void incinerate_whichcache_tree(ghw_Tree *t)
 {
     if (t->left)
@@ -371,27 +338,27 @@ static void incinerate_whichcache_tree(ghw_Tree *t)
  */
 static void ghw_sortfacs(GhwLoader *self)
 {
-    int i;
+    recurse_tree_build_whichcache(self, self->treeroot);
 
-    recurse_tree_build_whichcache(self, GLOBALS->treeroot);
-
-    for (i = 0; i < GLOBALS->numfacs; i++) {
+    for (guint i = 0; i < self->facs->len; i++) {
         char *subst;
         int len;
-        struct symbol *curnode = GLOBALS->facs[i];
+        struct symbol *curnode = g_ptr_array_index(self->facs, i);
 
         subst = curnode->name;
-        if ((len = strlen(subst)) > GLOBALS->longestname)
-            GLOBALS->longestname = len;
+        if ((len = strlen(subst)) > self->longestname) {
+            self->longestname = len;
+        }
     }
 
-    wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
+    wave_heapsort((struct symbol **)self->facs->pdata, self->facs->len);
 
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        self->gwt_corr = ghw_insert(GLOBALS->facs[i], self->gwt_corr, i, NULL);
+    for (guint i = 0; i < self->facs->len; i++) {
+        struct symbol *fac = g_ptr_array_index(self->facs, i);
+        self->gwt_corr = ghw_insert(fac, self->gwt_corr, i, NULL);
     }
 
-    recurse_tree_fix_from_whichcache(self, GLOBALS->treeroot);
+    recurse_tree_fix_from_whichcache(self, self->treeroot);
     if (self->gwt != NULL) {
         incinerate_whichcache_tree(self->gwt);
         self->gwt = NULL;
@@ -400,8 +367,6 @@ static void ghw_sortfacs(GhwLoader *self)
         incinerate_whichcache_tree(self->gwt_corr);
         self->gwt_corr = NULL;
     }
-
-    GLOBALS->facs_are_sorted = 1;
 }
 
 /*******************************************************************************/
@@ -742,35 +707,32 @@ static GwTree *build_hierarchy(GhwLoader *self, struct ghw_hie *hie)
     }
 }
 
-void facs_debug(void)
+void facs_debug(GhwLoader *self)
 {
-    int i;
-    GwNode *n;
-
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        GwHistEnt *h;
-
-        n = GLOBALS->facs[i]->n;
+    for (guint i = 0; i < self->facs->len; i++) {
+        struct symbol *fac = g_ptr_array_index(self->facs, i);
+        GwNode *n = fac->n;
         printf("%d: %s\n", i, n->nname);
-        if (n->extvals)
+        if (n->extvals) {
             printf("  ext: %d - %d\n", n->msi, n->lsi);
-        for (h = &n->head; h; h = h->next)
+        }
+        for (GwHistEnt *h = &n->head; h; h = h->next) {
             printf("  time:%" GW_TIME_FORMAT " flags:%02x vect:%p\n",
                    h->time,
                    h->flags,
                    h->v.h_vector);
+        }
     }
 }
 
 static void create_facs(GhwLoader *self)
 {
-    GLOBALS->numfacs = self->nbr_sig_ref;
-    GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
+    self->facs = g_ptr_array_new_full(self->nbr_sig_ref, NULL);
 
     guint i = 0;
     for (GSList *iter = self->sym_chain; iter != NULL; iter = iter->next, i++) {
         struct symbol *symbol = iter->data;
-        GLOBALS->facs[i] = symbol;
+        g_ptr_array_add(self->facs, symbol);
     }
 
     struct ghw_handler *h = self->h;
@@ -877,7 +839,7 @@ static void set_fac_name(GhwLoader *self)
     }
     self->fac_name_len = 3;
     memcpy(self->fac_name, "top", 4);
-    set_fac_name_1(self, GLOBALS->treeroot);
+    set_fac_name_1(self, self->treeroot);
 }
 
 static void add_history(GhwLoader *self, GwNode *n, int sig_num)
@@ -892,7 +854,7 @@ static void add_history(GhwLoader *self, GwNode *n, int sig_num)
     if (sig_type == NULL)
         return;
 
-    GLOBALS->regions++;
+    self->regions++;
 
     switch (sig_type->kind) {
         case ghdl_rtik_type_i32:
@@ -1078,7 +1040,7 @@ static void read_traces(GhwLoader *self)
     unsigned int i;
     enum ghw_res res;
 
-    list = malloc_2((GLOBALS->numfacs + 1) * sizeof(int));
+    list = malloc_2((self->facs->len + 1) * sizeof(int));
 
     struct ghw_handler *h = self->h;
 
@@ -1093,8 +1055,9 @@ static void read_traces(GhwLoader *self)
             case ghw_res_other:
                 break;
             case ghw_res_snapshot:
-                if (h->snap_time > GLOBALS->max_time)
-                    GLOBALS->max_time = h->snap_time;
+                if (h->snap_time > self->max_time) {
+                    self->max_time = h->snap_time;
+                }
                 /* printf ("Time is "GHWPRI64"\n", h->snap_time); */
 
                 for (i = 0; i < h->nbr_sigs; i++)
@@ -1106,11 +1069,13 @@ static void read_traces(GhwLoader *self)
 
                     /* printf ("Time is "GHWPRI64"\n", h->snap_time); */
                     if (h->snap_time < GW_TIME_CONSTANT(9223372036854775807)) {
-                        if (h->snap_time > GLOBALS->max_time)
-                            GLOBALS->max_time = h->snap_time;
+                        if (h->snap_time > self->max_time) {
+                            self->max_time = h->snap_time;
+                        }
 
-                        for (i = 0; (sig = list[i]) != 0; i++)
+                        for (i = 0; (sig = list[i]) != 0; i++) {
                             add_history(self, self->nxp[sig], sig);
+                        }
                     }
                     res = ghw_read_cycle_next(h);
                     if (res != 1)
@@ -1136,7 +1101,6 @@ static void read_traces(GhwLoader *self)
 GwTime ghw_main(char *fname)
 {
     struct ghw_handler handle;
-    int i;
     unsigned int ui;
     int rc;
 
@@ -1151,16 +1115,10 @@ GwTime ghw_main(char *fname)
         return (GW_TIME_CONSTANT(0)); /* look at return code in caller for success status... */
     }
 
-    GLOBALS->time_scale = 1;
-    GLOBALS->time_dimension = 'f';
-
     if (ghw_read_base(&handle) < 0) {
         fprintf(stderr, "Error in ghw file '%s'.\n", fname);
         return (GW_TIME_CONSTANT(0)); /* look at return code in caller for success status... */
     }
-
-    GLOBALS->min_time = 0;
-    GLOBALS->max_time = 0;
 
     GhwLoader loader = {0};
     GhwLoader *self = &loader;
@@ -1172,7 +1130,7 @@ GwTime ghw_main(char *fname)
         self->nxp[ui] = calloc_2(1, sizeof(GwNode));
     }
 
-    GLOBALS->treeroot = build_hierarchy(self, handle.hie);
+    self->treeroot = build_hierarchy(self, handle.hie);
     /* GHW does not contains a 'top' name.
        FIXME: should use basename of the file.  */
 
@@ -1185,12 +1143,14 @@ GwTime ghw_main(char *fname)
     g_clear_pointer(&self->nxp, free_2);
 
     /* fix up names on aliased nodes via cloning... */
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        if (strcmp(GLOBALS->facs[i]->name, GLOBALS->facs[i]->n->nname)) {
+    for (guint i = 0; i < self->facs->len; i++) {
+        struct symbol *fac = g_ptr_array_index(self->facs, i);
+
+        if (strcmp(fac->name, fac->n->nname) != 0) {
             GwNode *n = malloc_2(sizeof(GwNode));
-            memcpy(n, GLOBALS->facs[i]->n, sizeof(GwNode));
-            GLOBALS->facs[i]->n = n;
-            n->nname = GLOBALS->facs[i]->name;
+            memcpy(n, fac->n, sizeof(GwNode));
+            fac->n = n;
+            n->nname = fac->name;
         }
     }
 
@@ -1199,18 +1159,18 @@ GwTime ghw_main(char *fname)
         const char *base_hier = "top";
 
         GwTree *t = calloc_2(1, sizeof(GwTree) + strlen(base_hier) + 1);
-        memcpy(t, GLOBALS->treeroot, sizeof(GwTree));
+        memcpy(t, self->treeroot, sizeof(GwTree));
         strcpy(t->name,
                base_hier); /* scan-build false warning here, thinks name[1] is total length */
 #ifndef WAVE_TALLOC_POOL_SIZE
-        free_2(GLOBALS->treeroot); /* if using tree alloc pool, can't deallocate this */
+        free_2(self->treeroot); /* if using tree alloc pool, can't deallocate this */
 #endif
-        GLOBALS->treeroot = t;
+        self->treeroot = t;
     }
 
     ghw_close(&handle);
 
-    rechain_facs(); /* vectorize bitblasted nets */
+    rechain_facs(self); /* vectorize bitblasted nets */
     ghw_sortfacs(self); /* sort nets as ghw is unsorted ... also fix hier tree (it should really be
                        built *after* facs are sorted!) */
 
@@ -1219,7 +1179,17 @@ GwTime ghw_main(char *fname)
  facs_debug();
 #endif
 
+    GLOBALS->numfacs = self->facs->len;
+    GLOBALS->facs = (struct symbol **)g_ptr_array_free(self->facs, FALSE);
     GLOBALS->is_ghw = 1;
+    GLOBALS->facs_are_sorted = 1;
+    GLOBALS->min_time = 0;
+    GLOBALS->max_time = self->max_time;
+    GLOBALS->treeroot = self->treeroot;
+    GLOBALS->time_scale = 1;
+    GLOBALS->time_dimension = 'f';
+    GLOBALS->longestname = self->longestname;
+    GLOBALS->regions = self->regions;
 
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
