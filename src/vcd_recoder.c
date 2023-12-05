@@ -95,6 +95,8 @@ typedef struct
     gboolean already_backtracked;
 
     GSList *sym_chain;
+
+    GString *name_prefix;
 } VcdLoader;
 
 /**/
@@ -596,6 +598,27 @@ static unsigned int vlist_emit_finalize(VcdLoader *self)
 }
 
 /******************************************************************/
+
+static void update_name_prefix(VcdLoader *self)
+{
+    if (self->name_prefix == NULL) {
+        self->name_prefix = g_string_new(NULL);
+    } else {
+        g_string_truncate(self->name_prefix, 0);
+    }
+
+    if (GLOBALS->slistroot == 0) {
+        return;
+    }
+
+    for (struct slist *s = GLOBALS->slistroot; s != NULL; s = s->next) {
+        if (self->name_prefix->len > 0) {
+            g_string_append(self->name_prefix, GLOBALS->vcd_hier_delimeter);
+        }
+
+        g_string_append(self->name_prefix, s->str);
+    }
+}
 
 /*
  * single char get inlined/optimized
@@ -1381,8 +1404,8 @@ static void vcd_parse(VcdLoader *self)
                         GLOBALS->slistcurr = GLOBALS->slistroot = s;
                     }
 
-                    build_slisthier();
-                    DEBUG(fprintf(stderr, "SCOPE: %s\n", GLOBALS->slisthier));
+                    update_name_prefix(self);
+                    DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 }
                 sync_end(self, NULL);
                 break;
@@ -1407,8 +1430,8 @@ static void vcd_parse(VcdLoader *self)
                             }
                             s = s->next;
                         }
-                    build_slisthier();
-                    DEBUG(fprintf(stderr, "SCOPE: %s\n", GLOBALS->slisthier));
+                    update_name_prefix(self);
+                    DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 } else {
                     GLOBALS->mod_tree_parent = NULL;
                 }
@@ -1501,27 +1524,26 @@ static void vcd_parse(VcdLoader *self)
                         vtok = get_vartoken(self, 0);
                         if (vtok != V_STRING)
                             goto err;
-                        if (GLOBALS->slisthier_len) {
-                            v->name =
-                                (char *)malloc_2(GLOBALS->slisthier_len + 1 + self->yylen + 1);
-                            strcpy(v->name, GLOBALS->slisthier);
-                            strcpy(v->name + GLOBALS->slisthier_len, GLOBALS->vcd_hier_delimeter);
+                        if (self->name_prefix->len > 0) {
+                            v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
+                            strcpy(v->name, self->name_prefix->str);
+                            strcpy(v->name + self->name_prefix->len, GLOBALS->vcd_hier_delimeter);
                             if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name + GLOBALS->slisthier_len + 1,
+                                strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name + GLOBALS->slisthier_len + 1,
+                                if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
                                                      self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
+                                    char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
-                                    strcpy(sd, GLOBALS->slisthier);
-                                    strcpy(sd + GLOBALS->slisthier_len,
+                                    strcpy(sd, self->name_prefix->str);
+                                    strcpy(sd + self->name_prefix->len,
                                            GLOBALS->vcd_hier_delimeter);
-                                    sd[GLOBALS->slisthier_len + 1] = '\\';
-                                    strcpy(sd + GLOBALS->slisthier_len + 2,
-                                           v->name + GLOBALS->slisthier_len + 1);
+                                    sd[self->name_prefix->len + 1] = '\\';
+                                    strcpy(sd + self->name_prefix->len + 2,
+                                           v->name + self->name_prefix->len + 1);
                                     free_2(v->name);
                                     v->name = sd;
                                 }
@@ -1593,27 +1615,26 @@ static void vcd_parse(VcdLoader *self)
                         if (vtok != V_STRING)
                             goto err;
 
-                        if (GLOBALS->slisthier_len) {
-                            v->name =
-                                (char *)malloc_2(GLOBALS->slisthier_len + 1 + self->yylen + 1);
-                            strcpy(v->name, GLOBALS->slisthier);
-                            strcpy(v->name + GLOBALS->slisthier_len, GLOBALS->vcd_hier_delimeter);
+                        if (self->name_prefix->len > 0) {
+                            v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
+                            strcpy(v->name, self->name_prefix->str);
+                            strcpy(v->name + self->name_prefix->len, GLOBALS->vcd_hier_delimeter);
                             if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name + GLOBALS->slisthier_len + 1,
+                                strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name + GLOBALS->slisthier_len + 1,
+                                if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
                                                      self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
+                                    char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
-                                    strcpy(sd, GLOBALS->slisthier);
-                                    strcpy(sd + GLOBALS->slisthier_len,
+                                    strcpy(sd, self->name_prefix->str);
+                                    strcpy(sd + self->name_prefix->len,
                                            GLOBALS->vcd_hier_delimeter);
-                                    sd[GLOBALS->slisthier_len + 1] = '\\';
-                                    strcpy(sd + GLOBALS->slisthier_len + 2,
-                                           v->name + GLOBALS->slisthier_len + 1);
+                                    sd[self->name_prefix->len + 1] = '\\';
+                                    strcpy(sd + self->name_prefix->len + 2,
+                                           v->name + self->name_prefix->len + 1);
                                     free_2(v->name);
                                     v->name = sd;
                                 }
@@ -2385,10 +2406,11 @@ static void vcd_cleanup(VcdLoader *self)
     self->vcdsymroot = NULL;
     self->vcdsymcurr = NULL;
 
-    if (GLOBALS->slisthier) {
-        free_2(GLOBALS->slisthier);
-        GLOBALS->slisthier = NULL;
+    if (self->name_prefix != NULL) {
+        g_string_free(self->name_prefix, TRUE);
+        self->name_prefix = NULL;
     }
+
     s = GLOBALS->slistroot;
     while (s) {
         s2 = s->next;
@@ -2399,7 +2421,6 @@ static void vcd_cleanup(VcdLoader *self)
     }
 
     GLOBALS->slistroot = GLOBALS->slistcurr = NULL;
-    GLOBALS->slisthier_len = 0;
 
     if (self->is_compressed) {
         pclose(self->vcd_handle);
@@ -2501,7 +2522,7 @@ GwTime vcd_recoder_main(char *fname)
     sym_hash_initialize(GLOBALS);
     getch_alloc(self); /* alloc membuff for vcd getch buffer */
 
-    build_slisthier();
+    update_name_prefix(self);
 
     self->file->time_vlist = vlist_create(sizeof(GwTime));
 

@@ -722,8 +722,6 @@ static const struct Global globals_base_values = {
     0, /* escaped_names_found_vcd_c_1 494 */
     NULL, /* slistroot 495 */
     NULL, /* slistcurr */
-    NULL, /* slisthier 496 */
-    0, /* slisthier_len 497x */
     NULL, /* he_curr_vcd_c_1 506 */
     NULL, /* he_fini */
 

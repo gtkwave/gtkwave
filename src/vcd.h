@@ -136,9 +136,6 @@ struct vcdsymbol
 #pragma pack(pop)
 #endif
 
-char *build_slisthier(void);
-void append_vcd_slisthier(const char *str);
-
 GwHistEnt *histent_calloc(void);
 void strcpy_vcdalt(char *too, char *from, char delim);
 int strcpy_delimfix(char *too, char *from);
