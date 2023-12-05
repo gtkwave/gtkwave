@@ -700,8 +700,6 @@ struct Global
     FILE *vcd_save_handle; /* from vcd.c 510 */
     char vcd_hier_delimeter[2]; /* from vcd.c 522 */
     int escaped_names_found_vcd_c_1; /* from vcd.c 528 */
-    struct slist *slistroot; /* from vcd.c 529 */
-    struct slist *slistcurr; /* from vcd.c 530 */
     GwHistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
     GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
 
