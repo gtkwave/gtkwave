@@ -39,6 +39,12 @@
 #include "lx2.h"
 #include "hierpack.h"
 
+typedef struct
+{
+    gchar *name;
+    GwTree *mod_tree_parent;
+} VcdScope;
+
 struct _VcdFile
 {
     struct vlist_t *time_vlist;
@@ -96,6 +102,7 @@ typedef struct
 
     GSList *sym_chain;
 
+    GQueue *scopes;
     GString *name_prefix;
 } VcdLoader;
 
@@ -601,24 +608,46 @@ static unsigned int vlist_emit_finalize(VcdLoader *self)
 
 static void update_name_prefix(VcdLoader *self)
 {
-    if (self->name_prefix == NULL) {
-        self->name_prefix = g_string_new(NULL);
-    } else {
-        g_string_truncate(self->name_prefix, 0);
-    }
+    g_string_truncate(self->name_prefix, 0);
 
-    if (GLOBALS->slistroot == 0) {
-        return;
-    }
+    for (GList *iter = self->scopes->head; iter != NULL; iter = iter->next) {
+        VcdScope *scope = iter->data;
 
-    for (struct slist *s = GLOBALS->slistroot; s != NULL; s = s->next) {
         if (self->name_prefix->len > 0) {
             g_string_append(self->name_prefix, GLOBALS->vcd_hier_delimeter);
         }
 
-        g_string_append(self->name_prefix, s->str);
+        g_string_append(self->name_prefix, scope->name);
     }
 }
+
+static void push_scope(VcdLoader *self, const gchar *name, GwTree *tree_parent)
+{
+    VcdScope *scope = g_new0(VcdScope, 1);
+    scope->name = g_strdup(self->yytext);
+    scope->mod_tree_parent = tree_parent;
+
+    g_queue_push_tail(self->scopes, scope);
+
+    update_name_prefix(self);
+}
+
+static GwTree *pop_scope(VcdLoader *self)
+{
+    VcdScope *scope = g_queue_pop_tail(self->scopes);
+    g_assert_nonnull(scope);
+
+    GwTree *tree_parent = scope->mod_tree_parent;
+
+    g_free(scope->name);
+    g_free(scope);
+
+    update_name_prefix(self);
+
+    return tree_parent;
+}
+
+/******************************************************************/
 
 /*
  * single char get inlined/optimized
@@ -1382,12 +1411,7 @@ static void vcd_parse(VcdLoader *self)
                 }
                 T_GET;
                 if (tok != T_END && tok != T_EOF) {
-                    struct slist *s;
-                    s = (struct slist *)calloc_2(1, sizeof(struct slist));
-                    s->len = self->yylen;
-                    s->str = (char *)malloc_2(self->yylen + 1);
-                    strcpy(s->str, self->yytext);
-                    s->mod_tree_parent = GLOBALS->mod_tree_parent;
+                    push_scope(self, self->yytext, GLOBALS->mod_tree_parent);
 
                     allocate_and_decorate_module_tree_node(ttype,
                                                            self->yytext,
@@ -1397,40 +1421,13 @@ static void vcd_parse(VcdLoader *self)
                                                            0,
                                                            0);
 
-                    if (GLOBALS->slistcurr) {
-                        GLOBALS->slistcurr->next = s;
-                        GLOBALS->slistcurr = s;
-                    } else {
-                        GLOBALS->slistcurr = GLOBALS->slistroot = s;
-                    }
-
-                    update_name_prefix(self);
                     DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 }
                 sync_end(self, NULL);
                 break;
             case T_UPSCOPE:
-                if (GLOBALS->slistroot) {
-                    struct slist *s;
-
-                    GLOBALS->mod_tree_parent = GLOBALS->slistcurr->mod_tree_parent;
-                    s = GLOBALS->slistroot;
-                    if (!s->next) {
-                        free_2(s->str);
-                        free_2(s);
-                        GLOBALS->slistroot = GLOBALS->slistcurr = NULL;
-                    } else
-                        for (;;) {
-                            if (!s->next->next) {
-                                free_2(s->next->str);
-                                free_2(s->next);
-                                s->next = NULL;
-                                GLOBALS->slistcurr = s;
-                                break;
-                            }
-                            s = s->next;
-                        }
-                    update_name_prefix(self);
+                if (!g_queue_is_empty(self->scopes)) {
+                    GLOBALS->mod_tree_parent = pop_scope(self);
                     DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 } else {
                     GLOBALS->mod_tree_parent = NULL;
@@ -2385,7 +2382,6 @@ static void vcd_build_symbols(VcdLoader *self)
 
 static void vcd_cleanup(VcdLoader *self)
 {
-    struct slist *s, *s2;
     struct vcdsymbol *v, *vt;
 
     g_clear_pointer(&self->symbols_indexed, free_2);
@@ -2406,21 +2402,10 @@ static void vcd_cleanup(VcdLoader *self)
     self->vcdsymroot = NULL;
     self->vcdsymcurr = NULL;
 
-    if (self->name_prefix != NULL) {
-        g_string_free(self->name_prefix, TRUE);
-        self->name_prefix = NULL;
-    }
-
-    s = GLOBALS->slistroot;
-    while (s) {
-        s2 = s->next;
-        if (s->str)
-            free_2(s->str);
-        free_2(s);
-        s = s2;
-    }
-
-    GLOBALS->slistroot = GLOBALS->slistcurr = NULL;
+    g_queue_free_full(self->scopes, g_free);
+    g_string_free(self->name_prefix, TRUE);
+    self->scopes = NULL;
+    self->name_prefix = NULL;
 
     if (self->is_compressed) {
         pclose(self->vcd_handle);
@@ -2457,6 +2442,8 @@ GwTime vcd_recoder_main(char *fname)
     self->T_MAX_STR = 1024;
     self->yytext = malloc_2(self->T_MAX_STR + 1);
     self->vcd_minid = G_MAXUINT;
+    self->scopes = g_queue_new();
+    self->name_prefix = g_string_new(NULL);
 
     if (suffix_check(fname, ".gz") || suffix_check(fname, ".zip")) {
         char *str;

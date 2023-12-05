@@ -99,14 +99,6 @@ enum VarTypes
 
 GwTime vcd_recoder_main(char *fname);
 
-struct slist
-{
-    struct slist *next;
-    char *str;
-    GwTree *mod_tree_parent;
-    int len;
-};
-
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(push)
 #pragma pack(1)
