@@ -169,6 +169,336 @@ static int sprintf_2_sdd(char *s, char *c, int d, int d2)
 
 /******************************************************************/
 
+static void handle_scope(FstLoader *self, struct fstHierScope *scope)
+{
+    void *fst_reader = self->file->fst_reader;
+
+    self->scope_name = fstReaderPushScope(fst_reader, scope->name, GLOBALS->mod_tree_parent);
+    self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
+
+    unsigned char ttype = fst_scope_type_to_gw_tree_kind(scope->typ);
+
+    allocate_and_decorate_module_tree_node(ttype,
+                                           scope->name,
+                                           scope->component,
+                                           scope->name_length,
+                                           scope->component_length,
+                                           self->next_var_stem,
+                                           self->next_var_istem);
+    self->next_var_stem = 0;
+    self->next_var_istem = 0;
+}
+
+static void handle_upscope(FstLoader *self)
+{
+    void *fst_reader = self->file->fst_reader;
+
+    GLOBALS->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(fst_reader);
+    self->scope_name = fstReaderPopScope(fst_reader);
+    self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
+}
+
+static void handle_var(FstLoader *self,
+                       struct fstHierVar *var,
+                       gint *msb,
+                       gint *lsb,
+                       gchar **nam,
+                       gint *namlen,
+                       guint *nnam_max)
+{
+    char *pnt;
+    char *lb_last = NULL;
+    char *col_last = NULL;
+    char *rb_last = NULL;
+
+    if (var->name_length > (*nnam_max)) {
+        free_2(*nam);
+        *nam = malloc_2(((*nnam_max) = var->name_length) + 1);
+    }
+
+    char *s = *nam;
+    const char *pnts = var->name;
+    char *pntd = s;
+    while (*pnts) {
+        if (*pnts != ' ') {
+            if (*pnts == '[') {
+                lb_last = pntd;
+                col_last = NULL;
+                rb_last = NULL;
+            } else if (*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL) {
+                col_last = pntd;
+            } else if (*pnts == ']' && lb_last != NULL && rb_last == NULL) {
+                rb_last = pntd;
+            } else if (lb_last != NULL && rb_last == NULL &&
+                       (g_ascii_isdigit(*pnts) || (*pnts == '-'))) {
+            } else {
+                lb_last = NULL;
+                col_last = NULL;
+                rb_last = NULL;
+            }
+
+            *(pntd++) = *pnts;
+        }
+        pnts++;
+    }
+    *pntd = 0;
+    *namlen = pntd - s;
+
+    if (!rb_last) {
+        col_last = NULL;
+        lb_last = NULL;
+    }
+
+    if (!lb_last) {
+        *msb = *lsb = -1;
+    } else if ((var->length > 1) && !col_last &&
+               lb_last) /* add for NC arrays that don't add final explicit bitrange like VCS does */
+    {
+        lb_last = NULL;
+        *msb = var->length - 1;
+        *lsb = 0;
+    } else {
+        int sgna = 1, sgnb = 1;
+        pnt = lb_last + 1;
+        int acc = 0;
+        while (g_ascii_isdigit(*pnt) || (*pnt == '-')) {
+            if (*pnt != '-') {
+                acc *= 10;
+                acc += (*pnt - '0');
+            } else {
+                sgna = -1;
+            }
+            pnt++;
+        }
+
+        *msb = acc * sgna;
+        if (!col_last) {
+            *lsb = acc;
+        } else {
+            pnt = col_last + 1;
+            acc = 0;
+            while (g_ascii_isdigit(*pnt) || (*pnt == '-')) {
+                if (*pnt != '-') {
+                    acc *= 10;
+                    acc += (*pnt - '0');
+                } else {
+                    sgnb = -1;
+                }
+                pnt++;
+            }
+            *lsb = acc * sgnb;
+        }
+    }
+
+    if (lb_last) {
+        *lb_last = 0;
+        if ((lb_last - s) < (*namlen)) {
+            *namlen = lb_last - s;
+        }
+    }
+    *nam = s;
+}
+
+static void handle_supvar(FstLoader *self,
+                          struct fstHierAttr *attr,
+                          guint8 *sdt,
+                          guint8 *svt,
+                          guint *sxt)
+{
+    if (attr->name != NULL) {
+        JRB subvar_jrb_node;
+        char *attr_pnt;
+
+        if (fstReaderGetFileType(self->file->fst_reader) == FST_FT_VHDL) {
+            char *lc_p = attr_pnt = strdup_2(attr->name);
+
+            while (*lc_p) {
+                *lc_p = tolower(*lc_p); /* convert attrib name to lowercase for VHDL */
+                lc_p++;
+            }
+        } else {
+            attr_pnt = NULL;
+        }
+
+        /* sxt points to actual type name specified in FST file */
+        subvar_jrb_node = jrb_find_str(self->file->subvar_jrb, attr_pnt ? attr_pnt : attr->name);
+        if (subvar_jrb_node) {
+            *sxt = subvar_jrb_node->val.ui;
+        } else {
+            Jval jv;
+
+            if (self->file->subvar_jrb_count != WAVE_VARXT_MAX_ID) {
+                *sxt = jv.ui = ++self->file->subvar_jrb_count;
+                /* subvar_jrb_node = */ jrb_insert_str(self->file->subvar_jrb,
+                                                       strdup_2(attr_pnt ? attr_pnt : attr->name),
+                                                       jv);
+            } else {
+                sxt = 0;
+                if (!self->file->subvar_jrb_count_locked) {
+                    fprintf(stderr,
+                            FST_RDLOAD "Max number (%d) of type attributes reached, "
+                                       "please increase WAVE_VARXT_MAX_ID.\n",
+                            WAVE_VARXT_MAX_ID);
+                    self->file->subvar_jrb_count_locked = 1;
+                }
+            }
+        }
+
+        if (attr_pnt) {
+            free_2(attr_pnt);
+        }
+    }
+
+    *svt = attr->arg >> FST_SDT_SVT_SHIFT_COUNT;
+    *sdt = attr->arg & (FST_SDT_ABS_MAX - 1);
+
+    GLOBALS->supplemental_datatypes_encountered = 1;
+    if (*svt != FST_SVT_NONE && *svt != FST_SVT_VHDL_SIGNAL) {
+        GLOBALS->supplemental_vartypes_encountered = 1;
+    }
+}
+
+static void handle_sourceistem(FstLoader *self, struct fstHierAttr *attr)
+{
+    uint32_t istem_path_number = (uint32_t)attr->arg_from_name;
+    uint32_t istem_line_number = (uint32_t)attr->arg;
+
+    self->next_var_istem = gw_stems_add_istem(GLOBALS->stems, istem_path_number, istem_line_number);
+}
+
+static void handle_sourcestem(FstLoader *self, struct fstHierAttr *attr)
+{
+    uint32_t stem_path_number = (uint32_t)attr->arg_from_name;
+    uint32_t stem_line_number = (uint32_t)attr->arg;
+
+    self->next_var_stem = gw_stems_add_stem(GLOBALS->stems, stem_path_number, stem_line_number);
+}
+
+static void handle_pathname(FstLoader *self, struct fstHierAttr *attr)
+{
+    const gchar *path = attr->name;
+    guint64 index = attr->arg;
+
+    // Check that path index has the expected value.
+    // TODO: add warnings
+    if (path != NULL && index == gw_stems_get_next_path_index(GLOBALS->stems)) {
+        gw_stems_add_path(GLOBALS->stems, path);
+    }
+}
+
+static void handle_valuelist(FstLoader *self, struct fstHierAttr *attr)
+{
+    if (attr->name == NULL) {
+        return;
+    }
+
+    /* format is concatenations of [m b xs xe valstring] */
+    if (self->synclock_str) {
+        free_2(self->synclock_str);
+    }
+    self->synclock_str = strdup_2(attr->name);
+}
+
+static void handle_enumtable(FstLoader *self, struct fstHierAttr *attr)
+{
+    if (attr->name == NULL) {
+        return;
+    }
+    /* consumed by next enum variable definition */
+    self->queued_xl_enum_filter = attr->arg;
+
+    if (attr->name_length == 0) {
+        return;
+    }
+
+    /* currently fe->name is unused */
+    struct fstETab *fe = fstUtilityExtractEnumTableFromString(attr->name);
+    if (fe == NULL) {
+        return;
+    }
+
+    uint32_t ie;
+#ifdef _WAVE_HAVE_JUDY
+    Pvoid_t e = (Pvoid_t)NULL;
+    for (ie = 0; ie < fe->elem_count; ie++) {
+        PPvoid_t pv = JudyHSIns(&e, fe->val_arr[ie], strlen(fe->val_arr[ie]), NULL);
+        if (*pv) {
+            free_2(*pv);
+        }
+        *pv = (void *)strdup_2(fe->literal_arr[ie]);
+    }
+#else
+    struct xl_tree_node *e = NULL;
+
+    for (ie = 0; ie < fe->elem_count; ie++) {
+        e = xl_insert(fe->val_arr[ie], e, fe->literal_arr[ie]);
+    }
+#endif
+
+    if (GLOBALS->xl_enum_filter) {
+        GLOBALS->num_xl_enum_filter++;
+        GLOBALS->xl_enum_filter =
+            realloc_2(GLOBALS->xl_enum_filter,
+                      GLOBALS->num_xl_enum_filter * sizeof(struct xl_tree_node *));
+    } else {
+        GLOBALS->num_xl_enum_filter++;
+        GLOBALS->xl_enum_filter = malloc_2(sizeof(struct xl_tree_node *));
+    }
+
+    GLOBALS->xl_enum_filter[GLOBALS->num_xl_enum_filter - 1] = e;
+
+    if ((unsigned int)GLOBALS->num_xl_enum_filter != attr->arg) {
+        // TODO: convert into error/warning
+        fprintf(stderr,
+                FST_RDLOAD "Internal error, nonsequential enum tables "
+                           "definition encountered, exiting.\n");
+        exit(255);
+    }
+
+    fstUtilityFreeEnumTable(fe);
+}
+
+static void handle_attr(FstLoader *self,
+                        struct fstHierAttr *attr,
+                        guint8 *sdt,
+                        guint8 *svt,
+                        guint *sxt)
+{
+    if (attr->typ != FST_AT_MISC) {
+        return;
+    }
+
+    switch (attr->subtype) {
+        case FST_MT_SUPVAR:
+            handle_supvar(self, attr, sdt, svt, sxt);
+            break;
+
+        case FST_MT_SOURCEISTEM:
+            handle_sourceistem(self, attr);
+            break;
+
+        case FST_MT_SOURCESTEM:
+            handle_sourcestem(self, attr);
+            break;
+
+        case FST_MT_PATHNAME:
+            handle_pathname(self, attr);
+            break;
+
+        case FST_MT_VALUELIST:
+            handle_valuelist(self, attr);
+            break;
+
+        case FST_MT_ENUMTABLE:
+            handle_enumtable(self, attr);
+            break;
+
+        default:
+            // ignore
+            break;
+    }
+}
+
 static struct fstHier *extractNextVar(FstLoader *self,
                                       int *msb,
                                       int *lsb,
@@ -177,289 +507,34 @@ static struct fstHier *extractNextVar(FstLoader *self,
                                       unsigned int *nnam_max)
 {
     struct fstHier *h;
-    const char *pnts;
-    char *pnt, *pntd, *lb_last = NULL, *col_last = NULL, *rb_last = NULL;
-    int acc;
-    char *s;
-    unsigned char ttype;
-    int sdt = FST_SDT_NONE;
-    int svt = FST_SVT_NONE;
-    long sxt = 0;
+    guint8 sdt = FST_SDT_NONE;
+    guint8 svt = FST_SVT_NONE;
+    guint sxt = 0;
 
     void *fst_reader = self->file->fst_reader;
 
     while ((h = fstReaderIterateHier(fst_reader))) {
         switch (h->htyp) {
             case FST_HT_SCOPE:
-                self->scope_name =
-                    fstReaderPushScope(fst_reader, h->u.scope.name, GLOBALS->mod_tree_parent);
-                self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
-
-                ttype = fst_scope_type_to_gw_tree_kind(h->u.scope.typ);
-
-                allocate_and_decorate_module_tree_node(ttype,
-                                                       h->u.scope.name,
-                                                       h->u.scope.component,
-                                                       h->u.scope.name_length,
-                                                       h->u.scope.component_length,
-                                                       self->next_var_stem,
-                                                       self->next_var_istem);
-                self->next_var_stem = 0;
-                self->next_var_istem = 0;
+                handle_scope(self, &h->u.scope);
                 break;
 
             case FST_HT_UPSCOPE:
-                GLOBALS->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(fst_reader);
-                self->scope_name = fstReaderPopScope(fst_reader);
-                self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
+                handle_upscope(self);
                 break;
 
             case FST_HT_VAR:
-                /* GLOBALS->fst_scope_name = fstReaderGetCurrentFlatScope(xc); */
-                /* GLOBALS->fst_scope_name_len = fstReaderGetCurrentScopeLen(xc); */
-
-                if (h->u.var.name_length > (*nnam_max)) {
-                    free_2(*nam);
-                    *nam = malloc_2(((*nnam_max) = h->u.var.name_length) + 1);
-                }
-                s = *nam;
-                pnts = h->u.var.name;
-                pntd = s;
-                while (*pnts) {
-                    if (*pnts != ' ') {
-                        if (*pnts == '[') {
-                            lb_last = pntd;
-                            col_last = NULL;
-                            rb_last = NULL;
-                        } else if (*pnts == ':' && lb_last != NULL && col_last == NULL &&
-                                   rb_last == NULL) {
-                            col_last = pntd;
-                        } else if (*pnts == ']' && lb_last != NULL && rb_last == NULL) {
-                            rb_last = pntd;
-                        } else if (lb_last != NULL && rb_last == NULL &&
-                                   (isdigit((int)(unsigned char)*pnts) || (*pnts == '-'))) {
-                        } else {
-                            lb_last = NULL;
-                            col_last = NULL;
-                            rb_last = NULL;
-                        }
-
-                        *(pntd++) = *pnts;
-                    }
-                    pnts++;
-                }
-                *pntd = 0;
-                *namlen = pntd - s;
-
-                if (!rb_last) {
-                    col_last = NULL;
-                    lb_last = NULL;
-                }
-
-                if (!lb_last) {
-                    *msb = *lsb = -1;
-                } else if ((h->u.var.length > 1) && !col_last &&
-                           lb_last) /* add for NC arrays that don't add final explicit bitrange like
-                                       VCS does */
-                {
-                    lb_last = NULL;
-                    *msb = h->u.var.length - 1;
-                    *lsb = 0;
-                } else {
-                    int sgna = 1, sgnb = 1;
-                    pnt = lb_last + 1;
-                    acc = 0;
-                    while (isdigit((int)(unsigned char)*pnt) || (*pnt == '-')) {
-                        if (*pnt != '-') {
-                            acc *= 10;
-                            acc += (*pnt - '0');
-                        } else {
-                            sgna = -1;
-                        }
-                        pnt++;
-                    }
-
-                    *msb = acc * sgna;
-                    if (!col_last) {
-                        *lsb = acc;
-                    } else {
-                        pnt = col_last + 1;
-                        acc = 0;
-                        while (isdigit((int)(unsigned char)*pnt) || (*pnt == '-')) {
-                            if (*pnt != '-') {
-                                acc *= 10;
-                                acc += (*pnt - '0');
-                            } else {
-                                sgnb = -1;
-                            }
-                            pnt++;
-                        }
-                        *lsb = acc * sgnb;
-                    }
-                }
-
-                if (lb_last) {
-                    *lb_last = 0;
-                    if ((lb_last - s) < (*namlen)) {
-                        *namlen = lb_last - s;
-                    }
-                }
-                *nam = s;
+                handle_var(self, &h->u.var, msb, lsb, nam, namlen, nnam_max);
 
                 h->u.var.svt_workspace = svt;
                 h->u.var.sdt_workspace = sdt;
                 h->u.var.sxt_workspace = sxt;
 
-                return (h);
-                break;
+                return h;
 
-            case FST_HT_ATTRBEGIN: /* currently ignored for most cases except VHDL variable
-                                      vartype/datatype creation */
-                if (h->u.attr.typ == FST_AT_MISC) {
-                    if (h->u.attr.subtype == FST_MT_SUPVAR) {
-                        if (h->u.attr.name) {
-                            JRB subvar_jrb_node;
-                            char *attr_pnt;
-
-                            if (fstReaderGetFileType(fst_reader) == FST_FT_VHDL) {
-                                char *lc_p = attr_pnt = strdup_2(h->u.attr.name);
-
-                                while (*lc_p) {
-                                    *lc_p = tolower(
-                                        *lc_p); /* convert attrib name to lowercase for VHDL */
-                                    lc_p++;
-                                }
-                            } else {
-                                attr_pnt = NULL;
-                            }
-
-                            /* sxt points to actual type name specified in FST file */
-                            subvar_jrb_node = jrb_find_str(self->file->subvar_jrb,
-                                                           attr_pnt ? attr_pnt : h->u.attr.name);
-                            if (subvar_jrb_node) {
-                                sxt = subvar_jrb_node->val.ui;
-                            } else {
-                                Jval jv;
-
-                                if (self->file->subvar_jrb_count != WAVE_VARXT_MAX_ID) {
-                                    sxt = jv.ui = ++self->file->subvar_jrb_count;
-                                    /* subvar_jrb_node = */ jrb_insert_str(
-                                        self->file->subvar_jrb,
-                                        strdup_2(attr_pnt ? attr_pnt : h->u.attr.name),
-                                        jv);
-                                } else {
-                                    sxt = 0;
-                                    if (!self->file->subvar_jrb_count_locked) {
-                                        fprintf(stderr,
-                                                FST_RDLOAD
-                                                "Max number (%d) of type attributes reached, "
-                                                "please increase WAVE_VARXT_MAX_ID.\n",
-                                                WAVE_VARXT_MAX_ID);
-                                        self->file->subvar_jrb_count_locked = 1;
-                                    }
-                                }
-                            }
-
-                            if (attr_pnt) {
-                                free_2(attr_pnt);
-                            }
-                        }
-
-                        svt = h->u.attr.arg >> FST_SDT_SVT_SHIFT_COUNT;
-                        sdt = h->u.attr.arg & (FST_SDT_ABS_MAX - 1);
-                        GLOBALS->supplemental_datatypes_encountered = 1;
-                        GLOBALS->supplemental_vartypes_encountered |=
-                            ((svt != FST_SVT_NONE) && (svt != FST_SVT_VHDL_SIGNAL));
-                    } else if (h->u.attr.subtype == FST_MT_SOURCEISTEM) {
-                        uint32_t istem_path_number = (uint32_t)h->u.attr.arg_from_name;
-                        uint32_t istem_line_number = (uint32_t)h->u.attr.arg;
-
-                        self->next_var_istem = gw_stems_add_istem(GLOBALS->stems,
-                                                                  istem_path_number,
-                                                                  istem_line_number);
-                    } else if (h->u.attr.subtype == FST_MT_SOURCESTEM) {
-                        uint32_t stem_path_number = (uint32_t)h->u.attr.arg_from_name;
-                        uint32_t stem_line_number = (uint32_t)h->u.attr.arg;
-
-                        self->next_var_stem =
-                            gw_stems_add_stem(GLOBALS->stems, stem_path_number, stem_line_number);
-                    } else if (h->u.attr.subtype == FST_MT_PATHNAME) {
-                        const gchar *path = h->u.attr.name;
-                        guint64 index = h->u.attr.arg;
-
-                        // Check that path index has the expected value.
-                        // TODO: add warnings
-                        if (path != NULL && index == gw_stems_get_next_path_index(GLOBALS->stems)) {
-                            gw_stems_add_path(GLOBALS->stems, path);
-                        }
-                    } else if (h->u.attr.subtype == FST_MT_VALUELIST) {
-                        if (h->u.attr.name) {
-                            /* format is concatenations of [m b xs xe valstring] */
-                            if (self->synclock_str) {
-                                free_2(self->synclock_str);
-                            }
-                            self->synclock_str = strdup_2(h->u.attr.name);
-                        }
-                    } else if (h->u.attr.subtype == FST_MT_ENUMTABLE) {
-                        if (h->u.attr.name) {
-                            /* consumed by next enum variable definition */
-                            self->queued_xl_enum_filter = h->u.attr.arg;
-
-                            if (h->u.attr.name_length) {
-                                struct fstETab *fe =
-                                    fstUtilityExtractEnumTableFromString(h->u.attr.name);
-                                /* currently fe->name is unused */
-                                if (fe) {
-                                    uint32_t ie;
-#ifdef _WAVE_HAVE_JUDY
-                                    Pvoid_t e = (Pvoid_t)NULL;
-                                    for (ie = 0; ie < fe->elem_count; ie++) {
-                                        PPvoid_t pv = JudyHSIns(&e,
-                                                                fe->val_arr[ie],
-                                                                strlen(fe->val_arr[ie]),
-                                                                NULL);
-                                        if (*pv) {
-                                            free_2(*pv);
-                                        }
-                                        *pv = (void *)strdup_2(fe->literal_arr[ie]);
-                                    }
-#else
-                                    struct xl_tree_node *e = NULL;
-
-                                    for (ie = 0; ie < fe->elem_count; ie++) {
-                                        e = xl_insert(fe->val_arr[ie], e, fe->literal_arr[ie]);
-                                    }
-#endif
-
-                                    if (GLOBALS->xl_enum_filter) {
-                                        GLOBALS->num_xl_enum_filter++;
-                                        GLOBALS->xl_enum_filter =
-                                            realloc_2(GLOBALS->xl_enum_filter,
-                                                      GLOBALS->num_xl_enum_filter *
-                                                          sizeof(struct xl_tree_node *));
-                                    } else {
-                                        GLOBALS->num_xl_enum_filter++;
-                                        GLOBALS->xl_enum_filter =
-                                            malloc_2(sizeof(struct xl_tree_node *));
-                                    }
-
-                                    GLOBALS->xl_enum_filter[GLOBALS->num_xl_enum_filter - 1] = e;
-
-                                    if ((unsigned int)GLOBALS->num_xl_enum_filter !=
-                                        h->u.attr.arg) {
-                                        fprintf(stderr,
-                                                FST_RDLOAD
-                                                "Internal error, nonsequential enum tables "
-                                                "definition encountered, exiting.\n");
-                                        exit(255);
-                                    }
-
-                                    fstUtilityFreeEnumTable(fe);
-                                }
-                            }
-                        }
-                    }
-                }
+            case FST_HT_ATTRBEGIN:
+                // currently ignored for most cases except VHDL variable vartype/datatype creation
+                handle_attr(self, &h->u.attr, &sdt, &svt, &sxt);
                 break;
 
             case FST_HT_ATTREND:
