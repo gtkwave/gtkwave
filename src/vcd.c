@@ -92,64 +92,6 @@ GwHistEnt *histent_calloc(void)
     return (GLOBALS->he_curr_vcd_c_1++);
 }
 
-char *build_slisthier(void)
-{
-    struct slist *s;
-    int len = 0;
-
-    if (GLOBALS->slisthier) {
-        free_2(GLOBALS->slisthier);
-    }
-
-    if (!GLOBALS->slistroot) {
-        GLOBALS->slisthier_len = 0;
-        GLOBALS->slisthier = (char *)malloc_2(1);
-        *GLOBALS->slisthier = 0;
-        return (GLOBALS->slisthier);
-    }
-
-    s = GLOBALS->slistroot;
-    len = 0;
-    while (s) {
-        len += s->len + (s->next ? 1 : 0);
-        s = s->next;
-    }
-
-    GLOBALS->slisthier = (char *)malloc_2((GLOBALS->slisthier_len = len) + 1);
-    s = GLOBALS->slistroot;
-    len = 0;
-    while (s) {
-        strcpy(GLOBALS->slisthier + len, s->str);
-        len += s->len;
-        if (s->next) {
-            strcpy(GLOBALS->slisthier + len, GLOBALS->vcd_hier_delimeter);
-            len++;
-        }
-        s = s->next;
-    }
-
-    return (GLOBALS->slisthier);
-}
-
-void append_vcd_slisthier(const char *str)
-{
-    struct slist *s;
-    s = (struct slist *)calloc_2(1, sizeof(struct slist));
-    s->len = strlen(str);
-    s->str = (char *)malloc_2(s->len + 1);
-    strcpy(s->str, str);
-
-    if (GLOBALS->slistcurr) {
-        GLOBALS->slistcurr->next = s;
-        GLOBALS->slistcurr = s;
-    } else {
-        GLOBALS->slistcurr = GLOBALS->slistroot = s;
-    }
-
-    build_slisthier();
-    DEBUG(fprintf(stderr, "SCOPE: %s\n", GLOBALS->slisthier));
-}
-
 void set_vcd_vartype(struct vcdsymbol *v, GwNode *n)
 {
     unsigned char nvt;

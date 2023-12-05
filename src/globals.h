@@ -702,8 +702,6 @@ struct Global
     int escaped_names_found_vcd_c_1; /* from vcd.c 528 */
     struct slist *slistroot; /* from vcd.c 529 */
     struct slist *slistcurr; /* from vcd.c 530 */
-    char *slisthier; /* from vcd.c 531 */
-    int slisthier_len; /* from vcd.c 532 */
     GwHistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
     GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
 
