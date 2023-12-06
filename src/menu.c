@@ -4047,11 +4047,13 @@ static void open_index_in_forked_editor(uint32_t idx, int typ)
         return;
     }
 
+    GwStems *stems = gw_dump_file_get_stems(GLOBALS->dump_file);
+
     GwStem stem;
     if (typ == FST_MT_SOURCESTEM) {
-        stem = gw_stems_get_stem(GLOBALS->stems, idx);
+        stem = gw_stems_get_stem(stems, idx);
     } else {
-        stem = gw_stems_get_istem(GLOBALS->stems, idx);
+        stem = gw_stems_get_istem(stems, idx);
     }
 
     char *path = g_strdup(stem.path);
@@ -4204,10 +4206,12 @@ static void menu_open_hierarchy_2(gpointer null_data,
     if (((typ == FST_MT_SOURCESTEM) || (typ == FST_MT_SOURCEISTEM)) && t_forced) {
         uint32_t idx = (typ == FST_MT_SOURCESTEM) ? t_forced->t_stem : t_forced->t_istem;
 
-        if (GLOBALS->stems == NULL || gw_stems_is_empty(GLOBALS->stems)) {
+        GwStems *stems = gw_dump_file_get_stems(GLOBALS->dump_file);
+
+        if (gw_stems_is_empty(stems)) {
             fprintf(stderr, "GTKWAVE | Could not find stems information in this file!\n");
         } else {
-            if (!idx && (typ == FST_MT_SOURCEISTEM) && gw_stems_has_istems(GLOBALS->stems)) {
+            if (!idx && (typ == FST_MT_SOURCEISTEM) && gw_stems_has_istems(stems)) {
                 /* handle top level where istem == stem and istem is deliberately not specified */
                 typ = FST_MT_SOURCESTEM;
                 idx = t_forced->t_stem;
@@ -4233,10 +4237,12 @@ static void menu_open_hierarchy_2a(gpointer null_data,
         if (t_forced) {
             uint32_t idx = (typ == FST_MT_SOURCESTEM) ? t_forced->t_stem : t_forced->t_istem;
 
-            if (GLOBALS->stems == NULL || gw_stems_is_empty(GLOBALS->stems)) {
+            GwStems *stems = gw_dump_file_get_stems(GLOBALS->dump_file);
+
+            if (gw_stems_is_empty(stems)) {
                 fprintf(stderr, "GTKWAVE | Could not find stems information in this file!\n");
             } else {
-                if (!idx && (typ == FST_MT_SOURCEISTEM) && gw_stems_has_istems(GLOBALS->stems)) {
+                if (!idx && (typ == FST_MT_SOURCEISTEM) && gw_stems_has_istems(stems)) {
                     /* handle top level where istem == stem and istem is deliberately not specified
                      */
                     typ = FST_MT_SOURCESTEM;

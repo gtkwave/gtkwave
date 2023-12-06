@@ -76,7 +76,6 @@ struct Global
 {
     GwProject *project;
     GwDumpFile *dump_file;
-    GwStems *stems;
 
     /*
      * analyzer.c

@@ -66,6 +66,8 @@ typedef struct
     char *synclock_str;
 
     fstEnumHandle queued_xl_enum_filter;
+
+    GwStems *stems;
 } FstLoader;
 
 #define FST_RDLOAD "FSTLOAD | "
@@ -363,7 +365,7 @@ static void handle_sourceistem(FstLoader *self, struct fstHierAttr *attr)
     uint32_t istem_path_number = (uint32_t)attr->arg_from_name;
     uint32_t istem_line_number = (uint32_t)attr->arg;
 
-    self->next_var_istem = gw_stems_add_istem(GLOBALS->stems, istem_path_number, istem_line_number);
+    self->next_var_istem = gw_stems_add_istem(self->stems, istem_path_number, istem_line_number);
 }
 
 static void handle_sourcestem(FstLoader *self, struct fstHierAttr *attr)
@@ -371,7 +373,7 @@ static void handle_sourcestem(FstLoader *self, struct fstHierAttr *attr)
     uint32_t stem_path_number = (uint32_t)attr->arg_from_name;
     uint32_t stem_line_number = (uint32_t)attr->arg;
 
-    self->next_var_stem = gw_stems_add_stem(GLOBALS->stems, stem_path_number, stem_line_number);
+    self->next_var_stem = gw_stems_add_stem(self->stems, stem_path_number, stem_line_number);
 }
 
 static void handle_pathname(FstLoader *self, struct fstHierAttr *attr)
@@ -381,8 +383,8 @@ static void handle_pathname(FstLoader *self, struct fstHierAttr *attr)
 
     // Check that path index has the expected value.
     // TODO: add warnings
-    if (path != NULL && index == gw_stems_get_next_path_index(GLOBALS->stems)) {
-        gw_stems_add_path(GLOBALS->stems, path);
+    if (path != NULL && index == gw_stems_get_next_path_index(self->stems)) {
+        gw_stems_add_path(self->stems, path);
     }
 }
 
@@ -627,6 +629,7 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     FstLoader loader = {0};
     FstLoader *self = &loader;
     self->file = GLOBALS->fst_file;
+    self->stems = gw_stems_new();
 
     allowed_to_autocoalesce = (strstr(fstReaderGetVersionString(fst_reader), "Icarus") == NULL);
     if (!allowed_to_autocoalesce) {
@@ -659,7 +662,6 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     GLOBALS->facs = malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
     self->file->mvlfacs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
     self->file->mvlfacs_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
-    GLOBALS->stems = gw_stems_new();
 
     hier_auto_enable(); /* enable if greater than threshold */
 
@@ -1053,7 +1055,7 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
         }
     }
 
-    gw_stems_shrink_to_fit(GLOBALS->stems);
+    gw_stems_shrink_to_fit(self->stems);
 
     decorated_module_cleanup(); /* ...also now in gtk2_treesearch.c */
     freeze_facility_pack();
@@ -1146,9 +1148,15 @@ if(num_dups)
 
     /* SPLASH */ splash_finalize();
 
-    GwDumpFile *dump_file =
-        g_object_new(GW_TYPE_DUMP_FILE, "blackout-regions", blackout_regions, NULL);
+    // clang-format off
+    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE,
+                                         "blackout-regions", blackout_regions,
+                                         "stems", self->stems,
+                                         NULL);
+    // clang-format on
+
     g_object_unref(blackout_regions);
+    g_object_unref(self->stems);
 
     return dump_file;
 }
