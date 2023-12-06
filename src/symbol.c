@@ -35,14 +35,14 @@
  */
 #ifdef _WAVE_HAVE_JUDY
 
-char get_s_selected(struct symbol *s)
+char get_s_selected(GwSymbol *s)
 {
     int rc = Judy1Test(GLOBALS->s_selected, (Word_t)s, PJE0);
 
     return (rc);
 }
 
-char set_s_selected(struct symbol *s, char value)
+char set_s_selected(GwSymbol *s, char value)
 {
     if (value) {
         Judy1Set((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
@@ -62,12 +62,12 @@ void destroy_s_selected(void)
 
 #else
 
-char get_s_selected(struct symbol *s)
+char get_s_selected(GwSymbol *s)
 {
     return (s->s_selected);
 }
 
-char set_s_selected(struct symbol *s, char value)
+char set_s_selected(GwSymbol *s, char value)
 {
     return ((s->s_selected = value));
 }
@@ -87,7 +87,7 @@ void sym_hash_initialize(void *g)
 #ifdef _WAVE_HAVE_JUDY
     ((struct Global *)g)->sym_judy = NULL;
 #else
-    ((struct Global *)g)->sym_hash = (struct symbol **)calloc_2(SYMPRIME, sizeof(struct symbol *));
+    ((struct Global *)g)->sym_hash = (GwSymbol **)calloc_2(SYMPRIME, sizeof(GwSymbol *));
 #endif
 }
 
@@ -143,15 +143,15 @@ int hash(char *s)
  * add symbol to table.  no duplicate checking
  * is necessary as aet's are "correct."
  */
-struct symbol *symadd(char *name, int hv)
+GwSymbol *symadd(char *name, int hv)
 {
-    struct symbol *s = (struct symbol *)calloc_2(1, sizeof(struct symbol));
+    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
 
 #ifdef _WAVE_HAVE_JUDY
     (void)hv;
 
     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    *((struct symbol **)PPValue) = s;
+    *((GwSymbol **)PPValue) = s;
 
 #else
 
@@ -163,15 +163,15 @@ struct symbol *symadd(char *name, int hv)
     return (s);
 }
 
-struct symbol *symadd_name_exists(char *name, int hv)
+GwSymbol *symadd_name_exists(char *name, int hv)
 {
-    struct symbol *s = (struct symbol *)calloc_2(1, sizeof(struct symbol));
+    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
 
 #ifdef _WAVE_HAVE_JUDY
     (void)hv;
 
     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    *((struct symbol **)PPValue) = s;
+    *((GwSymbol **)PPValue) = s;
 
     s->name = name; /* redundant for now */
 
@@ -189,11 +189,11 @@ struct symbol *symadd_name_exists(char *name, int hv)
 /*
  * find a slot already in the table...
  */
-static struct symbol *symfind_2(char *s, unsigned int *rows_return)
+static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
 {
 #ifndef _WAVE_HAVE_JUDY
     int hv;
-    struct symbol *temp;
+    GwSymbol *temp;
 #endif
 
     if (!GLOBALS->facs_are_sorted) {
@@ -201,7 +201,7 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
         PPvoid_t PPValue = JudySLGet(GLOBALS->sym_judy, (uint8_t *)s, PJE0);
 
         if (PPValue) {
-            return (*(struct symbol **)PPValue);
+            return (*(GwSymbol **)PPValue);
         }
 #else
         hv = hash(s);
@@ -220,7 +220,7 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
         return (NULL); /* not found, add here if you want to add*/
     } else /* no sense hashing if the facs table is built */
     {
-        struct symbol *sr;
+        GwSymbol *sr;
         DEBUG(printf("BSEARCH: %s\n", s));
 
         sr = bsearch_facs(s, rows_return);
@@ -295,9 +295,9 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
     }
 }
 
-struct symbol *symfind(char *s, unsigned int *rows_return)
+GwSymbol *symfind(char *s, unsigned int *rows_return)
 {
-    struct symbol *s_pnt = symfind_2(s, rows_return);
+    GwSymbol *s_pnt = symfind_2(s, rows_return);
 
     if (!s_pnt) {
         int len = strlen(s);

@@ -173,11 +173,11 @@ struct Global
     int *extload_namecache_max;
     int *extload_namecache_lens;
     int *extload_namecache_patched;
-    struct symbol *extload_sym_block;
+    GwSymbol *extload_sym_block;
     GwNode *extload_node_block;
     void *extload_xc;
-    struct symbol *extload_prevsymroot;
-    struct symbol *extload_prevsym;
+    GwSymbol *extload_prevsymroot;
+    GwSymbol *extload_prevsym;
     GwTree **extload_npar;
     int extload_i;
     int extload_hlen;
@@ -554,8 +554,8 @@ struct Global
     Pvoid_t sym_judy; /* from symbol.c */
     Pvoid_t s_selected; /* from symbol.c */
 #endif
-    struct symbol **sym_hash; /* from symbol.c 453 */
-    struct symbol **facs; /* from symbol.c 454 */
+    GwSymbol **sym_hash; /* from symbol.c 453 */
+    GwSymbol **facs; /* from symbol.c 454 */
     char facs_are_sorted; /* from symbol.c 455 */
     char facs_have_symbols_state_machine; /* from symbol.c */
     int numfacs; /* from symbol.c 456 */
@@ -609,7 +609,7 @@ struct Global
     char hier_delimeter; /* from tree.c 477 */
     char hier_was_explicitly_set; /* from tree.c 478 */
     char alt_hier_delimeter; /* from tree.c 479 */
-    struct symbol **facs2_tree_c_1; /* from tree.c 481 */
+    GwSymbol **facs2_tree_c_1; /* from tree.c 481 */
     int facs2_pos_tree_c_1; /* from tree.c 482 */
     unsigned char *talloc_pool_base;
     size_t talloc_idx;

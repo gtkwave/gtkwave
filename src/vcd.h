@@ -107,7 +107,7 @@ GwTime vcd_recoder_main(char *fname);
 struct vcdsymbol
 {
     struct vcdsymbol *root, *chain;
-    struct symbol *sym_chain;
+    GwSymbol *sym_chain;
 
     struct vcdsymbol *next;
     char *name;

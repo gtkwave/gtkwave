@@ -456,7 +456,7 @@ int maketraces(char *str, char *alias, int quick_return)
 
     if (!wild_active) /* short circuit wildcard evaluation with bsearch */
     {
-        struct symbol *s;
+        GwSymbol *s;
         GwNode *nexp;
 
         if (str[0] == '(') {
@@ -579,7 +579,7 @@ GwBits *makevec(char *vec, char *str)
 
             if (!wild_active) /* short circuit wildcard evaluation with bsearch */
             {
-                struct symbol *s;
+                GwSymbol *s;
                 if (wild[0] == '(') {
                     GwNode *nexp;
 
@@ -737,7 +737,7 @@ GwBits *makevec_annotated(char *vec, char *str)
 
             /* no wildcards for annotated! */
             {
-                struct symbol *s;
+                GwSymbol *s;
 
                 if (nodepnt == BITATTRIBUTES_MAX) {
                     free_2(wild);
@@ -896,13 +896,14 @@ GwBits *makevec_selected(char *vec, int numrows, char direction)
  * bit facility_name[x] case never gets hit, but may be used in the
  * future...
  */
-GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
+GwBits *makevec_chain(char *vec, GwSymbol *sym, int len)
 {
     int nodepnt = 0, nodepnt_rev;
     int i;
     GwNode **n;
     GwBits *b = NULL;
-    struct symbol *symhi = NULL, *symlo = NULL;
+    GwSymbol *symhi = NULL;
+    GwSymbol *symlo = NULL;
     char hier_delimeter2 = '[';
 
     n = g_alloca(len * sizeof(GwNode *));
@@ -1058,7 +1059,7 @@ GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
 /*
  * add vector made in previous function
  */
-int add_vector_chain(struct symbol *s, int len)
+int add_vector_chain(GwSymbol *s, int len)
 {
     GwBitVector *v = NULL;
     GwBits *b = NULL;
@@ -1425,12 +1426,12 @@ int sigcmp(char *s1, char *s2)
  * that glibc will use a modified mergesort if memory is available, so
  * under linux use the stock qsort instead.
  */
-static struct symbol **hp;
+static GwSymbol **hp;
 static void heapify(int i, int heap_size)
 {
     int l, r;
     int largest;
-    struct symbol *t;
+    GwSymbol *t;
     int maxele = heap_size / 2 - 1; /* points to where heapswaps don't matter anymore */
 
     for (;;) {
@@ -1462,11 +1463,11 @@ static void heapify(int i, int heap_size)
     }
 }
 
-void wave_heapsort(struct symbol **a, int num)
+void wave_heapsort(GwSymbol **a, int num)
 {
     int i;
     int indx = num - 1;
-    struct symbol *t;
+    GwSymbol *t;
 
     hp = a;
 
@@ -1494,14 +1495,14 @@ void wave_heapsort(struct symbol **a, int num)
 
 static int qssigcomp(const void *v1, const void *v2)
 {
-    struct symbol *a1 = *((struct symbol **)v1);
-    struct symbol *a2 = *((struct symbol **)v2);
+    GwSymbol *a1 = *((GwSymbol **)v1);
+    GwSymbol *a2 = *((GwSymbol **)v2);
     return (sigcmp(a1->name, a2->name));
 }
 
-void wave_heapsort(struct symbol **a, int num)
+void wave_heapsort(GwSymbol **a, int num)
 {
-    qsort(a, num, sizeof(struct symbol *), qssigcomp);
+    qsort(a, num, sizeof(GwSymbol *), qssigcomp);
 }
 
 #endif
@@ -1511,10 +1512,11 @@ void wave_heapsort(struct symbol **a, int num)
  * bit facility_name[x] case never gets hit, but may be used in the
  * future...
  */
-char *makename_chain(struct symbol *sym)
+char *makename_chain(GwSymbol *sym)
 {
     int i;
-    struct symbol *symhi = NULL, *symlo = NULL;
+    GwSymbol *symhi = NULL;
+    GwSymbol *symlo = NULL;
     char hier_delimeter2 = '[';
     char *name = NULL;
     char *s1, *s2;

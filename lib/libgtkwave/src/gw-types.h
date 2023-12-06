@@ -7,6 +7,7 @@ typedef struct _GwExpandReferences GwExpandReferences;
 typedef struct _GwFac GwFac;
 typedef struct _GwHistEnt GwHistEnt;
 typedef struct _GwNode GwNode;
+typedef struct _GwSymbol GwSymbol;
 typedef struct _GwTrace GwTrace;
 typedef struct _GwTree GwTree;
 typedef struct _GwVectorEnt GwVectorEnt;

@@ -624,7 +624,7 @@ static void process_extload_variable(void)
     unsigned char vt, nvt;
     unsigned char vd;
     GwNode *n;
-    struct symbol *s;
+    GwSymbol *s;
     char buf[65537];
     char *str;
     GwFac *f;
@@ -994,8 +994,8 @@ static void extload_hiertree_callback(void *pnt)
                             GLOBALS->vzt_table_vzt_c_1,
                             GLOBALS->numfacs * sizeof(struct lx2_entry));
                         GLOBALS->extload_sym_block =
-                            (struct symbol *)realloc_2(GLOBALS->extload_sym_block,
-                                                       GLOBALS->numfacs * sizeof(struct symbol));
+                            (GwSymbol *)realloc_2(GLOBALS->extload_sym_block,
+                                                       GLOBALS->numfacs * sizeof(GwSymbol));
                         GLOBALS->extload_node_block =
                             (GwNode *)realloc_2(GLOBALS->extload_node_block,
                                                      GLOBALS->numfacs * sizeof(GwNode));
@@ -1332,7 +1332,7 @@ static void process_extload_variable2(struct fstHier *s_gv)
     unsigned char vt, nvt;
     unsigned char vd;
     GwNode *n;
-    struct symbol *s;
+    GwSymbol *s;
     char buf[65537];
     char *str;
     GwFac *f;
@@ -1711,8 +1711,8 @@ static void extload_hiertree_callback2(void *pnt)
                             GLOBALS->vzt_table_vzt_c_1,
                             GLOBALS->numfacs * sizeof(struct lx2_entry));
                         GLOBALS->extload_sym_block =
-                            (struct symbol *)realloc_2(GLOBALS->extload_sym_block,
-                                                       GLOBALS->numfacs * sizeof(struct symbol));
+                            (GwSymbol *)realloc_2(GLOBALS->extload_sym_block,
+                                                       GLOBALS->numfacs * sizeof(GwSymbol));
                         GLOBALS->extload_node_block =
                             (GwNode *)realloc_2(GLOBALS->extload_node_block,
                                                      GLOBALS->numfacs * sizeof(GwNode));
@@ -1941,7 +1941,7 @@ static GwTime extload_main_2(char *fname, char *skip_start, char *skip_end)
     GLOBALS->extload_namecache_max = (int *)calloc_2(F_NAME_MODULUS + 1, sizeof(int));
     GLOBALS->extload_namecache_lens = (int *)calloc_2(F_NAME_MODULUS + 1, sizeof(int));
     GLOBALS->extload_namecache_patched = (int *)calloc_2(F_NAME_MODULUS + 1, sizeof(int));
-    GLOBALS->extload_sym_block = (struct symbol *)calloc_2(GLOBALS->numfacs, sizeof(struct symbol));
+    GLOBALS->extload_sym_block = (GwSymbol *)calloc_2(GLOBALS->numfacs, sizeof(GwSymbol));
     GLOBALS->extload_node_block = (GwNode *)calloc_2(GLOBALS->numfacs, sizeof(GwNode));
     GLOBALS->extload_idcodes = (unsigned int *)calloc_2(GLOBALS->numfacs, sizeof(unsigned int));
     GLOBALS->extload_inv_idcodes = (int *)calloc_2(max_idcode + 1, sizeof(int));
@@ -2052,7 +2052,7 @@ static GwTime extload_main_2(char *fname, char *skip_start, char *skip_end)
     }
     freeze_facility_pack();
 
-    GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
+    GLOBALS->facs = (GwSymbol **)malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
 
     if (GLOBALS->fast_tree_sort) {
         for (i = 0; i < GLOBALS->numfacs; i++) {

@@ -2184,7 +2184,7 @@ static void vcd_build_symbols(VcdLoader *self)
             }
 
             if ((v->size == 1) && (v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
-                struct symbol *s = NULL;
+                GwSymbol *s = NULL;
 
                 for (j = 0; j < v->size; j++) {
                     if (v->msi >= 0) {
@@ -2247,8 +2247,8 @@ static void vcd_build_symbols(VcdLoader *self)
                 }
 
                 if ((j == 1) && (v->root)) {
-                    s->vec_root = (struct symbol *)v->root; /* these will get patched over */
-                    s->vec_chain = (struct symbol *)v->chain; /* these will get patched over */
+                    s->vec_root = (GwSymbol *)v->root; /* these will get patched over */
+                    s->vec_chain = (GwSymbol *)v->chain; /* these will get patched over */
                     v->sym_chain = s;
 
                     sym_chain = g_slist_prepend(sym_chain, s);
@@ -2294,7 +2294,7 @@ static void vcd_build_symbols(VcdLoader *self)
                 }
                 /* fallthrough */
                 {
-                    struct symbol *s;
+                    GwSymbol *s;
 
                     s = symadd(str,
                                hashdirty ? hash(str)
@@ -2350,7 +2350,7 @@ static void vcd_build_symbols(VcdLoader *self)
 
         for (PPValue = JudySLFirst(PJArray, (uint8_t *)Index, PJE0); PPValue != (PPvoid_t)NULL;
              PPValue = JudySLNext(PJArray, (uint8_t *)Index, PJE0)) {
-            struct symbol *s = *(struct symbol **)PPValue;
+            GwSymbol *s = *(GwSymbol **)PPValue;
             s->name = strdup_2(Index);
             s->n->nname = s->name;
         }
@@ -2361,7 +2361,7 @@ static void vcd_build_symbols(VcdLoader *self)
 
     if (sym_chain != NULL) {
         for (GSList *iter = sym_chain; iter != NULL; iter = iter->next) {
-            struct symbol *s = iter->data;
+            GwSymbol *s = iter->data;
 
             s->vec_root = ((struct vcdsymbol *)s->vec_root)->sym_chain;
             if ((struct vcdsymbol *)s->vec_chain != NULL) {

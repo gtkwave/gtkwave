@@ -29,21 +29,6 @@
 #include <inttypes.h>
 #endif
 
-struct symbol
-{
-#ifndef _WAVE_HAVE_JUDY
-    struct symbol *sym_next; /* for hash chain, judy uses sym_judy in globals */
-#endif
-
-    struct symbol *vec_root, *vec_chain;
-    char *name;
-    GwNode *n;
-
-#ifndef _WAVE_HAVE_JUDY
-    char s_selected; /* for the clist object */
-#endif
-};
-
 struct string_chain_t
 {
     struct string_chain_t *next;
@@ -54,9 +39,9 @@ struct string_chain_t
 void sym_hash_initialize(void *g);
 void sym_hash_destroy(void *g);
 
-struct symbol *symfind(char *, unsigned int *);
-struct symbol *symadd(char *, int);
-struct symbol *symadd_name_exists(char *name, int hv);
+GwSymbol *symfind(char *, unsigned int *);
+GwSymbol *symadd(char *, int);
+GwSymbol *symadd_name_exists(char *name, int hv);
 int hash(char *s);
 
 /* typically use zero for hashval as it doesn't matter if facs are sorted as symfind will bsearch...
@@ -67,9 +52,9 @@ int hash(char *s);
 
 void facsplit(char *, int *, int *);
 int sigcmp(char *, char *);
-void quicksort(struct symbol **, int, int);
+void quicksort(GwSymbol **, int, int);
 
-void wave_heapsort(struct symbol **a, int num);
+void wave_heapsort(GwSymbol **a, int num);
 
 GwBits *makevec(char *, char *);
 GwBits *makevec_annotated(char *, char *);
@@ -80,9 +65,9 @@ GwBitVector *bits2vector(GwBits *b);
 GwBits *makevec_selected(char *vec, int numrows, char direction);
 GwBits *makevec_range(char *vec, int lo, int hi, char direction);
 int add_vector_range(char *alias, int lo, int hi, char direction);
-GwBits *makevec_chain(char *vec, struct symbol *sym, int len);
-int add_vector_chain(struct symbol *s, int len);
-char *makename_chain(struct symbol *sym);
+GwBits *makevec_chain(char *vec, GwSymbol *sym, int len);
+int add_vector_chain(GwSymbol *s, int len);
+char *makename_chain(GwSymbol *sym);
 
 /* splash screen activation (version >= GTK2 only) */
 void splash_create(void);
@@ -91,8 +76,8 @@ void splash_finalize(void);
 gint splash_button_press_event(GtkWidget *widget, GdkEventExpose *event);
 
 /* accessor functions for sym->selected moved (potentially) to sparse array */
-char get_s_selected(struct symbol *s);
-char set_s_selected(struct symbol *s, char value);
+char get_s_selected(GwSymbol *s);
+char set_s_selected(GwSymbol *s, char value);
 void destroy_s_selected(void);
 
 #endif

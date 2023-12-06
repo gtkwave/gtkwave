@@ -44,7 +44,7 @@ static gboolean XXX_view_selection_func(GtkTreeSelection *selection,
 
     GtkTreeIter iter;
     char *nam = NULL;
-    struct symbol *s;
+    GwSymbol *s;
 
     if (path) {
         if (gtk_tree_model_get_iter(model, &iter, path)) /* null return should not happen */
@@ -214,7 +214,7 @@ static void insert_callback(GtkWidget *widget, GtkWidget *nothing)
 struct symchain /* for restoring state of ->selected in signal regex search */
 {
     struct symchain *next;
-    struct symbol *symbol;
+    GwSymbol *symbol;
 };
 
 void search_insert_callback(GtkWidget *widget, char is_prepend)
@@ -246,7 +246,7 @@ void search_insert_callback(GtkWidget *widget, char is_prepend)
 
         gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
         for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
-            struct symbol *s, *t;
+            GwSymbol *s, *t;
 
             gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search),
                                &iter,
@@ -283,7 +283,7 @@ void search_insert_callback(GtkWidget *widget, char is_prepend)
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -393,7 +393,7 @@ static void replace_callback(GtkWidget *widget, GtkWidget *nothing)
 
         gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
         for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
-            struct symbol *s, *t;
+            GwSymbol *s, *t;
 
             gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search),
                                &iter,
@@ -430,7 +430,7 @@ static void replace_callback(GtkWidget *widget, GtkWidget *nothing)
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -580,7 +580,7 @@ static void ok_callback(GtkWidget *widget, GtkWidget *nothing)
 
         gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
         for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
-            struct symbol *s, *t;
+            GwSymbol *s, *t;
 
             gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search),
                                &iter,
@@ -617,7 +617,7 @@ static void ok_callback(GtkWidget *widget, GtkWidget *nothing)
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);

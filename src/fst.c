@@ -594,11 +594,13 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
 {
     int i;
     GwNode *n;
-    struct symbol *s, *prevsymroot = NULL, *prevsym = NULL;
+    GwSymbol *s;
+    GwSymbol *prevsymroot = NULL;
+    GwSymbol *prevsym = NULL;
     signed char scale;
     int numalias = 0;
     int numvars = 0;
-    struct symbol *sym_block = NULL;
+    GwSymbol *sym_block = NULL;
     GwNode *node_block = NULL;
     struct fstHier *h = NULL;
     int msb, lsb;
@@ -652,9 +654,9 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     GLOBALS->numfacs = fstReaderGetVarCount(fst_reader);
     self->file->mvlfacs = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
     self->file->fst_table = calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
-    sym_block = (struct symbol *)calloc_2(GLOBALS->numfacs, sizeof(struct symbol));
+    sym_block = calloc_2(GLOBALS->numfacs, sizeof(GwSymbol));
     node_block = calloc_2(GLOBALS->numfacs, sizeof(GwNode));
-    GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
+    GLOBALS->facs = malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
     self->file->mvlfacs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
     self->file->mvlfacs_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
     GLOBALS->stems = gw_stems_new();
