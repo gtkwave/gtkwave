@@ -624,11 +624,10 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         cairo_set_line_width(traces_cr, GLOBALS->cr_line_width);
         cairo_set_line_cap(traces_cr, CAIRO_LINE_CAP_SQUARE);
 
-        if (GLOBALS->blackout_regions != NULL) {
-            RenderBlackoutData data = {.cr = traces_cr, .colors = colors};
+        GwBlackoutRegions *blackout_regions = gw_dump_file_get_blackout_regions(GLOBALS->dump_file);
 
-            gw_blackout_regions_foreach(GLOBALS->blackout_regions, renderblackout, &data);
-        }
+        RenderBlackoutData data = {.cr = traces_cr, .colors = colors};
+        gw_blackout_regions_foreach(blackout_regions, renderblackout, &data);
 
         if (GLOBALS->disable_antialiasing) {
             cairo_set_antialias(traces_cr, CAIRO_ANTIALIAS_NONE);

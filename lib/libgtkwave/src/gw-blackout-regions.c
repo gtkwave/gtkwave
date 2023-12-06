@@ -109,6 +109,14 @@ void gw_blackout_regions_scale(GwBlackoutRegions *self, GwTime scale)
     }
 }
 
+/**
+ * gw_blackout_regions_foreach:
+ * @self: A #GwBlackoutRegions.
+ * @function: (scope call): The function.
+ * @user_data: The data for @function.
+ *
+ * Calls the given function for each blackout region..
+ */
 void gw_blackout_regions_foreach(GwBlackoutRegions *self,
                                  GwBlackoutRegionsForEach function,
                                  gpointer user_data)

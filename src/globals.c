@@ -62,6 +62,7 @@ struct Global *GLOBALS = NULL;
 /* make this const so if we try to write to it we coredump */
 static const struct Global globals_base_values = {
     NULL, // project
+    NULL, // dump_file
     NULL, // stems
 
     /*
@@ -769,7 +770,6 @@ static const struct Global globals_base_values = {
     0, /* zoom_dyne */
     0, /* cursor_snap 604 */
     -1.0, /* old_wvalue 605 */
-    NULL, /* blackout_regions 606 */
     0, /* zoom 607 */
     1, /* scale */
     1, /* nsperframe */
@@ -918,7 +918,7 @@ static int handle_setjmp(void)
         switch (GLOBALS->loaded_file_type) /* on fail, longjmp called in these loaders */
         {
             case VCD_RECODER_FILE:
-                vcd_recoder_main(GLOBALS->loaded_file_name);
+                GLOBALS->dump_file = vcd_recoder_main(GLOBALS->loaded_file_name);
                 break;
             case GHW_FILE:
             case FST_FILE:
@@ -1605,12 +1605,14 @@ void reload_into_new_context_2(void)
 #endif
 
             case FST_FILE:
-                fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-                load_was_success = (GLOBALS->fst_file != NULL);
+                GLOBALS->dump_file =
+                    fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
+                load_was_success = GLOBALS->dump_file != NULL;
                 break;
 
             case GHW_FILE:
-                load_was_success = (ghw_main(GLOBALS->loaded_file_name) != 0);
+                GLOBALS->dump_file = ghw_main(GLOBALS->loaded_file_name);
+                load_was_success = GLOBALS->dump_file != NULL;
                 break;
 
             case VCD_RECODER_FILE:

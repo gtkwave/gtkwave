@@ -214,8 +214,8 @@ static void gw_time_display_update(GwTimeDisplay *self)
 
         gchar *text = reformat_time_2(cursor_pos, GLOBALS->time_dimension, FALSE);
 
-        if (GLOBALS->blackout_regions != NULL &&
-            gw_blackout_regions_contains(GLOBALS->blackout_regions, cursor_pos)) {
+        GwBlackoutRegions *blackout_regions = gw_dump_file_get_blackout_regions(GLOBALS->dump_file);
+        if (gw_blackout_regions_contains(blackout_regions, cursor_pos)) {
             gchar *last_space = g_strrstr(text, " ");
             if (last_space != NULL) {
                 *last_space = '*';

@@ -75,6 +75,7 @@
 struct Global
 {
     GwProject *project;
+    GwDumpFile *dump_file;
     GwStems *stems;
 
     /*
@@ -749,7 +750,6 @@ struct Global
     char zoom_dyne; /* from menu.c */
     int cursor_snap; /* from wavewindow.c 659 */
     float old_wvalue; /* from wavewindow.c 660 */
-    GwBlackoutRegions *blackout_regions; /* from wavewindow.c 661 */
     GwTime zoom; /* from wavewindow.c 662 */
     GwTime scale; /* from wavewindow.c 663 */
     GwTime nsperframe; /* from wavewindow.c 664 */

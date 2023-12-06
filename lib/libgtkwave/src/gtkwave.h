@@ -21,3 +21,5 @@
 #include "gw-tree.h"
 #include "gw-blackout-regions.h"
 #include "gw-symbol.h"
+#include "gw-dump-file.h"
+#include "gw-dump-file-builder.h"
