@@ -58,7 +58,7 @@ typedef struct
  * (now global) vars are used to resolve those differences...
  *
  * static GwNode **nxp;
- * static struct symbol *sym_head = NULL, *sym_curr = NULL;
+ * static GwSymbol *sym_head = NULL, *sym_curr = NULL;
  * static int sym_which = 0;
  */
 
@@ -71,7 +71,7 @@ struct ghw_tree_node
     ghw_Tree *left, *right;
     void *item;
     int val_old;
-    struct symbol *sym;
+    GwSymbol *sym;
 };
 
 long ghw_cmp_l(void *i, void *j)
@@ -133,7 +133,7 @@ static ghw_Tree *ghw_splay(void *i, ghw_Tree *t)
     return t;
 }
 
-static ghw_Tree *ghw_insert(void *i, ghw_Tree *t, int val, struct symbol *sym)
+static ghw_Tree *ghw_insert(void *i, ghw_Tree *t, int val, GwSymbol *sym)
 {
     /* Insert i into the tree t, unless it's already there.    */
     /* Return a pointer to the resulting tree.                 */
@@ -195,14 +195,14 @@ int strand_pnt(char *s)
 
 void rechain_facs(GhwLoader *self)
 {
-    struct symbol *psr = NULL;
-    struct symbol *root = NULL;
+    GwSymbol *psr = NULL;
+    GwSymbol *root = NULL;
 
     for (guint i = 0; i < self->facs->len; i++) {
-        struct symbol *fac = g_ptr_array_index(self->facs, i);
+        GwSymbol *fac = g_ptr_array_index(self->facs, i);
 
         if (psr != NULL) {
-            struct symbol *prev_fac = g_ptr_array_index(self->facs, i - 1);
+            GwSymbol *prev_fac = g_ptr_array_index(self->facs, i - 1);
 
             int ev1 = prev_fac->n->extvals;
             int ev2 = fac->n->extvals;
@@ -277,7 +277,7 @@ static void recurse_tree_build_whichcache(GhwLoader *self, GwTree *t)
     for (i = cnt - 1; i >= 0; i--) {
         t = ar[i];
         if (t->t_which >= 0) {
-            struct symbol *fac = g_ptr_array_index(self->facs, t->t_which);
+            GwSymbol *fac = g_ptr_array_index(self->facs, t->t_which);
             self->gwt = ghw_insert(t, self->gwt, t->t_which, fac);
         }
     }
@@ -343,7 +343,7 @@ static void ghw_sortfacs(GhwLoader *self)
     for (guint i = 0; i < self->facs->len; i++) {
         char *subst;
         int len;
-        struct symbol *curnode = g_ptr_array_index(self->facs, i);
+        GwSymbol *curnode = g_ptr_array_index(self->facs, i);
 
         subst = curnode->name;
         if ((len = strlen(subst)) > self->longestname) {
@@ -351,10 +351,10 @@ static void ghw_sortfacs(GhwLoader *self)
         }
     }
 
-    wave_heapsort((struct symbol **)self->facs->pdata, self->facs->len);
+    wave_heapsort((GwSymbol **)self->facs->pdata, self->facs->len);
 
     for (guint i = 0; i < self->facs->len; i++) {
-        struct symbol *fac = g_ptr_array_index(self->facs, i);
+        GwSymbol *fac = g_ptr_array_index(self->facs, i);
         self->gwt_corr = ghw_insert(fac, self->gwt_corr, i, NULL);
     }
 
@@ -535,7 +535,7 @@ static GwTree *build_hierarchy_type(GhwLoader *self,
         case ghdl_rtik_type_i64:
         case ghdl_rtik_type_p32:
         case ghdl_rtik_type_p64: {
-            struct symbol *s = calloc_2(1, sizeof(struct symbol));
+            GwSymbol *s = calloc_2(1, sizeof(GwSymbol));
             self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
             self->nbr_sig_ref++;
@@ -710,7 +710,7 @@ static GwTree *build_hierarchy(GhwLoader *self, struct ghw_hie *hie)
 void facs_debug(GhwLoader *self)
 {
     for (guint i = 0; i < self->facs->len; i++) {
-        struct symbol *fac = g_ptr_array_index(self->facs, i);
+        GwSymbol *fac = g_ptr_array_index(self->facs, i);
         GwNode *n = fac->n;
         printf("%d: %s\n", i, n->nname);
         if (n->extvals) {
@@ -731,7 +731,7 @@ static void create_facs(GhwLoader *self)
 
     guint i = 0;
     for (GSList *iter = self->sym_chain; iter != NULL; iter = iter->next, i++) {
-        struct symbol *symbol = iter->data;
+        GwSymbol *symbol = iter->data;
         g_ptr_array_add(self->facs, symbol);
     }
 
@@ -809,7 +809,7 @@ static void set_fac_name_1(GhwLoader *self, GwTree *t)
         }
 
         if (t->t_which >= 0) {
-            struct symbol *s = self->sym_chain->data;
+            GwSymbol *s = self->sym_chain->data;
 
             s->name = strdup_2(self->fac_name);
             s->n = self->nxp[t->t_which];
@@ -1144,7 +1144,7 @@ GwTime ghw_main(char *fname)
 
     /* fix up names on aliased nodes via cloning... */
     for (guint i = 0; i < self->facs->len; i++) {
-        struct symbol *fac = g_ptr_array_index(self->facs, i);
+        GwSymbol *fac = g_ptr_array_index(self->facs, i);
 
         if (strcmp(fac->name, fac->n->nname) != 0) {
             GwNode *n = malloc_2(sizeof(GwNode));
@@ -1180,7 +1180,7 @@ GwTime ghw_main(char *fname)
 #endif
 
     GLOBALS->numfacs = self->facs->len;
-    GLOBALS->facs = (struct symbol **)g_ptr_array_free(self->facs, FALSE);
+    GLOBALS->facs = (GwSymbol **)g_ptr_array_free(self->facs, FALSE);
     GLOBALS->is_ghw = 1;
     GLOBALS->facs_are_sorted = 1;
     GLOBALS->min_time = 0;

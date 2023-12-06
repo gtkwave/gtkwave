@@ -485,11 +485,10 @@ void order_facs_from_treesort_2(GwTree *t)
 
 void order_facs_from_treesort(GwTree *t, void *v)
 {
-    struct symbol ***f =
-        (struct symbol ***)v; /* eliminate compiler warning in tree.h as symbol.h refs tree.h */
+    GwSymbol ***f =
+        (GwSymbol ***)v; /* eliminate compiler warning in tree.h as symbol.h refs tree.h */
 
-    GLOBALS->facs2_tree_c_1 =
-        (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
+    GLOBALS->facs2_tree_c_1 = (GwSymbol **)malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
     GLOBALS->facs2_pos_tree_c_1 = GLOBALS->numfacs - 1;
     order_facs_from_treesort_2(t);
 
@@ -643,8 +642,7 @@ void build_tree_from_name(const char *s, int which)
             while (s) {
                 s = get_module_name(s);
 
-                nt =
-                    (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
+                nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
                 memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
                 if (s) {

@@ -802,7 +802,7 @@ static char *make_net_name_from_tcl_list(char *s, char **unescaped_str)
  * ----------------------------------------------------------------------------
  */
 
-void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
+void process_tcl_list_2(GwSymbol *s, int which_msb, int which_lsb)
 {
     GwTrace *t;
     GwNode *nexp;
@@ -1134,8 +1134,8 @@ int process_tcl_list(const char *sl, gboolean prepend)
             }
         }
 
-        import : if (match_type_list[ii]) { struct symbol *s = GLOBALS->facs[match_idx_list[ii]];
-        struct symbol *schain = s->vec_root;
+        import : if (match_type_list[ii]) { GwSymbol *s = GLOBALS->facs[match_idx_list[ii]];
+        GwSymbol *schain = s->vec_root;
 
         if (GLOBALS->is_lx2) {
             if (schain) {
@@ -1163,7 +1163,7 @@ GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
 for (ii = 0; ii < c; ii++) {
     if (match_type_list[ii]) {
-        struct symbol *s = GLOBALS->facs[match_idx_list[ii]];
+        GwSymbol *s = GLOBALS->facs[match_idx_list[ii]];
 
         if ((match_type_list[ii] >= 2) && (s->n->extvals)) {
             GwNode *nexp;
@@ -1220,7 +1220,7 @@ for (ii = 0; ii < c; ii++) {
                     which_lsb); /* is complicated, so split out to its own function */
             }
         } else {
-            struct symbol *schain = s->vec_root;
+            GwSymbol *schain = s->vec_root;
 
             if (!schain) {
                 AddNodeUnroll(s->n, NULL);
@@ -1526,7 +1526,7 @@ char *add_dnd_from_searchbox(void)
 
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -1549,7 +1549,7 @@ char *add_dnd_from_searchbox(void)
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -1905,10 +1905,10 @@ static void sig_selection_foreach_dnd(GtkTreeModel *model,
 
     /* If signals are vectors, iterate through them if so.  */
     for (i = low; i <= high; i++) {
-        struct symbol *s;
+        GwSymbol *s;
         s = GLOBALS->facs[i];
         if ((s->vec_root) && (GLOBALS->autocoalesce)) {
-            struct symbol *t = s->vec_root;
+            GwSymbol *t = s->vec_root;
             while (t) {
                 one_entry = make_single_tcl_list_name(t->n->nname, NULL, 1, 0);
                 WAVE_OE_ME

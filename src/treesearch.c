@@ -869,7 +869,7 @@ static void sig_selection_foreach(GtkTreeModel *model,
     /* Add signals and vectors.  */
     for (i = low; i <= high; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
         s = GLOBALS->facs[i];
         t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
@@ -998,7 +998,7 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
 
     /* If signals are vectors, coalesces vectors if so.  */
     for (i = low; i <= high; i++) {
-        struct symbol *s;
+        GwSymbol *s;
         s = GLOBALS->facs[i];
         if (s->vec_root) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
@@ -1008,7 +1008,7 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
     /* LX2 */
     if (GLOBALS->is_lx2) {
         for (i = low; i <= high; i++) {
-            struct symbol *s, *t;
+            GwSymbol *s, *t;
             s = GLOBALS->facs[i];
             t = s->vec_root;
             if ((t) && (GLOBALS->autocoalesce)) {
@@ -1575,7 +1575,7 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
     set_window_busy(widget);
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        struct symbol *s;
+        GwSymbol *s;
         if (i < 0)
             break; /* GHW */
         s = GLOBALS->facs[i];
@@ -1589,7 +1589,7 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
         int pre_import = 0;
 
         for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            struct symbol *s, *t;
+            GwSymbol *s, *t;
             if (i < 0)
                 break; /* GHW */
             s = GLOBALS->facs[i];
@@ -1620,7 +1620,7 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
         if (i < 0)
             break; /* GHW */
         s = GLOBALS->facs[i];
@@ -1662,7 +1662,7 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
     set_window_busy(widget);
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        struct symbol *s;
+        GwSymbol *s;
         if (i < 0)
             break; /* GHW */
         s = GLOBALS->facs[i];
@@ -1676,7 +1676,7 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
         int pre_import = 0;
 
         for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            struct symbol *s, *t;
+            GwSymbol *s, *t;
             if (i < 0)
                 break; /* GHW */
             s = GLOBALS->facs[i];
@@ -1707,7 +1707,7 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
         if (i < 0)
             break; /* GHW */
         s = GLOBALS->facs[i];
@@ -1763,7 +1763,7 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
     set_window_busy(widget);
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        struct symbol *s;
+        GwSymbol *s;
         if (i < 0)
             break; /* GHW */
         s = GLOBALS->facs[i];
@@ -1777,7 +1777,7 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
         int pre_import = 0;
 
         for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            struct symbol *s, *t;
+            GwSymbol *s, *t;
             if (i < 0)
                 break; /* GHW */
             s = GLOBALS->facs[i];
@@ -1808,7 +1808,7 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
         if (i < 0)
             break; /* GHW */
         s = GLOBALS->facs[i];

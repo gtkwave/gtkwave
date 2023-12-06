@@ -187,7 +187,7 @@ void vcd_sortfacs(GSList *sym_chain)
 {
     int i;
 
-    GLOBALS->facs = (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
+    GLOBALS->facs = (GwSymbol **)malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
 
     GSList *iter = sym_chain;
     for (i = 0; i < GLOBALS->numfacs; i++) {

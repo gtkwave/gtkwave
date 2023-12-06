@@ -380,7 +380,7 @@ GwTrace *sig_name_to_Trptr(char *name)
     int was_packed = HIER_DEPACK_ALLOC;
     int i, name_len;
     char *hfacname = NULL;
-    struct symbol *s = NULL, *s2;
+    GwSymbol *s = NULL, *s2;
     int len = 0;
     GwBitVector *v = NULL;
     GwBits *b = NULL;

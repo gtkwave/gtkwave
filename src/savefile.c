@@ -1082,7 +1082,7 @@ int parsewavline(char *w, char *alias, int depth)
         return (~0);
     } else if (*w2 == '+') {
         /* handle aliasing */
-        struct symbol *s;
+        GwSymbol *s;
         sscanf(w2 + strlen(prefix), "%s", suffix);
 
         if (suffix[0] == '(') {
@@ -1633,7 +1633,7 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
 
     if (!wild_active) /* short circuit wildcard evaluation with bsearch */
     {
-        struct symbol *s;
+        GwSymbol *s;
 
         if (str[0] == '(') {
             for (i = 1;; i++) {
@@ -1734,7 +1734,7 @@ int makevec_lx2(char *str)
 
             if (!wild_active) /* short circuit wildcard evaluation with bsearch */
             {
-                struct symbol *s;
+                GwSymbol *s;
                 if (wild[0] == '(') {
                     for (i = 1;; i++) {
                         if (wild[i] == 0)
@@ -1860,7 +1860,7 @@ int parsewavline_lx2(char *w, char *alias, int depth)
     } else if (*w2 == '@') {
     } else if (*w2 == '+') {
         /* handle aliasing */
-        struct symbol *s;
+        GwSymbol *s;
         sscanf(w2 + strlen(prefix), "%s", suffix);
 
         if (suffix[0] == '(') {
