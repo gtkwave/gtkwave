@@ -21,11 +21,33 @@ static void test_blackout_regions(void)
     g_object_unref(dump_file);
 }
 
+static void test_stems(void)
+{
+    GwStems *stems = gw_stems_new();
+
+    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE, "stems", stems, NULL);
+    g_object_unref(stems);
+
+    g_assert_true(GW_IS_STEMS(gw_dump_file_get_stems(dump_file)));
+    g_assert_true(gw_dump_file_get_stems(dump_file) == stems);
+
+    g_object_unref(dump_file);
+
+    // get_stems must always return a valid object.
+
+    dump_file = g_object_new(GW_TYPE_DUMP_FILE, NULL);
+
+    g_assert_true(GW_IS_STEMS(gw_dump_file_get_stems(dump_file)));
+
+    g_object_unref(dump_file);
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/dump-file/blackout-regions", test_blackout_regions);
+    g_test_add_func("/dump-file/stems", test_stems);
 
     return g_test_run();
 }

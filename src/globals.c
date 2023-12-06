@@ -63,7 +63,6 @@ struct Global *GLOBALS = NULL;
 static const struct Global globals_base_values = {
     NULL, // project
     NULL, // dump_file
-    NULL, // stems
 
     /*
      * analyzer.c
