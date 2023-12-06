@@ -2,6 +2,7 @@ libgtkwave_tests = [
     'gw-blackout-regions',
     'gw-color-theme',
     'gw-color',
+    'gw-dump-file',
     'gw-marker',
     'gw-named-markers',
     'gw-project',

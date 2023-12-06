@@ -1607,8 +1607,9 @@ loader_check_head:
         GLOBALS->aet_name = malloc_2(strlen(GLOBALS->loaded_file_name) + 1);
         strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
         GLOBALS->loaded_file_type = FST_FILE;
-        fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if (GLOBALS->fst_file == NULL) {
+        GLOBALS->dump_file =
+            fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
+        if (GLOBALS->dump_file == NULL) {
             fprintf(stderr,
                     "GTKWAVE | Could not initialize '%s'%s.\n",
                     GLOBALS->loaded_file_name,
@@ -1628,7 +1629,8 @@ loader_check_head:
                suffix_check(GLOBALS->loaded_file_name, ".ghw.gz") ||
                suffix_check(GLOBALS->loaded_file_name, ".ghw.bz2")) {
         GLOBALS->loaded_file_type = GHW_FILE;
-        if (!ghw_main(GLOBALS->loaded_file_name)) {
+        GLOBALS->dump_file = ghw_main(GLOBALS->loaded_file_name);
+        if (GLOBALS->dump_file == NULL) {
             /* error message printed in ghw_main() */
             vcd_exit(255);
         }
@@ -1665,7 +1667,7 @@ loader_check_head:
         } else {
             GLOBALS->loaded_file_type = DUMPLESS_FILE;
         }
-        vcd_recoder_main(GLOBALS->loaded_file_name);
+        GLOBALS->dump_file = vcd_recoder_main(GLOBALS->loaded_file_name);
     }
 
     /* deallocate the symbol hash table */

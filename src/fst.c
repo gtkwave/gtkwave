@@ -590,7 +590,7 @@ static GwBlackoutRegions *load_blackout_regions(FstLoader *self)
 /*
  * mainline
  */
-GwTime fst_main(char *fname, char *skip_start, char *skip_end)
+GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
 {
     int i;
     GwNode *n;
@@ -617,7 +617,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     void *fst_reader = fstReaderOpen(fname);
     if (fst_reader == NULL) {
         /* look at self->fst_reader in caller for success status... */
-        return GW_TIME_CONSTANT(0);
+        return NULL;
     }
     /* SPLASH */ splash_create();
 
@@ -673,7 +673,7 @@ GwTime fst_main(char *fname, char *skip_start, char *skip_end)
     self->total_cycles = self->last_cycle - self->first_cycle + 1;
     GLOBALS->global_time_offset = fstReaderGetTimezero(fst_reader) * GLOBALS->time_scale;
 
-    GLOBALS->blackout_regions = load_blackout_regions(self);
+    GwBlackoutRegions *blackout_regions = load_blackout_regions(self);
 
     /* do your stuff here..all useful info has been initialized by now */
 
@@ -1145,7 +1145,12 @@ if(num_dups)
     fstReaderIterBlocksSetNativeDoublesOnCallback(fst_reader, 1);
 
     /* SPLASH */ splash_finalize();
-    return (GLOBALS->max_time);
+
+    GwDumpFile *dump_file =
+        g_object_new(GW_TYPE_DUMP_FILE, "blackout-regions", blackout_regions, NULL);
+    g_object_unref(blackout_regions);
+
+    return dump_file;
 }
 
 /*

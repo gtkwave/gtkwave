@@ -1098,7 +1098,7 @@ static void read_traces(GhwLoader *self)
 
 /*******************************************************************************/
 
-GwTime ghw_main(char *fname)
+GwDumpFile *ghw_main(char *fname)
 {
     struct ghw_handler handle;
     unsigned int ui;
@@ -1112,12 +1112,12 @@ GwTime ghw_main(char *fname)
     handle.flag_verbose = 0;
     if ((rc = ghw_open(&handle, fname)) < 0) {
         fprintf(stderr, "Error opening ghw file '%s', rc=%d.\n", fname, rc);
-        return (GW_TIME_CONSTANT(0)); /* look at return code in caller for success status... */
+        return NULL; /* look at return code in caller for success status... */
     }
 
     if (ghw_read_base(&handle) < 0) {
         fprintf(stderr, "Error in ghw file '%s'.\n", fname);
-        return (GW_TIME_CONSTANT(0)); /* look at return code in caller for success status... */
+        return NULL; /* look at return code in caller for success status... */
     }
 
     GhwLoader loader = {0};
@@ -1203,7 +1203,9 @@ GwTime ghw_main(char *fname)
                 self->num_glitch_regions,
                 (self->num_glitch_regions != 1) ? "s" : "");
 
-    return GLOBALS->max_time;
+    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE, NULL);
+
+    return dump_file;
 }
 
 /*******************************************************************************/

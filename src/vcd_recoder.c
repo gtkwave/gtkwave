@@ -104,6 +104,8 @@ typedef struct
 
     GQueue *scopes;
     GString *name_prefix;
+
+    GwBlackoutRegions *blackout_regions;
 } VcdLoader;
 
 /**/
@@ -1884,11 +1886,11 @@ static void vcd_parse(VcdLoader *self)
                 break; /* just loop through..                 */
             case T_DUMPOFF:
             case T_DUMPPORTSOFF:
-                gw_blackout_regions_add_dumpoff(GLOBALS->blackout_regions, self->current_time);
+                gw_blackout_regions_add_dumpoff(self->blackout_regions, self->current_time);
                 break;
             case T_DUMPON:
             case T_DUMPPORTSON:
-                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, self->current_time);
+                gw_blackout_regions_add_dumpon(self->blackout_regions, self->current_time);
                 break;
             case T_DUMPVARS:
             case T_DUMPPORTS:
@@ -1905,7 +1907,7 @@ static void vcd_parse(VcdLoader *self)
                 sync_end(self, NULL); /* skip over unknown keywords */
                 break;
             case T_EOF:
-                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, self->current_time);
+                gw_blackout_regions_add_dumpon(self->blackout_regions, self->current_time);
 
                 self->pv = NULL;
                 if (GLOBALS->prev_hier_uncompressed_name) {
@@ -2419,11 +2421,9 @@ static void vcd_cleanup(VcdLoader *self)
 
 /*******************************************************************************/
 
-GwTime vcd_recoder_main(char *fname)
+GwDumpFile *vcd_recoder_main(char *fname)
 {
     GLOBALS->vcd_hier_delimeter[0] = GLOBALS->hier_delimeter;
-
-    GLOBALS->blackout_regions = gw_blackout_regions_new();
 
     errno = 0; /* reset in case it's set for some reason */
 
@@ -2444,6 +2444,7 @@ GwTime vcd_recoder_main(char *fname)
     self->vcd_minid = G_MAXUINT;
     self->scopes = g_queue_new();
     self->name_prefix = g_string_new(NULL);
+    self->blackout_regions = gw_blackout_regions_new();
 
     if (suffix_check(fname, ".gz") || suffix_check(fname, ".zip")) {
         char *str;
@@ -2560,14 +2561,19 @@ GwTime vcd_recoder_main(char *fname)
 
     getch_free(self); /* free membuff for vcd getch buffer */
 
-    gw_blackout_regions_scale(GLOBALS->blackout_regions, GLOBALS->time_scale);
+    gw_blackout_regions_scale(self->blackout_regions, GLOBALS->time_scale);
 
     /* is_vcd=~0; */
     GLOBALS->is_lx2 = LXT2_IS_VLIST;
     GLOBALS->vcd_file = self->file;
 
     /* SPLASH */ splash_finalize();
-    return (GLOBALS->max_time);
+
+    GwDumpFile *dump_file =
+        g_object_new(GW_TYPE_DUMP_FILE, "blackout-regions", self->blackout_regions, NULL);
+    g_object_unref(self->blackout_regions);
+
+    return dump_file;
 }
 
 /*******************************************************************************/

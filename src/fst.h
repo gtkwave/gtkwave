@@ -21,7 +21,7 @@
 
 typedef struct _FstFile FstFile;
 
-GwTime fst_main(char *fname, char *skip_start, char *skip_end);
+GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end);
 void import_fst_trace(FstFile *self, GwNode *np);
 void fst_set_fac_process_mask(FstFile *self, GwNode *np);
 void fst_import_masked(FstFile *self);
