@@ -306,18 +306,18 @@ void reformat_time(char *buf, GwTime val, char dim)
 
 void update_time_box(void)
 {
-
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
     if (GLOBALS->anno_ctx) {
         if (gw_marker_is_enabled(primary_marker)) {
             GwTime val = gw_marker_get_position(primary_marker);
+            GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
 
             GLOBALS->anno_ctx->marker_set = 0; /* avoid race on update */
             GLOBALS->anno_ctx->marker = val / GLOBALS->time_scale;
 
             reformat_time(GLOBALS->anno_ctx->time_string,
-                          val + GLOBALS->global_time_offset,
+                          val + global_time_offset,
                           GLOBALS->time_dimension);
 
             GLOBALS->anno_ctx->marker_set = 1;

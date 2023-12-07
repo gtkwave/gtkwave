@@ -404,7 +404,7 @@ static int gtkwavetcl_getTimeZero(ClientData clientData,
                                   int objc,
                                   Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->global_time_offset;
+    GwTime value = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 

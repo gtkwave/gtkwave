@@ -123,13 +123,11 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->save_on_exit = g_old->save_on_exit;
     GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
-    reformat_time(timestr,
-                  GLOBALS->tims.first + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, GLOBALS->time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr,
-                  GLOBALS->tims.last + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, GLOBALS->time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
     update_time_box();

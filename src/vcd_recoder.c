@@ -106,6 +106,7 @@ typedef struct
     GString *name_prefix;
 
     GwBlackoutRegions *blackout_regions;
+    GwTime global_time_offset;
 } VcdLoader;
 
 /**/
@@ -985,7 +986,7 @@ static void sync_end(VcdLoader *self, const char *hdr)
         if ((tok == T_END) || (tok == T_EOF))
             break;
         if (hdr) {
-            DEBUG(fprintf(stderr, " %s", GLOBALS->yytext_vcd_recoder_c_3));
+            DEBUG(fprintf(stderr, " %s", self->yytext));
         }
     }
     if (hdr) {
@@ -1006,7 +1007,7 @@ static int version_sync_end(VcdLoader *self, const char *hdr)
         if ((tok == T_END) || (tok == T_EOF))
             break;
         if (hdr) {
-            DEBUG(fprintf(stderr, " %s", GLOBALS->yytext_vcd_recoder_c_3));
+            DEBUG(fprintf(stderr, " %s", self->yytext));
         }
         /* turn off autocoalesce for Icarus */
         if (strstr(self->yytext, "Icarus") != NULL) {
@@ -1276,11 +1277,9 @@ static void vcd_parse(VcdLoader *self)
                 int vtok = get_token(self);
                 if ((vtok == T_END) || (vtok == T_EOF))
                     break;
-                GLOBALS->global_time_offset = atoi_64(self->yytext);
+                self->global_time_offset = atoi_64(self->yytext);
 
-                DEBUG(fprintf(stderr,
-                              "TIMEZERO: %" GW_TIME_FORMAT "\n",
-                              GLOBALS->global_time_offset));
+                DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n", self->global_time_offset));
                 sync_end(self, NULL);
             } break;
             case T_TIMESCALE: {
@@ -2548,7 +2547,7 @@ GwDumpFile *vcd_recoder_main(char *fname)
 
     GLOBALS->min_time = self->file->start_time * GLOBALS->time_scale;
     GLOBALS->max_time = self->file->end_time * GLOBALS->time_scale;
-    GLOBALS->global_time_offset = GLOBALS->global_time_offset * GLOBALS->time_scale;
+    self->global_time_offset *= GLOBALS->time_scale;
 
     if ((GLOBALS->min_time == GLOBALS->max_time) && (GLOBALS->max_time == GW_TIME_CONSTANT(-1))) {
         fprintf(stderr, "VCD times range is equal to zero.  Exiting.\n");
@@ -2569,8 +2568,13 @@ GwDumpFile *vcd_recoder_main(char *fname)
 
     /* SPLASH */ splash_finalize();
 
-    GwDumpFile *dump_file =
-        g_object_new(GW_TYPE_DUMP_FILE, "blackout-regions", self->blackout_regions, NULL);
+    // clang-format off
+    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE,
+                                         "blackout-regions", self->blackout_regions,
+                                         "global-time-offset", self->global_time_offset,
+                                         NULL);
+    // clang-format on
+
     g_object_unref(self->blackout_regions);
 
     return dump_file;

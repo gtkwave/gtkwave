@@ -673,7 +673,7 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     self->first_cycle = fstReaderGetStartTime(fst_reader) * GLOBALS->time_scale;
     self->last_cycle = fstReaderGetEndTime(fst_reader) * GLOBALS->time_scale;
     self->total_cycles = self->last_cycle - self->first_cycle + 1;
-    GLOBALS->global_time_offset = fstReaderGetTimezero(fst_reader) * GLOBALS->time_scale;
+    GwTime global_time_offset = fstReaderGetTimezero(fst_reader) * GLOBALS->time_scale;
 
     GwBlackoutRegions *blackout_regions = load_blackout_regions(self);
 
@@ -1152,6 +1152,7 @@ if(num_dups)
     GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE,
                                          "blackout-regions", blackout_regions,
                                          "stems", self->stems,
+                                         "global-time-offset", global_time_offset,
                                          NULL);
     // clang-format on
 

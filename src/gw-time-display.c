@@ -154,10 +154,11 @@ static void gw_time_display_update(GwTimeDisplay *self)
         cursor = gw_project_get_cursor(self->project);
     }
 
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
     if (GLOBALS->use_maxtime_display) {
-        gchar *text = reformat_time_2(GLOBALS->max_time + GLOBALS->global_time_offset,
-                                      GLOBALS->time_dimension,
-                                      FALSE);
+        gchar *text =
+            reformat_time_2(GLOBALS->max_time + global_time_offset, GLOBALS->time_dimension, FALSE);
         gtk_label_set_text(GTK_LABEL(self->marker_label), "Max");
         gtk_label_set_text(GTK_LABEL(self->marker_value), text);
         g_free(text);
@@ -185,8 +186,7 @@ static void gw_time_display_update(GwTimeDisplay *self)
                     text = t;
                 }
             } else {
-                text = reformat_time_2(gw_marker_get_position(primary_marker) +
-                                           GLOBALS->global_time_offset,
+                text = reformat_time_2(gw_marker_get_position(primary_marker) + global_time_offset,
                                        GLOBALS->time_dimension,
                                        FALSE);
             }
@@ -200,17 +200,16 @@ static void gw_time_display_update(GwTimeDisplay *self)
 
     if (baseline_marker != NULL && gw_marker_is_enabled(baseline_marker)) {
         gtk_label_set_text(GTK_LABEL(self->cursor_label), "Base");
-        gchar *text =
-            reformat_time_2(gw_marker_get_position(baseline_marker) + GLOBALS->global_time_offset,
-                            GLOBALS->time_dimension,
-                            FALSE);
+        gchar *text = reformat_time_2(gw_marker_get_position(baseline_marker) + global_time_offset,
+                                      GLOBALS->time_dimension,
+                                      FALSE);
         gtk_label_set_text(GTK_LABEL(self->cursor_value), text);
         g_free(text);
     } else {
         gtk_label_set_text(GTK_LABEL(self->cursor_label), "Cursor");
 
         GwTime cursor_pos = cursor != NULL ? gw_marker_get_position(cursor) : 0;
-        cursor_pos += GLOBALS->global_time_offset;
+        cursor_pos += global_time_offset;
 
         gchar *text = reformat_time_2(cursor_pos, GLOBALS->time_dimension, FALSE);
 

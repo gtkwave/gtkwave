@@ -9,10 +9,12 @@ G_DEFINE_TYPE(GwDumpFileBuilder, gw_dump_file_builder, G_TYPE_OBJECT)
 
 static void gw_dump_file_builder_class_init(GwDumpFileBuilderClass *klass)
 {
+    (void)klass;
 }
 
 static void gw_dump_file_builder_init(GwDumpFileBuilder *self)
 {
+    (void)self;
 }
 
 GwDumpFileBuilder *gw_dump_file_builder_new(void)

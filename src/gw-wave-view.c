@@ -406,10 +406,12 @@ static void rendertimes(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors)
     for (;;) {
         renderhash(self, cr, colors, realx, tim);
 
-        if (tim + GLOBALS->global_time_offset) {
+        GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+        if (tim + global_time_offset) {
             if (tim != GLOBALS->min_time) {
                 reformat_time(timebuff,
-                              time_trunc(tim) + GLOBALS->global_time_offset,
+                              time_trunc(tim) + global_time_offset,
                               GLOBALS->time_dimension);
             } else {
                 timebuff[0] = 0;

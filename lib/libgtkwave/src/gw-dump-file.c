@@ -6,6 +6,8 @@ struct _GwDumpFile
 
     GwBlackoutRegions *blackout_regions;
     GwStems *stems;
+
+    GwTime global_time_offset;
 };
 
 G_DEFINE_TYPE(GwDumpFile, gw_dump_file, G_TYPE_OBJECT)
@@ -14,6 +16,7 @@ enum
 {
     PROP_BLACKOUT_REGIONS = 1,
     PROP_STEMS,
+    PROP_GLOBAL_TIME_OFFSET,
     N_PROPERTIES,
 };
 
@@ -55,6 +58,10 @@ static void gw_dump_file_set_property(GObject *object,
             g_set_object(&self->stems, stems);
             break;
         }
+
+        case PROP_GLOBAL_TIME_OFFSET:
+            self->global_time_offset = g_value_get_int64(value);
+            break;
 
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -106,11 +113,21 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
                             GW_TYPE_STEMS,
                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+    properties[PROP_GLOBAL_TIME_OFFSET] =
+        g_param_spec_int64("global-time-offset",
+                           NULL,
+                           NULL,
+                           G_MININT64,
+                           G_MAXINT64,
+                           0,
+                           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
     g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }
 
 static void gw_dump_file_init(GwDumpFile *self)
 {
+    (void)self;
 }
 
 /**
@@ -141,4 +158,19 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self)
     g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
 
     return self->stems;
+}
+
+/**
+ * gw_dump_file_get_global_time_offset:
+ * @self: A #GwDumpFile.
+ *
+ * Returns the global time offset.
+ *
+ * Returns: The global time stems.
+ */
+GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), 0);
+
+    return self->global_time_offset;
 }

@@ -115,7 +115,6 @@ static const struct Global globals_base_values = {
     /*
      * currenttime.c
      */
-    GW_TIME_CONSTANT(0), /* global_time_offset */
     0, /* is_vcd 56 */
     0, /* partial_vcd */
     1, /* use_maxtime_display 57 */
@@ -1706,13 +1705,11 @@ void reload_into_new_context_2(void)
         GLOBALS->tims.laststart = GLOBALS->tims.last;
     }
 
-    reformat_time(timestr,
-                  GLOBALS->tims.first + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, GLOBALS->time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr,
-                  GLOBALS->tims.last + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, GLOBALS->time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
     /* Change SST - if it exists */
