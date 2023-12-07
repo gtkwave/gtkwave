@@ -76,15 +76,16 @@ static gboolean parse_time_entry(GtkEntry *entry, GwNamedMarkerDialog *dialog, G
         return FALSE;
     }
 
-    GwTime temp = unformat_time(text, GLOBALS->time_dimension);
-    temp -= GLOBALS->global_time_offset;
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+    GwTime temp = unformat_time(text, GLOBALS->time_dimension) - global_time_offset;
     g_free(text);
 
     if (temp < GLOBALS->tims.start || temp > GLOBALS->tims.last) {
         return FALSE;
     }
 
-    *time_out = temp + GLOBALS->global_time_offset;
+    *time_out = temp + global_time_offset;
 
     return TRUE;
 }
@@ -110,8 +111,9 @@ static void gw_named_marker_dialog_response(GtkDialog *dialog, gint response_id)
             const gchar *time_str = gtk_entry_get_text(time_entry);
             const gchar *alias_str = gtk_entry_get_text(alias_entry);
 
-            GwTime temp = unformat_time(time_str, GLOBALS->time_dimension);
-            temp -= GLOBALS->global_time_offset;
+            GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+            GwTime temp = unformat_time(time_str, GLOBALS->time_dimension) - global_time_offset;
 
             if (temp >= GLOBALS->tims.start && temp <= GLOBALS->tims.last) {
                 if (gw_named_markers_find(self->markers, temp) == NULL) {

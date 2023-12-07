@@ -128,7 +128,6 @@ struct Global
     /*
      * currenttime.c
      */
-    GwTime global_time_offset;
     char is_vcd; /* from currenttime.c 56 */
     char partial_vcd; /* from currenttime.c 57 */
     char use_maxtime_display; /* from currenttime.c 58 */

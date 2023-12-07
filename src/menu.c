@@ -3709,63 +3709,64 @@ void movetotime_cleanup(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
-    if (GLOBALS->entrybox_text) {
-        GwTime gt = GLOBALS->tims.first;
-        char update_string[128];
-        char timval[40];
-        GtkAdjustment *hadj;
-        GwTime pageinc;
-
-        if ((GLOBALS->entrybox_text[0] >= 'A' && GLOBALS->entrybox_text[0] <= 'Z') ||
-            (GLOBALS->entrybox_text[0] >= 'a' && GLOBALS->entrybox_text[0] <= 'z')) {
-            char *su = GLOBALS->entrybox_text;
-            int uch;
-            while (*su) {
-                uch = toupper((int)(unsigned char)*su);
-                *su = uch;
-                su++;
-            }
-
-            uch = bijective_marker_id_string_hash(GLOBALS->entrybox_text);
-
-            GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
-            GwMarker *marker = gw_named_markers_get(markers, uch);
-            if (marker != NULL && gw_marker_is_enabled(marker)) {
-                gt = gw_marker_get_position(marker);
-            }
-
-        } else {
-            gt = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension);
-            gt -= GLOBALS->global_time_offset;
-        }
-        free_2(GLOBALS->entrybox_text);
-        GLOBALS->entrybox_text = NULL;
-
-        if (gt < GLOBALS->tims.first)
-            gt = GLOBALS->tims.first;
-        else if (gt > GLOBALS->tims.last)
-            gt = GLOBALS->tims.last;
-
-        hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
-        gtk_adjustment_set_value(hadj, gt);
-
-        pageinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
-        if (gt < (GLOBALS->tims.last - pageinc + 1))
-            GLOBALS->tims.timecache = gt;
-        else {
-            GLOBALS->tims.timecache = GLOBALS->tims.last - pageinc + 1;
-            if (GLOBALS->tims.timecache < GLOBALS->tims.first)
-                GLOBALS->tims.timecache = GLOBALS->tims.first;
-        }
-
-        reformat_time(timval,
-                      GLOBALS->tims.timecache + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
-        sprintf(update_string, "Moved to time: %s\n", timval);
-        status_text(update_string);
-
-        time_update();
+    if (GLOBALS->entrybox_text == NULL) {
+        return;
     }
+
+    GwTime gt = GLOBALS->tims.first;
+    char update_string[128];
+    char timval[40];
+    GtkAdjustment *hadj;
+    GwTime pageinc;
+
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+    if ((GLOBALS->entrybox_text[0] >= 'A' && GLOBALS->entrybox_text[0] <= 'Z') ||
+        (GLOBALS->entrybox_text[0] >= 'a' && GLOBALS->entrybox_text[0] <= 'z')) {
+        char *su = GLOBALS->entrybox_text;
+        int uch;
+        while (*su) {
+            uch = toupper((int)(unsigned char)*su);
+            *su = uch;
+            su++;
+        }
+
+        uch = bijective_marker_id_string_hash(GLOBALS->entrybox_text);
+
+        GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
+        GwMarker *marker = gw_named_markers_get(markers, uch);
+        if (marker != NULL && gw_marker_is_enabled(marker)) {
+            gt = gw_marker_get_position(marker);
+        }
+
+    } else {
+        gt = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension) - global_time_offset;
+    }
+    free_2(GLOBALS->entrybox_text);
+    GLOBALS->entrybox_text = NULL;
+
+    if (gt < GLOBALS->tims.first)
+        gt = GLOBALS->tims.first;
+    else if (gt > GLOBALS->tims.last)
+        gt = GLOBALS->tims.last;
+
+    hadj = GTK_ADJUSTMENT(GLOBALS->wave_hslider);
+    gtk_adjustment_set_value(hadj, gt);
+
+    pageinc = (GwTime)(((gdouble)GLOBALS->wavewidth) * GLOBALS->nspx);
+    if (gt < (GLOBALS->tims.last - pageinc + 1))
+        GLOBALS->tims.timecache = gt;
+    else {
+        GLOBALS->tims.timecache = GLOBALS->tims.last - pageinc + 1;
+        if (GLOBALS->tims.timecache < GLOBALS->tims.first)
+            GLOBALS->tims.timecache = GLOBALS->tims.first;
+    }
+
+    reformat_time(timval, GLOBALS->tims.timecache + global_time_offset, GLOBALS->time_dimension);
+    sprintf(update_string, "Moved to time: %s\n", timval);
+    status_text(update_string);
+
+    time_update();
 }
 
 void menu_movetotime(gpointer null_data, guint callback_action, GtkWidget *widget)
@@ -3776,7 +3777,9 @@ void menu_movetotime(gpointer null_data, guint callback_action, GtkWidget *widge
 
     char gt[32];
 
-    reformat_time(gt, GLOBALS->tims.start + GLOBALS->global_time_offset, GLOBALS->time_dimension);
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+    reformat_time(gt, GLOBALS->tims.start + global_time_offset, GLOBALS->time_dimension);
 
     entrybox("Move To Time", 200, gt, NULL, 20, G_CALLBACK(movetotime_cleanup));
 }

@@ -18,18 +18,16 @@ void update_endcap_times_for_partial_vcd(void)
 {
     char str[40];
 
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
     if (GLOBALS->from_entry) {
-        reformat_time(str,
-                      GLOBALS->tims.first + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
+        reformat_time(str, GLOBALS->tims.first + global_time_offset, GLOBALS->time_dimension);
         gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), str);
         gtkwavetcl_setvar(WAVE_TCLCB_FROM_ENTRY_UPDATED, str, WAVE_TCLCB_FROM_ENTRY_UPDATED_FLAGS);
     }
 
     if (GLOBALS->to_entry) {
-        reformat_time(str,
-                      GLOBALS->tims.last + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
+        reformat_time(str, GLOBALS->tims.last + global_time_offset, GLOBALS->time_dimension);
         gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), str);
         gtkwavetcl_setvar(WAVE_TCLCB_TO_ENTRY_UPDATED, str, WAVE_TCLCB_TO_ENTRY_UPDATED_FLAGS);
     }
@@ -57,8 +55,9 @@ void from_entry_callback(GtkWidget *widget, GtkWidget *entry)
     entry_text = entry_text ? entry_text : "";
     DEBUG(printf("From Entry contents: %s\n", entry_text));
 
-    newlo = unformat_time(entry_text, GLOBALS->time_dimension);
-    newlo -= GLOBALS->global_time_offset;
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+    newlo = unformat_time(entry_text, GLOBALS->time_dimension) - global_time_offset;
 
     if (newlo < GLOBALS->min_time) {
         newlo = GLOBALS->min_time;
@@ -69,9 +68,7 @@ void from_entry_callback(GtkWidget *widget, GtkWidget *entry)
         if (GLOBALS->tims.start < GLOBALS->tims.first)
             GLOBALS->tims.timecache = GLOBALS->tims.start = GLOBALS->tims.first;
 
-        reformat_time(fromstr,
-                      GLOBALS->tims.first + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
+        reformat_time(fromstr, GLOBALS->tims.first + global_time_offset, GLOBALS->time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), fromstr);
         time_update();
         gtkwavetcl_setvar(WAVE_TCLCB_FROM_ENTRY_UPDATED,
@@ -79,9 +76,7 @@ void from_entry_callback(GtkWidget *widget, GtkWidget *entry)
                           WAVE_TCLCB_FROM_ENTRY_UPDATED_FLAGS);
         return;
     } else {
-        reformat_time(fromstr,
-                      GLOBALS->tims.first + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
+        reformat_time(fromstr, GLOBALS->tims.first + global_time_offset, GLOBALS->time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), fromstr);
         gtkwavetcl_setvar(WAVE_TCLCB_FROM_ENTRY_UPDATED,
                           fromstr,
@@ -102,8 +97,9 @@ void to_entry_callback(GtkWidget *widget, GtkWidget *entry)
     entry_text = entry_text ? entry_text : "";
     DEBUG(printf("To Entry contents: %s\n", entry_text));
 
-    newhi = unformat_time(entry_text, GLOBALS->time_dimension);
-    newhi -= GLOBALS->global_time_offset;
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
+    newhi = unformat_time(entry_text, GLOBALS->time_dimension) - global_time_offset;
 
     if ((newhi > GLOBALS->max_time) || (!strlen(entry_text))) /* null string makes max time */
     {
@@ -112,17 +108,13 @@ void to_entry_callback(GtkWidget *widget, GtkWidget *entry)
 
     if (newhi > (GLOBALS->tims.first)) {
         GLOBALS->tims.last = newhi;
-        reformat_time(tostr,
-                      GLOBALS->tims.last + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
+        reformat_time(tostr, GLOBALS->tims.last + global_time_offset, GLOBALS->time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), tostr);
         time_update();
         gtkwavetcl_setvar(WAVE_TCLCB_TO_ENTRY_UPDATED, tostr, WAVE_TCLCB_TO_ENTRY_UPDATED_FLAGS);
         return;
     } else {
-        reformat_time(tostr,
-                      GLOBALS->tims.last + GLOBALS->global_time_offset,
-                      GLOBALS->time_dimension);
+        reformat_time(tostr, GLOBALS->tims.last + global_time_offset, GLOBALS->time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), tostr);
         gtkwavetcl_setvar(WAVE_TCLCB_TO_ENTRY_UPDATED, tostr, WAVE_TCLCB_TO_ENTRY_UPDATED_FLAGS);
         return;
@@ -138,12 +130,12 @@ GtkWidget *create_entry_box(void)
 
     char fromstr[32], tostr[32];
 
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+
     label = gtk_label_new("From:");
     GLOBALS->from_entry = X_gtk_entry_new_with_max_length(40);
 
-    reformat_time(fromstr,
-                  GLOBALS->min_time + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    reformat_time(fromstr, GLOBALS->min_time + global_time_offset, GLOBALS->time_dimension);
 
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), fromstr);
     g_signal_connect(GLOBALS->from_entry,
@@ -161,7 +153,7 @@ GtkWidget *create_entry_box(void)
     label2 = gtk_label_new("To:");
     GLOBALS->to_entry = X_gtk_entry_new_with_max_length(40);
 
-    reformat_time(tostr, GLOBALS->max_time + GLOBALS->global_time_offset, GLOBALS->time_dimension);
+    reformat_time(tostr, GLOBALS->max_time + global_time_offset, GLOBALS->time_dimension);
 
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), tostr);
     g_signal_connect(GLOBALS->to_entry,
