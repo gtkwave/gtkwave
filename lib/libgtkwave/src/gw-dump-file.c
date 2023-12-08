@@ -1,17 +1,15 @@
 #include "gw-dump-file.h"
 
-struct _GwDumpFile
+typedef struct
 {
-    GObject parent_instance;
-
     GwBlackoutRegions *blackout_regions;
     GwStems *stems;
     GwHistEntFactory *hist_ent_factory;
 
     GwTime global_time_offset;
-};
+} GwDumpFilePrivate;
 
-G_DEFINE_TYPE(GwDumpFile, gw_dump_file, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE(GwDumpFile, gw_dump_file, G_TYPE_OBJECT)
 
 enum
 {
@@ -27,10 +25,11 @@ static GParamSpec *properties[N_PROPERTIES];
 static void gw_dump_file_dispose(GObject *object)
 {
     GwDumpFile *self = GW_DUMP_FILE(object);
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
-    g_clear_object(&self->blackout_regions);
-    g_clear_object(&self->stems);
-    g_clear_object(&self->hist_ent_factory);
+    g_clear_object(&priv->blackout_regions);
+    g_clear_object(&priv->stems);
+    g_clear_object(&priv->hist_ent_factory);
 
     G_OBJECT_CLASS(gw_dump_file_parent_class)->dispose(object);
 }
@@ -41,6 +40,7 @@ static void gw_dump_file_set_property(GObject *object,
                                       GParamSpec *pspec)
 {
     GwDumpFile *self = GW_DUMP_FILE(object);
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     switch (property_id) {
         case PROP_BLACKOUT_REGIONS: {
@@ -49,7 +49,7 @@ static void gw_dump_file_set_property(GObject *object,
                 blackout_regions = gw_blackout_regions_new();
             }
 
-            g_set_object(&self->blackout_regions, blackout_regions);
+            g_set_object(&priv->blackout_regions, blackout_regions);
             break;
         }
 
@@ -59,7 +59,7 @@ static void gw_dump_file_set_property(GObject *object,
                 stems = gw_stems_new();
             }
 
-            g_set_object(&self->stems, stems);
+            g_set_object(&priv->stems, stems);
             break;
         }
 
@@ -69,12 +69,12 @@ static void gw_dump_file_set_property(GObject *object,
                 hist_ent_factory = gw_hist_ent_factory_new();
             }
 
-            g_set_object(&self->hist_ent_factory, hist_ent_factory);
+            g_set_object(&priv->hist_ent_factory, hist_ent_factory);
             break;
         }
 
         case PROP_GLOBAL_TIME_OFFSET:
-            self->global_time_offset = g_value_get_int64(value);
+            priv->global_time_offset = g_value_get_int64(value);
             break;
 
         default:
@@ -171,7 +171,9 @@ GwBlackoutRegions *gw_dump_file_get_blackout_regions(GwDumpFile *self)
 {
     g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
 
-    return self->blackout_regions;
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->blackout_regions;
 }
 
 /**
@@ -186,7 +188,9 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self)
 {
     g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
 
-    return self->stems;
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->stems;
 }
 
 /**
@@ -201,7 +205,9 @@ GwHistEntFactory *gw_dump_file_get_hist_ent_factory(GwDumpFile *self)
 {
     g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
 
-    return self->hist_ent_factory;
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->hist_ent_factory;
 }
 
 /**
@@ -216,5 +222,7 @@ GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self)
 {
     g_return_val_if_fail(GW_IS_DUMP_FILE(self), 0);
 
-    return self->global_time_offset;
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->global_time_offset;
 }
