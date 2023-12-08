@@ -247,8 +247,8 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
     }
 }
 
-#define vlist_locate_import(x, y) \
-    ((GLOBALS->vlist_prepack) ? ((depacked) + (y)) : vlist_locate((x), (y)))
+#define vlist_locate_import(self, x, y) \
+    ((self->is_prepacked) ? ((depacked) + (y)) : vlist_locate((x), (y)))
 
 void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 {
@@ -272,7 +272,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         return;
     vlist_uncompress(&v);
 
-    if (GLOBALS->vlist_prepack) {
+    if (self->is_prepacked) {
         depacked = vlist_packer_decompress(v, &list_size);
         vlist_destroy(v);
     } else {
@@ -283,12 +283,12 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         len = 1;
         vlist_type = '!'; /* possible alias */
     } else {
-        chp = vlist_locate_import(v, vlist_pos++);
+        chp = vlist_locate_import(self, v, vlist_pos++);
         if (chp) {
             switch ((vlist_type = (*chp & 0x7f))) {
                 case '0':
                     len = 1;
-                    chp = vlist_locate_import(v, vlist_pos++);
+                    chp = vlist_locate_import(self, v, vlist_pos++);
                     if (!chp) {
                         fprintf(stderr,
                                 "Internal error file '%s' line %d, exiting.\n",
@@ -302,7 +302,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                 case 'B':
                 case 'R':
                 case 'S':
-                    chp = vlist_locate_import(v, vlist_pos++);
+                    chp = vlist_locate_import(self, v, vlist_pos++);
                     if (!chp) {
                         fprintf(stderr,
                                 "Internal error file '%s' line %d, exiting.\n",
@@ -315,7 +315,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                     arr_pos = accum = 0;
 
                     do {
-                        chp = vlist_locate_import(v, vlist_pos++);
+                        chp = vlist_locate_import(self, v, vlist_pos++);
                         if (!chp)
                             break;
                         ch = *chp;
@@ -352,7 +352,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             arr_pos = accum = 0;
 
             do {
-                chp = vlist_locate_import(v, vlist_pos++);
+                chp = vlist_locate_import(self, v, vlist_pos++);
                 if (!chp)
                     break;
                 ch = *chp;
@@ -402,7 +402,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             arr_pos = accum = 0;
 
             do {
-                chp = vlist_locate_import(v, vlist_pos++);
+                chp = vlist_locate_import(self, v, vlist_pos++);
                 if (!chp)
                     break;
                 ch = *chp;
@@ -429,7 +429,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 
             dst_len = 0;
             for (;;) {
-                chp = vlist_locate_import(v, vlist_pos++);
+                chp = vlist_locate_import(self, v, vlist_pos++);
                 if (!chp)
                     break;
                 ch = *chp;
@@ -489,7 +489,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             arr_pos = accum = 0;
 
             do {
-                chp = vlist_locate_import(v, vlist_pos++);
+                chp = vlist_locate_import(self, v, vlist_pos++);
                 if (!chp)
                     break;
                 ch = *chp;
@@ -516,7 +516,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 
             dst_len = 0;
             do {
-                chp = vlist_locate_import(v, vlist_pos++);
+                chp = vlist_locate_import(self, v, vlist_pos++);
                 if (!chp)
                     break;
                 ch = *chp;
@@ -549,7 +549,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             arr_pos = accum = 0;
 
             do {
-                chp = vlist_locate_import(v, vlist_pos++);
+                chp = vlist_locate_import(self, v, vlist_pos++);
                 if (!chp)
                     break;
                 ch = *chp;
@@ -576,7 +576,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 
             dst_len = 0;
             do {
-                chp = vlist_locate_import(v, vlist_pos++);
+                chp = vlist_locate_import(self, v, vlist_pos++);
                 if (!chp)
                     break;
                 ch = *chp;
@@ -606,7 +606,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         {
             gw_vcd_file_import_trace(self, n2);
 
-            if (GLOBALS->vlist_prepack) {
+            if (self->is_prepacked) {
                 vlist_packer_decompress_destroy((char *)depacked);
             } else {
                 vlist_destroy(v);
@@ -622,7 +622,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         vcd_exit(255);
     }
 
-    if (GLOBALS->vlist_prepack) {
+    if (self->is_prepacked) {
         vlist_packer_decompress_destroy((char *)depacked);
     } else {
         vlist_destroy(v);

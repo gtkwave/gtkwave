@@ -2361,6 +2361,7 @@ GwDumpFile *vcd_recoder_main(char *fname)
     dump_file->start_time = self->start_time;
     dump_file->end_time = self->end_time;
     dump_file->time_vlist = self->time_vlist;
+    dump_file->is_prepacked = GLOBALS->vlist_prepack;
 
     return GW_DUMP_FILE(dump_file);
 }
