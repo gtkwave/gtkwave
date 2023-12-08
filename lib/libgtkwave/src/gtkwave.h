@@ -10,6 +10,7 @@
 #include "gw-color.h"
 #include "gw-color-theme.h"
 #include "gw-hist-ent.h"
+#include "gw-hist-ent-factory.h"
 #include "gw-vector-ent.h"
 #include "gw-node.h"
 #include "gw-fac.h"
