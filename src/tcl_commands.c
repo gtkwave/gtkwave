@@ -420,7 +420,9 @@ static int gtkwavetcl_getTimeDimension(ClientData clientData,
     Tcl_Obj *aobj;
     char reportString[2];
 
-    reportString[0] = GLOBALS->time_dimension;
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+    reportString[0] = time_dimension;
     reportString[1] = 0;
 
     aobj = Tcl_NewStringObj(reportString, -1);
@@ -923,7 +925,8 @@ static int gtkwavetcl_setMarker(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        GwTime mrk = unformat_time(s, time_dimension);
 
         GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
@@ -953,7 +956,8 @@ static int gtkwavetcl_setBaselineMarker(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        GwTime mrk = unformat_time(s, time_dimension);
 
         GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
@@ -990,7 +994,9 @@ static int gtkwavetcl_setWindowStartTime(ClientData clientData,
             GtkAdjustment *hadj;
             GwTime pageinc;
 
-            gt = unformat_time(s, GLOBALS->time_dimension);
+            GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+            gt = unformat_time(s, time_dimension);
 
             if (gt < GLOBALS->tims.first)
                 gt = GLOBALS->tims.first;
@@ -1009,7 +1015,7 @@ static int gtkwavetcl_setWindowStartTime(ClientData clientData,
                     GLOBALS->tims.timecache = GLOBALS->tims.first;
             }
 
-            reformat_time(timval, GLOBALS->tims.timecache, GLOBALS->time_dimension);
+            reformat_time(timval, GLOBALS->tims.timecache, time_dimension);
 
             time_update();
         }
@@ -1068,10 +1074,12 @@ static int gtkwavetcl_setZoomRangeTimes(ClientData clientData,
         GwTime oldmarker_pos = gw_marker_get_position(primary_marker);
         GwTime oldmarker_enabled = gw_marker_is_enabled(primary_marker);
 
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
         s = get_Tcl_string(objv[1]);
-        time1 = unformat_time(s, GLOBALS->time_dimension);
+        time1 = unformat_time(s, time_dimension);
         t = get_Tcl_string(objv[2]);
-        time2 = unformat_time(t, GLOBALS->time_dimension);
+        time2 = unformat_time(t, time_dimension);
 
         if (time1 < GLOBALS->tims.first) {
             time1 = GLOBALS->tims.first;
@@ -1145,7 +1153,9 @@ static int gtkwavetcl_setNamedMarker(ClientData clientData,
 
         if (marker != NULL) {
             char *t = get_Tcl_string(objv[2]);
-            GwTime gt = unformat_time(t, GLOBALS->time_dimension);
+
+            GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+            GwTime gt = unformat_time(t, time_dimension);
 
             gw_marker_set_position(marker, gt);
             // TODO: dont' use sentinel values for disabled markers

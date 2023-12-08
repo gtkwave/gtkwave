@@ -1186,15 +1186,13 @@ GwDumpFile *ghw_main(char *fname)
     GLOBALS->min_time = 0;
     GLOBALS->max_time = self->max_time;
     GLOBALS->treeroot = self->treeroot;
-    GLOBALS->time_scale = 1;
-    GLOBALS->time_dimension = 'f';
     GLOBALS->longestname = self->longestname;
     GLOBALS->regions = self->regions;
 
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
-            GLOBALS->min_time * GLOBALS->time_scale,
-            GLOBALS->max_time * GLOBALS->time_scale);
+            GLOBALS->min_time,
+            GLOBALS->max_time);
     if (self->num_glitches)
         fprintf(stderr,
                 "Warning: encountered %d glitch%s across %d glitch region%s.\n",
@@ -1203,7 +1201,11 @@ GwDumpFile *ghw_main(char *fname)
                 self->num_glitch_regions,
                 (self->num_glitch_regions != 1) ? "s" : "");
 
-    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE, NULL);
+    // clang-format off
+    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE,
+                                         "time-dimension", GW_TIME_DIMENSION_FEMTO,
+                                         NULL);
+    // clang-format on
 
     return dump_file;
 }

@@ -29,12 +29,11 @@
 void fractional_timescale_fix(char *);
 void update_time_box(void);
 void update_currenttime(GwTime val);
-void reformat_time(char *buf, GwTime val, char dim);
+void reformat_time(char *buf, GwTime val, GwTimeDimension dim);
 void reformat_time_simple(char *buf, GwTime val, char dim);
 GwTime unformat_time(const char *buf, char dim);
 void time_trunc_set(void);
 GwTime time_trunc(GwTime t);
-void exponent_to_time_scale(signed char scale);
 
 /* other protos / definitions */
 

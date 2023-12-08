@@ -1299,10 +1299,11 @@ static char *make_gtkwave_pid(void)
     sprintf(pidstr, "{gtkwave PID %d} ", getpid());
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
     if (gw_marker_is_enabled(primary_marker)) {
         char mrkbuf[128];
-        reformat_time(mrkbuf, gw_marker_get_position(primary_marker), GLOBALS->time_dimension);
+        reformat_time(mrkbuf, gw_marker_get_position(primary_marker), time_dimension);
         sprintf(pidstr + strlen(pidstr), "{marker %s} ", mrkbuf);
     }
 

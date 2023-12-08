@@ -139,8 +139,6 @@ struct Global
     char fullscreen;
     char show_toolbar;
     GtkWidget *time_box;
-    GwTime time_scale; /* from currenttime.c 67 */
-    char time_dimension; /* from currenttime.c 68 */
     char scale_to_time_dimension; /* from currenttime.c */
     GwTime time_trunc_val_currenttime_c_1; /* from currenttime.c 77 */
     char use_full_precision; /* from currenttime.c 78 */

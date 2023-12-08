@@ -126,8 +126,6 @@ static const struct Global globals_base_values = {
     0, /* fullscreen */
     1, /* show_toolbar */
     NULL, /* time_box */
-    1, /* time_scale 66 */
-    'n', /* time_dimension 67 */
     0, /* scale_to_time_dimension */
     // 0, /* maxtimewid_currenttime_c_1 69 */
     // 0, /* curtimewid_currenttime_c_1 70 */
@@ -1701,10 +1699,11 @@ void reload_into_new_context_2(void)
     }
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
-    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, GLOBALS->time_dimension);
+    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, GLOBALS->time_dimension);
+    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
     /* Change SST - if it exists */

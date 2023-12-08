@@ -582,7 +582,9 @@ void warp_cleanup(GtkWidget *widget, gpointer data)
         GwTime gt, delta;
         GwTrace *t;
 
-        gt = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+        gt = unformat_time(GLOBALS->entrybox_text, time_dimension);
         free_2(GLOBALS->entrybox_text);
         GLOBALS->entrybox_text = NULL;
 
@@ -636,7 +638,8 @@ void menu_warp_traces(gpointer null_data, guint callback_action, GtkWidget *widg
     }
 
     if (found) {
-        reformat_time(gt, GW_TIME_CONSTANT(0), GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        reformat_time(gt, GW_TIME_CONSTANT(0), time_dimension);
         entrybox("Warp Traces", 200, gt, NULL, 20, G_CALLBACK(warp_cleanup));
     }
 }
@@ -1337,10 +1340,12 @@ void menu_quit_close_callback(GtkWidget *widget, gpointer dummy_data)
     }
     set_GLOBALS(saved_g);
 
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
     /* need to do this if 2 pages -> 1 */
-    reformat_time(sstr, GLOBALS->tims.first, GLOBALS->time_dimension);
+    reformat_time(sstr, GLOBALS->tims.first, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), sstr);
-    reformat_time(sstr, GLOBALS->tims.last, GLOBALS->time_dimension);
+    reformat_time(sstr, GLOBALS->tims.last, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), sstr);
     update_time_box();
 
@@ -3720,6 +3725,7 @@ void movetotime_cleanup(GtkWidget *widget, gpointer data)
     GwTime pageinc;
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
     if ((GLOBALS->entrybox_text[0] >= 'A' && GLOBALS->entrybox_text[0] <= 'Z') ||
         (GLOBALS->entrybox_text[0] >= 'a' && GLOBALS->entrybox_text[0] <= 'z')) {
@@ -3740,7 +3746,7 @@ void movetotime_cleanup(GtkWidget *widget, gpointer data)
         }
 
     } else {
-        gt = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension) - global_time_offset;
+        gt = unformat_time(GLOBALS->entrybox_text, time_dimension) - global_time_offset;
     }
     free_2(GLOBALS->entrybox_text);
     GLOBALS->entrybox_text = NULL;
@@ -3762,7 +3768,7 @@ void movetotime_cleanup(GtkWidget *widget, gpointer data)
             GLOBALS->tims.timecache = GLOBALS->tims.first;
     }
 
-    reformat_time(timval, GLOBALS->tims.timecache + global_time_offset, GLOBALS->time_dimension);
+    reformat_time(timval, GLOBALS->tims.timecache + global_time_offset, time_dimension);
     sprintf(update_string, "Moved to time: %s\n", timval);
     status_text(update_string);
 
@@ -3778,8 +3784,9 @@ void menu_movetotime(gpointer null_data, guint callback_action, GtkWidget *widge
     char gt[32];
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
-    reformat_time(gt, GLOBALS->tims.start + global_time_offset, GLOBALS->time_dimension);
+    reformat_time(gt, GLOBALS->tims.start + global_time_offset, time_dimension);
 
     entrybox("Move To Time", 200, gt, NULL, 20, G_CALLBACK(movetotime_cleanup));
 }
@@ -3789,10 +3796,12 @@ static void fetchsize_cleanup(GtkWidget *widget, gpointer data)
     (void)widget;
     (void)data;
 
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
     if (GLOBALS->entrybox_text) {
         GwTime fw;
         char update_string[128];
-        fw = unformat_time(GLOBALS->entrybox_text, GLOBALS->time_dimension);
+        fw = unformat_time(GLOBALS->entrybox_text, time_dimension);
         if (fw < 1) {
             fw = GLOBALS->fetchwindow; /* in case they try to pull 0 or <0 */
         } else {
@@ -3813,7 +3822,9 @@ void menu_fetchsize(gpointer null_data, guint callback_action, GtkWidget *widget
 
     char fw[32];
 
-    reformat_time(fw, GLOBALS->fetchwindow, GLOBALS->time_dimension);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+    reformat_time(fw, GLOBALS->fetchwindow, time_dimension);
 
     entrybox("New Fetch Size", 200, fw, NULL, 20, G_CALLBACK(fetchsize_cleanup));
 }

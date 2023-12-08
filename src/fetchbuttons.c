@@ -28,7 +28,8 @@ void fetch_left(GtkWidget *text, gpointer data)
     if (newlo <= GLOBALS->min_time)
         newlo = GLOBALS->min_time;
 
-    reformat_time(fromstr, newlo, GLOBALS->time_dimension);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    reformat_time(fromstr, newlo, time_dimension);
 
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), fromstr);
 
@@ -56,7 +57,8 @@ void fetch_right(GtkWidget *text, gpointer data)
     if (newhi >= GLOBALS->max_time)
         newhi = GLOBALS->max_time;
 
-    reformat_time(tostr, newhi, GLOBALS->time_dimension);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    reformat_time(tostr, newhi, time_dimension);
 
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), tostr);
 
@@ -79,7 +81,8 @@ void discard_left(GtkWidget *text, gpointer data)
     newlo = (GLOBALS->tims.first) + GLOBALS->fetchwindow;
 
     if (newlo < (GLOBALS->tims.last)) {
-        reformat_time(tostr, newlo, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        reformat_time(tostr, newlo, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), tostr);
 
         GLOBALS->tims.first = newlo;
@@ -100,7 +103,8 @@ void discard_right(GtkWidget *text, gpointer data)
     newhi = (GLOBALS->tims.last) - GLOBALS->fetchwindow;
 
     if (newhi > (GLOBALS->tims.first)) {
-        reformat_time(tostr, newhi, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        reformat_time(tostr, newhi, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), tostr);
 
         GLOBALS->tims.last = newhi;

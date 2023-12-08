@@ -60,10 +60,13 @@ if get_option('experimental_plugin_support')
     libgtkwave_dependencies += libpeas_dep
 endif
 
+libgtkwave_enums = gnome.mkenums_simple('gw-enums',
+    sources: libgtkwave_public_headers
+)
 
 libgtkwave = shared_library(
     'gtkwave',
-    sources: libgtkwave_public_sources + libgtkwave_private_sources,
+    sources: libgtkwave_public_sources + libgtkwave_private_sources + libgtkwave_enums,
     dependencies: libgtkwave_dependencies,
     include_directories: config_inc,
     install: true,

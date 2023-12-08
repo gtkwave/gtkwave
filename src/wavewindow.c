@@ -1781,7 +1781,9 @@ void populateBuffer(GwTrace *t, char *altname, char *buf)
 
             if ((tname) && (t->shift)) {
                 ptr[0] = '`';
-                reformat_time(ptr + 1, t->shift, GLOBALS->time_dimension);
+                GwTimeDimension time_dimension =
+                    gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+                reformat_time(ptr + 1, t->shift, time_dimension);
                 ptr = ptr + strlen(ptr + 1) + 1;
                 strcpy(ptr, "\'");
 #ifdef WAVE_ARRAY_SUPPORT

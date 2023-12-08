@@ -77,8 +77,9 @@ static gboolean parse_time_entry(GtkEntry *entry, GwNamedMarkerDialog *dialog, G
     }
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
-    GwTime temp = unformat_time(text, GLOBALS->time_dimension) - global_time_offset;
+    GwTime temp = unformat_time(text, time_dimension) - global_time_offset;
     g_free(text);
 
     if (temp < GLOBALS->tims.start || temp > GLOBALS->tims.last) {
@@ -112,8 +113,9 @@ static void gw_named_marker_dialog_response(GtkDialog *dialog, gint response_id)
             const gchar *alias_str = gtk_entry_get_text(alias_entry);
 
             GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+            GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
-            GwTime temp = unformat_time(time_str, GLOBALS->time_dimension) - global_time_offset;
+            GwTime temp = unformat_time(time_str, time_dimension) - global_time_offset;
 
             if (temp >= GLOBALS->tims.start && temp <= GLOBALS->tims.last) {
                 if (gw_named_markers_find(self->markers, temp) == NULL) {
@@ -165,7 +167,10 @@ gboolean on_time_entry_focus_out(GtkWidget *widget, GdkEventFocus event, gpointe
     GwTime time = 0;
     if (parse_time_entry(entry, dialog, &time)) {
         gchar buf[128];
-        reformat_time_simple(buf, time, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+        reformat_time_simple(buf, time, time_dimension);
+
         gtk_entry_set_text(entry, buf);
     } else {
         gtk_entry_set_text(entry, "");
@@ -226,7 +231,8 @@ static void gw_named_marker_dialog_constructed(GObject *object)
         g_ptr_array_add(self->alias_entries, alias_entry);
 
         if (gw_marker_is_enabled(marker)) {
-            reformat_time_simple(buf, gw_marker_get_position(marker), GLOBALS->time_dimension);
+            GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+            reformat_time_simple(buf, gw_marker_get_position(marker), time_dimension);
             gtk_entry_set_text(GTK_ENTRY(time_entry), buf);
             gtk_entry_set_text(GTK_ENTRY(alias_entry), gw_marker_get_alias(marker));
         }
