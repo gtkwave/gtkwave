@@ -454,6 +454,8 @@ int save_nodes_to_export_generic(FILE *trans_file,
         return (VCDSAV_EMPTY);
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTime time_scale = gw_dump_file_get_time_scale(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
     /* header */
     if (export_typ != WAVE_EXPORT_TRANS) {
@@ -470,9 +472,9 @@ int save_nodes_to_export_generic(FILE *trans_file,
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$timescale\n\t%d%c%s\n$end\n",
-                            (int)GLOBALS->time_scale,
-                            GLOBALS->time_dimension,
-                            (GLOBALS->time_dimension == 's') ? "" : "s");
+                            (int)time_scale,
+                            time_dimension,
+                            (time_dimension == 's') ? "" : "s");
         if (global_time_offset != 0) {
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
@@ -491,9 +493,9 @@ int save_nodes_to_export_generic(FILE *trans_file,
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$timescale %d%c%s $end\n",
-                            (int)GLOBALS->time_scale,
-                            GLOBALS->time_dimension,
-                            (GLOBALS->time_dimension == 's') ? "" : "s");
+                            (int)time_scale,
+                            time_dimension,
+                            (time_dimension == 's') ? "" : "s");
         if (global_time_offset != 0) {
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
@@ -503,11 +505,11 @@ int save_nodes_to_export_generic(FILE *trans_file,
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$comment min_time %" GW_TIME_FORMAT " $end\n",
-                            GLOBALS->min_time / GLOBALS->time_scale);
+                            GLOBALS->min_time / time_scale);
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$comment max_time %" GW_TIME_FORMAT " $end\n",
-                            GLOBALS->max_time / GLOBALS->time_scale);
+                            GLOBALS->max_time / time_scale);
     }
 
     if (export_typ == WAVE_EXPORT_TRANS) {
@@ -613,8 +615,8 @@ int save_nodes_to_export_generic(FILE *trans_file,
         if ((GLOBALS->hp_vcd_saver_c_1[0]->hist->time != prevtime) &&
             (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= GW_TIME_CONSTANT(0))) {
             GwTime tnorm = GLOBALS->hp_vcd_saver_c_1[0]->hist->time;
-            if (GLOBALS->time_scale != 1) {
-                tnorm /= GLOBALS->time_scale;
+            if (time_scale != 1) {
+                tnorm /= time_scale;
             }
 
             if (dumpvars_state == 1) {
@@ -714,7 +716,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "#%" GW_TIME_FORMAT "\n",
-                            GLOBALS->max_time / GLOBALS->time_scale);
+                            GLOBALS->max_time / time_scale);
     }
 
     for (i = 0; i < nodecnt; i++) {
@@ -1387,7 +1389,8 @@ int do_timfile_save(const char *fname)
         return (VCDSAV_FILE_ERROR);
     }
 
-    pnt = strchr(time_prefix, (int)GLOBALS->time_dimension);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    pnt = strchr(time_prefix, (int)time_dimension);
     if (pnt) {
         offset = pnt - time_prefix;
     } else

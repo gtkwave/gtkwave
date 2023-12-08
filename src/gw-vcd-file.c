@@ -42,6 +42,8 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
     GwHistEnt *he;
     char heval;
 
+    GwTime time_scale = gw_dump_file_get_time_scale(GW_DUMP_FILE(self));
+
     if (!vector) {
         if (!n->curr) {
             he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
@@ -54,7 +56,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
             add_histent(self, tim, n, ch, regadd, vector);
         } else {
             if (regadd) {
-                tim *= (GLOBALS->time_scale);
+                tim *= time_scale;
             }
 
             if (ch == '0')
@@ -122,7 +124,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                     add_histent(self, tim, n, ch, regadd, vector);
                 } else {
                     if (regadd) {
-                        tim *= (GLOBALS->time_scale);
+                        tim *= time_scale;
                     }
 
                     if (n->curr->time == tim) {
@@ -164,7 +166,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                     add_histent(self, tim, n, ch, regadd, vector);
                 } else {
                     if (regadd) {
-                        tim *= (GLOBALS->time_scale);
+                        tim *= time_scale;
                     }
 
                     if ((vector && (n->curr->v.h_double != *(double *)vector)) ||
@@ -207,7 +209,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                     add_histent(self, tim, n, ch, regadd, vector);
                 } else {
                     if (regadd) {
-                        tim *= (GLOBALS->time_scale);
+                        tim *= time_scale;
                     }
 
                     if ((n->curr->v.h_vector && vector && (strcmp(n->curr->v.h_vector, vector))) ||

@@ -236,7 +236,7 @@ void reformat_time_simple(char *buf, GwTime val, char dim)
     }
 }
 
-void reformat_time(char *buf, GwTime val, char dim)
+void reformat_time(char *buf, GwTime val, GwTimeDimension dim)
 {
     const char *pnt;
     int i, offset, offsetfix;
@@ -307,6 +307,8 @@ void reformat_time(char *buf, GwTime val, char dim)
 void update_time_box(void)
 {
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTime time_scale = gw_dump_file_get_time_scale(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
     if (GLOBALS->anno_ctx) {
         if (gw_marker_is_enabled(primary_marker)) {
@@ -314,11 +316,9 @@ void update_time_box(void)
             GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
 
             GLOBALS->anno_ctx->marker_set = 0; /* avoid race on update */
-            GLOBALS->anno_ctx->marker = val / GLOBALS->time_scale;
+            GLOBALS->anno_ctx->marker = val / time_scale;
 
-            reformat_time(GLOBALS->anno_ctx->time_string,
-                          val + global_time_offset,
-                          GLOBALS->time_dimension);
+            reformat_time(GLOBALS->anno_ctx->time_string, val + global_time_offset, time_dimension);
 
             GLOBALS->anno_ctx->marker_set = 1;
         } else {
@@ -381,93 +381,4 @@ void time_trunc_set(void)
     }
 
     GLOBALS->time_trunc_val_currenttime_c_1 = 1;
-}
-
-/*
- * called by lxt/lxt2/vzt reader inits
- */
-void exponent_to_time_scale(signed char scale)
-{
-    switch (scale) {
-        case 2:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 's';
-            break;
-        case 1:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case 0:
-            GLOBALS->time_dimension = 's';
-            break;
-
-        case -1:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 'm';
-            break;
-        case -2:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case -3:
-            GLOBALS->time_dimension = 'm';
-            break;
-
-        case -4:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 'u';
-            break;
-        case -5:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case -6:
-            GLOBALS->time_dimension = 'u';
-            break;
-
-        case -10:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 'p';
-            break;
-        case -11:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case -12:
-            GLOBALS->time_dimension = 'p';
-            break;
-
-        case -13:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 'f';
-            break;
-        case -14:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case -15:
-            GLOBALS->time_dimension = 'f';
-            break;
-
-        case -16:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 'a';
-            break;
-        case -17:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case -18:
-            GLOBALS->time_dimension = 'a';
-            break;
-
-        case -19:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 'z';
-            break;
-        case -20:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case -21:
-            GLOBALS->time_dimension = 'z';
-            break;
-
-        case -7:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(100);
-            GLOBALS->time_dimension = 'n';
-            break;
-        case -8:
-            GLOBALS->time_scale = GW_TIME_CONSTANT(10); /* fallthrough */
-        case -9:
-        default:
-            GLOBALS->time_dimension = 'n';
-            break;
-    }
 }

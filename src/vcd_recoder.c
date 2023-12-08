@@ -99,6 +99,8 @@ typedef struct
 
     GwBlackoutRegions *blackout_regions;
 
+    GwTime time_scale;
+    GwTimeDimension time_dimension;
     GwTime start_time;
     GwTime end_time;
     GwTime global_time_offset;
@@ -1287,9 +1289,10 @@ static void vcd_parse(VcdLoader *self)
                 if ((vtok == T_END) || (vtok == T_EOF))
                     break;
                 fractional_timescale_fix(self->yytext);
-                GLOBALS->time_scale = atoi_64(self->yytext);
-                if (!GLOBALS->time_scale)
-                    GLOBALS->time_scale = 1;
+                self->time_scale = atoi_64(self->yytext);
+                if (self->time_scale < 1) {
+                    self->time_scale = 1;
+                }
                 for (i = 0; i < self->yylen; i++) {
                     if (self->yytext[i] < '0' || self->yytext[i] > '9') {
                         prefix = self->yytext[i];
@@ -1311,13 +1314,13 @@ static void vcd_parse(VcdLoader *self)
                     case 'f':
                     case 'a':
                     case 'z':
-                        GLOBALS->time_dimension = prefix;
+                        self->time_dimension = prefix;
                         break;
                     case 's':
-                        GLOBALS->time_dimension = ' ';
+                        self->time_dimension = ' ';
                         break;
                     default: /* unknown */
-                        GLOBALS->time_dimension = 'n';
+                        self->time_dimension = 'n';
                         break;
                 }
 
@@ -2317,8 +2320,8 @@ GwDumpFile *vcd_recoder_main(char *fname)
 
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
-            self->start_time * GLOBALS->time_scale,
-            self->end_time * GLOBALS->time_scale);
+            self->start_time * self->time_scale,
+            self->end_time * self->time_scale);
 
     if (self->vcd_fsiz > 0) {
         splash_sync(self->vcd_fsiz, self->vcd_fsiz);
@@ -2327,9 +2330,9 @@ GwDumpFile *vcd_recoder_main(char *fname)
     }
     self->vcd_fsiz = 0;
 
-    GLOBALS->min_time = self->start_time * GLOBALS->time_scale;
-    GLOBALS->max_time = self->end_time * GLOBALS->time_scale;
-    self->global_time_offset *= GLOBALS->time_scale;
+    GLOBALS->min_time = self->start_time * self->time_scale;
+    GLOBALS->max_time = self->end_time * self->time_scale;
+    self->global_time_offset *= self->time_scale;
 
     if ((GLOBALS->min_time == GLOBALS->max_time) && (GLOBALS->max_time == GW_TIME_CONSTANT(-1))) {
         fprintf(stderr, "VCD times range is equal to zero.  Exiting.\n");
@@ -2342,7 +2345,7 @@ GwDumpFile *vcd_recoder_main(char *fname)
 
     getch_free(self); /* free membuff for vcd getch buffer */
 
-    gw_blackout_regions_scale(self->blackout_regions, GLOBALS->time_scale);
+    gw_blackout_regions_scale(self->blackout_regions, self->time_scale);
 
     /* is_vcd=~0; */
     GLOBALS->is_lx2 = LXT2_IS_VLIST;
@@ -2352,6 +2355,8 @@ GwDumpFile *vcd_recoder_main(char *fname)
     // clang-format off
     GwVcdFile *dump_file = g_object_new(GW_TYPE_VCD_FILE,
                                         "blackout-regions", self->blackout_regions,
+                                        "time-scale", self->time_scale,
+                                        "time-dimension", self->time_dimension,
                                         "global-time-offset", self->global_time_offset,
                                         NULL);
     // clang-format on

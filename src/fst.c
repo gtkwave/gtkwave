@@ -47,6 +47,8 @@ struct _FstFile
     int busycnt;
 
     JRB synclock_jrb;
+
+    GwTime time_scale;
 };
 
 typedef struct
@@ -58,6 +60,9 @@ typedef struct
 
     guint32 next_var_stem;
     guint32 next_var_istem;
+
+    GwTimeDimension time_dimension;
+    GwTime time_scale;
 
     GwTime first_cycle;
     GwTime last_cycle;
@@ -573,7 +578,7 @@ static GwBlackoutRegions *load_blackout_regions(FstLoader *self)
     guint32 num_activity_changes = fstReaderGetNumberDumpActivityChanges(fst_reader);
     for (guint32 activity_idx = 0; activity_idx < num_activity_changes; activity_idx++) {
         GwTime ct =
-            fstReaderGetDumpActivityChangeTime(fst_reader, activity_idx) * GLOBALS->time_scale;
+            fstReaderGetDumpActivityChangeTime(fst_reader, activity_idx) * self->time_scale;
         unsigned char ac = fstReaderGetDumpActivityChangeValue(fst_reader, activity_idx);
 
         if (ac == 1) {
@@ -599,7 +604,6 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     GwSymbol *s;
     GwSymbol *prevsymroot = NULL;
     GwSymbol *prevsym = NULL;
-    signed char scale;
     int numalias = 0;
     int numvars = 0;
     GwSymbol *sym_block = NULL;
@@ -636,8 +640,12 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
         GLOBALS->autocoalesce = 0;
     }
 
-    scale = (signed char)fstReaderGetTimescale(fst_reader);
-    exponent_to_time_scale(scale);
+    GwTimeScaleAndDimension *scale =
+        gw_time_scale_and_dimension_from_exponent(fstReaderGetTimescale(fst_reader));
+    self->time_dimension = scale->dimension;
+    self->time_scale = scale->scale;
+    self->file->time_scale = scale->scale;
+    g_free(scale);
 
     f_name = calloc_2(F_NAME_MODULUS + 1, sizeof(char *));
     f_name_len = calloc_2(F_NAME_MODULUS + 1, sizeof(int));
@@ -670,10 +678,10 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     fprintf(stderr, FST_RDLOAD "Processing %d facs.\n", GLOBALS->numfacs);
     /* SPLASH */ splash_sync(1, 5);
 
-    self->first_cycle = fstReaderGetStartTime(fst_reader) * GLOBALS->time_scale;
-    self->last_cycle = fstReaderGetEndTime(fst_reader) * GLOBALS->time_scale;
+    self->first_cycle = fstReaderGetStartTime(fst_reader) * self->time_scale;
+    self->last_cycle = fstReaderGetEndTime(fst_reader) * self->time_scale;
     self->total_cycles = self->last_cycle - self->first_cycle + 1;
-    GwTime global_time_offset = fstReaderGetTimezero(fst_reader) * GLOBALS->time_scale;
+    GwTime global_time_offset = fstReaderGetTimezero(fst_reader) * self->time_scale;
 
     GwBlackoutRegions *blackout_regions = load_blackout_regions(self);
 
@@ -1116,11 +1124,11 @@ if(num_dups)
         if (!skip_start)
             b_start = GLOBALS->min_time;
         else
-            b_start = unformat_time(skip_start, GLOBALS->time_dimension);
+            b_start = unformat_time(skip_start, self->time_dimension);
         if (!skip_end)
             b_end = GLOBALS->max_time;
         else
-            b_end = unformat_time(skip_end, GLOBALS->time_dimension);
+            b_end = unformat_time(skip_end, self->time_dimension);
 
         if (b_start < GLOBALS->min_time)
             b_start = GLOBALS->min_time;
@@ -1152,6 +1160,7 @@ if(num_dups)
     GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE,
                                          "blackout-regions", blackout_regions,
                                          "stems", self->stems,
+                                         "time-dimension", self->time_dimension,
                                          "global-time-offset", global_time_offset,
                                          NULL);
     // clang-format on
@@ -1369,7 +1378,7 @@ static void fst_callback2(void *user_callback_data_pointer,
         htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
     }
 
-    htemp->time = (tim) * (GLOBALS->time_scale);
+    htemp->time = (tim) * (self->time_scale);
 
     if (l2e->histent_curr) /* scan-build : was l2e->histent_head */
     {

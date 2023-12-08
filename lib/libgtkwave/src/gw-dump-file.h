@@ -3,7 +3,7 @@
 #include <glib-object.h>
 #include "gw-blackout-regions.h"
 #include "gw-stems.h"
-#include "gw-hist-ent-factory.h"
+#include "gw-time.h"
 
 G_BEGIN_DECLS
 
@@ -18,6 +18,8 @@ struct _GwDumpFileClass
 GwBlackoutRegions *gw_dump_file_get_blackout_regions(GwDumpFile *self);
 GwStems *gw_dump_file_get_stems(GwDumpFile *self);
 
+GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self);
+GwTime gw_dump_file_get_time_scale(GwDumpFile *self);
 GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self);
 
 G_END_DECLS

@@ -434,6 +434,8 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
     static const char xrev[AN_COUNT] = AN_INVERSE;
     const char *xtab;
 
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
     flags = t->flags;
     nbits = t->n.vec->nbits;
     bits = v->v;
@@ -837,7 +839,7 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
-                    reformat_time(os, val, GLOBALS->time_dimension);
+                    reformat_time(os, val, time_dimension);
                 }
             }
         } else {
@@ -925,7 +927,7 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
-                    reformat_time(os, val, GLOBALS->time_dimension);
+                    reformat_time(os, val, time_dimension);
                 }
             }
         } else {
@@ -1153,6 +1155,8 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
     char *os, *pnt, *newbuff;
     int i, j, len;
     const char *xtab;
+
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
     static const char xfwd[AN_COUNT] = AN_NORMAL;
     static const char xrev[AN_COUNT] = AN_INVERSE;
@@ -1561,7 +1565,7 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
-                    reformat_time(os, val, GLOBALS->time_dimension);
+                    reformat_time(os, val, time_dimension);
                 }
             }
         } else {
@@ -1650,7 +1654,7 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
                 } else {
                     free_2(os);
                     os = calloc_2(1, 128);
-                    reformat_time(os, val, GLOBALS->time_dimension);
+                    reformat_time(os, val, time_dimension);
                 }
             }
         } else {
