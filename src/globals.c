@@ -723,11 +723,6 @@ static const struct Global globals_base_values = {
     NULL, /* he_fini */
 
     /*
-     * vcd_recoder.c
-     */
-    NULL, /* vcd_file */
-
-    /*
      * vcd_saver.c
      */
     NULL, /* f_vcd_saver_c_1 579 */
