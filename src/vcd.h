@@ -33,8 +33,6 @@
 #include "debug.h"
 #include "tree.h"
 
-typedef struct _VcdFile VcdFile;
-
 #define VCD_SIZE_WARN (256) /* number of MB size where converter warning message appears */
 #define VCD_BSIZ 32768 /* size of getch() emulation buffer--this val should be ok */
 #define VCD_INDEXSIZ (8 * 1024 * 1024)
@@ -133,10 +131,6 @@ void strcpy_vcdalt(char *too, char *from, char delim);
 int strcpy_delimfix(char *too, char *from);
 void vcd_sortfacs(GSList *sym_chain);
 void set_vcd_vartype(struct vcdsymbol *v, GwNode *n);
-
-void vcd_import_masked(VcdFile *self);
-void vcd_set_fac_process_mask(VcdFile *self, GwNode *np);
-void import_vcd_trace(VcdFile *self, GwNode *np);
 
 int vcd_keyword_code(const char *s, unsigned int len);
 #endif

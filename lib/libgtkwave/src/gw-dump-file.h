@@ -17,7 +17,6 @@ struct _GwDumpFileClass
 
 GwBlackoutRegions *gw_dump_file_get_blackout_regions(GwDumpFile *self);
 GwStems *gw_dump_file_get_stems(GwDumpFile *self);
-GwHistEntFactory *gw_dump_file_get_hist_ent_factory(GwDumpFile *self);
 
 GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self);
 

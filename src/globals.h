@@ -703,11 +703,6 @@ struct Global
     GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
 
     /*
-     * vcd_recoder.c
-     */
-    VcdFile *vcd_file;
-
-    /*
      * vcd_saver.c
      */
     FILE *f_vcd_saver_c_1; /* from vcd_saver.c 630 */

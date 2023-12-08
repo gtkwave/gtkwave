@@ -4,7 +4,6 @@ typedef struct
 {
     GwBlackoutRegions *blackout_regions;
     GwStems *stems;
-    GwHistEntFactory *hist_ent_factory;
 
     GwTime global_time_offset;
 } GwDumpFilePrivate;
@@ -15,7 +14,6 @@ enum
 {
     PROP_BLACKOUT_REGIONS = 1,
     PROP_STEMS,
-    PROP_HIST_ENT_FACTORY,
     PROP_GLOBAL_TIME_OFFSET,
     N_PROPERTIES,
 };
@@ -29,7 +27,6 @@ static void gw_dump_file_dispose(GObject *object)
 
     g_clear_object(&priv->blackout_regions);
     g_clear_object(&priv->stems);
-    g_clear_object(&priv->hist_ent_factory);
 
     G_OBJECT_CLASS(gw_dump_file_parent_class)->dispose(object);
 }
@@ -63,16 +60,6 @@ static void gw_dump_file_set_property(GObject *object,
             break;
         }
 
-        case PROP_HIST_ENT_FACTORY: {
-            GwHistEntFactory *hist_ent_factory = g_value_get_object(value);
-            if (hist_ent_factory == NULL) {
-                hist_ent_factory = gw_hist_ent_factory_new();
-            }
-
-            g_set_object(&priv->hist_ent_factory, hist_ent_factory);
-            break;
-        }
-
         case PROP_GLOBAL_TIME_OFFSET:
             priv->global_time_offset = g_value_get_int64(value);
             break;
@@ -97,10 +84,6 @@ static void gw_dump_file_get_property(GObject *object,
 
         case PROP_STEMS:
             g_value_set_object(value, gw_dump_file_get_stems(self));
-            break;
-
-        case PROP_HIST_ENT_FACTORY:
-            g_value_set_object(value, gw_dump_file_get_hist_ent_factory(self));
             break;
 
         case PROP_GLOBAL_TIME_OFFSET:
@@ -133,13 +116,6 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
                             NULL,
                             NULL,
                             GW_TYPE_STEMS,
-                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
-    properties[PROP_HIST_ENT_FACTORY] =
-        g_param_spec_object("hist-ent-factory",
-                            NULL,
-                            NULL,
-                            GW_TYPE_HIST_ENT_FACTORY,
                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     properties[PROP_GLOBAL_TIME_OFFSET] =
@@ -191,23 +167,6 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self)
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     return priv->stems;
-}
-
-/**
- * gw_dump_file_get_hist_ent_factory:
- * @self: A #GwDumpFile.
- *
- * Returns the hist ent factory.
- *
- * Returns: (transfer none): The hist ent factory.
- */
-GwHistEntFactory *gw_dump_file_get_hist_ent_factory(GwDumpFile *self)
-{
-    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
-
-    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
-
-    return priv->hist_ent_factory;
 }
 
 /**
