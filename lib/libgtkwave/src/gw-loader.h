@@ -29,5 +29,6 @@ struct _GwLoaderClass
 };
 
 GwDumpFile *gw_loader_load(GwLoader *self, const gchar *path, GError **error);
+const GwLoaderSettings *gw_loader_get_settings(GwLoader *self);
 
 G_END_DECLS

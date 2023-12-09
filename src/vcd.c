@@ -36,8 +36,10 @@
 #endif
 
 #include <config.h>
+#include <gtkwave.h>
 #include "globals.h"
 #include "vcd.h"
+#include "gw-vcd-loader.h"
 
 void strcpy_vcdalt(char *too, char *from, char delim)
 {
@@ -230,4 +232,20 @@ void vcd_sortfacs(GSList *sym_chain)
     if (GLOBALS->escaped_names_found_vcd_c_1) {
         treenamefix(GLOBALS->treeroot);
     }
+}
+
+// TODO: remove
+GwDumpFile *vcd_recoder_main(char *fname)
+{
+    GwLoaderSettings *settings = gw_loader_settings_new();
+    settings->preserve_glitches = GLOBALS->vcd_preserve_glitches;
+    settings->preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;
+
+    GwLoader *loader = gw_vcd_loader_new(settings);
+
+    GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
+
+    g_object_unref(loader);
+
+    return file;
 }
