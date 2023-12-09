@@ -2363,6 +2363,8 @@ GwDumpFile *vcd_recoder_main(char *fname)
 
     g_object_unref(self->blackout_regions);
 
+    dump_file->preserve_glitches = GLOBALS->vcd_preserve_glitches;
+    dump_file->preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;
     dump_file->start_time = self->start_time;
     dump_file->end_time = self->end_time;
     dump_file->time_vlist = self->time_vlist;
