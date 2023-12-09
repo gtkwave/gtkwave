@@ -576,7 +576,6 @@ static const struct Global globals_base_values = {
     0, /* facs_are_sorted 426 */
     0, /* facs_have_symbols_state_machine */
     0, /* numfacs 427 */
-    0, /* regions 428 */
     0, /* longestname 429 */
     0, /* hashcache 432 */
 
