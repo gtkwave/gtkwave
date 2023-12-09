@@ -63,6 +63,7 @@ struct Global *GLOBALS = NULL;
 static const struct Global globals_base_values = {
     NULL, // project
     NULL, // dump_file
+    {0}, // settings
 
     /*
      * analyzer.c
@@ -710,8 +711,6 @@ static const struct Global globals_base_values = {
     1, /* autocoalesce 473 */
     0, /* autocoalesce_reversal */
     0, /* convert_to_reals 475 */
-    0, /* vcd_preserve_glitches 478 */
-    0, /* vcd_preserve_glitches_real */
     {0, 0}, /* vcd_hier_delimeter 491 */
     0, /* escaped_names_found_vcd_c_1 494 */
     NULL, /* he_curr_vcd_c_1 506 */
@@ -728,7 +727,6 @@ static const struct Global globals_base_values = {
     /*
      * vlist.c
      */
-    0, /* vlist_prepack */
     0, /* vlist_bytes_written */
     4, /* vlist_compression_depth 583 */
 
@@ -1233,11 +1231,9 @@ void reload_into_new_context_2(void)
     new_globals->use_maxtime_display = GLOBALS->use_maxtime_display;
     new_globals->use_nonprop_fonts = GLOBALS->use_nonprop_fonts;
     new_globals->use_roundcaps = GLOBALS->use_roundcaps;
-    new_globals->vcd_preserve_glitches = GLOBALS->vcd_preserve_glitches;
-    new_globals->vcd_preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;
     new_globals->vcd_warning_filesize = GLOBALS->vcd_warning_filesize;
     new_globals->vector_padding = GLOBALS->vector_padding;
-    new_globals->vlist_prepack = GLOBALS->vlist_prepack;
+    new_globals->settings = GLOBALS->settings;
     new_globals->vlist_compression_depth = GLOBALS->vlist_compression_depth;
     new_globals->wave_scrolling = GLOBALS->wave_scrolling;
     new_globals->do_zoom_center = GLOBALS->do_zoom_center;

@@ -577,8 +577,7 @@ static GwBlackoutRegions *load_blackout_regions(FstLoader *self)
 
     guint32 num_activity_changes = fstReaderGetNumberDumpActivityChanges(fst_reader);
     for (guint32 activity_idx = 0; activity_idx < num_activity_changes; activity_idx++) {
-        GwTime ct =
-            fstReaderGetDumpActivityChangeTime(fst_reader, activity_idx) * self->time_scale;
+        GwTime ct = fstReaderGetDumpActivityChangeTime(fst_reader, activity_idx) * self->time_scale;
         unsigned char ac = fstReaderGetDumpActivityChangeValue(fst_reader, activity_idx);
 
         if (ac == 1) {
@@ -1240,7 +1239,7 @@ static void fst_callback2(void *user_callback_data_pointer,
                 (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
             {
                 if ((!memcmp(l2e->histent_curr->v.h_vector, h_vector, f->len)) &&
-                    (!GLOBALS->vcd_preserve_glitches)) {
+                    (!GLOBALS->settings.preserve_glitches)) {
                     free_2(h_vector);
                     return;
                 }
@@ -1313,7 +1312,8 @@ static void fst_callback2(void *user_callback_data_pointer,
 
             if ((vt != GW_VAR_TYPE_VCD_EVENT) && (l2e->histent_curr)) /* remove duplicate values */
             {
-                if ((l2e->histent_curr->v.h_val == h_val) && (!GLOBALS->vcd_preserve_glitches)) {
+                if ((l2e->histent_curr->v.h_val == h_val) &&
+                    (!GLOBALS->settings.preserve_glitches)) {
                     return;
                 }
             }
@@ -1325,7 +1325,8 @@ static void fst_callback2(void *user_callback_data_pointer,
         if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
         {
             if (!memcmp(&l2e->histent_curr->v.h_double, value, sizeof(double))) {
-                if ((!GLOBALS->vcd_preserve_glitches) && (!GLOBALS->vcd_preserve_glitches_real)) {
+                if ((!GLOBALS->settings.preserve_glitches) &&
+                    (!GLOBALS->settings.preserve_glitches_real)) {
                     return;
                 }
             }
@@ -1367,7 +1368,7 @@ static void fst_callback2(void *user_callback_data_pointer,
         if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
         {
             if ((!strcmp(l2e->histent_curr->v.h_vector, (const char *)value)) &&
-                (!GLOBALS->vcd_preserve_glitches)) {
+                (!GLOBALS->settings.preserve_glitches)) {
                 free_2(s);
                 return;
             }

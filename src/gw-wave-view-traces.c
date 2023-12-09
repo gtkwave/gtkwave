@@ -616,7 +616,7 @@ static void draw_hptr_trace(GwWaveView *self,
                 }
             }
 
-            if ((h->flags & GW_HIST_ENT_FLAG_GLITCH) && (GLOBALS->vcd_preserve_glitches)) {
+            if ((h->flags & GW_HIST_ENT_FLAG_GLITCH) && (GLOBALS->settings.preserve_glitches)) {
                 XXX_gdk_draw_rectangle(cr, colors->stroke_z, TRUE, _x1 - 1, yu - 1, 3, 3);
             }
 
