@@ -252,13 +252,6 @@ int f_enable_horiz_grid(const char *str)
     return (0);
 }
 
-int f_enable_vcd_autosave(const char *str)
-{
-    DEBUG(printf("f_enable_vcd_autosave(\"%s\")\n", str));
-    GLOBALS->make_vcd_save_file = atoi_64(str) ? 1 : 0;
-    return (0);
-}
-
 int f_enable_vert_grid(const char *str)
 {
     DEBUG(printf("f_enable_vert_grid(\"%s\")\n", str));
@@ -870,7 +863,6 @@ static struct rc_entry rcitems[] = {
     {"enable_fast_exit", f_enable_fast_exit},
     {"enable_ghost_marker", f_enable_ghost_marker},
     {"enable_horiz_grid", f_enable_horiz_grid},
-    {"enable_vcd_autosave", f_enable_vcd_autosave},
     {"enable_vert_grid", f_enable_vert_grid},
     {"fill_waveform", f_fill_waveform},
     {"fontname_logfile", f_fontname_logfile},

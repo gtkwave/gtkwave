@@ -710,10 +710,8 @@ static const struct Global globals_base_values = {
     1, /* autocoalesce 473 */
     0, /* autocoalesce_reversal */
     0, /* convert_to_reals 475 */
-    0, /* make_vcd_save_file 477 */
     0, /* vcd_preserve_glitches 478 */
     0, /* vcd_preserve_glitches_real */
-    NULL, /* vcd_save_handle 479 */
     {0, 0}, /* vcd_hier_delimeter 491 */
     0, /* escaped_names_found_vcd_c_1 494 */
     NULL, /* he_curr_vcd_c_1 506 */
@@ -1213,7 +1211,6 @@ void reload_into_new_context_2(void)
     new_globals->enable_fast_exit = GLOBALS->enable_fast_exit;
     new_globals->enable_ghost_marker = GLOBALS->enable_ghost_marker;
     new_globals->enable_horiz_grid = GLOBALS->enable_horiz_grid;
-    new_globals->make_vcd_save_file = GLOBALS->make_vcd_save_file;
     new_globals->enable_vert_grid = GLOBALS->enable_vert_grid;
     new_globals->sst_expanded = GLOBALS->sst_expanded;
     new_globals->hier_max_level = GLOBALS->hier_max_level;
