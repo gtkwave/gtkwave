@@ -1727,26 +1727,6 @@ static void vcd_parse(GwVcdLoader *self)
                     self->vcdsymcurr = v;
                     self->numsyms++;
 
-                    if (GLOBALS->vcd_save_handle) {
-                        if (v->msi == v->lsi) {
-                            if ((v->vartype == V_REAL) || (v->vartype == V_STRINGTYPE)) {
-                                fprintf(GLOBALS->vcd_save_handle, "%s\n", v->name);
-                            } else {
-                                if (v->msi >= 0) {
-                                    fprintf(GLOBALS->vcd_save_handle, "%s[%d]\n", v->name, v->msi);
-                                } else {
-                                    fprintf(GLOBALS->vcd_save_handle, "%s\n", v->name);
-                                }
-                            }
-                        } else {
-                            fprintf(GLOBALS->vcd_save_handle,
-                                    "%s[%d:%d]\n",
-                                    v->name,
-                                    v->msi,
-                                    v->lsi);
-                        }
-                    }
-
                     goto bail;
                 err:
                     if (v) {
@@ -2274,11 +2254,6 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
     if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
         fprintf(stderr, "No symbols in VCD file..is it malformed?  Exiting!\n");
         vcd_exit(255);
-    }
-
-    if (GLOBALS->vcd_save_handle) {
-        fclose(GLOBALS->vcd_save_handle);
-        GLOBALS->vcd_save_handle = NULL;
     }
 
     fprintf(stderr,

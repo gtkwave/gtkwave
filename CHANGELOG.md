@@ -41,11 +41,13 @@ of these features.
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed legacy VCD loader.
 - Removed VCD fastload and support for vlist spillfiles.
+- Removed VCD autosave.
 - Removed rc variables:
     - `alt_wheel_mode`
     - `append_vcd_hier`
     - `atomic_vectors`
     - `disable_ae2_alias`
+    - `enable_vcd_autosave`
     - `force_toolbars`
     - `hide_sst`
     - `hier_grouping`

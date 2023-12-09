@@ -327,7 +327,6 @@ static void print_help(char *nam)
         "  -n, --nocli=DIRPATH        use file requester for dumpfile name\n"
         "  -f, --dump=FILE            specify dumpfile name\n" VCD_GETOPT
         "  -a, --save=FILE            specify savefile name\n"
-        "  -A, --autosavename         assume savefile is suffix modified dumpfile name\n"
         "  -r, --rcfile=FILE          specify override .rcfile name\n"
         "  -d, --defaultskip          if missing .rcfile, do not use useful defaults\n" DUAL_GETOPT
         "  -l, --logfile=FILE         specify simulation logfile name for time values\n"
@@ -723,7 +722,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 {
     static const char *winprefix = "GTKWave - ";
     static const char *winstd = "GTKWave (stdio) ";
-    static const char *vcd_autosave_name = "vcd_autosave.sav";
     char *output_name = NULL;
     char *chdir_cache = NULL;
 
@@ -742,7 +740,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
     char *override_rc = NULL;
     char *scriptfile = NULL;
     FILE *wave = NULL;
-    FILE *vcd_save_handle_cached = NULL;
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
@@ -827,7 +824,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->enable_horiz_grid = old_g->enable_horiz_grid;
         GLOBALS->fill_waveform = old_g->fill_waveform;
         GLOBALS->lz_removal = old_g->lz_removal;
-        GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->enable_vert_grid = old_g->enable_vert_grid;
         GLOBALS->sst_expanded = old_g->sst_expanded;
         GLOBALS->hier_max_level = old_g->hier_max_level;
@@ -882,7 +878,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->analog_redraw_skip_count = old_g->analog_redraw_skip_count;
         GLOBALS->context_tabposition = old_g->context_tabposition;
         GLOBALS->disable_empty_gui = old_g->disable_empty_gui;
-        GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->strace_repeat_count = old_g->strace_repeat_count;
 
         GLOBALS->extload_max_tree = old_g->extload_max_tree;
@@ -971,47 +966,23 @@ do_primary_inits:
         while (1) {
             int option_index = 0;
 
-            static struct option long_options[] = {{"dump", 1, 0, 'f'},
-                                                   {"optimize", 0, 0, 'o'},
-                                                   {"nocli", 1, 0, 'n'},
-                                                   {"save", 1, 0, 'a'},
-                                                   {"autosavename", 0, 0, 'A'},
-                                                   {"rcfile", 1, 0, 'r'},
-                                                   {"defaultskip", 0, 0, 'd'},
-                                                   {"logfile", 1, 0, 'l'},
-                                                   {"start", 1, 0, 's'},
-                                                   {"end", 1, 0, 'e'},
-                                                   {"cpus", 1, 0, 'c'},
-                                                   {"stems", 1, 0, 't'},
-                                                   {"nowm", 0, 0, 'N'},
-                                                   {"script", 1, 0, 'S'},
-                                                   {"vcd", 0, 0, 'v'},
-                                                   {"version", 0, 0, 'V'},
-                                                   {"help", 0, 0, 'h'},
-                                                   {"exit", 0, 0, 'x'},
-                                                   {"xid", 1, 0, 'X'},
-                                                   {"nomenus", 0, 0, 'M'},
-                                                   {"dualid", 1, 0, 'D'},
-                                                   {"giga", 0, 0, 'g'},
-                                                   {"comphier", 0, 0, 'C'},
-                                                   {"tcl_init", 1, 0, 'T'},
-                                                   {"wish", 0, 0, 'W'},
-                                                   {"repscript", 1, 0, 'R'},
-                                                   {"repperiod", 1, 0, 'P'},
-                                                   {"output", 1, 0, 'O'},
-                                                   {"slider-zoom", 0, 0, 'z'},
-                                                   {"rpcid", 1, 0, '1'},
-                                                   {"chdir", 1, 0, '2'},
-                                                   {"restore", 0, 0, '3'},
-                                                   {"rcvar", 1, 0, '4'},
-                                                   {"sstexclude", 1, 0, '5'},
-                                                   {"dark", 0, 0, '6'},
-                                                   {"saveonexit", 0, 0, '7'},
-                                                   {0, 0, 0, 0}};
+            static struct option long_options[] = {
+                {"dump", 1, 0, 'f'},        {"optimize", 0, 0, 'o'},   {"nocli", 1, 0, 'n'},
+                {"save", 1, 0, 'a'},        {"rcfile", 1, 0, 'r'},     {"defaultskip", 0, 0, 'd'},
+                {"logfile", 1, 0, 'l'},     {"start", 1, 0, 's'},      {"end", 1, 0, 'e'},
+                {"cpus", 1, 0, 'c'},        {"stems", 1, 0, 't'},      {"nowm", 0, 0, 'N'},
+                {"script", 1, 0, 'S'},      {"vcd", 0, 0, 'v'},        {"version", 0, 0, 'V'},
+                {"help", 0, 0, 'h'},        {"exit", 0, 0, 'x'},       {"xid", 1, 0, 'X'},
+                {"nomenus", 0, 0, 'M'},     {"dualid", 1, 0, 'D'},     {"giga", 0, 0, 'g'},
+                {"comphier", 0, 0, 'C'},    {"tcl_init", 1, 0, 'T'},   {"wish", 0, 0, 'W'},
+                {"repscript", 1, 0, 'R'},   {"repperiod", 1, 0, 'P'},  {"output", 1, 0, 'O'},
+                {"slider-zoom", 0, 0, 'z'}, {"rpcid", 1, 0, '1'},      {"chdir", 1, 0, '2'},
+                {"restore", 0, 0, '3'},     {"rcvar", 1, 0, '4'},      {"sstexclude", 1, 0, '5'},
+                {"dark", 0, 0, '6'},        {"saveonexit", 0, 0, '7'}, {0, 0, 0, 0}};
 
             c = getopt_long(argc,
                             argv,
-                            "zf:Fon:a:Ar:dl:s:e:c:t:NS:vVhxX:MD:IgCR:P:O:WT:1:2:34:5:67",
+                            "zf:Fon:a:r:dl:s:e:c:t:NS:vVhxX:MD:IgCR:P:O:WT:1:2:34:5:67",
                             long_options,
                             &option_index);
 
@@ -1534,13 +1505,6 @@ do_primary_inits:
         }
     }
 
-    if ((!wname) && (GLOBALS->make_vcd_save_file)) {
-        vcd_save_handle_cached = GLOBALS->vcd_save_handle = fopen(vcd_autosave_name, "wb");
-        errno = 0; /* just in case */
-        is_smartsave = (GLOBALS->vcd_save_handle !=
-                        NULL); /* use smartsave if for some reason can't open auto savefile */
-    }
-
     if (!GLOBALS->loaded_file_name) {
         GLOBALS->loaded_file_name = strdup_2("[no file loaded]");
         is_missing_file = 1;
@@ -1696,17 +1660,13 @@ loader_check_head:
         }
     }
 
-    if ((wname) || (vcd_save_handle_cached) || (is_smartsave)) {
+    if ((wname) || (is_smartsave)) {
         int wave_is_compressed;
         char *str = NULL;
 
         GLOBALS->is_gtkw_save_file = (!wname) || suffix_check(wname, ".gtkw");
 
-        if (vcd_save_handle_cached) {
-            wname = malloc_2(strlen(vcd_autosave_name) + 1);
-            strcpy(wname, vcd_autosave_name);
-            GLOBALS->do_initial_zoom_fit = 1;
-        } else if ((!wname) /* && (is_smartsave) */) {
+        if ((!wname) /* && (is_smartsave) */) {
             char *pnt = g_alloca(strlen(GLOBALS->loaded_file_name) + 1);
             char *pnt2;
             strcpy(pnt, GLOBALS->loaded_file_name);
