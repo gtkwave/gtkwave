@@ -72,10 +72,19 @@
 #endif
 #endif
 
+typedef struct
+{
+    gboolean vlist_prepack;
+    gboolean preserve_glitches;
+    gboolean preserve_glitches_real;
+} Settings;
+
 struct Global
 {
     GwProject *project;
     GwDumpFile *dump_file;
+
+    Settings settings;
 
     /*
      * analyzer.c
@@ -690,8 +699,6 @@ struct Global
     char autocoalesce; /* from vcd.c 503 */
     char autocoalesce_reversal; /* from vcd.c 504 */
     char convert_to_reals; /* from vcd.c 506 */
-    char vcd_preserve_glitches; /* from vcd.c 509 */
-    char vcd_preserve_glitches_real;
     char vcd_hier_delimeter[2]; /* from vcd.c 522 */
     int escaped_names_found_vcd_c_1; /* from vcd.c 528 */
     GwHistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
@@ -708,7 +715,6 @@ struct Global
     /*
      * vlist.c
      */
-    char vlist_prepack;
     off_t vlist_bytes_written;
     int vlist_compression_depth; /* from vlist.c 634 */
 

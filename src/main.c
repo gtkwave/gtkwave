@@ -843,8 +843,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->use_maxtime_display = old_g->use_maxtime_display;
         GLOBALS->use_nonprop_fonts = old_g->use_nonprop_fonts;
         GLOBALS->use_roundcaps = old_g->use_roundcaps;
-        GLOBALS->vcd_preserve_glitches = old_g->vcd_preserve_glitches;
-        GLOBALS->vcd_preserve_glitches_real = old_g->vcd_preserve_glitches_real;
         GLOBALS->vcd_warning_filesize = old_g->vcd_warning_filesize;
         GLOBALS->vector_padding = old_g->vector_padding;
         GLOBALS->vlist_compression_depth = old_g->vlist_compression_depth;
@@ -869,7 +867,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->ruler_origin = old_g->ruler_origin;
         GLOBALS->ruler_step = old_g->ruler_step;
 
-        GLOBALS->vlist_prepack = old_g->vlist_prepack;
+        GLOBALS->settings = old_g->settings;
         GLOBALS->do_dynamic_treefilter = old_g->do_dynamic_treefilter;
         GLOBALS->dragzoom_threshold = old_g->dragzoom_threshold;
 
@@ -1447,7 +1445,7 @@ do_primary_inits:
     }
 
     if (is_giga) {
-        GLOBALS->vlist_prepack = 1;
+        GLOBALS->settings.vlist_prepack = 1;
     }
 
     if (output_name) {

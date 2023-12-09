@@ -237,11 +237,12 @@ void vcd_sortfacs(GSList *sym_chain)
 // TODO: remove
 GwDumpFile *vcd_recoder_main(char *fname)
 {
-    GwLoaderSettings *settings = gw_loader_settings_new();
-    settings->preserve_glitches = GLOBALS->vcd_preserve_glitches;
-    settings->preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;
+    const Settings *global_settings = &GLOBALS->settings;
 
-    GwLoader *loader = gw_vcd_loader_new(settings);
+    GwLoader *loader = gw_vcd_loader_new();
+    gw_loader_set_preserve_glitches(loader, global_settings->preserve_glitches);
+    gw_loader_set_preserve_glitches_real(loader, global_settings->preserve_glitches_real);
+    gw_vcd_loader_set_vlist_prepack(GW_VCD_LOADER(loader), global_settings->vlist_prepack);
 
     GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
 
