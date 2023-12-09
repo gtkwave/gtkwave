@@ -1,45 +1,12 @@
-/*
- * Copyright (c) Tony Bybell 1999-2017.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- */
-
-/*
- * vcd.c 			23jan99ajb
- * evcd parts 			29jun99ajb
- * profiler optimizations 	15jul99ajb
- * more profiler optimizations	25jan00ajb
- * finsim parameter fix		26jan00ajb
- * vector rechaining code	03apr00ajb
- * multiple var section code	06apr00ajb
- * fix for duplicate nets	19dec00ajb
- * support for alt hier seps	23dec00ajb
- * fix for rcs identifiers	16jan01ajb
- * coredump fix for bad VCD	04apr02ajb
- * min/maxid speedup            27feb03ajb
- * bugfix on min/maxid speedup  06jul03ajb
- * escaped hier modification    20feb06ajb
- * added real_parameter vartype 04aug06ajb
- * recoder using vlists         17aug06ajb
- * code cleanup                 04sep06ajb
- * added in/out port vartype    31jan07ajb
- * use gperf for port vartypes  19feb07ajb
- * MTI SV implicit-var fix      05apr07ajb
- * MTI SV len=0 is real var     05apr07ajb
- * VCD fastloading		05mar09ajb
- * Backtracking fix             16oct18ajb
- */
 #include <config.h>
+#include "gw-vcd-loader.h"
+#include "gw-vcd-file.h"
+#include "gw-vcd-file-private.h"
 #include "globals.h"
 #include "vcd.h"
 #include "vlist.h"
 #include "lx2.h"
 #include "hierpack.h"
-#include "gw-vcd-file.h"
-#include "gw-vcd-file-private.h"
 
 typedef struct
 {
@@ -47,8 +14,10 @@ typedef struct
     GwTree *mod_tree_parent;
 } VcdScope;
 
-typedef struct
+struct _GwVcdLoader
 {
+    GwLoader parent_instance;
+
     FILE *vcd_handle;
     gboolean is_compressed;
     off_t vcd_fsiz;
@@ -106,11 +75,13 @@ typedef struct
     GwTime global_time_offset;
 
     struct vlist_t *time_vlist;
-} VcdLoader;
+};
+
+G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
 
 /**/
 
-static void malform_eof_fix(VcdLoader *self)
+static void malform_eof_fix(GwVcdLoader *self)
 {
     if (feof(self->vcd_handle)) {
         memset(self->vcdbuf, ' ', VCD_BSIZ);
@@ -323,8 +294,8 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s)
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static void vcd_build_symbols(VcdLoader *self);
-static void vcd_cleanup(VcdLoader *self);
+static void vcd_build_symbols(GwVcdLoader *self);
+static void vcd_cleanup(GwVcdLoader *self);
 static void evcd_strcpy(char *dst, char *src);
 
 /******************************************************************/
@@ -422,7 +393,7 @@ static int vcdsymbsearchcompare(const void *s1, const void *s2)
 /*
  * actual bsearch
  */
-static struct vcdsymbol *bsearch_vcd(VcdLoader *self, char *key, int len)
+static struct vcdsymbol *bsearch_vcd(GwVcdLoader *self, char *key, int len)
 {
     struct vcdsymbol **v;
     struct vcdsymbol *t;
@@ -485,7 +456,7 @@ static int vcdsymcompare(const void *s1, const void *s2)
 /*
  * create sorted (by id) table
  */
-static void create_sorted_table(VcdLoader *self)
+static void create_sorted_table(GwVcdLoader *self)
 {
     struct vcdsymbol *v;
     struct vcdsymbol **pnt;
@@ -525,7 +496,7 @@ static void create_sorted_table(VcdLoader *self)
 
 /******************************************************************/
 
-static unsigned int vlist_emit_finalize(VcdLoader *self)
+static unsigned int vlist_emit_finalize(GwVcdLoader *self)
 {
     struct vcdsymbol *v /* , *vprime */; /* scan-build */
     struct vlist_t *vlist;
@@ -607,7 +578,7 @@ static unsigned int vlist_emit_finalize(VcdLoader *self)
 
 /******************************************************************/
 
-static void update_name_prefix(VcdLoader *self)
+static void update_name_prefix(GwVcdLoader *self)
 {
     g_string_truncate(self->name_prefix, 0);
 
@@ -622,7 +593,7 @@ static void update_name_prefix(VcdLoader *self)
     }
 }
 
-static void push_scope(VcdLoader *self, const gchar *name, GwTree *tree_parent)
+static void push_scope(GwVcdLoader *self, const gchar *name, GwTree *tree_parent)
 {
     VcdScope *scope = g_new0(VcdScope, 1);
     scope->name = g_strdup(self->yytext);
@@ -633,7 +604,7 @@ static void push_scope(VcdLoader *self, const gchar *name, GwTree *tree_parent)
     update_name_prefix(self);
 }
 
-static GwTree *pop_scope(VcdLoader *self)
+static GwTree *pop_scope(GwVcdLoader *self)
 {
     VcdScope *scope = g_queue_pop_tail(self->scopes);
     g_assert_nonnull(scope);
@@ -653,14 +624,14 @@ static GwTree *pop_scope(VcdLoader *self)
 /*
  * single char get inlined/optimized
  */
-static void getch_alloc(VcdLoader *self)
+static void getch_alloc(GwVcdLoader *self)
 {
     self->vcdbuf = calloc_2(1, VCD_BSIZ);
     self->vst = self->vcdbuf;
     self->vend = self->vcdbuf;
 }
 
-static void getch_free(VcdLoader *self)
+static void getch_free(GwVcdLoader *self)
 {
     free_2(self->vcdbuf);
     self->vcdbuf = NULL;
@@ -668,7 +639,7 @@ static void getch_free(VcdLoader *self)
     self->vend = NULL;
 }
 
-static int getch_fetch(VcdLoader *self)
+static int getch_fetch(GwVcdLoader *self)
 {
     size_t rd;
 
@@ -691,21 +662,21 @@ static int getch_fetch(VcdLoader *self)
     return ((int)(*self->vst));
 }
 
-static inline signed char getch(VcdLoader *self)
+static inline signed char getch(GwVcdLoader *self)
 {
     signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
     self->vst++;
     return (ch);
 }
 
-static inline signed char getch_peek(VcdLoader *self)
+static inline signed char getch_peek(GwVcdLoader *self)
 {
     signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
     /* no increment */
     return (ch);
 }
 
-static int getch_patched(VcdLoader *self)
+static int getch_patched(GwVcdLoader *self)
 {
     char ch;
 
@@ -721,7 +692,7 @@ static int getch_patched(VcdLoader *self)
 /*
  * simple tokenizer
  */
-static int get_token(VcdLoader *self)
+static int get_token(GwVcdLoader *self)
 {
     int ch;
     int i, len = 0;
@@ -780,7 +751,7 @@ static int get_token(VcdLoader *self)
     return T_UNKNOWN_KEY;
 }
 
-static int get_vartoken_patched(VcdLoader *self, int match_kw)
+static int get_vartoken_patched(GwVcdLoader *self, int match_kw)
 {
     int ch;
     int len = 0;
@@ -846,7 +817,7 @@ static int get_vartoken_patched(VcdLoader *self, int match_kw)
     return V_STRING;
 }
 
-static int get_vartoken(VcdLoader *self, int match_kw)
+static int get_vartoken(GwVcdLoader *self, int match_kw)
 {
     int ch;
     int len = 0;
@@ -938,7 +909,7 @@ static int get_vartoken(VcdLoader *self, int match_kw)
     return V_STRING;
 }
 
-static int get_strtoken(VcdLoader *self)
+static int get_strtoken(GwVcdLoader *self)
 {
     int ch;
     int len = 0;
@@ -972,7 +943,7 @@ static int get_strtoken(VcdLoader *self)
     return V_STRING;
 }
 
-static void sync_end(VcdLoader *self, const char *hdr)
+static void sync_end(GwVcdLoader *self, const char *hdr)
 {
     int tok;
 
@@ -992,7 +963,7 @@ static void sync_end(VcdLoader *self, const char *hdr)
     }
 }
 
-static int version_sync_end(VcdLoader *self, const char *hdr)
+static int version_sync_end(GwVcdLoader *self, const char *hdr)
 {
     int tok;
     int rc = 0;
@@ -1019,7 +990,7 @@ static int version_sync_end(VcdLoader *self, const char *hdr)
     return (rc);
 }
 
-static void parse_valuechange(VcdLoader *self)
+static void parse_valuechange(GwVcdLoader *self)
 {
     struct vcdsymbol *v;
     char *vector;
@@ -1254,7 +1225,7 @@ static void evcd_strcpy(char *dst, char *src)
     *dst = 0; /* null terminate destination */
 }
 
-static void vcd_parse(VcdLoader *self)
+static void vcd_parse(GwVcdLoader *self)
 {
     int tok;
     unsigned char ttype;
@@ -1326,8 +1297,8 @@ static void vcd_parse(VcdLoader *self)
 
                 DEBUG(fprintf(stderr,
                               "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
-                              GLOBALS->time_scale,
-                              GLOBALS->time_dimension));
+                              self->time_scale,
+                              self->time_dimension));
                 sync_end(self, NULL);
             } break;
             case T_SCOPE:
@@ -1921,7 +1892,7 @@ static void vcd_parse(VcdLoader *self)
 
 /*******************************************************************************/
 
-static void vcd_build_symbols(VcdLoader *self)
+static void vcd_build_symbols(GwVcdLoader *self)
 {
     int j;
     int max_slen = -1;
@@ -2167,7 +2138,7 @@ static void vcd_build_symbols(VcdLoader *self)
 
 /*******************************************************************************/
 
-static void vcd_cleanup(VcdLoader *self)
+static void vcd_cleanup(GwVcdLoader *self)
 {
     struct vcdsymbol *v, *vt;
 
@@ -2206,8 +2177,13 @@ static void vcd_cleanup(VcdLoader *self)
 
 /*******************************************************************************/
 
-GwDumpFile *vcd_recoder_main(char *fname)
+GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **error)
 {
+    g_return_val_if_fail(fname != NULL, NULL);
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+    GwVcdLoader *self = GW_VCD_LOADER(loader);
+
     GLOBALS->vcd_hier_delimeter[0] = GLOBALS->hier_delimeter;
 
     errno = 0; /* reset in case it's set for some reason */
@@ -2216,19 +2192,6 @@ GwDumpFile *vcd_recoder_main(char *fname)
     {
         GLOBALS->hier_delimeter = '.';
     }
-
-    VcdLoader loader = {0};
-    VcdLoader *self = &loader;
-    self->current_time = -1;
-    self->start_time = -1;
-    self->end_time = -1;
-
-    self->T_MAX_STR = 1024;
-    self->yytext = malloc_2(self->T_MAX_STR + 1);
-    self->vcd_minid = G_MAXUINT;
-    self->scopes = g_queue_new();
-    self->name_prefix = g_string_new(NULL);
-    self->blackout_regions = gw_blackout_regions_new();
 
     if (suffix_check(fname, ".gz") || suffix_check(fname, ".zip")) {
         char *str;
@@ -2363,12 +2326,40 @@ GwDumpFile *vcd_recoder_main(char *fname)
 
     g_object_unref(self->blackout_regions);
 
-    dump_file->preserve_glitches = GLOBALS->vcd_preserve_glitches;
-    dump_file->preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;
     dump_file->start_time = self->start_time;
     dump_file->end_time = self->end_time;
     dump_file->time_vlist = self->time_vlist;
     dump_file->is_prepacked = GLOBALS->vlist_prepack;
 
+    const GwLoaderSettings *settings = gw_loader_get_settings(GW_LOADER(self));
+    dump_file->preserve_glitches = settings->preserve_glitches;
+    dump_file->preserve_glitches_real = settings->preserve_glitches_real;
+
     return GW_DUMP_FILE(dump_file);
+}
+
+static void gw_vcd_loader_class_init(GwVcdLoaderClass *klass)
+{
+    GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
+
+    loader_class->load = gw_vcd_loader_load;
+}
+
+static void gw_vcd_loader_init(GwVcdLoader *self)
+{
+    self->current_time = -1;
+    self->start_time = -1;
+    self->end_time = -1;
+
+    self->T_MAX_STR = 1024;
+    self->yytext = malloc_2(self->T_MAX_STR + 1);
+    self->vcd_minid = G_MAXUINT;
+    self->scopes = g_queue_new();
+    self->name_prefix = g_string_new(NULL);
+    self->blackout_regions = gw_blackout_regions_new();
+}
+
+GwLoader *gw_vcd_loader_new(GwLoaderSettings *settings)
+{
+    return g_object_new(GW_TYPE_VCD_LOADER, "settings", settings, NULL);
 }

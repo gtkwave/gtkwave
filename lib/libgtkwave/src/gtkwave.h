@@ -24,3 +24,4 @@
 #include "gw-symbol.h"
 #include "gw-dump-file.h"
 #include "gw-dump-file-builder.h"
+#include "gw-loader.h"
