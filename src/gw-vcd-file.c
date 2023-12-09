@@ -104,7 +104,6 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                         n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                     }
                     n->curr = he;
-                    GLOBALS->regions += regadd;
                 }
             }
         }
@@ -147,7 +146,6 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
 
                         n->curr->next = he;
                         n->curr = he;
-                        GLOBALS->regions += regadd;
                     }
                 }
                 break;
@@ -189,7 +187,6 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                             he->v.h_double = *((double *)vector);
                             n->curr->next = he;
                             n->curr = he;
-                            GLOBALS->regions += regadd;
                         }
                     } else {
                     }
@@ -237,7 +234,6 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
 
                             n->curr->next = he;
                             n->curr = he;
-                            GLOBALS->regions += regadd;
                         }
                     } else {
                         free_2(vector);

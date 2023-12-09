@@ -44,7 +44,6 @@ typedef struct
     GPtrArray *facs;
     GwTree *treeroot;
     int longestname;
-    int regions;
     GwTime max_time;
 } GhwLoader;
 
@@ -854,8 +853,6 @@ static void add_history(GhwLoader *self, GwNode *n, int sig_num)
     if (sig_type == NULL)
         return;
 
-    self->regions++;
-
     switch (sig_type->kind) {
         case ghdl_rtik_type_i32:
         case ghdl_rtik_type_i64:
@@ -1187,7 +1184,6 @@ GwDumpFile *ghw_main(char *fname)
     GLOBALS->max_time = self->max_time;
     GLOBALS->treeroot = self->treeroot;
     GLOBALS->longestname = self->longestname;
-    GLOBALS->regions = self->regions;
 
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",

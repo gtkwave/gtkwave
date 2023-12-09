@@ -556,7 +556,6 @@ struct Global
     char facs_are_sorted; /* from symbol.c 455 */
     char facs_have_symbols_state_machine; /* from symbol.c */
     int numfacs; /* from symbol.c 456 */
-    int regions; /* from symbol.c 457 */
     int longestname; /* from symbol.c 458 */
     int hashcache; /* from symbol.c 461 */
 

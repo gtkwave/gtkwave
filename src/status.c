@@ -83,20 +83,6 @@ void realize_text(GtkWidget *text, gpointer data)
 
     sprintf(buf, "[%d] facilities found.\n", GLOBALS->numfacs);
     status_text(buf);
-
-    if ((GLOBALS->is_vcd) || (GLOBALS->is_ghw)) {
-        if (!GLOBALS->partial_vcd) {
-            sprintf(buf, "[%d] regions found.\n", GLOBALS->regions);
-            status_text(buf);
-        }
-    } else {
-        if (GLOBALS->is_lx2 == LXT2_IS_VLIST) {
-            sprintf(buf, "Regions formed on demand.\n");
-        } else {
-            sprintf(buf, "Regions loaded on demand.\n");
-        }
-        status_text(buf);
-    }
 }
 
 /* Create a scrolled text area that displays a "message" */
