@@ -80,7 +80,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
 
             if ((n->curr->v.h_val != heval) || (tim == self->start_time) ||
                 (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
-                (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
+                (self->preserve_glitches)) /* same region == go skip */
             {
                 if (n->curr->time == tim) {
                     DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
@@ -170,8 +170,8 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                     }
 
                     if ((vector && (n->curr->v.h_double != *(double *)vector)) ||
-                        (tim == self->start_time) || (GLOBALS->vcd_preserve_glitches) ||
-                        (GLOBALS->vcd_preserve_glitches_real)) /* same region == go skip */
+                        (tim == self->start_time) || (self->preserve_glitches) ||
+                        (self->preserve_glitches_real)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
                             DEBUG(printf("Warning: Real number Glitch at time [%" GW_TIME_FORMAT
@@ -214,7 +214,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
 
                     if ((n->curr->v.h_vector && vector && (strcmp(n->curr->v.h_vector, vector))) ||
                         (tim == self->start_time) || (!n->curr->v.h_vector) ||
-                        (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
+                        (self->preserve_glitches)) /* same region == go skip */
                     {
                         if (n->curr->time == tim) {
                             DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
