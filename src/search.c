@@ -20,11 +20,12 @@
 #include "symbol.h"
 #include "vcd.h"
 #include "lx2.h"
-#include "ghw.h"
 #include "debug.h"
 #include "busy.h"
 #include "hierpack.h"
 #include "signal_list.h"
+
+#define WAVE_GHW_DUMMYFACNAME "!!__(dummy)__!!"
 
 enum
 {

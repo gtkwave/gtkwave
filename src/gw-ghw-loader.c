@@ -1,32 +1,17 @@
-/*  GHDL Wavefile reader interface.
-    Copyright (C) 2005-2014 Tristan Gingold and Tony Bybell
-
-    GHDL is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License as published by the Free
-    Software Foundation; either version 2, or (at your option) any later
-    version.
-
-    GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-    for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with GCC; see the file COPYING.  If not, write to the Free
-    Software Foundation, 51 Franklin Street - Suite 500, Boston, MA
-    02110-1335, USA.
-*/
-
-#include "globals.h"
 #include <config.h>
-#include "ghw.h"
-#include "libghw.h"
+#include <stdint.h>
+#include <libghw.h>
+#include <gtkwave.h>
+#include "debug.h"
 #include "tree.h"
+#include "gw-ghw-loader.h"
 #include "gw-ghw-file.h"
 #include "gw-ghw-file-private.h"
 
-typedef struct
+struct _GwGhwLoader
 {
+    GwLoader parent_instance;
+
     struct ghw_handler *h;
     GwNode **nxp;
     int sym_which;
@@ -49,7 +34,9 @@ typedef struct
     GwTime max_time;
 
     GwHistEntFactory *hist_ent_factory;
-} GhwLoader;
+};
+
+G_DEFINE_TYPE(GwGhwLoader, gw_ghw_loader, GW_TYPE_LOADER)
 
 /************************ splay ************************/
 
@@ -196,7 +183,7 @@ int strand_pnt(char *s)
     return (rc);
 }
 
-void rechain_facs(GhwLoader *self)
+void rechain_facs(GwGhwLoader *self)
 {
     GwSymbol *psr = NULL;
     GwSymbol *root = NULL;
@@ -252,7 +239,7 @@ void rechain_facs(GhwLoader *self)
 
 /* limited recursive version */
 
-static void recurse_tree_build_whichcache(GhwLoader *self, GwTree *t)
+static void recurse_tree_build_whichcache(GwGhwLoader *self, GwTree *t)
 {
     if (t == NULL) {
         return;
@@ -288,7 +275,7 @@ static void recurse_tree_build_whichcache(GhwLoader *self, GwTree *t)
     free_2(ar);
 }
 
-static void recurse_tree_fix_from_whichcache(GhwLoader *self, GwTree *t)
+static void recurse_tree_fix_from_whichcache(GwGhwLoader *self, GwTree *t)
 {
     if (t) {
         GwTree *t2 = t;
@@ -339,7 +326,7 @@ static void incinerate_whichcache_tree(ghw_Tree *t)
 /*
  * sort facs and also cache/reconGwTree->t_which pointers
  */
-static void ghw_sortfacs(GhwLoader *self)
+static void ghw_sortfacs(GwGhwLoader *self)
 {
     recurse_tree_build_whichcache(self, self->treeroot);
 
@@ -374,12 +361,12 @@ static void ghw_sortfacs(GhwLoader *self)
 
 /*******************************************************************************/
 
-static GwTree *build_hierarchy_type(GhwLoader *self,
+static GwTree *build_hierarchy_type(GwGhwLoader *self,
                                     union ghw_type *t,
                                     const char *pfx,
                                     unsigned int **sig);
 
-static GwTree *build_hierarchy_record(GhwLoader *self,
+static GwTree *build_hierarchy_record(GwGhwLoader *self,
                                       const char *pfx,
                                       unsigned nbr_els,
                                       struct ghw_record_element *els,
@@ -406,7 +393,7 @@ static GwTree *build_hierarchy_record(GhwLoader *self,
     return res;
 }
 
-static void build_hierarchy_array(GhwLoader *self,
+static void build_hierarchy_array(GwGhwLoader *self,
                                   union ghw_type *arr,
                                   int dim,
                                   const char *pfx,
@@ -522,7 +509,7 @@ static void build_hierarchy_array(GhwLoader *self,
     }
 }
 
-static GwTree *build_hierarchy_type(GhwLoader *self,
+static GwTree *build_hierarchy_type(GwGhwLoader *self,
                                     union ghw_type *t,
                                     const char *pfx,
                                     unsigned int **sig)
@@ -576,7 +563,7 @@ static GwTree *build_hierarchy_type(GhwLoader *self,
 
 /* Create the gtkwave tree from the GHW hierarchy.  */
 
-static GwTree *build_hierarchy(GhwLoader *self, struct ghw_hie *hie)
+static GwTree *build_hierarchy(GwGhwLoader *self, struct ghw_hie *hie)
 {
     GwTree *t;
     GwTree *t_ch;
@@ -710,7 +697,7 @@ static GwTree *build_hierarchy(GhwLoader *self, struct ghw_hie *hie)
     }
 }
 
-void facs_debug(GhwLoader *self)
+void facs_debug(GwGhwLoader *self)
 {
     for (guint i = 0; i < self->facs->len; i++) {
         GwSymbol *fac = g_ptr_array_index(self->facs, i);
@@ -728,7 +715,7 @@ void facs_debug(GhwLoader *self)
     }
 }
 
-static void create_facs(GhwLoader *self)
+static void create_facs(GwGhwLoader *self)
 {
     self->facs = g_ptr_array_new_full(self->nbr_sig_ref, NULL);
 
@@ -783,7 +770,7 @@ static void create_facs(GhwLoader *self)
     }
 }
 
-static void set_fac_name_1(GhwLoader *self, GwTree *t)
+static void set_fac_name_1(GwGhwLoader *self, GwTree *t)
 {
     for (; t != NULL; t = t->next) {
         int prev_len = self->fac_name_len;
@@ -834,7 +821,7 @@ static void set_fac_name_1(GhwLoader *self, GwTree *t)
     }
 }
 
-static void set_fac_name(GhwLoader *self)
+static void set_fac_name(GwGhwLoader *self)
 {
     if (self->fac_name_max == 0) {
         self->fac_name_max = 1024;
@@ -845,7 +832,7 @@ static void set_fac_name(GhwLoader *self)
     set_fac_name_1(self, self->treeroot);
 }
 
-static void add_history(GhwLoader *self, GwNode *n, int sig_num)
+static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
 {
     GwHistEnt *he;
     struct ghw_sig *sig = &self->h->sigs[sig_num];
@@ -1009,7 +996,7 @@ static void add_history(GhwLoader *self, GwNode *n, int sig_num)
     n->curr = he;
 }
 
-static void add_tail(GhwLoader *self)
+static void add_tail(GwGhwLoader *self)
 {
     unsigned int i;
     GwTime j;
@@ -1035,7 +1022,7 @@ static void add_tail(GhwLoader *self)
         }
 }
 
-static void read_traces(GhwLoader *self)
+static void read_traces(GwGhwLoader *self)
 {
     int *list;
     unsigned int i;
@@ -1099,8 +1086,10 @@ static void read_traces(GhwLoader *self)
 
 /*******************************************************************************/
 
-GwDumpFile *ghw_main(char *fname)
+GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **error)
 {
+    GwGhwLoader *self = GW_GHW_LOADER(loader);
+
     struct ghw_handler handle;
     unsigned int ui;
     int rc;
@@ -1121,8 +1110,6 @@ GwDumpFile *ghw_main(char *fname)
         return NULL; /* look at return code in caller for success status... */
     }
 
-    GhwLoader loader = {0};
-    GhwLoader *self = &loader;
     self->h = &handle;
     self->asbuf = malloc_2(4097);
 
@@ -1212,4 +1199,19 @@ GwDumpFile *ghw_main(char *fname)
     return GW_DUMP_FILE(dump_file);
 }
 
-/*******************************************************************************/
+static void gw_ghw_loader_class_init(GwGhwLoaderClass *klass)
+{
+    GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
+
+    loader_class->load = gw_ghw_loader_load;
+}
+
+static void gw_ghw_loader_init(GwGhwLoader *self)
+{
+    self->hist_ent_factory = gw_hist_ent_factory_new();
+}
+
+GwLoader *gw_ghw_loader_new(void)
+{
+    return g_object_new(GW_TYPE_GHW_LOADER, NULL);
+}
