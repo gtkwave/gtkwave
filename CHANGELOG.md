@@ -61,6 +61,8 @@ of these features.
     - `use_toolbutton_interface`
     - `vcd_explicit_zero_subscripts`
     - `vlist_spill`
+    - `zoom_dynamic`
+    - `zoom_dynamic_end`
 
 ### Fixed
 

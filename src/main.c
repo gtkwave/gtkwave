@@ -115,8 +115,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
     GLOBALS->keep_xz_colors = g_old->keep_xz_colors;
     GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
-    GLOBALS->zoom_dyn = g_old->zoom_dyn;
-    GLOBALS->zoom_dyne = g_old->zoom_dyne;
     GLOBALS->hier_ignore_escapes = g_old->hier_ignore_escapes;
     GLOBALS->sst_dbl_action_type = g_old->sst_dbl_action_type;
     GLOBALS->use_gestures = g_old->use_gestures;
@@ -815,8 +813,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->wave_scrolling = old_g->wave_scrolling;
         GLOBALS->do_zoom_center = old_g->do_zoom_center;
         GLOBALS->zoom_pow10_snap = old_g->zoom_pow10_snap;
-        GLOBALS->zoom_dyn = old_g->zoom_dyn;
-        GLOBALS->zoom_dyne = old_g->zoom_dyne;
         GLOBALS->alt_hier_delimeter = old_g->alt_hier_delimeter;
         GLOBALS->cursor_snap = old_g->cursor_snap;
         GLOBALS->hier_delimeter = old_g->hier_delimeter;

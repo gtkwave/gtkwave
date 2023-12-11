@@ -135,7 +135,6 @@ struct Global
      * currenttime.c
      */
     char is_vcd; /* from currenttime.c 56 */
-    char partial_vcd; /* from currenttime.c 57 */
     char use_maxtime_display; /* from currenttime.c 58 */
     char use_frequency_delta; /* from currenttime.c 59 */
     GwTime cached_currenttimeval_currenttime_c_1; /* from currenttime.c 62 */
@@ -705,8 +704,6 @@ struct Global
     unsigned int in_button_press_wavewindow_c_1; /* from wavewindow.c 656 */
     char left_justify_sigs; /* from wavewindow.c 657 */
     char zoom_pow10_snap; /* from wavewindow.c 658 */
-    char zoom_dyn; /* from menu.c */
-    char zoom_dyne; /* from menu.c */
     int cursor_snap; /* from wavewindow.c 659 */
     float old_wvalue; /* from wavewindow.c 660 */
     GwTime zoom; /* from wavewindow.c 662 */

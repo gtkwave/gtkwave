@@ -689,20 +689,6 @@ int f_zoom_center(const char *str)
     return (0);
 }
 
-int f_zoom_dynamic(const char *str)
-{
-    DEBUG(printf("f_zoom_dynamic(\"%s\")\n", str));
-    GLOBALS->zoom_dyn = atoi_64(str) ? 1 : 0;
-    return (0);
-}
-
-int f_zoom_dynamic_end(const char *str)
-{
-    DEBUG(printf("f_zoom_dynamic_end(\"%s\")\n", str));
-    GLOBALS->zoom_dyne = atoi_64(str) ? 1 : 0;
-    return (0);
-}
-
 int f_zoom_pow10_snap(const char *str)
 {
     DEBUG(printf("f_zoom_pow10_snap(\"%s\")\n", str));
@@ -903,8 +889,6 @@ static struct rc_entry rcitems[] = {{"accel", f_accel},
                                     {"wave_scrolling", f_wave_scrolling},
                                     {"zoom_base", f_zoom_base},
                                     {"zoom_center", f_zoom_center},
-                                    {"zoom_dynamic", f_zoom_dynamic},
-                                    {"zoom_dynamic_end", f_zoom_dynamic_end},
                                     {"zoom_pow10_snap", f_zoom_pow10_snap}};
 
 static void vanilla_rc(void)

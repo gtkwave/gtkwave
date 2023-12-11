@@ -61,11 +61,7 @@ void realize_text(GtkWidget *text, gpointer data)
     char buf[128];
 
     if (GLOBALS->is_vcd) {
-        if (GLOBALS->partial_vcd) {
-            status_text("VCD loading interactively.\n");
-        } else {
-            status_text("VCD loaded successfully.\n");
-        }
+        status_text("VCD loaded successfully.\n");
     } else if (GLOBALS->is_ghw) {
         status_text("GHW loaded successfully.\n");
     } else if (GLOBALS->is_lx2) {

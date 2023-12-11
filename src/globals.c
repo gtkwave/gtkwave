@@ -112,7 +112,6 @@ static const struct Global globals_base_values = {
      * currenttime.c
      */
     0, /* is_vcd 56 */
-    0, /* partial_vcd */
     1, /* use_maxtime_display 57 */
     0, /* use_frequency_delta 58 */
     0, /* cached_currenttimeval_currenttime_c_1 61 */
@@ -713,8 +712,6 @@ static const struct Global globals_base_values = {
     0, /* in_button_press_wavewindow_c_1 601 */
     0, /* left_justify_sigs 602 */
     0, /* zoom_pow10_snap 603 */
-    0, /* zoom_dyn */
-    0, /* zoom_dyne */
     0, /* cursor_snap 604 */
     -1.0, /* old_wvalue 605 */
     0, /* zoom 607 */
@@ -1139,8 +1136,6 @@ void reload_into_new_context_2(void)
 
     /* rc.c */
     new_globals->scale_to_time_dimension = GLOBALS->scale_to_time_dimension;
-    new_globals->zoom_dyn = GLOBALS->zoom_dyn;
-    new_globals->zoom_dyne = GLOBALS->zoom_dyne;
     new_globals->context_tabposition = GLOBALS->context_tabposition;
     new_globals->dragzoom_threshold = GLOBALS->dragzoom_threshold;
     new_globals->cr_line_width = GLOBALS->cr_line_width;
@@ -1946,8 +1941,6 @@ static gint context_swapper(GtkWindow *w, GdkEvent *event, void *data)
                             GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
 
                             GLOBALS->scale_to_time_dimension = g_old->scale_to_time_dimension;
-                            GLOBALS->zoom_dyn = g_old->zoom_dyn;
-                            GLOBALS->zoom_dyne = g_old->zoom_dyne;
 
                             GLOBALS->ignore_savefile_pane_pos = g_old->ignore_savefile_pane_pos;
                             GLOBALS->ignore_savefile_pos = g_old->ignore_savefile_pos;
