@@ -8,6 +8,8 @@
 #include "lx2.h"
 #include "hierpack.h"
 
+int vcd_keyword_code(const char *s, unsigned int len);
+
 typedef struct
 {
     gchar *name;
@@ -503,6 +505,97 @@ static void create_sorted_table(GwVcdLoader *self)
 }
 
 /******************************************************************/
+
+static void set_vcd_vartype(struct vcdsymbol *v, GwNode *n)
+{
+    unsigned char nvt;
+
+    switch (v->vartype) {
+        case V_EVENT:
+            nvt = GW_VAR_TYPE_VCD_EVENT;
+            break;
+        case V_PARAMETER:
+            nvt = GW_VAR_TYPE_VCD_PARAMETER;
+            break;
+        case V_INTEGER:
+            nvt = GW_VAR_TYPE_VCD_INTEGER;
+            break;
+        case V_REAL:
+            nvt = GW_VAR_TYPE_VCD_REAL;
+            break;
+        case V_REG:
+            nvt = GW_VAR_TYPE_VCD_REG;
+            break;
+        case V_SUPPLY0:
+            nvt = GW_VAR_TYPE_VCD_SUPPLY0;
+            break;
+        case V_SUPPLY1:
+            nvt = GW_VAR_TYPE_VCD_SUPPLY1;
+            break;
+        case V_TIME:
+            nvt = GW_VAR_TYPE_VCD_TIME;
+            break;
+        case V_TRI:
+            nvt = GW_VAR_TYPE_VCD_TRI;
+            break;
+        case V_TRIAND:
+            nvt = GW_VAR_TYPE_VCD_TRIAND;
+            break;
+        case V_TRIOR:
+            nvt = GW_VAR_TYPE_VCD_TRIOR;
+            break;
+        case V_TRIREG:
+            nvt = GW_VAR_TYPE_VCD_TRIREG;
+            break;
+        case V_TRI0:
+            nvt = GW_VAR_TYPE_VCD_TRI0;
+            break;
+        case V_TRI1:
+            nvt = GW_VAR_TYPE_VCD_TRI1;
+            break;
+        case V_WAND:
+            nvt = GW_VAR_TYPE_VCD_WAND;
+            break;
+        case V_WIRE:
+            nvt = GW_VAR_TYPE_VCD_WIRE;
+            break;
+        case V_WOR:
+            nvt = GW_VAR_TYPE_VCD_WOR;
+            break;
+        case V_PORT:
+            nvt = GW_VAR_TYPE_VCD_PORT;
+            break;
+        case V_STRINGTYPE:
+            nvt = GW_VAR_TYPE_GEN_STRING;
+            break;
+        case V_BIT:
+            nvt = GW_VAR_TYPE_SV_BIT;
+            break;
+        case V_LOGIC:
+            nvt = GW_VAR_TYPE_SV_LOGIC;
+            break;
+        case V_INT:
+            nvt = GW_VAR_TYPE_SV_INT;
+            break;
+        case V_SHORTINT:
+            nvt = GW_VAR_TYPE_SV_SHORTINT;
+            break;
+        case V_LONGINT:
+            nvt = GW_VAR_TYPE_SV_LONGINT;
+            break;
+        case V_BYTE:
+            nvt = GW_VAR_TYPE_SV_BYTE;
+            break;
+        case V_ENUM:
+            nvt = GW_VAR_TYPE_SV_ENUM;
+            break;
+        /* V_SHORTREAL as a type does not exist for VCD: is cast to V_REAL */
+        default:
+            nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
+            break;
+    }
+    n->vartype = nvt;
+}
 
 static unsigned int vlist_emit_finalize(GwVcdLoader *self)
 {
@@ -1239,6 +1332,25 @@ static void evcd_strcpy(char *dst, char *src)
     }
 
     *dst = 0; /* null terminate destination */
+}
+
+static int strcpy_delimfix(char *too, char *from)
+{
+    char ch;
+    int found = 0;
+
+    do {
+        ch = *(from++);
+        if (ch == GLOBALS->hier_delimeter) {
+            ch = VCDNAM_ESCAPE;
+            found = 1;
+        }
+    } while ((*(too++) = ch));
+
+    if (found)
+        GLOBALS->escaped_names_found_vcd_c_1 = found;
+
+    return (found);
 }
 
 static void vcd_parse(GwVcdLoader *self)
@@ -2169,6 +2281,55 @@ static void vcd_cleanup(GwVcdLoader *self)
     self->vcd_handle = NULL;
 
     g_clear_pointer(&self->yytext, free_2);
+}
+
+static void vcd_sortfacs(GSList *sym_chain)
+{
+    int i;
+
+    GLOBALS->facs = (GwSymbol **)malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
+
+    GSList *iter = sym_chain;
+    for (i = 0; i < GLOBALS->numfacs; i++) {
+        GLOBALS->facs[i] = iter->data;
+
+        char *subst = GLOBALS->facs[i]->name;
+        int len = strlen(subst);
+        if (len > GLOBALS->longestname) {
+            GLOBALS->longestname = len;
+        }
+
+        iter = g_slist_delete_link(iter, iter);
+    }
+
+    /* quicksort(facs,0,numfacs-1); */ /* quicksort deprecated because it degenerates on sorted
+                                          traces..badly.  very badly. */
+    wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
+
+    GLOBALS->facs_are_sorted = 1;
+
+    init_tree();
+    for (i = 0; i < GLOBALS->numfacs; i++) {
+        char *n = GLOBALS->facs[i]->name;
+        build_tree_from_name(n, i);
+
+        if (GLOBALS->escaped_names_found_vcd_c_1) {
+            char *subst, ch;
+            subst = GLOBALS->facs[i]->name;
+            while ((ch = (*subst))) {
+                if (ch == VCDNAM_ESCAPE) {
+                    *subst = GLOBALS->hier_delimeter;
+                } /* restore back to normal */
+                subst++;
+            }
+        }
+    }
+    treegraft(&GLOBALS->treeroot);
+    treesort(GLOBALS->treeroot, NULL);
+
+    if (GLOBALS->escaped_names_found_vcd_c_1) {
+        treenamefix(GLOBALS->treeroot);
+    }
 }
 
 /*******************************************************************************/

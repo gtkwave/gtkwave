@@ -19,8 +19,6 @@
 #include "vcd.h"
 #include "tree_component.h"
 
-typedef struct _FstFile FstFile;
-
 GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end);
 
 #endif
