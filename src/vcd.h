@@ -126,7 +126,6 @@ struct vcdsymbol
 #pragma pack(pop)
 #endif
 
-GwHistEnt *histent_calloc(void);
 void strcpy_vcdalt(char *too, char *from, char delim);
 int strcpy_delimfix(char *too, char *from);
 void vcd_sortfacs(GSList *sym_chain);

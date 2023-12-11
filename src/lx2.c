@@ -24,6 +24,7 @@
 #include "hierpack.h"
 #include "fst.h"
 #include "gw-vcd-file.h"
+#include "gw-fst-file.h"
 
 /*
  * actually import an lx2 trace but don't do it if it's already been imported
@@ -35,7 +36,7 @@ void import_lx2_trace(GwNode *np)
             gw_vcd_file_import_trace(GW_VCD_FILE(GLOBALS->dump_file), np);
             return;
         case LXT2_IS_FST:
-            import_fst_trace(GLOBALS->fst_file, np);
+            gw_fst_file_import_trace(GW_FST_FILE(GLOBALS->dump_file), np);
             return;
         case LXT2_IS_FSDB:
             import_extload_trace(np);
@@ -56,7 +57,7 @@ void lx2_set_fac_process_mask(GwNode *np)
             gw_vcd_file_set_fac_process_mask(GW_VCD_FILE(GLOBALS->dump_file), np);
             return;
         case LXT2_IS_FST:
-            fst_set_fac_process_mask(GLOBALS->fst_file, np);
+            gw_fst_file_set_fac_process_mask(GW_FST_FILE(GLOBALS->dump_file), np);
             return;
         case LXT2_IS_FSDB:
             fsdb_set_fac_process_mask(np);
@@ -74,7 +75,7 @@ void lx2_import_masked(void)
             gw_vcd_file_import_masked(GW_VCD_FILE(GLOBALS->dump_file));
             return;
         case LXT2_IS_FST:
-            fst_import_masked(GLOBALS->fst_file);
+            gw_fst_file_import_masked(GW_FST_FILE(GLOBALS->dump_file));
             return;
         case LXT2_IS_FSDB:
             fsdb_import_masked();

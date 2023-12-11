@@ -24,6 +24,7 @@
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
 #include "signal_list.h"
+#include "gw-fst-file.h"
 
 /* Treesearch is a pop-up window used to select signals.
    It is composed of two main areas:
@@ -159,7 +160,7 @@ void fill_sig_store(void)
         t_prev = t;
 
         varxt = GLOBALS->facs[i]->n->varxt;
-        varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
+        varxt_pnt = varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt)) : NULL;
 
         vartype = GLOBALS->facs[i]->n->vartype;
         if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {

@@ -72,28 +72,6 @@ int strcpy_delimfix(char *too, char *from)
     return (found);
 }
 
-/*
- * histent structs are NEVER freed so this is OK..
- * (we are allocating as many entries that fit in 64k minus the size of the two
- * bookkeeping void* pointers found in the malloc_2/free_2 routines in
- * debug.c--unless Judy, then can dispense with pointer subtraction)
- */
-#ifdef _WAVE_HAVE_JUDY
-#define VCD_HISTENT_GRANULARITY ((64 * 1024) / sizeof(GwHistEnt))
-#else
-#define VCD_HISTENT_GRANULARITY (((64 * 1024) - (2 * sizeof(void *))) / sizeof(GwHistEnt))
-#endif
-
-GwHistEnt *histent_calloc(void)
-{
-    if (GLOBALS->he_curr_vcd_c_1 == GLOBALS->he_fini_vcd_c_1) {
-        GLOBALS->he_curr_vcd_c_1 = calloc_2(VCD_HISTENT_GRANULARITY, sizeof(GwHistEnt));
-        GLOBALS->he_fini_vcd_c_1 = GLOBALS->he_curr_vcd_c_1 + VCD_HISTENT_GRANULARITY;
-    }
-
-    return (GLOBALS->he_curr_vcd_c_1++);
-}
-
 void set_vcd_vartype(struct vcdsymbol *v, GwNode *n)
 {
     unsigned char nvt;
