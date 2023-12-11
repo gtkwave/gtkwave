@@ -127,9 +127,5 @@ struct vcdsymbol
 #endif
 
 void strcpy_vcdalt(char *too, char *from, char delim);
-int strcpy_delimfix(char *too, char *from);
-void vcd_sortfacs(GSList *sym_chain);
-void set_vcd_vartype(struct vcdsymbol *v, GwNode *n);
 
-int vcd_keyword_code(const char *s, unsigned int len);
 #endif
