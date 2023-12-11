@@ -79,31 +79,27 @@ static void GuiDoEvent(GdkEvent *event, gpointer data)
 
 void gtkwave_main_iteration(void)
 {
-    if (GLOBALS->partial_vcd) {
-        gtk_events_pending_gtk_main_iteration();
-    } else {
-        struct Global *g_old = GLOBALS;
-        struct Global *gcache = NULL;
+    struct Global *g_old = GLOBALS;
+    struct Global *gcache = NULL;
 
-        set_window_busy(NULL);
+    set_window_busy(NULL);
 
-        while (gtk_events_pending()) {
-            gtk_main_iteration();
-            if (GLOBALS != g_old) {
-                /* this should never happen! */
-                /* if it does, the program state is probably screwed */
-                fprintf(stderr,
-                        "GTKWAVE | WARNING: globals changed during gtkwave_main_iteration()!\n");
-                gcache = GLOBALS;
-            }
+    while (gtk_events_pending()) {
+        gtk_main_iteration();
+        if (GLOBALS != g_old) {
+            /* this should never happen! */
+            /* if it does, the program state is probably screwed */
+            fprintf(stderr,
+                    "GTKWAVE | WARNING: globals changed during gtkwave_main_iteration()!\n");
+            gcache = GLOBALS;
         }
+    }
 
-        set_GLOBALS(g_old);
-        set_window_idle(NULL);
+    set_GLOBALS(g_old);
+    set_window_idle(NULL);
 
-        if (gcache) {
-            set_GLOBALS(gcache);
-        }
+    if (gcache) {
+        set_GLOBALS(gcache);
     }
 }
 

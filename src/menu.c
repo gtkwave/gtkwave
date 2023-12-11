@@ -1021,64 +1021,6 @@ void menu_zoom10_snap(gpointer null_data, guint callback_action, GtkWidget *widg
 }
 
 /**/
-void menu_zoom_dynf(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->tcl_menu_toggle_item) {
-        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-        if (menu_wlist[WV_MENU_VZDYN]) /* not always available */
-        {
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]),
-                GLOBALS->zoom_dyn =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->zoom_dyn));
-        }
-    } else {
-        GLOBALS->zoom_dyn =
-            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]));
-        if (!GLOBALS->zoom_dyn) {
-            status_text("Dynamic Zoom Full Off.\n");
-        } else {
-            status_text("Dynamic Zoom Full On.\n");
-        }
-    }
-}
-
-/**/
-void menu_zoom_dyne(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    if (GLOBALS->tcl_menu_toggle_item) {
-        GLOBALS->tcl_menu_toggle_item = FALSE; /* to avoid retriggers */
-        if (menu_wlist[WV_MENU_VZDYNE]) /* not always available */
-        {
-            gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]),
-                GLOBALS->zoom_dyne =
-                    GLOBALS->wave_script_args
-                        ? (atoi_64(GLOBALS->wave_script_args->payload) ? TRUE : FALSE)
-                        : (!GLOBALS->zoom_dyne));
-        }
-    } else {
-        GLOBALS->zoom_dyne =
-            gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]));
-        if (!GLOBALS->zoom_dyne) {
-            status_text("Dynamic Zoom To End Off.\n");
-        } else {
-            status_text("Dynamic Zoom To End On.\n");
-        }
-    }
-}
-
-/**/
 void menu_left_justify(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
     (void)null_data;
@@ -2773,7 +2715,7 @@ void menu_new_viewer_tab(gpointer null_data, guint callback_action, GtkWidget *w
     if (in_main_iteration())
         return;
 
-    if ((!GLOBALS->socket_xid) && (!GLOBALS->partial_vcd)) {
+    if ((!GLOBALS->socket_xid)) {
         fileselbox("Select a trace to view...",
                    &GLOBALS->filesel_newviewer_menu_c_1,
                    G_CALLBACK(menu_new_viewer_tab_cleanup),
@@ -5797,16 +5739,6 @@ static gtkwave_mlist_t menu_items[] = {
                 menu_zoom10_snap,
                 WV_MENU_VZPS,
                 "<ToggleItem>"),
-    WAVE_GTKIFE("/View/Partial VCD Dynamic Zoom Full",
-                NULL,
-                menu_zoom_dynf,
-                WV_MENU_VZDYN,
-                "<ToggleItem>"),
-    WAVE_GTKIFE("/View/Partial VCD Dynamic Zoom To End",
-                NULL,
-                menu_zoom_dyne,
-                WV_MENU_VZDYNE,
-                "<ToggleItem>"),
     WAVE_GTKIFE("/View/Full Precision",
                 "<Alt>Pause",
                 menu_use_full_precision,
@@ -5952,13 +5884,6 @@ void set_menu_toggles(void)
                                    GLOBALS->autocoalesce_reversal);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]),
                                    GLOBALS->keep_xz_colors);
-
-    if (GLOBALS->partial_vcd) {
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYN]),
-                                       GLOBALS->zoom_dyn);
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_VZDYNE]),
-                                       GLOBALS->zoom_dyne);
-    }
 
     set_scale_to_time_dimension_toggles();
     GLOBALS->quiet_checkmenu = 0;
@@ -6808,16 +6733,9 @@ GtkWidget *alt_menu_top(GtkWidget *window)
 #endif
     }
 
-    if ((GLOBALS->socket_xid) || (GLOBALS->partial_vcd)) {
+    if (GLOBALS->socket_xid) {
         gtk_widget_destroy(menu_wlist[WV_MENU_FONVT]);
         menu_wlist[WV_MENU_FONVT] = NULL;
-    }
-
-    if (!GLOBALS->partial_vcd) {
-        gtk_widget_destroy(menu_wlist[WV_MENU_VZDYN]);
-        menu_wlist[WV_MENU_VZDYN] = NULL;
-        gtk_widget_destroy(menu_wlist[WV_MENU_VZDYNE]);
-        menu_wlist[WV_MENU_VZDYNE] = NULL;
     }
 
     if (GLOBALS->loaded_file_type == DUMPLESS_FILE) {

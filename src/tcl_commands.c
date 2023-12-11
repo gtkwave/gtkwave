@@ -508,11 +508,7 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
     const char *reportString = "UNKNOWN";
 
     if (GLOBALS->is_vcd) {
-        if (GLOBALS->partial_vcd) {
-            reportString = "PVCD";
-        } else {
-            reportString = "VCD";
-        }
+        reportString = "VCD";
     } else if (GLOBALS->is_ghw) {
         reportString = "GHW";
     } else if (GLOBALS->is_lx2) {
@@ -2066,8 +2062,6 @@ static gint switch_to_tab_number(unsigned int i)
         GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
 
         GLOBALS->scale_to_time_dimension = g_old->scale_to_time_dimension;
-        GLOBALS->zoom_dyn = g_old->zoom_dyn;
-        GLOBALS->zoom_dyne = g_old->zoom_dyne;
 
         gtk_notebook_set_current_page(GTK_NOTEBOOK(GLOBALS->notebook), GLOBALS->this_context_page);
         return (TRUE);
