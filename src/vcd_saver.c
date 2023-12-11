@@ -10,7 +10,6 @@
 #include <config.h>
 #include "globals.h"
 #include "vcd_saver.h"
-#include "ghw.h"
 #include "hierpack.h"
 #include <time.h>
 

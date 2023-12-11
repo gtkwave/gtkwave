@@ -35,7 +35,6 @@
 #include "fonts.h"
 #include "fstapi.h"
 #include "gconf.h"
-#include "ghw.h"
 #include "gtk23compat.h"
 #include "main.h"
 #include "memory.h"

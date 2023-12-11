@@ -52,7 +52,6 @@
 #endif
 
 #include "symbol.h"
-#include "ghw.h"
 #include "main.h"
 #include "menu.h"
 #include "vcd.h"

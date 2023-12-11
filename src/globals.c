@@ -16,8 +16,6 @@
 #include "currenttime.h"
 #include "debug.h"
 #include "fgetdynamic.h"
-#include "ghw.h"
-#include "globals.h"
 #include <getopt.h>
 #include "gtk23compat.h"
 #include "main.h"

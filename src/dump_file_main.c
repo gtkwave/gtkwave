@@ -2,6 +2,7 @@
 #include <gtkwave.h>
 #include "globals.h"
 #include "gw-vcd-loader.h"
+#include "gw-ghw-loader.h"
 #include "gw-fst-loader.h"
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
@@ -22,6 +23,19 @@ GwDumpFile *vcd_recoder_main(char *fname)
     GwLoader *loader = gw_vcd_loader_new();
     set_common_settings(loader);
     gw_vcd_loader_set_vlist_prepack(GW_VCD_LOADER(loader), global_settings->vlist_prepack);
+
+    GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
+
+    g_object_unref(loader);
+
+    return file;
+}
+
+// TODO: remove
+GwDumpFile *ghw_main(char *fname)
+{
+    GwLoader *loader = gw_ghw_loader_new();
+    set_common_settings(loader);
 
     GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
 
