@@ -170,6 +170,39 @@ void gw_tree_sort(GwTree *self)
     g_free(tm);
 }
 
+void gw_tree_graft(GwTree *self, GwTreeNode *graft_chain)
+{
+    g_return_if_fail(GW_IS_TREE(self));
+    g_return_if_fail(graft_chain != NULL);
+
+    GwTreeNode *iter = graft_chain;
+
+    while (iter != NULL) {
+        GwTreeNode *iter_next = iter->next;
+        GwTreeNode *parent = g_steal_pointer(&iter->child);
+
+        if (parent != NULL) {
+            if (parent->child != NULL) {
+                iter->next = parent->child;
+                parent->child = iter;
+            } else {
+                parent->child = iter;
+                iter->next = NULL;
+            }
+        } else {
+            if (self->root != NULL) {
+                iter->next = self->root->next;
+                self->root->next = iter;
+            } else {
+                self->root = iter;
+                iter->next = NULL;
+            }
+        }
+
+        iter = iter_next;
+    }
+}
+
 /*
  * compares two facilities a la strcmp but preserves
  * numbers for comparisons

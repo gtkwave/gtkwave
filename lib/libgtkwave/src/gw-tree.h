@@ -104,5 +104,6 @@ GwTree *gw_tree_new(GwTreeNode *root);
 GwTreeNode *gw_tree_get_root(GwTree *self);
 
 void gw_tree_sort(GwTree *self);
+void gw_tree_graft(GwTree *self, GwTreeNode *graft_chain);
 
 G_END_DECLS

@@ -2324,10 +2324,10 @@ static void vcd_sortfacs(GSList *sym_chain)
             }
         }
     }
-    treegraft(&GLOBALS->treeroot);
 
     // TODO: add GwTree to GwDumpFile
     GwTree *tree = gw_tree_new(GLOBALS->treeroot);
+    gw_tree_graft(tree, GLOBALS->terminals_tchain_tree_c_1);
     gw_tree_sort(tree);
     GLOBALS->treeroot = gw_tree_get_root(tree);
     g_object_unref(tree);

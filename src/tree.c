@@ -261,45 +261,6 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
 }
 
 /*
- * adds back netnames
- */
-int treegraft(GwTreeNode **t)
-{
-    GwTreeNode *tx = GLOBALS->terminals_tchain_tree_c_1;
-    GwTreeNode *t2;
-    GwTreeNode *par;
-
-    while (tx) {
-        t2 = tx->next;
-
-        par = tx->child;
-        tx->child = NULL;
-
-        if (par) {
-            if (par->child) {
-                tx->next = par->child;
-                par->child = tx;
-            } else {
-                par->child = tx;
-                tx->next = NULL;
-            }
-        } else {
-            if (*t) {
-                tx->next = (*t)->next;
-                (*t)->next = tx;
-            } else {
-                *t = tx;
-                tx->next = NULL;
-            }
-        }
-
-        tx = t2;
-    }
-
-    return (1);
-}
-
-/*
  * unswizzle extended names in tree
  */
 void treenamefix_str(char *s)

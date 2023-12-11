@@ -1031,7 +1031,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     fprintf(stderr, FST_RDLOAD "Building facility hierarchy tree.\n");
 
     init_tree();
-    treegraft(&GLOBALS->treeroot);
 
     /* SPLASH */ splash_sync(3, 5);
 
@@ -1039,6 +1038,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
     // TODO: add GwTree to GwDumpFile
     GwTree *tree = gw_tree_new(GLOBALS->treeroot);
+    gw_tree_graft(tree, GLOBALS->terminals_tchain_tree_c_1);
     gw_tree_sort(tree);
     GLOBALS->treeroot = gw_tree_get_root(tree);
     g_object_unref(tree);
