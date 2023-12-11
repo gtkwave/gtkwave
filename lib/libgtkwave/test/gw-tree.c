@@ -115,12 +115,59 @@ static void test_sort(void)
     g_object_unref(tree);
 }
 
+static void test_graft(void)
+{
+    GwTree *tree;
+    GwTreeNode *chain;
+
+    // Graft  node to empty tree
+
+    chain = alloc_node("a");
+
+    tree = gw_tree_new(NULL);
+    gw_tree_graft(tree, chain);
+    assert_tree(gw_tree_get_root(tree), "(a)");
+    g_object_unref(tree);
+
+    // Graft two nodes to empty tree
+
+    chain = alloc_node("a");
+    chain->next = alloc_node("b");
+
+    tree = gw_tree_new(NULL);
+    gw_tree_graft(tree, chain);
+    assert_tree(gw_tree_get_root(tree), "(a b)");
+    g_object_unref(tree);
+
+    // Graft nodes to parents
+
+    GwTreeNode *p1 = alloc_node("parent1");
+    GwTreeNode *p2 = alloc_node("parent2");
+    p1->next = p2;
+
+    GwTreeNode *c1 = alloc_node("child1");
+    GwTreeNode *c2 = alloc_node("child2");
+    GwTreeNode *c3 = alloc_node("child3");
+    c1->next = c2;
+    c2->next = c3;
+
+    c1->child = p1;
+    c2->child = p1;
+    c3->child = p2;
+
+    tree = gw_tree_new(p1);
+    gw_tree_graft(tree, c1);
+    assert_tree(gw_tree_get_root(tree), "((parent1 child2 child1) (parent2 child3))");
+    g_object_unref(tree);
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/tree/to_string", test_to_string);
     g_test_add_func("/tree/sort", test_sort);
+    g_test_add_func("/tree/graft", test_graft);
 
     return g_test_run();
 }
