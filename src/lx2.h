@@ -25,7 +25,6 @@ enum LXT2_Loader_Type_Encodings
     LXT2_IS_INACTIVE,
     LXT2_IS_VLIST,
     LXT2_IS_FST,
-    LXT2_IS_FSDB
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING

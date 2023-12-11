@@ -43,8 +43,6 @@
 #include "fst.h"
 #include "hierpack.h"
 
-#include "fsdb_wrapper_api.h"
-
 #ifdef __MINGW32__
 #define sleep(x) Sleep(x * 1000)
 #endif
@@ -145,37 +143,6 @@ static const struct Global globals_base_values = {
      * entry.c
      */
     NULL, /* entrybox_text 82 */
-
-    /*
-     * extload.c
-     */
-    0, /* extload_ffr_import_count */
-    NULL, /* extload_ffr_ctx */
-    NULL, /* extload */
-    NULL, /* extload_idcodes */
-    NULL, /* extload_inv_idcodes */
-#if !defined __MINGW32__
-    0, /* extload_lastmod */
-    0, /* extload_already_errored */
-#endif
-    NULL, /* extload_namecache */
-    NULL, /* extload_namecache_max */
-    NULL, /* extload_namecache_lens */
-    NULL, /* extload_namecache_patched */
-    NULL, /* extload_sym_block */
-    NULL, /* extload_node_block */
-    NULL, /* extload_xc */
-    NULL, /* extload_prevsymroot */
-    NULL, /* extload_prevsym */
-    NULL, /* extload_npar */
-    0, /* extload_i */
-    0, /* extload_hlen */
-    0, /* extload_vt_prev */
-    0, /* extload_vd_prev */
-    0, /* f_name_build_buf_len */
-    NULL, /* f_name_build_buf */
-    0, /* extload_max_tree */
-    0, /* extload_curr_tree */
 
     /*
      * fetchbuttons.c
@@ -1212,7 +1179,6 @@ void reload_into_new_context_2(void)
     new_globals->hier_max_level_shadow = GLOBALS->hier_max_level_shadow;
     new_globals->paned_pack_semantics = GLOBALS->paned_pack_semantics;
     new_globals->left_justify_sigs = GLOBALS->left_justify_sigs;
-    new_globals->extload_max_tree = GLOBALS->extload_max_tree;
     new_globals->ps_maxveclen = GLOBALS->ps_maxveclen;
     new_globals->show_base = GLOBALS->show_base;
     new_globals->display_grid = GLOBALS->display_grid;

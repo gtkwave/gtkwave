@@ -205,20 +205,6 @@ static void close_all_fst_files(void) /* so mingw does delete of reader tempfile
 }
 #endif
 
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-static void close_all_fsdb_files(
-    void) /* otherwise fsdb can leave around stray files if .gz/.bz2 was in use */
-{
-    unsigned int i;
-    for (i = 0; i < GLOBALS->num_notebook_pages; i++) {
-        if ((*GLOBALS->contexts)[i]->extload_ffr_ctx) {
-            fsdbReaderClose((*GLOBALS->contexts)[i]->extload_ffr_ctx);
-            (*GLOBALS->contexts)[i]->extload_ffr_ctx = NULL;
-        }
-    }
-}
-#endif
-
 void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, int pct)
 {
     if (window && title) {
@@ -249,16 +235,6 @@ void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, i
 
 static void print_help(char *nam)
 {
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-    int slen = strlen(EXTLOAD_SUFFIX);
-    char *ucase_ext = g_alloca(slen + 1);
-    int i;
-
-    for (i = 0; i < slen; i++) {
-        ucase_ext[i] = toupper(EXTLOAD_SUFFIX[i]);
-    }
-    ucase_ext[i] = 0;
-#endif
 
 #if !defined __MINGW32__ && !defined __FreeBSD__ && !defined __CYGWIN__
 #define WAVE_GETOPT_CPUS \
@@ -268,11 +244,7 @@ static void print_help(char *nam)
 #endif
 
 #if !defined __MINGW32__
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-#define VCD_GETOPT "  -o, --optimize             optimize VCD/%s to FST\n"
-#else
 #define VCD_GETOPT "  -o, --optimize             optimize VCD to FST\n"
-#endif
 #else
 #define VCD_GETOPT
 #endif
@@ -357,12 +329,6 @@ static void print_help(char *nam)
 
         "Report bugs to <" PACKAGE_BUGREPORT ">.\n",
         nam
-#if !defined __MINGW32__
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-        ,
-        ucase_ext
-#endif
-#endif
     );
 
 #ifdef __MINGW32__
@@ -879,7 +845,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->disable_empty_gui = old_g->disable_empty_gui;
         GLOBALS->strace_repeat_count = old_g->strace_repeat_count;
 
-        GLOBALS->extload_max_tree = old_g->extload_max_tree;
         GLOBALS->do_hier_compress = old_g->do_hier_compress;
         GLOBALS->disable_auto_comphier = old_g->disable_auto_comphier;
         GLOBALS->sst_dbl_action_type = old_g->sst_dbl_action_type;
@@ -953,9 +918,6 @@ do_primary_inits:
         atexit(remove_all_ttrans_filters);
 #if defined __MINGW32__
         atexit(close_all_fst_files);
-#endif
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-        atexit(close_all_fsdb_files);
 #endif
     }
 
@@ -1354,24 +1316,6 @@ do_primary_inits:
         exit(255);
     }
 
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-#if !defined(FSDB_IS_PRESENT) || !defined(FSDB_NSYS_IS_PRESENT)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
-#endif
-#if defined(EXT2LOAD_SUFFIX) && defined(EXT2CONV_PATH)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXT2LOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
-#if defined(EXT3LOAD_SUFFIX) && defined(EXT3CONV_PATH)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXT3LOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
-
     /* attempt to load a dump+save file if only a savefile is specified at the command line */
     if ((GLOBALS->loaded_file_name) && (!wname) &&
         (suffix_check(GLOBALS->loaded_file_name, ".gtkw") ||
@@ -1535,28 +1479,6 @@ loader_check_head:
     if (is_missing_file) {
         GLOBALS->loaded_file_type = MISSING_FILE;
     } else
-#if defined(EXTLOAD_SUFFIX)
-        if ((suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX) && !opt_vcd) ||
-            (suffix_check(GLOBALS->loaded_file_name, ".vf") && !opt_vcd) || /* virtual file */
-            (suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX ".gz") &&
-             !opt_vcd) || /* loader automatically does gzip -cd */
-            (suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX ".bz2") &&
-             !opt_vcd) /* loader automatically does bzip2 -cd */
-        ) {
-        GwTime extload_max;
-
-        GLOBALS->loaded_file_type = EXTLOAD_FILE;
-        extload_max =
-            extload_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if ((!GLOBALS->extload) || (GLOBALS->extload_already_errored) || (!extload_max)) {
-            fprintf(stderr,
-                    "GTKWAVE | Could not initialize '%s'%s.\n",
-                    GLOBALS->loaded_file_name,
-                    GLOBALS->vcd_jmp_buf ? "" : ", exiting");
-            vcd_exit(255);
-        }
-    } else
-#endif
         if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
             suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
             suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
@@ -1734,9 +1656,6 @@ loader_check_head:
                         break;
                     case LXT2_IS_FST:
                         gw_fst_file_import_masked(GW_FST_FILE(GLOBALS->dump_file));
-                        break;
-                    case LXT2_IS_FSDB:
-                        fsdb_import_masked();
                         break;
                     default:
                         g_warn_if_reached();

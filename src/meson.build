@@ -38,7 +38,6 @@ gtkwave_sources = [
     'debug.c',
     'edgebuttons.c',
     'entry.c',
-    'extload.c',
     'fetchbuttons.c',
     'fgetdynamic.c',
     'file.c',

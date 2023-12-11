@@ -38,9 +38,6 @@ void import_lx2_trace(GwNode *np)
         case LXT2_IS_FST:
             gw_fst_file_import_trace(GW_FST_FILE(GLOBALS->dump_file), np);
             return;
-        case LXT2_IS_FSDB:
-            import_extload_trace(np);
-            return;
         default:
             g_return_if_reached();
             break;
@@ -59,9 +56,6 @@ void lx2_set_fac_process_mask(GwNode *np)
         case LXT2_IS_FST:
             gw_fst_file_set_fac_process_mask(GW_FST_FILE(GLOBALS->dump_file), np);
             return;
-        case LXT2_IS_FSDB:
-            fsdb_set_fac_process_mask(np);
-            return;
         default:
             g_return_if_reached();
             break;
@@ -76,9 +70,6 @@ void lx2_import_masked(void)
             return;
         case LXT2_IS_FST:
             gw_fst_file_import_masked(GW_FST_FILE(GLOBALS->dump_file));
-            return;
-        case LXT2_IS_FSDB:
-            fsdb_import_masked();
             return;
         default:
             g_return_if_reached();

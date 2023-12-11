@@ -17,7 +17,6 @@
 #include "analyzer.h"
 #include "symbol.h"
 #include "lx2.h"
-#include "extload.h"
 #include "debug.h"
 #include "bsearch.h"
 #include "strace.h"
@@ -193,9 +192,7 @@ void import_trace(GwNode *np)
     set_window_busy(NULL);
 
     // needs to be ahead of is_lx2 as now can be is_lx2 with FsdbReader
-    if (GLOBALS->extload) {
-        import_extload_trace(np);
-    } else if (GLOBALS->is_lx2) {
+    if (GLOBALS->is_lx2) {
         import_lx2_trace(np);
     } else {
         fprintf(stderr, "Internal error with mvlfac trace handling, exiting.\n");

@@ -14,7 +14,7 @@ if there is enough interest by users. Please notify us on GitHub if you require 
 of these features.
 
 - Removed the interactive VCD mode.
-- Removed support for LXT, LXT2, VZT, and AET2 formats.
+- Removed support for LXT, LXT2, VZT, FSDB, and AET2 formats.
 
 ### Changed
 
@@ -53,6 +53,7 @@ of these features.
     - `hier_grouping`
     - `hpane_pack`
     - `lxt_clock_compress_to_z`
+    - `max_fsdb_trees`
     - `use_scrollbar_only`
     - `use_scrollwheel_as_y`
     - `use_standard_clicking`

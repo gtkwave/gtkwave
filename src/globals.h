@@ -57,7 +57,6 @@
 #include "vcd_saver.h"
 #include "vlist.h"
 #include "version.h"
-#include "extload.h"
 #include "fst.h"
 
 #ifdef _WAVE_HAVE_JUDY
@@ -164,35 +163,6 @@ struct Global
      * entry.c
      */
     char *entrybox_text; /* from entry.c 83 */
-
-    /* extload.c */
-    unsigned int extload_ffr_import_count; /* from extload.c */
-    void *extload_ffr_ctx; /* from extload.c */
-    FILE *extload; /* from extload.c */
-    unsigned int *extload_idcodes; /* from extload.c */
-    int *extload_inv_idcodes; /* from extload.c */
-#if !defined __MINGW32__
-    time_t extload_lastmod; /* from extload.c */
-    char extload_already_errored; /* from extload.c */
-#endif
-    char **extload_namecache;
-    int *extload_namecache_max;
-    int *extload_namecache_lens;
-    int *extload_namecache_patched;
-    GwSymbol *extload_sym_block;
-    GwNode *extload_node_block;
-    void *extload_xc;
-    GwSymbol *extload_prevsymroot;
-    GwSymbol *extload_prevsym;
-    GwTree **extload_npar;
-    int extload_i;
-    int extload_hlen;
-    unsigned char extload_vt_prev;
-    unsigned char extload_vd_prev;
-    int f_name_build_buf_len;
-    char *f_name_build_buf;
-    unsigned int extload_max_tree;
-    unsigned int extload_curr_tree;
 
     /*
      * fetchbuttons.c
