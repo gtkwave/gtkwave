@@ -2325,7 +2325,12 @@ static void vcd_sortfacs(GSList *sym_chain)
         }
     }
     treegraft(&GLOBALS->treeroot);
-    treesort(GLOBALS->treeroot, NULL);
+
+    // TODO: add GwTree to GwDumpFile
+    GwTree *tree = gw_tree_new(GLOBALS->treeroot);
+    gw_tree_sort(tree);
+    GLOBALS->treeroot = gw_tree_get_root(tree);
+    g_object_unref(tree);
 
     if (GLOBALS->escaped_names_found_vcd_c_1) {
         treenamefix(GLOBALS->treeroot);
