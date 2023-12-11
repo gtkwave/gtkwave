@@ -229,7 +229,6 @@ struct Global
     /*
      * fst.c
      */
-    FstFile *fst_file;
     char nonimplicit_direction_encountered;
     char supplemental_datatypes_encountered;
     char supplemental_vartypes_encountered;
@@ -701,8 +700,6 @@ struct Global
     char convert_to_reals; /* from vcd.c 506 */
     char vcd_hier_delimeter[2]; /* from vcd.c 522 */
     int escaped_names_found_vcd_c_1; /* from vcd.c 528 */
-    GwHistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
-    GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
 
     /*
      * vcd_saver.c

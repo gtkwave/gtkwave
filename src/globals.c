@@ -212,7 +212,6 @@ static const struct Global globals_base_values = {
     /*
      * fst.c
      */
-    NULL, /* fst_fst_c_1 */
     0, /* nonimplicit_direction_encountered */
     0, /* supplemental_datatypes_encountered */
     0, /* supplemental_vartypes_encountered */
@@ -713,8 +712,6 @@ static const struct Global globals_base_values = {
     0, /* convert_to_reals 475 */
     {0, 0}, /* vcd_hier_delimeter 491 */
     0, /* escaped_names_found_vcd_c_1 494 */
-    NULL, /* he_curr_vcd_c_1 506 */
-    NULL, /* he_fini */
 
     /*
      * vcd_saver.c
@@ -1426,30 +1423,7 @@ void reload_into_new_context_2(void)
     }
 #endif
 
-    /* deallocate any loader-related stuff */
-    switch (GLOBALS->loaded_file_type) {
-        case FST_FILE:
-            g_clear_pointer(&GLOBALS->fst_file, fst_file_close);
-            break;
-
-#ifdef EXTLOAD_SUFFIX
-        case EXTLOAD_FILE:
-            if (GLOBALS->extload_ffr_ctx) {
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-                fsdbReaderClose(GLOBALS->extload_ffr_ctx);
-#endif
-                GLOBALS->extload_ffr_ctx = NULL;
-            }
-            break;
-#endif
-
-        case MISSING_FILE:
-        case DUMPLESS_FILE:
-        case GHW_FILE:
-        case VCD_RECODER_FILE:
-        default:
-            /* do nothing */ break;
-    }
+    g_clear_object(&GLOBALS->dump_file);
 
     /* window destruction (of windows that aren't the parent window) */
 
@@ -1875,30 +1849,7 @@ void free_and_destroy_page_context(void)
 {
     int s_ctx_iter;
 
-    /* deallocate any loader-related stuff */
-    switch (GLOBALS->loaded_file_type) {
-        case FST_FILE:
-            g_clear_pointer(&GLOBALS->fst_file, fst_file_close);
-            break;
-
-#ifdef EXTLOAD_SUFFIX
-        case EXTLOAD_FILE:
-            if (GLOBALS->extload_ffr_ctx) {
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-                fsdbReaderClose(GLOBALS->extload_ffr_ctx);
-#endif
-                GLOBALS->extload_ffr_ctx = NULL;
-            }
-            break;
-#endif
-
-        case MISSING_FILE:
-        case DUMPLESS_FILE:
-        case GHW_FILE:
-        case VCD_RECODER_FILE:
-        default:
-            /* do nothing */ break;
-    }
+    g_clear_object(&GLOBALS->dump_file);
 
     /* window destruction (of windows that aren't the parent window) */
 

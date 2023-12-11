@@ -10,6 +10,8 @@ static void gw_vcd_file_dispose(GObject *object)
     GwVcdFile *self = GW_VCD_FILE(object);
 
     g_clear_object(&self->hist_ent_factory);
+
+    G_OBJECT_CLASS(gw_vcd_file_parent_class)->dispose(object);
 }
 
 static void gw_vcd_file_class_init(GwVcdFileClass *klass)

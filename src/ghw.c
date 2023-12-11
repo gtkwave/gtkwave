@@ -22,6 +22,8 @@
 #include "ghw.h"
 #include "libghw.h"
 #include "tree.h"
+#include "gw-ghw-file.h"
+#include "gw-ghw-file-private.h"
 
 typedef struct
 {
@@ -45,6 +47,8 @@ typedef struct
     GwTree *treeroot;
     int longestname;
     GwTime max_time;
+
+    GwHistEntFactory *hist_ent_factory;
 } GhwLoader;
 
 /************************ splay ************************/
@@ -892,7 +896,7 @@ static void add_history(GhwLoader *self, GwNode *n, int sig_num)
     }
 
     if (!n->curr) {
-        he = histent_calloc();
+        he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
         he->flags = flags;
         he->time = -1;
         he->v.h_vector = NULL;
@@ -902,7 +906,7 @@ static void add_history(GhwLoader *self, GwNode *n, int sig_num)
         n->head.time = -2;
     }
 
-    he = histent_calloc();
+    he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
     he->flags = flags;
     he->time = self->h->snap_time;
 
@@ -1020,7 +1024,7 @@ static void add_tail(GhwLoader *self)
                 continue;
 
             /* Copy the last one.  */
-            he = histent_calloc();
+            he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             *he = *n->curr;
             he->time = MAX_HISTENT_TIME - j;
             he->next = NULL;
@@ -1198,12 +1202,14 @@ GwDumpFile *ghw_main(char *fname)
                 (self->num_glitch_regions != 1) ? "s" : "");
 
     // clang-format off
-    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE,
-                                         "time-dimension", GW_TIME_DIMENSION_FEMTO,
-                                         NULL);
+    GwGhwFile *dump_file = g_object_new(GW_TYPE_GHW_FILE,
+                                        "time-dimension", GW_TIME_DIMENSION_FEMTO,
+                                        NULL);
     // clang-format on
 
-    return dump_file;
+    dump_file->hist_ent_factory = g_steal_pointer(&self->hist_ent_factory);
+
+    return GW_DUMP_FILE(dump_file);
 }
 
 /*******************************************************************************/

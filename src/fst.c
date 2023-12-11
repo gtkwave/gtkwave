@@ -26,34 +26,12 @@
 #include "hierpack.h"
 #include "fst.h"
 #include "fst_util.h"
-
-struct _FstFile
-{
-    void *fst_reader;
-
-    fstHandle fst_maxhandle;
-
-    struct lx2_entry *fst_table;
-
-    GwFac *mvlfacs;
-    fstHandle *mvlfacs_alias;
-    fstHandle *mvlfacs_rvs_alias;
-
-    JRB subvar_jrb;
-    unsigned int subvar_jrb_count;
-    char **subvar_pnt;
-    unsigned subvar_jrb_count_locked : 1;
-
-    int busycnt;
-
-    JRB synclock_jrb;
-
-    GwTime time_scale;
-};
+#include "gw-fst-file.h"
+#include "gw-fst-file-private.h"
 
 typedef struct
 {
-    FstFile *file;
+    void *fst_reader;
 
     const char *scope_name;
     int scope_name_len;
@@ -73,6 +51,17 @@ typedef struct
     fstEnumHandle queued_xl_enum_filter;
 
     GwStems *stems;
+
+    struct lx2_entry *fst_table;
+
+    GwFac *mvlfacs;
+    fstHandle *mvlfacs_rvs_alias;
+
+    JRB subvar_jrb;
+    guint subvar_jrb_count;
+    gboolean subvar_jrb_count_locked;
+
+    JRB synclock_jrb;
 } FstLoader;
 
 #define FST_RDLOAD "FSTLOAD | "
@@ -178,7 +167,7 @@ static int sprintf_2_sdd(char *s, char *c, int d, int d2)
 
 static void handle_scope(FstLoader *self, struct fstHierScope *scope)
 {
-    void *fst_reader = self->file->fst_reader;
+    void *fst_reader = self->fst_reader;
 
     self->scope_name = fstReaderPushScope(fst_reader, scope->name, GLOBALS->mod_tree_parent);
     self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
@@ -198,7 +187,7 @@ static void handle_scope(FstLoader *self, struct fstHierScope *scope)
 
 static void handle_upscope(FstLoader *self)
 {
-    void *fst_reader = self->file->fst_reader;
+    void *fst_reader = self->fst_reader;
 
     GLOBALS->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(fst_reader);
     self->scope_name = fstReaderPopScope(fst_reader);
@@ -316,7 +305,7 @@ static void handle_supvar(FstLoader *self,
         JRB subvar_jrb_node;
         char *attr_pnt;
 
-        if (fstReaderGetFileType(self->file->fst_reader) == FST_FT_VHDL) {
+        if (fstReaderGetFileType(self->fst_reader) == FST_FT_VHDL) {
             char *lc_p = attr_pnt = strdup_2(attr->name);
 
             while (*lc_p) {
@@ -328,25 +317,25 @@ static void handle_supvar(FstLoader *self,
         }
 
         /* sxt points to actual type name specified in FST file */
-        subvar_jrb_node = jrb_find_str(self->file->subvar_jrb, attr_pnt ? attr_pnt : attr->name);
+        subvar_jrb_node = jrb_find_str(self->subvar_jrb, attr_pnt ? attr_pnt : attr->name);
         if (subvar_jrb_node) {
             *sxt = subvar_jrb_node->val.ui;
         } else {
             Jval jv;
 
-            if (self->file->subvar_jrb_count != WAVE_VARXT_MAX_ID) {
-                *sxt = jv.ui = ++self->file->subvar_jrb_count;
-                /* subvar_jrb_node = */ jrb_insert_str(self->file->subvar_jrb,
+            if (self->subvar_jrb_count != WAVE_VARXT_MAX_ID) {
+                *sxt = jv.ui = ++self->subvar_jrb_count;
+                /* subvar_jrb_node = */ jrb_insert_str(self->subvar_jrb,
                                                        strdup_2(attr_pnt ? attr_pnt : attr->name),
                                                        jv);
             } else {
                 sxt = 0;
-                if (!self->file->subvar_jrb_count_locked) {
+                if (!self->subvar_jrb_count_locked) {
                     fprintf(stderr,
                             FST_RDLOAD "Max number (%d) of type attributes reached, "
                                        "please increase WAVE_VARXT_MAX_ID.\n",
                             WAVE_VARXT_MAX_ID);
-                    self->file->subvar_jrb_count_locked = 1;
+                    self->subvar_jrb_count_locked = TRUE;
                 }
             }
         }
@@ -518,7 +507,7 @@ static struct fstHier *extractNextVar(FstLoader *self,
     guint8 svt = FST_SVT_NONE;
     guint sxt = 0;
 
-    void *fst_reader = self->file->fst_reader;
+    void *fst_reader = self->fst_reader;
 
     while ((h = fstReaderIterateHier(fst_reader))) {
         switch (h->htyp) {
@@ -571,7 +560,7 @@ static void fst_append_graft_chain(int len, char *nam, int which, GwTree *par)
 
 static GwBlackoutRegions *load_blackout_regions(FstLoader *self)
 {
-    void *fst_reader = self->file->fst_reader;
+    void *fst_reader = self->fst_reader;
 
     GwBlackoutRegions *blackout_regions = gw_blackout_regions_new();
 
@@ -626,12 +615,9 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     }
     /* SPLASH */ splash_create();
 
-    GLOBALS->fst_file = g_new0(FstFile, 1);
-    GLOBALS->fst_file->fst_reader = fst_reader;
-
     FstLoader loader = {0};
     FstLoader *self = &loader;
-    self->file = GLOBALS->fst_file;
+    self->fst_reader = fst_reader;
     self->stems = gw_stems_new();
 
     allowed_to_autocoalesce = (strstr(fstReaderGetVersionString(fst_reader), "Icarus") == NULL);
@@ -643,7 +629,6 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
         gw_time_scale_and_dimension_from_exponent(fstReaderGetTimescale(fst_reader));
     self->time_dimension = scale->dimension;
     self->time_scale = scale->scale;
-    self->file->time_scale = scale->scale;
     g_free(scale);
 
     f_name = calloc_2(F_NAME_MODULUS + 1, sizeof(char *));
@@ -657,18 +642,15 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
         GLOBALS->is_vhdl_component_format = 1;
     }
 
-    self->file->subvar_jrb =
-        make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
-    self->file->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
+    self->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
+    self->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
 
     GLOBALS->numfacs = fstReaderGetVarCount(fst_reader);
-    self->file->mvlfacs = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
-    self->file->fst_table = calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
+    self->mvlfacs = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
     sym_block = calloc_2(GLOBALS->numfacs, sizeof(GwSymbol));
     node_block = calloc_2(GLOBALS->numfacs, sizeof(GwNode));
     GLOBALS->facs = malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
-    self->file->mvlfacs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
-    self->file->mvlfacs_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
+    self->mvlfacs_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
 
     hier_auto_enable(); /* enable if greater than threshold */
 
@@ -762,7 +744,7 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
             node_block[i].msi = msb;
             node_block[i].lsi = lsb;
         }
-        self->file->mvlfacs[i].len = h->u.var.length;
+        self->mvlfacs[i].len = h->u.var.length;
 
         if (h->u.var.length) {
             nvd = fst_var_dir_to_gw_var_dir(h->u.var.direction);
@@ -778,42 +760,42 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
                 case FST_VT_SV_INT:
                 case FST_VT_SV_SHORTINT:
                 case FST_VT_SV_LONGINT:
-                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_INTEGER;
+                    self->mvlfacs[i].flags = VZT_RD_SYM_F_INTEGER;
                     break;
 
                 case FST_VT_VCD_REAL:
                 case FST_VT_VCD_REAL_PARAMETER:
                 case FST_VT_VCD_REALTIME:
                 case FST_VT_SV_SHORTREAL:
-                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_DOUBLE;
+                    self->mvlfacs[i].flags = VZT_RD_SYM_F_DOUBLE;
                     break;
 
                 case FST_VT_GEN_STRING:
-                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
-                    self->file->mvlfacs[i].len = 2;
+                    self->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
+                    self->mvlfacs[i].len = 2;
                     break;
 
                 default:
-                    self->file->mvlfacs[i].flags = VZT_RD_SYM_F_BITS;
+                    self->mvlfacs[i].flags = VZT_RD_SYM_F_BITS;
                     break;
             }
         } else /* convert any variable length records into strings */
         {
             nvt = GW_VAR_TYPE_GEN_STRING;
             nvd = GW_VAR_DIR_IMPLICIT;
-            self->file->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
-            self->file->mvlfacs[i].len = 2;
+            self->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
+            self->mvlfacs[i].len = 2;
         }
 
         if (self->synclock_str != NULL) {
-            if (self->file->mvlfacs[i].len == 1) /* currently only for single bit signals */
+            if (self->mvlfacs[i].len == 1) /* currently only for single bit signals */
             {
                 Jval syn_jv;
 
                 /* special meaning for this in FST loader--means synthetic signal! */
-                self->file->mvlfacs[i].flags |= VZT_RD_SYM_F_SYNVEC;
+                self->mvlfacs[i].flags |= VZT_RD_SYM_F_SYNVEC;
                 syn_jv.s = self->synclock_str;
-                jrb_insert_int(self->file->synclock_jrb, i, syn_jv);
+                jrb_insert_int(self->synclock_jrb, i, syn_jv);
             } else {
                 free_2(self->synclock_str);
             }
@@ -823,17 +805,17 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
         }
 
         if (h->u.var.is_alias) {
-            self->file->mvlfacs[i].node_alias =
+            self->mvlfacs[i].node_alias =
                 h->u.var.handle - 1; /* subtract 1 to scale it with gtkwave-style numbering */
-            self->file->mvlfacs[i].flags |= VZT_RD_SYM_F_ALIAS;
+            self->mvlfacs[i].flags |= VZT_RD_SYM_F_ALIAS;
             numalias++;
         } else {
-            self->file->mvlfacs_rvs_alias[numvars] = i;
-            self->file->mvlfacs[i].node_alias = numvars;
+            self->mvlfacs_rvs_alias[numvars] = i;
+            self->mvlfacs[i].node_alias = numvars;
             numvars++;
         }
 
-        f = &self->file->mvlfacs[i];
+        f = &self->mvlfacs[i];
 
         if ((f->len > 1) &&
             (!(f->flags & (VZT_RD_SYM_F_INTEGER | VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING)))) {
@@ -944,11 +926,11 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
                     if (f->len != 0) {
                         node_block[i].msi = f->len - 1;
                         node_block[i].lsi = 0;
-                        self->file->mvlfacs[i].len = f->len;
+                        self->mvlfacs[i].len = f->len;
                     } else {
                         node_block[i].msi = 31;
                         node_block[i].lsi = 0;
-                        self->file->mvlfacs[i].len = 32;
+                        self->mvlfacs[i].len = 32;
                     }
                 }
 
@@ -980,8 +962,8 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
             n->nname = s->name;
         }
 
-        n->mv.mvlfac = &self->file->mvlfacs[i];
-        self->file->mvlfacs[i].working_node = n;
+        n->mv.mvlfac = &self->mvlfacs[i];
+        self->mvlfacs[i].working_node = n;
         n->vardir = nvd;
         n->varxt = h->u.var.sxt_workspace;
         if ((h->u.var.svt_workspace == FST_SVT_NONE) && (h->u.var.sdt_workspace == FST_SDT_NONE)) {
@@ -1047,18 +1029,18 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     f_name_len = NULL;
 
     if (numvars != GLOBALS->numfacs) {
-        self->file->mvlfacs_rvs_alias =
-            realloc_2(self->file->mvlfacs_rvs_alias, numvars * sizeof(fstHandle));
+        self->mvlfacs_rvs_alias = realloc_2(self->mvlfacs_rvs_alias, numvars * sizeof(fstHandle));
     }
 
     /* generate lookup table for typenames explicitly given as attributes */
-    if (self->file->subvar_jrb_count > 0) {
+    gchar **subvar_pnt = NULL;
+    if (self->subvar_jrb_count > 0) {
         JRB subvar_jrb_node = NULL;
-        self->file->subvar_pnt = calloc_2(self->file->subvar_jrb_count + 1, sizeof(char *));
+        subvar_pnt = calloc_2(self->subvar_jrb_count + 1, sizeof(char *));
 
-        jrb_traverse(subvar_jrb_node, self->file->subvar_jrb)
+        jrb_traverse(subvar_jrb_node, self->subvar_jrb)
         {
-            self->file->subvar_pnt[subvar_jrb_node->val.ui] = subvar_jrb_node->key.s;
+            subvar_pnt[subvar_jrb_node->val.ui] = subvar_jrb_node->key.s;
         }
     }
 
@@ -1074,8 +1056,6 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
             (numvars == 1) ? "" : "s",
             numalias,
             (numalias == 1) ? "" : "es");
-
-    self->file->fst_maxhandle = numvars;
 
     /* SPLASH */ splash_sync(2, 5);
     fprintf(stderr, FST_RDLOAD "Building facility hierarchy tree.\n");
@@ -1156,632 +1136,26 @@ if(num_dups)
     /* SPLASH */ splash_finalize();
 
     // clang-format off
-    GwDumpFile *dump_file = g_object_new(GW_TYPE_DUMP_FILE,
-                                         "blackout-regions", blackout_regions,
-                                         "stems", self->stems,
-                                         "time-dimension", self->time_dimension,
-                                         "global-time-offset", global_time_offset,
-                                         NULL);
+    GwFstFile *dump_file = g_object_new(GW_TYPE_FST_FILE,
+                                        "blackout-regions", blackout_regions,
+                                        "stems", self->stems,
+                                        "time-dimension", self->time_dimension,
+                                        "global-time-offset", global_time_offset,
+                                        NULL);
     // clang-format on
+
+    dump_file->fst_reader = g_steal_pointer(&self->fst_reader);
+    dump_file->fst_maxhandle = numvars;
+    dump_file->fst_table = calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
+    dump_file->mvlfacs = g_steal_pointer(&self->mvlfacs);
+    dump_file->mvlfacs_rvs_alias = g_steal_pointer(&self->mvlfacs_rvs_alias);
+    dump_file->subvar_jrb = g_steal_pointer(&self->subvar_jrb);
+    dump_file->subvar_pnt = subvar_pnt;
+    dump_file->synclock_jrb = g_steal_pointer(&self->synclock_jrb);
+    dump_file->time_scale = self->time_scale;
 
     g_object_unref(blackout_regions);
     g_object_unref(self->stems);
 
-    return dump_file;
-}
-
-/*
- * conversion from evcd -> vcd format
- */
-static void evcd_memcpy(char *dst, const char *src, int len)
-{
-    static const char *evcd = "DUNZduLHXTlh01?FAaBbCcf";
-    static const char *vcd = "01xz0101xz0101xzxxxxxxz";
-
-    char ch;
-    int i, j;
-
-    for (j = 0; j < len; j++) {
-        ch = *src;
-        for (i = 0; i < 23; i++) {
-            if (evcd[i] == ch) {
-                *dst = vcd[i];
-                break;
-            }
-        }
-        if (i == 23)
-            *dst = 'x';
-
-        src++;
-        dst++;
-    }
-}
-
-/*
- * fst callback (only does bits for now)
- */
-static void fst_callback2(void *user_callback_data_pointer,
-                          uint64_t tim,
-                          fstHandle txidx,
-                          const unsigned char *value,
-                          uint32_t plen)
-{
-    FstFile *self = user_callback_data_pointer;
-
-    fstHandle facidx = self->mvlfacs_rvs_alias[--txidx];
-    GwHistEnt *htemp;
-    struct lx2_entry *l2e = &self->fst_table[facidx];
-    GwFac *f = &self->mvlfacs[facidx];
-
-    self->busycnt++;
-    if (self->busycnt == WAVE_BUSY_ITER) {
-        busy_window_refresh();
-        self->busycnt = 0;
-    }
-
-    /* fprintf(stderr, "%lld %d '%s'\n", tim, facidx, value); */
-
-    if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
-        unsigned char vt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
-        if (f->working_node) {
-            vt = f->working_node->vartype;
-        }
-
-        if (f->len > 1) {
-            char *h_vector = (char *)malloc_2(f->len);
-            if (vt != GW_VAR_TYPE_VCD_PORT) {
-                memcpy(h_vector, value, f->len);
-            } else {
-                evcd_memcpy(h_vector, (const char *)value, f->len);
-            }
-
-            if ((l2e->histent_curr) &&
-                (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
-            {
-                if ((!memcmp(l2e->histent_curr->v.h_vector, h_vector, f->len)) &&
-                    (!GLOBALS->settings.preserve_glitches)) {
-                    free_2(h_vector);
-                    return;
-                }
-            }
-
-            htemp = histent_calloc();
-            htemp->v.h_vector = h_vector;
-        } else {
-            unsigned char h_val;
-
-            if (vt != GW_VAR_TYPE_VCD_PORT) {
-                switch (*value) {
-                    case '0':
-                        h_val = AN_0;
-                        break;
-                    case '1':
-                        h_val = AN_1;
-                        break;
-                    case 'X':
-                    case 'x':
-                        h_val = AN_X;
-                        break;
-                    case 'Z':
-                    case 'z':
-                        h_val = AN_Z;
-                        break;
-                    case 'H':
-                    case 'h':
-                        h_val = AN_H;
-                        break;
-                    case 'U':
-                    case 'u':
-                        h_val = AN_U;
-                        break;
-                    case 'W':
-                    case 'w':
-                        h_val = AN_W;
-                        break;
-                    case 'L':
-                    case 'l':
-                        h_val = AN_L;
-                        break;
-                    case '-':
-                        h_val = AN_DASH;
-                        break;
-
-                    default:
-                        h_val = AN_X;
-                        break;
-                }
-            } else {
-                char membuf[1];
-                evcd_memcpy(membuf, (const char *)value, 1);
-                switch (*membuf) {
-                    case '0':
-                        h_val = AN_0;
-                        break;
-                    case '1':
-                        h_val = AN_1;
-                        break;
-                    case 'Z':
-                    case 'z':
-                        h_val = AN_Z;
-                        break;
-                    default:
-                        h_val = AN_X;
-                        break;
-                }
-            }
-
-            if ((vt != GW_VAR_TYPE_VCD_EVENT) && (l2e->histent_curr)) /* remove duplicate values */
-            {
-                if ((l2e->histent_curr->v.h_val == h_val) &&
-                    (!GLOBALS->settings.preserve_glitches)) {
-                    return;
-                }
-            }
-
-            htemp = histent_calloc();
-            htemp->v.h_val = h_val;
-        }
-    } else if (f->flags & VZT_RD_SYM_F_DOUBLE) {
-        if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
-        {
-            if (!memcmp(&l2e->histent_curr->v.h_double, value, sizeof(double))) {
-                if ((!GLOBALS->settings.preserve_glitches) &&
-                    (!GLOBALS->settings.preserve_glitches_real)) {
-                    return;
-                }
-            }
-        }
-
-        /* if(fstReaderIterBlocksSetNativeDoublesOnCallback is disabled...)
-
-        double *d = double_slab_calloc();
-        sscanf(value, "%lg", d);
-        htemp = histent_calloc();
-        htemp->v.h_vector = (char *)d;
-
-        otherwise...
-        */
-
-        htemp = histent_calloc();
-        memcpy(&htemp->v.h_double, value, sizeof(double));
-        htemp->flags = GW_HIST_ENT_FLAG_REAL;
-    } else /* string */
-    {
-        unsigned char *s = malloc_2(plen + 1);
-        uint32_t pidx;
-
-        for (pidx = 0; pidx < plen; pidx++) {
-            unsigned char ch = value[pidx];
-
-#if 0
-		/* for now do not convert to printable unless done in vcd + lxt loaders also */
-		if((ch < ' ') || (ch > '~'))
-			{
-			ch = '.';
-			}
-#endif
-
-            s[pidx] = ch;
-        }
-        s[pidx] = 0;
-
-        if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
-        {
-            if ((!strcmp(l2e->histent_curr->v.h_vector, (const char *)value)) &&
-                (!GLOBALS->settings.preserve_glitches)) {
-                free_2(s);
-                return;
-            }
-        }
-
-        htemp = histent_calloc();
-        htemp->v.h_vector = (char *)s;
-        htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
-    }
-
-    htemp->time = (tim) * (self->time_scale);
-
-    if (l2e->histent_curr) /* scan-build : was l2e->histent_head */
-    {
-        l2e->histent_curr->next = htemp; /* scan-build : this is ok given how it's used */
-        l2e->histent_curr = htemp;
-    } else {
-        l2e->histent_head = l2e->histent_curr = htemp;
-    }
-
-    l2e->numtrans++;
-}
-
-static void fst_callback(void *user_callback_data_pointer,
-                         uint64_t tim,
-                         fstHandle txidx,
-                         const unsigned char *value)
-{
-    fst_callback2(user_callback_data_pointer, tim, txidx, value, 0);
-}
-
-/*
- * this is the black magic that handles aliased signals...
- */
-static void fst_resolver(GwNode *np, GwNode *resolve)
-{
-    np->extvals = resolve->extvals;
-    np->msi = resolve->msi;
-    np->lsi = resolve->lsi;
-    memcpy(&np->head, &resolve->head, sizeof(GwHistEnt));
-    np->curr = resolve->curr;
-    np->harray = resolve->harray;
-    np->numhist = resolve->numhist;
-    np->mv.mvlfac = NULL;
-}
-
-/*
- * actually import a fst trace but don't do it if it's already been imported
- */
-void import_fst_trace(FstFile *self, GwNode *np)
-{
-    GwHistEnt *htemp;
-    GwHistEnt *htempx = NULL;
-    GwHistEnt *histent_tail;
-    int len, i;
-    GwFac *f;
-    int txidx;
-    GwNode *nold = np;
-
-    if (!(f = np->mv.mvlfac))
-        return; /* already imported */
-
-    txidx = f - self->mvlfacs;
-    if (np->mv.mvlfac->flags & VZT_RD_SYM_F_ALIAS) {
-        /* this is to map to fstHandles, so even non-aliased are remapped */
-        txidx = self->mvlfacs[txidx].node_alias;
-        txidx = self->mvlfacs_rvs_alias[txidx];
-        np = self->mvlfacs[txidx].working_node;
-
-        if (!(f = np->mv.mvlfac)) {
-            fst_resolver(nold, np);
-            return; /* already imported */
-        }
-    }
-
-    if (!(f->flags & VZT_RD_SYM_F_SYNVEC)) /* block debug message for synclk */
-    {
-        int flagged = HIER_DEPACK_STATIC;
-        char *str = hier_decompress_flagged(np->nname, &flagged);
-        fprintf(stderr, "Import: %s\n", str); /* normally this never happens */
-    }
-
-    /* new stuff */
-    len = np->mv.mvlfac->len;
-
-    /* check here for array height in future */
-
-    if (!(f->flags & VZT_RD_SYM_F_SYNVEC)) {
-        fstReaderSetFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
-        fstReaderIterBlocks2(self->fst_reader, fst_callback, fst_callback2, self, NULL);
-        fstReaderClrFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
-    }
-
-    histent_tail = htemp = histent_calloc();
-    if (len > 1) {
-        htemp->v.h_vector = (char *)malloc_2(len);
-        for (i = 0; i < len; i++)
-            htemp->v.h_vector[i] = AN_Z;
-    } else {
-        htemp->v.h_val = AN_Z; /* z */
-    }
-    htemp->time = MAX_HISTENT_TIME;
-
-    htemp = histent_calloc();
-    if (len > 1) {
-        if (!(f->flags & VZT_RD_SYM_F_DOUBLE)) {
-            if (!(f->flags & VZT_RD_SYM_F_STRING)) {
-                htemp->v.h_vector = (char *)malloc_2(len);
-                for (i = 0; i < len; i++)
-                    htemp->v.h_vector[i] = AN_X;
-            } else {
-                htemp->v.h_vector = strdup_2("UNDEF");
-                htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
-            }
-        } else {
-            htemp->v.h_double = strtod("NaN", NULL);
-            htemp->flags = GW_HIST_ENT_FLAG_REAL;
-        }
-        htempx = htemp;
-    } else {
-        htemp->v.h_val = AN_X; /* x */
-        htempx = htemp;
-    }
-    htemp->time = MAX_HISTENT_TIME - 1;
-    htemp->next = histent_tail;
-
-    if (self->fst_table[txidx].histent_curr) {
-        self->fst_table[txidx].histent_curr->next = htemp;
-        htemp = self->fst_table[txidx].histent_head;
-    }
-
-    if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
-        if (len > 1) {
-            np->head.v.h_vector = (char *)malloc_2(len);
-            for (i = 0; i < len; i++)
-                np->head.v.h_vector[i] = AN_X;
-        } else {
-            np->head.v.h_val = AN_X; /* x */
-        }
-    } else {
-        np->head.flags = GW_HIST_ENT_FLAG_REAL;
-        if (f->flags & VZT_RD_SYM_F_STRING) {
-            np->head.flags |= GW_HIST_ENT_FLAG_STRING;
-        }
-    }
-
-    {
-        GwHistEnt *htemp2 = histent_calloc();
-        htemp2->time = -1;
-        if (len > 1) {
-            htemp2->v.h_vector = htempx->v.h_vector;
-            htemp2->flags = htempx->flags;
-        } else {
-            htemp2->v.h_val = htempx->v.h_val;
-        }
-        htemp2->next = htemp;
-        htemp = htemp2;
-        self->fst_table[txidx].numtrans++;
-    }
-
-    np->head.time = -2;
-    np->head.next = htemp;
-    np->numhist = self->fst_table[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
-
-    memset(&self->fst_table[txidx], 0, sizeof(struct lx2_entry)); /* zero it out */
-
-    np->curr = histent_tail;
-    np->mv.mvlfac = NULL; /* it's imported and cached so we can forget it's an mvlfac now */
-
-    if (nold != np) {
-        fst_resolver(nold, np);
-    }
-}
-
-/*
- * decompress [m b xs xe valstring]... format string into trace
- */
-static void expand_synvec(FstFile *self, int txidx, const char *s)
-{
-    char *scopy = NULL;
-    char *pnt, *pnt2;
-    double m, b;
-    uint64_t xs, xe, xi;
-    char *vs;
-    uint64_t tim;
-    uint64_t tim_max;
-    int vslen;
-    int vspnt;
-    unsigned char value[2] = {0, 0};
-    unsigned char pval = 0;
-
-    scopy = strdup_2(s);
-    vs = calloc_2(1, strlen(s) + 1); /* will never be as big as original string */
-    pnt = scopy;
-
-    while (*pnt) {
-        if (*pnt != '[') {
-            pnt++;
-            continue;
-        }
-        pnt++;
-
-        pnt2 = strchr(pnt, ']');
-        if (!pnt2)
-            break;
-        *pnt2 = 0;
-
-        /* printf("PNT: %s\n", pnt); */
-        int rc = sscanf(pnt, "%lg %lg %" SCNu64 " %" SCNu64 " %s", &m, &b, &xs, &xe, vs);
-        if (rc == 5) {
-            vslen = strlen(vs);
-            vspnt = 0;
-
-            tim_max = 0;
-            for (xi = xs; xi <= xe; xi++) {
-                tim = (xi * m) + b;
-                /* fprintf(stderr, "#%"PRIu64" '%c'\n", tim, vs[vspnt]); */
-                value[0] = vs[vspnt];
-                if (value[0] != pval) /* collapse new == old value transitions so new is ignored */
-                {
-                    if ((tim >= tim_max) || (xi == xs)) {
-                        fst_callback2(self, tim, txidx, value, 0);
-                        tim_max = tim;
-                    }
-                    pval = value[0];
-                }
-                vspnt++;
-                vspnt = (vspnt == vslen) ? 0 : vspnt; /* modulus on repeating clock */
-            }
-        } else {
-            break;
-        }
-
-        pnt = pnt2 + 1;
-    }
-
-    free_2(vs);
-    free_2(scopy);
-}
-
-/*
- * pre-import many traces at once so function above doesn't have to iterate...
- */
-void fst_set_fac_process_mask(FstFile *self, GwNode *np)
-{
-    GwFac *f;
-    int txidx;
-
-    if (!(f = np->mv.mvlfac))
-        return; /* already imported */
-
-    txidx = f - self->mvlfacs;
-
-    if (np->mv.mvlfac->flags & VZT_RD_SYM_F_ALIAS) {
-        txidx = self->mvlfacs[txidx].node_alias;
-        txidx = self->mvlfacs_rvs_alias[txidx];
-        np = self->mvlfacs[txidx].working_node;
-
-        if (!(np->mv.mvlfac))
-            return; /* already imported */
-    }
-
-    if (np->mv.mvlfac->flags & VZT_RD_SYM_F_SYNVEC) {
-        JRB fi = jrb_find_int(self->synclock_jrb, txidx);
-        if (fi) {
-            expand_synvec(self, self->mvlfacs[txidx].node_alias + 1, fi->val.s);
-            import_fst_trace(self, np);
-            return; /* import_fst_trace() will construct the trailer */
-        }
-    }
-
-    /* check here for array height in future */
-    {
-        fstReaderSetFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
-        self->fst_table[txidx].np = np;
-    }
-}
-
-void fst_import_masked(FstFile *self)
-{
-    unsigned int txidxi;
-    int i, cnt;
-    GwHistEnt *htempx = NULL;
-
-    cnt = 0;
-    for (txidxi = 0; txidxi < self->fst_maxhandle; txidxi++) {
-        if (fstReaderGetFacProcessMask(self->fst_reader, txidxi + 1)) {
-            cnt++;
-        }
-    }
-
-    if (!cnt) {
-        return;
-    }
-
-    if (cnt > 100) {
-        fprintf(stderr, FST_RDLOAD "Extracting %d traces\n", cnt);
-    }
-
-    set_window_busy(NULL);
-    fstReaderIterBlocks2(self->fst_reader, fst_callback, fst_callback2, self, NULL);
-    set_window_idle(NULL);
-
-    for (txidxi = 0; txidxi < self->fst_maxhandle; txidxi++) {
-        if (fstReaderGetFacProcessMask(self->fst_reader, txidxi + 1)) {
-            int txidx = self->mvlfacs_rvs_alias[txidxi];
-            GwHistEnt *htemp, *histent_tail;
-            GwFac *f = &self->mvlfacs[txidx];
-            int len = f->len;
-            GwNode *np = self->fst_table[txidx].np;
-
-            histent_tail = htemp = histent_calloc();
-            if (len > 1) {
-                htemp->v.h_vector = (char *)malloc_2(len);
-                for (i = 0; i < len; i++)
-                    htemp->v.h_vector[i] = AN_Z;
-            } else {
-                htemp->v.h_val = AN_Z; /* z */
-            }
-            htemp->time = MAX_HISTENT_TIME;
-
-            htemp = histent_calloc();
-            if (len > 1) {
-                if (!(f->flags & VZT_RD_SYM_F_DOUBLE)) {
-                    if (!(f->flags & VZT_RD_SYM_F_STRING)) {
-                        htemp->v.h_vector = (char *)malloc_2(len);
-                        for (i = 0; i < len; i++)
-                            htemp->v.h_vector[i] = AN_X;
-                    } else {
-                        htemp->v.h_vector = strdup_2("UNDEF");
-                        htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
-                    }
-                    htempx = htemp;
-                } else {
-                    htemp->v.h_double = strtod("NaN", NULL);
-                    htemp->flags = GW_HIST_ENT_FLAG_REAL;
-                    htempx = htemp;
-                }
-            } else {
-                htemp->v.h_val = AN_X; /* x */
-                htempx = htemp;
-            }
-            htemp->time = MAX_HISTENT_TIME - 1;
-            htemp->next = histent_tail;
-
-            if (self->fst_table[txidx].histent_curr) {
-                self->fst_table[txidx].histent_curr->next = htemp;
-                htemp = self->fst_table[txidx].histent_head;
-            }
-
-            if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
-                if (len > 1) {
-                    np->head.v.h_vector = (char *)malloc_2(len);
-                    for (i = 0; i < len; i++)
-                        np->head.v.h_vector[i] = AN_X;
-                } else {
-                    np->head.v.h_val = AN_X; /* x */
-                }
-            } else {
-                np->head.flags = GW_HIST_ENT_FLAG_REAL;
-                if (f->flags & VZT_RD_SYM_F_STRING) {
-                    np->head.flags |= GW_HIST_ENT_FLAG_STRING;
-                }
-            }
-
-            {
-                GwHistEnt *htemp2 = histent_calloc();
-                htemp2->time = -1;
-                if (len > 1) {
-                    htemp2->v.h_vector = htempx->v.h_vector;
-                    htemp2->flags = htempx->flags;
-                } else {
-                    htemp2->v.h_val = htempx->v.h_val;
-                }
-                htemp2->next = htemp;
-                htemp = htemp2;
-                self->fst_table[txidx].numtrans++;
-            }
-
-            np->head.time = -2;
-            np->head.next = htemp;
-            np->numhist = self->fst_table[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
-
-            memset(&self->fst_table[txidx], 0, sizeof(struct lx2_entry)); /* zero it out */
-
-            np->curr = histent_tail;
-            np->mv.mvlfac = NULL; /* it's imported and cached so we can forget it's an mvlfac now */
-            fstReaderClrFacProcessMask(self->fst_reader, txidxi + 1);
-        }
-    }
-}
-
-void fst_file_close(FstFile *self)
-{
-    g_return_if_fail(self != NULL);
-
-    g_clear_pointer(&self->fst_reader, fstReaderClose);
-
-    if (self->subvar_jrb != NULL) {
-        jrb_free_tree(self->subvar_jrb);
-        self->subvar_jrb = NULL;
-        self->subvar_jrb_count = 0;
-    }
-
-    if (self->synclock_jrb) {
-        jrb_free_tree(self->synclock_jrb);
-        self->synclock_jrb = NULL;
-    }
-}
-
-gchar *fst_file_get_subvar(FstFile *self, gint index)
-{
-    g_return_val_if_fail(self != NULL, NULL);
-
-    return self->subvar_pnt[index];
+    return GW_DUMP_FILE(dump_file);
 }

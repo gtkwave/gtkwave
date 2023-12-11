@@ -68,6 +68,7 @@
 #include "signal_list.h"
 #include "gw-time-display.h"
 #include "gw-vcd-file.h"
+#include "gw-fst-file.h"
 
 #include "tcl_helper.h"
 #if defined(HAVE_LIBTCL)
@@ -1732,7 +1733,7 @@ loader_check_head:
                         gw_vcd_file_import_masked(GW_VCD_FILE(GLOBALS->dump_file));
                         break;
                     case LXT2_IS_FST:
-                        fst_import_masked(GLOBALS->fst_file);
+                        gw_fst_file_import_masked(GW_FST_FILE(GLOBALS->dump_file));
                         break;
                     case LXT2_IS_FSDB:
                         fsdb_import_masked();

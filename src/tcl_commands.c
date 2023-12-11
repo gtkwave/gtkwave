@@ -31,6 +31,7 @@
 #include "tcl_support_commands.h"
 #include "signal_list.h"
 #include "gw-wave-view.h"
+#include "gw-fst-file.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -321,7 +322,9 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
             int vardt;
 
             varxt = GLOBALS->facs[which]->n->varxt;
-            varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
+            varxt_pnt =
+                varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
+                      : NULL;
 
             vartype = GLOBALS->facs[which]->n->vartype;
             if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
@@ -364,7 +367,9 @@ static int gtkwavetcl_getFacDtype(ClientData clientData,
             int vardt;
 
             varxt = GLOBALS->facs[which]->n->varxt;
-            varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
+            varxt_pnt =
+                varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
+                      : NULL;
 
             vardt = GLOBALS->facs[which]->n->vardt;
             if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
