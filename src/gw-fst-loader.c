@@ -1,36 +1,33 @@
-/*
- * Copyright (c) Tony Bybell 2009-2018.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- */
-
 #include <config.h>
+#include <fstapi.h>
 #include "globals.h"
-#include <stdio.h>
-#include "fstapi.h"
-
-#include <unistd.h>
-
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-#include "symbol.h"
-#include "vcd.h"
-#include "lx2.h"
-#include "fstapi.h"
-#include "debug.h"
-#include "busy.h"
 #include "hierpack.h"
-#include "fst.h"
-#include "fst_util.h"
+#include "lx2.h"
+#include "tree_component.h"
+#include "gw-fst-loader.h"
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
 
-typedef struct
+static GwTreeKind fst_scope_type_to_gw_tree_kind(enum fstScopeType scope_type);
+static GwVarType fst_var_type_to_gw_var_type(enum fstVarType var_type);
+static GwVarDir fst_var_dir_to_gw_var_dir(enum fstVarDir var_dir);
+static GwVarDataType fst_supplemental_data_type_to_gw_var_data_type(
+    enum fstSupplementalDataType supplemental_data_type);
+
+#define FST_RDLOAD "FSTLOAD | "
+
+#define VZT_RD_SYM_F_BITS (0)
+#define VZT_RD_SYM_F_INTEGER (1 << 0)
+#define VZT_RD_SYM_F_DOUBLE (1 << 1)
+#define VZT_RD_SYM_F_STRING (1 << 2)
+#define VZT_RD_SYM_F_ALIAS (1 << 3)
+#define VZT_RD_SYM_F_SYNVEC \
+    (1 << 17) /* reader synthesized vector in alias sec'n from non-adjacent vectorizing */
+
+struct _GwFstLoader
 {
+    GwLoader parent_instance;
+
     void *fst_reader;
 
     const char *scope_name;
@@ -62,31 +59,9 @@ typedef struct
     gboolean subvar_jrb_count_locked;
 
     JRB synclock_jrb;
-} FstLoader;
+};
 
-#define FST_RDLOAD "FSTLOAD | "
-
-#define VZT_RD_SYM_F_BITS (0)
-#define VZT_RD_SYM_F_INTEGER (1 << 0)
-#define VZT_RD_SYM_F_DOUBLE (1 << 1)
-#define VZT_RD_SYM_F_STRING (1 << 2)
-#define VZT_RD_SYM_F_ALIAS (1 << 3)
-#define VZT_RD_SYM_F_SYNVEC \
-    (1 << 17) /* reader synthesized vector in alias sec'n from non-adjacent vectorizing */
-
-/******************************************************************/
-
-/*
- * doubles going into histent structs are NEVER freed so this is OK..
- * (we are allocating as many entries that fit in 4k minus the size of the two
- * bookkeeping void* pointers found in the malloc_2/free_2 routines in
- * debug.c)
- */
-#ifdef _WAVE_HAVE_JUDY
-#define FST_DOUBLE_GRANULARITY ((4 * 1024) / sizeof(double))
-#else
-#define FST_DOUBLE_GRANULARITY (((4 * 1024) - (2 * sizeof(void *))) / sizeof(double))
-#endif
+G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
 
 /*
  * reverse equality mem compare
@@ -165,7 +140,7 @@ static int sprintf_2_sdd(char *s, char *c, int d, int d2)
 
 /******************************************************************/
 
-static void handle_scope(FstLoader *self, struct fstHierScope *scope)
+static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
 {
     void *fst_reader = self->fst_reader;
 
@@ -185,7 +160,7 @@ static void handle_scope(FstLoader *self, struct fstHierScope *scope)
     self->next_var_istem = 0;
 }
 
-static void handle_upscope(FstLoader *self)
+static void handle_upscope(GwFstLoader *self)
 {
     void *fst_reader = self->fst_reader;
 
@@ -194,7 +169,7 @@ static void handle_upscope(FstLoader *self)
     self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
 }
 
-static void handle_var(FstLoader *self,
+static void handle_var(GwFstLoader *self,
                        struct fstHierVar *var,
                        gint *msb,
                        gint *lsb,
@@ -295,7 +270,7 @@ static void handle_var(FstLoader *self,
     *nam = s;
 }
 
-static void handle_supvar(FstLoader *self,
+static void handle_supvar(GwFstLoader *self,
                           struct fstHierAttr *attr,
                           guint8 *sdt,
                           guint8 *svt,
@@ -354,7 +329,7 @@ static void handle_supvar(FstLoader *self,
     }
 }
 
-static void handle_sourceistem(FstLoader *self, struct fstHierAttr *attr)
+static void handle_sourceistem(GwFstLoader *self, struct fstHierAttr *attr)
 {
     uint32_t istem_path_number = (uint32_t)attr->arg_from_name;
     uint32_t istem_line_number = (uint32_t)attr->arg;
@@ -362,7 +337,7 @@ static void handle_sourceistem(FstLoader *self, struct fstHierAttr *attr)
     self->next_var_istem = gw_stems_add_istem(self->stems, istem_path_number, istem_line_number);
 }
 
-static void handle_sourcestem(FstLoader *self, struct fstHierAttr *attr)
+static void handle_sourcestem(GwFstLoader *self, struct fstHierAttr *attr)
 {
     uint32_t stem_path_number = (uint32_t)attr->arg_from_name;
     uint32_t stem_line_number = (uint32_t)attr->arg;
@@ -370,7 +345,7 @@ static void handle_sourcestem(FstLoader *self, struct fstHierAttr *attr)
     self->next_var_stem = gw_stems_add_stem(self->stems, stem_path_number, stem_line_number);
 }
 
-static void handle_pathname(FstLoader *self, struct fstHierAttr *attr)
+static void handle_pathname(GwFstLoader *self, struct fstHierAttr *attr)
 {
     const gchar *path = attr->name;
     guint64 index = attr->arg;
@@ -382,7 +357,7 @@ static void handle_pathname(FstLoader *self, struct fstHierAttr *attr)
     }
 }
 
-static void handle_valuelist(FstLoader *self, struct fstHierAttr *attr)
+static void handle_valuelist(GwFstLoader *self, struct fstHierAttr *attr)
 {
     if (attr->name == NULL) {
         return;
@@ -395,7 +370,7 @@ static void handle_valuelist(FstLoader *self, struct fstHierAttr *attr)
     self->synclock_str = strdup_2(attr->name);
 }
 
-static void handle_enumtable(FstLoader *self, struct fstHierAttr *attr)
+static void handle_enumtable(GwFstLoader *self, struct fstHierAttr *attr)
 {
     if (attr->name == NULL) {
         return;
@@ -454,7 +429,7 @@ static void handle_enumtable(FstLoader *self, struct fstHierAttr *attr)
     fstUtilityFreeEnumTable(fe);
 }
 
-static void handle_attr(FstLoader *self,
+static void handle_attr(GwFstLoader *self,
                         struct fstHierAttr *attr,
                         guint8 *sdt,
                         guint8 *svt,
@@ -495,7 +470,7 @@ static void handle_attr(FstLoader *self,
     }
 }
 
-static struct fstHier *extractNextVar(FstLoader *self,
+static struct fstHier *extractNextVar(GwFstLoader *self,
                                       int *msb,
                                       int *lsb,
                                       char **nam,
@@ -558,7 +533,7 @@ static void fst_append_graft_chain(int len, char *nam, int which, GwTree *par)
     GLOBALS->terminals_tchain_tree_c_1 = t;
 }
 
-static GwBlackoutRegions *load_blackout_regions(FstLoader *self)
+static GwBlackoutRegions *load_blackout_regions(GwFstLoader *self)
 {
     void *fst_reader = self->fst_reader;
 
@@ -582,11 +557,10 @@ static GwBlackoutRegions *load_blackout_regions(FstLoader *self)
     return blackout_regions;
 }
 
-/*
- * mainline
- */
-GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
+static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GError **error)
 {
+    GwFstLoader *self = GW_FST_LOADER(loader);
+
     int i;
     GwNode *n;
     GwSymbol *s;
@@ -608,25 +582,21 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     int f_name_build_buf_len = 128;
     char *f_name_build_buf = malloc_2(f_name_build_buf_len + 1);
 
-    void *fst_reader = fstReaderOpen(fname);
-    if (fst_reader == NULL) {
-        /* look at self->fst_reader in caller for success status... */
+    self->fst_reader = fstReaderOpen(fname);
+    if (self->fst_reader == NULL) {
+        // TODO: set error
         return NULL;
     }
     /* SPLASH */ splash_create();
 
-    FstLoader loader = {0};
-    FstLoader *self = &loader;
-    self->fst_reader = fst_reader;
-    self->stems = gw_stems_new();
-
-    allowed_to_autocoalesce = (strstr(fstReaderGetVersionString(fst_reader), "Icarus") == NULL);
+    allowed_to_autocoalesce =
+        (strstr(fstReaderGetVersionString(self->fst_reader), "Icarus") == NULL);
     if (!allowed_to_autocoalesce) {
         GLOBALS->autocoalesce = 0;
     }
 
     GwTimeScaleAndDimension *scale =
-        gw_time_scale_and_dimension_from_exponent(fstReaderGetTimescale(fst_reader));
+        gw_time_scale_and_dimension_from_exponent(fstReaderGetTimescale(self->fst_reader));
     self->time_dimension = scale->dimension;
     self->time_scale = scale->scale;
     g_free(scale);
@@ -638,14 +608,14 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     nnam_max = 16;
     nnam = malloc_2(nnam_max + 1);
 
-    if (fstReaderGetFileType(fst_reader) == FST_FT_VHDL) {
+    if (fstReaderGetFileType(self->fst_reader) == FST_FT_VHDL) {
         GLOBALS->is_vhdl_component_format = 1;
     }
 
     self->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
     self->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
 
-    GLOBALS->numfacs = fstReaderGetVarCount(fst_reader);
+    GLOBALS->numfacs = fstReaderGetVarCount(self->fst_reader);
     self->mvlfacs = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
     sym_block = calloc_2(GLOBALS->numfacs, sizeof(GwSymbol));
     node_block = calloc_2(GLOBALS->numfacs, sizeof(GwNode));
@@ -659,10 +629,10 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     fprintf(stderr, FST_RDLOAD "Processing %d facs.\n", GLOBALS->numfacs);
     /* SPLASH */ splash_sync(1, 5);
 
-    self->first_cycle = fstReaderGetStartTime(fst_reader) * self->time_scale;
-    self->last_cycle = fstReaderGetEndTime(fst_reader) * self->time_scale;
+    self->first_cycle = fstReaderGetStartTime(self->fst_reader) * self->time_scale;
+    self->last_cycle = fstReaderGetEndTime(self->fst_reader) * self->time_scale;
     self->total_cycles = self->last_cycle - self->first_cycle + 1;
-    GwTime global_time_offset = fstReaderGetTimezero(fst_reader) * self->time_scale;
+    GwTime global_time_offset = fstReaderGetTimezero(self->fst_reader) * self->time_scale;
 
     GwBlackoutRegions *blackout_regions = load_blackout_regions(self);
 
@@ -686,7 +656,7 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
         h = extractNextVar(self, &msb, &lsb, &nnam, &name_len, &nnam_max);
         if (!h) {
             /* this should never happen */
-            fstReaderIterateHierRewind(fst_reader);
+            fstReaderIterateHierRewind(self->fst_reader);
             h = extractNextVar(self, &msb, &lsb, &nnam, &name_len, &nnam_max);
             if (!h) {
                 fprintf(stderr,
@@ -1097,41 +1067,8 @@ if(num_dups)
     GLOBALS->max_time = self->last_cycle;
     GLOBALS->is_lx2 = LXT2_IS_FST;
 
-    if (skip_start || skip_end) {
-        GwTime b_start, b_end;
-
-        if (!skip_start)
-            b_start = GLOBALS->min_time;
-        else
-            b_start = unformat_time(skip_start, self->time_dimension);
-        if (!skip_end)
-            b_end = GLOBALS->max_time;
-        else
-            b_end = unformat_time(skip_end, self->time_dimension);
-
-        if (b_start < GLOBALS->min_time)
-            b_start = GLOBALS->min_time;
-        else if (b_start > GLOBALS->max_time)
-            b_start = GLOBALS->max_time;
-
-        if (b_end < GLOBALS->min_time)
-            b_end = GLOBALS->min_time;
-        else if (b_end > GLOBALS->max_time)
-            b_end = GLOBALS->max_time;
-
-        if (b_start > b_end) {
-            GwTime tmp_time = b_start;
-            b_start = b_end;
-            b_end = tmp_time;
-        }
-
-        fstReaderSetLimitTimeRange(fst_reader, b_start, b_end);
-        GLOBALS->min_time = b_start;
-        GLOBALS->max_time = b_end;
-    }
-
     /* to avoid bin -> ascii -> bin double swap */
-    fstReaderIterBlocksSetNativeDoublesOnCallback(fst_reader, 1);
+    fstReaderIterBlocksSetNativeDoublesOnCallback(self->fst_reader, 1);
 
     /* SPLASH */ splash_finalize();
 
@@ -1158,4 +1095,205 @@ if(num_dups)
     g_object_unref(self->stems);
 
     return GW_DUMP_FILE(dump_file);
+}
+
+static void gw_fst_loader_class_init(GwFstLoaderClass *klass)
+{
+    GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
+
+    loader_class->load = gw_fst_loader_load;
+}
+
+static void gw_fst_loader_init(GwFstLoader *self)
+{
+    self->stems = gw_stems_new();
+}
+
+GwLoader *gw_fst_loader_new(void)
+{
+    return g_object_new(GW_TYPE_FST_LOADER, NULL);
+}
+
+static GwTreeKind fst_scope_type_to_gw_tree_kind(enum fstScopeType scope_type)
+{
+    switch (scope_type) {
+        case FST_ST_VCD_MODULE:
+            return GW_TREE_KIND_VCD_ST_MODULE;
+        case FST_ST_VCD_TASK:
+            return GW_TREE_KIND_VCD_ST_TASK;
+        case FST_ST_VCD_FUNCTION:
+            return GW_TREE_KIND_VCD_ST_FUNCTION;
+        case FST_ST_VCD_BEGIN:
+            return GW_TREE_KIND_VCD_ST_BEGIN;
+        case FST_ST_VCD_FORK:
+            return GW_TREE_KIND_VCD_ST_FORK;
+        case FST_ST_VCD_GENERATE:
+            return GW_TREE_KIND_VCD_ST_GENERATE;
+        case FST_ST_VCD_STRUCT:
+            return GW_TREE_KIND_VCD_ST_STRUCT;
+        case FST_ST_VCD_UNION:
+            return GW_TREE_KIND_VCD_ST_UNION;
+        case FST_ST_VCD_CLASS:
+            return GW_TREE_KIND_VCD_ST_CLASS;
+        case FST_ST_VCD_INTERFACE:
+            return GW_TREE_KIND_VCD_ST_INTERFACE;
+        case FST_ST_VCD_PACKAGE:
+            return GW_TREE_KIND_VCD_ST_PACKAGE;
+        case FST_ST_VCD_PROGRAM:
+            return GW_TREE_KIND_VCD_ST_PROGRAM;
+
+        case FST_ST_VHDL_ARCHITECTURE:
+            return GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
+        case FST_ST_VHDL_PROCEDURE:
+            return GW_TREE_KIND_VHDL_ST_PROCEDURE;
+        case FST_ST_VHDL_FUNCTION:
+            return GW_TREE_KIND_VHDL_ST_FUNCTION;
+        case FST_ST_VHDL_RECORD:
+            return GW_TREE_KIND_VHDL_ST_RECORD;
+        case FST_ST_VHDL_PROCESS:
+            return GW_TREE_KIND_VHDL_ST_PROCESS;
+        case FST_ST_VHDL_BLOCK:
+            return GW_TREE_KIND_VHDL_ST_BLOCK;
+        case FST_ST_VHDL_FOR_GENERATE:
+            return GW_TREE_KIND_VHDL_ST_GENFOR;
+        case FST_ST_VHDL_IF_GENERATE:
+            return GW_TREE_KIND_VHDL_ST_GENIF;
+        case FST_ST_VHDL_GENERATE:
+            return GW_TREE_KIND_VHDL_ST_GENERATE;
+        case FST_ST_VHDL_PACKAGE:
+            return GW_TREE_KIND_VHDL_ST_PACKAGE;
+
+        default:
+            return GW_TREE_KIND_UNKNOWN;
+    }
+}
+
+static GwVarType fst_var_type_to_gw_var_type(enum fstVarType var_type)
+{
+    switch (var_type) {
+        case FST_VT_VCD_EVENT:
+            return GW_VAR_TYPE_VCD_EVENT;
+        case FST_VT_VCD_INTEGER:
+            return GW_VAR_TYPE_VCD_INTEGER;
+        case FST_VT_VCD_PARAMETER:
+            return GW_VAR_TYPE_VCD_PARAMETER;
+        case FST_VT_VCD_REAL:
+            return GW_VAR_TYPE_VCD_REAL;
+        case FST_VT_VCD_REAL_PARAMETER:
+            return GW_VAR_TYPE_VCD_REAL_PARAMETER;
+        case FST_VT_VCD_REALTIME:
+            return GW_VAR_TYPE_VCD_REALTIME;
+        case FST_VT_VCD_REG:
+            return GW_VAR_TYPE_VCD_REG;
+        case FST_VT_VCD_SUPPLY0:
+            return GW_VAR_TYPE_VCD_SUPPLY0;
+        case FST_VT_VCD_SUPPLY1:
+            return GW_VAR_TYPE_VCD_SUPPLY1;
+        case FST_VT_VCD_TIME:
+            return GW_VAR_TYPE_VCD_TIME;
+        case FST_VT_VCD_TRI:
+            return GW_VAR_TYPE_VCD_TRI;
+        case FST_VT_VCD_TRIAND:
+            return GW_VAR_TYPE_VCD_TRIAND;
+        case FST_VT_VCD_TRIOR:
+            return GW_VAR_TYPE_VCD_TRIOR;
+        case FST_VT_VCD_TRIREG:
+            return GW_VAR_TYPE_VCD_TRIREG;
+        case FST_VT_VCD_TRI0:
+            return GW_VAR_TYPE_VCD_TRI0;
+        case FST_VT_VCD_TRI1:
+            return GW_VAR_TYPE_VCD_TRI1;
+        case FST_VT_VCD_WAND:
+            return GW_VAR_TYPE_VCD_WAND;
+        case FST_VT_VCD_WIRE:
+            return GW_VAR_TYPE_VCD_WIRE;
+        case FST_VT_VCD_WOR:
+            return GW_VAR_TYPE_VCD_WOR;
+        case FST_VT_VCD_PORT:
+            return GW_VAR_TYPE_VCD_PORT;
+
+        case FST_VT_GEN_STRING:
+            return GW_VAR_TYPE_GEN_STRING;
+
+        case FST_VT_SV_BIT:
+            return GW_VAR_TYPE_SV_BIT;
+        case FST_VT_SV_LOGIC:
+            return GW_VAR_TYPE_SV_LOGIC;
+        case FST_VT_SV_INT:
+            return GW_VAR_TYPE_SV_INT;
+        case FST_VT_SV_SHORTINT:
+            return GW_VAR_TYPE_SV_SHORTINT;
+        case FST_VT_SV_LONGINT:
+            return GW_VAR_TYPE_SV_LONGINT;
+        case FST_VT_SV_BYTE:
+            return GW_VAR_TYPE_SV_BYTE;
+        case FST_VT_SV_ENUM:
+            return GW_VAR_TYPE_SV_ENUM;
+        case FST_VT_SV_SHORTREAL:
+            return GW_VAR_TYPE_SV_SHORTREAL;
+
+        default:
+            return GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
+    }
+}
+
+static GwVarDir fst_var_dir_to_gw_var_dir(enum fstVarDir var_dir)
+{
+    switch (var_dir) {
+        case FST_VD_INPUT:
+            return GW_VAR_DIR_IN;
+        case FST_VD_OUTPUT:
+            return GW_VAR_DIR_OUT;
+        case FST_VD_INOUT:
+            return GW_VAR_DIR_INOUT;
+        case FST_VD_BUFFER:
+            return GW_VAR_DIR_BUFFER;
+        case FST_VD_LINKAGE:
+            return GW_VAR_DIR_LINKAGE;
+
+        case FST_VD_IMPLICIT:
+        default:
+            return GW_VAR_DIR_IMPLICIT;
+    }
+}
+
+static GwVarDataType fst_supplemental_data_type_to_gw_var_data_type(
+    enum fstSupplementalDataType supplemental_data_type)
+{
+    switch (supplemental_data_type) {
+        case FST_SDT_VHDL_BOOLEAN:
+            return GW_VAR_DATA_TYPE_VHDL_BOOLEAN;
+        case FST_SDT_VHDL_BIT:
+            return GW_VAR_DATA_TYPE_VHDL_BIT;
+        case FST_SDT_VHDL_BIT_VECTOR:
+            return GW_VAR_DATA_TYPE_VHDL_BIT_VECTOR;
+        case FST_SDT_VHDL_STD_ULOGIC:
+            return GW_VAR_DATA_TYPE_VHDL_STD_ULOGIC;
+        case FST_SDT_VHDL_STD_ULOGIC_VECTOR:
+            return GW_VAR_DATA_TYPE_VHDL_STD_ULOGIC_VECTOR;
+        case FST_SDT_VHDL_STD_LOGIC:
+            return GW_VAR_DATA_TYPE_VHDL_STD_LOGIC;
+        case FST_SDT_VHDL_STD_LOGIC_VECTOR:
+            return GW_VAR_DATA_TYPE_VHDL_STD_LOGIC_VECTOR;
+        case FST_SDT_VHDL_UNSIGNED:
+            return GW_VAR_DATA_TYPE_VHDL_UNSIGNED;
+        case FST_SDT_VHDL_SIGNED:
+            return GW_VAR_DATA_TYPE_VHDL_SIGNED;
+        case FST_SDT_VHDL_INTEGER:
+            return GW_VAR_DATA_TYPE_VHDL_INTEGER;
+        case FST_SDT_VHDL_REAL:
+            return GW_VAR_DATA_TYPE_VHDL_REAL;
+        case FST_SDT_VHDL_NATURAL:
+            return GW_VAR_DATA_TYPE_VHDL_NATURAL;
+        case FST_SDT_VHDL_POSITIVE:
+            return GW_VAR_DATA_TYPE_VHDL_POSITIVE;
+        case FST_SDT_VHDL_TIME:
+            return GW_VAR_DATA_TYPE_VHDL_TIME;
+        case FST_SDT_VHDL_CHARACTER:
+            return GW_VAR_DATA_TYPE_VHDL_CHARACTER;
+        case FST_SDT_VHDL_STRING:
+            return GW_VAR_DATA_TYPE_VHDL_STRING;
+        default:
+            return GW_VAR_DATA_TYPE_NONE;
+    }
 }

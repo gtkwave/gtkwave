@@ -57,7 +57,6 @@
 #include "vcd_saver.h"
 #include "vlist.h"
 #include "version.h"
-#include "fst.h"
 
 #ifdef _WAVE_HAVE_JUDY
 #include <Judy.h>
