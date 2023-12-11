@@ -38,9 +38,8 @@
 #include "vlist.h"
 #include "lx2.h"
 #include "signal_list.h"
+#include "dump_file_main.h"
 #include "gw-time-display.h"
-
-#include "fst.h"
 #include "hierpack.h"
 
 #ifdef __MINGW32__

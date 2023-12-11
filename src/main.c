@@ -53,7 +53,6 @@
 
 #include "symbol.h"
 #include "ghw.h"
-#include "fst.h"
 #include "main.h"
 #include "menu.h"
 #include "vcd.h"
@@ -66,6 +65,7 @@
 #include "ptranslate.h"
 #include "ttranslate.h"
 #include "signal_list.h"
+#include "dump_file_main.h"
 #include "gw-time-display.h"
 #include "gw-vcd-file.h"
 #include "gw-fst-file.h"

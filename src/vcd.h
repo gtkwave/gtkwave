@@ -95,8 +95,6 @@ enum VarTypes
 };
 #endif
 
-GwDumpFile *vcd_recoder_main(char *fname);
-
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(push)
 #pragma pack(1)
