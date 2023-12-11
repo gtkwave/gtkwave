@@ -458,15 +458,6 @@ int f_left_justify_sigs(const char *str)
     return (0);
 }
 
-int f_max_fsdb_trees(const char *str)
-{
-    int val;
-    DEBUG(printf("f_max_fsdb_trees(\"%s\")\n", str));
-    val = atoi_64(str);
-    GLOBALS->extload_max_tree = (val < 0) ? 0 : val;
-    return (0);
-}
-
 int f_page_divisor(const char *str)
 {
     DEBUG(printf("f_page_divisor(\"%s\")\n", str));
@@ -882,7 +873,6 @@ static struct rc_entry rcitems[] = {{"accel", f_accel},
                                     {"keep_xz_colors", f_keep_xz_colors},
                                     {"left_justify_sigs", f_left_justify_sigs},
                                     {"lz_removal", f_lz_removal},
-                                    {"max_fsdb_trees", f_max_fsdb_trees},
                                     {"page_divisor", f_page_divisor},
                                     {"ps_maxveclen", f_ps_maxveclen},
                                     {"ruler_origin", f_ruler_origin},

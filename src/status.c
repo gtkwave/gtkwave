@@ -73,9 +73,6 @@ void realize_text(GtkWidget *text, gpointer data)
             case LXT2_IS_VLIST:
                 status_text("VCD loaded successfully.\n");
                 break;
-            case LXT2_IS_FSDB:
-                status_text("FSDB loaded successfully.\n");
-                break;
             default:
                 break;
         }

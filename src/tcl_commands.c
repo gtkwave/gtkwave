@@ -523,9 +523,6 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
             case LXT2_IS_FST:
                 reportString = "FST";
                 break;
-            case LXT2_IS_FSDB:
-                reportString = "FSDB";
-                break;
             default:
                 break;
         }
