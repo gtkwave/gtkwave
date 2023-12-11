@@ -45,8 +45,8 @@ struct stem_struct_t
 
 struct treechain
 {
-    GwTree *tree; /* top of list of selected item in hierarchy */
-    GwTree *label; /* actual selected item in hierarchy */
+    GwTreeNode *tree; /* top of list of selected item in hierarchy */
+    GwTreeNode *label; /* actual selected item in hierarchy */
     struct treechain *next;
 };
 
@@ -59,8 +59,8 @@ struct autocoalesce_free_list
 
 void init_tree(void);
 void build_tree_from_name(const char *s, int which);
-int treegraft(GwTree **t);
-void treedebug(GwTree *t, char *s);
+int treegraft(GwTreeNode **t);
+void treedebug(GwTreeNode *t, char *s);
 
 char *leastsig_hiername(char *nam);
 void allocate_and_decorate_module_tree_node(unsigned char ttype,
@@ -72,15 +72,15 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                                             uint32_t t_istem);
 int decorated_module_cleanup(void);
 
-void treesort(GwTree *t, GwTree *p);
-void order_facs_from_treesort(GwTree *t, void *v);
+void treesort(GwTreeNode *t, GwTreeNode *p);
+void order_facs_from_treesort(GwTreeNode *t, void *v);
 
-void treenamefix(GwTree *t);
+void treenamefix(GwTreeNode *t);
 
 #ifdef WAVE_USE_STRUCT_PACKING
 #define WAVE_TALLOC_POOL_SIZE (64 * 1024)
 #define WAVE_TALLOC_ALTREQ_SIZE (4 * 1024)
-GwTree *talloc_2(size_t siz);
+GwTreeNode *talloc_2(size_t siz);
 #else
 #define talloc_2(x) calloc_2(1, (x))
 #endif
@@ -95,13 +95,13 @@ enum treeview_columns
     XXX_NUM_COLUMNS
 };
 
-void XXX_maketree(GtkTreeIter *subtree, GwTree *t);
-void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth);
+void XXX_maketree(GtkTreeIter *subtree, GwTreeNode *t);
+void XXX_maketree2(GtkTreeIter *subtree, GwTreeNode *t, int depth);
 
 void sst_exclusion_loader(void);
 
-GwTree *fetchhigh(GwTree *t);
-GwTree *fetchlow(GwTree *t);
-void recurse_fetch_high_low(GwTree *t);
+GwTreeNode *fetchhigh(GwTreeNode *t);
+GwTreeNode *fetchlow(GwTreeNode *t);
+void recurse_fetch_high_low(GwTreeNode *t);
 
 #endif

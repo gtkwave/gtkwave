@@ -521,9 +521,9 @@ static struct fstHier *extractNextVar(GwFstLoader *self,
     return (NULL);
 }
 
-static void fst_append_graft_chain(int len, char *nam, int which, GwTree *par)
+static void fst_append_graft_chain(int len, char *nam, int which, GwTreeNode *par)
 {
-    GwTree *t = talloc_2(sizeof(GwTree) + len + 1);
+    GwTreeNode *t = talloc_2(sizeof(GwTreeNode) + len + 1);
 
     memcpy(t->name, nam, len + 1);
     t->t_which = which;
@@ -573,7 +573,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     struct fstHier *h = NULL;
     int msb, lsb;
     char *nnam = NULL;
-    GwTree *npar = NULL;
+    GwTreeNode *npar = NULL;
     char **f_name = NULL;
     int *f_name_len = NULL, *f_name_max_len = NULL;
     int allowed_to_autocoalesce;

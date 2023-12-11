@@ -1877,7 +1877,7 @@ static void sig_selection_foreach_dnd(GtkTreeModel *model,
 {
     (void)path;
 
-    GwTree *sel;
+    GwTreeNode *sel;
     int i;
     int low, high;
     struct iter_dnd_strings *it;

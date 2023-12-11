@@ -8,10 +8,10 @@
 #pragma pack(1)
 #endif
 
-struct _GwTree
+struct _GwTreeNode
 {
-    GwTree *next;
-    GwTree *child;
+    GwTreeNode *next;
+    GwTreeNode *child;
     int t_which; /* 'i' for facs[i] table, value of < 0 means not a full signame */
     guint32 t_stem; /* source stem (if >0) for Open Hierarchy Source Def,  see stem_struct_t */
     guint32 t_istem; /* source stem (if >0) for Open Hierarchy Source Inst, see stem_struct_t */
