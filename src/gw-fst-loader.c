@@ -1036,7 +1036,13 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     /* SPLASH */ splash_sync(3, 5);
 
     fprintf(stderr, FST_RDLOAD "Sorting facility hierarchy tree.\n");
-    treesort(GLOBALS->treeroot, NULL);
+
+    // TODO: add GwTree to GwDumpFile
+    GwTree *tree = gw_tree_new(GLOBALS->treeroot);
+    gw_tree_sort(tree);
+    GLOBALS->treeroot = gw_tree_get_root(tree);
+    g_object_unref(tree);
+
     /* SPLASH */ splash_sync(4, 5);
     order_facs_from_treesort(GLOBALS->treeroot, &GLOBALS->facs);
 

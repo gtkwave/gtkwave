@@ -1,7 +1,9 @@
 #pragma once
 
-#include <glib.h>
+#include <glib-object.h>
 #include "gw-types.h"
+
+G_BEGIN_DECLS
 
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(push)
@@ -93,3 +95,14 @@ typedef enum
     GW_TREE_KIND_VHDL_ST_PROCESS,
     GW_TREE_KIND_VHDL_ST_GENERATE
 } GwTreeKind;
+
+#define GW_TYPE_TREE (gw_tree_get_type())
+G_DECLARE_FINAL_TYPE(GwTree, gw_tree, GW, TREE, GObject)
+
+GwTree *gw_tree_new(GwTreeNode *root);
+
+GwTreeNode *gw_tree_get_root(GwTree *self);
+
+void gw_tree_sort(GwTree *self);
+
+G_END_DECLS

@@ -8,6 +8,7 @@ libgtkwave_tests = [
     'gw-project',
     'gw-stems',
     'gw-time',
+    'gw-tree',
 ]
 
 foreach test : libgtkwave_tests

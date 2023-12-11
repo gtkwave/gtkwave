@@ -72,7 +72,6 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                                             uint32_t t_istem);
 int decorated_module_cleanup(void);
 
-void treesort(GwTreeNode *t, GwTreeNode *p);
 void order_facs_from_treesort(GwTreeNode *t, void *v);
 
 void treenamefix(GwTreeNode *t);

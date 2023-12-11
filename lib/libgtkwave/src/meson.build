@@ -11,6 +11,7 @@ libgtkwave_public_sources = [
     'gw-project.c',
     'gw-stems.c',
     'gw-time.c',
+    'gw-tree.c',
     'gw-var-enums.c',
 ]
 
