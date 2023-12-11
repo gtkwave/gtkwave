@@ -26,13 +26,13 @@ enum TreeBuildTypes
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING
-GwTree *talloc_2(size_t siz)
+GwTreeNode *talloc_2(size_t siz)
 {
     if (GLOBALS->talloc_pool_base) {
         if ((siz + GLOBALS->talloc_idx) <= WAVE_TALLOC_POOL_SIZE) {
             unsigned char *m = GLOBALS->talloc_pool_base + GLOBALS->talloc_idx;
             GLOBALS->talloc_idx += siz;
-            return ((GwTree *)m);
+            return ((GwTreeNode *)m);
         } else if (siz >= WAVE_TALLOC_ALTREQ_SIZE) {
             return (calloc_2(1, siz));
         }
@@ -118,7 +118,7 @@ int decorated_module_cleanup(void)
 
         for (rcValue = Judy1First(GLOBALS->sym_tree_addresses, &Index, PJE0); rcValue != 0;
              rcValue = Judy1Next(GLOBALS->sym_tree_addresses, &Index, PJE0)) {
-            ((GwTree *)Index)->children_in_gui = 0;
+            ((GwTreeNode *)Index)->children_in_gui = 0;
         }
 
         Judy1FreeArray(&GLOBALS->sym_tree_addresses, PJE0);
@@ -139,7 +139,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                                             uint32_t t_stem,
                                             uint32_t t_istem)
 {
-    GwTree *t;
+    GwTreeNode *t;
     int mtyp = WAVE_T_WHICH_UNDEFINED_COMPNAME;
 #ifdef _WAVE_HAVE_JUDY
     char str[2048];
@@ -167,7 +167,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                     return;
                 }
 
-                t = talloc_2(sizeof(GwTree) + scopename_len + 1);
+                t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
                 *PPValue = t;
                 goto t_allocated;
             } else {
@@ -206,14 +206,14 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
 
                     strcpy(str + len, scopename);
                     PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                    t = talloc_2(sizeof(GwTree) + scopename_len + 1);
+                    t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
                     *PPValue = t;
                     goto t_allocated;
                 }
             }
 #endif
 
-            t = talloc_2(sizeof(GwTree) + scopename_len + 1);
+            t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
 #ifdef _WAVE_HAVE_JUDY
         t_allocated:
 #endif
@@ -238,7 +238,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
                 t = t->next;
             }
 
-            t = talloc_2(sizeof(GwTree) + scopename_len + 1);
+            t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
             strcpy(t->name, scopename);
             t->kind = ttype;
             t->t_which = mtyp;
@@ -249,7 +249,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
             GLOBALS->mod_tree_parent = GLOBALS->treeroot = t;
         }
     } else {
-        t = talloc_2(sizeof(GwTree) + scopename_len + 1);
+        t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
         strcpy(t->name, scopename);
         t->kind = ttype;
         t->t_which = mtyp;
@@ -263,11 +263,11 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
 /*
  * adds back netnames
  */
-int treegraft(GwTree **t)
+int treegraft(GwTreeNode **t)
 {
-    GwTree *tx = GLOBALS->terminals_tchain_tree_c_1;
-    GwTree *t2;
-    GwTree *par;
+    GwTreeNode *tx = GLOBALS->terminals_tchain_tree_c_1;
+    GwTreeNode *t2;
+    GwTreeNode *par;
 
     while (tx) {
         t2 = tx->next;
@@ -311,9 +311,9 @@ void treenamefix_str(char *s)
     }
 }
 
-void treenamefix(GwTree *t)
+void treenamefix(GwTreeNode *t)
 {
-    GwTree *tnext;
+    GwTreeNode *tnext;
     if (t->child)
         treenamefix(t->child);
 
@@ -332,7 +332,7 @@ void treenamefix(GwTree *t)
 /*
  * for debugging purposes only
  */
-void treedebug(GwTree *t, char *s)
+void treedebug(GwTreeNode *t, char *s)
 {
     while (t) {
         char *s2;
@@ -393,16 +393,16 @@ char *leastsig_hiername(char *nam)
 
 static int tree_qsort_cmp(const void *v1, const void *v2)
 {
-    GwTree *t1 = *(GwTree **)v1;
-    GwTree *t2 = *(GwTree **)v2;
+    GwTreeNode *t1 = *(GwTreeNode **)v1;
+    GwTreeNode *t2 = *(GwTreeNode **)v2;
 
     return (sigcmp(t2->name, t1->name)); /* because list must be in rvs */
 }
 
-static void treesort_2(GwTree *t, GwTree *p, GwTree ***tm, int *tm_siz)
+static void treesort_2(GwTreeNode *t, GwTreeNode *p, GwTreeNode ***tm, int *tm_siz)
 {
-    GwTree *it;
-    GwTree **srt;
+    GwTreeNode *it;
+    GwTreeNode **srt;
     int cnt;
     int i;
 
@@ -419,7 +419,7 @@ static void treesort_2(GwTree *t, GwTree *p, GwTree ***tm, int *tm_siz)
             if (*tm) {
                 free_2(*tm);
             }
-            *tm = malloc_2((cnt + 1) * sizeof(GwTree *));
+            *tm = malloc_2((cnt + 1) * sizeof(GwTreeNode *));
         }
         srt = *tm;
 
@@ -429,7 +429,7 @@ static void treesort_2(GwTree *t, GwTree *p, GwTree ***tm, int *tm_siz)
         }
         srt[i] = NULL;
 
-        qsort((void *)srt, cnt, sizeof(GwTree *), tree_qsort_cmp);
+        qsort((void *)srt, cnt, sizeof(GwTreeNode *), tree_qsort_cmp);
 
         if (p) {
             p->child = srt[0];
@@ -453,9 +453,9 @@ static void treesort_2(GwTree *t, GwTree *p, GwTree ***tm, int *tm_siz)
     }
 }
 
-void treesort(GwTree *t, GwTree *p)
+void treesort(GwTreeNode *t, GwTreeNode *p)
 {
-    GwTree **tm = NULL;
+    GwTreeNode **tm = NULL;
     int tm_siz = 0;
 
     treesort_2(t, p, &tm, &tm_siz);
@@ -464,7 +464,7 @@ void treesort(GwTree *t, GwTree *p)
     }
 }
 
-void order_facs_from_treesort_2(GwTree *t)
+void order_facs_from_treesort_2(GwTreeNode *t)
 {
     while (t) {
         if (t->child) {
@@ -483,7 +483,7 @@ void order_facs_from_treesort_2(GwTree *t)
     }
 }
 
-void order_facs_from_treesort(GwTree *t, void *v)
+void order_facs_from_treesort(GwTreeNode *t, void *v)
 {
     GwSymbol ***f =
         (GwSymbol ***)v; /* eliminate compiler warning in tree.h as symbol.h refs tree.h */
@@ -509,9 +509,9 @@ void order_facs_from_treesort(GwTree *t, void *v)
 
 void build_tree_from_name(const char *s, int which)
 {
-    GwTree *t, *nt;
-    GwTree *tchain = NULL, *tchain_iter;
-    GwTree *prevt;
+    GwTreeNode *t, *nt;
+    GwTreeNode *tchain = NULL, *tchain_iter;
+    GwTreeNode *prevt;
 #ifdef _WAVE_HAVE_JUDY
     PPvoid_t PPValue = NULL;
     char str[2048];
@@ -608,7 +608,7 @@ void build_tree_from_name(const char *s, int which)
 #ifdef _WAVE_HAVE_JUDY
         construct:
 #endif
-            nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
+            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
             memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
             if (s) {
@@ -642,7 +642,7 @@ void build_tree_from_name(const char *s, int which)
             while (s) {
                 s = get_module_name(s);
 
-                nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
+                nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
                 memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
                 if (s) {
@@ -662,7 +662,7 @@ void build_tree_from_name(const char *s, int which)
         while (s) {
             s = get_module_name(s);
 
-            nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
+            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
             memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
             if (!s)
@@ -694,7 +694,7 @@ void build_tree_from_name(const char *s, int which)
 /*
  * GTK2: build the tree.
  */
-static void XXX_maketree_nodes(GwTree *t2, GtkTreeIter *iter)
+static void XXX_maketree_nodes(GwTreeNode *t2, GtkTreeIter *iter)
 {
     char *tmp, *tmp2, *tmp3;
     gchar *text[1];
@@ -756,9 +756,9 @@ static void XXX_maketree_nodes(GwTree *t2, GtkTreeIter *iter)
                        -1);
 }
 
-void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth)
+void XXX_maketree2(GtkTreeIter *subtree, GwTreeNode *t, int depth)
 {
-    GwTree *t2;
+    GwTreeNode *t2;
 
 #ifndef WAVE_DISABLE_FAST_TREE
     if (depth > 1)
@@ -813,7 +813,7 @@ void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth)
     }
 }
 
-void XXX_maketree(GtkTreeIter *subtree, GwTree *t)
+void XXX_maketree(GtkTreeIter *subtree, GwTreeNode *t)
 {
     GtkCellRenderer *renderer_t;
     GtkCellRenderer *renderer_p;
@@ -1031,7 +1031,7 @@ void sst_exclusion_loader(void)
 }
 
 /* Get the highest signal from T.  */
-GwTree *fetchhigh(GwTree *t)
+GwTreeNode *fetchhigh(GwTreeNode *t)
 {
     while (t->child)
         t = t->child;
@@ -1039,7 +1039,7 @@ GwTree *fetchhigh(GwTree *t)
 }
 
 /* Get the lowest signal from T.  */
-GwTree *fetchlow(GwTree *t)
+GwTreeNode *fetchlow(GwTreeNode *t)
 {
     if (t->child) {
         t = t->child;
@@ -1056,7 +1056,7 @@ GwTree *fetchlow(GwTree *t)
     return (t);
 }
 
-void recurse_fetch_high_low(GwTree *t)
+void recurse_fetch_high_low(GwTreeNode *t)
 {
 top:
     if (t->t_which >= 0) {

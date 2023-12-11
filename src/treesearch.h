@@ -12,7 +12,7 @@
 
 GtkWidget *treeboxframe(const char *title);
 void dump_open_tree_nodes(FILE *wave, xl_Tree *t);
-int force_open_tree_node(char *name, int keep_path_nodes_open, GwTree **t_pnt);
+int force_open_tree_node(char *name, int keep_path_nodes_open, GwTreeNode **t_pnt);
 void select_tree_node(char *name);
 void dnd_setup(GtkWidget *src, gboolean search); /* dnd from gtk2 tree to signalwindow */
 void treeview_select_all_callback(void); /* gtk2 */

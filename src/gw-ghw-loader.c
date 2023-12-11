@@ -29,7 +29,7 @@ struct _GwGhwLoader
     GSList *sym_chain;
 
     GPtrArray *facs;
-    GwTree *treeroot;
+    GwTreeNode *treeroot;
     int longestname;
     GwTime max_time;
 
@@ -239,22 +239,22 @@ void rechain_facs(GwGhwLoader *self)
 
 /* limited recursive version */
 
-static void recurse_tree_build_whichcache(GwGhwLoader *self, GwTree *t)
+static void recurse_tree_build_whichcache(GwGhwLoader *self, GwTreeNode *t)
 {
     if (t == NULL) {
         return;
     }
 
-    GwTree *t2 = t;
+    GwTreeNode *t2 = t;
     int i;
     int cnt = 1;
-    GwTree **ar;
+    GwTreeNode **ar;
 
     while ((t2 = t2->next)) {
         cnt++;
     }
 
-    ar = malloc_2(cnt * sizeof(GwTree *));
+    ar = malloc_2(cnt * sizeof(GwTreeNode *));
     t2 = t;
     for (i = 0; i < cnt; i++) {
         ar[i] = t2;
@@ -275,19 +275,19 @@ static void recurse_tree_build_whichcache(GwGhwLoader *self, GwTree *t)
     free_2(ar);
 }
 
-static void recurse_tree_fix_from_whichcache(GwGhwLoader *self, GwTree *t)
+static void recurse_tree_fix_from_whichcache(GwGhwLoader *self, GwTreeNode *t)
 {
     if (t) {
-        GwTree *t2 = t;
+        GwTreeNode *t2 = t;
         int i;
         int cnt = 1;
-        GwTree **ar;
+        GwTreeNode **ar;
 
         while ((t2 = t2->next)) {
             cnt++;
         }
 
-        ar = malloc_2(cnt * sizeof(GwTree *));
+        ar = malloc_2(cnt * sizeof(GwTreeNode *));
         t2 = t;
         for (i = 0; i < cnt; i++) {
             ar[i] = t2;
@@ -361,23 +361,23 @@ static void ghw_sortfacs(GwGhwLoader *self)
 
 /*******************************************************************************/
 
-static GwTree *build_hierarchy_type(GwGhwLoader *self,
+static GwTreeNode *build_hierarchy_type(GwGhwLoader *self,
                                     union ghw_type *t,
                                     const char *pfx,
                                     unsigned int **sig);
 
-static GwTree *build_hierarchy_record(GwGhwLoader *self,
+static GwTreeNode *build_hierarchy_record(GwGhwLoader *self,
                                       const char *pfx,
                                       unsigned nbr_els,
                                       struct ghw_record_element *els,
                                       unsigned int **sig)
 {
-    GwTree *res;
-    GwTree *last;
-    GwTree *c;
+    GwTreeNode *res;
+    GwTreeNode *last;
+    GwTreeNode *c;
     unsigned int i;
 
-    res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
+    res = (GwTreeNode *)calloc_2(1, sizeof(GwTreeNode) + strlen(pfx) + 1);
     strcpy(res->name, (char *)pfx);
     res->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
 
@@ -397,7 +397,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
                                   union ghw_type *arr,
                                   int dim,
                                   const char *pfx,
-                                  GwTree **res,
+                                  GwTreeNode **res,
                                   unsigned int **sig)
 {
     union ghw_type *idx;
@@ -405,7 +405,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
     char *name = NULL;
 
     if ((unsigned int)dim == base->nbr_dim) {
-        GwTree *t;
+        GwTreeNode *t;
         sprintf(self->asbuf, "%s]", pfx);
         name = strdup_2(self->asbuf);
 
@@ -423,7 +423,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int32_t v;
             char *nam;
             struct ghw_range_i32 *r;
-            /* GwTree *last; */
+            /* GwTreeNode *last; */
             int len;
 
             /* last = NULL; */
@@ -451,7 +451,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int32_t v;
             char *nam;
             struct ghw_range_e8 *r;
-            /* GwTree *last; */
+            /* GwTreeNode *last; */
             int len;
 
             /* last = NULL; */
@@ -479,7 +479,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int32_t v;
             char *nam;
             struct ghw_range_b2 *r;
-            /* GwTree *last; */
+            /* GwTreeNode *last; */
             int len;
 
             /* last = NULL; */
@@ -509,7 +509,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
     }
 }
 
-static GwTree *build_hierarchy_type(GwGhwLoader *self,
+static GwTreeNode *build_hierarchy_type(GwGhwLoader *self,
                                     union ghw_type *t,
                                     const char *pfx,
                                     unsigned int **sig)
@@ -529,7 +529,7 @@ static GwTree *build_hierarchy_type(GwGhwLoader *self,
             self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
             self->nbr_sig_ref++;
-            GwTree *res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
+            GwTreeNode *res = (GwTreeNode *)calloc_2(1, sizeof(GwTreeNode) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
             res->t_which = *(*sig)++;
 
@@ -539,10 +539,10 @@ static GwTree *build_hierarchy_type(GwGhwLoader *self,
 
         case ghdl_rtik_subtype_array:
         case ghdl_rtik_subtype_array_ptr: {
-            GwTree *res = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(pfx) + 1);
+            GwTreeNode *res = (GwTreeNode *)calloc_2(1, sizeof(GwTreeNode) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
             res->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-            GwTree *r = res;
+            GwTreeNode *r = res;
             build_hierarchy_array(self, t, 0, "", &res, sig);
             r->child = r->next;
             r->next = NULL;
@@ -563,11 +563,11 @@ static GwTree *build_hierarchy_type(GwGhwLoader *self,
 
 /* Create the gtkwave tree from the GHW hierarchy.  */
 
-static GwTree *build_hierarchy(GwGhwLoader *self, struct ghw_hie *hie)
+static GwTreeNode *build_hierarchy(GwGhwLoader *self, struct ghw_hie *hie)
 {
-    GwTree *t;
-    GwTree *t_ch;
-    GwTree *prev;
+    GwTreeNode *t;
+    GwTreeNode *t_ch;
+    GwTreeNode *prev;
     struct ghw_hie *ch;
     unsigned char ttype;
 
@@ -612,7 +612,7 @@ static GwTree *build_hierarchy(GwGhwLoader *self, struct ghw_hie *hie)
                 name_len = strlen(hie->name);
                 buf_len = strlen(buf);
 
-                t = (GwTree *)calloc_2(1, sizeof(GwTree) + (2 + buf_len + name_len + 1));
+                t = (GwTreeNode *)calloc_2(1, sizeof(GwTreeNode) + (2 + buf_len + name_len + 1));
                 t->kind = ttype;
                 n = t->name;
 
@@ -625,11 +625,11 @@ static GwTree *build_hierarchy(GwGhwLoader *self, struct ghw_hie *hie)
                 *n = 0;
             } else {
                 if (hie->name) {
-                    t = (GwTree *)calloc_2(1, sizeof(GwTree) + strlen(hie->name) + 1);
+                    t = (GwTreeNode *)calloc_2(1, sizeof(GwTreeNode) + strlen(hie->name) + 1);
                     t->kind = ttype;
                     strcpy(t->name, (char *)hie->name);
                 } else {
-                    t = (GwTree *)calloc_2(1, sizeof(GwTree) + 1);
+                    t = (GwTreeNode *)calloc_2(1, sizeof(GwTreeNode) + 1);
                     t->kind = ttype;
                 }
             }
@@ -770,7 +770,7 @@ static void create_facs(GwGhwLoader *self)
     }
 }
 
-static void set_fac_name_1(GwGhwLoader *self, GwTree *t)
+static void set_fac_name_1(GwGhwLoader *self, GwTreeNode *t)
 {
     for (; t != NULL; t = t->next) {
         int prev_len = self->fac_name_len;
@@ -1146,8 +1146,8 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
     {
         const char *base_hier = "top";
 
-        GwTree *t = calloc_2(1, sizeof(GwTree) + strlen(base_hier) + 1);
-        memcpy(t, self->treeroot, sizeof(GwTree));
+        GwTreeNode *t = calloc_2(1, sizeof(GwTreeNode) + strlen(base_hier) + 1);
+        memcpy(t, self->treeroot, sizeof(GwTreeNode));
         strcpy(t->name,
                base_hier); /* scan-build false warning here, thinks name[1] is total length */
 #ifndef WAVE_TALLOC_POOL_SIZE

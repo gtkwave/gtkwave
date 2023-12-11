@@ -13,7 +13,7 @@ int vcd_keyword_code(const char *s, unsigned int len);
 typedef struct
 {
     gchar *name;
-    GwTree *mod_tree_parent;
+    GwTreeNode *mod_tree_parent;
 } VcdScope;
 
 struct _GwVcdLoader
@@ -694,7 +694,7 @@ static void update_name_prefix(GwVcdLoader *self)
     }
 }
 
-static void push_scope(GwVcdLoader *self, const gchar *name, GwTree *tree_parent)
+static void push_scope(GwVcdLoader *self, const gchar *name, GwTreeNode *tree_parent)
 {
     VcdScope *scope = g_new0(VcdScope, 1);
     scope->name = g_strdup(self->yytext);
@@ -705,12 +705,12 @@ static void push_scope(GwVcdLoader *self, const gchar *name, GwTree *tree_parent
     update_name_prefix(self);
 }
 
-static GwTree *pop_scope(GwVcdLoader *self)
+static GwTreeNode *pop_scope(GwVcdLoader *self)
 {
     VcdScope *scope = g_queue_pop_tail(self->scopes);
     g_assert_nonnull(scope);
 
-    GwTree *tree_parent = scope->mod_tree_parent;
+    GwTreeNode *tree_parent = scope->mod_tree_parent;
 
     g_free(scope->name);
     g_free(scope);
