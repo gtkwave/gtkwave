@@ -470,13 +470,6 @@ static const struct Global globals_base_values = {
     NULL, /* wave_splash_pixbuf */
 
     /*
-     * status.c
-     */
-    NULL, /* text_status_c_2 398 */
-    {NULL, NULL, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, NULL}, /* iter_status_c_3 400 */
-    NULL, /* bold_tag_status_c_3 401 */
-
-    /*
      * strace.c
      */
     NULL, /* strace_ctx (defined in strace.h for multiple strace sessions) */
@@ -973,16 +966,6 @@ void reload_into_new_context_2(void)
         XXX_gdk_pointer_ungrab(GDK_CURRENT_TIME);
     }
 
-    /* let all GTK/X events spin through in order to keep menus from freezing open during reload */
-#ifndef MAC_INTEGRATION
-    if (GLOBALS->text_status_c_2) {
-        wave_gtk_grab_add(
-            GLOBALS->text_status_c_2); /* grab focus to a known widget with no real side effects */
-        gtkwave_main_iteration(); /* spin on GTK event loop */
-        wave_gtk_grab_remove(GLOBALS->text_status_c_2); /* ungrab focus */
-    }
-#endif
-
     printf("GTKWAVE | Reloading waveform...\n");
     gtkwavetcl_setvar(WAVE_TCLCB_RELOAD_BEGIN,
                       GLOBALS->loaded_file_name,
@@ -1296,10 +1279,6 @@ void reload_into_new_context_2(void)
     new_globals->gprs = GLOBALS->gprs;
     new_globals->gps = GLOBALS->gps;
 #endif
-
-    /* status.c */
-    new_globals->text_status_c_2 = GLOBALS->text_status_c_2;
-    memcpy(&new_globals->iter_status_c_3, &GLOBALS->iter_status_c_3, sizeof(GtkTextIter));
 
     /* treesearch_gtk2.c */
     new_globals->do_dynamic_treefilter = GLOBALS->do_dynamic_treefilter;

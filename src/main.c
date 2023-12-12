@@ -753,11 +753,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 #endif
         GLOBALS->vcd_jmp_buf = old_g->vcd_jmp_buf;
 
-        /* status.c */
-        GLOBALS->text_status_c_2 = old_g->text_status_c_2;
-        GLOBALS->iter_status_c_3 = old_g->iter_status_c_3;
-        GLOBALS->bold_tag_status_c_3 = old_g->bold_tag_status_c_3;
-
         /* timeentry.c */
         GLOBALS->from_entry = old_g->from_entry;
         GLOBALS->to_entry = old_g->to_entry;
