@@ -58,11 +58,12 @@ struct autocoalesce_free_list
 };
 
 void init_tree(void);
-void build_tree_from_name(const char *s, int which);
+void build_tree_from_name(GwTreeNode **tree_root, const char *s, int which);
 void treedebug(GwTreeNode *t, char *s);
 
 char *leastsig_hiername(char *nam);
-void allocate_and_decorate_module_tree_node(unsigned char ttype,
+void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
+                                            unsigned char ttype,
                                             const char *scopename,
                                             const char *compname,
                                             uint32_t scopename_len,

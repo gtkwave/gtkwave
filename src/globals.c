@@ -580,7 +580,6 @@ static const struct Global globals_base_values = {
     NULL, /* sym_tree */
     NULL, /* sym_tree_addresses */
 #endif
-    NULL, /* treeroot 443 */
     NULL, /* mod_tree_parent */
     NULL, /* module_tree_c_1 444 */
     0, /* module_len_tree_c_1 445 */

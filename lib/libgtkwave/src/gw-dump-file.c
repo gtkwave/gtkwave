@@ -5,6 +5,7 @@ typedef struct
 {
     GwBlackoutRegions *blackout_regions;
     GwStems *stems;
+    GwTree *tree;
 
     GwTime time_scale;
     GwTimeDimension time_dimension;
@@ -17,6 +18,7 @@ enum
 {
     PROP_BLACKOUT_REGIONS = 1,
     PROP_STEMS,
+    PROP_TREE,
     PROP_TIME_SCALE,
     PROP_TIME_DIMENSION,
     PROP_GLOBAL_TIME_OFFSET,
@@ -65,6 +67,16 @@ static void gw_dump_file_set_property(GObject *object,
             break;
         }
 
+        case PROP_TREE: {
+            GwTree *tree = g_value_get_object(value);
+            if (tree == NULL) {
+                tree = gw_tree_new(NULL);
+            }
+
+            g_set_object(&priv->tree, tree);
+            break;
+        }
+
         case PROP_TIME_SCALE:
             priv->time_scale = g_value_get_int64(value);
             break;
@@ -97,6 +109,10 @@ static void gw_dump_file_get_property(GObject *object,
 
         case PROP_STEMS:
             g_value_set_object(value, gw_dump_file_get_stems(self));
+            break;
+
+        case PROP_TREE:
+            g_value_set_object(value, gw_dump_file_get_tree(self));
             break;
 
         case PROP_TIME_SCALE:
@@ -137,6 +153,13 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
                             NULL,
                             NULL,
                             GW_TYPE_STEMS,
+                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_TREE] =
+        g_param_spec_object("tree",
+                            NULL,
+                            NULL,
+                            GW_TYPE_TREE,
                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     properties[PROP_TIME_SCALE] =
@@ -205,6 +228,22 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self)
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     return priv->stems;
+}
+/**
+ * gw_dump_file_get_tree:
+ * @self: A #GwDumpFile.
+ *
+ * Returns the symbols tree.
+ *
+ * Returns: (transfer none): The tree.
+ */
+GwTree *gw_dump_file_get_tree(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->tree;
 }
 
 /**

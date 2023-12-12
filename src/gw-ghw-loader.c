@@ -362,15 +362,15 @@ static void ghw_sortfacs(GwGhwLoader *self)
 /*******************************************************************************/
 
 static GwTreeNode *build_hierarchy_type(GwGhwLoader *self,
-                                    union ghw_type *t,
-                                    const char *pfx,
-                                    unsigned int **sig);
+                                        union ghw_type *t,
+                                        const char *pfx,
+                                        unsigned int **sig);
 
 static GwTreeNode *build_hierarchy_record(GwGhwLoader *self,
-                                      const char *pfx,
-                                      unsigned nbr_els,
-                                      struct ghw_record_element *els,
-                                      unsigned int **sig)
+                                          const char *pfx,
+                                          unsigned nbr_els,
+                                          struct ghw_record_element *els,
+                                          unsigned int **sig)
 {
     GwTreeNode *res;
     GwTreeNode *last;
@@ -510,9 +510,9 @@ static void build_hierarchy_array(GwGhwLoader *self,
 }
 
 static GwTreeNode *build_hierarchy_type(GwGhwLoader *self,
-                                    union ghw_type *t,
-                                    const char *pfx,
-                                    unsigned int **sig)
+                                        union ghw_type *t,
+                                        const char *pfx,
+                                        unsigned int **sig)
 {
     switch (t->kind) {
         case ghdl_rtik_subtype_scalar:
@@ -1173,7 +1173,6 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
     GLOBALS->facs_are_sorted = 1;
     GLOBALS->min_time = 0;
     GLOBALS->max_time = self->max_time;
-    GLOBALS->treeroot = self->treeroot;
     GLOBALS->longestname = self->longestname;
 
     fprintf(stderr,
@@ -1188,13 +1187,18 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
                 self->num_glitch_regions,
                 (self->num_glitch_regions != 1) ? "s" : "");
 
+    GwTree *tree = gw_tree_new(g_steal_pointer(&self->treeroot));
+
     // clang-format off
     GwGhwFile *dump_file = g_object_new(GW_TYPE_GHW_FILE,
                                         "time-dimension", GW_TIME_DIMENSION_FEMTO,
+                                        "tree", tree,
                                         NULL);
     // clang-format on
 
     dump_file->hist_ent_factory = g_steal_pointer(&self->hist_ent_factory);
+
+    g_object_unref(tree);
 
     return GW_DUMP_FILE(dump_file);
 }
