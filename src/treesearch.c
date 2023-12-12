@@ -160,7 +160,9 @@ void fill_sig_store(void)
         t_prev = t;
 
         varxt = GLOBALS->facs[i]->n->varxt;
-        varxt_pnt = varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt)) : NULL;
+        varxt_pnt = varxt
+                        ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
+                        : NULL;
 
         vartype = GLOBALS->facs[i]->n->vartype;
         if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
@@ -585,9 +587,11 @@ static void XXX_unselect_row_callback(GtkTreeModel *model, GtkTreePath *path)
         /* unused */
     }
 
+    GwTreeNode *tree_root = gw_tree_get_root(gw_dump_file_get_tree(GLOBALS->dump_file));
+
     DEBUG(printf("TU: %08x %s\n", t, t->name));
     GLOBALS->sst_sig_root_treesearch_gtk2_c_1 = NULL;
-    GLOBALS->sig_root_treesearch_gtk2_c_1 = GLOBALS->treeroot;
+    GLOBALS->sig_root_treesearch_gtk2_c_1 = tree_root;
     fill_sig_store();
 }
 
@@ -1212,7 +1216,10 @@ GtkWidget *treeboxframe(const char *title)
     gtk_paned_pack1(GTK_PANED(vpan), GLOBALS->gtk2_tree_frame, TRUE, FALSE);
 
     decorated_module_cleanup();
-    XXX_maketree(NULL, GLOBALS->treeroot);
+
+    GwTreeNode *tree_root = gw_tree_get_root(gw_dump_file_get_tree(GLOBALS->dump_file));
+
+    XXX_maketree(NULL, tree_root);
     gtk_tree_selection_set_select_function(
         gtk_tree_view_get_selection(GTK_TREE_VIEW(GLOBALS->treeview_main)),
         XXX_view_selection_func,
@@ -1251,7 +1258,7 @@ GtkWidget *treeboxframe(const char *title)
                                                                 G_TYPE_STRING,
                                                                 G_TYPE_STRING);
     GLOBALS->sst_sig_root_treesearch_gtk2_c_1 = NULL;
-    GLOBALS->sig_root_treesearch_gtk2_c_1 = GLOBALS->treeroot;
+    GLOBALS->sig_root_treesearch_gtk2_c_1 = tree_root;
     fill_sig_store();
 
     sig_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(GLOBALS->sig_store_treesearch_gtk2_c_1));

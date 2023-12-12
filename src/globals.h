@@ -572,7 +572,6 @@ struct Global
     Pvoid_t sym_tree;
     Pvoid_t sym_tree_addresses;
 #endif
-    GwTreeNode *treeroot; /* from tree.c 473 */
     GwTreeNode *mod_tree_parent; /* from tree.c */
     char *module_tree_c_1; /* from tree.c 474 */
     int module_len_tree_c_1; /* from tree.c 475 */

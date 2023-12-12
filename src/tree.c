@@ -131,7 +131,8 @@ int decorated_module_cleanup(void)
 /*
  * decorated module add
  */
-void allocate_and_decorate_module_tree_node(unsigned char ttype,
+void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
+                                            unsigned char ttype,
                                             const char *scopename,
                                             const char *compname,
                                             uint32_t scopename_len,
@@ -153,7 +154,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
         }
     }
 
-    if (GLOBALS->treeroot) {
+    if (*tree_root != NULL) {
         if (GLOBALS->mod_tree_parent) {
 #ifdef _WAVE_HAVE_JUDY
             if (GLOBALS->mod_tree_parent->children_in_gui) {
@@ -229,7 +230,7 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
             GLOBALS->mod_tree_parent->child = t;
             GLOBALS->mod_tree_parent = t;
         } else {
-            t = GLOBALS->treeroot;
+            t = *tree_root;
             while (t) {
                 if (!strcmp(t->name, scopename)) {
                     GLOBALS->mod_tree_parent = t;
@@ -245,8 +246,9 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
             t->t_stem = t_stem;
             t->t_istem = t_istem;
 
-            t->next = GLOBALS->treeroot;
-            GLOBALS->mod_tree_parent = GLOBALS->treeroot = t;
+            t->next = *tree_root;
+            *tree_root = t;
+            GLOBALS->mod_tree_parent = t;
         }
     } else {
         t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
@@ -256,7 +258,8 @@ void allocate_and_decorate_module_tree_node(unsigned char ttype,
         t->t_stem = t_stem;
         t->t_istem = t_istem;
 
-        GLOBALS->mod_tree_parent = GLOBALS->treeroot = t;
+        *tree_root = t;
+        GLOBALS->mod_tree_parent = t;
     }
 }
 
@@ -395,7 +398,7 @@ void order_facs_from_treesort(GwTreeNode *t, void *v)
     GLOBALS->facs2_tree_c_1 = NULL;
 }
 
-void build_tree_from_name(const char *s, int which)
+void build_tree_from_name(GwTreeNode **tree_root, const char *s, int which)
 {
     GwTreeNode *t, *nt;
     GwTreeNode *tchain = NULL, *tchain_iter;
@@ -408,7 +411,7 @@ void build_tree_from_name(const char *s, int which)
     if (s == NULL || !s[0])
         return;
 
-    t = GLOBALS->treeroot;
+    t = *tree_root;
 
     if (t) {
         prevt = NULL;
@@ -558,13 +561,12 @@ void build_tree_from_name(const char *s, int which)
             else
                 nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
 
-            if ((GLOBALS->treeroot) && (t)) /* scan-build : && t should be unnecessary to avoid null
-                                               pointer deref, but add defensively */
-            {
+            if (*tree_root != NULL && t != NULL) {
                 t->child = nt;
                 t = nt;
             } else {
-                GLOBALS->treeroot = t = nt;
+                t = nt;
+                *tree_root = t;
             }
         }
     }

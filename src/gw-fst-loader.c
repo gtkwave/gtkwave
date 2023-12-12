@@ -59,6 +59,8 @@ struct _GwFstLoader
     gboolean subvar_jrb_count_locked;
 
     JRB synclock_jrb;
+
+    GwTreeNode *tree_root;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
@@ -149,7 +151,8 @@ static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
 
     unsigned char ttype = fst_scope_type_to_gw_tree_kind(scope->typ);
 
-    allocate_and_decorate_module_tree_node(ttype,
+    allocate_and_decorate_module_tree_node(&self->tree_root,
+                                           ttype,
                                            scope->name,
                                            scope->component,
                                            scope->name_length,
@@ -1037,14 +1040,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     fprintf(stderr, FST_RDLOAD "Sorting facility hierarchy tree.\n");
 
     // TODO: add GwTree to GwDumpFile
-    GwTree *tree = gw_tree_new(GLOBALS->treeroot);
+    GwTree *tree = gw_tree_new(g_steal_pointer(&self->tree_root));
     gw_tree_graft(tree, GLOBALS->terminals_tchain_tree_c_1);
     gw_tree_sort(tree);
-    GLOBALS->treeroot = gw_tree_get_root(tree);
-    g_object_unref(tree);
 
     /* SPLASH */ splash_sync(4, 5);
-    order_facs_from_treesort(GLOBALS->treeroot, &GLOBALS->facs);
+    order_facs_from_treesort(gw_tree_get_root(tree), &GLOBALS->facs);
 
     /* SPLASH */ splash_sync(5, 5);
     GLOBALS->facs_are_sorted = 1;
@@ -1084,6 +1085,7 @@ if(num_dups)
                                         "stems", self->stems,
                                         "time-dimension", self->time_dimension,
                                         "global-time-offset", global_time_offset,
+                                        "tree", tree,
                                         NULL);
     // clang-format on
 
@@ -1099,6 +1101,7 @@ if(num_dups)
 
     g_object_unref(blackout_regions);
     g_object_unref(self->stems);
+    g_object_unref(tree);
 
     return GW_DUMP_FILE(dump_file);
 }

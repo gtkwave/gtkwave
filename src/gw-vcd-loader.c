@@ -77,6 +77,8 @@ struct _GwVcdLoader
     GwTime start_time;
     GwTime end_time;
     GwTime global_time_offset;
+
+    GwTreeNode *tree_root;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -1512,7 +1514,8 @@ static void vcd_parse(GwVcdLoader *self)
                 if (tok != T_END && tok != T_EOF) {
                     push_scope(self, self->yytext, GLOBALS->mod_tree_parent);
 
-                    allocate_and_decorate_module_tree_node(ttype,
+                    allocate_and_decorate_module_tree_node(&self->tree_root,
+                                                           ttype,
                                                            self->yytext,
                                                            NULL,
                                                            self->yylen,
@@ -2283,13 +2286,13 @@ static void vcd_cleanup(GwVcdLoader *self)
     g_clear_pointer(&self->yytext, free_2);
 }
 
-static void vcd_sortfacs(GSList *sym_chain)
+static GwTree *vcd_sortfacs(GwVcdLoader *self)
 {
     int i;
 
     GLOBALS->facs = (GwSymbol **)malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
 
-    GSList *iter = sym_chain;
+    GSList *iter = self->sym_chain;
     for (i = 0; i < GLOBALS->numfacs; i++) {
         GLOBALS->facs[i] = iter->data;
 
@@ -2311,7 +2314,7 @@ static void vcd_sortfacs(GSList *sym_chain)
     init_tree();
     for (i = 0; i < GLOBALS->numfacs; i++) {
         char *n = GLOBALS->facs[i]->name;
-        build_tree_from_name(n, i);
+        build_tree_from_name(&self->tree_root, n, i);
 
         if (GLOBALS->escaped_names_found_vcd_c_1) {
             char *subst, ch;
@@ -2325,16 +2328,15 @@ static void vcd_sortfacs(GSList *sym_chain)
         }
     }
 
-    // TODO: add GwTree to GwDumpFile
-    GwTree *tree = gw_tree_new(GLOBALS->treeroot);
+    GwTree *tree = gw_tree_new(g_steal_pointer(&self->tree_root));
     gw_tree_graft(tree, GLOBALS->terminals_tchain_tree_c_1);
     gw_tree_sort(tree);
-    GLOBALS->treeroot = gw_tree_get_root(tree);
-    g_object_unref(tree);
 
     if (GLOBALS->escaped_names_found_vcd_c_1) {
-        treenamefix(GLOBALS->treeroot);
+        treenamefix(gw_tree_get_root(tree));
     }
+
+    return tree;
 }
 
 /*******************************************************************************/
@@ -2460,7 +2462,7 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
     }
 
     vcd_build_symbols(self);
-    vcd_sortfacs(self->sym_chain);
+    GwTree *tree = vcd_sortfacs(self);
     vcd_cleanup(self);
 
     getch_free(self); /* free membuff for vcd getch buffer */
@@ -2478,6 +2480,7 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
                                         "time-scale", self->time_scale,
                                         "time-dimension", self->time_dimension,
                                         "global-time-offset", self->global_time_offset,
+                                        "tree", tree,
                                         NULL);
     // clang-format on
 
@@ -2490,6 +2493,8 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     dump_file->preserve_glitches = gw_loader_is_preserve_glitches(loader);
     dump_file->preserve_glitches_real = gw_loader_is_preserve_glitches_real(loader);
+
+    g_object_unref(tree);
 
     return GW_DUMP_FILE(dump_file);
 }
