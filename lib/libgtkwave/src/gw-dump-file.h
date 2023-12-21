@@ -5,6 +5,7 @@
 #include "gw-stems.h"
 #include "gw-tree.h"
 #include "gw-time.h"
+#include "gw-facs.h"
 
 G_BEGIN_DECLS
 
@@ -16,9 +17,10 @@ struct _GwDumpFileClass
     GObjectClass parent_class;
 };
 
+GwTree *gw_dump_file_get_tree(GwDumpFile *self);
+GwFacs *gw_dump_file_get_facs(GwDumpFile *self);
 GwBlackoutRegions *gw_dump_file_get_blackout_regions(GwDumpFile *self);
 GwStems *gw_dump_file_get_stems(GwDumpFile *self);
-GwTree *gw_dump_file_get_tree(GwDumpFile *self);
 
 GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self);
 GwTime gw_dump_file_get_time_scale(GwDumpFile *self);
