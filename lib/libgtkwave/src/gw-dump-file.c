@@ -3,9 +3,10 @@
 
 typedef struct
 {
+    GwTree *tree;
+    GwFacs *facs;
     GwBlackoutRegions *blackout_regions;
     GwStems *stems;
-    GwTree *tree;
 
     GwTime time_scale;
     GwTimeDimension time_dimension;
@@ -16,9 +17,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(GwDumpFile, gw_dump_file, G_TYPE_OBJECT)
 
 enum
 {
-    PROP_BLACKOUT_REGIONS = 1,
+    PROP_TREE = 1,
+    PROP_FACS,
+    PROP_BLACKOUT_REGIONS,
     PROP_STEMS,
-    PROP_TREE,
     PROP_TIME_SCALE,
     PROP_TIME_DIMENSION,
     PROP_GLOBAL_TIME_OFFSET,
@@ -47,6 +49,26 @@ static void gw_dump_file_set_property(GObject *object,
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     switch (property_id) {
+        case PROP_TREE: {
+            GwTree *tree = g_value_get_object(value);
+            if (tree == NULL) {
+                tree = gw_tree_new(NULL);
+            }
+
+            g_set_object(&priv->tree, tree);
+            break;
+        }
+
+        case PROP_FACS: {
+            GwFacs *facs = g_value_get_object(value);
+            if (facs == NULL) {
+                facs = gw_facs_new(0);
+            }
+
+            g_set_object(&priv->facs, facs);
+            break;
+        }
+
         case PROP_BLACKOUT_REGIONS: {
             GwBlackoutRegions *blackout_regions = g_value_get_object(value);
             if (blackout_regions == NULL) {
@@ -64,16 +86,6 @@ static void gw_dump_file_set_property(GObject *object,
             }
 
             g_set_object(&priv->stems, stems);
-            break;
-        }
-
-        case PROP_TREE: {
-            GwTree *tree = g_value_get_object(value);
-            if (tree == NULL) {
-                tree = gw_tree_new(NULL);
-            }
-
-            g_set_object(&priv->tree, tree);
             break;
         }
 
@@ -103,16 +115,20 @@ static void gw_dump_file_get_property(GObject *object,
     GwDumpFile *self = GW_DUMP_FILE(object);
 
     switch (property_id) {
+        case PROP_TREE:
+            g_value_set_object(value, gw_dump_file_get_tree(self));
+            break;
+
+        case PROP_FACS:
+            g_value_set_object(value, gw_dump_file_get_facs(self));
+            break;
+
         case PROP_BLACKOUT_REGIONS:
             g_value_set_object(value, gw_dump_file_get_blackout_regions(self));
             break;
 
         case PROP_STEMS:
             g_value_set_object(value, gw_dump_file_get_stems(self));
-            break;
-
-        case PROP_TREE:
-            g_value_set_object(value, gw_dump_file_get_tree(self));
             break;
 
         case PROP_TIME_SCALE:
@@ -141,6 +157,20 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
     object_class->set_property = gw_dump_file_set_property;
     object_class->get_property = gw_dump_file_get_property;
 
+    properties[PROP_TREE] =
+        g_param_spec_object("tree",
+                            NULL,
+                            NULL,
+                            GW_TYPE_TREE,
+                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_FACS] =
+        g_param_spec_object("facs",
+                             NULL,
+                             NULL,
+                             GW_TYPE_FACS,
+                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
     properties[PROP_BLACKOUT_REGIONS] =
         g_param_spec_object("blackout-regions",
                             NULL,
@@ -153,13 +183,6 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
                             NULL,
                             NULL,
                             GW_TYPE_STEMS,
-                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
-    properties[PROP_TREE] =
-        g_param_spec_object("tree",
-                            NULL,
-                            NULL,
-                            GW_TYPE_TREE,
                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     properties[PROP_TIME_SCALE] =
@@ -197,6 +220,40 @@ static void gw_dump_file_init(GwDumpFile *self)
 }
 
 /**
+ * gw_dump_file_get_tree:
+ * @self: A #GwDumpFile.
+ *
+ * Returns the symbols tree.
+ *
+ * Returns: (transfer none): The tree.
+ */
+GwTree *gw_dump_file_get_tree(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->tree;
+}
+
+/**
+ * gw_dump_file_get_facs:
+ * @self: A #GwDumpFile.
+ *
+ * Returns the facs.
+ *
+ * Returns: (transfer none): The facs.
+ */
+GwFacs *gw_dump_file_get_facs(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->facs;
+}
+
+/**
  * gw_dump_file_get_blackout_regions:
  * @self: A #GwDumpFile.
  *
@@ -228,22 +285,6 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self)
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     return priv->stems;
-}
-/**
- * gw_dump_file_get_tree:
- * @self: A #GwDumpFile.
- *
- * Returns the symbols tree.
- *
- * Returns: (transfer none): The tree.
- */
-GwTree *gw_dump_file_get_tree(GwDumpFile *self)
-{
-    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
-
-    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
-
-    return priv->tree;
 }
 
 /**
