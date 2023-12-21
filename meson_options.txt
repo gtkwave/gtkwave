@@ -67,3 +67,10 @@ option(
     value: true,
     description: 'Build tests',
 )
+
+option(
+    'set_rpath',
+    type: 'feature',
+    value: 'auto',
+    description: 'Set rpath for executables (automatically enabled if the prefix is not /usr)',
+)
