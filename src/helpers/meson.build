@@ -48,5 +48,6 @@ foreach helper : helpers
         c_args: warning_args,
         include_directories: config_inc,
         install: true,
+        install_rpath: install_rpath,
     )
 endforeach

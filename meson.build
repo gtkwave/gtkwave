@@ -200,6 +200,14 @@ foreach arg: test_warning_args
     endif
 endforeach
 
+# Set excutable rpaths for non standard prefixes
+
+if get_option('set_rpath').enabled() or (get_option('set_rpath').auto() and get_option('prefix') != '/usr')
+    install_rpath = get_option('prefix') / get_option('libdir')
+else
+    install_rpath = ''
+endif
+
 # config.h
 
 config.set_quoted('PACKAGE_BUGREPORT', 'bybell@rocketmail.com')

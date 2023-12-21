@@ -131,6 +131,7 @@ executable(
     c_args: warning_args,
     link_args: link_args,
     install: true,
+    install_rpath: install_rpath,
 )
 
 # twinwave
@@ -155,4 +156,5 @@ executable(
     dependencies: twinwave_dependencies,
     include_directories: twinwave_include_directories,
     install: true,
+    install_rpath: install_rpath,
 )
