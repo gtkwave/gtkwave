@@ -46,6 +46,12 @@ char *hier_extract(char *pnt, int levels)
     if (!len)
         return (pnt);
 
+    for (i = 0; levels < 0 && i < len; ) {
+      if (pnt[i++] == GLOBALS->hier_delimeter && !++levels) {
+        return (pnt + i);
+      }
+    }
+
     if (levels < 1)
         levels = 1;
     if ((!GLOBALS->hier_ignore_escapes) && (esc = strchr(pnt, '\\'))) {
