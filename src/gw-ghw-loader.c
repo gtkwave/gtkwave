@@ -1167,7 +1167,6 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
  facs_debug();
 #endif
 
-    GLOBALS->is_ghw = 1;
     GLOBALS->facs_are_sorted = 1;
     GLOBALS->longestname = self->longestname;
 
