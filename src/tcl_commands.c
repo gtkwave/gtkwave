@@ -32,6 +32,7 @@
 #include "signal_list.h"
 #include "gw-wave-view.h"
 #include "gw-fst-file.h"
+#include "gw-ghw-file.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -532,7 +533,7 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
 
     if (GLOBALS->is_vcd) {
         reportString = "VCD";
-    } else if (GLOBALS->is_ghw) {
+    } else if (GW_IS_GHW_FILE(GLOBALS->dump_file)) {
         reportString = "GHW";
     } else if (GLOBALS->is_lx2) {
         switch (GLOBALS->is_lx2) {

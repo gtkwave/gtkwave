@@ -182,11 +182,6 @@ static const struct Global globals_base_values = {
     NULL, /* enum_nptrs_jrb */
 
     /*
-     * ghw.c
-     */
-    0, /* is_ghw 99 */
-
-    /*
      * globals.c
      */
     NULL, /* dead_context */

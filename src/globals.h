@@ -207,11 +207,6 @@ struct Global
     JRB enum_nptrs_jrb;
 
     /*
-     * ghw.c
-     */
-    char is_ghw; /* from ghw.c 102 */
-
-    /*
      * globals.c
      */
     struct Global **

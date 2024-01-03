@@ -24,6 +24,7 @@
 #include "busy.h"
 #include "hierpack.h"
 #include "signal_list.h"
+#include "gw-ghw-file.h"
 
 #define WAVE_GHW_DUMMYFACNAME "!!__(dummy)__!!"
 
@@ -754,7 +755,7 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
         }
 
         if ((!skiprow) && wave_regex_match(hfacname, WAVE_REGEX_SEARCH))
-            if ((!GLOBALS->is_ghw) || (strcmp(WAVE_GHW_DUMMYFACNAME, hfacname))) {
+            if (!GW_IS_GHW_FILE(GLOBALS->dump_file) || (strcmp(WAVE_GHW_DUMMYFACNAME, hfacname))) {
                 GtkTreeIter iter;
 
                 if (!fac->vec_root) {
