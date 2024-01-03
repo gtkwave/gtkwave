@@ -653,7 +653,6 @@ static const struct Global globals_base_values = {
     1, /* autocoalesce 473 */
     0, /* autocoalesce_reversal */
     0, /* convert_to_reals 475 */
-    {0, 0}, /* vcd_hier_delimeter 491 */
     0, /* escaped_names_found_vcd_c_1 494 */
 
     /*
