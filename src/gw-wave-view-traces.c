@@ -660,6 +660,9 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
     int any_infs = 0, any_infp = 0, any_infm = 0;
     int skipcnt = 0;
 
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+    GwTime max_time = gw_time_range_get_start(time_range);
+
     liney = ((which + 2 + num_extension) * GLOBALS->fontheight) - 2;
     _y1 = ((which + 1) * GLOBALS->fontheight) + 2;
     _y0 = liney - 2;
@@ -906,13 +909,13 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
             }
 
             if (h->next) {
-                if (h->next->time > GLOBALS->max_time) {
+                if (h->next->time > max_time) {
                     yt1 = yt0;
                 }
             }
 
             cfixed = is_inf ? cinf : c;
-            if ((is_nan2) && (h2tim > GLOBALS->max_time))
+            if ((is_nan2) && (h2tim > max_time))
                 is_nan2 = 0;
 
             /* clamp to top/bottom because of integer rounding errors */
@@ -1460,6 +1463,9 @@ static void draw_vptr_trace_analog(GwWaveView *self,
     int any_infs = 0, any_infp = 0, any_infm = 0;
     int skipcnt = 0;
 
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+    GwTime max_time = gw_time_range_get_start(time_range);
+
     h = v;
     liney = ((which + 2 + num_extension) * GLOBALS->fontheight) - 2;
     _y1 = ((which + 1) * GLOBALS->fontheight) + 2;
@@ -1674,13 +1680,13 @@ static void draw_vptr_trace_analog(GwWaveView *self,
             }
 
             if (h->next) {
-                if (h->next->time > GLOBALS->max_time) {
+                if (h->next->time > max_time) {
                     yt1 = yt0;
                 }
             }
 
             cfixed = is_inf ? cinf : c;
-            if ((is_nan2) && (h2tim > GLOBALS->max_time))
+            if ((is_nan2) && (h2tim > max_time))
                 is_nan2 = 0;
 
             /* clamp to top/bottom because of integer rounding errors */

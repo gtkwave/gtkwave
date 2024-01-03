@@ -232,7 +232,6 @@ void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, i
 
 static void print_help(char *nam)
 {
-
 #if !defined __MINGW32__ && !defined __FreeBSD__ && !defined __CYGWIN__
 #define WAVE_GETOPT_CPUS \
     "  -c, --cpu=NUMCPUS          specify number of CPUs for parallelizable ops\n"
@@ -325,8 +324,7 @@ static void print_help(char *nam)
         "SAVEFILE and RCFILE are always optional.\n\n"
 
         "Report bugs to <" PACKAGE_BUGREPORT ">.\n",
-        nam
-    );
+        nam);
 
 #ifdef __MINGW32__
     fflush(stdout); /* fix for possible problem with mingw/msys shells */
@@ -1441,8 +1439,6 @@ do_primary_inits:
     if (!GLOBALS->loaded_file_name) {
         GLOBALS->loaded_file_name = strdup_2("[no file loaded]");
         is_missing_file = 1;
-        GLOBALS->min_time = GW_TIME_CONSTANT(0);
-        GLOBALS->max_time = GW_TIME_CONSTANT(0);
         if (!is_wish) {
             fprintf(stderr, "GTKWAVE | Use the -h, --help command line flags to display help.\n");
         }
@@ -1468,10 +1464,9 @@ loader_check_head:
 
     if (is_missing_file) {
         GLOBALS->loaded_file_type = MISSING_FILE;
-    } else
-        if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
-            suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
-            suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
+    } else if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
+               suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
+               suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
         fprintf(
             stderr,
             "GTKWAVE | LXT and LXT2 files are no longer supported by this version of GTKWave.\n");
@@ -1552,15 +1547,19 @@ loader_check_head:
     // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
     //     GLOBALS->named_markers[i] = -1; /* reset all named markers */
 
-    GLOBALS->tims.last = GLOBALS->max_time;
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
+    GLOBALS->tims.first = gw_time_range_get_start(time_range);
+    GLOBALS->tims.last = gw_time_range_get_end(time_range);
+    GLOBALS->tims.start = GLOBALS->tims.first;
+    GLOBALS->tims.laststart = GLOBALS->tims.first;
     GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
-    GLOBALS->tims.first = GLOBALS->tims.start = GLOBALS->tims.laststart = GLOBALS->min_time;
     GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
     gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
     gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
     gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
 
-    if (GLOBALS->max_time >> DBL_MANT_DIG) {
+    if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
         fprintf(stderr,
                 "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n",
                 DBL_MANT_DIG);

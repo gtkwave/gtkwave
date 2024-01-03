@@ -1169,14 +1169,12 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     GLOBALS->is_ghw = 1;
     GLOBALS->facs_are_sorted = 1;
-    GLOBALS->min_time = 0;
-    GLOBALS->max_time = self->max_time;
     GLOBALS->longestname = self->longestname;
 
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
-            GLOBALS->min_time,
-            GLOBALS->max_time);
+            GW_TIME_CONSTANT(0),
+            self->max_time);
     if (self->num_glitches)
         fprintf(stderr,
                 "Warning: encountered %d glitch%s across %d glitch region%s.\n",
@@ -1186,18 +1184,21 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
                 (self->num_glitch_regions != 1) ? "s" : "");
 
     GwTree *tree = gw_tree_new(g_steal_pointer(&self->treeroot));
+    GwTimeRange *time_range = gw_time_range_new(0, self->max_time);
 
     // clang-format off
     GwGhwFile *dump_file = g_object_new(GW_TYPE_GHW_FILE,
                                         "tree", tree,
                                         "facs", g_steal_pointer(&self->facs),
                                         "time-dimension", GW_TIME_DIMENSION_FEMTO,
+                                        "time-range", time_range,
                                         NULL);
     // clang-format on
 
     dump_file->hist_ent_factory = g_steal_pointer(&self->hist_ent_factory);
 
     g_object_unref(tree);
+    g_object_unref(time_range);
 
     return GW_DUMP_FILE(dump_file);
 }

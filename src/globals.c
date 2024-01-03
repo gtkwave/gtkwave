@@ -115,8 +115,6 @@ static const struct Global globals_base_values = {
     1, /* use_maxtime_display 57 */
     0, /* use_frequency_delta 58 */
     0, /* cached_currenttimeval_currenttime_c_1 61 */
-    0, /* max_time 63 */
-    -1, /* min_time 64 */
     ~0, /* display_grid 65 */
     0, /* fullscreen */
     1, /* show_toolbar */
@@ -1307,12 +1305,14 @@ void reload_into_new_context_2(void)
     new_globals->from_entry = GLOBALS->from_entry;
     new_globals->to_entry = GLOBALS->to_entry;
 
-    if (GLOBALS->tims.first != GLOBALS->min_time) {
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
+    if (GLOBALS->tims.first != gw_time_range_get_start(time_range)) {
         fix_from_time = 1;
         from_time = GLOBALS->tims.first;
     }
 
-    if (GLOBALS->tims.last != GLOBALS->max_time) {
+    if (GLOBALS->tims.last != gw_time_range_get_end(time_range)) {
         fix_to_time = 1;
         to_time = GLOBALS->tims.last;
     }
@@ -1555,20 +1555,16 @@ void reload_into_new_context_2(void)
     sym_hash_destroy(GLOBALS);
 
     /* Setup timings we probably need to redraw here */
-    GLOBALS->tims.last = GLOBALS->max_time;
-    GLOBALS->tims.first = GLOBALS->min_time;
+    GLOBALS->tims.last = gw_time_range_get_end(time_range);
+    GLOBALS->tims.first = gw_time_range_get_start(time_range);
 
-    if (fix_from_time) {
-        if ((from_time >= GLOBALS->min_time) && (from_time <= GLOBALS->max_time)) {
-            GLOBALS->tims.first = from_time;
-        }
+    if (fix_from_time && gw_time_range_contains(time_range, from_time)) {
+        GLOBALS->tims.first = from_time;
     }
 
-    if (fix_to_time) {
-        if ((to_time >= GLOBALS->min_time) && (to_time <= GLOBALS->max_time) &&
-            (to_time > GLOBALS->tims.first)) {
-            GLOBALS->tims.last = to_time;
-        }
+    if (fix_to_time && gw_time_range_contains(time_range, to_time) &&
+        to_time > GLOBALS->tims.first) {
+        GLOBALS->tims.last = to_time;
     }
 
     if (GLOBALS->tims.start < GLOBALS->tims.first) {

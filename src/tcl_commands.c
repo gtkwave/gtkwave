@@ -412,7 +412,8 @@ static int gtkwavetcl_getMinTime(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->min_time;
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+    GwTime value = gw_time_range_get_start(time_range);
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -421,7 +422,8 @@ static int gtkwavetcl_getMaxTime(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->max_time;
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+    GwTime value = gw_time_range_get_end(time_range);
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -945,11 +947,12 @@ static int gtkwavetcl_setMarker(ClientData clientData,
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
         GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
         GwTime mrk = unformat_time(s, time_dimension);
 
         GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
-        if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
+        if (gw_time_range_contains(time_range, mrk)) {
             gw_marker_set_position(primary_marker, mrk);
             gw_marker_set_enabled(primary_marker, TRUE);
         } else {
@@ -976,11 +979,12 @@ static int gtkwavetcl_setBaselineMarker(ClientData clientData,
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
         GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
         GwTime mrk = unformat_time(s, time_dimension);
 
         GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
-        if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
+        if (gw_time_range_contains(time_range, mrk)) {
             gw_marker_set_position(baseline_marker, mrk);
             gw_marker_set_enabled(baseline_marker, TRUE);
         } else {

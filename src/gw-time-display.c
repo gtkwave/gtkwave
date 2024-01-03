@@ -156,10 +156,12 @@ static void gw_time_display_update(GwTimeDisplay *self)
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
 
     if (GLOBALS->use_maxtime_display) {
-        gchar *text =
-            reformat_time_2(GLOBALS->max_time + global_time_offset, time_dimension, FALSE);
+        gchar *text = reformat_time_2(gw_time_range_get_end(time_range) + global_time_offset,
+                                      time_dimension,
+                                      FALSE);
         gtk_label_set_text(GTK_LABEL(self->marker_label), "Max");
         gtk_label_set_text(GTK_LABEL(self->marker_value), text);
         g_free(text);

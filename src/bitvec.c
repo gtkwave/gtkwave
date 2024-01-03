@@ -1833,9 +1833,11 @@ eptr ExpandNode(GwNode *n)
             narray[i]->expansion = exp1; /* can be safely deleted if expansion set like here */
         }
 
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
         for (i = 0; i < n->numhist; i++) {
             h = n->harray[i];
-            if ((h->time < GLOBALS->min_time) || (h->time > GLOBALS->max_time)) {
+            if (!gw_time_range_contains(time_range, h->time)) {
                 for (j = 0; j < width; j++) {
                     if (narray[j]->curr) {
                         htemp = calloc_2(1, sizeof(GwHistEnt));
@@ -2097,9 +2099,11 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
         exp1->actual = actual; /* actual bitnum in [] */
         np->expansion = exp1; /* can be safely deleted if expansion set like here */
 
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
         for (i = 0; i < n->numhist; i++) {
             h = n->harray[i];
-            if ((h->time < GLOBALS->min_time) || (h->time > GLOBALS->max_time)) {
+            if (!gw_time_range_contains(time_range, h->time)) {
                 if (np->curr) {
                     htemp = calloc_2(1, sizeof(GwHistEnt));
                     htemp->v.h_val = AN_X; /* 'x' */

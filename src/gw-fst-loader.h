@@ -10,5 +10,7 @@ G_DECLARE_FINAL_TYPE(GwFstLoader, gw_fst_loader, GW, FST_LOADER, GwLoader)
 
 GwLoader *gw_fst_loader_new(void);
 
-G_END_DECLS
+void gw_fst_loader_set_start_time(GwFstLoader *self, const gchar *start_time);
+void gw_fst_loader_set_end_time(GwFstLoader *self, const gchar *end_time);
 
+G_END_DECLS
