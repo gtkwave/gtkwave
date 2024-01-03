@@ -8,6 +8,7 @@ libgtkwave_tests = [
     'gw-named-markers',
     'gw-project',
     'gw-stems',
+    'gw-time-range',
     'gw-time',
     'gw-tree',
 ]

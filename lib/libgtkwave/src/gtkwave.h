@@ -2,6 +2,7 @@
 
 #include "gw-types.h"
 #include "gw-time.h"
+#include "gw-time-range.h"
 #include "gw-named-markers.h"
 #include "gw-marker.h"
 #include "gw-project.h"
