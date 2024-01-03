@@ -72,8 +72,6 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
                                             uint32_t t_istem);
 int decorated_module_cleanup(void);
 
-void order_facs_from_treesort(GwTreeNode *t, void *v);
-
 void treenamefix(GwTreeNode *t);
 
 #ifdef WAVE_USE_STRUCT_PACKING

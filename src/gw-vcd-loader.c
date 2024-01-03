@@ -79,6 +79,8 @@ struct _GwVcdLoader
     GwTime global_time_offset;
 
     GwTreeNode *tree_root;
+
+    guint numfacs;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -2109,7 +2111,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
 #endif
                         self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
-                        GLOBALS->numfacs++;
+                        self->numfacs++;
                         DEBUG(fprintf(stderr, "Added: %s\n", str));
                     }
                     msi += delta;
@@ -2202,7 +2204,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
 #endif
                     self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
-                    GLOBALS->numfacs++;
+                    self->numfacs++;
                     DEBUG(fprintf(stderr, "Added: %s\n", str));
                 }
             }
@@ -2286,18 +2288,16 @@ static void vcd_cleanup(GwVcdLoader *self)
     g_clear_pointer(&self->yytext, free_2);
 }
 
-static GwTree *vcd_sortfacs(GwVcdLoader *self)
+static GwFacs *vcd_sortfacs(GwVcdLoader *self)
 {
-    int i;
-
-    GLOBALS->facs = (GwSymbol **)malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
+    GwFacs *facs = gw_facs_new(self->numfacs);
 
     GSList *iter = self->sym_chain;
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        GLOBALS->facs[i] = iter->data;
+    for (guint i = 0; i < self->numfacs; i++) {
+        GwSymbol *fac = iter->data;
+        gw_facs_set(facs, i, fac);
 
-        char *subst = GLOBALS->facs[i]->name;
-        int len = strlen(subst);
+        int len = strlen(fac->name);
         if (len > GLOBALS->longestname) {
             GLOBALS->longestname = len;
         }
@@ -2305,20 +2305,25 @@ static GwTree *vcd_sortfacs(GwVcdLoader *self)
         iter = g_slist_delete_link(iter, iter);
     }
 
-    /* quicksort(facs,0,numfacs-1); */ /* quicksort deprecated because it degenerates on sorted
-                                          traces..badly.  very badly. */
-    wave_heapsort(GLOBALS->facs, GLOBALS->numfacs);
+    gw_facs_sort(facs);
 
     GLOBALS->facs_are_sorted = 1;
 
+    return facs;
+}
+
+static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
+{
     init_tree();
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        char *n = GLOBALS->facs[i]->name;
+    for (guint i = 0; i < gw_facs_get_length(facs); i++) {
+        GwSymbol *fac = gw_facs_get(facs, i);
+
+        char *n = fac->name;
         build_tree_from_name(&self->tree_root, n, i);
 
         if (GLOBALS->escaped_names_found_vcd_c_1) {
             char *subst, ch;
-            subst = GLOBALS->facs[i]->name;
+            subst = fac->name;
             while ((ch = (*subst))) {
                 if (ch == VCDNAM_ESCAPE) {
                     *subst = GLOBALS->hier_delimeter;
@@ -2462,7 +2467,8 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
     }
 
     vcd_build_symbols(self);
-    GwTree *tree = vcd_sortfacs(self);
+    GwFacs *facs = vcd_sortfacs(self);
+    GwTree *tree = vcd_build_tree(self, facs);
     vcd_cleanup(self);
 
     getch_free(self); /* free membuff for vcd getch buffer */
@@ -2476,11 +2482,12 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     // clang-format off
     GwVcdFile *dump_file = g_object_new(GW_TYPE_VCD_FILE,
+                                        "tree", tree,
+                                        "facs", facs,
                                         "blackout-regions", self->blackout_regions,
                                         "time-scale", self->time_scale,
                                         "time-dimension", self->time_dimension,
                                         "global-time-offset", self->global_time_offset,
-                                        "tree", tree,
                                         NULL);
     // clang-format on
 

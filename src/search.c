@@ -704,6 +704,9 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
 
     GLOBALS->num_rows_search_c_2 = 0;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    guint numfacs = gw_facs_get_length(facs);
+
     entry_suffixed =
         g_alloca(strlen(GLOBALS->searchbox_text_search_c_1 /* scan-build, was entry_text */) +
                  strlen(regex_type[GLOBALS->regex_which_search_c_1]) + 1 +
@@ -714,18 +717,19 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
     strcat(entry_suffixed, GLOBALS->searchbox_text_search_c_1); /* scan-build */
     strcat(entry_suffixed, regex_type[GLOBALS->regex_which_search_c_1]);
     wave_regex_compile(entry_suffixed, WAVE_REGEX_SEARCH);
-    for (i = 0; i < GLOBALS->numfacs; i++) {
-        set_s_selected(GLOBALS->facs[i], 0);
+    for (i = 0; i < numfacs; i++) {
+        GwSymbol *fac = gw_facs_get(facs, i);
+        set_s_selected(fac, 0);
     }
 
     GLOBALS->pdata->oldvalue = -1.0;
-    interval = (gfloat)(GLOBALS->numfacs / 100.0);
+    interval = (gfloat)(numfacs / 100.0);
 
     duplicate_row_buffer = (char *)calloc_2(1, GLOBALS->longestname + 1);
 
     gtk_list_store_clear(GTK_LIST_STORE(GLOBALS->sig_store_search));
 
-    for (i = 0; i < GLOBALS->numfacs; i++) {
+    for (i = 0; i < numfacs; i++) {
         int was_packed = HIER_DEPACK_STATIC;
         char *hfacname = NULL;
         int skiprow;
@@ -733,14 +737,15 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
         GLOBALS->pdata->value = i;
         if (((int)(GLOBALS->pdata->value / interval)) !=
             ((int)(GLOBALS->pdata->oldvalue / interval))) {
-            gtk_progress_bar_set_fraction(
-                GTK_PROGRESS_BAR(GLOBALS->pdata->pbar),
-                i / (gfloat)((GLOBALS->numfacs > 1) ? GLOBALS->numfacs - 1 : 1));
+            gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(GLOBALS->pdata->pbar),
+                                          i / (gfloat)((numfacs > 1) ? numfacs - 1 : 1));
             gtkwave_main_iteration();
         }
         GLOBALS->pdata->oldvalue = i;
 
-        hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+        GwSymbol *fac = gw_facs_get(facs, i);
+
+        hfacname = hier_decompress_flagged(fac->name, &was_packed);
         if (!strcmp(hfacname, duplicate_row_buffer)) {
             skiprow = 1;
         } else {
@@ -752,21 +757,21 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
             if ((!GLOBALS->is_ghw) || (strcmp(WAVE_GHW_DUMMYFACNAME, hfacname))) {
                 GtkTreeIter iter;
 
-                if (!GLOBALS->facs[i]->vec_root) {
+                if (!fac->vec_root) {
                     gtk_list_store_append(GTK_LIST_STORE(GLOBALS->sig_store_search), &iter);
                     gtk_list_store_set(GTK_LIST_STORE(GLOBALS->sig_store_search),
                                        &iter,
                                        NAME_COLUMN,
                                        hfacname,
                                        PTR_COLUMN,
-                                       GLOBALS->facs[i],
+                                       fac,
                                        -1);
                 } else {
                     if (GLOBALS->autocoalesce) {
-                        if (GLOBALS->facs[i]->vec_root != GLOBALS->facs[i])
+                        if (fac->vec_root != fac)
                             continue;
 
-                        tmp2 = makename_chain(GLOBALS->facs[i]);
+                        tmp2 = makename_chain(fac);
                         s = (char *)malloc_2(strlen(tmp2) + 4);
                         strcpy(s, "[] ");
                         strcpy(s + 3, tmp2);
@@ -783,7 +788,7 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
                                        NAME_COLUMN,
                                        s,
                                        PTR_COLUMN,
-                                       GLOBALS->facs[i],
+                                       fac,
                                        -1);
                     free_2(s);
                 }

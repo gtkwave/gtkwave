@@ -931,6 +931,9 @@ int process_tcl_list(const char *sl, gboolean prepend)
     most_recent_lbrack_list = calloc_2(c, sizeof(char *));
     most_recent_colon_list = calloc_2(c, sizeof(char *));
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    guint numfacs = gw_facs_get_length(facs);
+
     GLOBALS->default_flags = TR_RJUSTIFY;
     GLOBALS->default_fpshift = 0;
 
@@ -1038,11 +1041,13 @@ int process_tcl_list(const char *sl, gboolean prepend)
         }
 
         unesc_len = strlen(unescaped_str);
-        for (i = 0; i < GLOBALS->numfacs; i++) {
+        for (i = 0; i < numfacs; i++) {
             int was_packed = HIER_DEPACK_ALLOC;
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[curr_srch_idx]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, curr_srch_idx);
+
+            hfacname = hier_decompress_flagged(fac->name, &was_packed);
 
             if (!strncmp(unescaped_str, hfacname, unesc_len)) {
                 int hfacname_len = strlen(hfacname);
@@ -1062,7 +1067,7 @@ int process_tcl_list(const char *sl, gboolean prepend)
             }
 
             curr_srch_idx++;
-            if (curr_srch_idx == GLOBALS->numfacs)
+            if (curr_srch_idx == numfacs)
                 curr_srch_idx = 0; /* optimization for rtlbrowse as names should be in order */
 
             if (was_packed) {
@@ -1081,11 +1086,13 @@ int process_tcl_list(const char *sl, gboolean prepend)
         strcat(entry_suffixed, this_regex);
 
         wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
-        for (i = 0; i < GLOBALS->numfacs; i++) {
+        for (i = 0; i < numfacs; i++) {
             int was_packed = HIER_DEPACK_ALLOC;
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, i);
+
+            hfacname = hier_decompress_flagged(fac->name, &was_packed);
 
             if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                 found++;
@@ -1112,11 +1119,13 @@ int process_tcl_list(const char *sl, gboolean prepend)
             strcat(entry_suffixed, this_regex);
 
             wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
-            for (i = 0; i < GLOBALS->numfacs; i++) {
+            for (i = 0; i < numfacs; i++) {
                 int was_packed = HIER_DEPACK_ALLOC;
                 char *hfacname = NULL;
 
-                hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+                GwSymbol *fac = gw_facs_get(facs, i);
+
+                hfacname = hier_decompress_flagged(fac->name, &was_packed);
 
                 if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                     found++;
@@ -1134,7 +1143,7 @@ int process_tcl_list(const char *sl, gboolean prepend)
             }
         }
 
-        import : if (match_type_list[ii]) { GwSymbol *s = GLOBALS->facs[match_idx_list[ii]];
+        import : if (match_type_list[ii]) { GwSymbol *s = gw_facs_get(facs, match_idx_list[ii]);
         GwSymbol *schain = s->vec_root;
 
         if (GLOBALS->is_lx2) {
@@ -1163,7 +1172,7 @@ GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
 for (ii = 0; ii < c; ii++) {
     if (match_type_list[ii]) {
-        GwSymbol *s = GLOBALS->facs[match_idx_list[ii]];
+        GwSymbol *s = gw_facs_get(facs, match_idx_list[ii]);
 
         if ((match_type_list[ii] >= 2) && (s->n->extvals)) {
             GwNode *nexp;
@@ -1904,10 +1913,11 @@ static void sig_selection_foreach_dnd(GtkTreeModel *model,
     low = fetchlow(sel)->t_which;
     high = fetchhigh(sel)->t_which;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     /* If signals are vectors, iterate through them if so.  */
     for (i = low; i <= high; i++) {
-        GwSymbol *s;
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if ((s->vec_root) && (GLOBALS->autocoalesce)) {
             GwSymbol *t = s->vec_root;
             while (t) {

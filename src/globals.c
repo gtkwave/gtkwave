@@ -528,10 +528,8 @@ static const struct Global globals_base_values = {
     NULL, /* s_selected */
 #endif
     NULL, /* sym_hash 424 */
-    NULL, /* facs 425 */
     0, /* facs_are_sorted 426 */
     0, /* facs_have_symbols_state_machine */
-    0, /* numfacs 427 */
     0, /* longestname 429 */
     0, /* hashcache 432 */
 
@@ -580,8 +578,6 @@ static const struct Global globals_base_values = {
     '.', /* hier_delimeter 447 */
     0, /* hier_was_explicitly_set 448 */
     0x00, /* alt_hier_delimeter 449 */
-    NULL, /* facs2_tree_c_1 451 */
-    0, /* facs2_pos_tree_c_1 452 */
     NULL, /* talloc_pool_base */
     0, /* talloc_idx */
     NULL, /* sst_exclude_filename */

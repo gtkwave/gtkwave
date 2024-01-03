@@ -515,9 +515,12 @@ int maketraces(char *str, char *alias, int quick_return)
             memcpy(wild, str, len);
             wave_regex_compile(wild, WAVE_REGEX_WILD);
 
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                    AddNode(GLOBALS->facs[i]->n, NULL);
+            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+            for (i = 0; i < gw_facs_get_length(facs); i++) {
+                GwSymbol *fac = gw_facs_get(facs, i);
+                if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                    AddNode(fac->n, NULL);
                     made = ~0;
                     if (quick_return)
                         break;
@@ -649,11 +652,14 @@ GwBits *makevec(char *vec, char *str)
                 }
             } else {
                 wave_regex_compile(wild, WAVE_REGEX_WILD);
-                for (i = GLOBALS->numfacs - 1; i >= 0;
-                     i--) /* to keep vectors in little endian hi..lo order */
-                {
-                    if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                        n[nodepnt++] = GLOBALS->facs[i]->n;
+
+                GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+                /* decrement to keep vectors in little endian hi..lo order */
+                for (i = gw_facs_get_length(facs) - 1; i >= 0; i--) {
+                    GwSymbol *fac = gw_facs_get(facs, i);
+                    if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                        n[nodepnt++] = fac->n;
                         if (nodepnt == BITATTRIBUTES_MAX) {
                             free_2(wild);
                             goto ifnode;
@@ -847,33 +853,37 @@ ifnode:
 GwBits *makevec_selected(char *vec, int numrows, char direction)
 {
     int nodepnt = 0;
-    int i;
     GwNode *n[BITATTRIBUTES_MAX];
     GwBits *b = NULL;
 
-    if (!direction)
-        for (i = GLOBALS->numfacs - 1; i >= 0; i--) /* to keep vectors in hi..lo order */
-        {
-            if (get_s_selected(GLOBALS->facs[i])) {
-                n[nodepnt++] = GLOBALS->facs[i]->n;
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    if (!direction) {
+        /* to keep vectors in hi..lo order */
+        for (gint i = gw_facs_get_length(facs) - 1; i >= 0; i--) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            if (get_s_selected(fac)) {
+                n[nodepnt++] = fac->n;
                 if ((nodepnt == BITATTRIBUTES_MAX) || (numrows == nodepnt))
                     break;
             }
         }
-    else
-        for (i = 0; i < GLOBALS->numfacs; i++) /* to keep vectors in lo..hi order */
-        {
-            if (get_s_selected(GLOBALS->facs[i])) {
-                n[nodepnt++] = GLOBALS->facs[i]->n;
+    } else {
+        /* to keep vectors in lo..hi order */
+        for (gint i = 0; i < gw_facs_get_length(facs); i++) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            if (get_s_selected(fac)) {
+                n[nodepnt++] = fac->n;
                 if ((nodepnt == BITATTRIBUTES_MAX) || (numrows == nodepnt))
                     break;
             }
         }
+    }
 
     if (nodepnt) {
         b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
-        for (i = 0; i < nodepnt; i++) {
+        for (gint i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
             if (n[i]->mv.mvlfac)
                 import_trace(n[i]);
@@ -1092,29 +1102,33 @@ int add_vector_chain(GwSymbol *s, int len)
 GwBits *makevec_range(char *vec, int lo, int hi, char direction)
 {
     int nodepnt = 0;
-    int i;
     GwNode *n[BITATTRIBUTES_MAX];
     GwBits *b = NULL;
 
-    if (!direction)
-        for (i = hi; i >= lo; i--) /* to keep vectors in hi..lo order */
-        {
-            n[nodepnt++] = GLOBALS->facs[i]->n;
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    if (!direction) {
+        /* to keep vectors in hi..lo order */
+        for (gint i = hi; i >= lo; i--) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            n[nodepnt++] = fac->n;
             if (nodepnt == BITATTRIBUTES_MAX)
                 break;
         }
-    else
-        for (i = lo; i <= hi; i++) /* to keep vectors in lo..hi order */
-        {
-            n[nodepnt++] = GLOBALS->facs[i]->n;
+    } else {
+        /* to keep vectors in lo..hi order */
+        for (gint i = lo; i <= hi; i++) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            n[nodepnt++] = fac->n;
             if (nodepnt == BITATTRIBUTES_MAX)
                 break;
         }
+    }
 
     if (nodepnt) {
         b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
-        for (i = 0; i < nodepnt; i++) {
+        for (gint i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
             if (n[i]->mv.mvlfac)
                 import_trace(n[i]);
@@ -1125,17 +1139,18 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
         if (vec) {
             strcpy(b->name = (char *)malloc_2(strlen(vec) + 1), vec);
         } else {
-            char *s1, *s2;
             int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
-            int root1len = 0, root2len = 0;
-            int l1, l2;
 
+            GwSymbol *fac_hi = gw_facs_get(facs, hi);
+            GwSymbol *fac_lo = gw_facs_get(facs, lo);
+
+            char *s1, *s2;
             if (!direction) {
-                s1 = GLOBALS->facs[hi]->n->nname;
-                s2 = GLOBALS->facs[lo]->n->nname;
+                s1 = fac_hi->n->nname;
+                s2 = fac_lo->n->nname;
             } else {
-                s1 = GLOBALS->facs[lo]->n->nname;
-                s2 = GLOBALS->facs[hi]->n->nname;
+                s1 = fac_lo->n->nname;
+                s2 = fac_hi->n->nname;
             }
 
             if (GLOBALS->do_hier_compress) {
@@ -1143,17 +1158,18 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
                 s2 = hier_decompress_flagged(s2, &s2_was_packed);
             }
 
-            l1 = strlen(s1);
-
-            for (i = l1 - 1; i >= 0; i--) {
+            gint l1 = strlen(s1);
+            gint root1len = 0;
+            for (gint i = l1 - 1; i >= 0; i--) {
                 if (s1[i] == GLOBALS->hier_delimeter) {
                     root1len = i + 1;
                     break;
                 }
             }
 
-            l2 = strlen(s2);
-            for (i = l2 - 1; i >= 0; i--) {
+            gint l2 = strlen(s2);
+            gint root2len = 0;
+            for (gint i = l2 - 1; i >= 0; i--) {
                 if (s2[i] == GLOBALS->hier_delimeter) {
                     root2len = i + 1;
                     break;
@@ -1233,25 +1249,29 @@ int add_vector_range(char *alias, int lo, int hi, char direction)
     GwBitVector *v = NULL;
     GwBits *b = NULL;
 
-    if (lo != hi) {
-        if ((b = makevec_range(alias, lo, hi, direction))) {
-            if ((v = bits2vector(b))) {
-                v->bits = b; /* only needed for savefile function */
-                AddVector(v, NULL);
-                free_2(b->name);
-                b->name = NULL;
-                return (v != NULL);
-            } else {
-                free_2(b->name);
-                if (b->attribs)
-                    free_2(b->attribs);
-                free_2(b);
-            }
-        }
-        return (v != NULL);
-    } else {
-        return (AddNode(GLOBALS->facs[lo]->n, NULL));
+    if (lo == hi) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        GwSymbol *fac = gw_facs_get(facs, lo);
+
+        return AddNode(fac->n, NULL);
     }
+
+    if ((b = makevec_range(alias, lo, hi, direction))) {
+        if ((v = bits2vector(b))) {
+            v->bits = b; /* only needed for savefile function */
+            AddVector(v, NULL);
+            free_2(b->name);
+            b->name = NULL;
+        } else {
+            free_2(b->name);
+            if (b->attribs != NULL) {
+                free_2(b->attribs);
+            }
+            free_2(b);
+        }
+    }
+
+    return v != NULL;
 }
 
 /*

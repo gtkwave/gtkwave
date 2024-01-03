@@ -135,6 +135,8 @@ void fill_sig_store(void)
     free_afl();
     gtk_list_store_clear(GLOBALS->sig_store_treesearch_gtk2_c_1);
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     for (t = GLOBALS->sig_root_treesearch_gtk2_c_1; t != NULL; t = t->next) {
         int i = t->t_which;
         char *s, *tmp2;
@@ -159,38 +161,39 @@ void fill_sig_store(void)
         }
         t_prev = t;
 
-        varxt = GLOBALS->facs[i]->n->varxt;
+        GwSymbol *fac = gw_facs_get(facs, i);
+
+        varxt = fac->n->varxt;
         varxt_pnt = varxt
                         ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
                         : NULL;
 
-        vartype = GLOBALS->facs[i]->n->vartype;
+        vartype = fac->n->vartype;
         if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
             vartype = 0;
         }
 
-        vardir = GLOBALS->facs[i]
-                     ->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
+        vardir = fac->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
         if ((vardir < 0) || (vardir > GW_VAR_DIR_MAX)) {
             vardir = 0;
         }
 
-        vardt = GLOBALS->facs[i]->n->vardt;
+        vardt = fac->n->vardt;
         if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
             vardt = 0;
         }
 
-        if (!GLOBALS->facs[i]->vec_root) {
+        if (!fac->vec_root) {
             is_tname = 1;
             s = t->name;
             s = fix_escaped_names(s, 0);
         } else {
             if (GLOBALS->autocoalesce) {
                 char *p;
-                if (GLOBALS->facs[i]->vec_root != GLOBALS->facs[i])
+                if (fac->vec_root != fac)
                     continue;
 
-                tmp2 = makename_chain(GLOBALS->facs[i]);
+                tmp2 = makename_chain(fac);
                 p = prune_hierarchy(tmp2);
                 s = (char *)malloc_2(strlen(p) + 4);
                 strcpy(s, "[] ");
@@ -198,7 +201,7 @@ void fill_sig_store(void)
                 s = fix_escaped_names(s, 1);
                 free_2(tmp2);
             } else {
-                char *p = prune_hierarchy(GLOBALS->facs[i]->name);
+                char *p = prune_hierarchy(fac->name);
                 s = (char *)malloc_2(strlen(p) + 4);
                 strcpy(s, "[] ");
                 strcpy(s + 3, p);
@@ -871,12 +874,13 @@ static void sig_selection_foreach(GtkTreeModel *model,
     low = fetchlow(sel)->t_which;
     high = fetchhigh(sel)->t_which;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     /* Add signals and vectors.  */
     for (i = low; i <= high; i++) {
         int len;
-        GwSymbol *s, *t;
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
             if (get_s_selected(t)) {
                 set_s_selected(t, 0);
@@ -1001,10 +1005,11 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
     low = fetchlow(sel)->t_which;
     high = fetchhigh(sel)->t_which;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     /* If signals are vectors, coalesces vectors if so.  */
     for (i = low; i <= high; i++) {
-        GwSymbol *s;
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if (s->vec_root) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
         }
@@ -1013,9 +1018,8 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
     /* LX2 */
     if (GLOBALS->is_lx2) {
         for (i = low; i <= high; i++) {
-            GwSymbol *s, *t;
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
+            GwSymbol *s = gw_facs_get(facs, i);
+            GwSymbol *t = s->vec_root;
             if ((t) && (GLOBALS->autocoalesce)) {
                 if (get_s_selected(t)) {
                     while (t) {
@@ -1582,11 +1586,12 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
 
     set_window_busy(widget);
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        GwSymbol *s;
         if (i < 0)
             break; /* GHW */
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if (s->vec_root) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
         }
@@ -1597,11 +1602,10 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
         int pre_import = 0;
 
         for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            GwSymbol *s, *t;
             if (i < 0)
                 break; /* GHW */
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
+            GwSymbol *s = gw_facs_get(facs, i);
+            GwSymbol *t = s->vec_root;
             if ((t) && (GLOBALS->autocoalesce)) {
                 if (get_s_selected(t)) {
                     while (t) {
@@ -1628,11 +1632,10 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
         int len;
-        GwSymbol *s, *t;
         if (i < 0)
             break; /* GHW */
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
             if (get_s_selected(t)) {
                 set_s_selected(t, 0);
@@ -1669,11 +1672,12 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
 
     set_window_busy(widget);
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        GwSymbol *s;
         if (i < 0)
             break; /* GHW */
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if (s->vec_root) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
         }
@@ -1684,11 +1688,10 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
         int pre_import = 0;
 
         for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            GwSymbol *s, *t;
             if (i < 0)
                 break; /* GHW */
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
+            GwSymbol *s = gw_facs_get(facs, i);
+            GwSymbol *t = s->vec_root;
             if ((t) && (GLOBALS->autocoalesce)) {
                 if (get_s_selected(t)) {
                     while (t) {
@@ -1715,11 +1718,10 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
         int len;
-        GwSymbol *s, *t;
         if (i < 0)
             break; /* GHW */
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
             if (get_s_selected(t)) {
                 set_s_selected(t, 0);
@@ -1770,11 +1772,12 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
 
     set_window_busy(widget);
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        GwSymbol *s;
         if (i < 0)
             break; /* GHW */
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if (s->vec_root) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
         }
@@ -1785,11 +1788,10 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
         int pre_import = 0;
 
         for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            GwSymbol *s, *t;
             if (i < 0)
                 break; /* GHW */
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
+            GwSymbol *s = gw_facs_get(facs, i);
+            GwSymbol *t = s->vec_root;
             if ((t) && (GLOBALS->autocoalesce)) {
                 if (get_s_selected(t)) {
                     while (t) {
@@ -1816,11 +1818,10 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
 
     for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
         int len;
-        GwSymbol *s, *t;
         if (i < 0)
             break; /* GHW */
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
             if (get_s_selected(t)) {
                 set_s_selected(t, 0);

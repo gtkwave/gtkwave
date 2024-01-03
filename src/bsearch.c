@@ -280,6 +280,7 @@ static int compar_facs(const void *key, const void *v2)
     return (rc);
 }
 
+// TODO: move to GwFacs
 GwSymbol *bsearch_facs(char *ascii, unsigned int *rows_return)
 {
     GwSymbol **rc;
@@ -291,6 +292,10 @@ GwSymbol *bsearch_facs(char *ascii, unsigned int *rows_return)
         *rows_return = 0;
     }
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    GwSymbol **facs_array = gw_facs_get_array(facs);
+    guint numfacs = gw_facs_get_length(facs);
+
     if (ascii[len - 1] == '}') {
         int i;
 
@@ -301,8 +306,9 @@ GwSymbol *bsearch_facs(char *ascii, unsigned int *rows_return)
                 char *tsc = g_alloca(i + 1);
                 memcpy(tsc, ascii, i + 1);
                 tsc[i] = 0;
-                rc = (GwSymbol **)
-                    bsearch(tsc, GLOBALS->facs, GLOBALS->numfacs, sizeof(GwSymbol *), compar_facs);
+
+                rc =
+                    (GwSymbol **)bsearch(tsc, facs_array, numfacs, sizeof(GwSymbol *), compar_facs);
                 if (rc) {
                     unsigned int whichrow = atoi(&ascii[i + 1]);
                     if (rows_return)
@@ -320,8 +326,7 @@ GwSymbol *bsearch_facs(char *ascii, unsigned int *rows_return)
         }
     }
 
-    rc = (GwSymbol **)
-        bsearch(ascii, GLOBALS->facs, GLOBALS->numfacs, sizeof(GwSymbol *), compar_facs);
+    rc = (GwSymbol **)bsearch(ascii, facs_array, numfacs, sizeof(GwSymbol *), compar_facs);
     if (rc)
         return (*rc);
     else

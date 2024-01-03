@@ -1,5 +1,6 @@
 #include <gtkwave.h>
 
+// TODO: replace with gw_tree_node_new or similar
 static GwTreeNode *alloc_node(const gchar *name)
 {
     GwTreeNode *node = g_malloc0(sizeof(GwTreeNode) + strlen(name) + 1);

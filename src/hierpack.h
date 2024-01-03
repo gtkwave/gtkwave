@@ -22,6 +22,6 @@ void freeze_facility_pack(void);
 
 char *hier_decompress_flagged(char *n, int *was_packed);
 
-void hier_auto_enable(void);
+void hier_auto_enable(guint numfacs);
 
 #endif
