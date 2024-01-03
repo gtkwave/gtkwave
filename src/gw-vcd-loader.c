@@ -691,7 +691,7 @@ static void update_name_prefix(GwVcdLoader *self)
         VcdScope *scope = iter->data;
 
         if (self->name_prefix->len > 0) {
-            g_string_append(self->name_prefix, GLOBALS->vcd_hier_delimeter);
+            g_string_append_c(self->name_prefix, GLOBALS->hier_delimeter);
         }
 
         g_string_append(self->name_prefix, scope->name);
@@ -1628,7 +1628,7 @@ static void vcd_parse(GwVcdLoader *self)
                         if (self->name_prefix->len > 0) {
                             v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
-                            strcpy(v->name + self->name_prefix->len, GLOBALS->vcd_hier_delimeter);
+                            v->name[self->name_prefix->len] = GLOBALS->hier_delimeter;
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
@@ -1640,8 +1640,7 @@ static void vcd_parse(GwVcdLoader *self)
                                     char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
                                     strcpy(sd, self->name_prefix->str);
-                                    strcpy(sd + self->name_prefix->len,
-                                           GLOBALS->vcd_hier_delimeter);
+                                    sd[self->name_prefix->len] = GLOBALS->hier_delimeter;
                                     sd[self->name_prefix->len + 1] = '\\';
                                     strcpy(sd + self->name_prefix->len + 2,
                                            v->name + self->name_prefix->len + 1);
@@ -1719,7 +1718,7 @@ static void vcd_parse(GwVcdLoader *self)
                         if (self->name_prefix->len > 0) {
                             v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
-                            strcpy(v->name + self->name_prefix->len, GLOBALS->vcd_hier_delimeter);
+                            v->name[self->name_prefix->len] = GLOBALS->hier_delimeter;
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
@@ -1731,8 +1730,7 @@ static void vcd_parse(GwVcdLoader *self)
                                     char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
                                     strcpy(sd, self->name_prefix->str);
-                                    strcpy(sd + self->name_prefix->len,
-                                           GLOBALS->vcd_hier_delimeter);
+                                    sd[self->name_prefix->len] = GLOBALS->hier_delimeter;
                                     sd[self->name_prefix->len + 1] = '\\';
                                     strcpy(sd + self->name_prefix->len + 2,
                                            v->name + self->name_prefix->len + 1);
@@ -2037,7 +2035,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
             strcpy(str, v->name);
 
             if ((v->msi >= 0) || (v->msi != v->lsi)) {
-                strcpy(str + slen, GLOBALS->vcd_hier_delimeter);
+                str[slen] = GLOBALS->hier_delimeter;
                 slen++;
             }
 
@@ -2071,11 +2069,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                         DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                         do
-                            sprintf(dupfix,
-                                    "$DUP%d%s%s",
-                                    duphier++,
-                                    GLOBALS->vcd_hier_delimeter,
-                                    str);
+                            sprintf(dupfix, "$DUP%d%c%s", duphier++, GLOBALS->hier_delimeter, str);
                         while (symfind(dupfix, NULL));
 
                         strcpy(str, dupfix);
@@ -2156,7 +2150,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                     do
-                        sprintf(dupfix, "$DUP%d%s%s", duphier++, GLOBALS->vcd_hier_delimeter, str);
+                        sprintf(dupfix, "$DUP%d%c%s", duphier++, GLOBALS->hier_delimeter, str);
                     while (symfind(dupfix, NULL));
 
                     strcpy(str, dupfix);
@@ -2352,8 +2346,6 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
     GwVcdLoader *self = GW_VCD_LOADER(loader);
-
-    GLOBALS->vcd_hier_delimeter[0] = GLOBALS->hier_delimeter;
 
     errno = 0; /* reset in case it's set for some reason */
 
