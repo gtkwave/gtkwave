@@ -111,7 +111,6 @@ static const struct Global globals_base_values = {
     /*
      * currenttime.c
      */
-    0, /* is_vcd 56 */
     1, /* use_maxtime_display 57 */
     0, /* use_frequency_delta 58 */
     0, /* cached_currenttimeval_currenttime_c_1 61 */
