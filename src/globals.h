@@ -520,10 +520,8 @@ struct Global
     Pvoid_t s_selected; /* from symbol.c */
 #endif
     GwSymbol **sym_hash; /* from symbol.c 453 */
-    GwSymbol **facs; /* from symbol.c 454 */
     char facs_are_sorted; /* from symbol.c 455 */
     char facs_have_symbols_state_machine; /* from symbol.c */
-    int numfacs; /* from symbol.c 456 */
     int longestname; /* from symbol.c 458 */
     int hashcache; /* from symbol.c 461 */
 
@@ -572,8 +570,6 @@ struct Global
     char hier_delimeter; /* from tree.c 477 */
     char hier_was_explicitly_set; /* from tree.c 478 */
     char alt_hier_delimeter; /* from tree.c 479 */
-    GwSymbol **facs2_tree_c_1; /* from tree.c 481 */
-    int facs2_pos_tree_c_1; /* from tree.c 482 */
     unsigned char *talloc_pool_base;
     size_t talloc_idx;
     char *sst_exclude_filename;

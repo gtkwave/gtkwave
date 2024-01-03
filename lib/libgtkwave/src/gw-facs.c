@@ -1,4 +1,5 @@
 #include "gw-facs.h"
+#include "gw-util.h"
 
 struct _GwFacs
 {
@@ -21,7 +22,9 @@ static void gw_facs_finalize(GObject *object)
 {
     GwFacs *self = GW_FACS(object);
 
-    g_ptr_array_free(self->facs, TRUE);
+    if (self->facs != NULL) {
+        g_ptr_array_free(self->facs, TRUE);
+    }
 
     G_OBJECT_CLASS(gw_facs_parent_class)->finalize(object);
 }
@@ -91,6 +94,14 @@ GwFacs *gw_facs_new(guint length)
     return g_object_new(GW_TYPE_FACS, "length", length, NULL);
 }
 
+void gw_facs_set(GwFacs *self, guint index, GwSymbol *symbol)
+{
+    g_return_if_fail(GW_IS_FACS(self));
+    g_return_if_fail(index < self->facs->len);
+
+    g_ptr_array_index(self->facs, index) = symbol;
+}
+
 GwSymbol *gw_facs_get(GwFacs *self, guint index)
 {
     g_return_val_if_fail(GW_IS_FACS(self), NULL);
@@ -104,4 +115,65 @@ guint gw_facs_get_length(GwFacs *self)
     g_return_val_if_fail(GW_IS_FACS(self), 0);
 
     return self->facs->len;
+}
+
+// TODO: remove
+GwSymbol **gw_facs_get_array(GwFacs *self)
+{
+    g_return_val_if_fail(GW_IS_FACS(self), NULL);
+
+    return (GwSymbol **)self->facs->pdata;
+}
+
+void gw_facs_order_from_tree_rec(GwFacs *facs, GwFacs *sorted_facs, gint *pos, GwTreeNode *t)
+{
+    for (; t != NULL; t = t->next) {
+        if (t->child != NULL) {
+            gw_facs_order_from_tree_rec(facs, sorted_facs, pos, t->child);
+        }
+
+        /* for when valid netnames like A.B.C, A.B.C.D exist (not legal excluding texsim) */
+        /* otherwise this would be an 'else' */
+        if (t->t_which >= 0) {
+            gw_facs_set(sorted_facs, *pos, gw_facs_get(facs, t->t_which));
+            t->t_which = *pos;
+            (*pos)--;
+        }
+    }
+}
+
+void gw_facs_order_from_tree(GwFacs *self, GwTree *tree)
+{
+    g_return_if_fail(GW_IS_FACS(self));
+    g_return_if_fail(GW_IS_TREE(tree));
+
+    // TODO: check for empty
+
+    GwFacs *sorted_facs = gw_facs_new(gw_facs_get_length(self));
+    gint pos = gw_facs_get_length(self) - 1;
+
+    gw_facs_order_from_tree_rec(self, sorted_facs, &pos, gw_tree_get_root(tree));
+    g_assert_cmpint(pos, <, 0);
+
+    g_ptr_array_free(self->facs, TRUE);
+    self->facs = g_steal_pointer(&sorted_facs->facs);
+
+    g_object_unref(sorted_facs);
+}
+
+static int sigcmp(const void *v1, const void *v2)
+{
+    GwSymbol *a1 = *((GwSymbol **)v1);
+    GwSymbol *a2 = *((GwSymbol **)v2);
+    return gw_signal_name_compare(a1->name, a2->name);
+}
+
+void gw_facs_sort(GwFacs *self)
+{
+    g_return_if_fail(GW_IS_FACS(self));
+
+    // TODO: Check which sorting algorithm is used by Glib. The original code
+    // used a custom heapsort for some platforms, because quicksort can be very
+    // slow if the facs are already sorted.
+    g_ptr_array_sort(self->facs, sigcmp);
 }

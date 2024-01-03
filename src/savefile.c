@@ -1675,9 +1675,13 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
             memcpy(wild, str, len);
             wave_regex_compile(wild, WAVE_REGEX_WILD);
 
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                    lx2_set_fac_process_mask(GLOBALS->facs[i]->n);
+            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+            for (i = 0; i < gw_facs_get_length(facs); i++) {
+                GwSymbol *fac = gw_facs_get(facs, i);
+
+                if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                    lx2_set_fac_process_mask(fac->n);
                     made = ~0;
                     if (quick_return)
                         break;
@@ -1757,11 +1761,16 @@ int makevec_lx2(char *str)
                 }
             } else {
                 wave_regex_compile(wild, WAVE_REGEX_WILD);
-                for (i = GLOBALS->numfacs - 1; i >= 0;
+
+                GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+                for (i = gw_facs_get_length(facs) - 1; i >= 0;
                      i--) /* to keep vectors in little endian hi..lo order */
                 {
-                    if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                        lx2_set_fac_process_mask(GLOBALS->facs[i]->n);
+                    GwSymbol *fac = gw_facs_get(facs, i);
+
+                    if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                        lx2_set_fac_process_mask(fac->n);
                         rc = 1;
                     }
                 }

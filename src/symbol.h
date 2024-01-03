@@ -54,8 +54,6 @@ void facsplit(char *, int *, int *);
 int sigcmp(char *, char *);
 void quicksort(GwSymbol **, int, int);
 
-void wave_heapsort(GwSymbol **a, int num);
-
 GwBits *makevec(char *, char *);
 GwBits *makevec_annotated(char *, char *);
 int maketraces(char *, char *, int);

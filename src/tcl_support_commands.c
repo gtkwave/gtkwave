@@ -386,13 +386,18 @@ GwTrace *sig_name_to_Trptr(char *name)
     GwBits *b = NULL;
     int pre_import = 0;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    guint numfacs = gw_facs_get_length(facs);
+
     if (name) {
         name_len = strlen(name);
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+        for (i = 0; i < numfacs; i++) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+
+            hfacname = hier_decompress_flagged(fac->name, &was_packed);
             if (!strcmp(name, hfacname) ||
                 ((!strncmp(name, hfacname, name_len) && hfacname[name_len] == '['))) {
-                s = GLOBALS->facs[i];
+                s = fac;
                 if ((s2 = s->vec_root)) {
                     s = s2;
                 } else {

@@ -233,7 +233,9 @@ static int gtkwavetcl_getNumFacs(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    int value = GLOBALS->numfacs;
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    int value = gw_facs_get_length(facs);
     return (gtkwavetcl_printInteger(clientData, interp, objc, objv, value));
 }
 
@@ -257,11 +259,16 @@ static int gtkwavetcl_getFacName(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        if ((which >= 0) && (which < numfacs)) {
             int was_packed = HIER_DEPACK_ALLOC;
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[which]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, which);
+
+            hfacname = hier_decompress_flagged(fac->name, &was_packed);
 
             aobj = Tcl_NewStringObj(hfacname, -1);
             Tcl_SetObjResult(interp, aobj);
@@ -286,10 +293,14 @@ static int gtkwavetcl_getFacDir(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        if ((which >= 0) && (which < numfacs)) {
+            GwSymbol *fac = gw_facs_get(facs, which);
+
             int vardir =
-                GLOBALS->facs[which]
-                    ->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
+                fac->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
             if ((vardir < 0) || (vardir > GW_VAR_DIR_MAX)) {
                 vardir = 0;
             }
@@ -315,23 +326,28 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        if ((which >= 0) && (which < numfacs)) {
             unsigned int varxt;
             char *varxt_pnt;
             int vartype;
             int vardt;
 
-            varxt = GLOBALS->facs[which]->n->varxt;
+            GwSymbol *fac = gw_facs_get(facs, which);
+
+            varxt = fac->n->varxt;
             varxt_pnt =
                 varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
                       : NULL;
 
-            vartype = GLOBALS->facs[which]->n->vartype;
+            vartype = fac->n->vartype;
             if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
                 vartype = 0;
             }
 
-            vardt = GLOBALS->facs[which]->n->vardt;
+            vardt = fac->n->vardt;
             if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
                 vardt = 0;
             }
@@ -361,17 +377,22 @@ static int gtkwavetcl_getFacDtype(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        if ((which >= 0) && (which < numfacs)) {
             unsigned int varxt;
             char *varxt_pnt;
             int vardt;
 
-            varxt = GLOBALS->facs[which]->n->varxt;
+            GwSymbol *fac = gw_facs_get(facs, which);
+
+            varxt = fac->n->varxt;
             varxt_pnt =
                 varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
                       : NULL;
 
-            vardt = GLOBALS->facs[which]->n->vardt;
+            vardt = fac->n->vardt;
             if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
                 vardt = 0;
             }

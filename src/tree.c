@@ -355,49 +355,6 @@ char *leastsig_hiername(char *nam)
  * moving numfacs longer strings around
  */
 
-void order_facs_from_treesort_2(GwTreeNode *t)
-{
-    while (t) {
-        if (t->child) {
-            order_facs_from_treesort_2(t->child);
-        }
-
-        if (t->t_which >=
-            0) /* for when valid netnames like A.B.C, A.B.C.D exist (not legal excluding texsim) */
-        /* otherwise this would be an 'else' */
-        {
-            GLOBALS->facs2_tree_c_1[GLOBALS->facs2_pos_tree_c_1] = GLOBALS->facs[t->t_which];
-            t->t_which = GLOBALS->facs2_pos_tree_c_1--;
-        }
-
-        t = t->next;
-    }
-}
-
-void order_facs_from_treesort(GwTreeNode *t, void *v)
-{
-    GwSymbol ***f =
-        (GwSymbol ***)v; /* eliminate compiler warning in tree.h as symbol.h refs tree.h */
-
-    GLOBALS->facs2_tree_c_1 = (GwSymbol **)malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
-    GLOBALS->facs2_pos_tree_c_1 = GLOBALS->numfacs - 1;
-    order_facs_from_treesort_2(t);
-
-    if (GLOBALS->facs2_pos_tree_c_1 >= 0) {
-        fprintf(stderr,
-                "Internal Error: GLOBALS->facs2_pos_tree_c_1 = %d\n",
-                GLOBALS->facs2_pos_tree_c_1);
-        fprintf(stderr,
-                "[This is usually the result of multiply defined facilities such as a hierarchy "
-                "name also being used as a signal at the same level of scope.]\n");
-        exit(255);
-    }
-
-    free_2(*f);
-    *f = GLOBALS->facs2_tree_c_1;
-    GLOBALS->facs2_tree_c_1 = NULL;
-}
-
 void build_tree_from_name(GwTreeNode **tree_root, const char *s, int which)
 {
     GwTreeNode *t, *nt;
@@ -590,14 +547,17 @@ static void XXX_maketree_nodes(GwTreeNode *t2, GtkTreeIter *iter)
     gchar *text[1];
     GdkPixbuf *pxb;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     if (t2->t_which >= 0) {
-        if (GLOBALS->facs[t2->t_which]->vec_root) {
+        GwSymbol *fac = gw_facs_get(facs, t2->t_which);
+        if (fac->vec_root) {
             if (GLOBALS->autocoalesce) {
-                if (GLOBALS->facs[t2->t_which]->vec_root != GLOBALS->facs[t2->t_which]) {
+                if (fac->vec_root != fac) {
                     return; /* was return(NULL) */
                 }
 
-                tmp2 = makename_chain(GLOBALS->facs[t2->t_which]);
+                tmp2 = makename_chain(fac);
                 tmp3 = leastsig_hiername(tmp2);
                 tmp = g_alloca(strlen(tmp3) + 4);
                 strcpy(tmp, "[] ");

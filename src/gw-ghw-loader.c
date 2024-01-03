@@ -28,7 +28,7 @@ struct _GwGhwLoader
 
     GSList *sym_chain;
 
-    GPtrArray *facs;
+    GwFacs *facs;
     GwTreeNode *treeroot;
     int longestname;
     GwTime max_time;
@@ -188,11 +188,11 @@ void rechain_facs(GwGhwLoader *self)
     GwSymbol *psr = NULL;
     GwSymbol *root = NULL;
 
-    for (guint i = 0; i < self->facs->len; i++) {
-        GwSymbol *fac = g_ptr_array_index(self->facs, i);
+    for (guint i = 0; i < gw_facs_get_length(self->facs); i++) {
+        GwSymbol *fac = gw_facs_get(self->facs, i);
 
         if (psr != NULL) {
-            GwSymbol *prev_fac = g_ptr_array_index(self->facs, i - 1);
+            GwSymbol *prev_fac = gw_facs_get(self->facs, i - 1);
 
             int ev1 = prev_fac->n->extvals;
             int ev2 = fac->n->extvals;
@@ -267,7 +267,7 @@ static void recurse_tree_build_whichcache(GwGhwLoader *self, GwTreeNode *t)
     for (i = cnt - 1; i >= 0; i--) {
         t = ar[i];
         if (t->t_which >= 0) {
-            GwSymbol *fac = g_ptr_array_index(self->facs, t->t_which);
+            GwSymbol *fac = gw_facs_get(self->facs, t->t_which);
             self->gwt = ghw_insert(t, self->gwt, t->t_which, fac);
         }
     }
@@ -330,10 +330,10 @@ static void ghw_sortfacs(GwGhwLoader *self)
 {
     recurse_tree_build_whichcache(self, self->treeroot);
 
-    for (guint i = 0; i < self->facs->len; i++) {
+    for (guint i = 0; i < gw_facs_get_length(self->facs); i++) {
         char *subst;
         int len;
-        GwSymbol *curnode = g_ptr_array_index(self->facs, i);
+        GwSymbol *curnode = gw_facs_get(self->facs, i);
 
         subst = curnode->name;
         if ((len = strlen(subst)) > self->longestname) {
@@ -341,10 +341,10 @@ static void ghw_sortfacs(GwGhwLoader *self)
         }
     }
 
-    wave_heapsort((GwSymbol **)self->facs->pdata, self->facs->len);
+    gw_facs_sort(self->facs);
 
-    for (guint i = 0; i < self->facs->len; i++) {
-        GwSymbol *fac = g_ptr_array_index(self->facs, i);
+    for (guint i = 0; i < gw_facs_get_length(self->facs); i++) {
+        GwSymbol *fac = gw_facs_get(self->facs, i);
         self->gwt_corr = ghw_insert(fac, self->gwt_corr, i, NULL);
     }
 
@@ -699,8 +699,8 @@ static GwTreeNode *build_hierarchy(GwGhwLoader *self, struct ghw_hie *hie)
 
 void facs_debug(GwGhwLoader *self)
 {
-    for (guint i = 0; i < self->facs->len; i++) {
-        GwSymbol *fac = g_ptr_array_index(self->facs, i);
+    for (guint i = 0; i < gw_facs_get_length(self->facs); i++) {
+        GwSymbol *fac = gw_facs_get(self->facs, i);
         GwNode *n = fac->n;
         printf("%d: %s\n", i, n->nname);
         if (n->extvals) {
@@ -717,12 +717,12 @@ void facs_debug(GwGhwLoader *self)
 
 static void create_facs(GwGhwLoader *self)
 {
-    self->facs = g_ptr_array_new_full(self->nbr_sig_ref, NULL);
+    self->facs = gw_facs_new(self->nbr_sig_ref);
 
     guint i = 0;
     for (GSList *iter = self->sym_chain; iter != NULL; iter = iter->next, i++) {
         GwSymbol *symbol = iter->data;
-        g_ptr_array_add(self->facs, symbol);
+        gw_facs_set(self->facs, i, symbol);
     }
 
     struct ghw_handler *h = self->h;
@@ -1028,7 +1028,7 @@ static void read_traces(GwGhwLoader *self)
     unsigned int i;
     enum ghw_res res;
 
-    list = malloc_2((self->facs->len + 1) * sizeof(int));
+    list = malloc_2((gw_facs_get_length(self->facs) + 1) * sizeof(int));
 
     struct ghw_handler *h = self->h;
 
@@ -1131,8 +1131,8 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
     g_clear_pointer(&self->nxp, free_2);
 
     /* fix up names on aliased nodes via cloning... */
-    for (guint i = 0; i < self->facs->len; i++) {
-        GwSymbol *fac = g_ptr_array_index(self->facs, i);
+    for (guint i = 0; i < gw_facs_get_length(self->facs); i++) {
+        GwSymbol *fac = gw_facs_get(self->facs, i);
 
         if (strcmp(fac->name, fac->n->nname) != 0) {
             GwNode *n = malloc_2(sizeof(GwNode));
@@ -1167,8 +1167,6 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
  facs_debug();
 #endif
 
-    GLOBALS->numfacs = self->facs->len;
-    GLOBALS->facs = (GwSymbol **)g_ptr_array_free(self->facs, FALSE);
     GLOBALS->is_ghw = 1;
     GLOBALS->facs_are_sorted = 1;
     GLOBALS->min_time = 0;
@@ -1191,8 +1189,9 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     // clang-format off
     GwGhwFile *dump_file = g_object_new(GW_TYPE_GHW_FILE,
-                                        "time-dimension", GW_TIME_DIMENSION_FEMTO,
                                         "tree", tree,
+                                        "facs", g_steal_pointer(&self->facs),
+                                        "time-dimension", GW_TIME_DIMENSION_FEMTO,
                                         NULL);
     // clang-format on
 

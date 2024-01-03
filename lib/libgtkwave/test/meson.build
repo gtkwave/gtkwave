@@ -3,6 +3,7 @@ libgtkwave_tests = [
     'gw-color-theme',
     'gw-color',
     'gw-dump-file',
+    'gw-facs',
     'gw-marker',
     'gw-named-markers',
     'gw-project',

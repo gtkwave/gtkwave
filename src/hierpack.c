@@ -188,10 +188,10 @@ char *hier_decompress_flagged(char *n, int *was_packed)
     return ((avoid_strdup != HIER_DEPACK_ALLOC) ? (str + ob) : strdup_2(str + ob));
 }
 
-void hier_auto_enable(void)
+void hier_auto_enable(guint numfacs)
 {
-    if ((!GLOBALS->do_hier_compress) && (!GLOBALS->disable_auto_comphier) &&
-        (GLOBALS->numfacs >= HIER_AUTO_ENABLE_CNT)) {
+    if (!GLOBALS->do_hier_compress && !GLOBALS->disable_auto_comphier &&
+        numfacs >= HIER_AUTO_ENABLE_CNT) {
         GLOBALS->do_hier_compress = 1;
     }
 }

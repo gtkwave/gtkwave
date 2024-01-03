@@ -236,17 +236,22 @@ static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
                 return (sr);
             }
 
+            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+            guint numfacs = gw_facs_get_length(facs);
+
             if (GLOBALS->facs_have_symbols_state_machine == 0) {
                 if (GLOBALS->escaped_names_found_vcd_c_1) {
                     mat = 1;
                 } else {
                     mat = 0;
 
-                    for (i = 0; i < GLOBALS->numfacs; i++) {
+                    for (i = 0; i < numfacs; i++) {
                         int was_packed = HIER_DEPACK_STATIC;
                         char *hfacname = NULL;
 
-                        hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+                        GwSymbol *fac = gw_facs_get(facs, i);
+
+                        hfacname = hier_decompress_flagged(fac->name, &was_packed);
                         s2 = hfacname;
                         while (*s2) {
                             if (*s2 < GLOBALS->hier_delimeter) {
@@ -273,18 +278,20 @@ static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
 
             if (GLOBALS->facs_have_symbols_state_machine == 1) {
                 mat = 0;
-                for (i = 0; i < GLOBALS->numfacs; i++) {
+                for (i = 0; i < numfacs; i++) {
                     int was_packed = HIER_DEPACK_STATIC;
                     char *hfacname = NULL;
 
-                    hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+                    GwSymbol *fac = gw_facs_get(facs, i);
+
+                    hfacname = hier_decompress_flagged(fac->name, &was_packed);
                     if (!strcmp(hfacname, s)) {
                         mat = 1;
                     }
 
                     /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
                     if (mat) {
-                        sr = GLOBALS->facs[i];
+                        sr = fac;
                         break;
                     }
                 }

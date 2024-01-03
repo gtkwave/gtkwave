@@ -618,18 +618,19 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     self->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
     self->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
 
-    GLOBALS->numfacs = fstReaderGetVarCount(self->fst_reader);
-    self->mvlfacs = calloc_2(GLOBALS->numfacs, sizeof(GwFac));
-    sym_block = calloc_2(GLOBALS->numfacs, sizeof(GwSymbol));
-    node_block = calloc_2(GLOBALS->numfacs, sizeof(GwNode));
-    GLOBALS->facs = malloc_2(GLOBALS->numfacs * sizeof(GwSymbol *));
-    self->mvlfacs_rvs_alias = calloc_2(GLOBALS->numfacs, sizeof(fstHandle));
+    uint numfacs = fstReaderGetVarCount(self->fst_reader);
 
-    hier_auto_enable(); /* enable if greater than threshold */
+    GwFacs *facs = gw_facs_new(numfacs);
+    self->mvlfacs = calloc_2(numfacs, sizeof(GwFac));
+    sym_block = calloc_2(numfacs, sizeof(GwSymbol));
+    node_block = calloc_2(numfacs, sizeof(GwNode));
+    self->mvlfacs_rvs_alias = calloc_2(numfacs, sizeof(fstHandle));
+
+    hier_auto_enable(numfacs); /* enable if greater than threshold */
 
     init_facility_pack();
 
-    fprintf(stderr, FST_RDLOAD "Processing %d facs.\n", GLOBALS->numfacs);
+    fprintf(stderr, FST_RDLOAD "Processing %d facs.\n", numfacs);
     /* SPLASH */ splash_sync(1, 5);
 
     self->first_cycle = fstReaderGetStartTime(self->fst_reader) * self->time_scale;
@@ -646,7 +647,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         GLOBALS->hier_delimeter = '.';
     }
 
-    for (i = 0; i < GLOBALS->numfacs; i++) {
+    for (i = 0; i < numfacs; i++) {
         char buf[65537];
         char *str;
         GwFac *f;
@@ -914,7 +915,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         if (longest_nam_candidate > GLOBALS->longestname)
             GLOBALS->longestname = longest_nam_candidate;
 
-        GLOBALS->facs[i] = &sym_block[i];
+        gw_facs_set(facs, i, &sym_block[i]);
         n = &node_block[i];
 
         if (self->queued_xl_enum_filter != 0) {
@@ -1001,7 +1002,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     free_2(f_name_len);
     f_name_len = NULL;
 
-    if (numvars != GLOBALS->numfacs) {
+    if (numvars != numfacs) {
         self->mvlfacs_rvs_alias = realloc_2(self->mvlfacs_rvs_alias, numvars * sizeof(fstHandle));
     }
 
@@ -1045,7 +1046,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     gw_tree_sort(tree);
 
     /* SPLASH */ splash_sync(4, 5);
-    order_facs_from_treesort(gw_tree_get_root(tree), &GLOBALS->facs);
+    gw_facs_order_from_tree(facs, tree);
 
     /* SPLASH */ splash_sync(5, 5);
     GLOBALS->facs_are_sorted = 1;
@@ -1086,12 +1087,13 @@ if(num_dups)
                                         "time-dimension", self->time_dimension,
                                         "global-time-offset", global_time_offset,
                                         "tree", tree,
+                                        "facs", facs,
                                         NULL);
     // clang-format on
 
     dump_file->fst_reader = g_steal_pointer(&self->fst_reader);
     dump_file->fst_maxhandle = numvars;
-    dump_file->fst_table = calloc_2(GLOBALS->numfacs, sizeof(struct lx2_entry));
+    dump_file->fst_table = calloc_2(numfacs, sizeof(struct lx2_entry));
     dump_file->mvlfacs = g_steal_pointer(&self->mvlfacs);
     dump_file->mvlfacs_rvs_alias = g_steal_pointer(&self->mvlfacs_rvs_alias);
     dump_file->subvar_jrb = g_steal_pointer(&self->subvar_jrb);
