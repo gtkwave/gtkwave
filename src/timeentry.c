@@ -58,12 +58,10 @@ void from_entry_callback(GtkWidget *widget, GtkWidget *entry)
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
 
     newlo = unformat_time(entry_text, time_dimension) - global_time_offset;
-
-    if (newlo < GLOBALS->min_time) {
-        newlo = GLOBALS->min_time;
-    }
+    newlo = MAX(newlo, gw_time_range_get_start(time_range));
 
     if (newlo < (GLOBALS->tims.last)) {
         GLOBALS->tims.first = newlo;
@@ -101,12 +99,13 @@ void to_entry_callback(GtkWidget *widget, GtkWidget *entry)
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
 
     newhi = unformat_time(entry_text, time_dimension) - global_time_offset;
 
-    if ((newhi > GLOBALS->max_time) || (!strlen(entry_text))) /* null string makes max time */
-    {
-        newhi = GLOBALS->max_time;
+    /* null string makes max time */
+    if (newhi > gw_time_range_get_end(time_range) || strlen(entry_text) == 0) {
+        newhi = gw_time_range_get_end(time_range);
     }
 
     if (newhi > (GLOBALS->tims.first)) {
@@ -135,11 +134,12 @@ GtkWidget *create_entry_box(void)
 
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
 
     label = gtk_label_new("From:");
     GLOBALS->from_entry = X_gtk_entry_new_with_max_length(40);
 
-    reformat_time(fromstr, GLOBALS->min_time + global_time_offset, time_dimension);
+    reformat_time(fromstr, gw_time_range_get_start(time_range) + global_time_offset, time_dimension);
 
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), fromstr);
     g_signal_connect(GLOBALS->from_entry,
@@ -157,7 +157,7 @@ GtkWidget *create_entry_box(void)
     label2 = gtk_label_new("To:");
     GLOBALS->to_entry = X_gtk_entry_new_with_max_length(40);
 
-    reformat_time(tostr, GLOBALS->max_time + global_time_offset, time_dimension);
+    reformat_time(tostr, gw_time_range_get_end(time_range) + global_time_offset, time_dimension);
 
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), tostr);
     g_signal_connect(GLOBALS->to_entry,

@@ -10,6 +10,7 @@ typedef struct
 
     GwTime time_scale;
     GwTimeDimension time_dimension;
+    GwTimeRange *time_range;
     GwTime global_time_offset;
 } GwDumpFilePrivate;
 
@@ -23,6 +24,7 @@ enum
     PROP_STEMS,
     PROP_TIME_SCALE,
     PROP_TIME_DIMENSION,
+    PROP_TIME_RANGE,
     PROP_GLOBAL_TIME_OFFSET,
     N_PROPERTIES,
 };
@@ -36,6 +38,7 @@ static void gw_dump_file_dispose(GObject *object)
 
     g_clear_object(&priv->blackout_regions);
     g_clear_object(&priv->stems);
+    g_clear_object(&priv->time_range);
 
     G_OBJECT_CLASS(gw_dump_file_parent_class)->dispose(object);
 }
@@ -97,6 +100,16 @@ static void gw_dump_file_set_property(GObject *object,
             priv->time_dimension = g_value_get_enum(value);
             break;
 
+        case PROP_TIME_RANGE: {
+            GwTimeRange *time_range = g_value_get_object(value);
+            if (time_range == NULL) {
+                time_range = gw_time_range_new(0, 0);
+            }
+
+            g_set_object(&priv->time_range, time_range);
+            break;
+        }
+
         case PROP_GLOBAL_TIME_OFFSET:
             priv->global_time_offset = g_value_get_int64(value);
             break;
@@ -139,6 +152,10 @@ static void gw_dump_file_get_property(GObject *object,
             g_value_set_enum(value, gw_dump_file_get_time_dimension(self));
             break;
 
+        case PROP_TIME_RANGE:
+            g_value_set_object(value, gw_dump_file_get_time_range(self));
+            break;
+
         case PROP_GLOBAL_TIME_OFFSET:
             g_value_set_int64(value, gw_dump_file_get_global_time_offset(self));
             break;
@@ -166,10 +183,10 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
 
     properties[PROP_FACS] =
         g_param_spec_object("facs",
-                             NULL,
-                             NULL,
-                             GW_TYPE_FACS,
-                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+                            NULL,
+                            NULL,
+                            GW_TYPE_FACS,
+                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     properties[PROP_BLACKOUT_REGIONS] =
         g_param_spec_object("blackout-regions",
@@ -201,6 +218,13 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
                           GW_TYPE_TIME_DIMENSION,
                           GW_TIME_DIMENSION_NONE,
                           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_TIME_RANGE] =
+        g_param_spec_object("time-range",
+                            NULL,
+                            NULL,
+                            GW_TYPE_TIME_RANGE,
+                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     properties[PROP_GLOBAL_TIME_OFFSET] =
         g_param_spec_int64("global-time-offset",
@@ -319,6 +343,23 @@ GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self)
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     return priv->time_dimension;
+}
+
+/**
+ * gw_dump_file_get_time_range:
+ * @self: A #GwDumpFile.
+ *
+ * Returns the time range.
+ *
+ * Returns: (transfer none): The time range.
+ */
+GwTimeRange *gw_dump_file_get_time_range(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->time_range;
 }
 
 /**

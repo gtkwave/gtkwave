@@ -397,9 +397,11 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
         newcurr = GLOBALS->tims.start;
     }
 
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
     newcurr = time_trunc(newcurr);
     if (newcurr < 0)
-        newcurr = GLOBALS->min_time; /* prevents marker from disappearing? */
+        newcurr = gw_time_range_get_start(time_range); /* prevents marker from disappearing? */
 
     if (!is_button_2) {
         GwTime markertime = cook_markertime(newcurr, xin, yin);

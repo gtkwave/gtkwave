@@ -7,6 +7,7 @@
 #include "gw-fst-loader.h"
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
+#include "gw-util.h"
 
 static GwTreeKind fst_scope_type_to_gw_tree_kind(enum fstScopeType scope_type);
 static GwVarType fst_var_type_to_gw_var_type(enum fstVarType var_type);
@@ -61,9 +62,22 @@ struct _GwFstLoader
     JRB synclock_jrb;
 
     GwTreeNode *tree_root;
+
+    // TODO: don't use strings for start and end time
+    gchar *start_time;
+    gchar *end_time;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
+
+enum
+{
+    PROP_START_TIME = 1,
+    PROP_END_TIME,
+    N_PROPERTIES,
+};
+
+GParamSpec *properties[N_PROPERTIES];
 
 /*
  * reverse equality mem compare
@@ -1071,8 +1085,6 @@ if(num_dups)
 }
 #endif
 
-    GLOBALS->min_time = self->first_cycle;
-    GLOBALS->max_time = self->last_cycle;
     GLOBALS->is_lx2 = LXT2_IS_FST;
 
     /* to avoid bin -> ascii -> bin double swap */
@@ -1080,11 +1092,42 @@ if(num_dups)
 
     /* SPLASH */ splash_finalize();
 
+    GwTimeRange *time_range;
+
+    if (self->start_time || self->end_time) {
+        GwTime b_start = self->first_cycle;
+        GwTime b_end = self->last_cycle;
+
+        if (self->start_time != NULL) {
+            b_start = unformat_time(self->start_time, self->time_dimension);
+        }
+
+        if (self->end_time != NULL) {
+            b_end = unformat_time(self->end_time, self->time_dimension);
+        }
+
+        b_start = CLAMP(b_start, self->first_cycle, self->last_cycle);
+        b_end = CLAMP(b_end, self->first_cycle, self->last_cycle);
+
+        if (b_start > b_end) {
+            GwTime tmp_time = b_start;
+            b_start = b_end;
+            b_end = tmp_time;
+        }
+
+        fstReaderSetLimitTimeRange(self->fst_reader, b_start, b_end);
+
+        time_range = gw_time_range_new(b_start, b_end);
+    } else {
+        time_range = gw_time_range_new(self->first_cycle, self->last_cycle);
+    }
+
     // clang-format off
     GwFstFile *dump_file = g_object_new(GW_TYPE_FST_FILE,
                                         "blackout-regions", blackout_regions,
                                         "stems", self->stems,
                                         "time-dimension", self->time_dimension,
+                                        "time-range", time_range,
                                         "global-time-offset", global_time_offset,
                                         "tree", tree,
                                         "facs", facs,
@@ -1104,15 +1147,55 @@ if(num_dups)
     g_object_unref(blackout_regions);
     g_object_unref(self->stems);
     g_object_unref(tree);
+    g_object_unref(time_range);
 
     return GW_DUMP_FILE(dump_file);
 }
 
+static void gw_fst_loader_set_property(GObject *object,
+                                       guint property_id,
+                                       const GValue *value,
+                                       GParamSpec *pspec)
+{
+    GwFstLoader *self = GW_FST_LOADER(object);
+
+    switch (property_id) {
+        case PROP_START_TIME:
+            gw_fst_loader_set_start_time(self, g_value_get_string(value));
+            break;
+
+        case PROP_END_TIME:
+            gw_fst_loader_set_end_time(self, g_value_get_string(value));
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+            break;
+    }
+}
+
 static void gw_fst_loader_class_init(GwFstLoaderClass *klass)
 {
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
     GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
 
+    object_class->set_property = gw_fst_loader_set_property;
+
     loader_class->load = gw_fst_loader_load;
+
+    properties[PROP_START_TIME] =
+        gw_param_spec_time("start-time",
+                           NULL,
+                           NULL,
+                           G_PARAM_WRITABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_END_TIME] =
+        gw_param_spec_time("end-time",
+                           NULL,
+                           NULL,
+                           G_PARAM_WRITABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+    g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }
 
 static void gw_fst_loader_init(GwFstLoader *self)
@@ -1123,6 +1206,28 @@ static void gw_fst_loader_init(GwFstLoader *self)
 GwLoader *gw_fst_loader_new(void)
 {
     return g_object_new(GW_TYPE_FST_LOADER, NULL);
+}
+
+void gw_fst_loader_set_start_time(GwFstLoader *self, const gchar *start_time)
+{
+    g_return_if_fail(GW_IS_FST_LOADER(self));
+
+    if (g_strcmp0(self->start_time, start_time) != 0) {
+        self->start_time = g_strdup(start_time);
+
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_START_TIME]);
+    }
+}
+
+void gw_fst_loader_set_end_time(GwFstLoader *self, const gchar *end_time)
+{
+    g_return_if_fail(GW_IS_FST_LOADER(self));
+
+    if (g_strcmp0(self->end_time, end_time) != 0) {
+        self->end_time = g_strdup(end_time);
+
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_END_TIME]);
+    }
 }
 
 static GwTreeKind fst_scope_type_to_gw_tree_kind(enum fstScopeType scope_type)

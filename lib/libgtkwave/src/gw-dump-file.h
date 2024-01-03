@@ -5,6 +5,7 @@
 #include "gw-stems.h"
 #include "gw-tree.h"
 #include "gw-time.h"
+#include "gw-time-range.h"
 #include "gw-facs.h"
 
 G_BEGIN_DECLS
@@ -24,6 +25,7 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self);
 
 GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self);
 GwTime gw_dump_file_get_time_scale(GwDumpFile *self);
+GwTimeRange *gw_dump_file_get_time_range(GwDumpFile *self);
 GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self);
 
 G_END_DECLS

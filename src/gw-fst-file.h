@@ -12,4 +12,6 @@ void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np);
 void gw_fst_file_import_masked(GwFstFile *self);
 gchar *gw_fst_file_get_subvar(GwFstFile *self, gint index);
 
+void gw_fst_file_limit_time_range(GwFstFile *self, GwTimeRange *range);
+
 G_END_DECLS

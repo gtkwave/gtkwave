@@ -2457,11 +2457,11 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
     }
     self->vcd_fsiz = 0;
 
-    GLOBALS->min_time = self->start_time * self->time_scale;
-    GLOBALS->max_time = self->end_time * self->time_scale;
+    GwTime min_time = self->start_time * self->time_scale;
+    GwTime max_time = self->end_time * self->time_scale;
     self->global_time_offset *= self->time_scale;
 
-    if ((GLOBALS->min_time == GLOBALS->max_time) && (GLOBALS->max_time == GW_TIME_CONSTANT(-1))) {
+    if (min_time == max_time && max_time == GW_TIME_CONSTANT(-1)) {
         fprintf(stderr, "VCD times range is equal to zero.  Exiting.\n");
         vcd_exit(255);
     }
@@ -2480,6 +2480,8 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     /* SPLASH */ splash_finalize();
 
+    GwTimeRange *time_range = gw_time_range_new(min_time, max_time);
+
     // clang-format off
     GwVcdFile *dump_file = g_object_new(GW_TYPE_VCD_FILE,
                                         "tree", tree,
@@ -2487,6 +2489,7 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
                                         "blackout-regions", self->blackout_regions,
                                         "time-scale", self->time_scale,
                                         "time-dimension", self->time_dimension,
+                                        "time-range", time_range,
                                         "global-time-offset", self->global_time_offset,
                                         NULL);
     // clang-format on
@@ -2502,6 +2505,7 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
     dump_file->preserve_glitches_real = gw_loader_is_preserve_glitches_real(loader);
 
     g_object_unref(tree);
+    g_object_unref(time_range);
 
     return GW_DUMP_FILE(dump_file);
 }
