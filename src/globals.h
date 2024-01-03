@@ -134,7 +134,6 @@ struct Global
     /*
      * currenttime.c
      */
-    char is_vcd; /* from currenttime.c 56 */
     char use_maxtime_display; /* from currenttime.c 58 */
     char use_frequency_delta; /* from currenttime.c 59 */
     GwTime cached_currenttimeval_currenttime_c_1; /* from currenttime.c 62 */

@@ -531,9 +531,7 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
     Tcl_Obj *aobj;
     const char *reportString = "UNKNOWN";
 
-    if (GLOBALS->is_vcd) {
-        reportString = "VCD";
-    } else if (GW_IS_GHW_FILE(GLOBALS->dump_file)) {
+    if (GW_IS_GHW_FILE(GLOBALS->dump_file)) {
         reportString = "GHW";
     } else if (GLOBALS->is_lx2) {
         switch (GLOBALS->is_lx2) {
