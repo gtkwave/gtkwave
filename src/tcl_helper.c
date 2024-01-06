@@ -1616,7 +1616,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
     unsigned int mult_len = 0;
     const char *netoff = "{gtkwave NET OFF} ";
     char *trace_val = NULL;
-    static const char xfwd[AN_COUNT] = AN_NORMAL;
+    static const char xfwd[GW_BIT_COUNT] = AN_NORMAL;
     char trace_val_vec_single[2] = {0, 0};
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
@@ -1759,9 +1759,9 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
                                 int bitnum = bits[i];
 
                                 if (bitnum < 0)
-                                    bitnum = AN_DASH;
-                                else if (bitnum >= AN_COUNT)
-                                    bitnum = AN_DASH;
+                                    bitnum = GW_BIT_DASH;
+                                else if (bitnum >= GW_BIT_COUNT)
+                                    bitnum = GW_BIT_DASH;
 
                                 trace_val_vec_single[0] = AN_STR[(int)xfwd[bitnum]];
                                 one_entry =

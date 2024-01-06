@@ -1,55 +1,6 @@
 #include <gtkwave.h>
 #include "test-util.h"
 
-// TODO: remove
-enum AnalyzerBits
-{
-    AN_0,
-    AN_X,
-    AN_Z,
-    AN_1,
-    AN_H,
-    AN_U,
-    AN_W,
-    AN_L,
-    AN_DASH,
-    AN_RSV9,
-    AN_RSVA,
-    AN_RSVB,
-    AN_RSVC,
-    AN_RSVD,
-    AN_RSVE,
-    AN_RSVF,
-    AN_COUNT
-};
-
-// TODO: remove
-static gchar bit_to_char(unsigned char bit)
-{
-    switch (bit) {
-        case AN_0:
-            return '0';
-        case AN_X:
-            return 'x';
-        case AN_Z:
-            return 'z';
-        case AN_1:
-            return '1';
-        case AN_H:
-            return 'h';
-        case AN_U:
-            return 'u';
-        case AN_W:
-            return 'w';
-        case AN_L:
-            return 'l';
-        case AN_DASH:
-            return '-';
-        default:
-            return bit;
-    }
-}
-
 static void assert_scalar_transitions(GwNode *node, const gchar *expected)
 {
     GwHistEnt *h = &node->head;
@@ -60,7 +11,7 @@ static void assert_scalar_transitions(GwNode *node, const gchar *expected)
         if (str->len > 0) {
             g_string_append(str, ", ");
         }
-        g_string_append_printf(str, "%c@%" GW_TIME_FORMAT, bit_to_char(h->v.h_val), h->time);
+        g_string_append_printf(str, "%c@%" GW_TIME_FORMAT, gw_bit_to_char(h->v.h_val), h->time);
 
         h = h->next;
     }

@@ -202,7 +202,7 @@ static char *pdofilter(GwTrace *t, char *s)
 static void convert_graybin(char *pnt, int nbits)
 {
     char kill_state = 0;
-    char pch = AN_0;
+    char pch = GW_BIT_0;
     int i;
 
     for (i = 0; i < nbits; i++) {
@@ -210,19 +210,19 @@ static void convert_graybin(char *pnt, int nbits)
 
         if (!kill_state) {
             switch (ch) {
-                case AN_0:
-                case AN_L:
-                    if ((pch == AN_1) || (pch == AN_H)) {
+                case GW_BIT_0:
+                case GW_BIT_L:
+                    if ((pch == GW_BIT_1) || (pch == GW_BIT_H)) {
                         pnt[i] = pch;
                     }
                     break;
 
-                case AN_1:
-                case AN_H:
-                    if (pch == AN_1) {
-                        pnt[i] = AN_0;
-                    } else if (pch == AN_H) {
-                        pnt[i] = AN_L;
+                case GW_BIT_1:
+                case GW_BIT_H:
+                    if (pch == GW_BIT_1) {
+                        pnt[i] = GW_BIT_0;
+                    } else if (pch == GW_BIT_H) {
+                        pnt[i] = GW_BIT_L;
                     }
                     break;
 
@@ -241,7 +241,7 @@ static void convert_graybin(char *pnt, int nbits)
 static void convert_bingray(char *pnt, int nbits)
 {
     char kill_state = 0;
-    char pch = AN_0;
+    char pch = GW_BIT_0;
     int i;
 
     for (i = 0; i < nbits; i++) {
@@ -249,19 +249,19 @@ static void convert_bingray(char *pnt, int nbits)
 
         if (!kill_state) {
             switch (ch) {
-                case AN_0:
-                case AN_L:
-                    if ((pch == AN_1) || (pch == AN_H)) {
+                case GW_BIT_0:
+                case GW_BIT_L:
+                    if ((pch == GW_BIT_1) || (pch == GW_BIT_H)) {
                         pnt[i] = pch;
                     }
                     break;
 
-                case AN_1:
-                case AN_H:
-                    if (pch == AN_1) {
-                        pnt[i] = AN_0;
-                    } else if (pch == AN_H) {
-                        pnt[i] = AN_L;
+                case GW_BIT_1:
+                case GW_BIT_H:
+                    if (pch == GW_BIT_1) {
+                        pnt[i] = GW_BIT_0;
+                    } else if (pch == GW_BIT_H) {
+                        pnt[i] = GW_BIT_L;
                     }
                     break;
 
@@ -286,8 +286,8 @@ static void convert_popcnt(char *pnt, int nbits)
         char ch = pnt[i];
 
         switch (ch) {
-            case AN_1:
-            case AN_H:
+            case GW_BIT_1:
+            case GW_BIT_H:
                 pop++;
                 break;
 
@@ -298,7 +298,7 @@ static void convert_popcnt(char *pnt, int nbits)
 
     for (i = nbits - 1; i >= 0; i--) /* always requires less number of bits */
     {
-        pnt[i] = (pop & 1) ? AN_1 : AN_0;
+        pnt[i] = (pop & 1) ? GW_BIT_1 : GW_BIT_0;
         pop >>= 1;
     }
 }
@@ -311,7 +311,7 @@ static void convert_ffo(char *pnt, int nbits)
     for (i = (nbits - 1); i >= 0; i--) {
         char ch = pnt[i];
 
-        if ((ch == AN_1) || (ch == AN_H)) {
+        if ((ch == GW_BIT_1) || (ch == GW_BIT_H)) {
             ffo = (nbits - 1) - i;
             break;
         }
@@ -320,13 +320,13 @@ static void convert_ffo(char *pnt, int nbits)
     if (ffo >= 0) {
         for (i = nbits - 1; i >= 0; i--) /* always requires less number of bits */
         {
-            pnt[i] = (ffo & 1) ? AN_1 : AN_0;
+            pnt[i] = (ffo & 1) ? GW_BIT_1 : GW_BIT_0;
             ffo >>= 1;
         }
     } else {
         for (i = nbits - 1; i >= 0; i--) /* always requires less number of bits */
         {
-            pnt[i] = AN_X;
+            pnt[i] = GW_BIT_X;
         }
     }
 }
@@ -430,8 +430,8 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
     char *os, *pnt, *newbuff;
     int i, j, len;
 
-    static const char xfwd[AN_COUNT] = AN_NORMAL;
-    static const char xrev[AN_COUNT] = AN_INVERSE;
+    static const char xfwd[GW_BIT_COUNT] = AN_NORMAL;
+    static const char xrev[GW_BIT_COUNT] = AN_INVERSE;
     const char *xtab;
 
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
@@ -447,7 +447,7 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
     }
 
     if (flags & (TR_ZEROFILL | TR_ONEFILL)) {
-        char whichfill = (flags & TR_ZEROFILL) ? AN_0 : AN_1;
+        char whichfill = (flags & TR_ZEROFILL) ? GW_BIT_0 : GW_BIT_1;
         int msi = 0, lsi = 0, ok = 0;
         if ((t->name) && (nbits > 1)) {
             char *lbrack = strrchr(t->name, '[');
@@ -571,11 +571,11 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
             for (j = 0; j < 8; j++) {
                 val <<= 1;
 
-                if ((parse[j] == AN_X) || (parse[j] == AN_Z) || (parse[j] == AN_W) ||
-                    (parse[j] == AN_U) || (parse[j] == AN_DASH)) {
+                if ((parse[j] == GW_BIT_X) || (parse[j] == GW_BIT_Z) || (parse[j] == GW_BIT_W) ||
+                    (parse[j] == GW_BIT_U) || (parse[j] == GW_BIT_DASH)) {
                     val = 1000; /* arbitrarily large */
                 }
-                if ((parse[j] == AN_1) || (parse[j] == AN_H)) {
+                if ((parse[j] == GW_BIT_1) || (parse[j] == GW_BIT_H)) {
                     val |= 1;
                 }
             }
@@ -619,14 +619,14 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
             for (j = 0; j < 4; j++) {
                 val <<= 1;
 
-                if ((parse[j] == AN_1) || (parse[j] == AN_H)) {
+                if ((parse[j] == GW_BIT_1) || (parse[j] == GW_BIT_H)) {
                     val |= 1;
-                } else if ((parse[j] == AN_0) || (parse[j] == AN_L)) {
-                } else if (parse[j] == AN_X) {
+                } else if ((parse[j] == GW_BIT_0) || (parse[j] == GW_BIT_L)) {
+                } else if (parse[j] == GW_BIT_X) {
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_X) {
+                        if (parse[k] != GW_BIT_X) {
                             char *thisbyt = parse + i + k;
                             char *lastbyt = newbuff + 3 + nbits - 1;
                             if ((lastbyt - thisbyt) >= 0)
@@ -636,13 +636,13 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
                     }
                     val = (match) ? 16 : 21;
                     break;
-                } else if (parse[j] == AN_Z) {
+                } else if (parse[j] == GW_BIT_Z) {
                     int xover = 0;
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_Z) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_Z) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             } else {
                                 char *thisbyt = parse + i + k;
@@ -659,13 +659,13 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
                     else
                         val = (match) ? 17 : 22;
                     break;
-                } else if (parse[j] == AN_W) {
+                } else if (parse[j] == GW_BIT_W) {
                     int xover = 0;
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_W) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_W) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             } else {
                                 char *thisbyt = parse + i + k;
@@ -682,13 +682,13 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
                     else
                         val = (match) ? 18 : 23;
                     break;
-                } else if (parse[j] == AN_U) {
+                } else if (parse[j] == GW_BIT_U) {
                     int xover = 0;
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_U) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_U) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             } else {
                                 char *thisbyt = parse + i + k;
@@ -705,12 +705,12 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
                     else
                         val = (match) ? 19 : 24;
                     break;
-                } else if (parse[j] == AN_DASH) {
+                } else if (parse[j] == GW_BIT_DASH) {
                     int xover = 0;
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_DASH) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_DASH) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             }
                             break;
@@ -750,28 +750,28 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
             for (j = 0; j < 3; j++) {
                 val <<= 1;
 
-                if (parse[j] == AN_X) {
+                if (parse[j] == GW_BIT_X) {
                     val = 8;
                     break;
                 }
-                if (parse[j] == AN_Z) {
+                if (parse[j] == GW_BIT_Z) {
                     val = 9;
                     break;
                 }
-                if (parse[j] == AN_W) {
+                if (parse[j] == GW_BIT_W) {
                     val = 10;
                     break;
                 }
-                if (parse[j] == AN_U) {
+                if (parse[j] == GW_BIT_U) {
                     val = 11;
                     break;
                 }
-                if (parse[j] == AN_DASH) {
+                if (parse[j] == GW_BIT_DASH) {
                     val = 12;
                     break;
                 }
 
-                if ((parse[j] == AN_1) || (parse[j] == AN_H)) {
+                if ((parse[j] == GW_BIT_1) || (parse[j] == GW_BIT_H)) {
                     val |= 1;
                 }
             }
@@ -810,9 +810,9 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
         parse = newbuff + 3;
         cvt_gray(flags, parse, nbits);
 
-        if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
+        if ((parse[0] == GW_BIT_1) || (parse[0] == GW_BIT_H)) {
             val = GW_TIME_CONSTANT(-1);
-        } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
+        } else if ((parse[0] == GW_BIT_0) || (parse[0] == GW_BIT_L)) {
             val = GW_TIME_CONSTANT(0);
         } else {
             fail = 1;
@@ -822,9 +822,9 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
             for (i = 1; i < nbits; i++) {
                 val <<= 1;
 
-                if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+                if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                     val |= GW_TIME_CONSTANT(1);
-                } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+                } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                     fail = 1;
                     break;
                 }
@@ -910,9 +910,9 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
         for (i = 0; i < nbits; i++) {
             val <<= 1;
 
-            if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+            if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                 val |= GW_TIME_CONSTANT(1);
-            } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+            } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                 fail = 1;
                 break;
             }
@@ -957,9 +957,9 @@ char *convert_ascii_real(GwTrace *t, double *d)
         memcpy(&swapmem, d, sizeof(guint64));
         for (i = 0; i < 64; i++) {
             if (swapmem & (GW_UTIME_CONSTANT(1) << (63 - i))) {
-                vec[i] = AN_1;
+                vec[i] = GW_BIT_1;
             } else {
-                vec[i] = AN_0;
+                vec[i] = GW_BIT_0;
             }
         }
 
@@ -1013,58 +1013,58 @@ char *convert_ascii_string(char *s)
 }
 
 static const unsigned char cvt_table[] = {
-    AN_0 /* . */,    AN_X /* . */,    AN_Z /* . */,    AN_1 /* . */,    AN_H /* . */,
-    AN_U /* . */,    AN_W /* . */,    AN_L /* . */,    AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /*   */, AN_DASH /* ! */, AN_DASH /* " */,
-    AN_DASH /* # */, AN_DASH /* $ */, AN_DASH /* % */, AN_DASH /* & */, AN_DASH /* ' */,
-    AN_DASH /* ( */, AN_DASH /* ) */, AN_DASH /* * */, AN_DASH /* + */, AN_DASH /* , */,
-    AN_DASH /* - */, AN_DASH /* . */, AN_DASH /* / */, AN_0 /* 0 */,    AN_1 /* 1 */,
-    AN_DASH /* 2 */, AN_DASH /* 3 */, AN_DASH /* 4 */, AN_DASH /* 5 */, AN_DASH /* 6 */,
-    AN_DASH /* 7 */, AN_DASH /* 8 */, AN_DASH /* 9 */, AN_DASH /* : */, AN_DASH /* ; */,
-    AN_DASH /* < */, AN_DASH /* = */, AN_DASH /* > */, AN_DASH /* ? */, AN_DASH /* @ */,
-    AN_DASH /* A */, AN_DASH /* B */, AN_DASH /* C */, AN_DASH /* D */, AN_DASH /* E */,
-    AN_DASH /* F */, AN_DASH /* G */, AN_H /* H */,    AN_DASH /* I */, AN_DASH /* J */,
-    AN_DASH /* K */, AN_L /* L */,    AN_DASH /* M */, AN_DASH /* N */, AN_DASH /* O */,
-    AN_DASH /* P */, AN_DASH /* Q */, AN_DASH /* R */, AN_DASH /* S */, AN_DASH /* T */,
-    AN_U /* U */,    AN_DASH /* V */, AN_W /* W */,    AN_X /* X */,    AN_DASH /* Y */,
-    AN_Z /* Z */,    AN_DASH /* [ */, AN_DASH /* \ */, AN_DASH /* ] */, AN_DASH /* ^ */,
-    AN_DASH /* _ */, AN_DASH /* ` */, AN_DASH /* a */, AN_DASH /* b */, AN_DASH /* c */,
-    AN_DASH /* d */, AN_DASH /* e */, AN_DASH /* f */, AN_DASH /* g */, AN_H /* h */,
-    AN_DASH /* i */, AN_DASH /* j */, AN_DASH /* k */, AN_L /* l */,    AN_DASH /* m */,
-    AN_DASH /* n */, AN_DASH /* o */, AN_DASH /* p */, AN_DASH /* q */, AN_DASH /* r */,
-    AN_DASH /* s */, AN_DASH /* t */, AN_U /* u */,    AN_DASH /* v */, AN_W /* w */,
-    AN_X /* x */,    AN_DASH /* y */, AN_Z /* z */,    AN_DASH /* { */, AN_DASH /* | */,
-    AN_DASH /* } */, AN_DASH /* ~ */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */, AN_DASH /* . */,
-    AN_DASH /* . */
+    GW_BIT_0 /* . */,    GW_BIT_X /* . */,    GW_BIT_Z /* . */,    GW_BIT_1 /* . */,    GW_BIT_H /* . */,
+    GW_BIT_U /* . */,    GW_BIT_W /* . */,    GW_BIT_L /* . */,    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /*   */, GW_BIT_DASH /* ! */, GW_BIT_DASH /* " */,
+    GW_BIT_DASH /* # */, GW_BIT_DASH /* $ */, GW_BIT_DASH /* % */, GW_BIT_DASH /* & */, GW_BIT_DASH /* ' */,
+    GW_BIT_DASH /* ( */, GW_BIT_DASH /* ) */, GW_BIT_DASH /* * */, GW_BIT_DASH /* + */, GW_BIT_DASH /* , */,
+    GW_BIT_DASH /* - */, GW_BIT_DASH /* . */, GW_BIT_DASH /* / */, GW_BIT_0 /* 0 */,    GW_BIT_1 /* 1 */,
+    GW_BIT_DASH /* 2 */, GW_BIT_DASH /* 3 */, GW_BIT_DASH /* 4 */, GW_BIT_DASH /* 5 */, GW_BIT_DASH /* 6 */,
+    GW_BIT_DASH /* 7 */, GW_BIT_DASH /* 8 */, GW_BIT_DASH /* 9 */, GW_BIT_DASH /* : */, GW_BIT_DASH /* ; */,
+    GW_BIT_DASH /* < */, GW_BIT_DASH /* = */, GW_BIT_DASH /* > */, GW_BIT_DASH /* ? */, GW_BIT_DASH /* @ */,
+    GW_BIT_DASH /* A */, GW_BIT_DASH /* B */, GW_BIT_DASH /* C */, GW_BIT_DASH /* D */, GW_BIT_DASH /* E */,
+    GW_BIT_DASH /* F */, GW_BIT_DASH /* G */, GW_BIT_H /* H */,    GW_BIT_DASH /* I */, GW_BIT_DASH /* J */,
+    GW_BIT_DASH /* K */, GW_BIT_L /* L */,    GW_BIT_DASH /* M */, GW_BIT_DASH /* N */, GW_BIT_DASH /* O */,
+    GW_BIT_DASH /* P */, GW_BIT_DASH /* Q */, GW_BIT_DASH /* R */, GW_BIT_DASH /* S */, GW_BIT_DASH /* T */,
+    GW_BIT_U /* U */,    GW_BIT_DASH /* V */, GW_BIT_W /* W */,    GW_BIT_X /* X */,    GW_BIT_DASH /* Y */,
+    GW_BIT_Z /* Z */,    GW_BIT_DASH /* [ */, GW_BIT_DASH /* \ */, GW_BIT_DASH /* ] */, GW_BIT_DASH /* ^ */,
+    GW_BIT_DASH /* _ */, GW_BIT_DASH /* ` */, GW_BIT_DASH /* a */, GW_BIT_DASH /* b */, GW_BIT_DASH /* c */,
+    GW_BIT_DASH /* d */, GW_BIT_DASH /* e */, GW_BIT_DASH /* f */, GW_BIT_DASH /* g */, GW_BIT_H /* h */,
+    GW_BIT_DASH /* i */, GW_BIT_DASH /* j */, GW_BIT_DASH /* k */, GW_BIT_L /* l */,    GW_BIT_DASH /* m */,
+    GW_BIT_DASH /* n */, GW_BIT_DASH /* o */, GW_BIT_DASH /* p */, GW_BIT_DASH /* q */, GW_BIT_DASH /* r */,
+    GW_BIT_DASH /* s */, GW_BIT_DASH /* t */, GW_BIT_U /* u */,    GW_BIT_DASH /* v */, GW_BIT_W /* w */,
+    GW_BIT_X /* x */,    GW_BIT_DASH /* y */, GW_BIT_Z /* z */,    GW_BIT_DASH /* { */, GW_BIT_DASH /* | */,
+    GW_BIT_DASH /* } */, GW_BIT_DASH /* ~ */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */
 };
 
 int vtype(GwTrace *t, char *vec)
@@ -1073,7 +1073,7 @@ int vtype(GwTrace *t, char *vec)
     char pch, ch;
 
     if (vec == NULL)
-        return (AN_X);
+        return (GW_BIT_X);
 
     nbits = t->n.nd->msi - t->n.nd->lsi;
     if (nbits < 0)
@@ -1089,19 +1089,19 @@ int vtype(GwTrace *t, char *vec)
     return (ch);
 
 miscompare:
-    if ((pch == AN_X) || (pch == AN_U))
+    if ((pch == GW_BIT_X) || (pch == GW_BIT_U))
         return (pch);
-    if (pch == AN_Z)
-        return (AN_X);
+    if (pch == GW_BIT_Z)
+        return (GW_BIT_X);
     for (; i < nbits; i++) {
         ch = cvt_table[(unsigned char)vec[i]];
-        if ((ch == AN_X) || (ch == AN_U))
+        if ((ch == GW_BIT_X) || (ch == GW_BIT_U))
             return (ch);
-        if (ch == AN_Z)
-            return (AN_X);
+        if (ch == GW_BIT_Z)
+            return (GW_BIT_X);
     }
 
-    return (AN_COUNT);
+    return (GW_BIT_COUNT);
 }
 
 int vtype2(GwTrace *t, GwVectorEnt *v)
@@ -1112,9 +1112,9 @@ int vtype2(GwTrace *t, GwVectorEnt *v)
 
     if (!t->t_filter_converted) {
         if (vec == NULL)
-            return (AN_X);
+            return (GW_BIT_X);
     } else {
-        return (((vec == NULL) || (vec[0] == 0)) ? AN_Z : AN_COUNT);
+        return (((vec == NULL) || (vec[0] == 0)) ? GW_BIT_Z : GW_BIT_COUNT);
     }
 
     nbits = t->n.vec->nbits;
@@ -1129,19 +1129,19 @@ int vtype2(GwTrace *t, GwVectorEnt *v)
     return (ch);
 
 miscompare:
-    if ((pch == AN_X) || (pch == AN_U))
+    if ((pch == GW_BIT_X) || (pch == GW_BIT_U))
         return (pch);
-    if (pch == AN_Z)
-        return (AN_X);
+    if (pch == GW_BIT_Z)
+        return (GW_BIT_X);
     for (; i < nbits; i++) {
         ch = cvt_table[(unsigned char)vec[i]];
-        if ((ch == AN_X) || (ch == AN_U))
+        if ((ch == GW_BIT_X) || (ch == GW_BIT_U))
             return (ch);
-        if (ch == AN_Z)
-            return (AN_X);
+        if (ch == GW_BIT_Z)
+            return (GW_BIT_X);
     }
 
-    return (AN_COUNT);
+    return (GW_BIT_COUNT);
 }
 
 /*
@@ -1158,8 +1158,8 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
 
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
-    static const char xfwd[AN_COUNT] = AN_NORMAL;
-    static const char xrev[AN_COUNT] = AN_INVERSE;
+    static const char xfwd[GW_BIT_COUNT] = AN_NORMAL;
+    static const char xrev[GW_BIT_COUNT] = AN_INVERSE;
 
     flags = t->flags;
 
@@ -1170,19 +1170,19 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
 
     if (vec) {
         bits = vec;
-        if (*vec > AN_MSK) /* convert as needed */
+        if (*vec > GW_BIT_MASK) /* convert as needed */
             for (i = 0; i < nbits; i++) {
                 vec[i] = cvt_table[(unsigned char)vec[i]];
             }
     } else {
         pnt = bits = g_alloca(nbits);
         for (i = 0; i < nbits; i++) {
-            *pnt++ = AN_X;
+            *pnt++ = GW_BIT_X;
         }
     }
 
     if ((flags & (TR_ZEROFILL | TR_ONEFILL)) && (nbits > 1) && (t->n.nd->msi) && (t->n.nd->lsi)) {
-        char whichfill = (flags & TR_ZEROFILL) ? AN_0 : AN_1;
+        char whichfill = (flags & TR_ZEROFILL) ? GW_BIT_0 : GW_BIT_1;
 
         if (t->n.nd->msi > t->n.nd->lsi) {
             if (t->n.nd->lsi > 0) {
@@ -1298,11 +1298,11 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
             for (j = 0; j < 8; j++) {
                 val <<= 1;
 
-                if ((parse[j] == AN_X) || (parse[j] == AN_Z) || (parse[j] == AN_W) ||
-                    (parse[j] == AN_U) || (parse[j] == AN_DASH)) {
+                if ((parse[j] == GW_BIT_X) || (parse[j] == GW_BIT_Z) || (parse[j] == GW_BIT_W) ||
+                    (parse[j] == GW_BIT_U) || (parse[j] == GW_BIT_DASH)) {
                     val = 1000; /* arbitrarily large */
                 }
-                if ((parse[j] == AN_1) || (parse[j] == AN_H)) {
+                if ((parse[j] == GW_BIT_1) || (parse[j] == GW_BIT_H)) {
                     val |= 1;
                 }
             }
@@ -1346,14 +1346,14 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
             for (j = 0; j < 4; j++) {
                 val <<= 1;
 
-                if ((parse[j] == AN_1) || (parse[j] == AN_H)) {
+                if ((parse[j] == GW_BIT_1) || (parse[j] == GW_BIT_H)) {
                     val |= 1;
-                } else if ((parse[j] == AN_0) || (parse[j] == AN_L)) {
-                } else if (parse[j] == AN_X) {
+                } else if ((parse[j] == GW_BIT_0) || (parse[j] == GW_BIT_L)) {
+                } else if (parse[j] == GW_BIT_X) {
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_X) {
+                        if (parse[k] != GW_BIT_X) {
                             char *thisbyt = parse + i + k;
                             char *lastbyt = newbuff + 3 + nbits - 1;
                             if ((lastbyt - thisbyt) >= 0)
@@ -1363,13 +1363,13 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
                     }
                     val = (match) ? 16 : 21;
                     break;
-                } else if (parse[j] == AN_Z) {
+                } else if (parse[j] == GW_BIT_Z) {
                     int xover = 0;
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_Z) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_Z) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             } else {
                                 char *thisbyt = parse + i + k;
@@ -1386,13 +1386,13 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
                     else
                         val = (match) ? 17 : 22;
                     break;
-                } else if (parse[j] == AN_W) {
+                } else if (parse[j] == GW_BIT_W) {
                     int xover = 0;
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_W) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_W) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             } else {
                                 char *thisbyt = parse + i + k;
@@ -1409,13 +1409,13 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
                     else
                         val = (match) ? 18 : 23;
                     break;
-                } else if (parse[j] == AN_U) {
+                } else if (parse[j] == GW_BIT_U) {
                     int xover = 0;
                     int match = (j == 0) || ((parse + i + j) == (newbuff + 3));
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_U) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_U) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             } else {
                                 char *thisbyt = parse + i + k;
@@ -1432,12 +1432,12 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
                     else
                         val = (match) ? 19 : 24;
                     break;
-                } else if (parse[j] == AN_DASH) {
+                } else if (parse[j] == GW_BIT_DASH) {
                     int xover = 0;
                     int k;
                     for (k = j + 1; k < 4; k++) {
-                        if (parse[k] != AN_DASH) {
-                            if (parse[k] == AN_X) {
+                        if (parse[k] != GW_BIT_DASH) {
+                            if (parse[k] == GW_BIT_X) {
                                 xover = 1;
                             }
                             break;
@@ -1477,28 +1477,28 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
             for (j = 0; j < 3; j++) {
                 val <<= 1;
 
-                if (parse[j] == AN_X) {
+                if (parse[j] == GW_BIT_X) {
                     val = 8;
                     break;
                 }
-                if (parse[j] == AN_Z) {
+                if (parse[j] == GW_BIT_Z) {
                     val = 9;
                     break;
                 }
-                if (parse[j] == AN_W) {
+                if (parse[j] == GW_BIT_W) {
                     val = 10;
                     break;
                 }
-                if (parse[j] == AN_U) {
+                if (parse[j] == GW_BIT_U) {
                     val = 11;
                     break;
                 }
-                if (parse[j] == AN_DASH) {
+                if (parse[j] == GW_BIT_DASH) {
                     val = 12;
                     break;
                 }
 
-                if ((parse[j] == AN_1) || (parse[j] == AN_H)) {
+                if ((parse[j] == GW_BIT_1) || (parse[j] == GW_BIT_H)) {
                     val |= 1;
                 }
             }
@@ -1536,9 +1536,9 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
         parse = newbuff + 3;
         cvt_gray(flags, parse, nbits);
 
-        if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
+        if ((parse[0] == GW_BIT_1) || (parse[0] == GW_BIT_H)) {
             val = GW_TIME_CONSTANT(-1);
-        } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
+        } else if ((parse[0] == GW_BIT_0) || (parse[0] == GW_BIT_L)) {
             val = GW_TIME_CONSTANT(0);
         } else {
             fail = 1;
@@ -1548,9 +1548,9 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
             for (i = 1; i < nbits; i++) {
                 val <<= 1;
 
-                if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+                if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                     val |= GW_TIME_CONSTANT(1);
-                } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+                } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                     fail = 1;
                     break;
                 }
@@ -1637,9 +1637,9 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
         for (i = 0; i < nbits; i++) {
             val <<= 1;
 
-            if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+            if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                 val |= GW_TIME_CONSTANT(1);
-            } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+            } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                 fail = 1;
                 break;
             }
@@ -1738,8 +1738,8 @@ double convert_real_vec(GwTrace *t, char *vec)
     double mynan = strtod("NaN", NULL);
     double retval = mynan;
 
-    static const char xfwd[AN_COUNT] = AN_NORMAL;
-    static const char xrev[AN_COUNT] = AN_INVERSE;
+    static const char xfwd[GW_BIT_COUNT] = AN_NORMAL;
+    static const char xrev[GW_BIT_COUNT] = AN_INVERSE;
 
     flags = t->flags;
 
@@ -1750,14 +1750,14 @@ double convert_real_vec(GwTrace *t, char *vec)
 
     if (vec) {
         bits = vec;
-        if (*vec > AN_MSK) /* convert as needed */
+        if (*vec > GW_BIT_MASK) /* convert as needed */
             for (i = 0; i < nbits; i++) {
                 vec[i] = cvt_table[(unsigned char)vec[i]];
             }
     } else {
         pnt = bits = g_alloca(nbits);
         for (i = 0; i < nbits; i++) {
-            *pnt++ = AN_X;
+            *pnt++ = GW_BIT_X;
         }
     }
 
@@ -1810,9 +1810,9 @@ double convert_real_vec(GwTrace *t, char *vec)
             for (i = 0; i < nbits; i++) {
                 val <<= 1;
 
-                if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+                if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                     val |= GW_TIME_CONSTANT(1);
-                } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+                } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                     fail = 1;
                     break;
                 }
@@ -1840,9 +1840,9 @@ double convert_real_vec(GwTrace *t, char *vec)
             parse = newbuff + 3;
             cvt_gray(flags, parse, nbits);
 
-            if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
+            if ((parse[0] == GW_BIT_1) || (parse[0] == GW_BIT_H)) {
                 val = GW_TIME_CONSTANT(-1);
-            } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
+            } else if ((parse[0] == GW_BIT_0) || (parse[0] == GW_BIT_L)) {
                 val = GW_TIME_CONSTANT(0);
             } else {
                 fail = 1;
@@ -1852,9 +1852,9 @@ double convert_real_vec(GwTrace *t, char *vec)
                 for (i = 1; i < nbits; i++) {
                     val <<= 1;
 
-                    if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+                    if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                         val |= GW_TIME_CONSTANT(1);
-                    } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+                    } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                         fail = 1;
                         break;
                     }
@@ -1874,9 +1874,9 @@ double convert_real_vec(GwTrace *t, char *vec)
             for (i = 0; i < nbits; i++) {
                 val <<= 1;
 
-                if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+                if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                     val |= GW_TIME_CONSTANT(1);
-                } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+                } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                     fail = 1;
                     break;
                 }
@@ -1905,8 +1905,8 @@ double convert_real(GwTrace *t, GwVectorEnt *v)
     double mynan = strtod("NaN", NULL);
     double retval = mynan;
 
-    static const char xfwd[AN_COUNT] = AN_NORMAL;
-    static const char xrev[AN_COUNT] = AN_INVERSE;
+    static const char xfwd[GW_BIT_COUNT] = AN_NORMAL;
+    static const char xrev[GW_BIT_COUNT] = AN_INVERSE;
 
     flags = t->flags;
     nbits = t->n.vec->nbits;
@@ -1957,9 +1957,9 @@ double convert_real(GwTrace *t, GwVectorEnt *v)
         parse = newbuff + 3;
         cvt_gray(flags, parse, nbits);
 
-        if ((parse[0] == AN_1) || (parse[0] == AN_H)) {
+        if ((parse[0] == GW_BIT_1) || (parse[0] == GW_BIT_H)) {
             val = GW_TIME_CONSTANT(-1);
-        } else if ((parse[0] == AN_0) || (parse[0] == AN_L)) {
+        } else if ((parse[0] == GW_BIT_0) || (parse[0] == GW_BIT_L)) {
             val = GW_TIME_CONSTANT(0);
         } else {
             fail = 1;
@@ -1969,9 +1969,9 @@ double convert_real(GwTrace *t, GwVectorEnt *v)
             for (i = 1; i < nbits; i++) {
                 val <<= 1;
 
-                if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+                if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                     val |= GW_TIME_CONSTANT(1);
-                } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+                } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                     fail = 1;
                     break;
                 }
@@ -1992,9 +1992,9 @@ double convert_real(GwTrace *t, GwVectorEnt *v)
         for (i = 0; i < nbits; i++) {
             val <<= 1;
 
-            if ((parse[i] == AN_1) || (parse[i] == AN_H)) {
+            if ((parse[i] == GW_BIT_1) || (parse[i] == GW_BIT_H)) {
                 val |= GW_TIME_CONSTANT(1);
-            } else if ((parse[i] != AN_0) && (parse[i] != AN_L)) {
+            } else if ((parse[i] != GW_BIT_0) && (parse[i] != GW_BIT_L)) {
                 fail = 1;
                 break;
             }

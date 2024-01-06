@@ -130,8 +130,8 @@ static gchar *local_trace_asciival(GwTrace *t, GwTime tim)
                     if (t->n.nd->vartype == GW_VAR_TYPE_VCD_EVENT) {
                         h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                         ((primary_pos - GLOBALS->shift_timebase) == h_ptr->time)
-                                    ? AN_1
-                                    : AN_0; /* generate impulse */
+                                    ? GW_BIT_1
+                                    : GW_BIT_0; /* generate impulse */
                     }
 
                     str = (char *)calloc_2(1, 2 * sizeof(char));
