@@ -709,11 +709,13 @@ static void strace_search_2(int direction, int is_last_iteration)
                     while (s->his.h->next && s->his.h->time == s->his.h->next->time)
                         s->his.h = s->his.h->next;
                 }
+
+                GwBit h_val = s->his.h->v.h_val;
                 if (t->flags & TR_INVERT) {
-                    str[0] = AN_STR_INV[s->his.h->v.h_val];
-                } else {
-                    str[0] = AN_STR[s->his.h->v.h_val];
+                    h_val = gw_bit_invert(h_val);
                 }
+
+                str[0] = gw_bit_to_char(h_val);
                 str[1] = 0x00;
 
                 switch (s->value) {
@@ -1065,11 +1067,13 @@ GwTime strace_timetrace(GwTime basetime, int notfirst)
                         s->his.h = s->his.h->next;
                     }
                 }
+
+                GwBit h_val = s->his.h->v.h_val;
                 if (t->flags & TR_INVERT) {
-                    str[0] = AN_STR_INV[s->his.h->v.h_val];
-                } else {
-                    str[0] = AN_STR[s->his.h->v.h_val];
+                    h_val = gw_bit_invert(h_val);
                 }
+
+                str[0] = gw_bit_to_char(s->his.h->v.h_val);
                 str[1] = 0x00;
 
                 switch (s->value) {

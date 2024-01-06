@@ -49,7 +49,7 @@ static unsigned char analyzer_demang(int strict, unsigned char ch)
 {
     if (!strict) {
         if (ch < GW_BIT_COUNT) {
-            return (AN_STR[ch]);
+            return gw_bit_to_char(ch);
         } else {
             return (ch);
         }

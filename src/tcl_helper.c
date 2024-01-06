@@ -1489,7 +1489,7 @@ static char *give_value_string(GwTrace *t)
                 if (h_ptr) {
                     if (!t->n.nd->extvals) {
                         rc = (char *)calloc_2(2, 2 * sizeof(char));
-                        rc[0] = AN_STR[h_ptr->v.h_val];
+                        rc[0] = gw_bit_to_char(h_ptr->v.h_val);
                     } else {
                         if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
                             if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
@@ -1763,7 +1763,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
                                 else if (bitnum >= GW_BIT_COUNT)
                                     bitnum = GW_BIT_DASH;
 
-                                trace_val_vec_single[0] = AN_STR[(int)xfwd[bitnum]];
+                                trace_val_vec_single[0] = gw_bit_to_char((int)xfwd[bitnum]);
                                 one_entry =
                                     make_single_tcl_list_name(str, trace_val_vec_single, 0, 0);
                                 WAVE_OE_ME

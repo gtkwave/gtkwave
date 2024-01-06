@@ -795,7 +795,7 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
         cvt_gray(flags, parse, nbits);
 
         for (i = 0; i < nbits; i++) {
-            *(pnt++) = AN_STR[(int)(*(parse++))];
+            *(pnt++) = gw_bit_to_char((int)(*(parse++)));
         }
 
         *(pnt) = 0x00; /* scan build : remove dead increment */
@@ -858,7 +858,7 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
             cvt_gray(flags, parse, nbits);
 
             for (i = 0; i < nbits; i++) {
-                char ch = AN_STR[(int)(*(parse++))];
+                char ch = gw_bit_to_char((int)(*(parse++)));
                 if ((ch == '0') || (ch == '1')) {
                     utt <<= 1;
                     if (ch == '1') {
@@ -890,7 +890,7 @@ static char *convert_ascii_2(GwTrace *t, GwVectorEnt *v)
             cvt_gray(flags, parse, nbits);
 
             for (i = 0; i < nbits; i++) {
-                *(pnt++) = AN_STR[(int)(*(parse++))];
+                *(pnt++) = gw_bit_to_char((int)(*(parse++)));
             }
 
             *(pnt) = 0x00; /* scan build : remove dead increment */
@@ -1013,58 +1013,70 @@ char *convert_ascii_string(char *s)
 }
 
 static const unsigned char cvt_table[] = {
-    GW_BIT_0 /* . */,    GW_BIT_X /* . */,    GW_BIT_Z /* . */,    GW_BIT_1 /* . */,    GW_BIT_H /* . */,
-    GW_BIT_U /* . */,    GW_BIT_W /* . */,    GW_BIT_L /* . */,    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /*   */, GW_BIT_DASH /* ! */, GW_BIT_DASH /* " */,
-    GW_BIT_DASH /* # */, GW_BIT_DASH /* $ */, GW_BIT_DASH /* % */, GW_BIT_DASH /* & */, GW_BIT_DASH /* ' */,
-    GW_BIT_DASH /* ( */, GW_BIT_DASH /* ) */, GW_BIT_DASH /* * */, GW_BIT_DASH /* + */, GW_BIT_DASH /* , */,
-    GW_BIT_DASH /* - */, GW_BIT_DASH /* . */, GW_BIT_DASH /* / */, GW_BIT_0 /* 0 */,    GW_BIT_1 /* 1 */,
-    GW_BIT_DASH /* 2 */, GW_BIT_DASH /* 3 */, GW_BIT_DASH /* 4 */, GW_BIT_DASH /* 5 */, GW_BIT_DASH /* 6 */,
-    GW_BIT_DASH /* 7 */, GW_BIT_DASH /* 8 */, GW_BIT_DASH /* 9 */, GW_BIT_DASH /* : */, GW_BIT_DASH /* ; */,
-    GW_BIT_DASH /* < */, GW_BIT_DASH /* = */, GW_BIT_DASH /* > */, GW_BIT_DASH /* ? */, GW_BIT_DASH /* @ */,
-    GW_BIT_DASH /* A */, GW_BIT_DASH /* B */, GW_BIT_DASH /* C */, GW_BIT_DASH /* D */, GW_BIT_DASH /* E */,
-    GW_BIT_DASH /* F */, GW_BIT_DASH /* G */, GW_BIT_H /* H */,    GW_BIT_DASH /* I */, GW_BIT_DASH /* J */,
-    GW_BIT_DASH /* K */, GW_BIT_L /* L */,    GW_BIT_DASH /* M */, GW_BIT_DASH /* N */, GW_BIT_DASH /* O */,
-    GW_BIT_DASH /* P */, GW_BIT_DASH /* Q */, GW_BIT_DASH /* R */, GW_BIT_DASH /* S */, GW_BIT_DASH /* T */,
-    GW_BIT_U /* U */,    GW_BIT_DASH /* V */, GW_BIT_W /* W */,    GW_BIT_X /* X */,    GW_BIT_DASH /* Y */,
-    GW_BIT_Z /* Z */,    GW_BIT_DASH /* [ */, GW_BIT_DASH /* \ */, GW_BIT_DASH /* ] */, GW_BIT_DASH /* ^ */,
-    GW_BIT_DASH /* _ */, GW_BIT_DASH /* ` */, GW_BIT_DASH /* a */, GW_BIT_DASH /* b */, GW_BIT_DASH /* c */,
-    GW_BIT_DASH /* d */, GW_BIT_DASH /* e */, GW_BIT_DASH /* f */, GW_BIT_DASH /* g */, GW_BIT_H /* h */,
-    GW_BIT_DASH /* i */, GW_BIT_DASH /* j */, GW_BIT_DASH /* k */, GW_BIT_L /* l */,    GW_BIT_DASH /* m */,
-    GW_BIT_DASH /* n */, GW_BIT_DASH /* o */, GW_BIT_DASH /* p */, GW_BIT_DASH /* q */, GW_BIT_DASH /* r */,
-    GW_BIT_DASH /* s */, GW_BIT_DASH /* t */, GW_BIT_U /* u */,    GW_BIT_DASH /* v */, GW_BIT_W /* w */,
-    GW_BIT_X /* x */,    GW_BIT_DASH /* y */, GW_BIT_Z /* z */,    GW_BIT_DASH /* { */, GW_BIT_DASH /* | */,
-    GW_BIT_DASH /* } */, GW_BIT_DASH /* ~ */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
-    GW_BIT_DASH /* . */
+    GW_BIT_0 /* . */,    GW_BIT_X /* . */,    GW_BIT_Z /* . */,    GW_BIT_1 /* . */,
+    GW_BIT_H /* . */,    GW_BIT_U /* . */,    GW_BIT_W /* . */,    GW_BIT_L /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /*   */, GW_BIT_DASH /* ! */, GW_BIT_DASH /* " */, GW_BIT_DASH /* # */,
+    GW_BIT_DASH /* $ */, GW_BIT_DASH /* % */, GW_BIT_DASH /* & */, GW_BIT_DASH /* ' */,
+    GW_BIT_DASH /* ( */, GW_BIT_DASH /* ) */, GW_BIT_DASH /* * */, GW_BIT_DASH /* + */,
+    GW_BIT_DASH /* , */, GW_BIT_DASH /* - */, GW_BIT_DASH /* . */, GW_BIT_DASH /* / */,
+    GW_BIT_0 /* 0 */,    GW_BIT_1 /* 1 */,    GW_BIT_DASH /* 2 */, GW_BIT_DASH /* 3 */,
+    GW_BIT_DASH /* 4 */, GW_BIT_DASH /* 5 */, GW_BIT_DASH /* 6 */, GW_BIT_DASH /* 7 */,
+    GW_BIT_DASH /* 8 */, GW_BIT_DASH /* 9 */, GW_BIT_DASH /* : */, GW_BIT_DASH /* ; */,
+    GW_BIT_DASH /* < */, GW_BIT_DASH /* = */, GW_BIT_DASH /* > */, GW_BIT_DASH /* ? */,
+    GW_BIT_DASH /* @ */, GW_BIT_DASH /* A */, GW_BIT_DASH /* B */, GW_BIT_DASH /* C */,
+    GW_BIT_DASH /* D */, GW_BIT_DASH /* E */, GW_BIT_DASH /* F */, GW_BIT_DASH /* G */,
+    GW_BIT_H /* H */,    GW_BIT_DASH /* I */, GW_BIT_DASH /* J */, GW_BIT_DASH /* K */,
+    GW_BIT_L /* L */,    GW_BIT_DASH /* M */, GW_BIT_DASH /* N */, GW_BIT_DASH /* O */,
+    GW_BIT_DASH /* P */, GW_BIT_DASH /* Q */, GW_BIT_DASH /* R */, GW_BIT_DASH /* S */,
+    GW_BIT_DASH /* T */, GW_BIT_U /* U */,    GW_BIT_DASH /* V */, GW_BIT_W /* W */,
+    GW_BIT_X /* X */,    GW_BIT_DASH /* Y */, GW_BIT_Z /* Z */,    GW_BIT_DASH /* [ */,
+    GW_BIT_DASH /* \ */, GW_BIT_DASH /* ] */, GW_BIT_DASH /* ^ */, GW_BIT_DASH /* _ */,
+    GW_BIT_DASH /* ` */, GW_BIT_DASH /* a */, GW_BIT_DASH /* b */, GW_BIT_DASH /* c */,
+    GW_BIT_DASH /* d */, GW_BIT_DASH /* e */, GW_BIT_DASH /* f */, GW_BIT_DASH /* g */,
+    GW_BIT_H /* h */,    GW_BIT_DASH /* i */, GW_BIT_DASH /* j */, GW_BIT_DASH /* k */,
+    GW_BIT_L /* l */,    GW_BIT_DASH /* m */, GW_BIT_DASH /* n */, GW_BIT_DASH /* o */,
+    GW_BIT_DASH /* p */, GW_BIT_DASH /* q */, GW_BIT_DASH /* r */, GW_BIT_DASH /* s */,
+    GW_BIT_DASH /* t */, GW_BIT_U /* u */,    GW_BIT_DASH /* v */, GW_BIT_W /* w */,
+    GW_BIT_X /* x */,    GW_BIT_DASH /* y */, GW_BIT_Z /* z */,    GW_BIT_DASH /* { */,
+    GW_BIT_DASH /* | */, GW_BIT_DASH /* } */, GW_BIT_DASH /* ~ */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */,
+    GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */, GW_BIT_DASH /* . */
 };
 
 int vtype(GwTrace *t, char *vec)
@@ -1521,7 +1533,7 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
         cvt_gray(flags, parse, nbits);
 
         for (i = 0; i < nbits; i++) {
-            *(pnt++) = AN_STR[(int)(*(parse++))];
+            *(pnt++) = gw_bit_to_char((int)(*(parse++)));
         }
 
         *(pnt) = 0x00; /* scan build : remove dead increment */
@@ -1584,7 +1596,7 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
             cvt_gray(flags, parse, nbits);
 
             for (i = 0; i < nbits; i++) {
-                char ch = AN_STR[(int)(*(parse++))];
+                char ch = gw_bit_to_char((int)(*(parse++)));
                 if ((ch == '0') || (ch == '1')) {
                     utt <<= 1;
                     if (ch == '1') {
@@ -1617,7 +1629,7 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
             cvt_gray(flags, parse, nbits);
 
             for (i = 0; i < nbits; i++) {
-                *(pnt++) = AN_STR[(int)(*(parse++))];
+                *(pnt++) = gw_bit_to_char((int)(*(parse++)));
             }
 
             *(pnt) = 0x00; /* scan build : remove dead increment */

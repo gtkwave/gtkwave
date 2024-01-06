@@ -1979,10 +1979,11 @@ void MaxSignalLength(void)
                             }
 
                             if (t->flags & TR_INVERT) {
-                                str[1] = AN_STR_INV[h_val];
-                            } else {
-                                str[1] = AN_STR[h_val];
+                                h_val = gw_bit_invert(h_val);
                             }
+
+                            str[1] = gw_bit_to_char(h_val);
+
                             t->asciivalue = str;
                             vlen = font_engine_string_measure(GLOBALS->signalfont, str);
                         } else {
@@ -2204,13 +2205,14 @@ void UpdateSigValue(GwTrace *t)
                                         : GW_BIT_0; /* generate impulse */
                         }
 
+                        if (t->flags & TR_INVERT) {
+                            h_val = gw_bit_invert(h_val);
+                        }
+
                         str = (char *)calloc_2(1, 3 * sizeof(char));
                         str[0] = '=';
-                        if (t->flags & TR_INVERT) {
-                            str[1] = AN_STR_INV[h_val];
-                        } else {
-                            str[1] = AN_STR[h_val];
-                        }
+                        str[1] = gw_bit_to_char(h_val);
+
                         t->asciivalue = str;
                     } else {
                         char *str2;
