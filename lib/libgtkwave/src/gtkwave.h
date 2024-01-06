@@ -26,3 +26,5 @@
 #include "gw-dump-file.h"
 #include "gw-dump-file-builder.h"
 #include "gw-loader.h"
+#include "gw-ghw-loader.h"
+#include "gw-ghw-file.h"

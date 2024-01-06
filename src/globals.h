@@ -507,10 +507,6 @@ struct Global
 /*
  * symbol.c
  */
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t sym_judy; /* from symbol.c */
-    Pvoid_t s_selected; /* from symbol.c */
-#endif
     GwSymbol **sym_hash; /* from symbol.c 453 */
     char facs_are_sorted; /* from symbol.c 455 */
     char facs_have_symbols_state_machine; /* from symbol.c */

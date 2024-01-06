@@ -2012,9 +2012,9 @@ static void vcd_build_symbols(GwVcdLoader *self)
     char hashdirty;
     struct vcdsymbol *v, *vprime;
     char *str = g_alloca(1); /* quiet scan-build null pointer warning below */
-#ifdef _WAVE_HAVE_JUDY
-    int ss_len, longest = 0;
-#endif
+    // #ifdef _WAVE_HAVE_JUDY
+    //     int ss_len, longest = 0;
+    // #endif
 
     v = self->vcdsymroot;
     while (v) {
@@ -2063,9 +2063,9 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     hashdirty = 0;
                     if (symfind(str, NULL)) {
                         char *dupfix = (char *)malloc_2(max_slen + 32);
-#ifndef _WAVE_HAVE_JUDY
+                        // #ifndef _WAVE_HAVE_JUDY
                         hashdirty = 1;
-#endif
+                        // #endif
                         DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                         do
@@ -2079,12 +2079,12 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     /* fallthrough */
                     {
                         s = symadd(str, hashdirty ? hash(str) : GLOBALS->hashcache);
-#ifdef _WAVE_HAVE_JUDY
-                        ss_len = strlen(str);
-                        if (ss_len >= longest) {
-                            longest = ss_len + 1;
-                        }
-#endif
+                        // #ifdef _WAVE_HAVE_JUDY
+                        //                         ss_len = strlen(str);
+                        //                         if (ss_len >= longest) {
+                        //                             longest = ss_len + 1;
+                        //                         }
+                        // #endif
                         s->n = v->narray[j];
                         if (substnode) {
                             GwNode *n;
@@ -2100,9 +2100,9 @@ static void vcd_build_symbols(GwVcdLoader *self)
                             n->numhist = n2->numhist;
                         }
 
-#ifndef _WAVE_HAVE_JUDY
+                        // #ifndef _WAVE_HAVE_JUDY
                         s->n->nname = s->name;
-#endif
+                        // #endif
                         self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
                         self->numfacs++;
@@ -2144,9 +2144,9 @@ static void vcd_build_symbols(GwVcdLoader *self)
                 hashdirty = 0;
                 if (symfind(str, NULL)) {
                     char *dupfix = (char *)malloc_2(max_slen + 32);
-#ifndef _WAVE_HAVE_JUDY
+                    // #ifndef _WAVE_HAVE_JUDY
                     hashdirty = 1;
-#endif
+                    // #endif
                     DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                     do
@@ -2164,12 +2164,12 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     s = symadd(str,
                                hashdirty ? hash(str)
                                          : GLOBALS->hashcache); /* cut down on double lookups.. */
-#ifdef _WAVE_HAVE_JUDY
-                    ss_len = strlen(str);
-                    if (ss_len >= longest) {
-                        longest = ss_len + 1;
-                    }
-#endif
+                    // #ifdef _WAVE_HAVE_JUDY
+                    //                     ss_len = strlen(str);
+                    //                     if (ss_len >= longest) {
+                    //                         longest = ss_len + 1;
+                    //                     }
+                    // #endif
                     s->n = v->narray[0];
                     if (substnode) {
                         GwNode *n;
@@ -2193,9 +2193,9 @@ static void vcd_build_symbols(GwVcdLoader *self)
                         s->n->extvals = 1;
                     }
 
-#ifndef _WAVE_HAVE_JUDY
+                    // #ifndef _WAVE_HAVE_JUDY
                     s->n->nname = s->name;
-#endif
+                    // #endif
                     self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
                     self->numfacs++;
@@ -2207,22 +2207,24 @@ static void vcd_build_symbols(GwVcdLoader *self)
         v = v->next;
     }
 
-#ifdef _WAVE_HAVE_JUDY
-    {
-        Pvoid_t PJArray = GLOBALS->sym_judy;
-        PPvoid_t PPValue;
-        char *Index = calloc_2(1, longest);
-
-        for (PPValue = JudySLFirst(PJArray, (uint8_t *)Index, PJE0); PPValue != (PPvoid_t)NULL;
-             PPValue = JudySLNext(PJArray, (uint8_t *)Index, PJE0)) {
-            GwSymbol *s = *(GwSymbol **)PPValue;
-            s->name = strdup_2(Index);
-            s->n->nname = s->name;
-        }
-
-        free_2(Index);
-    }
-#endif
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     {
+    //         Pvoid_t PJArray = GLOBALS->sym_judy;
+    //         PPvoid_t PPValue;
+    //         char *Index = calloc_2(1, longest);
+    //
+    //         for (PPValue = JudySLFirst(PJArray, (uint8_t *)Index, PJE0); PPValue !=
+    //         (PPvoid_t)NULL;
+    //              PPValue = JudySLNext(PJArray, (uint8_t *)Index, PJE0)) {
+    //             GwSymbol *s = *(GwSymbol **)PPValue;
+    //             s->name = strdup_2(Index);
+    //             s->n->nname = s->name;
+    //         }
+    //
+    //         free_2(Index);
+    //     }
+    // #endif
 
     if (sym_chain != NULL) {
         for (GSList *iter = sym_chain; iter != NULL; iter = iter->next) {

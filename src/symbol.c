@@ -33,34 +33,36 @@
 /*
  * s_selected accessors
  */
-#ifdef _WAVE_HAVE_JUDY
 
-char get_s_selected(GwSymbol *s)
-{
-    int rc = Judy1Test(GLOBALS->s_selected, (Word_t)s, PJE0);
-
-    return (rc);
-}
-
-char set_s_selected(GwSymbol *s, char value)
-{
-    if (value) {
-        Judy1Set((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
-    } else {
-        Judy1Unset((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
-    }
-
-    return (value);
-}
-
-void destroy_s_selected(void)
-{
-    Judy1FreeArray(&GLOBALS->s_selected, PJE0);
-
-    GLOBALS->s_selected = NULL;
-}
-
-#else
+// TODO: reenable judy support
+// #ifdef _WAVE_HAVE_JUDY
+//
+// char get_s_selected(GwSymbol *s)
+// {
+//     int rc = Judy1Test(GLOBALS->s_selected, (Word_t)s, PJE0);
+//
+//     return (rc);
+// }
+//
+// char set_s_selected(GwSymbol *s, char value)
+// {
+//     if (value) {
+//         Judy1Set((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
+//     } else {
+//         Judy1Unset((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
+//     }
+//
+//     return (value);
+// }
+//
+// void destroy_s_selected(void)
+// {
+//     Judy1FreeArray(&GLOBALS->s_selected, PJE0);
+//
+//     GLOBALS->s_selected = NULL;
+// }
+//
+// #else
 
 char get_s_selected(GwSymbol *s)
 {
@@ -77,37 +79,39 @@ void destroy_s_selected(void)
     /* nothing */
 }
 
-#endif
+// #endif
 
 /*
  * hash create/destroy
  */
 void sym_hash_initialize(void *g)
 {
-#ifdef _WAVE_HAVE_JUDY
-    ((struct Global *)g)->sym_judy = NULL;
-#else
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     ((struct Global *)g)->sym_judy = NULL;
+    // #else
     ((struct Global *)g)->sym_hash = (GwSymbol **)calloc_2(SYMPRIME, sizeof(GwSymbol *));
-#endif
+    // #endif
 }
 
 void sym_hash_destroy(void *g)
 {
     struct Global *gg = (struct Global *)g;
 
-#ifdef _WAVE_HAVE_JUDY
-
-    JudySLFreeArray(&gg->sym_judy, PJE0);
-    gg->sym_judy = NULL;
-
-#else
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //
+    //     JudySLFreeArray(&gg->sym_judy, PJE0);
+    //     gg->sym_judy = NULL;
+    //
+    // #else
 
     if (gg->sym_hash) {
         free_2(gg->sym_hash);
         gg->sym_hash = NULL;
     }
 
-#endif
+    // #endif
 }
 
 /*
@@ -115,7 +119,8 @@ void sym_hash_destroy(void *g)
  */
 int hash(char *s)
 {
-#ifndef _WAVE_HAVE_JUDY
+    // TODO: reenable judy support
+    // #ifndef _WAVE_HAVE_JUDY
     char *p;
     char ch;
     unsigned int h = 0, h2 = 0, pos = 0, g;
@@ -133,9 +138,9 @@ int hash(char *s)
 
     h ^= h2; /* combine the two hashes */
     GLOBALS->hashcache = h % SYMPRIME;
-#else
-    (void)s;
-#endif
+    // #else
+    //     (void)s;
+    // #endif
     return (GLOBALS->hashcache);
 }
 
@@ -147,19 +152,20 @@ GwSymbol *symadd(char *name, int hv)
 {
     GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
 
-#ifdef _WAVE_HAVE_JUDY
-    (void)hv;
-
-    PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    *((GwSymbol **)PPValue) = s;
-
-#else
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     (void)hv;
+    //
+    //     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
+    //     *((GwSymbol **)PPValue) = s;
+    //
+    // #else
 
     strcpy(s->name = (char *)malloc_2(strlen(name) + 1), name);
     s->sym_next = GLOBALS->sym_hash[hv];
     GLOBALS->sym_hash[hv] = s;
 
-#endif
+    // #endif
     return (s);
 }
 
@@ -167,21 +173,22 @@ GwSymbol *symadd_name_exists(char *name, int hv)
 {
     GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
 
-#ifdef _WAVE_HAVE_JUDY
-    (void)hv;
-
-    PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    *((GwSymbol **)PPValue) = s;
-
-    s->name = name; /* redundant for now */
-
-#else
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     (void)hv;
+    //
+    //     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
+    //     *((GwSymbol **)PPValue) = s;
+    //
+    //     s->name = name; /* redundant for now */
+    //
+    // #else
 
     s->name = name;
     s->sym_next = GLOBALS->sym_hash[hv];
     GLOBALS->sym_hash[hv] = s;
 
-#endif
+    // #endif
 
     return (s);
 }
@@ -191,19 +198,18 @@ GwSymbol *symadd_name_exists(char *name, int hv)
  */
 static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
 {
-#ifndef _WAVE_HAVE_JUDY
     int hv;
     GwSymbol *temp;
-#endif
 
     if (!GLOBALS->facs_are_sorted) {
-#ifdef _WAVE_HAVE_JUDY
-        PPvoid_t PPValue = JudySLGet(GLOBALS->sym_judy, (uint8_t *)s, PJE0);
-
-        if (PPValue) {
-            return (*(GwSymbol **)PPValue);
-        }
-#else
+        // TODO: reenable judy support
+        // #ifdef _WAVE_HAVE_JUDY
+        //         PPvoid_t PPValue = JudySLGet(GLOBALS->sym_judy, (uint8_t *)s, PJE0);
+        //
+        //         if (PPValue) {
+        //             return (*(GwSymbol **)PPValue);
+        //         }
+        // #else
         hv = hash(s);
         if (!(GLOBALS->sym_hash) || !(temp = GLOBALS->sym_hash[hv]))
             return (NULL); /* no hash entry, add here wanted to add */
@@ -216,7 +222,7 @@ static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
                 break;
             temp = temp->sym_next;
         }
-#endif
+        // #endif
         return (NULL); /* not found, add here if you want to add*/
     } else /* no sense hashing if the facs table is built */
     {

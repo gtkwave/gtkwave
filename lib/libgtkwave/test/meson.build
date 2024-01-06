@@ -4,6 +4,7 @@ libgtkwave_tests = [
     'gw-color',
     'gw-dump-file',
     'gw-facs',
+    'gw-ghw-loader',
     'gw-marker',
     'gw-named-markers',
     'gw-project',
@@ -16,7 +17,7 @@ libgtkwave_tests = [
 foreach test : libgtkwave_tests
     test_executable = executable(
         test,
-        test + '.c',
+        [test + '.c', 'test-util.c'],
         dependencies: libgtkwave_dep,
     )
 
