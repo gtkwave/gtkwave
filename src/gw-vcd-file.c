@@ -50,7 +50,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
         if (!n->curr) {
             he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             he->time = -1;
-            he->v.h_val = AN_X;
+            he->v.h_val = GW_BIT_X;
 
             n->curr = he;
             n->head.next = he;
@@ -62,23 +62,23 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
             }
 
             if (ch == '0')
-                heval = AN_0;
+                heval = GW_BIT_0;
             else if (ch == '1')
-                heval = AN_1;
+                heval = GW_BIT_1;
             else if ((ch == 'x') || (ch == 'X'))
-                heval = AN_X;
+                heval = GW_BIT_X;
             else if ((ch == 'z') || (ch == 'Z'))
-                heval = AN_Z;
+                heval = GW_BIT_Z;
             else if ((ch == 'h') || (ch == 'H'))
-                heval = AN_H;
+                heval = GW_BIT_H;
             else if ((ch == 'u') || (ch == 'U'))
-                heval = AN_U;
+                heval = GW_BIT_U;
             else if ((ch == 'w') || (ch == 'W'))
-                heval = AN_W;
+                heval = GW_BIT_W;
             else if ((ch == 'l') || (ch == 'L'))
-                heval = AN_L;
+                heval = GW_BIT_L;
             else
-                /* if(ch=='-') */ heval = AN_DASH; /* default */
+                /* if(ch=='-') */ heval = GW_BIT_DASH; /* default */
 
             if ((n->curr->v.h_val != heval) || (tim == self->start_time) ||
                 (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
@@ -433,7 +433,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                 if (!chp)
                     break;
                 ch = *chp;
-                if ((ch >> 4) == AN_MSK)
+                if ((ch >> 4) == GW_BIT_MASK)
                     break;
                 if (dst_len == len) {
                     if (len != 1)
@@ -441,14 +441,14 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                     dst_len--;
                 }
                 sbuf[dst_len++] = AN_STR[ch >> 4];
-                if ((ch & AN_MSK) == AN_MSK)
+                if ((ch & GW_BIT_MASK) == GW_BIT_MASK)
                     break;
                 if (dst_len == len) {
                     if (len != 1)
                         memmove(sbuf, sbuf + 1, dst_len - 1);
                     dst_len--;
                 }
-                sbuf[dst_len++] = AN_STR[ch & AN_MSK];
+                sbuf[dst_len++] = AN_STR[ch & GW_BIT_MASK];
             }
 
             if (len == 1) {

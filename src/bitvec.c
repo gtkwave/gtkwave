@@ -304,54 +304,54 @@ GwBitVector *bits2vector(GwBits *b)
                     switch (enc) /* don't remember if it's preconverted in all cases; being
                                     conservative is OK */
                     {
-                        case AN_0:
+                        case GW_BIT_0:
                         case '0':
-                            enc = AN_1;
+                            enc = GW_BIT_1;
                             break;
 
-                        case AN_1:
+                        case GW_BIT_1:
                         case '1':
-                            enc = AN_0;
+                            enc = GW_BIT_0;
                             break;
 
-                        case AN_H:
+                        case GW_BIT_H:
                         case 'h':
                         case 'H':
-                            enc = AN_L;
+                            enc = GW_BIT_L;
                             break;
 
-                        case AN_L:
+                        case GW_BIT_L:
                         case 'l':
                         case 'L':
-                            enc = AN_H;
+                            enc = GW_BIT_H;
                             break;
 
                         case 'x':
                         case 'X':
-                            enc = AN_X;
+                            enc = GW_BIT_X;
                             break;
 
                         case 'z':
                         case 'Z':
-                            enc = AN_Z;
+                            enc = GW_BIT_Z;
                             break;
 
                         case 'u':
                         case 'U':
-                            enc = AN_U;
+                            enc = GW_BIT_U;
                             break;
 
                         case 'w':
                         case 'W':
-                            enc = AN_W;
+                            enc = GW_BIT_W;
                             break;
 
                         default:
-                            enc = enc & AN_MSK;
+                            enc = enc & GW_BIT_MASK;
                             break;
                     }
                 } else {
-                    enc = ((unsigned char)(h[i]->v.h_val)) & AN_MSK;
+                    enc = ((unsigned char)(h[i]->v.h_val)) & GW_BIT_MASK;
                 }
 
                 vadd->v[i] = enc;
@@ -407,7 +407,7 @@ GwBitVector *bits2vector(GwBits *b)
     vadd = calloc_2(1, sizeof(GwVectorEnt) + numextrabytes);
     vadd->time = MAX_HISTENT_TIME;
     for (i = 0; i < numextrabytes; i++)
-        vadd->v[i] = AN_U; /* formerly 0x55 */
+        vadd->v[i] = GW_BIT_U; /* formerly 0x55 */
     if (vcurr) {
         vcurr->next = vadd;
     } /* scan-build */
@@ -1841,12 +1841,12 @@ eptr ExpandNode(GwNode *n)
                 for (j = 0; j < width; j++) {
                     if (narray[j]->curr) {
                         htemp = calloc_2(1, sizeof(GwHistEnt));
-                        htemp->v.h_val = AN_X; /* 'x' */
+                        htemp->v.h_val = GW_BIT_X; /* 'x' */
                         htemp->time = h->time;
                         narray[j]->curr->next = htemp;
                         narray[j]->curr = htemp;
                     } else {
-                        narray[j]->head.v.h_val = AN_X; /* 'x' */
+                        narray[j]->head.v.h_val = GW_BIT_X; /* 'x' */
                         narray[j]->head.time = h->time;
                         narray[j]->curr = &(narray[j]->head);
                     }
@@ -1858,37 +1858,37 @@ eptr ExpandNode(GwNode *n)
                     unsigned char val = h->v.h_vector[j];
                     switch (val) {
                         case '0':
-                            val = AN_0;
+                            val = GW_BIT_0;
                             break;
                         case '1':
-                            val = AN_1;
+                            val = GW_BIT_1;
                             break;
                         case 'x':
                         case 'X':
-                            val = AN_X;
+                            val = GW_BIT_X;
                             break;
                         case 'z':
                         case 'Z':
-                            val = AN_Z;
+                            val = GW_BIT_Z;
                             break;
                         case 'h':
                         case 'H':
-                            val = AN_H;
+                            val = GW_BIT_H;
                             break;
                         case 'l':
                         case 'L':
-                            val = AN_L;
+                            val = GW_BIT_L;
                             break;
                         case 'u':
                         case 'U':
-                            val = AN_U;
+                            val = GW_BIT_U;
                             break;
                         case 'w':
                         case 'W':
-                            val = AN_W;
+                            val = GW_BIT_W;
                             break;
                         case '-':
-                            val = AN_DASH;
+                            val = GW_BIT_DASH;
                             break;
                         default:
                             break; /* leave val alone as it's been converted already.. */
@@ -2106,12 +2106,12 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
             if (!gw_time_range_contains(time_range, h->time)) {
                 if (np->curr) {
                     htemp = calloc_2(1, sizeof(GwHistEnt));
-                    htemp->v.h_val = AN_X; /* 'x' */
+                    htemp->v.h_val = GW_BIT_X; /* 'x' */
                     htemp->time = h->time;
                     np->curr->next = htemp;
                     np->curr = htemp;
                 } else {
-                    np->head.v.h_val = AN_X; /* 'x' */
+                    np->head.v.h_val = GW_BIT_X; /* 'x' */
                     np->head.time = h->time;
                     np->curr = &(np->head);
                 }
@@ -2121,37 +2121,37 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
                 unsigned char val = h->v.h_vector[bit];
                 switch (val) {
                     case '0':
-                        val = AN_0;
+                        val = GW_BIT_0;
                         break;
                     case '1':
-                        val = AN_1;
+                        val = GW_BIT_1;
                         break;
                     case 'x':
                     case 'X':
-                        val = AN_X;
+                        val = GW_BIT_X;
                         break;
                     case 'z':
                     case 'Z':
-                        val = AN_Z;
+                        val = GW_BIT_Z;
                         break;
                     case 'h':
                     case 'H':
-                        val = AN_H;
+                        val = GW_BIT_H;
                         break;
                     case 'l':
                     case 'L':
-                        val = AN_L;
+                        val = GW_BIT_L;
                         break;
                     case 'u':
                     case 'U':
-                        val = AN_U;
+                        val = GW_BIT_U;
                         break;
                     case 'w':
                     case 'W':
-                        val = AN_W;
+                        val = GW_BIT_W;
                         break;
                     case '-':
-                        val = AN_DASH;
+                        val = GW_BIT_DASH;
                         break;
                     default:
                         break; /* leave val alone as it's been converted already.. */

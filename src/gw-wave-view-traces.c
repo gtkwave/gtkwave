@@ -328,22 +328,22 @@ static void draw_hptr_trace(GwWaveView *self,
     }
 
     if ((h) && (GLOBALS->tims.start == h->time))
-        if (h->v.h_val != AN_Z) {
+        if (h->v.h_val != GW_BIT_Z) {
             switch (h->v.h_val) {
-                case AN_X:
+                case GW_BIT_X:
                     c = LINE_COLOR_X;
                     break;
-                case AN_U:
+                case GW_BIT_U:
                     c = LINE_COLOR_U;
                     break;
-                case AN_W:
+                case GW_BIT_W:
                     c = LINE_COLOR_W;
                     break;
-                case AN_DASH:
+                case GW_BIT_DASH:
                     c = LINE_COLOR_DASH;
                     break;
                 default:
-                    c = (h->v.h_val == AN_X) ? LINE_COLOR_X : LINE_COLOR_TRANS;
+                    c = (h->v.h_val == GW_BIT_X) ? LINE_COLOR_X : LINE_COLOR_TRANS;
             }
             line_buffer_add(lines, c, 0, _y0, 0, _y1);
         }
@@ -394,31 +394,31 @@ static void draw_hptr_trace(GwWaveView *self,
                 h2val = h2->v.h_val;
 
                 switch (h2val) {
-                    case AN_X:
+                    case GW_BIT_X:
                         c = LINE_COLOR_X;
                         break;
-                    case AN_U:
+                    case GW_BIT_U:
                         c = LINE_COLOR_U;
                         break;
-                    case AN_W:
+                    case GW_BIT_W:
                         c = LINE_COLOR_W;
                         break;
-                    case AN_DASH:
+                    case GW_BIT_DASH:
                         c = LINE_COLOR_DASH;
                         break;
                     default:
-                        c = (hval == AN_X) ? LINE_COLOR_X : LINE_COLOR_TRANS;
+                        c = (hval == GW_BIT_X) ? LINE_COLOR_X : LINE_COLOR_TRANS;
                 }
 
                 switch (hval) {
-                    case AN_0: /* 0 */
-                    case AN_L: /* L */
+                    case GW_BIT_0: /* 0 */
+                    case GW_BIT_L: /* L */
                         if (GLOBALS->fill_waveform && invert) {
                             switch (hval) {
-                                case AN_0:
+                                case GW_BIT_0:
                                     gcxf = colors->fill_1;
                                     break;
-                                case AN_L:
+                                case GW_BIT_L:
                                     gcxf = colors->fill_h;
                                     break;
                                 default:
@@ -434,7 +434,7 @@ static void draw_hptr_trace(GwWaveView *self,
                                                    _y1 - _y0 + 1);
                         }
                         line_buffer_add(lines,
-                                        (hval == AN_0) ? LINE_COLOR_0 : LINE_COLOR_LOW,
+                                        (hval == GW_BIT_0) ? LINE_COLOR_0 : LINE_COLOR_LOW,
                                         _x0,
                                         _y0,
                                         _x1,
@@ -442,11 +442,11 @@ static void draw_hptr_trace(GwWaveView *self,
 
                         if (h2tim <= GLOBALS->tims.end)
                             switch (h2val) {
-                                case AN_0:
-                                case AN_L:
+                                case GW_BIT_0:
+                                case GW_BIT_L:
                                     break;
 
-                                case AN_Z:
+                                case GW_BIT_Z:
                                     line_buffer_add(lines, c, _x1, _y0, _x1, yu);
                                     break;
                                 default:
@@ -455,26 +455,26 @@ static void draw_hptr_trace(GwWaveView *self,
                             }
                         break;
 
-                    case AN_X: /* X */
-                    case AN_W: /* W */
-                    case AN_U: /* U */
-                    case AN_DASH: /* - */
+                    case GW_BIT_X: /* X */
+                    case GW_BIT_W: /* W */
+                    case GW_BIT_U: /* U */
+                    case GW_BIT_DASH: /* - */
 
                         identifier_str[1] = 0;
                         switch (hval) {
-                            case AN_X:
+                            case GW_BIT_X:
                                 c = LINE_COLOR_X;
                                 gcx = colors->stroke_x;
                                 gcxf = colors->fill_x;
                                 identifier_str[0] = 0;
                                 break;
-                            case AN_W:
+                            case GW_BIT_W:
                                 c = LINE_COLOR_W;
                                 gcx = colors->stroke_w;
                                 gcxf = colors->fill_w;
                                 identifier_str[0] = 'W';
                                 break;
-                            case AN_U:
+                            case GW_BIT_U:
                                 c = LINE_COLOR_U;
                                 gcx = colors->stroke_u;
                                 gcxf = colors->fill_u;
@@ -531,16 +531,16 @@ static void draw_hptr_trace(GwWaveView *self,
                             line_buffer_add(lines, c, _x1, _y0, _x1, _y1);
                         break;
 
-                    case AN_Z: /* Z */
+                    case GW_BIT_Z: /* Z */
                         line_buffer_add(lines, LINE_COLOR_MID, _x0, yu, _x1, yu);
                         if (h2tim <= GLOBALS->tims.end)
                             switch (h2val) {
-                                case AN_0:
-                                case AN_L:
+                                case GW_BIT_0:
+                                case GW_BIT_L:
                                     line_buffer_add(lines, c, _x1, yu, _x1, _y0);
                                     break;
-                                case AN_1:
-                                case AN_H:
+                                case GW_BIT_1:
+                                case GW_BIT_H:
                                     line_buffer_add(lines, c, _x1, yu, _x1, _y1);
                                     break;
                                 default:
@@ -549,14 +549,14 @@ static void draw_hptr_trace(GwWaveView *self,
                             }
                         break;
 
-                    case AN_1: /* 1 */
-                    case AN_H: /* 1 */
+                    case GW_BIT_1: /* 1 */
+                    case GW_BIT_H: /* 1 */
                         if (GLOBALS->fill_waveform && !invert) {
                             switch (hval) {
-                                case AN_1:
+                                case GW_BIT_1:
                                     gcxf = colors->fill_1;
                                     break;
-                                case AN_H:
+                                case GW_BIT_H:
                                     gcxf = colors->fill_h;
                                     break;
                                 default:
@@ -572,22 +572,22 @@ static void draw_hptr_trace(GwWaveView *self,
                                                    _y0 - _y1 + 1);
                         }
                         line_buffer_add(lines,
-                                        (hval == AN_1) ? LINE_COLOR_1 : LINE_COLOR_HIGH,
+                                        (hval == GW_BIT_1) ? LINE_COLOR_1 : LINE_COLOR_HIGH,
                                         _x0,
                                         _y1,
                                         _x1,
                                         _y1);
                         if (h2tim <= GLOBALS->tims.end)
                             switch (h2val) {
-                                case AN_1:
-                                case AN_H:
+                                case GW_BIT_1:
+                                case GW_BIT_H:
                                     break;
 
-                                case AN_0:
-                                case AN_L:
+                                case GW_BIT_0:
+                                case GW_BIT_L:
                                     line_buffer_add(lines, c, _x1, _y1, _x1, _y0);
                                     break;
-                                case AN_Z:
+                                case GW_BIT_Z:
                                     line_buffer_add(lines, c, _x1, _y1, _x1, yu);
                                     break;
                                 default:
@@ -850,7 +850,7 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
         /* draw trans */
         type = (!(h->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)))
                    ? vtype(t, h->v.h_vector)
-                   : AN_COUNT;
+                   : GW_BIT_COUNT;
         tv = tv2 = mynan;
 
         if (h->flags & GW_HIST_ENT_FLAG_REAL) {
@@ -902,7 +902,7 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
                 skipcnt = 0;
             }
 
-            if (type != AN_X) {
+            if (type != GW_BIT_X) {
                 c = colors->stroke_vector;
             } else {
                 c = colors->stroke_x;
@@ -1198,27 +1198,27 @@ static void draw_hptr_trace_vector(GwWaveView *self,
             type = vtype(t, h->v.h_vector);
         } else {
             /* s\000 ID is special "z" case */
-            type = AN_COUNT;
+            type = GW_BIT_COUNT;
 
             if (h->flags & GW_HIST_ENT_FLAG_STRING) {
                 if (h->v.h_vector) {
                     if (!h->v.h_vector[0]) {
-                        type = AN_Z;
+                        type = GW_BIT_Z;
                     } else {
                         if (!strcmp(h->v.h_vector, "UNDEF")) {
-                            type = AN_X;
+                            type = GW_BIT_X;
                         }
                     }
                 } else {
-                    type = AN_X;
+                    type = GW_BIT_X;
                 }
             }
         }
         /* type = (!(h->flags&(GW_HIST_ENT_FLAG_REAL|GW_HIST_ENT_FLAG_STRING))) ?
-         * vtype(t,h->v.h_vector) : AN_COUNT; */
+         * vtype(t,h->v.h_vector) : GW_BIT_COUNT; */
 
         if (_x0 != _x1) {
-            if (type == AN_Z) {
+            if (type == GW_BIT_Z) {
                 gdouble offset = GLOBALS->cairo_050_offset;
                 XXX_gdk_set_color(cr, colors->stroke_z);
 
@@ -1233,7 +1233,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
             } else {
                 gdouble offset = GLOBALS->cairo_050_offset;
                 GwColor color;
-                if (type != AN_X && type != AN_U) {
+                if (type != GW_BIT_X && type != GW_BIT_U) {
                     color = colors->stroke_vector;
                 } else {
                     color = colors->stroke_x;
@@ -1247,7 +1247,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                     cairo_line_to(cr, _x0 + offset, _y1 + offset);
                     cairo_stroke(cr);
                 } else {
-                    if (type == AN_1) {
+                    if (type == GW_BIT_1) {
                         GwColor c = colors->stroke_vector;
                         cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a / 3.0);
                     } else {
@@ -1274,7 +1274,7 @@ static void draw_hptr_trace_vector(GwWaveView *self,
                     }
                     cairo_stroke(cr);
 
-                    if (type == AN_0) {
+                    if (type == GW_BIT_0) {
                         GwColor c = colors->stroke_vector;
                         cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a / 3.0);
                     } else {
@@ -1673,7 +1673,7 @@ static void draw_vptr_trace_analog(GwWaveView *self,
                 skipcnt = 0;
             }
 
-            if (type != AN_X) {
+            if (type != GW_BIT_X) {
                 c = colors->stroke_vector;
             } else {
                 c = colors->stroke_x;
@@ -1990,10 +1990,10 @@ static void draw_vptr_trace(GwWaveView *self,
             GwColor gltype, gtype;
 
             switch (lasttype) {
-                case AN_X:
+                case GW_BIT_X:
                     gltype = colors->stroke_x;
                     break;
-                case AN_U:
+                case GW_BIT_U:
                     gltype = colors->stroke_u;
                     break;
                 default:
@@ -2001,10 +2001,10 @@ static void draw_vptr_trace(GwWaveView *self,
                     break;
             }
             switch (type) {
-                case AN_X:
+                case GW_BIT_X:
                     gtype = colors->stroke_x;
                     break;
-                case AN_U:
+                case GW_BIT_U:
                     gtype = colors->stroke_u;
                     break;
                 default:
@@ -2013,23 +2013,23 @@ static void draw_vptr_trace(GwWaveView *self,
             }
 
             if (GLOBALS->use_roundcaps) {
-                if (type == AN_Z) {
+                if (type == GW_BIT_Z) {
                     if (lasttype != -1) {
                         XXX_gdk_draw_line(cr, gltype, _x0 - 1, _y0, _x0, yu);
-                        if (lasttype != AN_0)
+                        if (lasttype != GW_BIT_0)
                             XXX_gdk_draw_line(cr, gltype, _x0, yu, _x0 - 1, _y1);
                     }
-                } else if (lasttype == AN_Z) {
+                } else if (lasttype == GW_BIT_Z) {
                     XXX_gdk_draw_line(cr, gtype, _x0 + 1, _y0, _x0, yu);
-                    if (type != AN_0)
+                    if (type != GW_BIT_0)
                         XXX_gdk_draw_line(cr, gtype, _x0, yu, _x0 + 1, _y1);
                 } else {
                     if (lasttype != type) {
                         XXX_gdk_draw_line(cr, gltype, _x0 - 1, _y0, _x0, yu);
-                        if (lasttype != AN_0)
+                        if (lasttype != GW_BIT_0)
                             XXX_gdk_draw_line(cr, gltype, _x0, yu, _x0 - 1, _y1);
                         XXX_gdk_draw_line(cr, gtype, _x0 + 1, _y0, _x0, yu);
-                        if (type != AN_0)
+                        if (type != GW_BIT_0)
                             XXX_gdk_draw_line(cr, gtype, _x0, yu, _x0 + 1, _y1);
                     } else {
                         XXX_gdk_draw_line(cr, gtype, _x0 - 2, _y0, _x0 + 2, _y1);
@@ -2042,14 +2042,14 @@ static void draw_vptr_trace(GwWaveView *self,
         }
 
         if (_x0 != _x1) {
-            if (type == AN_Z) {
+            if (type == GW_BIT_Z) {
                 if (GLOBALS->use_roundcaps) {
                     XXX_gdk_draw_line(cr, colors->stroke_z, _x0 + 1, yu, _x1 - 1, yu);
                 } else {
                     XXX_gdk_draw_line(cr, colors->stroke_z, _x0, yu, _x1, yu);
                 }
             } else {
-                if ((type != AN_X) && (type != AN_U)) {
+                if ((type != GW_BIT_X) && (type != GW_BIT_U)) {
                     c = colors->stroke_vector;
                 } else {
                     c = colors->stroke_x;
@@ -2057,15 +2057,15 @@ static void draw_vptr_trace(GwWaveView *self,
 
                 if (GLOBALS->use_roundcaps) {
                     XXX_gdk_draw_line(cr, c, _x0 + 2, _y0, _x1 - 2, _y0);
-                    if (type != AN_0)
+                    if (type != GW_BIT_0)
                         XXX_gdk_draw_line(cr, c, _x0 + 2, _y1, _x1 - 2, _y1);
-                    if (type == AN_1)
+                    if (type == GW_BIT_1)
                         XXX_gdk_draw_line(cr, c, _x0 + 2, _y1 + 1, _x1 - 2, _y1 + 1);
                 } else {
                     XXX_gdk_draw_line(cr, c, _x0, _y0, _x1, _y0);
-                    if (type != AN_0)
+                    if (type != GW_BIT_0)
                         XXX_gdk_draw_line(cr, c, _x0, _y1, _x1, _y1);
-                    if (type == AN_1)
+                    if (type == GW_BIT_1)
                         XXX_gdk_draw_line(cr, c, _x0, _y1 + 1, _x1, _y1 + 1);
                 }
 

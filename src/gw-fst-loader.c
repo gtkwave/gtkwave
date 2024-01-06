@@ -988,7 +988,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         }
 
         n->head.time = -1; /* mark 1st node as negative time */
-        n->head.v.h_val = AN_X;
+        n->head.v.h_val = GW_BIT_X;
         s->n = n;
     } /* for(i) of facs parsing */
 

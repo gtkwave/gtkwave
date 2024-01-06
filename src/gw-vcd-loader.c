@@ -135,37 +135,37 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
     while (*s) {
         switch (*s) {
             case '0':
-                recoded_bit = AN_0;
+                recoded_bit = GW_BIT_0;
                 break;
             case '1':
-                recoded_bit = AN_1;
+                recoded_bit = GW_BIT_1;
                 break;
             case 'x':
             case 'X':
-                recoded_bit = AN_X;
+                recoded_bit = GW_BIT_X;
                 break;
             case 'z':
             case 'Z':
-                recoded_bit = AN_Z;
+                recoded_bit = GW_BIT_Z;
                 break;
             case 'h':
             case 'H':
-                recoded_bit = AN_H;
+                recoded_bit = GW_BIT_H;
                 break;
             case 'u':
             case 'U':
-                recoded_bit = AN_U;
+                recoded_bit = GW_BIT_U;
                 break;
             case 'w':
             case 'W':
-                recoded_bit = AN_W;
+                recoded_bit = GW_BIT_W;
                 break;
             case 'l':
             case 'L':
-                recoded_bit = AN_L;
+                recoded_bit = GW_BIT_L;
                 break;
             default:
-                recoded_bit = AN_DASH;
+                recoded_bit = GW_BIT_DASH;
                 break;
         }
 
@@ -180,7 +180,7 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
         s++;
     }
 
-    recoded_bit = AN_MSK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
+    recoded_bit = GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
     if (!which) {
         accum = (recoded_bit << 4);
     } else {
@@ -247,37 +247,37 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s, gboolean 
     while (*s) {
         switch (*s) {
             case '0':
-                recoded_bit = AN_0;
+                recoded_bit = GW_BIT_0;
                 break;
             case '1':
-                recoded_bit = AN_1;
+                recoded_bit = GW_BIT_1;
                 break;
             case 'x':
             case 'X':
-                recoded_bit = AN_X;
+                recoded_bit = GW_BIT_X;
                 break;
             case 'z':
             case 'Z':
-                recoded_bit = AN_Z;
+                recoded_bit = GW_BIT_Z;
                 break;
             case 'h':
             case 'H':
-                recoded_bit = AN_H;
+                recoded_bit = GW_BIT_H;
                 break;
             case 'u':
             case 'U':
-                recoded_bit = AN_U;
+                recoded_bit = GW_BIT_U;
                 break;
             case 'w':
             case 'W':
-                recoded_bit = AN_W;
+                recoded_bit = GW_BIT_W;
                 break;
             case 'l':
             case 'L':
-                recoded_bit = AN_L;
+                recoded_bit = GW_BIT_L;
                 break;
             default:
-                recoded_bit = AN_DASH;
+                recoded_bit = GW_BIT_DASH;
                 break;
         }
 
@@ -293,7 +293,7 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s, gboolean 
         s++;
     }
 
-    recoded_bit = AN_MSK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
+    recoded_bit = GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
     if (!which) {
         accum = (recoded_bit << 4);
     } else {
@@ -1848,7 +1848,7 @@ static void vcd_parse(GwVcdLoader *self)
                     v->narray = calloc_2(1, sizeof(GwNode *));
                     v->narray[0] = calloc_2(1, sizeof(GwNode));
                     v->narray[0]->head.time = -1;
-                    v->narray[0]->head.v.h_val = AN_X;
+                    v->narray[0]->head.v.h_val = GW_BIT_X;
 
                     if (self->vcdsymroot == NULL) {
                         self->vcdsymroot = self->vcdsymcurr = v;

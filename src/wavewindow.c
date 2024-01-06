@@ -1974,8 +1974,8 @@ void MaxSignalLength(void)
                                 h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                                 ((gw_marker_get_position(primary_marker) -
                                                   GLOBALS->shift_timebase) == h_ptr->time)
-                                            ? AN_1
-                                            : AN_0; /* generate impulse */
+                                            ? GW_BIT_1
+                                            : GW_BIT_0; /* generate impulse */
                             }
 
                             if (t->flags & TR_INVERT) {
@@ -2200,8 +2200,8 @@ void UpdateSigValue(GwTrace *t)
                             h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                             ((gw_marker_get_position(primary_marker) -
                                               GLOBALS->shift_timebase) == h_ptr->time)
-                                        ? AN_1
-                                        : AN_0; /* generate impulse */
+                                        ? GW_BIT_1
+                                        : GW_BIT_0; /* generate impulse */
                         }
 
                         str = (char *)calloc_2(1, 3 * sizeof(char));

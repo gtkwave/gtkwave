@@ -133,41 +133,41 @@ static void fst_callback2(void *user_callback_data_pointer,
             if (vt != GW_VAR_TYPE_VCD_PORT) {
                 switch (*value) {
                     case '0':
-                        h_val = AN_0;
+                        h_val = GW_BIT_0;
                         break;
                     case '1':
-                        h_val = AN_1;
+                        h_val = GW_BIT_1;
                         break;
                     case 'X':
                     case 'x':
-                        h_val = AN_X;
+                        h_val = GW_BIT_X;
                         break;
                     case 'Z':
                     case 'z':
-                        h_val = AN_Z;
+                        h_val = GW_BIT_Z;
                         break;
                     case 'H':
                     case 'h':
-                        h_val = AN_H;
+                        h_val = GW_BIT_H;
                         break;
                     case 'U':
                     case 'u':
-                        h_val = AN_U;
+                        h_val = GW_BIT_U;
                         break;
                     case 'W':
                     case 'w':
-                        h_val = AN_W;
+                        h_val = GW_BIT_W;
                         break;
                     case 'L':
                     case 'l':
-                        h_val = AN_L;
+                        h_val = GW_BIT_L;
                         break;
                     case '-':
-                        h_val = AN_DASH;
+                        h_val = GW_BIT_DASH;
                         break;
 
                     default:
-                        h_val = AN_X;
+                        h_val = GW_BIT_X;
                         break;
                 }
             } else {
@@ -175,17 +175,17 @@ static void fst_callback2(void *user_callback_data_pointer,
                 evcd_memcpy(membuf, (const char *)value, 1);
                 switch (*membuf) {
                     case '0':
-                        h_val = AN_0;
+                        h_val = GW_BIT_0;
                         break;
                     case '1':
-                        h_val = AN_1;
+                        h_val = GW_BIT_1;
                         break;
                     case 'Z':
                     case 'z':
-                        h_val = AN_Z;
+                        h_val = GW_BIT_Z;
                         break;
                     default:
-                        h_val = AN_X;
+                        h_val = GW_BIT_X;
                         break;
                 }
             }
@@ -346,9 +346,9 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
     if (len > 1) {
         htemp->v.h_vector = (char *)malloc_2(len);
         for (i = 0; i < len; i++)
-            htemp->v.h_vector[i] = AN_Z;
+            htemp->v.h_vector[i] = GW_BIT_Z;
     } else {
-        htemp->v.h_val = AN_Z; /* z */
+        htemp->v.h_val = GW_BIT_Z; /* z */
     }
     htemp->time = MAX_HISTENT_TIME;
 
@@ -358,7 +358,7 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
             if (!(f->flags & VZT_RD_SYM_F_STRING)) {
                 htemp->v.h_vector = (char *)malloc_2(len);
                 for (i = 0; i < len; i++)
-                    htemp->v.h_vector[i] = AN_X;
+                    htemp->v.h_vector[i] = GW_BIT_X;
             } else {
                 htemp->v.h_vector = strdup_2("UNDEF");
                 htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
@@ -369,7 +369,7 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
         }
         htempx = htemp;
     } else {
-        htemp->v.h_val = AN_X; /* x */
+        htemp->v.h_val = GW_BIT_X; /* x */
         htempx = htemp;
     }
     htemp->time = MAX_HISTENT_TIME - 1;
@@ -384,9 +384,9 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
         if (len > 1) {
             np->head.v.h_vector = (char *)malloc_2(len);
             for (i = 0; i < len; i++)
-                np->head.v.h_vector[i] = AN_X;
+                np->head.v.h_vector[i] = GW_BIT_X;
         } else {
-            np->head.v.h_val = AN_X; /* x */
+            np->head.v.h_val = GW_BIT_X; /* x */
         }
     } else {
         np->head.flags = GW_HIST_ENT_FLAG_REAL;
@@ -564,9 +564,9 @@ void gw_fst_file_import_masked(GwFstFile *self)
             if (len > 1) {
                 htemp->v.h_vector = (char *)malloc_2(len);
                 for (i = 0; i < len; i++)
-                    htemp->v.h_vector[i] = AN_Z;
+                    htemp->v.h_vector[i] = GW_BIT_Z;
             } else {
-                htemp->v.h_val = AN_Z; /* z */
+                htemp->v.h_val = GW_BIT_Z; /* z */
             }
             htemp->time = MAX_HISTENT_TIME;
 
@@ -576,7 +576,7 @@ void gw_fst_file_import_masked(GwFstFile *self)
                     if (!(f->flags & VZT_RD_SYM_F_STRING)) {
                         htemp->v.h_vector = (char *)malloc_2(len);
                         for (i = 0; i < len; i++)
-                            htemp->v.h_vector[i] = AN_X;
+                            htemp->v.h_vector[i] = GW_BIT_X;
                     } else {
                         htemp->v.h_vector = strdup_2("UNDEF");
                         htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
@@ -588,7 +588,7 @@ void gw_fst_file_import_masked(GwFstFile *self)
                     htempx = htemp;
                 }
             } else {
-                htemp->v.h_val = AN_X; /* x */
+                htemp->v.h_val = GW_BIT_X; /* x */
                 htempx = htemp;
             }
             htemp->time = MAX_HISTENT_TIME - 1;
@@ -603,9 +603,9 @@ void gw_fst_file_import_masked(GwFstFile *self)
                 if (len > 1) {
                     np->head.v.h_vector = (char *)malloc_2(len);
                     for (i = 0; i < len; i++)
-                        np->head.v.h_vector[i] = AN_X;
+                        np->head.v.h_vector[i] = GW_BIT_X;
                 } else {
-                    np->head.v.h_val = AN_X; /* x */
+                    np->head.v.h_val = GW_BIT_X; /* x */
                 }
             } else {
                 np->head.flags = GW_HIST_ENT_FLAG_REAL;

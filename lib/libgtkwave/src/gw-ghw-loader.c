@@ -6,33 +6,9 @@
 #include "gw-ghw-file-private.h"
 #include "gw-time.h"
 
-// ---------------------
+
 // TODO: remove!
-
-enum AnalyzerBits
-{
-    AN_0,
-    AN_X,
-    AN_Z,
-    AN_1,
-    AN_H,
-    AN_U,
-    AN_W,
-    AN_L,
-    AN_DASH,
-    AN_RSV9,
-    AN_RSVA,
-    AN_RSVB,
-    AN_RSVC,
-    AN_RSVD,
-    AN_RSVE,
-    AN_RSVF,
-    AN_COUNT
-};
-
 #define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
-
-// ---------------------
 
 struct _GwGhwLoader
 {
@@ -936,7 +912,7 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
     switch (sig_type->kind) {
         case ghdl_rtik_type_b2:
             if (sig_type->en.wkt == ghw_wkt_bit)
-                he->v.h_val = sig->val->b2 == 0 ? AN_0 : AN_1;
+                he->v.h_val = sig->val->b2 == 0 ? GW_BIT_0 : GW_BIT_1;
             else {
                 he->v.h_vector = (char *)sig->type->en.lits[sig->val->b2];
                 is_vector = 1;
@@ -946,15 +922,15 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
         case ghdl_rtik_type_e8:
             if (sig_type->en.wkt == ghw_wkt_std_ulogic) {
                 /* Res: 0->0, 1->X, 2->Z, 3->1 */
-                static const char map_su2vlg[9] = {/* U */ AN_U,
-                                                   /* X */ AN_X,
-                                                   /* 0 */ AN_0,
-                                                   /* 1 */ AN_1,
-                                                   /* Z */ AN_Z,
-                                                   /* W */ AN_W,
-                                                   /* L */ AN_L,
-                                                   /* H */ AN_H,
-                                                   /* - */ AN_DASH};
+                static const char map_su2vlg[9] = {/* U */ GW_BIT_U,
+                                                   /* X */ GW_BIT_X,
+                                                   /* 0 */ GW_BIT_0,
+                                                   /* 1 */ GW_BIT_1,
+                                                   /* Z */ GW_BIT_Z,
+                                                   /* W */ GW_BIT_W,
+                                                   /* L */ GW_BIT_L,
+                                                   /* H */ GW_BIT_H,
+                                                   /* - */ GW_BIT_DASH};
                 he->v.h_val = map_su2vlg[sig->val->e8];
             } else {
                 he->v.h_vector = (char *)sig_type->en.lits[sig->val->e8];
@@ -971,7 +947,7 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
         case ghdl_rtik_type_p32: {
             he->v.h_vector = g_malloc(32);
             for (gint i = 0; i < 32; i++) {
-                he->v.h_vector[31 - i] = ((sig->val->i32 >> i) & 1) ? AN_1 : AN_0;
+                he->v.h_vector[31 - i] = ((sig->val->i32 >> i) & 1) ? GW_BIT_1 : GW_BIT_0;
             }
 
             is_vector = 1;
@@ -982,7 +958,7 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
         case ghdl_rtik_type_p64: {
             he->v.h_vector = g_malloc(64);
             for (gint i = 0; i < 64; i++) {
-                he->v.h_vector[63 - i] = ((sig->val->i64 >> i) & 1) ? AN_1 : AN_0;
+                he->v.h_vector[63 - i] = ((sig->val->i64 >> i) & 1) ? GW_BIT_1 : GW_BIT_0;
             }
 
             is_vector = 1;

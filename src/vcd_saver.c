@@ -48,13 +48,13 @@ static void w32redirect_fprintf(int is_trans, FILE *sfd, const char *format, ...
 static unsigned char analyzer_demang(int strict, unsigned char ch)
 {
     if (!strict) {
-        if (ch < AN_COUNT) {
+        if (ch < GW_BIT_COUNT) {
             return (AN_STR[ch]);
         } else {
             return (ch);
         }
     } else {
-        if (ch < AN_COUNT) {
+        if (ch < GW_BIT_COUNT) {
             return (AN_STR4ST[ch]);
         } else {
             return (ch);
@@ -944,7 +944,7 @@ static void write_hptr_trace(GwTrace *t, int *whichptr, GwTime tmin, GwTime tmax
     GwHistEnt **ha = n->harray;
     int numhist = n->numhist;
     int i;
-    unsigned char h_val = AN_X;
+    unsigned char h_val = GW_BIT_X;
     gboolean first;
     gboolean invert = ((t->flags & TR_INVERT) != 0);
     int edges = 0;

@@ -572,61 +572,61 @@ llist_p *signal_change_list(char *sig_name,
                 if (!t->n.nd->extvals) { /* really single bit */
                     switch (((GwHistEnt *)lp->u.p)->v.h_val) {
                         case '0':
-                        case AN_0:
+                        case GW_BIT_0:
                             llp.str = (char *)"0";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
 
                         case '1':
-                        case AN_1:
+                        case GW_BIT_1:
                             llp.str = (char *)"1";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
 
                         case 'x':
                         case 'X':
-                        case AN_X:
+                        case GW_BIT_X:
                             llp.str = (char *)"x";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
 
                         case 'z':
                         case 'Z':
-                        case AN_Z:
+                        case GW_BIT_Z:
                             llp.str = (char *)"z";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
 
                         case 'h':
                         case 'H':
-                        case AN_H:
+                        case GW_BIT_H:
                             llp.str = (char *)"h";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break; /* added for GHW... */
 
                         case 'u':
                         case 'U':
-                        case AN_U:
+                        case GW_BIT_U:
                             llp.str = (char *)"u";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
 
                         case 'w':
                         case 'W':
-                        case AN_W:
+                        case GW_BIT_W:
                             llp.str = (char *)"w";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
 
                         case 'l':
                         case 'L':
-                        case AN_L:
+                        case GW_BIT_L:
                             llp.str = (char *)"l";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
 
                         case '-':
-                        case AN_DASH:
+                        case GW_BIT_DASH:
                             llp.str = (char *)"-";
                             l_elem = llist_new(llp, LL_STR, -1);
                             break;
