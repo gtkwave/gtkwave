@@ -59,8 +59,6 @@ enum TraceReorderMode
 
 /* positional ascii 0123456789ABCDEF, question marks should not happen unless something slips
  * through the cracks as AN_RSVA to AN_RSVF are reserved */
-#define AN_STR "0xz1huwl-???????"
-#define AN_STR_INV "1xz0luwh-???????"
 
 #define AN_USTR "0XZ1HUWL-???????"
 #define AN_USTR_INV "1XZ0LUWH-???????"

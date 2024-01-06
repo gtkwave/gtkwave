@@ -134,12 +134,13 @@ static gchar *local_trace_asciival(GwTrace *t, GwTime tim)
                                     : GW_BIT_0; /* generate impulse */
                     }
 
-                    str = (char *)calloc_2(1, 2 * sizeof(char));
                     if (t->flags & TR_INVERT) {
-                        str[0] = AN_STR_INV[h_val];
-                    } else {
-                        str[0] = AN_STR[h_val];
+                        h_val = gw_bit_invert(h_val);
                     }
+
+                    str = (char *)calloc_2(1, 2 * sizeof(char));
+                    str[0] = gw_bit_to_char(h_val);
+
                     return str;
                 } else {
                     if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {

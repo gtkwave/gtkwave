@@ -89,7 +89,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                                  "] Signal [%p], Value [%c->%c].\n",
                                  tim,
                                  n,
-                                 AN_STR[n->curr->v.h_val],
+                                 gw_bit_to_char(n->curr->v.h_val),
                                  ch));
                     n->curr->v.h_val = heval; /* we have a glitch! */
 
@@ -220,7 +220,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
                                          "] Signal [%p], Value [%c->%c].\n",
                                          tim,
                                          n,
-                                         AN_STR[n->curr->v.h_val],
+                                         gw_bit_to_char(n->curr->v.h_val),
                                          ch));
                             if (n->curr->v.h_vector)
                                 free_2(n->curr->v.h_vector);
@@ -440,7 +440,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                         memmove(sbuf, sbuf + 1, dst_len - 1);
                     dst_len--;
                 }
-                sbuf[dst_len++] = AN_STR[ch >> 4];
+                sbuf[dst_len++] = gw_bit_to_char(ch >> 4);
                 if ((ch & GW_BIT_MASK) == GW_BIT_MASK)
                     break;
                 if (dst_len == len) {
@@ -448,7 +448,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                         memmove(sbuf, sbuf + 1, dst_len - 1);
                     dst_len--;
                 }
-                sbuf[dst_len++] = AN_STR[ch & GW_BIT_MASK];
+                sbuf[dst_len++] = gw_bit_to_char(ch & GW_BIT_MASK);
             }
 
             if (len == 1) {
