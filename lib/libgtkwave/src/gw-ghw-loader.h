@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glib-object.h>
-#include <gtkwave.h>
+#include "gw-loader.h"
 
 G_BEGIN_DECLS
 

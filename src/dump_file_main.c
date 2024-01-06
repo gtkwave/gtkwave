@@ -41,6 +41,12 @@ GwDumpFile *ghw_main(char *fname)
 
     g_object_unref(loader);
 
+    if (!GLOBALS->hier_was_explicitly_set) /* set default hierarchy split char */
+    {
+        GLOBALS->hier_delimeter = '.';
+    }
+    GLOBALS->facs_are_sorted = 1;
+
     return file;
 }
 

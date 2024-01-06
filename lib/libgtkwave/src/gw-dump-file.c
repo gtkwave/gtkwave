@@ -321,7 +321,7 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self)
  */
 GwTime gw_dump_file_get_time_scale(GwDumpFile *self)
 {
-    g_return_val_if_fail(GW_IS_DUMP_FILE(self), GW_TIME_DIMENSION_NONE);
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), 1);
 
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
