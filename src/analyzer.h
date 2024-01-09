@@ -279,7 +279,7 @@ void EnsureGroupsMatch(void);
 #define IsCollapsed(t) (t->flags & TR_COLLAPSED)
 
 unsigned IsShadowed(GwTrace *t);
-char *GetFullName(GwTrace *t, int *was_packed);
+char *GetFullName(GwTrace *t);
 
 void OpenTrace(GwTrace *t);
 void CloseTrace(GwTrace *t);

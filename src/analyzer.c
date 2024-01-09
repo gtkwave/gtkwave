@@ -24,7 +24,6 @@
 #include "translate.h"
 #include "ptranslate.h"
 #include "ttranslate.h"
-#include "hierpack.h"
 #include "analyzer.h"
 
 void UpdateTraceSelection(GwTrace *t);
@@ -485,20 +484,9 @@ int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret)
             t->name = hier_extract(t->name_full, GLOBALS->hier_max_level);
     } else {
         if (!GLOBALS->hier_max_level) {
-            int flagged = HIER_DEPACK_ALLOC;
-
-            t->name = hier_decompress_flagged(nd->nname, &flagged);
-            t->is_depacked = (flagged != 0);
+            t->name = nd->nname;
         } else {
-            int flagged = HIER_DEPACK_ALLOC;
-            char *tbuff = hier_decompress_flagged(nd->nname, &flagged);
-            if (!flagged) {
-                t->name = hier_extract(nd->nname, GLOBALS->hier_max_level);
-            } else {
-                t->name = strdup_2(hier_extract(tbuff, GLOBALS->hier_max_level));
-                free_2(tbuff);
-                t->is_depacked = 1;
-            }
+            t->name = hier_extract(nd->nname, GLOBALS->hier_max_level);
         }
     }
 
@@ -671,8 +659,6 @@ void FreeTrace(GwTrace *t)
         }
     }
 
-    if (t->is_depacked)
-        free_2(t->name);
     if (t->asciivalue)
         free_2(t->asciivalue);
     if (t->name_full)
@@ -1412,7 +1398,7 @@ unsigned IsShadowed(GwTrace *t)
     return 0;
 }
 
-char *GetFullName(GwTrace *t, int *was_packed)
+char *GetFullName(GwTrace *t)
 {
     if (HasAlias(t) || !HasWave(t)) {
         return (t->name_full);
@@ -1420,7 +1406,7 @@ char *GetFullName(GwTrace *t, int *was_packed)
         return (t->n.vec->bvname);
 
     } else {
-        return (hier_decompress_flagged(t->n.nd->nname, was_packed));
+        return t->n.nd->nname;
     }
 }
 

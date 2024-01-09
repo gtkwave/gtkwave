@@ -20,7 +20,6 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
 
@@ -262,13 +261,12 @@ GwTrace *is_signal_displayed(char *name)
         *p = '\0';
     len = strlen(name);
     while (t) {
-        int was_packed = HIER_DEPACK_ALLOC;
         int cc;
         if (t->vector) {
             p = t->n.vec->bvname;
         } else {
             if (t->n.vec) {
-                p = hier_decompress_flagged(t->n.nd->nname, &was_packed);
+                p = t->n.nd->nname;
             } else {
                 p = NULL;
             }
@@ -278,8 +276,6 @@ GwTrace *is_signal_displayed(char *name)
             p1 = strchr(p, '[');
             len1 = (p1) ? (unsigned int)(p1 - p) : strlen(p);
             cc = ((len == len1) && !strncmp(name, p, len));
-            if (was_packed)
-                free_2(p);
             if (cc)
                 break;
         }
@@ -335,20 +331,9 @@ GwTrace *Node_to_Trptr(GwNode *nd)
     }
 
     if (!GLOBALS->hier_max_level) {
-        int flagged = HIER_DEPACK_ALLOC;
-
-        t->name = hier_decompress_flagged(nd->nname, &flagged);
-        t->is_depacked = (flagged != 0);
+        t->name = nd->nname;
     } else {
-        int flagged = HIER_DEPACK_ALLOC;
-        char *tbuff = hier_decompress_flagged(nd->nname, &flagged);
-        if (!flagged) {
-            t->name = hier_extract(nd->nname, GLOBALS->hier_max_level);
-        } else {
-            t->name = strdup_2(hier_extract(tbuff, GLOBALS->hier_max_level));
-            free_2(tbuff);
-            t->is_depacked = 1;
-        }
+        t->name = hier_extract(nd->nname, GLOBALS->hier_max_level);
     }
 
     if (nd->extvals) { /* expansion vectors */
@@ -377,7 +362,6 @@ GwTrace *Node_to_Trptr(GwNode *nd)
 GwTrace *sig_name_to_Trptr(char *name)
 {
     GwTrace *t = NULL;
-    int was_packed = HIER_DEPACK_ALLOC;
     int i, name_len;
     char *hfacname = NULL;
     GwSymbol *s = NULL, *s2;
@@ -394,7 +378,7 @@ GwTrace *sig_name_to_Trptr(char *name)
         for (i = 0; i < numfacs; i++) {
             GwSymbol *fac = gw_facs_get(facs, i);
 
-            hfacname = hier_decompress_flagged(fac->name, &was_packed);
+            hfacname = fac->name;
             if (!strcmp(name, hfacname) ||
                 ((!strncmp(name, hfacname, name_len) && hfacname[name_len] == '['))) {
                 s = fac;
@@ -421,14 +405,7 @@ GwTrace *sig_name_to_Trptr(char *name)
                         len++;
                     }
                 }
-
-                if (was_packed) {
-                    free_2(hfacname);
-                }
                 break;
-            }
-            if (was_packed) {
-                free_2(hfacname);
             }
             s = NULL;
         }

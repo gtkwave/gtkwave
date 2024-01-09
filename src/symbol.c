@@ -24,7 +24,6 @@
 #include "symbol.h"
 #include "vcd.h"
 #include "bsearch.h"
-#include "hierpack.h"
 
 #ifdef _WAVE_HAVE_JUDY
 #include <Judy.h>
@@ -252,12 +251,11 @@ static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
                     mat = 0;
 
                     for (i = 0; i < numfacs; i++) {
-                        int was_packed = HIER_DEPACK_STATIC;
                         char *hfacname = NULL;
 
                         GwSymbol *fac = gw_facs_get(facs, i);
 
-                        hfacname = hier_decompress_flagged(fac->name, &was_packed);
+                        hfacname = fac->name;
                         s2 = hfacname;
                         while (*s2) {
                             if (*s2 < GLOBALS->hier_delimeter) {
@@ -285,12 +283,11 @@ static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
             if (GLOBALS->facs_have_symbols_state_machine == 1) {
                 mat = 0;
                 for (i = 0; i < numfacs; i++) {
-                    int was_packed = HIER_DEPACK_STATIC;
                     char *hfacname = NULL;
 
                     GwSymbol *fac = gw_facs_get(facs, i);
 
-                    hfacname = hier_decompress_flagged(fac->name, &was_packed);
+                    hfacname = fac->name;
                     if (!strcmp(hfacname, s)) {
                         mat = 1;
                     }

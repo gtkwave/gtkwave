@@ -25,7 +25,6 @@
 #include "ptranslate.h"
 #include "ttranslate.h"
 #include "lx2.h"
-#include "hierpack.h"
 #include "tcl_helper.h"
 #include "signal_list.h"
 #include "gw-named-marker-dialog.h"
@@ -802,29 +801,9 @@ void set_hier_cleanup(GtkWidget *widget, gpointer data, int level)
                         t->name = hier_extract(t->name, GLOBALS->hier_max_level);
                 } else {
                     if (!GLOBALS->hier_max_level) {
-                        int flagged = HIER_DEPACK_ALLOC;
-
-                        if (t->name && t->is_depacked) {
-                            free_2(t->name);
-                        }
-                        t->name = hier_decompress_flagged(t->n.nd->nname, &flagged);
-                        t->is_depacked = (flagged != 0);
+                        t->name = t->n.nd->nname;
                     } else {
-                        int flagged = HIER_DEPACK_ALLOC;
-                        char *tbuff;
-
-                        if (t->name && t->is_depacked) {
-                            free_2(t->name);
-                        }
-                        tbuff = hier_decompress_flagged(t->n.nd->nname, &flagged);
-                        t->is_depacked = (flagged != 0);
-
-                        if (!flagged) {
-                            t->name = hier_extract(t->n.nd->nname, GLOBALS->hier_max_level);
-                        } else {
-                            t->name = strdup_2(hier_extract(tbuff, GLOBALS->hier_max_level));
-                            free_2(tbuff);
-                        }
+                        t->name = hier_extract(t->n.nd->nname, GLOBALS->hier_max_level);
                     }
                 }
             }
@@ -1587,13 +1566,10 @@ static unsigned expand_trace(GwTrace *t_top)
                 /* 		      if(t->n.nd->expansion) t->n.nd->expansion->refcnt++; */
                 /* 		      AddNode(t->n.nd,NULL); */
             } else {
-                int dhc_sav = GLOBALS->do_hier_compress;
-                GLOBALS->do_hier_compress = 0;
                 for (i = 0; i < e->width; i++) {
                     GLOBALS->which_t_color = color;
                     AddNode(e->narray[i], NULL);
                 }
-                GLOBALS->do_hier_compress = dhc_sav;
                 free_2(e->narray);
                 free_2(e);
             }
@@ -1826,14 +1802,10 @@ static void menu_rename(GtkWidget *widget, gpointer data)
     }
 
     if (GLOBALS->trace_to_alias_menu_c_1) {
-        int was_packed = HIER_DEPACK_ALLOC;
-        char *current = GetFullName(GLOBALS->trace_to_alias_menu_c_1, &was_packed);
+        char *current = GetFullName(GLOBALS->trace_to_alias_menu_c_1);
         ClearTraces();
         GLOBALS->trace_to_alias_menu_c_1->flags |= TR_HIGHLIGHT;
         entrybox("Trace Name", 300, current, NULL, 128, G_CALLBACK(rename_cleanup));
-        if (was_packed) {
-            free_2(current);
-        }
     } else {
         must_sel();
     }
@@ -2165,7 +2137,6 @@ GwBitVector *combine_traces(int direction, GwTrace *single_trace_only)
             int ix, offset;
             char *nam;
             char *namex;
-            int was_packed = HIER_DEPACK_ALLOC;
 
             int row = 0, bit = 0;
             int row2 = 0, bit2 = 0;
@@ -2174,7 +2145,7 @@ GwBitVector *combine_traces(int direction, GwTrace *single_trace_only)
             char *namey;
             char sep2d = ':';
 
-            namex = hier_decompress_flagged(n[0]->nname, &was_packed);
+            namex = n[0]->nname;
 
             offset = strlen(namex);
             for (ix = offset - 1; ix >= 0; ix--) {
@@ -2207,13 +2178,10 @@ GwBitVector *combine_traces(int direction, GwTrace *single_trace_only)
 
             nam = (char *)g_alloca(offset + 50); /* to handle [a:b][c:d] case */
             memcpy(nam, namex, offset);
-            if (was_packed) {
-                free_2(namex);
-            }
 
             if (is_2d) {
                 is_2d = 0;
-                namey = hier_decompress_flagged(n[nodepnt - 1]->nname, &was_packed);
+                namey = n[nodepnt - 1]->nname;
 
                 offsety = strlen(namey);
                 for (iy = offsety - 1; iy >= 0; iy--) {
@@ -2246,10 +2214,6 @@ GwBitVector *combine_traces(int direction, GwTrace *single_trace_only)
                             }
                         }
                     }
-                }
-
-                if (was_packed) {
-                    free_2(namey);
                 }
             }
 
@@ -3036,7 +3000,6 @@ void menu_remove_aliases(gpointer null_data, guint callback_action, GtkWidget *w
     while (t) {
         if (HasAlias(t) && IsSelected(t)) {
             char *name_full;
-            int was_packed = HIER_DEPACK_ALLOC;
 
             free_2(t->name_full);
             t->name_full = NULL;
@@ -3044,21 +3007,13 @@ void menu_remove_aliases(gpointer null_data, guint callback_action, GtkWidget *w
             if (t->vector) {
                 name_full = t->n.vec->bvname;
             } else {
-                name_full = hier_decompress_flagged(t->n.nd->nname, &was_packed);
+                name_full = t->n.nd->nname;
             }
 
             t->name = name_full;
             if (GLOBALS->hier_max_level) {
-                if (!was_packed) {
-                    t->name = hier_extract(t->name, GLOBALS->hier_max_level);
-                } else {
-                    t->name = strdup_2(hier_extract(name_full, GLOBALS->hier_max_level));
-                    free_2(name_full);
-                }
+                t->name = hier_extract(t->name, GLOBALS->hier_max_level);
             }
-
-            if (was_packed)
-                t->is_depacked = 1;
 
             dirty = 1;
         }
@@ -3143,14 +3098,10 @@ void menu_alias(gpointer null_data, guint callback_action, GtkWidget *widget)
     }
 
     if (GLOBALS->trace_to_alias_menu_c_1) {
-        int was_packed = HIER_DEPACK_ALLOC;
-        char *current = GetFullName(GLOBALS->trace_to_alias_menu_c_1, &was_packed);
+        char *current = GetFullName(GLOBALS->trace_to_alias_menu_c_1);
         ClearTraces();
         GLOBALS->trace_to_alias_menu_c_1->flags |= TR_HIGHLIGHT;
         entrybox("Alias Highlighted Trace", 300, current, NULL, 128, G_CALLBACK(alias_cleanup));
-        if (was_packed) {
-            free_2(current);
-        }
     } else {
         must_sel();
     }
@@ -4113,16 +4064,11 @@ static void menu_open_hierarchy_2(gpointer null_data,
                 } else if (t->vector == TRUE) {
                     tname = strdup_2(t->n.vec->bvname);
                 } else {
-                    int flagged = HIER_DEPACK_ALLOC;
-
                     if (!t->n.nd) {
                         break; /* additional guard on top of !HasWave(t) */
                     }
 
-                    tname = hier_decompress_flagged(t->n.nd->nname, &flagged);
-                    if (!flagged) {
-                        tname = strdup_2(tname);
-                    }
+                    tname = strdup_2(t->n.nd->nname);
                 }
 
                 if (tname) {

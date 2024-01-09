@@ -15,6 +15,7 @@ of these features.
 
 - Removed the interactive VCD mode.
 - Removed support for LXT, LXT2, VZT, FSDB, and AET2 formats.
+- Removed support compressed hierarchy names.
 
 ### Changed
 
@@ -46,6 +47,7 @@ of these features.
     - `alt_wheel_mode`
     - `append_vcd_hier`
     - `atomic_vectors`
+    - `disable_auto_comphier`
     - `disable_ae2_alias`
     - `enable_vcd_autosave`
     - `force_toolbars`

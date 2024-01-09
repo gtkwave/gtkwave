@@ -20,7 +20,6 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
 #include "signal_list.h"

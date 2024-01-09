@@ -3,7 +3,6 @@
 #include <gtkwave.h>
 #include "busy.h"
 #include "lx2.h"
-#include "hierpack.h"
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
 
@@ -326,9 +325,7 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
 
     if (!(f->flags & VZT_RD_SYM_F_SYNVEC)) /* block debug message for synclk */
     {
-        int flagged = HIER_DEPACK_STATIC;
-        char *str = hier_decompress_flagged(np->nname, &flagged);
-        fprintf(stderr, "Import: %s\n", str); /* normally this never happens */
+        fprintf(stderr, "Import: %s\n", np->nname); /* normally this never happens */
     }
 
     /* new stuff */

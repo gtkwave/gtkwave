@@ -21,7 +21,6 @@
 #include "vcd.h"
 #include "debug.h"
 #include "busy.h"
-#include "hierpack.h"
 #include "gw-vcd-file.h"
 #include "gw-fst-file.h"
 
