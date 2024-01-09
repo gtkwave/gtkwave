@@ -193,9 +193,6 @@ struct Global
     /*
      * fst.c
      */
-    char nonimplicit_direction_encountered;
-    char supplemental_datatypes_encountered;
-    char supplemental_vartypes_encountered;
     char is_vhdl_component_format;
     JRB enum_nptrs_jrb;
 

@@ -135,6 +135,9 @@ void fill_sig_store(void)
     gtk_list_store_clear(GLOBALS->sig_store_treesearch_gtk2_c_1);
 
     GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    gboolean has_supplemental_datatypes =
+        gw_dump_file_has_supplemental_datatypes(GLOBALS->dump_file);
+    gboolean has_supplemental_vartypes = gw_dump_file_has_supplemental_vartypes(GLOBALS->dump_file);
 
     for (t = GLOBALS->sig_root_treesearch_gtk2_c_1; t != NULL; t = t->next) {
         int i = t->t_which;
@@ -226,8 +229,7 @@ void fill_sig_store(void)
                                    TREE_COLUMN,
                                    t,
                                    TYPE_COLUMN,
-                                   (((GLOBALS->supplemental_datatypes_encountered) &&
-                                     (!GLOBALS->supplemental_vartypes_encountered))
+                                   ((has_supplemental_datatypes && !has_supplemental_vartypes)
                                         ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
                                         : gw_var_type_to_string(vartype)),
                                    DIR_COLUMN,
@@ -253,8 +255,7 @@ void fill_sig_store(void)
                                    TREE_COLUMN,
                                    t,
                                    TYPE_COLUMN,
-                                   (((GLOBALS->supplemental_datatypes_encountered) &&
-                                     (!GLOBALS->supplemental_vartypes_encountered))
+                                   ((has_supplemental_datatypes && !has_supplemental_vartypes)
                                         ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
                                         : gw_var_type_to_string(vartype)),
                                    DIR_COLUMN,
@@ -1273,6 +1274,13 @@ GtkWidget *treeboxframe(const char *title)
         GtkCellRenderer *renderer;
         GtkTreeViewColumn *column;
 
+        gboolean has_nonimplicit_directions =
+            gw_dump_file_has_nonimplicit_directions(GLOBALS->dump_file);
+        gboolean has_supplemental_datatypes =
+            gw_dump_file_has_supplemental_datatypes(GLOBALS->dump_file);
+        gboolean has_supplemental_vartypes =
+            gw_dump_file_has_supplemental_vartypes(GLOBALS->dump_file);
+
         renderer = gtk_cell_renderer_text_new();
 
         switch (GLOBALS->loaded_file_type) {
@@ -1281,7 +1289,7 @@ GtkWidget *treeboxframe(const char *title)
 #endif
             case FST_FILE:
                 /* fallthrough for Dir is deliberate for extload and FST */
-                if (GLOBALS->nonimplicit_direction_encountered) {
+                if (has_nonimplicit_directions) {
                     column = gtk_tree_view_column_new_with_attributes("Dir",
                                                                       renderer,
                                                                       "text",
@@ -1293,17 +1301,13 @@ GtkWidget *treeboxframe(const char *title)
             case VCD_RECODER_FILE:
             case DUMPLESS_FILE:
                 column = gtk_tree_view_column_new_with_attributes(
-                    ((GLOBALS->supplemental_datatypes_encountered) &&
-                     (GLOBALS->supplemental_vartypes_encountered))
-                        ? "VType"
-                        : "Type",
+                    (has_supplemental_datatypes && has_supplemental_vartypes) ? "VType" : "Type",
                     renderer,
                     "text",
                     TYPE_COLUMN,
                     NULL);
                 gtk_tree_view_append_column(GTK_TREE_VIEW(sig_view), column);
-                if ((GLOBALS->supplemental_datatypes_encountered) &&
-                    (GLOBALS->supplemental_vartypes_encountered)) {
+                if (has_supplemental_datatypes && has_supplemental_vartypes) {
                     column = gtk_tree_view_column_new_with_attributes("DType",
                                                                       renderer,
                                                                       "text",

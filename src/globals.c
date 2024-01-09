@@ -171,9 +171,6 @@ static const struct Global globals_base_values = {
     /*
      * fst.c
      */
-    0, /* nonimplicit_direction_encountered */
-    0, /* supplemental_datatypes_encountered */
-    0, /* supplemental_vartypes_encountered */
     0, /* is_vhdl_component_format */
     NULL, /* enum_nptrs_jrb */
 
