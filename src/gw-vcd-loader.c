@@ -6,7 +6,6 @@
 #include "vcd.h"
 #include "vlist.h"
 #include "lx2.h"
-#include "hierpack.h"
 
 int vcd_keyword_code(const char *s, unsigned int len);
 
@@ -81,6 +80,7 @@ struct _GwVcdLoader
     GwTreeNode *tree_root;
 
     guint numfacs;
+    gchar *prev_hier_uncompressed_name;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -180,7 +180,8 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
         s++;
     }
 
-    recoded_bit = GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
+    recoded_bit =
+        GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
     if (!which) {
         accum = (recoded_bit << 4);
     } else {
@@ -293,7 +294,8 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s, gboolean 
         s++;
     }
 
-    recoded_bit = GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
+    recoded_bit =
+        GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
     if (!which) {
         accum = (recoded_bit << 4);
     } else {
@@ -1665,7 +1667,7 @@ static void vcd_parse(GwVcdLoader *self)
                         }
 
                         if (self->pv != NULL) {
-                            if (!strcmp(GLOBALS->prev_hier_uncompressed_name, v->name) &&
+                            if (!strcmp(self->prev_hier_uncompressed_name, v->name) &&
                                 !disable_autocoalesce && (!strchr(v->name, '\\'))) {
                                 self->pv->chain = v;
                                 v->root = self->rootv;
@@ -1676,13 +1678,13 @@ static void vcd_parse(GwVcdLoader *self)
                                 self->rootv = v;
                             }
 
-                            free_2(GLOBALS->prev_hier_uncompressed_name);
+                            free_2(self->prev_hier_uncompressed_name);
                         } else {
                             self->rootv = v;
                         }
 
                         self->pv = v;
-                        GLOBALS->prev_hier_uncompressed_name = strdup_2(v->name);
+                        self->prev_hier_uncompressed_name = strdup_2(v->name);
                     } else /* regular vcd var, not an evcd port var */
                     {
                         vtok = get_vartoken(self, 1);
@@ -1755,7 +1757,7 @@ static void vcd_parse(GwVcdLoader *self)
                         }
 
                         if (self->pv != NULL) {
-                            if (!strcmp(GLOBALS->prev_hier_uncompressed_name, v->name)) {
+                            if (!strcmp(self->prev_hier_uncompressed_name, v->name)) {
                                 self->pv->chain = v;
                                 v->root = self->rootv;
                                 if (self->pv == self->rootv) {
@@ -1765,12 +1767,12 @@ static void vcd_parse(GwVcdLoader *self)
                                 self->rootv = v;
                             }
 
-                            free_2(GLOBALS->prev_hier_uncompressed_name);
+                            free_2(self->prev_hier_uncompressed_name);
                         } else {
                             self->rootv = v;
                         }
                         self->pv = v;
-                        GLOBALS->prev_hier_uncompressed_name = strdup_2(v->name);
+                        self->prev_hier_uncompressed_name = strdup_2(v->name);
 
                         vtok = get_vartoken(self, 1);
                         if (vtok == V_END)
@@ -1989,9 +1991,9 @@ static void vcd_parse(GwVcdLoader *self)
                 gw_blackout_regions_add_dumpon(self->blackout_regions, self->current_time);
 
                 self->pv = NULL;
-                if (GLOBALS->prev_hier_uncompressed_name) {
-                    free_2(GLOBALS->prev_hier_uncompressed_name);
-                    GLOBALS->prev_hier_uncompressed_name = NULL;
+                if (self->prev_hier_uncompressed_name) {
+                    free_2(self->prev_hier_uncompressed_name);
+                    self->prev_hier_uncompressed_name = NULL;
                 }
 
                 return;

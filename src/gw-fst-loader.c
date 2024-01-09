@@ -1,7 +1,6 @@
 #include <config.h>
 #include <fstapi.h>
 #include "globals.h"
-#include "hierpack.h"
 #include "lx2.h"
 #include "tree_component.h"
 #include "gw-fst-loader.h"
@@ -640,10 +639,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     node_block = calloc_2(numfacs, sizeof(GwNode));
     self->mvlfacs_rvs_alias = calloc_2(numfacs, sizeof(fstHandle));
 
-    hier_auto_enable(numfacs); /* enable if greater than threshold */
-
-    init_facility_pack();
-
     fprintf(stderr, FST_RDLOAD "Processing %d facs.\n", numfacs);
     /* SPLASH */ splash_sync(1, 5);
 
@@ -820,15 +815,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
             longest_nam_candidate = len;
 
-            if (!GLOBALS->do_hier_compress) {
-                str = malloc_2(len + 1);
-            } else {
-                if (len > f_name_build_buf_len) {
-                    free_2(f_name_build_buf);
-                    f_name_build_buf = malloc_2((f_name_build_buf_len = len) + 1);
-                }
-                str = f_name_build_buf;
-            }
+            str = malloc_2(len + 1);
 
             if (!GLOBALS->alt_hier_delimeter) {
                 memcpy(str, buf, len + 1);
@@ -856,15 +843,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 int len = sprintf_2_sd(buf, f_name[(i)&F_NAME_MODULUS], node_block[i].msi);
 
                 longest_nam_candidate = len;
-                if (!GLOBALS->do_hier_compress) {
-                    str = malloc_2(len + 1);
-                } else {
-                    if (len > f_name_build_buf_len) {
-                        free_2(f_name_build_buf);
-                        f_name_build_buf = malloc_2((f_name_build_buf_len = len) + 1);
-                    }
-                    str = f_name_build_buf;
-                }
+                str = malloc_2(len + 1);
 
                 if (!GLOBALS->alt_hier_delimeter) {
                     memcpy(str, buf, len + 1);
@@ -891,15 +870,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
                 longest_nam_candidate = len;
-                if (!GLOBALS->do_hier_compress) {
-                    str = malloc_2(len + 1);
-                } else {
-                    if (len > f_name_build_buf_len) {
-                        free_2(f_name_build_buf);
-                        f_name_build_buf = malloc_2((f_name_build_buf_len = len) + 1);
-                    }
-                    str = f_name_build_buf;
-                }
+                str = malloc_2(len + 1);
 
                 if (!GLOBALS->alt_hier_delimeter) {
                     memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
@@ -942,13 +913,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             jrb_insert_vptr(GLOBALS->enum_nptrs_jrb, n, jv);
         }
 
-        if (GLOBALS->do_hier_compress) {
-            n->nname = compress_facility((unsigned char *)s->name, longest_nam_candidate);
-            /* free_2(s->name); ...removed as f_name_build_buf is now used */
-            s->name = n->nname;
-        } else {
-            n->nname = s->name;
-        }
+        n->nname = s->name;
 
         n->mv.mvlfac = &self->mvlfacs[i];
         self->mvlfacs[i].working_node = n;
@@ -1035,7 +1000,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     gw_stems_shrink_to_fit(self->stems);
 
     decorated_module_cleanup(); /* ...also now in gtk2_treesearch.c */
-    freeze_facility_pack();
     iter_through_comp_name_table();
 
     fprintf(stderr,

@@ -310,7 +310,6 @@ static void print_help(char *nam)
         "  -5, --sstexclude           specify sst exclusion filter filename\n"
         "  -6, --dark                 set gtk-application-prefer-dark-theme = TRUE\n"
         "  -7, --saveonexit           prompt user to write save file at exit\n"
-        "  -C, --comphier             use compressed hierarchy names (slower)\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
         "  -V, --version              display version banner then exit\n"
@@ -833,8 +832,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->disable_empty_gui = old_g->disable_empty_gui;
         GLOBALS->strace_repeat_count = old_g->strace_repeat_count;
 
-        GLOBALS->do_hier_compress = old_g->do_hier_compress;
-        GLOBALS->disable_auto_comphier = old_g->disable_auto_comphier;
         GLOBALS->sst_dbl_action_type = old_g->sst_dbl_action_type;
         GLOBALS->use_gestures = old_g->use_gestures;
         GLOBALS->use_dark = old_g->use_dark;
@@ -915,19 +912,41 @@ do_primary_inits:
         while (1) {
             int option_index = 0;
 
-            static struct option long_options[] = {
-                {"dump", 1, 0, 'f'},        {"optimize", 0, 0, 'o'},   {"nocli", 1, 0, 'n'},
-                {"save", 1, 0, 'a'},        {"rcfile", 1, 0, 'r'},     {"defaultskip", 0, 0, 'd'},
-                {"logfile", 1, 0, 'l'},     {"start", 1, 0, 's'},      {"end", 1, 0, 'e'},
-                {"cpus", 1, 0, 'c'},        {"stems", 1, 0, 't'},      {"nowm", 0, 0, 'N'},
-                {"script", 1, 0, 'S'},      {"vcd", 0, 0, 'v'},        {"version", 0, 0, 'V'},
-                {"help", 0, 0, 'h'},        {"exit", 0, 0, 'x'},       {"xid", 1, 0, 'X'},
-                {"nomenus", 0, 0, 'M'},     {"dualid", 1, 0, 'D'},     {"giga", 0, 0, 'g'},
-                {"comphier", 0, 0, 'C'},    {"tcl_init", 1, 0, 'T'},   {"wish", 0, 0, 'W'},
-                {"repscript", 1, 0, 'R'},   {"repperiod", 1, 0, 'P'},  {"output", 1, 0, 'O'},
-                {"slider-zoom", 0, 0, 'z'}, {"rpcid", 1, 0, '1'},      {"chdir", 1, 0, '2'},
-                {"restore", 0, 0, '3'},     {"rcvar", 1, 0, '4'},      {"sstexclude", 1, 0, '5'},
-                {"dark", 0, 0, '6'},        {"saveonexit", 0, 0, '7'}, {0, 0, 0, 0}};
+            static struct option long_options[] = {{"dump", 1, 0, 'f'},
+                                                   {"optimize", 0, 0, 'o'},
+                                                   {"nocli", 1, 0, 'n'},
+                                                   {"save", 1, 0, 'a'},
+                                                   {"rcfile", 1, 0, 'r'},
+                                                   {"defaultskip", 0, 0, 'd'},
+                                                   {"logfile", 1, 0, 'l'},
+                                                   {"start", 1, 0, 's'},
+                                                   {"end", 1, 0, 'e'},
+                                                   {"cpus", 1, 0, 'c'},
+                                                   {"stems", 1, 0, 't'},
+                                                   {"nowm", 0, 0, 'N'},
+                                                   {"script", 1, 0, 'S'},
+                                                   {"vcd", 0, 0, 'v'},
+                                                   {"version", 0, 0, 'V'},
+                                                   {"help", 0, 0, 'h'},
+                                                   {"exit", 0, 0, 'x'},
+                                                   {"xid", 1, 0, 'X'},
+                                                   {"nomenus", 0, 0, 'M'},
+                                                   {"dualid", 1, 0, 'D'},
+                                                   {"giga", 0, 0, 'g'},
+                                                   {"tcl_init", 1, 0, 'T'},
+                                                   {"wish", 0, 0, 'W'},
+                                                   {"repscript", 1, 0, 'R'},
+                                                   {"repperiod", 1, 0, 'P'},
+                                                   {"output", 1, 0, 'O'},
+                                                   {"slider-zoom", 0, 0, 'z'},
+                                                   {"rpcid", 1, 0, '1'},
+                                                   {"chdir", 1, 0, '2'},
+                                                   {"restore", 0, 0, '3'},
+                                                   {"rcvar", 1, 0, '4'},
+                                                   {"sstexclude", 1, 0, '5'},
+                                                   {"dark", 0, 0, '6'},
+                                                   {"saveonexit", 0, 0, '7'},
+                                                   {0, 0, 0, 0}};
 
             c = getopt_long(argc,
                             argv,
@@ -1203,10 +1222,6 @@ do_primary_inits:
 
                 case 'g':
                     is_giga = 1;
-                    break;
-
-                case 'C':
-                    GLOBALS->do_hier_compress = 1;
                     break;
 
                 case 'R':

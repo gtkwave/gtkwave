@@ -25,7 +25,6 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_np.h"
@@ -1042,12 +1041,11 @@ int process_tcl_list(const char *sl, gboolean prepend)
 
         unesc_len = strlen(unescaped_str);
         for (i = 0; i < numfacs; i++) {
-            int was_packed = HIER_DEPACK_ALLOC;
             char *hfacname = NULL;
 
             GwSymbol *fac = gw_facs_get(facs, curr_srch_idx);
 
-            hfacname = hier_decompress_flagged(fac->name, &was_packed);
+            hfacname = fac->name;
 
             if (!strncmp(unescaped_str, hfacname, unesc_len)) {
                 int hfacname_len = strlen(hfacname);
@@ -1056,9 +1054,6 @@ int process_tcl_list(const char *sl, gboolean prepend)
                     found++;
                     match_idx_list[ii] = curr_srch_idx;
                     match_type_list[ii] = 1; /* match was on normal search */
-                    if (was_packed) {
-                        free_2(hfacname);
-                    }
                     if (s_new != unescaped_str) {
                         free_2(unescaped_str);
                     }
@@ -1069,10 +1064,6 @@ int process_tcl_list(const char *sl, gboolean prepend)
             curr_srch_idx++;
             if (curr_srch_idx == numfacs)
                 curr_srch_idx = 0; /* optimization for rtlbrowse as names should be in order */
-
-            if (was_packed) {
-                free_2(hfacname);
-            }
         }
 
         if (s_new != unescaped_str) {
@@ -1087,25 +1078,17 @@ int process_tcl_list(const char *sl, gboolean prepend)
 
         wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
         for (i = 0; i < numfacs; i++) {
-            int was_packed = HIER_DEPACK_ALLOC;
             char *hfacname = NULL;
 
             GwSymbol *fac = gw_facs_get(facs, i);
 
-            hfacname = hier_decompress_flagged(fac->name, &was_packed);
+            hfacname = fac->name;
 
             if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                 found++;
                 match_idx_list[ii] = i;
                 match_type_list[ii] = 1; /* match was on normal search */
-                if (was_packed) {
-                    free_2(hfacname);
-                }
                 goto import;
-            }
-
-            if (was_packed) {
-                free_2(hfacname);
             }
         }
 
@@ -1120,25 +1103,17 @@ int process_tcl_list(const char *sl, gboolean prepend)
 
             wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
             for (i = 0; i < numfacs; i++) {
-                int was_packed = HIER_DEPACK_ALLOC;
                 char *hfacname = NULL;
 
                 GwSymbol *fac = gw_facs_get(facs, i);
 
-                hfacname = hier_decompress_flagged(fac->name, &was_packed);
+                hfacname = fac->name;
 
                 if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                     found++;
                     match_idx_list[ii] = i;
                     match_type_list[ii] = 2 + lbrack_adj; /* match was on lbrack removal */
-                    if (was_packed) {
-                        free_2(hfacname);
-                    }
                     goto import;
-                }
-
-                if (was_packed) {
-                    free_2(hfacname);
                 }
             }
         }
@@ -1344,18 +1319,12 @@ char *make_single_tcl_list_name(char *s, char *opt_value, int promote_to_bus, in
 
     if (s) {
         int len;
-        int was_packed = HIER_DEPACK_ALLOC;
         char *s2;
 
-        s = hier_decompress_flagged(s, &was_packed);
         len = strlen(s);
         s2 = g_alloca(len + 1);
 
         strcpy(s2, s);
-        if (was_packed) {
-            free_2(s);
-            s = NULL;
-        }
 
         pnt = s2;
 

@@ -22,7 +22,6 @@
 #include "lx2.h"
 #include "debug.h"
 #include "busy.h"
-#include "hierpack.h"
 #include "signal_list.h"
 #include "gw-ghw-file.h"
 
@@ -731,7 +730,6 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
     gtk_list_store_clear(GTK_LIST_STORE(GLOBALS->sig_store_search));
 
     for (i = 0; i < numfacs; i++) {
-        int was_packed = HIER_DEPACK_STATIC;
         char *hfacname = NULL;
         int skiprow;
 
@@ -746,7 +744,7 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
 
         GwSymbol *fac = gw_facs_get(facs, i);
 
-        hfacname = hier_decompress_flagged(fac->name, &was_packed);
+        hfacname = fac->name;
         if (!strcmp(hfacname, duplicate_row_buffer)) {
             skiprow = 1;
         } else {
@@ -800,8 +798,6 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
                     break;
                 }
             }
-
-        /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
     }
 
     free_2(duplicate_row_buffer);

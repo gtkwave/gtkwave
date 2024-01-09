@@ -38,7 +38,6 @@
 #include "signal_list.h"
 #include "dump_file_main.h"
 #include "gw-time-display.h"
-#include "hierpack.h"
 
 #ifdef __MINGW32__
 #define sleep(x) Sleep(x * 1000)
@@ -185,19 +184,6 @@ static const struct Global globals_base_values = {
      */
     NULL, /* dead_context */
     NULL, /* gtk_context_bridge_ptr */
-
-    /*
-     * hierpack.c
-     */
-    NULL, /* hp_buf */
-    NULL, /* hp_offs */
-    0, /* hp_prev */
-    0, /* hp_buf_siz */
-    NULL, /* fmem_buf */
-    0, /* fmem_buf_siz */
-    0, /* fmem_buf_offs */
-    0, /* fmem_uncompressed_siz */
-    0, /* disable_auto_comphier */
 
     /*
      * logfile.c
@@ -642,8 +628,6 @@ static const struct Global globals_base_values = {
     /*
      * vcd.c
      */
-    0, /* do_hier_compress */
-    NULL, /* prev_hier_uncompressed_name */
     NULL, /* vcd_jmp_buf */
     -1, /* vcd_warning_filesize 472 */
     1, /* autocoalesce 473 */
@@ -1121,8 +1105,6 @@ void reload_into_new_context_2(void)
     new_globals->clipboard_mouseover = GLOBALS->clipboard_mouseover;
     new_globals->keep_xz_colors = GLOBALS->keep_xz_colors;
     new_globals->disable_tooltips = GLOBALS->disable_tooltips;
-    new_globals->do_hier_compress = GLOBALS->do_hier_compress;
-    new_globals->disable_auto_comphier = GLOBALS->disable_auto_comphier;
     new_globals->do_initial_zoom_fit = GLOBALS->do_initial_zoom_fit;
     new_globals->do_initial_zoom_fit_used = GLOBALS->do_initial_zoom_fit_used;
     new_globals->do_resize_signals = GLOBALS->do_resize_signals;

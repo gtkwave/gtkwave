@@ -55,7 +55,6 @@ gtkwave_sources = [
     'gw-vcd-loader.c',
     'gw-wave-view-traces.c',
     'gw-wave-view.c',
-    'hierpack.c',
     'logfile.c',
     'lx2.c',
     'main.c',

@@ -25,7 +25,6 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
@@ -198,12 +197,7 @@ static char *extractFullTraceName(GwTrace *t)
         } else if (t->vector) {
             name = strdup_2(t->n.vec->bvname);
         } else {
-            int flagged = HIER_DEPACK_ALLOC;
-
-            name = hier_decompress_flagged(t->n.nd->nname, &flagged);
-            if (!flagged) {
-                name = strdup_2(name);
-            }
+            name = strdup_2(t->n.nd->nname);
         }
     }
     return (name);
@@ -264,17 +258,14 @@ static int gtkwavetcl_getFacName(ClientData clientData,
         guint numfacs = gw_facs_get_length(facs);
 
         if ((which >= 0) && (which < numfacs)) {
-            int was_packed = HIER_DEPACK_ALLOC;
             char *hfacname = NULL;
 
             GwSymbol *fac = gw_facs_get(facs, which);
 
-            hfacname = hier_decompress_flagged(fac->name, &was_packed);
+            hfacname = fac->name;
 
             aobj = Tcl_NewStringObj(hfacname, -1);
             Tcl_SetObjResult(interp, aobj);
-            if (was_packed)
-                free_2(hfacname);
         }
     } else {
         return (gtkwavetcl_badNumArgs(clientData, interp, objc, objv, 1));

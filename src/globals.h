@@ -214,19 +214,6 @@ struct Global
                                                buttons to ctx */
 
     /*
-     * hierpack.c
-     */
-    unsigned char *hp_buf;
-    size_t *hp_offs;
-    size_t hp_prev;
-    size_t hp_buf_siz;
-    unsigned char *fmem_buf;
-    size_t fmem_buf_siz;
-    size_t fmem_buf_offs;
-    size_t fmem_uncompressed_siz;
-    char disable_auto_comphier;
-
-    /*
      * logfile.c
      */
     void **logfiles;
@@ -634,8 +621,6 @@ struct Global
     /*
      * vcd.c
      */
-    unsigned char do_hier_compress; /* from vcd.c */
-    char *prev_hier_uncompressed_name; /* from vcd.c */
     jmp_buf *vcd_jmp_buf; /* from vcd.c */
     int vcd_warning_filesize; /* from vcd.c 502 */
     char autocoalesce; /* from vcd.c 503 */

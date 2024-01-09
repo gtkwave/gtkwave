@@ -26,7 +26,6 @@
 #include "main.h"
 #include "menu.h"
 #include "busy.h"
-#include "hierpack.h"
 #include <stdlib.h>
 
 /*
@@ -166,19 +165,12 @@ char *attempt_vecmatch(char *s1, char *s2)
     if (!s1 || !s2) {
         return (pnt);
     } else {
-        int ns1_was_decompressed = HIER_DEPACK_ALLOC;
-        char *ns1 = hier_decompress_flagged(s1, &ns1_was_decompressed);
-        int ns2_was_decompressed = HIER_DEPACK_ALLOC;
-        char *ns2 = hier_decompress_flagged(s2, &ns2_was_decompressed);
+        char *ns1 = s1;
+        char *ns2 = s2;
 
         if (*ns1 && *ns2) {
             pnt = attempt_vecmatch_2(ns1, ns2);
         }
-
-        if (ns1_was_decompressed)
-            free_2(ns1);
-        if (ns2_was_decompressed)
-            free_2(ns2);
 
         return (pnt);
     }
@@ -951,17 +943,11 @@ GwBits *makevec_chain(char *vec, GwSymbol *sym, int len)
             strcpy(b->name = (char *)malloc_2(strlen(vec) + 1), vec);
         } else {
             char *s1, *s2;
-            int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
             int root1len = 0, root2len = 0;
             int l1, l2;
 
             s1 = symhi->n->nname;
             s2 = symlo->n->nname;
-
-            if (GLOBALS->do_hier_compress) {
-                s1 = hier_decompress_flagged(s1, &s1_was_packed);
-                s2 = hier_decompress_flagged(s2, &s2_was_packed);
-            }
 
             l1 = strlen(s1);
 
@@ -1050,13 +1036,6 @@ GwBits *makevec_chain(char *vec, GwSymbol *sym, int len)
                     *(s1 + l1 - 1) = fixup1;
                 }
             }
-
-            if (GLOBALS->do_hier_compress) {
-                if (s2_was_packed)
-                    free_2(s2);
-                if (s1_was_packed)
-                    free_2(s1);
-            }
         }
     }
 
@@ -1139,8 +1118,6 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
         if (vec) {
             strcpy(b->name = (char *)malloc_2(strlen(vec) + 1), vec);
         } else {
-            int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
-
             GwSymbol *fac_hi = gw_facs_get(facs, hi);
             GwSymbol *fac_lo = gw_facs_get(facs, lo);
 
@@ -1151,11 +1128,6 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
             } else {
                 s1 = fac_lo->n->nname;
                 s2 = fac_hi->n->nname;
-            }
-
-            if (GLOBALS->do_hier_compress) {
-                s1 = hier_decompress_flagged(s1, &s1_was_packed);
-                s2 = hier_decompress_flagged(s2, &s2_was_packed);
             }
 
             gint l1 = strlen(s1);
@@ -1228,12 +1200,6 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
                     strncpy(b->name, s1, root1len - 1);
                     sprintf(b->name + root1len - 1, "[%s]", s1 + root1len);
                 }
-            }
-            if (GLOBALS->do_hier_compress) {
-                if (s2_was_packed)
-                    free_2(s2);
-                if (s1_was_packed)
-                    free_2(s1);
             }
         }
     }
@@ -1537,7 +1503,6 @@ char *makename_chain(GwSymbol *sym)
     char hier_delimeter2 = '[';
     char *name = NULL;
     char *s1, *s2;
-    int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
     int root1len = 0, root2len = 0;
     int l1, l2;
 
@@ -1564,8 +1529,8 @@ char *makename_chain(GwSymbol *sym)
         }
     }
 
-    s1 = hier_decompress_flagged(symhi->n->nname, &s1_was_packed);
-    s2 = hier_decompress_flagged(symlo->n->nname, &s2_was_packed);
+    s1 = symhi->n->nname;
+    s2 = symlo->n->nname;
 
     l1 = strlen(s1);
 
@@ -1645,13 +1610,6 @@ char *makename_chain(GwSymbol *sym)
         }
     }
 
-    if (s1_was_packed) {
-        free_2(s1);
-    }
-    if (s2_was_packed) {
-        free_2(s2);
-    }
-
     return (name);
 }
 
@@ -1683,7 +1641,6 @@ eptr ExpandNode(GwNode *n)
         DEBUG(fprintf(stderr, "Nothing to expand\n"));
     } else {
         char *namex;
-        int was_packed = HIER_DEPACK_ALLOC;
 
         msb = n->msi;
         lsb = n->lsi;
@@ -1703,11 +1660,7 @@ eptr ExpandNode(GwNode *n)
         rc->lsb = lsb;
         rc->width = width;
 
-        if (GLOBALS->do_hier_compress) {
-            namex = hier_decompress_flagged(n->nname, &was_packed);
-        } else {
-            namex = n->nname;
-        }
+        namex = n->nname;
 
         offset = strlen(namex);
         for (i = offset - 1; i >= 0; i--) {
@@ -1753,10 +1706,6 @@ eptr ExpandNode(GwNode *n)
 
         nam = (char *)g_alloca(offset + 20 + 30);
         memcpy(nam, namex, offset);
-
-        if (was_packed) {
-            free_2(namex);
-        }
 
         if (!n->harray) /* make quick array lookup for aet display--normally this is done in addnode
                          */
@@ -1948,7 +1897,6 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
         return (NULL);
     } else {
         char *namex;
-        int was_packed = HIER_DEPACK_ALLOC;
 
         if (n->lsi > n->msi) {
             width = n->lsi - n->msi + 1;
@@ -1967,11 +1915,7 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
             return (NULL);
         }
 
-        if (GLOBALS->do_hier_compress) {
-            namex = hier_decompress_flagged(n->nname, &was_packed);
-        } else {
-            namex = n->nname;
-        }
+        namex = n->nname;
 
         offset = strlen(namex);
         for (i = offset - 1; i >= 0; i--) {
@@ -2017,10 +1961,6 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
 
         nam = (char *)g_alloca(offset + 20);
         memcpy(nam, namex, offset);
-
-        if (was_packed) {
-            free_2(namex);
-        }
 
         if (!n->harray) /* make quick array lookup for aet display--normally this is done in addnode
                          */

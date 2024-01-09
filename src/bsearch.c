@@ -14,7 +14,6 @@
 #include "symbol.h"
 #include "bsearch.h"
 #include "strace.h"
-#include "hierpack.h"
 #include <ctype.h>
 
 static int compar_timechain(const void *s1, const void *s2)
@@ -268,11 +267,10 @@ static int compar_facs(const void *key, const void *v2)
 {
     GwSymbol *s2;
     int rc;
-    int was_packed = HIER_DEPACK_STATIC;
     char *s3;
 
     s2 = *((GwSymbol **)v2);
-    s3 = hier_decompress_flagged(s2->name, &was_packed);
+    s3 = s2->name;
     rc = sigcmp((char *)key, s3);
 
     /* if(was_packed) free_2(s3); ...not needed with HIER_DEPACK_STATIC */

@@ -10,7 +10,6 @@
 #include "globals.h"
 #include <config.h>
 #include "savefile.h"
-#include "hierpack.h"
 #include "lx2.h"
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -82,8 +81,7 @@ bot:
 
 char *append_array_row(GwNode *n)
 {
-    int was_packed = HIER_DEPACK_ALLOC;
-    char *hname = hier_decompress_flagged(n->nname, &was_packed);
+    char *hname = n->nname;
 
 #ifdef WAVE_ARRAY_SUPPORT
     if (!n->array_height)
@@ -96,9 +94,6 @@ char *append_array_row(GwNode *n)
         sprintf(GLOBALS->buf_menu_c_1, "%s{%d}", hname, n->this_row);
     }
 #endif
-
-    if (was_packed)
-        free_2(hname);
 
     return (GLOBALS->buf_menu_c_1);
 }

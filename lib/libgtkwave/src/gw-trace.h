@@ -40,8 +40,6 @@ struct _GwTrace
 
     unsigned is_cursor : 1; /* set to mark a cursor trace */
     unsigned is_alias : 1; /* set when it's an alias (safe to free t->name then) */
-    unsigned is_depacked : 1; /* set when it's been depacked from a compressed entry (safe to free
-                                 t->name then) */
     unsigned vector : 1; /* 1 if bit vector, 0 if node */
     unsigned shift_drag_valid : 1; /* qualifies shift_drag above */
     unsigned interactive_vector_needs_regeneration : 1; /* for interactive VCDs */
