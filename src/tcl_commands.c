@@ -321,6 +321,11 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
         GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
         guint numfacs = gw_facs_get_length(facs);
 
+        gboolean has_supplemental_datatypes =
+            gw_dump_file_has_supplemental_datatypes(GLOBALS->dump_file);
+        gboolean has_supplemental_vartypes =
+            gw_dump_file_has_supplemental_vartypes(GLOBALS->dump_file);
+
         if ((which >= 0) && (which < numfacs)) {
             unsigned int varxt;
             char *varxt_pnt;
@@ -344,8 +349,7 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
                 vardt = 0;
             }
 
-            aobj = Tcl_NewStringObj((((GLOBALS->supplemental_datatypes_encountered) &&
-                                      (!GLOBALS->supplemental_vartypes_encountered))
+            aobj = Tcl_NewStringObj(((has_supplemental_datatypes && !has_supplemental_vartypes)
                                          ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
                                          : gw_var_type_to_string(vartype)),
                                     -1);

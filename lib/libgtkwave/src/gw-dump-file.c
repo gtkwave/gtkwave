@@ -13,6 +13,10 @@ typedef struct
     GwTimeDimension time_dimension;
     GwTimeRange *time_range;
     GwTime global_time_offset;
+
+    gboolean has_nonimplicit_directions;
+    gboolean has_supplemental_datatypes;
+    gboolean has_supplemental_vartypes;
 } GwDumpFilePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(GwDumpFile, gw_dump_file, G_TYPE_OBJECT)
@@ -28,6 +32,9 @@ enum
     PROP_TIME_DIMENSION,
     PROP_TIME_RANGE,
     PROP_GLOBAL_TIME_OFFSET,
+    PROP_HAS_NONIMPLICIT_DIRECTIONS,
+    PROP_HAS_SUPPLEMENTAL_DATATYPES,
+    PROP_HAS_SUPPLEMENTAL_VARTYPES,
     N_PROPERTIES,
 };
 
@@ -127,6 +134,18 @@ static void gw_dump_file_set_property(GObject *object,
             priv->global_time_offset = g_value_get_int64(value);
             break;
 
+        case PROP_HAS_NONIMPLICIT_DIRECTIONS:
+            priv->has_nonimplicit_directions = g_value_get_boolean(value);
+            break;
+
+        case PROP_HAS_SUPPLEMENTAL_DATATYPES:
+            priv->has_supplemental_datatypes = g_value_get_boolean(value);
+            break;
+
+        case PROP_HAS_SUPPLEMENTAL_VARTYPES:
+            priv->has_supplemental_vartypes = g_value_get_boolean(value);
+            break;
+
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
             break;
@@ -175,6 +194,18 @@ static void gw_dump_file_get_property(GObject *object,
 
         case PROP_GLOBAL_TIME_OFFSET:
             g_value_set_int64(value, gw_dump_file_get_global_time_offset(self));
+            break;
+
+        case PROP_HAS_NONIMPLICIT_DIRECTIONS:
+            g_value_set_boolean(value, gw_dump_file_has_nonimplicit_directions(self));
+            break;
+
+        case PROP_HAS_SUPPLEMENTAL_DATATYPES:
+            g_value_set_boolean(value, gw_dump_file_has_supplemental_datatypes(self));
+            break;
+
+        case PROP_HAS_SUPPLEMENTAL_VARTYPES:
+            g_value_set_boolean(value, gw_dump_file_has_supplemental_vartypes(self));
             break;
 
         default:
@@ -258,6 +289,27 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
                            G_MAXINT64,
                            0,
                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_HAS_NONIMPLICIT_DIRECTIONS] =
+        g_param_spec_boolean("has-nonimplicit-directions",
+                             NULL,
+                             NULL,
+                             FALSE,
+                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_HAS_SUPPLEMENTAL_DATATYPES] =
+        g_param_spec_boolean("has-supplemental-datatypes",
+                             NULL,
+                             NULL,
+                             FALSE,
+                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_HAS_SUPPLEMENTAL_VARTYPES] =
+        g_param_spec_boolean("has-supplemental-vartypes",
+                             NULL,
+                             NULL,
+                             FALSE,
+                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }
@@ -352,8 +404,6 @@ GwEnumFilterList *gw_dump_file_get_enum_filters(GwDumpFile *self)
     return priv->enum_filters;
 }
 
-
-
 /**
  * gw_dump_file_get_time_scale:
  * @self: A #GwDumpFile.
@@ -420,4 +470,55 @@ GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self)
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     return priv->global_time_offset;
+}
+
+/**
+ * gw_dump_file_has_nonimplicit_directions:
+ * @self: A #GwDumpFile.
+ *
+ * Returns whether the dump file has non implicit directions.
+ *
+ * Returns: %TRUE, if the dump file has non implicit directions.
+ */
+gboolean gw_dump_file_has_nonimplicit_directions(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), 0);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->has_nonimplicit_directions;
+}
+
+/**
+ * gw_dump_file_has_supplemental_datatypes:
+ * @self: A #GwDumpFile.
+ *
+ * Returns whether the dump file has supplemental datatypes.
+ *
+ * Returns: %TRUE, if the dump file has supplemental datatypes.
+ */
+gboolean gw_dump_file_has_supplemental_datatypes(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), 0);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->has_supplemental_datatypes;
+}
+
+/**
+ * gw_dump_file_has_supplemental_vartatypes:
+ * @self: A #GwDumpFile.
+ *
+ * Returns whether the dump file has supplemental vartatypes.
+ *
+ * Returns: %TRUE, if the dump file has supplemental vartatypes.
+ */
+gboolean gw_dump_file_has_supplemental_vartypes(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), 0);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->has_supplemental_vartypes;
 }

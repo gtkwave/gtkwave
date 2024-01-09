@@ -67,6 +67,10 @@ struct _GwFstLoader
     gchar *end_time;
 
     GwEnumFilterList *enum_filters;
+
+    gboolean has_nonimplicit_directions;
+    gboolean has_supplemental_datatypes;
+    gboolean has_supplemental_vartypes;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
@@ -341,9 +345,9 @@ static void handle_supvar(GwFstLoader *self,
     *svt = attr->arg >> FST_SDT_SVT_SHIFT_COUNT;
     *sdt = attr->arg & (FST_SDT_ABS_MAX - 1);
 
-    GLOBALS->supplemental_datatypes_encountered = 1;
+    self->has_supplemental_datatypes = TRUE;
     if (*svt != FST_SVT_NONE && *svt != FST_SVT_VHDL_SIGNAL) {
-        GLOBALS->supplemental_vartypes_encountered = 1;
+        self->has_supplemental_vartypes = TRUE;
     }
 }
 
@@ -712,7 +716,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         if (h->u.var.length) {
             nvd = fst_var_dir_to_gw_var_dir(h->u.var.direction);
             if (nvd != GW_VAR_DIR_IMPLICIT) {
-                GLOBALS->nonimplicit_direction_encountered = 1;
+                self->has_nonimplicit_directions = TRUE;
             }
 
             nvt = fst_var_type_to_gw_var_type(h->u.var.typ);
@@ -1076,6 +1080,9 @@ if(num_dups)
                                         "global-time-offset", global_time_offset,
                                         "tree", tree,
                                         "facs", facs,
+                                        "has-nonimplicit-directions", self->has_nonimplicit_directions,
+                                        "has-supplemental-datatypes", self->has_supplemental_datatypes,
+                                        "has-supplemental-vartypes", self->has_supplemental_vartypes,
                                         NULL);
     // clang-format on
 
