@@ -74,37 +74,29 @@ static char *dofilter(GwTrace *t, char *s)
 
 static char *edofilter(GwTrace *t, char *s)
 {
-    if (t->flags & TR_ENUM) {
-        int filt = t->e_filter - 1;
+    if (!(t->flags & TR_ENUM)) {
+        return s;
+    }
 
-#ifdef _WAVE_HAVE_JUDY
-        PPvoid_t pv = JudyHSGet(GLOBALS->xl_enum_filter[filt], s, strlen(s));
-        if (pv) {
-            free_2(s);
-            s = malloc_2(strlen(*pv) + 1);
-            strcpy(s, *pv);
-        }
-#else
-        GLOBALS->xl_enum_filter[filt] = xl_splay(s, GLOBALS->xl_enum_filter[filt]);
+    GwEnumFilterList *filters = gw_dump_file_get_enum_filters(GLOBALS->dump_file);
+    GwEnumFilter *filter = gw_enum_filter_list_get(filters, t->e_filter - 1);
 
-        if (!strcasecmp(s, GLOBALS->xl_enum_filter[filt]->item)) {
-            free_2(s);
-            s = malloc_2(strlen(GLOBALS->xl_enum_filter[filt]->trans) + 1);
-            strcpy(s, GLOBALS->xl_enum_filter[filt]->trans);
-        }
-#endif
-        else {
-            char *zerofind = s;
-            char *dst = s, *src;
-            while (*zerofind == '0')
-                zerofind++;
-            if (zerofind != s) {
-                src = (!*zerofind) ? (zerofind - 1) : zerofind;
-                while (*src) {
-                    *(dst++) = *(src++);
-                }
-                *dst = 0;
+    const gchar *value = gw_enum_filter_lookup(filter, s);
+    if (value != NULL) {
+        free_2(s);
+        s = malloc_2(strlen(value) + 1);
+        strcpy(s, value);
+    } else {
+        char *zerofind = s;
+        char *dst = s, *src;
+        while (*zerofind == '0')
+            zerofind++;
+        if (zerofind != s) {
+            src = (!*zerofind) ? (zerofind - 1) : zerofind;
+            while (*src) {
+                *(dst++) = *(src++);
             }
+            *dst = 0;
         }
     }
 

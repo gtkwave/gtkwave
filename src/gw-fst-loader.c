@@ -65,6 +65,8 @@ struct _GwFstLoader
     // TODO: don't use strings for start and end time
     gchar *start_time;
     gchar *end_time;
+
+    GwEnumFilterList *enum_filters;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
@@ -404,37 +406,14 @@ static void handle_enumtable(GwFstLoader *self, struct fstHierAttr *attr)
         return;
     }
 
-    uint32_t ie;
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t e = (Pvoid_t)NULL;
-    for (ie = 0; ie < fe->elem_count; ie++) {
-        PPvoid_t pv = JudyHSIns(&e, fe->val_arr[ie], strlen(fe->val_arr[ie]), NULL);
-        if (*pv) {
-            free_2(*pv);
-        }
-        *pv = (void *)strdup_2(fe->literal_arr[ie]);
-    }
-#else
-    struct xl_tree_node *e = NULL;
-
-    for (ie = 0; ie < fe->elem_count; ie++) {
-        e = xl_insert(fe->val_arr[ie], e, fe->literal_arr[ie]);
-    }
-#endif
-
-    if (GLOBALS->xl_enum_filter) {
-        GLOBALS->num_xl_enum_filter++;
-        GLOBALS->xl_enum_filter =
-            realloc_2(GLOBALS->xl_enum_filter,
-                      GLOBALS->num_xl_enum_filter * sizeof(struct xl_tree_node *));
-    } else {
-        GLOBALS->num_xl_enum_filter++;
-        GLOBALS->xl_enum_filter = malloc_2(sizeof(struct xl_tree_node *));
+    GwEnumFilter *filter = gw_enum_filter_new();
+    for (int i = 0; i < fe->elem_count; i++) {
+        gw_enum_filter_insert(filter, fe->val_arr[i], fe->literal_arr[i]);
     }
 
-    GLOBALS->xl_enum_filter[GLOBALS->num_xl_enum_filter - 1] = e;
+    guint index = gw_enum_filter_list_add(self->enum_filters, filter);
 
-    if ((unsigned int)GLOBALS->num_xl_enum_filter != attr->arg) {
+    if (index + 1 != attr->arg) {
         // TODO: convert into error/warning
         fprintf(stderr,
                 FST_RDLOAD "Internal error, nonsequential enum tables "
@@ -443,6 +422,7 @@ static void handle_enumtable(GwFstLoader *self, struct fstHierAttr *attr)
     }
 
     fstUtilityFreeEnumTable(fe);
+    g_object_unref(filter);
 }
 
 static void handle_attr(GwFstLoader *self,
@@ -1090,6 +1070,7 @@ if(num_dups)
     GwFstFile *dump_file = g_object_new(GW_TYPE_FST_FILE,
                                         "blackout-regions", blackout_regions,
                                         "stems", self->stems,
+                                        "enum-filters", self->enum_filters,
                                         "time-dimension", self->time_dimension,
                                         "time-range", time_range,
                                         "global-time-offset", global_time_offset,
@@ -1110,6 +1091,7 @@ if(num_dups)
 
     g_object_unref(blackout_regions);
     g_object_unref(self->stems);
+    g_object_unref(self->enum_filters);
     g_object_unref(tree);
     g_object_unref(time_range);
 
@@ -1165,6 +1147,7 @@ static void gw_fst_loader_class_init(GwFstLoaderClass *klass)
 static void gw_fst_loader_init(GwFstLoader *self)
 {
     self->stems = gw_stems_new();
+    self->enum_filters = gw_enum_filter_list_new();
 }
 
 GwLoader *gw_fst_loader_new(void)

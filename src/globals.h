@@ -197,12 +197,6 @@ struct Global
     char supplemental_datatypes_encountered;
     char supplemental_vartypes_encountered;
     char is_vhdl_component_format;
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t *xl_enum_filter;
-#else
-    struct xl_tree_node **xl_enum_filter;
-#endif
-    int num_xl_enum_filter;
     JRB enum_nptrs_jrb;
 
     /*

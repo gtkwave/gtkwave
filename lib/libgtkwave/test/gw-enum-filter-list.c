@@ -12,6 +12,10 @@ static void test_basic(void)
     g_assert_cmpint(gw_enum_filter_list_add(list, b), ==, 1);
     g_assert_cmpint(gw_enum_filter_list_add(list, c), ==, 2);
 
+    g_object_unref(a);
+    g_object_unref(b);
+    g_object_unref(c);
+
     g_assert_true(gw_enum_filter_list_get(list, 0) == a);
     g_assert_true(gw_enum_filter_list_get(list, 1) == b);
     g_assert_true(gw_enum_filter_list_get(list, 2) == c);

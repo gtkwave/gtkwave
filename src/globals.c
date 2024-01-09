@@ -175,8 +175,6 @@ static const struct Global globals_base_values = {
     0, /* supplemental_datatypes_encountered */
     0, /* supplemental_vartypes_encountered */
     0, /* is_vhdl_component_format */
-    NULL, /* xl_enum_filter */
-    0, /* num_xl_enum_filter */
     NULL, /* enum_nptrs_jrb */
 
     /*
@@ -1314,17 +1312,6 @@ void reload_into_new_context_2(void)
         jrb_free_tree(GLOBALS->enum_nptrs_jrb);
         GLOBALS->enum_nptrs_jrb = NULL;
     }
-
-#ifdef _WAVE_HAVE_JUDY
-    if (GLOBALS->num_xl_enum_filter) {
-        int ie;
-        for (ie = 0; ie < GLOBALS->num_xl_enum_filter; ie++) {
-            JudyHSFreeArray(&GLOBALS->xl_enum_filter[ie], NULL);
-        }
-
-        GLOBALS->num_xl_enum_filter = 0;
-    }
-#endif
 
     g_clear_object(&GLOBALS->dump_file);
 

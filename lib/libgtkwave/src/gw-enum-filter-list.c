@@ -42,7 +42,7 @@ guint gw_enum_filter_list_add(GwEnumFilterList *self, GwEnumFilter *filter)
 
     guint index = self->filters->len;
 
-    g_ptr_array_add(self->filters, filter);
+    g_ptr_array_add(self->filters, g_object_ref(filter));
 
     return index;
 }

@@ -236,7 +236,9 @@ static void AddTrace(GwTrace *t)
         JRB enum_nptr = jrb_find_vptr(GLOBALS->enum_nptrs_jrb, t->n.nd);
         if (enum_nptr) {
             int e_filter = enum_nptr->val.ui;
-            if ((e_filter > 0) && (e_filter <= GLOBALS->num_xl_enum_filter)) {
+
+            GwEnumFilterList *filters = gw_dump_file_get_enum_filters(GLOBALS->dump_file);
+            if (e_filter > 0 && gw_enum_filter_list_get(filters, e_filter - 1) != NULL) {
                 t->e_filter = e_filter;
                 if (!(GLOBALS->default_flags & TR_NUMMASK))
                     t->flags = (t->flags & (~TR_NUMMASK)) | TR_ENUM |
