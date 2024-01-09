@@ -3,6 +3,8 @@ libgtkwave_tests = [
     'gw-color-theme',
     'gw-color',
     'gw-dump-file',
+    'gw-enum-filter-list',
+    'gw-enum-filter',
     'gw-facs',
     'gw-ghw-loader',
     'gw-marker',

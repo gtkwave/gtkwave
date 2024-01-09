@@ -7,6 +7,7 @@
 #include "gw-time.h"
 #include "gw-time-range.h"
 #include "gw-facs.h"
+#include "gw-enum-filter.h"
 
 G_BEGIN_DECLS
 
@@ -27,5 +28,7 @@ GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self);
 GwTime gw_dump_file_get_time_scale(GwDumpFile *self);
 GwTimeRange *gw_dump_file_get_time_range(GwDumpFile *self);
 GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self);
+
+GwEnumFilter *gw_dump_file_get_enum_filter(GwDumpFile *self, guint index);
 
 G_END_DECLS
