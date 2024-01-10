@@ -1219,8 +1219,6 @@ GtkWidget *treeboxframe(const char *title)
 
     gtk_paned_pack1(GTK_PANED(vpan), GLOBALS->gtk2_tree_frame, TRUE, FALSE);
 
-    decorated_module_cleanup();
-
     GwTreeNode *tree_root = gw_tree_get_root(gw_dump_file_get_tree(GLOBALS->dump_file));
 
     XXX_maketree(NULL, tree_root);

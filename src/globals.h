@@ -525,10 +525,6 @@ struct Global
 /*
  * tree.c
  */
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t sym_tree;
-    Pvoid_t sym_tree_addresses;
-#endif
     GwTreeNode *mod_tree_parent; /* from tree.c */
     char *module_tree_c_1; /* from tree.c 474 */
     int module_len_tree_c_1; /* from tree.c 475 */

@@ -82,51 +82,6 @@ static const char *get_module_name(const char *s)
     }
 }
 
-/*
- * generate unique hierarchy pointer faster that sprintf("%p")
- * use 7-bit string to generate less characters
- */
-#ifdef _WAVE_HAVE_JUDY
-static int gen_hier_string(char *dest, void *pnt)
-{
-    uintptr_t p = (uintptr_t)(pnt);
-    char *dest_copy = dest;
-
-    while (p) {
-        *(dest++) = (p & 0x7f) | 0x80;
-        p >>= 7;
-    }
-    *(dest++) = '.';
-
-    return (dest - dest_copy);
-}
-#endif
-
-/*
- * decorated module cleanup (if judy active)
- */
-int decorated_module_cleanup(void)
-{
-#ifdef _WAVE_HAVE_JUDY
-    if (GLOBALS->sym_tree) {
-        JudySLFreeArray(&GLOBALS->sym_tree, PJE0);
-    }
-
-    if (GLOBALS->sym_tree_addresses) {
-        int rcValue;
-        Word_t Index = 0;
-
-        for (rcValue = Judy1First(GLOBALS->sym_tree_addresses, &Index, PJE0); rcValue != 0;
-             rcValue = Judy1Next(GLOBALS->sym_tree_addresses, &Index, PJE0)) {
-            ((GwTreeNode *)Index)->children_in_gui = 0;
-        }
-
-        Judy1FreeArray(&GLOBALS->sym_tree_addresses, PJE0);
-    }
-
-#endif
-    return (1);
-}
 
 /*
  * decorated module add
@@ -142,9 +97,6 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
 {
     GwTreeNode *t;
     int mtyp = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-#ifdef _WAVE_HAVE_JUDY
-    char str[2048];
-#endif
 
     if (compname && compname[0] && strcmp(scopename, compname)) {
         int ix = add_to_comp_name_table(compname, compname_len);
@@ -156,68 +108,16 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
 
     if (*tree_root != NULL) {
         if (GLOBALS->mod_tree_parent) {
-#ifdef _WAVE_HAVE_JUDY
-            if (GLOBALS->mod_tree_parent->children_in_gui) {
-                PPvoid_t PPValue;
-                /* find with judy */
-                int len = gen_hier_string(str, GLOBALS->mod_tree_parent);
-                strcpy(str + len, scopename);
-                PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                if (*PPValue) {
-                    GLOBALS->mod_tree_parent = *PPValue;
+            t = GLOBALS->mod_tree_parent->child;
+            while (t) {
+                if (!strcmp(t->name, scopename)) {
+                    GLOBALS->mod_tree_parent = t;
                     return;
                 }
-
-                t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
-                *PPValue = t;
-                goto t_allocated;
-            } else {
-                int dep = 0;
-#endif
-                t = GLOBALS->mod_tree_parent->child;
-                while (t) {
-                    if (!strcmp(t->name, scopename)) {
-                        GLOBALS->mod_tree_parent = t;
-                        return;
-                    }
-                    t = t->next;
-#ifdef _WAVE_HAVE_JUDY
-                    dep++;
-#endif
-                }
-
-#ifdef _WAVE_HAVE_JUDY
-                if (dep >= FST_TREE_SEARCH_NEXT_LIMIT) {
-                    PPvoid_t PPValue;
-                    int len = gen_hier_string(str, GLOBALS->mod_tree_parent);
-                    GLOBALS->mod_tree_parent->children_in_gui = 1; /* "borrowed" for tree build */
-                    t = GLOBALS->mod_tree_parent->child;
-
-                    Judy1Set((Pvoid_t)&GLOBALS->sym_tree_addresses,
-                             (Word_t)GLOBALS->mod_tree_parent,
-                             PJE0);
-                    /* assemble judy based on scopename + GLOBALS->mod_tree_parent pnt */
-                    while (t) {
-                        strcpy(str + len, t->name);
-                        PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                        *PPValue = t;
-
-                        t = t->next;
-                    }
-
-                    strcpy(str + len, scopename);
-                    PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                    t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
-                    *PPValue = t;
-                    goto t_allocated;
-                }
+                t = t->next;
             }
-#endif
 
             t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
-#ifdef _WAVE_HAVE_JUDY
-        t_allocated:
-#endif
             strcpy(t->name, scopename);
             t->kind = ttype;
             t->t_which = mtyp;
@@ -360,10 +260,6 @@ void build_tree_from_name(GwTreeNode **tree_root, const char *s, int which)
     GwTreeNode *t, *nt;
     GwTreeNode *tchain = NULL, *tchain_iter;
     GwTreeNode *prevt;
-#ifdef _WAVE_HAVE_JUDY
-    PPvoid_t PPValue = NULL;
-    char str[2048];
-#endif
 
     if (s == NULL || !s[0])
         return;
@@ -387,29 +283,8 @@ void build_tree_from_name(GwTreeNode **tree_root, const char *s, int which)
                 continue;
             }
 
-#ifdef _WAVE_HAVE_JUDY
-        rescan:
-            if (prevt && prevt->children_in_gui) {
-                /* find with judy */
-                int len = gen_hier_string(str, prevt);
-                strcpy(str + len, GLOBALS->module_tree_c_1);
-                PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                if (*PPValue) {
-                    t = *PPValue;
-                    prevt = t;
-                    t = t->child;
-                    continue;
-                }
-
-                goto construct;
-            }
-#endif
-
             tchain = tchain_iter = t;
             if (s && t) {
-#ifdef _WAVE_HAVE_JUDY
-                int dep = 0;
-#endif
                 nt = t->next;
                 while (nt) {
                     if (nt && !strcmp(nt->name, GLOBALS->module_tree_c_1)) {
@@ -427,46 +302,14 @@ void build_tree_from_name(GwTreeNode **tree_root, const char *s, int which)
 
                     tchain_iter = nt;
                     nt = nt->next;
-#ifdef _WAVE_HAVE_JUDY
-                    dep++;
-#endif
                 }
-
-#ifdef _WAVE_HAVE_JUDY
-                if (prevt && (dep >= FST_TREE_SEARCH_NEXT_LIMIT)) {
-                    int len = gen_hier_string(str, prevt);
-                    prevt->children_in_gui = 1; /* "borrowed" for tree build */
-                    t = prevt->child;
-
-                    Judy1Set((Pvoid_t)&GLOBALS->sym_tree_addresses, (Word_t)prevt, PJE0);
-                    /* assemble judy based on scopename + prevt pnt */
-                    while (t) {
-                        strcpy(str + len, t->name);
-                        PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                        *PPValue = t;
-
-                        t = t->next;
-                    }
-
-                    goto rescan; /* this level of hier is built, now do insert */
-                }
-#endif
             }
 
-#ifdef _WAVE_HAVE_JUDY
-        construct:
-#endif
             nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
             memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
 
             if (s) {
                 nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-
-#ifdef _WAVE_HAVE_JUDY
-                if (prevt && prevt->children_in_gui) {
-                    *PPValue = nt;
-                }
-#endif
 
                 if (prevt) /* make first in chain */
                 {

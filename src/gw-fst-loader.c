@@ -983,7 +983,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
     gw_stems_shrink_to_fit(self->stems);
 
-    decorated_module_cleanup(); /* ...also now in gtk2_treesearch.c */
     iter_through_comp_name_table();
 
     fprintf(stderr,
