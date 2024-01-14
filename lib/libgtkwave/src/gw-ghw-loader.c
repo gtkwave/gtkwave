@@ -449,6 +449,8 @@ static void build_hierarchy_array(GwGhwLoader *self,
 
         t = build_hierarchy_type(self, arr->sa.el, name, sig);
 
+        g_free(name);
+
         if (*res != NULL)
             (*res)->next = t;
         *res = t;
