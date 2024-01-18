@@ -26,12 +26,17 @@
 #include "config.h"
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The libghw uses the standard c99 int32_t and int64_t.  They are declared
    in stdint.h.  Header inttypes.h includes stdint.h and provides macro for
    printf and co specifiers.  Use it if known to be available.  */
 
-#if defined(__cplusplus) ||                                                    \
-    (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) ||            \
+#if defined(__cplusplus) ||                                                   \
+    defined(__linux__) ||                                                     \
+    (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) ||           \
     defined(HAVE_INTTYPES_H)
 /* Use C99 standard header.  */
 #include <inttypes.h>
@@ -379,6 +384,8 @@ struct ghw_handler
   char *skip_sigs;
   int flag_full_names;
   struct ghw_sig *sigs;
+  /* 1: sigs does not contain any signals with type = NULL and index > 0 */
+  int sigs_no_null;
 
   /* Hierarchy.  */
   struct ghw_hie *hie;
@@ -468,4 +475,9 @@ void ghw_disp_range (union ghw_type *type, union ghw_range *rng);
 void ghw_disp_type (struct ghw_handler *h, union ghw_type *t);
 
 void ghw_disp_types (struct ghw_handler *h);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* _LIBGHW_H_ */
