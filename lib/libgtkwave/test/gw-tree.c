@@ -1,11 +1,10 @@
 #include <gtkwave.h>
 #include "test-util.h"
 
-// TODO: replace with gw_tree_node_new or similar
 static GwTreeNode *alloc_node(const gchar *name)
 {
-    GwTreeNode *node = g_malloc0(sizeof(GwTreeNode) + strlen(name) + 1);
-    strcpy(node->name, name);
+    GwTreeNode *node = gw_tree_node_new(GW_TREE_KIND_UNKNOWN, name);
+    node->t_which = -1;
 
     return node;
 }
@@ -15,19 +14,19 @@ static void test_to_string(void)
     assert_tree(NULL, "");
 
     GwTreeNode *root = alloc_node("root");
-    assert_tree(root, "(root)");
+    assert_tree(root, "root");
 
     root->next = alloc_node("root_sibling");
-    assert_tree(root, "(root root_sibling)");
+    assert_tree(root, "root, root_sibling");
 
     root->child = alloc_node("child");
-    assert_tree(root, "((root child) root_sibling)");
+    assert_tree(root, "root[child], root_sibling");
 
     root->child->child = alloc_node("child2");
-    assert_tree(root, "((root (child child2)) root_sibling)");
+    assert_tree(root, "root[child[child2]], root_sibling");
 
     root->child->child->next = alloc_node("child3");
-    assert_tree(root, "((root (child child2 child3)) root_sibling)");
+    assert_tree(root, "root[child[child2, child3]], root_sibling");
 }
 
 static void test_sort(void)
@@ -47,7 +46,7 @@ static void test_sort(void)
     root = alloc_node("a");
     tree = gw_tree_new(root);
     gw_tree_sort(tree);
-    assert_tree(gw_tree_get_root(tree), "(a)");
+    assert_tree(gw_tree_get_root(tree), "a");
     g_object_unref(tree);
 
     // Three flat nodes
@@ -58,7 +57,7 @@ static void test_sort(void)
 
     tree = gw_tree_new(root);
     gw_tree_sort(tree);
-    assert_tree(gw_tree_get_root(tree), "(c b a)");
+    assert_tree(gw_tree_get_root(tree), "c, b, a");
     g_object_unref(tree);
 
     // Nested nodes
@@ -71,7 +70,7 @@ static void test_sort(void)
 
     tree = gw_tree_new(root);
     gw_tree_sort(tree);
-    assert_tree(gw_tree_get_root(tree), "((c n10 n2) b a)");
+    assert_tree(gw_tree_get_root(tree), "c[n10, n2], b, a");
     g_object_unref(tree);
 }
 
@@ -86,7 +85,7 @@ static void test_graft(void)
 
     tree = gw_tree_new(NULL);
     gw_tree_graft(tree, chain);
-    assert_tree(gw_tree_get_root(tree), "(a)");
+    assert_tree(gw_tree_get_root(tree), "a");
     g_object_unref(tree);
 
     // Graft two nodes to empty tree
@@ -96,7 +95,7 @@ static void test_graft(void)
 
     tree = gw_tree_new(NULL);
     gw_tree_graft(tree, chain);
-    assert_tree(gw_tree_get_root(tree), "(a b)");
+    assert_tree(gw_tree_get_root(tree), "a, b");
     g_object_unref(tree);
 
     // Graft nodes to parents
@@ -117,7 +116,7 @@ static void test_graft(void)
 
     tree = gw_tree_new(p1);
     gw_tree_graft(tree, c1);
-    assert_tree(gw_tree_get_root(tree), "((parent1 child2 child1) (parent2 child3))");
+    assert_tree(gw_tree_get_root(tree), "parent1[child2, child1], parent2[child3]");
     g_object_unref(tree);
 }
 
