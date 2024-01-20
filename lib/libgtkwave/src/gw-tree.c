@@ -201,3 +201,12 @@ void gw_tree_graft(GwTree *self, GwTreeNode *graft_chain)
         iter = iter_next;
     }
 }
+
+GwTreeNode *gw_tree_node_new(GwTreeKind kind, const gchar *name)
+{
+    GwTreeNode *node = g_malloc0(sizeof(GwTreeNode) + strlen(name) + 1);
+    node->kind = kind;
+    strcpy(node->name, name);
+
+    return node;
+}

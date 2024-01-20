@@ -5,29 +5,6 @@
 
 G_BEGIN_DECLS
 
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-struct _GwTreeNode
-{
-    GwTreeNode *next;
-    GwTreeNode *child;
-    int t_which; /* 'i' for facs[i] table, value of < 0 means not a full signame */
-    guint32 t_stem; /* source stem (if >0) for Open Hierarchy Source Def,  see stem_struct_t */
-    guint32 t_istem; /* source stem (if >0) for Open Hierarchy Source Inst, see stem_struct_t */
-
-    unsigned kind : 7; /* Kind of the leaf: libghw reads this as val & 0x7f so only 7 bits needed */
-    unsigned children_in_gui : 1; /* indicates that the child nodes are in the gtk2 tree, but gets
-                                     borrowed during tree creation for fast judy sort */
-    char name[]; /* C99 */
-};
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
-
 typedef enum
 {
     /* Unknown.  */
@@ -95,6 +72,31 @@ typedef enum
     GW_TREE_KIND_VHDL_ST_PROCESS,
     GW_TREE_KIND_VHDL_ST_GENERATE
 } GwTreeKind;
+
+#ifdef WAVE_USE_STRUCT_PACKING
+#pragma pack(push)
+#pragma pack(1)
+#endif
+
+struct _GwTreeNode
+{
+    GwTreeNode *next;
+    GwTreeNode *child;
+    int t_which; /* 'i' for facs[i] table, value of < 0 means not a full signame */
+    guint32 t_stem; /* source stem (if >0) for Open Hierarchy Source Def,  see stem_struct_t */
+    guint32 t_istem; /* source stem (if >0) for Open Hierarchy Source Inst, see stem_struct_t */
+
+    unsigned kind : 7; /* Kind of the leaf: libghw reads this as val & 0x7f so only 7 bits needed */
+    unsigned children_in_gui : 1; /* indicates that the child nodes are in the gtk2 tree, but gets
+                                     borrowed during tree creation for fast judy sort */
+    char name[]; /* C99 */
+};
+
+#ifdef WAVE_USE_STRUCT_PACKING
+#pragma pack(pop)
+#endif
+
+GwTreeNode *gw_tree_node_new(GwTreeKind kind, const gchar *name);
 
 #define GW_TYPE_TREE (gw_tree_get_type())
 G_DECLARE_FINAL_TYPE(GwTree, gw_tree, GW, TREE, GObject)

@@ -2,18 +2,21 @@
 
 static void tree_to_string_recursive(GwTreeNode *node, GString *str)
 {
-    if (node->child == NULL) {
-        g_string_append(str, node->name);
-    } else {
-        g_string_append_c(str, '(');
-        g_string_append(str, node->name);
-
-        for (GwTreeNode *iter = node->child; iter != NULL; iter = iter->next) {
-            g_string_append_c(str, ' ');
-            tree_to_string_recursive(iter, str);
+    for (GwTreeNode *iter = node; iter != NULL; iter = iter->next) {
+        if (iter != node) {
+            g_string_append(str, ", ");
         }
 
-        g_string_append_c(str, ')');
+        g_string_append(str, iter->name);
+        if (iter->t_which >= 0) {
+            g_string_append_printf(str, "(%d)", iter->t_which);
+        }
+
+        if (iter->child != NULL) {
+            g_string_append_c(str, '[');
+            tree_to_string_recursive(iter->child, str);
+            g_string_append_c(str, ']');
+        }
     }
 }
 
@@ -21,16 +24,7 @@ static gchar *tree_to_string(GwTreeNode *node)
 {
     GString *str = g_string_new(NULL);
 
-    if (node != NULL) {
-        g_string_append_c(str, '(');
-        for (GwTreeNode *iter = node; iter != NULL; iter = iter->next) {
-            if (str->len > 1) {
-                g_string_append_c(str, ' ');
-            }
-            tree_to_string_recursive(iter, str);
-        }
-        g_string_append_c(str, ')');
-    }
+    tree_to_string_recursive(node, str);
 
     return g_string_free(str, FALSE);
 }
