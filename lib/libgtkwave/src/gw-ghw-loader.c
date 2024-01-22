@@ -125,6 +125,17 @@ static ghw_Tree *ghw_splay(void *i, ghw_Tree *t)
     return t;
 }
 
+// Exit the program with return value 1 and print calling line
+__attribute__((noreturn)) static void
+ghw_error_exit_line (char const *file, int line)
+{
+  fprintf(stderr, "Failed to load ghw file due to invalid data. Terminating.\n");
+  fprintf(stderr, "Error raised at %s:%d.\n", file, line);
+  exit(1);
+}
+
+#define ghw_error_exit() ghw_error_exit_line(__FILE__, __LINE__)
+
 static ghw_Tree *ghw_insert(void *i, ghw_Tree *t, int val, GwSymbol *sym)
 {
     /* Insert i into the tree t, unless it's already there.    */
@@ -426,6 +437,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int len;
 
             /* last = NULL; */
+            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_i32) ghw_error_exit();
             r = &arr->sa.rngs[dim]->i32;
             len = ghw_get_range_length((union ghw_range *)r);
             if (len <= 0)
@@ -454,6 +466,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int len;
 
             /* last = NULL; */
+            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_e8) ghw_error_exit();
             r = &arr->sa.rngs[dim]->e8;
             len = ghw_get_range_length((union ghw_range *)r);
             if (len <= 0)
@@ -482,6 +495,7 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int len;
 
             /* last = NULL; */
+            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_b2) ghw_error_exit();
             r = &arr->sa.rngs[dim]->b2;
             len = ghw_get_range_length((union ghw_range *)r);
             if (len <= 0)
@@ -530,9 +544,13 @@ static GwTreeNode *build_hierarchy_type(GwGhwLoader *self,
             self->nbr_sig_ref++;
             GwTreeNode *res = g_malloc0(sizeof(GwTreeNode) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
+            // last element is GHW_NO_SIG, don't increment beyond it
+            if (**sig == GHW_NO_SIG) ghw_error_exit();
             res->t_which = *(*sig)++;
 
-            s->n = self->nxp[res->t_which];
+            size_t nxp_idx = (size_t)res->t_which;
+            if (nxp_idx >= self->h->nbr_sigs) ghw_error_exit();
+            s->n = self->nxp[nxp_idx];
             return res;
         }
 
@@ -808,7 +826,9 @@ static void set_fac_name_1(GwGhwLoader *self, GwTreeNode *t)
             GwSymbol *s = self->sym_chain->data;
 
             s->name = g_strdup(self->fac_name);
-            s->n = self->nxp[t->t_which];
+            size_t nxp_idx = (size_t)t->t_which;
+            if (nxp_idx > self->h->nbr_sigs) ghw_error_exit();
+            s->n = self->nxp[nxp_idx];
             if (!s->n->nname)
                 s->n->nname = s->name;
 
@@ -914,12 +934,14 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
             if (sig_type->en.wkt == ghw_wkt_bit)
                 he->v.h_val = sig->val->b2 == 0 ? GW_BIT_0 : GW_BIT_1;
             else {
-                he->v.h_vector = (char *)sig->type->en.lits[sig->val->b2];
+                if (sig->val->b2 >= sig->type->en.nbr) ghw_error_exit();
+                he->v.h_vector = (char *) sig->type->en.lits[sig->val->b2];
                 is_vector = 1;
             }
             break;
 
-        case ghdl_rtik_type_e8:
+        case ghdl_rtik_type_e8: {
+            unsigned char val_e8 = sig->val->e8;
             if (sig_type->en.wkt == ghw_wkt_std_ulogic) {
                 /* Res: 0->0, 1->X, 2->Z, 3->1 */
                 static const char map_su2vlg[9] = {/* U */ GW_BIT_U,
@@ -931,12 +953,15 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
                                                    /* L */ GW_BIT_L,
                                                    /* H */ GW_BIT_H,
                                                    /* - */ GW_BIT_DASH};
-                he->v.h_val = map_su2vlg[sig->val->e8];
+                if (val_e8 >= sizeof(map_su2vlg)/sizeof(map_su2vlg[0])) ghw_error_exit();
+                he->v.h_val = map_su2vlg[val_e8];
             } else {
-                he->v.h_vector = (char *)sig_type->en.lits[sig->val->e8];
+                if (val_e8 >= sig_type->en.nbr) ghw_error_exit();
+                he->v.h_vector = (char *)sig_type->en.lits[val_e8];
                 is_vector = 1;
             }
             break;
+        }
 
         case ghdl_rtik_type_f64: {
             he->v.h_double = sig->val->f64;
@@ -1079,7 +1104,9 @@ static void read_traces(GwGhwLoader *self)
                         }
 
                         for (i = 0; (sig = list[i]) != 0; i++) {
-                            add_history(self, self->nxp[sig], sig);
+                            size_t nxp_idx = (size_t)sig;
+                            if (nxp_idx > self->h->nbr_sigs) ghw_error_exit();
+                            add_history(self, self->nxp[nxp_idx], sig);
                         }
                     }
                     res = ghw_read_cycle_next(h);
@@ -1107,7 +1134,7 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
 {
     GwGhwLoader *self = GW_GHW_LOADER(loader);
 
-    struct ghw_handler handle;
+    struct ghw_handler handle = {0};
     unsigned int ui;
     int rc;
 
@@ -1124,6 +1151,11 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     if (ghw_read_base(&handle) < 0) {
         fprintf(stderr, "Error in ghw file '%s'.\n", fname);
+        return NULL; /* look at return code in caller for success status... */
+    }
+
+    if (handle.hie == NULL) {
+        fprintf(stderr, "Error in ghw file '%s': No HIE.\n", fname);
         return NULL; /* look at return code in caller for success status... */
     }
 
