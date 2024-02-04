@@ -655,7 +655,7 @@ ghw_read_type (struct ghw_handler *h)
       if (t == EOF)
 	return -1;
       if (h->flag_verbose > 1)
-	printf ("type[%d]= %d\n", i, t);
+	printf ("type[%u]= %d\n", i, t);
       switch (t)
 	{
 	case ghdl_rtik_type_b2:
@@ -684,6 +684,7 @@ ghw_read_type (struct ghw_handler *h)
 	    h->types[i] = (union ghw_type *) e;
 	    break;
 	  err_b2:
+	    free (e->lits);
 	    free (e);
 	    return -1;
 	  }
@@ -771,6 +772,7 @@ ghw_read_type (struct ghw_handler *h)
 	    h->types[i] = (union ghw_type *) arr;
 	    break;
 	  err_array:
+	    free (arr->dims);
 	    free (arr);
 	    return -1;
 	  }
@@ -1002,8 +1004,8 @@ ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
 }
 
 int
-ghw_read_value (struct ghw_handler *h, union ghw_val *val,
-		union ghw_type *type)
+ghw_read_value (struct ghw_handler *h,
+		union ghw_val *val, union ghw_type *type)
 {
   switch (ghw_get_base_type (type)->kind)
     {
@@ -1079,7 +1081,7 @@ ghw_read_hie (struct ghw_handler *h)
   h->nbr_sigs = ghw_get_i32 (h, &hdr[12]);
 
   if (h->flag_verbose)
-    printf ("%u scopes, %u signals, %u signal elements\n", nbr_scopes,
+    printf ("%d scopes, %d signals, %u signal elements\n", nbr_scopes,
 	    nbr_sigs, h->nbr_sigs);
 
   blk = (struct ghw_hie *) malloc (sizeof (struct ghw_hie));
@@ -1095,6 +1097,7 @@ ghw_read_hie (struct ghw_handler *h)
   h->nbr_sigs++;
   h->skip_sigs = NULL;
   h->flag_full_names = 0;
+  h->sigs_no_null = 0;
   h->sigs = (struct ghw_sig *) malloc (h->nbr_sigs * sizeof (struct ghw_sig));
   memset (h->sigs, 0, h->nbr_sigs * sizeof (struct ghw_sig));
 
@@ -1210,10 +1213,20 @@ ghw_read_hie (struct ghw_handler *h)
 	}
     }
 
-  /* Allocate values.  */
+  /* Allocate values. Store indication if we have NULL-type signals with index
+     i > 0. Index i=0  */
+  int sigs_no_null = 1;
   for (i = 0; i < h->nbr_sigs; i++)
     if (h->sigs[i].type != NULL)
       h->sigs[i].val = (union ghw_val *) malloc (sizeof (union ghw_val));
+    else if (i > 0)
+      {
+	printf ("Warning: ghw_read_hie: NULL type signal %ud.", i);
+	printf ("Loading this file may take a long time.\n");
+	sigs_no_null = 0;
+      }
+
+  h->sigs_no_null = sigs_no_null;
   return 0;
 }
 
@@ -1503,7 +1516,7 @@ ghw_read_cycle_start (struct ghw_handler *h)
 int
 ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 {
-  int i;
+  uint32_t i;
   int *list_p;
 
   i = 0;
@@ -1522,11 +1535,25 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	}
 
       /* Find next signal.  */
-      while (d > 0)
+      if (h->sigs_no_null)
 	{
-	  i++;
-	  if (h->sigs[i].type != NULL)
-	    d--;
+	  /* Fast version. */
+	  i = i + d;
+	  if (i >= h->nbr_sigs)
+	    goto err;
+	}
+      else
+	{
+	  /* Slow version: Linear search through all signals. Find d-th
+	     element with non-NULL type. Note: Type of sigs[0] is ignored. */
+	  while (d > 0)
+	    {
+	      i++;
+	      if (i >= h->nbr_sigs)
+	        goto err;
+	      if (h->sigs[i].type != NULL)
+		d--;
+	    }
 	}
 
       if (ghw_read_signal_value (h, &h->sigs[i]) < 0)
@@ -1538,6 +1565,10 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
   if (list_p)
     *list_p = 0;
   return 0;
+
+err:
+  fprintf(stderr, "Error: ghw_read_cycle_cont: Invalid entry in GHW file.\n");
+  return -1;
 }
 
 int
@@ -2178,7 +2209,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	    printf ("  %s = " GHWPRI64 " %s;\n", u->name, u->val,
 		    p->units[0].name);
 	  }
-	printf ("end units\n");
+	printf ("end units;\n");
       } break;
     case ghdl_rtik_type_array:
       {
