@@ -49,7 +49,7 @@ struct _GwFstLoader
 
     GwStems *stems;
 
-    struct lx2_entry *fst_table;
+    GwLx2Entry *fst_table;
 
     GwFac *mvlfacs;
     fstHandle *mvlfacs_rvs_alias;
@@ -1087,7 +1087,7 @@ if(num_dups)
 
     dump_file->fst_reader = g_steal_pointer(&self->fst_reader);
     dump_file->fst_maxhandle = numvars;
-    dump_file->fst_table = calloc_2(numfacs, sizeof(struct lx2_entry));
+    dump_file->fst_table = calloc_2(numfacs, sizeof(GwLx2Entry));
     dump_file->mvlfacs = g_steal_pointer(&self->mvlfacs);
     dump_file->mvlfacs_rvs_alias = g_steal_pointer(&self->mvlfacs_rvs_alias);
     dump_file->subvar_jrb = g_steal_pointer(&self->subvar_jrb);
