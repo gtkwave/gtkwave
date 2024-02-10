@@ -85,7 +85,6 @@ gtkwave_sources = [
     'tcl_support_commands.c',
     'timeentry.c',
     'translate.c',
-    'tree_component.c',
     'tree.c',
     'treesearch.c',
     'ttranslate.c',

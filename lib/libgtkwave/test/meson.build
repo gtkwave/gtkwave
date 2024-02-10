@@ -11,6 +11,7 @@ libgtkwave_tests = [
     'gw-named-markers',
     'gw-project',
     'gw-stems',
+    'gw-string-table',
     'gw-time-range',
     'gw-time',
     'gw-tree',

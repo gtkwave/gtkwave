@@ -15,7 +15,6 @@
 #include <config.h>
 #include "globals.h"
 #include "tree.h"
-#include "tree_component.h"
 #include "vcd.h"
 
 enum TreeBuildTypes
@@ -58,23 +57,13 @@ void init_tree(void)
 void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
                                             unsigned char ttype,
                                             const char *scopename,
-                                            const char *compname,
                                             uint32_t scopename_len,
-                                            uint32_t compname_len,
+                                            gint component_index,
                                             uint32_t t_stem,
                                             uint32_t t_istem,
                                             GwTreeNode **mod_tree_parent)
 {
     GwTreeNode *t;
-    int mtyp = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-
-    if (compname && compname[0] && strcmp(scopename, compname)) {
-        int ix = add_to_comp_name_table(compname, compname_len);
-        if (ix) {
-            ix--;
-            mtyp = WAVE_T_WHICH_COMPNAME_START - ix;
-        }
-    }
 
     if (*tree_root != NULL) {
         if (*mod_tree_parent != NULL) {
@@ -90,7 +79,7 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
             t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
             strcpy(t->name, scopename);
             t->kind = ttype;
-            t->t_which = mtyp;
+            t->t_which = component_index;
             t->t_stem = t_stem;
             t->t_istem = t_istem;
 
@@ -112,7 +101,7 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
             t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
             strcpy(t->name, scopename);
             t->kind = ttype;
-            t->t_which = mtyp;
+            t->t_which = component_index;
             t->t_stem = t_stem;
             t->t_istem = t_istem;
 
@@ -124,7 +113,7 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
         t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
         strcpy(t->name, scopename);
         t->kind = ttype;
-        t->t_which = mtyp;
+        t->t_which = component_index;
         t->t_stem = t_stem;
         t->t_istem = t_istem;
 
@@ -225,8 +214,6 @@ char *leastsig_hiername(char *nam)
  * moving numfacs longer strings around
  */
 
-
-
 /* ######################## */
 /* ## compatibility code ## */
 /* ######################## */
@@ -274,14 +261,16 @@ static void XXX_maketree_nodes(GwTreeNode *t2, GtkTreeIter *iter)
             tmp = t2->name;
         } else {
             int thidx = -t2->t_which + WAVE_T_WHICH_COMPNAME_START;
-            if ((thidx >= 0) && (thidx < GLOBALS->comp_name_serial)) {
-                char *sc = GLOBALS->comp_name_idx[thidx];
-                int tlen = strlen(t2->name) + 2 + 1 + strlen(sc) + 1 + 1;
+
+            GwStringTable *component_names = gw_dump_file_get_component_names(GLOBALS->dump_file);
+            const gchar *component = gw_string_table_get(component_names, thidx);
+            if (component != NULL) {
+                int tlen = strlen(t2->name) + 2 + 1 + strlen(component) + 1 + 1;
                 tmp = g_alloca(tlen);
                 if (!GLOBALS->is_vhdl_component_format) {
-                    sprintf(tmp, "%s  (%s)", t2->name, sc);
+                    sprintf(tmp, "%s  (%s)", t2->name, component);
                 } else {
-                    sprintf(tmp, "%s  : %s", t2->name, sc);
+                    sprintf(tmp, "%s  : %s", t2->name, component);
                 }
             } else {
                 tmp = t2->name; /* should never get a value out of range here! */
@@ -339,11 +328,15 @@ void XXX_maketree2(GtkTreeIter *subtree, GwTreeNode *t, int depth)
 
             if (GLOBALS->exclcompname) {
                 int thidx = -t2->t_which + WAVE_T_WHICH_COMPNAME_START;
-                char *sc = ((thidx >= 0) && (thidx < GLOBALS->comp_name_serial))
-                               ? GLOBALS->comp_name_idx[thidx]
-                               : t2->name;
 
-                JRB str = jrb_find_str(GLOBALS->exclcompname, sc);
+                GwStringTable *component_names =
+                    gw_dump_file_get_component_names(GLOBALS->dump_file);
+                const gchar *component = gw_string_table_get(component_names, thidx);
+                if (component == NULL) {
+                    component = t2->name;
+                }
+
+                JRB str = jrb_find_str(GLOBALS->exclcompname, component);
                 if (str)
                     blacklist = 1;
             }

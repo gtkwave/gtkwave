@@ -1524,9 +1524,8 @@ static void vcd_parse(GwVcdLoader *self)
                     allocate_and_decorate_module_tree_node(&self->tree_root,
                                                            ttype,
                                                            self->yytext,
-                                                           NULL,
                                                            self->yylen,
-                                                           0,
+                                                           -1,
                                                            0,
                                                            0,
                                                            &self->mod_tree_parent);
