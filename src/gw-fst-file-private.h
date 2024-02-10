@@ -4,6 +4,23 @@
 #include <fstapi.h>
 #include <jrb.h>
 
+#ifdef WAVE_USE_STRUCT_PACKING
+#pragma pack(push)
+#pragma pack(1)
+#endif
+
+typedef struct
+{
+    GwHistEnt *histent_head;
+    GwHistEnt *histent_curr;
+    int numtrans;
+    GwNode *np;
+} GwLx2Entry;
+
+#ifdef WAVE_USE_STRUCT_PACKING
+#pragma pack(pop)
+#endif
+
 struct _GwFstFile
 {
     GwDumpFile parent_instance;
@@ -12,7 +29,7 @@ struct _GwFstFile
 
     fstHandle fst_maxhandle;
 
-    struct lx2_entry *fst_table;
+    GwLx2Entry *fst_table;
 
     GwFac *mvlfacs;
     fstHandle *mvlfacs_rvs_alias;
@@ -28,4 +45,3 @@ struct _GwFstFile
 
     int busycnt;
 };
-

@@ -89,7 +89,7 @@ static void fst_callback2(void *user_callback_data_pointer,
 
     fstHandle facidx = self->mvlfacs_rvs_alias[--txidx];
     GwHistEnt *htemp;
-    struct lx2_entry *l2e = &self->fst_table[facidx];
+    GwLx2Entry *l2e = &self->fst_table[facidx];
     GwFac *f = &self->mvlfacs[facidx];
 
     self->busycnt++;
@@ -410,7 +410,7 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
     np->head.next = htemp;
     np->numhist = self->fst_table[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
 
-    memset(&self->fst_table[txidx], 0, sizeof(struct lx2_entry)); /* zero it out */
+    memset(&self->fst_table[txidx], 0, sizeof(GwLx2Entry)); /* zero it out */
 
     np->curr = histent_tail;
     np->mv.mvlfac = NULL; /* it's imported and cached so we can forget it's an mvlfac now */
@@ -629,7 +629,7 @@ void gw_fst_file_import_masked(GwFstFile *self)
             np->head.next = htemp;
             np->numhist = self->fst_table[txidx].numtrans + 2 /*endcap*/ + 1 /*frontcap*/;
 
-            memset(&self->fst_table[txidx], 0, sizeof(struct lx2_entry)); /* zero it out */
+            memset(&self->fst_table[txidx], 0, sizeof(GwLx2Entry)); /* zero it out */
 
             np->curr = histent_tail;
             np->mv.mvlfac = NULL; /* it's imported and cached so we can forget it's an mvlfac now */
