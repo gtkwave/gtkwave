@@ -62,7 +62,8 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
                                             uint32_t scopename_len,
                                             uint32_t compname_len,
                                             uint32_t t_stem,
-                                            uint32_t t_istem)
+                                            uint32_t t_istem,
+                                            GwTreeNode **mod_tree_parent)
 {
     GwTreeNode *t;
     int mtyp = WAVE_T_WHICH_UNDEFINED_COMPNAME;
@@ -76,11 +77,11 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
     }
 
     if (*tree_root != NULL) {
-        if (GLOBALS->mod_tree_parent) {
-            t = GLOBALS->mod_tree_parent->child;
+        if (*mod_tree_parent != NULL) {
+            t = (*mod_tree_parent)->child;
             while (t) {
                 if (!strcmp(t->name, scopename)) {
-                    GLOBALS->mod_tree_parent = t;
+                    *mod_tree_parent = t;
                     return;
                 }
                 t = t->next;
@@ -93,16 +94,16 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
             t->t_stem = t_stem;
             t->t_istem = t_istem;
 
-            if (GLOBALS->mod_tree_parent->child) {
-                t->next = GLOBALS->mod_tree_parent->child;
+            if ((*mod_tree_parent)->child) {
+                t->next = (*mod_tree_parent)->child;
             }
-            GLOBALS->mod_tree_parent->child = t;
-            GLOBALS->mod_tree_parent = t;
+            (*mod_tree_parent)->child = t;
+            *mod_tree_parent = t;
         } else {
             t = *tree_root;
             while (t) {
                 if (!strcmp(t->name, scopename)) {
-                    GLOBALS->mod_tree_parent = t;
+                    *mod_tree_parent = t;
                     return;
                 }
                 t = t->next;
@@ -117,7 +118,7 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
 
             t->next = *tree_root;
             *tree_root = t;
-            GLOBALS->mod_tree_parent = t;
+            *mod_tree_parent = t;
         }
     } else {
         t = talloc_2(sizeof(GwTreeNode) + scopename_len + 1);
@@ -128,7 +129,7 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
         t->t_istem = t_istem;
 
         *tree_root = t;
-        GLOBALS->mod_tree_parent = t;
+        *mod_tree_parent = t;
     }
 }
 

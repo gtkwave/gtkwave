@@ -73,6 +73,7 @@ struct _GwFstLoader
     gboolean has_supplemental_vartypes;
 
     GwTreeNode *terminals_chain;
+    GwTreeNode *mod_tree_parent;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
@@ -167,7 +168,7 @@ static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
 {
     void *fst_reader = self->fst_reader;
 
-    self->scope_name = fstReaderPushScope(fst_reader, scope->name, GLOBALS->mod_tree_parent);
+    self->scope_name = fstReaderPushScope(fst_reader, scope->name, self->mod_tree_parent);
     self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
 
     unsigned char ttype = fst_scope_type_to_gw_tree_kind(scope->typ);
@@ -179,7 +180,8 @@ static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
                                            scope->name_length,
                                            scope->component_length,
                                            self->next_var_stem,
-                                           self->next_var_istem);
+                                           self->next_var_istem,
+                                           &self->mod_tree_parent);
     self->next_var_stem = 0;
     self->next_var_istem = 0;
 }
@@ -188,7 +190,7 @@ static void handle_upscope(GwFstLoader *self)
 {
     void *fst_reader = self->fst_reader;
 
-    GLOBALS->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(fst_reader);
+    self->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(fst_reader);
     self->scope_name = fstReaderPopScope(fst_reader);
     self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
 }
@@ -664,7 +666,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
         }
 
-        npar = GLOBALS->mod_tree_parent;
+        npar = self->mod_tree_parent;
         hier_len = self->scope_name ? self->scope_name_len : 0;
         if (hier_len) {
             tlen = hier_len + 1 + name_len;

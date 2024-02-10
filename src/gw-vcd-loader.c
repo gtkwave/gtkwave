@@ -83,6 +83,7 @@ struct _GwVcdLoader
     gchar *prev_hier_uncompressed_name;
 
     GwTreeNode *terminals_chain;
+    GwTreeNode *mod_tree_parent;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -1518,7 +1519,7 @@ static void vcd_parse(GwVcdLoader *self)
                 }
                 T_GET;
                 if (tok != T_END && tok != T_EOF) {
-                    push_scope(self, self->yytext, GLOBALS->mod_tree_parent);
+                    push_scope(self, self->yytext, self->mod_tree_parent);
 
                     allocate_and_decorate_module_tree_node(&self->tree_root,
                                                            ttype,
@@ -1527,7 +1528,8 @@ static void vcd_parse(GwVcdLoader *self)
                                                            self->yylen,
                                                            0,
                                                            0,
-                                                           0);
+                                                           0,
+                                                           &self->mod_tree_parent);
 
                     DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 }
@@ -1535,10 +1537,10 @@ static void vcd_parse(GwVcdLoader *self)
                 break;
             case T_UPSCOPE:
                 if (!g_queue_is_empty(self->scopes)) {
-                    GLOBALS->mod_tree_parent = pop_scope(self);
+                    self->mod_tree_parent = pop_scope(self);
                     DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 } else {
-                    GLOBALS->mod_tree_parent = NULL;
+                    self->mod_tree_parent = NULL;
                 }
                 sync_end(self, NULL);
                 break;
