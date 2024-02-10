@@ -43,5 +43,6 @@ struct _GwFstFile
 
     GwHistEntFactory *hist_ent_factory;
 
-    int busycnt;
+    gboolean preserve_glitches;
+    gboolean preserve_glitches_real;
 };
