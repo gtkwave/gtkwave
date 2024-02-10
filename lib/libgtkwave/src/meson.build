@@ -8,6 +8,7 @@ libgtkwave_public_sources = [
     'gw-enum-filter-list.c',
     'gw-enum-filter.c',
     'gw-facs.c',
+    'gw-fst-file.c',
     'gw-ghw-file.c',
     'gw-ghw-loader.c',
     'gw-hist-ent-factory.c',
@@ -37,6 +38,7 @@ libgtkwave_public_headers = [
     'gw-enum-filter.h',
     'gw-fac.h',
     'gw-facs.h',
+    'gw-fst-file.h',
     'gw-ghw-file.h',
     'gw-ghw-loader.h',
     'gw-hist-ent-factory.h',
@@ -62,6 +64,8 @@ libgtkwave_dependencies = [
     glib_dep,
     gobject_dep,
     libghw_dep,
+    libfst_dep,
+    libjrb_dep,
 ]
 
 if get_option('experimental_plugin_support')

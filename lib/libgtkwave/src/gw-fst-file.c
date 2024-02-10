@@ -1,8 +1,4 @@
-#include <config.h>
 #include <fstapi.h>
-#include <gtkwave.h>
-#include "busy.h"
-#include "lx2.h"
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
 
@@ -92,11 +88,12 @@ static void fst_callback2(void *user_callback_data_pointer,
     GwLx2Entry *l2e = &self->fst_table[facidx];
     GwFac *f = &self->mvlfacs[facidx];
 
-    self->busycnt++;
-    if (self->busycnt == WAVE_BUSY_ITER) {
-        busy_window_refresh();
-        self->busycnt = 0;
-    }
+    // TODO: report progress
+    // self->busycnt++;
+    // if (self->busycnt == WAVE_BUSY_ITER) {
+    //     busy_window_refresh();
+    //     self->busycnt = 0;
+    // }
 
     /* fprintf(stderr, "%lld %d '%s'\n", tim, facidx, value); */
 
@@ -107,7 +104,7 @@ static void fst_callback2(void *user_callback_data_pointer,
         }
 
         if (f->len > 1) {
-            char *h_vector = (char *)malloc_2(f->len);
+            char *h_vector = g_malloc(f->len);
             if (vt != GW_VAR_TYPE_VCD_PORT) {
                 memcpy(h_vector, value, f->len);
             } else {
@@ -118,8 +115,8 @@ static void fst_callback2(void *user_callback_data_pointer,
                 (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
             {
                 if ((!memcmp(l2e->histent_curr->v.h_vector, h_vector, f->len)) &&
-                    (!GLOBALS->settings.preserve_glitches)) {
-                    free_2(h_vector);
+                    (!self->preserve_glitches)) {
+                    g_free(h_vector);
                     return;
                 }
             }
@@ -191,8 +188,7 @@ static void fst_callback2(void *user_callback_data_pointer,
 
             if ((vt != GW_VAR_TYPE_VCD_EVENT) && (l2e->histent_curr)) /* remove duplicate values */
             {
-                if ((l2e->histent_curr->v.h_val == h_val) &&
-                    (!GLOBALS->settings.preserve_glitches)) {
+                if ((l2e->histent_curr->v.h_val == h_val) && (!self->preserve_glitches)) {
                     return;
                 }
             }
@@ -204,8 +200,7 @@ static void fst_callback2(void *user_callback_data_pointer,
         if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
         {
             if (!memcmp(&l2e->histent_curr->v.h_double, value, sizeof(double))) {
-                if ((!GLOBALS->settings.preserve_glitches) &&
-                    (!GLOBALS->settings.preserve_glitches_real)) {
+                if ((!self->preserve_glitches) && (!self->preserve_glitches_real)) {
                     return;
                 }
             }
@@ -226,7 +221,7 @@ static void fst_callback2(void *user_callback_data_pointer,
         htemp->flags = GW_HIST_ENT_FLAG_REAL;
     } else /* string */
     {
-        unsigned char *s = malloc_2(plen + 1);
+        unsigned char *s = g_malloc(plen + 1);
         uint32_t pidx;
 
         for (pidx = 0; pidx < plen; pidx++) {
@@ -247,8 +242,8 @@ static void fst_callback2(void *user_callback_data_pointer,
         if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
         {
             if ((!strcmp(l2e->histent_curr->v.h_vector, (const char *)value)) &&
-                (!GLOBALS->settings.preserve_glitches)) {
-                free_2(s);
+                (!self->preserve_glitches)) {
+                g_free(s);
                 return;
             }
         }
@@ -341,23 +336,23 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
 
     histent_tail = htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
     if (len > 1) {
-        htemp->v.h_vector = (char *)malloc_2(len);
+        htemp->v.h_vector = g_malloc(len);
         for (i = 0; i < len; i++)
             htemp->v.h_vector[i] = GW_BIT_Z;
     } else {
         htemp->v.h_val = GW_BIT_Z; /* z */
     }
-    htemp->time = MAX_HISTENT_TIME;
+    htemp->time = GW_TIME_MAX;
 
     htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
     if (len > 1) {
         if (!(f->flags & VZT_RD_SYM_F_DOUBLE)) {
             if (!(f->flags & VZT_RD_SYM_F_STRING)) {
-                htemp->v.h_vector = (char *)malloc_2(len);
+                htemp->v.h_vector = g_malloc(len);
                 for (i = 0; i < len; i++)
                     htemp->v.h_vector[i] = GW_BIT_X;
             } else {
-                htemp->v.h_vector = strdup_2("UNDEF");
+                htemp->v.h_vector = g_strdup("UNDEF");
                 htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
             }
         } else {
@@ -369,7 +364,7 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
         htemp->v.h_val = GW_BIT_X; /* x */
         htempx = htemp;
     }
-    htemp->time = MAX_HISTENT_TIME - 1;
+    htemp->time = GW_TIME_MAX - 1;
     htemp->next = histent_tail;
 
     if (self->fst_table[txidx].histent_curr) {
@@ -379,7 +374,7 @@ void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
 
     if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
         if (len > 1) {
-            np->head.v.h_vector = (char *)malloc_2(len);
+            np->head.v.h_vector = g_malloc(len);
             for (i = 0; i < len; i++)
                 np->head.v.h_vector[i] = GW_BIT_X;
         } else {
@@ -437,8 +432,8 @@ static void expand_synvec(GwFstFile *self, int txidx, const char *s)
     unsigned char value[2] = {0, 0};
     unsigned char pval = 0;
 
-    scopy = strdup_2(s);
-    vs = calloc_2(1, strlen(s) + 1); /* will never be as big as original string */
+    scopy = g_strdup(s);
+    vs = g_malloc0(strlen(s) + 1); /* will never be as big as original string */
     pnt = scopy;
 
     while (*pnt) {
@@ -482,8 +477,8 @@ static void expand_synvec(GwFstFile *self, int txidx, const char *s)
         pnt = pnt2 + 1;
     }
 
-    free_2(vs);
-    free_2(scopy);
+    g_free(vs);
+    g_free(scopy);
 }
 
 /*
@@ -545,9 +540,13 @@ void gw_fst_file_import_masked(GwFstFile *self)
         fprintf(stderr, FST_RDLOAD "Extracting %d traces\n", cnt);
     }
 
-    set_window_busy(NULL);
+    // TODO: report progress
+    // set_window_busy(NULL);
+
     fstReaderIterBlocks2(self->fst_reader, fst_callback, fst_callback2, self, NULL);
-    set_window_idle(NULL);
+
+    // TODO: report progress
+    // set_window_idle(NULL);
 
     for (txidxi = 0; txidxi < self->fst_maxhandle; txidxi++) {
         if (fstReaderGetFacProcessMask(self->fst_reader, txidxi + 1)) {
@@ -559,23 +558,23 @@ void gw_fst_file_import_masked(GwFstFile *self)
 
             histent_tail = htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             if (len > 1) {
-                htemp->v.h_vector = (char *)malloc_2(len);
+                htemp->v.h_vector = g_malloc(len);
                 for (i = 0; i < len; i++)
                     htemp->v.h_vector[i] = GW_BIT_Z;
             } else {
                 htemp->v.h_val = GW_BIT_Z; /* z */
             }
-            htemp->time = MAX_HISTENT_TIME;
+            htemp->time = GW_TIME_MAX;
 
             htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             if (len > 1) {
                 if (!(f->flags & VZT_RD_SYM_F_DOUBLE)) {
                     if (!(f->flags & VZT_RD_SYM_F_STRING)) {
-                        htemp->v.h_vector = (char *)malloc_2(len);
+                        htemp->v.h_vector = g_malloc(len);
                         for (i = 0; i < len; i++)
                             htemp->v.h_vector[i] = GW_BIT_X;
                     } else {
-                        htemp->v.h_vector = strdup_2("UNDEF");
+                        htemp->v.h_vector = g_strdup("UNDEF");
                         htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
                     }
                     htempx = htemp;
@@ -588,7 +587,7 @@ void gw_fst_file_import_masked(GwFstFile *self)
                 htemp->v.h_val = GW_BIT_X; /* x */
                 htempx = htemp;
             }
-            htemp->time = MAX_HISTENT_TIME - 1;
+            htemp->time = GW_TIME_MAX - 1;
             htemp->next = histent_tail;
 
             if (self->fst_table[txidx].histent_curr) {
@@ -598,7 +597,7 @@ void gw_fst_file_import_masked(GwFstFile *self)
 
             if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
                 if (len > 1) {
-                    np->head.v.h_vector = (char *)malloc_2(len);
+                    np->head.v.h_vector = g_malloc(len);
                     for (i = 0; i < len; i++)
                         np->head.v.h_vector[i] = GW_BIT_X;
                 } else {
