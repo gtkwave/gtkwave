@@ -2,7 +2,6 @@
 #include <fstapi.h>
 #include "globals.h"
 #include "lx2.h"
-#include "tree_component.h"
 #include "gw-fst-loader.h"
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
@@ -74,6 +73,8 @@ struct _GwFstLoader
 
     GwTreeNode *terminals_chain;
     GwTreeNode *mod_tree_parent;
+
+    GwStringTable *component_names;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
@@ -173,15 +174,23 @@ static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
 
     unsigned char ttype = fst_scope_type_to_gw_tree_kind(scope->typ);
 
+    gint component_index = WAVE_T_WHICH_UNDEFINED_COMPNAME;
+
+    if (scope->component != NULL && scope->component[0] != '\0' &&
+        strcmp(scope->component, scope->name) != 0) {
+        guint index = gw_string_table_add(self->component_names, scope->component);
+        component_index = WAVE_T_WHICH_COMPNAME_START - index;
+    }
+
     allocate_and_decorate_module_tree_node(&self->tree_root,
                                            ttype,
                                            scope->name,
-                                           scope->component,
                                            scope->name_length,
-                                           scope->component_length,
+                                           component_index,
                                            self->next_var_stem,
                                            self->next_var_istem,
                                            &self->mod_tree_parent);
+
     self->next_var_stem = 0;
     self->next_var_istem = 0;
 }
@@ -525,7 +534,11 @@ static struct fstHier *extractNextVar(GwFstLoader *self,
     return (NULL);
 }
 
-static void fst_append_graft_chain(GwFstLoader *self, int len, char *nam, int which, GwTreeNode *par)
+static void fst_append_graft_chain(GwFstLoader *self,
+                                   int len,
+                                   char *nam,
+                                   int which,
+                                   GwTreeNode *par)
 {
     GwTreeNode *t = talloc_2(sizeof(GwTreeNode) + len + 1);
 
@@ -987,7 +1000,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
     gw_stems_shrink_to_fit(self->stems);
 
-    iter_through_comp_name_table();
+    gw_string_table_freeze(self->component_names);
 
     fprintf(stderr,
             FST_RDLOAD "Built %d signal%s and %d alias%s.\n",
@@ -1077,6 +1090,7 @@ if(num_dups)
     GwFstFile *dump_file = g_object_new(GW_TYPE_FST_FILE,
                                         "blackout-regions", blackout_regions,
                                         "stems", self->stems,
+                                        "component-names", self->component_names,
                                         "enum-filters", self->enum_filters,
                                         "time-dimension", self->time_dimension,
                                         "time-range", time_range,
@@ -1101,6 +1115,7 @@ if(num_dups)
 
     g_object_unref(blackout_regions);
     g_object_unref(self->stems);
+    g_object_unref(self->component_names);
     g_object_unref(self->enum_filters);
     g_object_unref(tree);
     g_object_unref(time_range);
@@ -1157,6 +1172,7 @@ static void gw_fst_loader_class_init(GwFstLoaderClass *klass)
 static void gw_fst_loader_init(GwFstLoader *self)
 {
     self->stems = gw_stems_new();
+    self->component_names = gw_string_table_new();
     self->enum_filters = gw_enum_filter_list_new();
 }
 

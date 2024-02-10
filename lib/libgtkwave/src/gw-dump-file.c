@@ -1,5 +1,6 @@
 #include "gw-dump-file.h"
 #include "gw-enums.h"
+#include "gw-string-table.h"
 
 typedef struct
 {
@@ -7,6 +8,7 @@ typedef struct
     GwFacs *facs;
     GwBlackoutRegions *blackout_regions;
     GwStems *stems;
+    GwStringTable *component_names;
     GwEnumFilterList *enum_filters;
 
     GwTime time_scale;
@@ -27,6 +29,7 @@ enum
     PROP_FACS,
     PROP_BLACKOUT_REGIONS,
     PROP_STEMS,
+    PROP_COMPONENT_NAMES,
     PROP_ENUM_FILTERS,
     PROP_TIME_SCALE,
     PROP_TIME_DIMENSION,
@@ -47,6 +50,7 @@ static void gw_dump_file_dispose(GObject *object)
 
     g_clear_object(&priv->blackout_regions);
     g_clear_object(&priv->stems);
+    g_clear_object(&priv->component_names);
     g_clear_object(&priv->enum_filters);
     g_clear_object(&priv->time_range);
 
@@ -99,6 +103,16 @@ static void gw_dump_file_set_property(GObject *object,
             }
 
             g_set_object(&priv->stems, stems);
+            break;
+        }
+
+        case PROP_COMPONENT_NAMES: {
+            GwStringTable *component_names = g_value_get_object(value);
+            if (component_names == NULL) {
+                component_names = gw_string_table_new();
+            }
+
+            g_set_object(&priv->component_names, component_names);
             break;
         }
 
@@ -176,6 +190,10 @@ static void gw_dump_file_get_property(GObject *object,
             g_value_set_object(value, gw_dump_file_get_stems(self));
             break;
 
+        case PROP_COMPONENT_NAMES:
+            g_value_set_object(value, gw_dump_file_get_component_names(self));
+            break;
+
         case PROP_ENUM_FILTERS:
             g_value_set_object(value, gw_dump_file_get_enum_filters(self));
             break;
@@ -248,6 +266,13 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
                             NULL,
                             NULL,
                             GW_TYPE_STEMS,
+                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_COMPONENT_NAMES] =
+        g_param_spec_object("component-names",
+                            NULL,
+                            NULL,
+                            GW_TYPE_STRING_TABLE,
                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     properties[PROP_ENUM_FILTERS] =
@@ -385,6 +410,23 @@ GwStems *gw_dump_file_get_stems(GwDumpFile *self)
     GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
 
     return priv->stems;
+}
+
+/**
+ * gw_dump_file_get_component_names:
+ * @self: A #GwDumpFile.
+ *
+ * Returns the component names table.
+ *
+ * Returns: (transfer none): The component names table.
+ */
+GwStringTable *gw_dump_file_get_component_names(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->component_names;
 }
 
 /**

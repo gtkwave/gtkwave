@@ -24,6 +24,7 @@
 #include "gw-tree.h"
 #include "gw-blackout-regions.h"
 #include "gw-symbol.h"
+#include "gw-string-table.h"
 #include "gw-enum-filter.h"
 #include "gw-enum-filter-list.h"
 #include "gw-dump-file.h"

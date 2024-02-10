@@ -64,9 +64,8 @@ char *leastsig_hiername(char *nam);
 void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
                                             unsigned char ttype,
                                             const char *scopename,
-                                            const char *compname,
                                             uint32_t scopename_len,
-                                            uint32_t compname_len,
+                                            gint component_index,
                                             uint32_t t_stem,
                                             uint32_t t_istem,
                                             GwTreeNode **mod_tree_parent);

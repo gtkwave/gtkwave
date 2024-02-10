@@ -8,6 +8,7 @@
 #include "gw-time-range.h"
 #include "gw-facs.h"
 #include "gw-enum-filter-list.h"
+#include "gw-string-table.h"
 
 G_BEGIN_DECLS
 
@@ -23,6 +24,7 @@ GwTree *gw_dump_file_get_tree(GwDumpFile *self);
 GwFacs *gw_dump_file_get_facs(GwDumpFile *self);
 GwBlackoutRegions *gw_dump_file_get_blackout_regions(GwDumpFile *self);
 GwStems *gw_dump_file_get_stems(GwDumpFile *self);
+GwStringTable *gw_dump_file_get_component_names(GwDumpFile *self);
 GwEnumFilterList *gw_dump_file_get_enum_filters(GwDumpFile *self);
 
 GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self);

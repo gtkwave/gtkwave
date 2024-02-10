@@ -537,19 +537,6 @@ struct Global
     JRB exclcompname;
     JRB exclinstname;
 
-/*
- * tree_component.c
- */
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t comp_name_judy;
-#else
-    JRB comp_name_jrb;
-#endif
-    char **comp_name_idx;
-    int comp_name_serial;
-    size_t comp_name_total_stringmem;
-    int comp_name_longest;
-
     /*
      * treesearch_gtk2.c
      */

@@ -548,19 +548,6 @@ static const struct Global globals_base_values = {
     NULL, /* exclcompname */
     NULL, /* exclinstname */
 
-/*
- * tree_component.c
- */
-#ifdef _WAVE_HAVE_JUDY
-    NULL, /* comp_name_judy */
-#else
-    NULL, /* comp_name_jrb */
-#endif
-    NULL, /* comp_name_idx */
-    0, /* comp_name_serial */
-    0, /* comp_name_total_stringmem */
-    0, /* comp_name_longest */
-
     /*
      * treesearch_gtk2.c
      */
