@@ -81,6 +81,8 @@ struct _GwVcdLoader
 
     guint numfacs;
     gchar *prev_hier_uncompressed_name;
+
+    GwTreeNode *terminals_chain;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -2310,6 +2312,155 @@ static GwFacs *vcd_sortfacs(GwVcdLoader *self)
     return facs;
 }
 
+/*
+ * extract the next part of the name in the flattened
+ * hierarchy name.  return ptr to next name if it exists
+ * else NULL
+ */
+static const char *get_module_name(const char *s)
+{
+    char ch;
+    char *pnt;
+
+    pnt = GLOBALS->module_tree_c_1;
+
+    for (;;) {
+        ch = *(s++);
+
+        if (((ch == GLOBALS->hier_delimeter) || (ch == '|')) &&
+            (*s)) /* added && null check to allow possible . at end of name */
+        {
+            *(pnt) = 0;
+            GLOBALS->module_len_tree_c_1 = pnt - GLOBALS->module_tree_c_1;
+            return (s);
+        }
+
+        if (!(*(pnt++) = ch)) {
+            GLOBALS->module_len_tree_c_1 = pnt - GLOBALS->module_tree_c_1;
+            return (NULL); /* nothing left to extract */
+        }
+    }
+}
+
+static void build_tree_from_name(GwVcdLoader *self,
+                                 GwTreeNode **tree_root,
+                                 const char *s,
+                                 int which)
+{
+    GwTreeNode *t, *nt;
+    GwTreeNode *tchain = NULL, *tchain_iter;
+    GwTreeNode *prevt;
+
+    if (s == NULL || !s[0])
+        return;
+
+    t = *tree_root;
+
+    if (t) {
+        prevt = NULL;
+        while (s) {
+        rs:
+            s = get_module_name(s);
+
+            if (s && t &&
+                !strcmp(t->name,
+                        GLOBALS->module_tree_c_1)) /* ajb 300616 added "s &&" to cover case where we
+                                                      can have hierarchy + final name are same, see
+                                                      A.B.C.D notes elsewhere in this file */
+            {
+                prevt = t;
+                t = t->child;
+                continue;
+            }
+
+            tchain = tchain_iter = t;
+            if (s && t) {
+                nt = t->next;
+                while (nt) {
+                    if (nt && !strcmp(nt->name, GLOBALS->module_tree_c_1)) {
+                        /* move to front to speed up next compare if in same hier during build */
+                        if (prevt) {
+                            tchain_iter->next = nt->next;
+                            nt->next = tchain;
+                            prevt->child = nt;
+                        }
+
+                        prevt = nt;
+                        t = nt->child;
+                        goto rs;
+                    }
+
+                    tchain_iter = nt;
+                    nt = nt->next;
+                }
+            }
+
+            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
+            memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
+
+            if (s) {
+                nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
+
+                if (prevt) /* make first in chain */
+                {
+                    nt->next = prevt->child;
+                    prevt->child = nt;
+                } else /* make second in chain as it's toplevel */
+                {
+                    nt->next = tchain->next;
+                    tchain->next = nt;
+                }
+            } else {
+                nt->child = prevt; /* parent */
+                nt->t_which = which;
+                nt->next = self->terminals_chain;
+                self->terminals_chain = nt;
+                return;
+            }
+
+            /* blindly clone fac from next part of hier on down */
+            t = nt;
+            while (s) {
+                s = get_module_name(s);
+
+                nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
+                memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
+
+                if (s) {
+                    nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
+                    t->child = nt;
+                    t = nt;
+                } else {
+                    nt->child = t; /* parent */
+                    nt->t_which = which;
+                    nt->next = self->terminals_chain;
+                    self->terminals_chain = nt;
+                }
+            }
+        }
+    } else {
+        /* blindly create first fac in the tree (only ever called once) */
+        while (s) {
+            s = get_module_name(s);
+
+            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
+            memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
+
+            if (!s)
+                nt->t_which = which;
+            else
+                nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
+
+            if (*tree_root != NULL && t != NULL) {
+                t->child = nt;
+                t = nt;
+            } else {
+                t = nt;
+                *tree_root = t;
+            }
+        }
+    }
+}
 static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
 {
     init_tree();
@@ -2317,7 +2468,7 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
         GwSymbol *fac = gw_facs_get(facs, i);
 
         char *n = fac->name;
-        build_tree_from_name(&self->tree_root, n, i);
+        build_tree_from_name(self, &self->tree_root, n, i);
 
         if (GLOBALS->escaped_names_found_vcd_c_1) {
             char *subst, ch;
@@ -2332,7 +2483,7 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
     }
 
     GwTree *tree = gw_tree_new(g_steal_pointer(&self->tree_root));
-    gw_tree_graft(tree, GLOBALS->terminals_tchain_tree_c_1);
+    gw_tree_graft(tree, self->terminals_chain);
     gw_tree_sort(tree);
 
     if (GLOBALS->escaped_names_found_vcd_c_1) {

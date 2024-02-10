@@ -58,7 +58,6 @@ struct autocoalesce_free_list
 };
 
 void init_tree(void);
-void build_tree_from_name(GwTreeNode **tree_root, const char *s, int which);
 void treedebug(GwTreeNode *t, char *s);
 
 char *leastsig_hiername(char *nam);

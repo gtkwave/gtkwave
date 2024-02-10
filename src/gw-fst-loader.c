@@ -71,6 +71,8 @@ struct _GwFstLoader
     gboolean has_nonimplicit_directions;
     gboolean has_supplemental_datatypes;
     gboolean has_supplemental_vartypes;
+
+    GwTreeNode *terminals_chain;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
@@ -521,7 +523,7 @@ static struct fstHier *extractNextVar(GwFstLoader *self,
     return (NULL);
 }
 
-static void fst_append_graft_chain(int len, char *nam, int which, GwTreeNode *par)
+static void fst_append_graft_chain(GwFstLoader *self, int len, char *nam, int which, GwTreeNode *par)
 {
     GwTreeNode *t = talloc_2(sizeof(GwTreeNode) + len + 1);
 
@@ -529,8 +531,8 @@ static void fst_append_graft_chain(int len, char *nam, int which, GwTreeNode *pa
     t->t_which = which;
 
     t->child = par;
-    t->next = GLOBALS->terminals_tchain_tree_c_1;
-    GLOBALS->terminals_tchain_tree_c_1 = t;
+    t->next = self->terminals_chain;
+    self->terminals_chain = t;
 }
 
 static GwBlackoutRegions *load_blackout_regions(GwFstLoader *self)
@@ -811,7 +813,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             prevsymroot = prevsym = NULL;
 
             len = sprintf_2_sdd(buf, nnam, node_block[i].msi, node_block[i].lsi);
-            fst_append_graft_chain(len, buf, i, npar);
+            fst_append_graft_chain(self, len, buf, i, npar);
         } else {
             int gatecmp = (f->len == 1) &&
                           (!(f->flags &
@@ -849,7 +851,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 }
 
                 len = sprintf_2_sd(buf, nnam, node_block[i].msi);
-                fst_append_graft_chain(len, buf, i, npar);
+                fst_append_graft_chain(self, len, buf, i, npar);
             } else {
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
@@ -877,7 +879,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                     }
                 }
 
-                fst_append_graft_chain(strlen(nnam), nnam, i, npar);
+                fst_append_graft_chain(self, strlen(nnam), nnam, i, npar);
             }
         }
 
@@ -1003,7 +1005,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
     // TODO: add GwTree to GwDumpFile
     GwTree *tree = gw_tree_new(g_steal_pointer(&self->tree_root));
-    gw_tree_graft(tree, GLOBALS->terminals_tchain_tree_c_1);
+    gw_tree_graft(tree, self->terminals_chain);
     gw_tree_sort(tree);
 
     /* SPLASH */ splash_sync(4, 5);
