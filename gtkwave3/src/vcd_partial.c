@@ -525,7 +525,16 @@ for(GLOBALS->yytext_vcd_partial_c_2[len++]=ch;;GLOBALS->yytext_vcd_partial_c_2[l
 	{
 	if(len==GLOBALS->T_MAX_STR_vcd_partial_c_2)
 		{
-		GLOBALS->yytext_vcd_partial_c_2=(char *)realloc_2(GLOBALS->yytext_vcd_partial_c_2, (GLOBALS->T_MAX_STR_vcd_partial_c_2=GLOBALS->T_MAX_STR_vcd_partial_c_2*2)+1);
+		if(!GLOBALS->varsplit_vcd_partial_c_2)
+			{
+			GLOBALS->yytext_vcd_partial_c_2=(char *)realloc_2(GLOBALS->yytext_vcd_partial_c_2, (GLOBALS->T_MAX_STR_vcd_partial_c_2=GLOBALS->T_MAX_STR_vcd_partial_c_2*2)+1);
+			}
+		else /* TALOS-2023-1806 */
+			{
+			int vsplit_len = GLOBALS->varsplit_vcd_partial_c_2 - GLOBALS->yytext_vcd_partial_c_2; /* save old len */
+			GLOBALS->yytext_vcd_partial_c_2=(char *)realloc_2(GLOBALS->yytext_vcd_partial_c_2, (GLOBALS->T_MAX_STR_vcd_partial_c_2=GLOBALS->T_MAX_STR_vcd_partial_c_2*2)+1);
+			GLOBALS->varsplit_vcd_partial_c_2 = GLOBALS->yytext_vcd_partial_c_2+vsplit_len; /* reconstruct old len in new buffer */
+			}
 		}
 
 	ch=getch();
@@ -898,7 +907,7 @@ switch(GLOBALS->yytext_vcd_partial_c_2[0])
 				}
 				else
 				{
-				if(GLOBALS->yylen_cache_vcd_partial_c_2<v->size)
+				if(GLOBALS->yylen_cache_vcd_partial_c_2<=v->size) /* TALOS-2023-1804 */
 					{
 					free_2(vector);
 					vector=malloc_2(v->size+1);
@@ -1193,11 +1202,11 @@ for(;;)
 			sync_end(NULL);
 			break;
 		case T_VAR:
-			if((GLOBALS->header_over_vcd_partial_c_2)&&(0))
+			if(GLOBALS->header_over_vcd_partial_c_2) /* reinstated because of TALOS-2023-1805 */
 			{
 			fprintf(stderr,"$VAR encountered after $ENDDEFINITIONS near byte %d.  VCD is malformed, exiting.\n",
 				(int)(GLOBALS->vcdbyteno_vcd_partial_c_2+(GLOBALS->vst_vcd_partial_c_2-GLOBALS->vcdbuf_vcd_partial_c_2)));
-			exit(0);
+			exit(255);
 			}
 			else
 			{

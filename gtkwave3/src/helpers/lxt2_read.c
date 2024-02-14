@@ -90,6 +90,16 @@ return(
 /****************************************************************************/
 
 /*
+ * report abort messages
+ */
+static void chk_report_abort(const char *s)
+{
+fprintf(stderr,"Triggered %s security check, exiting.\n", s);
+abort();
+}
+
+
+/*
  * fast SWAR ones count for 32 and 64 bits
  */
 #if LXT2_RD_GRANULE_SIZE > 32
@@ -140,6 +150,11 @@ static char s[33];
 char *p = s;
 int i;
 int len2 = len-1;
+
+if(len >= sizeof(s))
+	{
+	chk_report_abort("TALOS-2023-1827");
+	}
 
 for(i=0;i<len;i++)
         {
@@ -214,12 +229,20 @@ while((top_elem = lt->radix_sort[which_time]))
         	case LXT2_RD_ENC_INV:	for(i=0;i<lt->len[idx];i++) { lt->value[idx][i] ^= 1; } break;
 
         	case LXT2_RD_ENC_LSH0:
-        	case LXT2_RD_ENC_LSH1:	memmove(lt->value[idx], lt->value[idx]+1, lt->len[idx]-1);
+        	case LXT2_RD_ENC_LSH1:	if(!lt->len[idx])
+						{
+						chk_report_abort("TALOS-2023-1824");
+						}
+					memmove(lt->value[idx], lt->value[idx]+1, lt->len[idx]-1);
 					lt->value[idx][lt->len[idx]-1] = '0'+(vch-LXT2_RD_ENC_LSH0);
 					break;
 
         	case LXT2_RD_ENC_RSH0:
-        	case LXT2_RD_ENC_RSH1:	memmove(lt->value[idx]+1, lt->value[idx], lt->len[idx]-1);
+        	case LXT2_RD_ENC_RSH1:	if(!lt->len[idx])
+						{
+						chk_report_abort("TALOS-2023-1824");
+						}
+					memmove(lt->value[idx]+1, lt->value[idx], lt->len[idx]-1);
 					lt->value[idx][0] = '0'+(vch-LXT2_RD_ENC_RSH0);
 					break;
 
@@ -598,7 +621,21 @@ if(vld != LXT2_RD_GRAN_SECT_DICT)
 
 if(b->num_dict_entries)
 	{
+        {
+        size_t chk_x = b->num_dict_entries * sizeof(char *);
+        if((chk_x / sizeof(char *)) != b->num_dict_entries)
+		{
+                chk_report_abort("TALOS-2023-1820");
+                }
+        }
 	b->string_pointers = malloc(b->num_dict_entries * sizeof(char *));
+        {
+        size_t chk_x = b->num_dict_entries * sizeof(unsigned int);
+        if((chk_x / sizeof(unsigned int)) != b->num_dict_entries)
+		{
+                chk_report_abort("TALOS-2023-1820");
+                }
+        }
 	b->string_lens = malloc(b->num_dict_entries * sizeof(unsigned int));
 	pnt = b->dict_start;
 	for(i=0;i<b->num_dict_entries;i++)
@@ -662,6 +699,10 @@ while(((sect_typ=*pnt) == LXT2_RD_GRAN_SECT_TIME)||(sect_typ == LXT2_RD_GRAN_SEC
 	/* fprintf(stderr, LXT2_RDLOAD"processing granule %d\n", granule); */
 	pnt++;
 	lt->num_time_table_entries = lxt2_rd_get_byte(pnt, 0);
+	if(lt->num_time_table_entries > LXT2_RD_GRANULE_SIZE)
+		{
+		chk_report_abort("TALOS-2023-1819");
+		}
 	pnt++;
 	for(i=0;i<lt->num_time_table_entries;i++)
 		{
@@ -884,6 +925,13 @@ if(!(lt->handle=fopen(name, "rb")))
 			lt->zhandle = gzdopen(dup(fileno(lt->handle)), "rb");
 
 			t = lt->numfacs * 4 * sizeof(lxtint32_t);
+			{
+			size_t chk_x = lt->numfacs * 4 * sizeof(lxtint32_t);
+			if((chk_x / (4 * sizeof(lxtint32_t))) != lt->numfacs)
+				{
+				chk_report_abort("TALOS-2023-1818");
+				}
+			}
 			m=(char *)malloc(t);
 			rc=gzread(lt->zhandle, m, t);
 			gzclose(lt->zhandle); lt->zhandle=NULL;
@@ -899,11 +947,25 @@ if(!(lt->handle=fopen(name, "rb")))
 
 			pos = pos+lt->zfacgeometrysize;
 
+			{
+			size_t chk_x = lt->numfacs * sizeof(lxtint32_t);
+			if((chk_x / sizeof(lxtint32_t)) != lt->numfacs)
+				{
+				chk_report_abort("TALOS-2023-1818");
+				}
+			}
 			lt->rows = malloc(lt->numfacs * sizeof(lxtint32_t));
 			lt->msb = malloc(lt->numfacs * sizeof(lxtsint32_t));
 			lt->lsb = malloc(lt->numfacs * sizeof(lxtsint32_t));
 			lt->flags = malloc(lt->numfacs * sizeof(lxtint32_t));
 			lt->len = malloc(lt->numfacs * sizeof(lxtint32_t));
+			{
+			size_t chk_x = lt->numfacs * sizeof(char *);
+			if((chk_x / sizeof(char *)) != lt->numfacs)
+				{
+				chk_report_abort("TALOS-2023-1818");
+				}
+			}
 			lt->value = malloc(lt->numfacs * sizeof(char *));
 			lt->next_radix = malloc(lt->numfacs * sizeof(void *));
 
@@ -922,6 +984,13 @@ if(!(lt->handle=fopen(name, "rb")))
 					{
 					lt->len[i] = 32;
 					}
+			        if(sizeof(size_t) < sizeof(uint64_t))
+                			{
+                			/* TALOS-2023-1821 for 32b overflow */
+                			uint64_t chk_64 = lt->len[i] + 1;
+                			size_t   chk_32 = lt->len[i] + 1;
+                			if(chk_64 != chk_32) chk_report_abort("TALOS-2023-1821");
+                			}
 				lt->value[i] = calloc(lt->len[i] + 1, sizeof(char));
 				}
 
@@ -1261,12 +1330,24 @@ if(lt)
 			clone=lxt2_rd_get_16(lt->faccache->n, 0);  lt->faccache->n+=2;
 			pnt=lt->faccache->bufcurr;
 
+			if(clone > lt->longestname)
+				{
+				chk_report_abort("TALOS-2023-1826");
+				}
+
 			for(j=0;j<clone;j++)
 				{
 				*(pnt++) = lt->faccache->bufprev[j];
 				}
 
-			while((*(pnt++)=lxt2_rd_get_byte(lt->faccache->n++,0)));
+			do
+				{
+				if((pnt - lt->faccache->bufcurr) > lt->longestname)
+					{
+					chk_report_abort("TALOS-2023-1826");
+					}
+				}
+				while((*(pnt++)=lxt2_rd_get_byte(lt->faccache->n++,0)));
 			lt->faccache->old_facidx = facidx;
 			return(lt->faccache->bufcurr);
 			}
@@ -1526,6 +1607,11 @@ if(lt)
 					rcf = fread(&unclen, 4, 1, lt->handle);	unclen = rcf ? lxt2_rd_get_32(&unclen,0) : 0;
 					rcf = fread(&iter, 4, 1, lt->handle);	iter = rcf ? lxt2_rd_get_32(&iter,0) : 0;
 
+					if(unclen > b->uncompressed_siz)
+						{
+						chk_report_abort("TALOS-2023-1823"); /* could fix this up with a realloc(), but abort to indicate the file is malformed */
+						}
+
 					fspos += 12;
 					if((iter==0xFFFFFFFF)||(lt->process_mask_compressed[iter/LXT2_RD_PARTIAL_SIZE]))
 						{
@@ -1533,6 +1619,10 @@ if(lt)
 							{
 							if(zbuff) free(zbuff);
 							zlen = clen * 2;
+							if(zlen < clen)
+								{
+								chk_report_abort("TALOS-2023-1822");
+								}
 							zbuff = malloc(zlen ? zlen : 1 /* scan-build */);
 							}
 

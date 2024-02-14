@@ -1843,3 +1843,53 @@
 		Add GDK_WINDOWING_WAYLAND check for gdkwayland.h header usage.
 		Changed	sprintf	to snprintf in fstapi.c.
 		Fix init crash on show_base_symbols enabled.
+3.3.117	08aug23	Fix stems reader processing code broken in 3.3.114.
+3.3.118 17dec23 Update xml2stems to handle newer "loc" vs "fl" xml tags.
+		Change preg_regex_c_1 decl to use regex_t* as datatype.
+		Move gtkwave.appdata.xml to 
+		io.github.gtkwave.GTKWave.metainfo.xml.
+		Fixed popen security advisories:
+		TALOS-2023-1786
+		Fixed FST security advisories:		
+		TALOS-2023-1777
+		TALOS-2023-1783
+		TALOS-2023-1785
+		TALOS-2023-1789
+		TALOS-2023-1790
+		TALOS-2023-1791
+		TALOS-2023-1792
+		TALOS-2023-1793
+		TALOS-2023-1797
+		TALOS-2023-1798
+		Fixed evcd2vcd security advisories:
+		TALOS-2023-1803
+		Fixed VCD security advisories:
+		TALOS-2023-1804
+		TALOS-2023-1805
+		TALOS-2023-1806
+		TALOS-2023-1807
+		Fixed VZT security advisories:
+		TALOS-2023-1810
+		TALOS-2023-1811
+		TALOS-2023-1812
+		TALOS-2023-1813
+		TALOS-2023-1814
+		TALOS-2023-1815
+		TALOS-2023-1816
+		TALOS-2023-1817
+		Fixed LXT2 security advisories:		
+		TALOS-2023-1818
+		TALOS-2023-1819
+		TALOS-2023-1820
+		TALOS-2023-1821
+		TALOS-2023-1822
+		TALOS-2023-1823
+		TALOS-2023-1824
+		TALOS-2023-1826
+		TALOS-2023-1827
+3.3.119 14feb24 Remove FST_DO_MISALIGNED_OPS.
+		Update lz4 to current version from github.
+		Change LZ4_compress to LZ4_compress_default.
+		Update libghw.c/.h to latest upstream version.
+		Fix for -Wsign-compare in fstapi.c.
+		Security fixes for GHW.

@@ -1,4 +1,4 @@
 ## -*- makefile -*-
 ##
 
-EXTRA_DIST= gtkwave.appdata.xml
+EXTRA_DIST= io.github.gtkwave.GTKWave.metainfo.xml

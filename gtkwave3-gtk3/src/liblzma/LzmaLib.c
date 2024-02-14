@@ -51,6 +51,16 @@ size_t write_cnt, read_cnt;
 };
 
 
+/*
+ * report abort messages
+ */
+static void chk_report_abort(const char *s)
+{
+fprintf(stderr,"Triggered %s security check, exiting.\n", s);
+abort();
+}
+
+
 static void LZMA_write_varint(struct lzma_handle_t *h, size_t v)
 {
 size_t nxt;
@@ -72,14 +82,20 @@ h->write_cnt += write(h->fd, buf, pnt-buf);
 /* ifdef is warnings fix if XZ is not present */
 static size_t LZMA_read_varint(struct lzma_handle_t *h)
 {
-unsigned char buf[16];
+int chk_len = 16; /* TALOS-2023-1811 */
+unsigned char buf[chk_len];
 int idx = 0;
 size_t rc = 0;
 
-for(;;)
+while(idx<chk_len)
 	{
 	h->read_cnt += read(h->fd, buf+idx, 1);
 	if(buf[idx++] & 0x80) break;
+	}
+
+if(idx == chk_len)
+	{
+	chk_report_abort("TALOS-2023-1811");	
 	}
 
 do
@@ -324,6 +340,21 @@ if(h)
 
 			srclen = LZMA_read_varint(h);
 
+			if(srclen > h->blksiz) /* TALOS-2023-1810 */
+				{
+				if(h->dmem)
+					{
+					free(h->dmem);
+					}
+				if(h->mem)
+					{
+					free(h->mem);
+					}
+				h->blksiz = srclen; 
+				h->mem = malloc(h->blksiz);
+				h->dmem = malloc(h->blksiz);
+				}
+
 			if(!srclen)
 				{
 				h->read_cnt += (rc = read(h->fd, h->mem, dstlen));
@@ -335,7 +366,7 @@ if(h)
 				lzma_stream strm = LZMA_STREAM_INIT;
 				lzma_ret lrc;
 
-				h->read_cnt += (rc = read(h->fd, h->dmem, srclen));
+				h->read_cnt += (rc = read(h->fd, h->dmem, srclen)); /* TALOS-2023-1810: srclen used here, generally ok as data are compressible */
 
 				lrc = lzma_alone_decoder(&strm, LZMA_DECODER_SIZE);
 				if(lrc != LZMA_OK)

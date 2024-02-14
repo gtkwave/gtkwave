@@ -38,6 +38,17 @@
 
 /****************************************************************************/
 
+/*
+ * report abort messages
+ */
+static void chk_report_abort(const char *s)
+{
+fprintf(stderr,"Triggered %s security check, exiting.\n", s);
+abort();
+}
+
+/****************************************************************************/
+
 static int is_big_endian(void)
 {
 union
@@ -326,6 +337,13 @@ num_time_ticks = vzt_rd_get_v32(&pnt);
 if(num_time_ticks != 0)
 	{
 	vztint64_t cur_time;
+        {
+        size_t chk_x = num_time_ticks * sizeof(vztint64_t);
+        if((chk_x / sizeof(vztint64_t)) != num_time_ticks)
+               	{
+                chk_report_abort("TALOS-2023-1814");
+                }
+        }
 	times = malloc(num_time_ticks * sizeof(vztint64_t));
 	times[0] = cur_time = vzt_rd_get_v64(&pnt);
 	for(i=1;i<num_time_ticks;i++)
@@ -340,6 +358,13 @@ if(num_time_ticks != 0)
 	vztint64_t cur_time = b->start;
 
 	num_time_ticks = b->end - b->start + 1;
+        {
+        size_t chk_x = num_time_ticks * sizeof(vztint64_t);
+        if((chk_x / sizeof(vztint64_t)) != num_time_ticks)
+               	{
+                chk_report_abort("TALOS-2023-1814");
+                }
+        }
 	times = malloc(num_time_ticks * sizeof(vztint64_t));
 
 	for(i=0;i<num_time_ticks;i++)
@@ -360,6 +385,20 @@ if(b->rle)
 	vztint32_t first_bit = 0, curr_bit = 0;
 	vztint32_t runlen;
 
+	if(num_sections && num_dict_entries)
+		{
+		size_t chk_x = (num_sections * num_dict_entries);
+		size_t chk_y = chk_x * sizeof(vztint32_t);
+	
+		if((chk_x/num_sections) != num_dict_entries)
+			{
+			chk_report_abort("TALOS-2023-1815");
+			}
+		if((chk_y/sizeof(vztint32_t)) != chk_x)
+			{
+			chk_report_abort("TALOS-2023-1815");
+			}
+		}
 	val_dict = calloc(1, b->num_rle_bytes = (num_dict_words = num_sections * num_dict_entries) * sizeof(vztint32_t));
 	curr_dec_dict = val_dict;
 
@@ -444,7 +483,20 @@ if(b->num_str_entries)
 		}
 	}
 
+if(num_sections && num_dict_entries)
+	{
+	size_t chk_x = (num_sections * num_dict_entries);
+	size_t chk_y = chk_x * sizeof(vztint32_t);
 
+	if((chk_x/num_sections) != num_dict_entries)
+		{
+		chk_report_abort("TALOS-2023-1815");
+		}
+	if((chk_y/sizeof(vztint32_t)) != chk_x)
+		{
+		chk_report_abort("TALOS-2023-1815");
+		}
+	}
 num_dict_words = (num_sections * num_dict_entries) * sizeof(vztint32_t);
 change_dict = malloc(num_dict_words ? num_dict_words : sizeof(vztint32_t)); /* scan-build */
 m = 0;
@@ -866,10 +918,17 @@ do_vch_0:		if(!(lt->flags[idx] & (VZT_RD_SYM_F_DOUBLE|VZT_RD_SYM_F_STRING)))
 		i2 = vzt_rd_next_value_chg_time(lt, b, i, idx);
                 if(i2)
                         {
-                        struct vzt_ncycle_autosort *t = autosort[i2];
-
-                        autofacs[idx].next = t;
-                        autosort[i2] = autofacs+idx;
+			if(i2 < b->num_time_ticks)
+				{
+	                        struct vzt_ncycle_autosort *t = autosort[i2];
+	
+	                        autofacs[idx].next = t;
+	                        autosort[i2] = autofacs+idx;
+				}
+			else
+				{
+				chk_report_abort("TALOS-2023-1817");
+				}
                         }
                         else
                         {
@@ -917,10 +976,17 @@ for(i = 1; i < b->num_time_ticks; i++)
 
                         if(i2!=i)
                                 {
-                                struct vzt_ncycle_autosort *ta = autosort[i2];
+				if(i2 < b->num_time_ticks)
+					{
+	                                struct vzt_ncycle_autosort *ta = autosort[i2];
 
-                                autofacs[idx].next = ta;
-                                autosort[i2] = autofacs+idx;
+	                                autofacs[idx].next = ta;
+	                                autosort[i2] = autofacs+idx;
+					}
+				else
+					{
+					chk_report_abort("TALOS-2023-1817");
+					}
                                 }
                                 else
                                 {
@@ -1131,12 +1197,24 @@ if(lt)
 			clonecnt=vzt_rd_get_16(lt->faccache->n, 0);  lt->faccache->n+=2;
 			pnt=lt->faccache->bufcurr;
 
+			if(clonecnt > lt->longestname)
+				{
+				chk_report_abort("TALOS-2023-1813");
+				}
+
 			for(j=0;j<clonecnt;j++)
 				{
 				*(pnt++) = lt->faccache->bufprev[j];
 				}
 
-			while((*(pnt++)=vzt_rd_get_byte(lt->faccache->n++,0)));
+			char *bufcurr_exceeded = lt->faccache->bufcurr + (lt->longestname+1);
+			do
+				{
+				if(bufcurr_exceeded == pnt)
+					{
+					chk_report_abort("TALOS-2023-1813");
+					}
+				} while((*(pnt++)=vzt_rd_get_byte(lt->faccache->n++,0)));
 			lt->faccache->old_facidx = facidx;
 			return(lt->faccache->bufcurr);
 			}
@@ -1853,6 +1931,13 @@ if(!(lt->handle=fopen(name, "rb")))
 
 		pos = pos+lt->zfacgeometrysize;
 
+                {
+                size_t chk_x = lt->numfacs * sizeof(vztint32_t);
+                if((chk_x / sizeof(vztint32_t)) != lt->numfacs)
+                	{
+                        chk_report_abort("TALOS-2023-1812");
+                        }
+                }
 		lt->rows = malloc(lt->numfacs * sizeof(vztint32_t));
 		lt->msb = malloc(lt->numfacs * sizeof(vztsint32_t));
 		lt->lsb = malloc(lt->numfacs * sizeof(vztsint32_t));
@@ -1884,6 +1969,14 @@ if(!(lt->handle=fopen(name, "rb")))
 			if(lt->len[i] > lt->longest_len)
 				{
 				lt->longest_len = lt->len[i];
+				}
+			}
+
+		if(sizeof(size_t) < sizeof(uint64_t))
+			{
+			if(lt->longest_len == 0xffffffff)
+				{
+				chk_report_abort("TALOS-2023-1816");
 				}
 			}
 

@@ -671,7 +671,7 @@ int read_save_helper(char *wname, char **dumpfile, char **savefile, off_t *dumps
                 str=wave_alloca(strlen(wname)+5+1);
                 strcpy(str,"zcat ");
                 strcpy(str+5,wname);
-                wave=popen(str,"r");
+                wave=popen_san(str,"r");
                 wave_is_compressed=~0;
                 }
                 else
@@ -808,7 +808,7 @@ int read_save_helper(char *wname, char **dumpfile, char **savefile, off_t *dumps
 			if(wave_is_compressed)
 		                {
 				pclose(wave);
-		                wave=popen(str,"r");
+		                wave=popen_san(str,"r");
 		                }
 		                else
 		                {

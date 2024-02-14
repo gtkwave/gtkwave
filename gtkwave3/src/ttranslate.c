@@ -154,7 +154,7 @@ static void load_ttrans_filter(int which, char *name)
 #if !defined __MINGW32__ && !defined _MSC_VER
   cmd = (char *)malloc_2(strlen(exec_name)+6+1);
   sprintf(cmd, "which %s", exec_name);
-  stream = popen(cmd, "r");
+  stream = popen_san(cmd, "r");
 
   result = fscanf(stream, "%s", abs_path);
 

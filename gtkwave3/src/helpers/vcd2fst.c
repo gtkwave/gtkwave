@@ -68,6 +68,43 @@ if(!pnt)
 return(pnt);
 }
 
+/******************************************************/
+
+static FILE *popen_san(const char *command, const char *type) /* TALOS-2023-1786 */
+{
+const char *p = command;
+int is_ok = 1;
+char ch;
+
+while(p && (ch = *(p++)))
+	{
+	switch(ch)
+		{
+		case '&':
+		case '|':
+		case ';':
+		case '\n':
+		case '`':
+		case '$':
+			is_ok = 0;
+
+		default:
+			break;
+		}
+	}
+
+if(is_ok)
+	{
+	return(popen(command, type));
+	}
+else
+	{
+	fprintf(stderr, "GTKWAVE | TALOS-2023-1786: popen() command string '%s' may not be properly sanitized, blocking command.\n", command);
+	return(NULL);
+	}
+}
+
+/******************************************************/
 
 /*********************************************************/
 /*** vvv extload component type name determination vvv ***/
@@ -281,7 +318,7 @@ FILE *extload;
 void *xc = fstReaderOpenForUtilitiesOnly();
 
 sprintf(sbuff, "%s -info %s 2>&1", EXTLOAD_PATH, fname);
-extload = popen(sbuff, "r");
+extload = popen_san(sbuff, "r");
 if(extload)
 	{
 	while(get_info(extload));
@@ -295,7 +332,7 @@ if(numfacs)
 	}
 
 sprintf(sbuff, "%s -tree %s 2>&1", EXTLOAD_PATH, fname);
-extload = popen(sbuff, "r");
+extload = popen_san(sbuff, "r");
 if(extload)
 	{
 	while(get_scopename(xc, extload));
@@ -482,7 +519,7 @@ if(!strcmp("-", vname))
 	if(suffix_check(vname, "."EXTLOAD_SUFFIX) || suffix_check(vname, "."EXTLOAD_SUFFIX".gz") || suffix_check(vname, "."EXTLOAD_SUFFIX".bz2"))
 		{
 		sprintf(bin_fixbuff, EXTCONV_PATH" %s", vname);
-		f = popen(bin_fixbuff, "r");
+		f = popen_san(bin_fixbuff, "r");
 		is_popen = 1;
 		is_extload = 1;
 #ifndef _WAVE_HAVE_JUDY
@@ -497,7 +534,7 @@ if(!strcmp("-", vname))
 		if(suffix_check(vname, "."EXT2LOAD_SUFFIX))
 			{
 			sprintf(bin_fixbuff, EXT2CONV_PATH" %s", vname);
-			f = popen(bin_fixbuff, "r");
+			f = popen_san(bin_fixbuff, "r");
 			is_popen = 1;
 			}
 			else
@@ -506,7 +543,7 @@ if(!strcmp("-", vname))
 		if(suffix_check(vname, "."EXT3LOAD_SUFFIX))
 			{
 			sprintf(bin_fixbuff, EXT3CONV_PATH" %s", vname);
-			f = popen(bin_fixbuff, "r");
+			f = popen_san(bin_fixbuff, "r");
 			is_popen = 1;
 			}
 			else

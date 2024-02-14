@@ -1738,7 +1738,7 @@ if((wname)||(vcd_save_handle_cached)||(is_smartsave))
 	        str=wave_alloca(strlen(wname)+dlen+1);
 	        strcpy(str,WAVE_DECOMPRESSOR);
 	        strcpy(str+dlen,wname);
-	        wave=popen(str,"r");
+	        wave=popen_san(str,"r");
 	        wave_is_compressed=~0;
 	        }
 	        else
@@ -1786,7 +1786,7 @@ if((wname)||(vcd_save_handle_cached)||(is_smartsave))
 			if(wave_is_compressed)
 			        {
 				pclose(wave);
-			        wave=popen(str,"r");
+			        wave=popen_san(str,"r");
 			        }
 			        else
 			        {

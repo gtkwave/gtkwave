@@ -350,6 +350,7 @@ NULL, /* enum_nptrs_jrb */
  * ghw.c
  */
 0, /* nxp_ghw_c_1 93 */
+0, /* nbr_sigs_ghw_c_1 */
 0, /* sym_which_ghw_c_1 95 */
 NULL, /* gwt_ghw_c_1 96 */
 NULL, /* gwt_corr_ghw_c_1 97 */

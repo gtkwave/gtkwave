@@ -145,6 +145,53 @@ static struct queuedevent *queuedevents=NULL;
 
 /******************************************************************/
 
+/*
+ * report abort messages
+ */
+static void chk_report_abort(const char *s)
+{
+fprintf(stderr,"Triggered %s security check, exiting.\n", s);
+abort();
+}
+
+/******************************************************************/
+
+static FILE *popen_san(const char *command, const char *type) /* TALOS-2023-1786 */
+{
+const char *p = command;
+int is_ok = 1;
+char ch;
+
+while(p && (ch = *(p++)))
+        {
+        switch(ch)
+                {
+                case '&':
+                case '|':
+                case ';':
+                case '\n':
+                case '`':
+                case '$':
+                        is_ok = 0;
+
+                default:
+                        break;
+                }
+        }
+
+if(is_ok)
+        {
+        return(popen(command, type));
+        }
+else
+    	{
+        fprintf(stderr, "GTKWAVE | TALOS-2023-1786: popen() command string '%s' may not be properly sanitized, blocking command.\n", command);
+        return(NULL);
+        }
+}
+
+/******************************************************************/
+
 static unsigned int vcd_minid = ~0;
 static unsigned int vcd_maxid = 0;
 
@@ -199,6 +246,8 @@ if(indexed)
 		{
 		return(indexed[hsh-vcd_minid]);
 		}
+
+	return(NULL); /* TALOS-2023-1807 */
 	}
 
 v=(struct vcdsymbol **)bsearch(key, sorted, numsyms,
@@ -561,7 +610,16 @@ for(yytext[len++]=ch;;yytext[len++]=ch)
         {
         if(len==T_MAX_STR)
                 {
-                yytext=(char *)realloc_2(yytext, (T_MAX_STR=T_MAX_STR*2)+1);
+		if(!varsplit)
+			{
+	                yytext=(char *)realloc_2(yytext, (T_MAX_STR=T_MAX_STR*2)+1);
+			}
+                else /* TALOS-2023-1806 */
+                        {
+                        int vsplit_len = varsplit - yytext; /* save old len */
+                        yytext=(char *)realloc_2(yytext, (T_MAX_STR=T_MAX_STR*2)+1);
+                        varsplit = yytext+vsplit_len; /* reconstruct old len in new buffer */
+                        }
                 }
 
         ch=getch();
@@ -930,7 +988,7 @@ switch(yytext[0])
 				}
 				else
 				{
-				if(yylen_cache<v->size)
+				if(yylen_cache<=v->size) /* TALOS-2023-1804 */
 					{
 					free_2(vector);
 					vector=malloc_2(v->size+1);
@@ -1138,6 +1196,11 @@ for(;;)
 			{
 			int vtok;
 			struct vcdsymbol *v=NULL;
+
+                        if(header_over)
+                                {
+                                chk_report_abort("TALOS-2023-1805: $var after $enddefinitions");
+                                }
 
 			var_prevch=0;
 			if(varsplit)
@@ -1585,7 +1648,7 @@ if((strlen(fname)>2)&&(!strcmp(fname+strlen(fname)-3,".gz")))
 	str=(char *)wave_alloca(strlen(fname)+dlen+1);
 	strcpy(str,WAVE_DECOMPRESSOR);
 	strcpy(str+dlen,fname);
-	vcd_handle=popen(str,"r");
+	vcd_handle=popen_san(str,"r");
 	vcd_is_compressed=~0;
 	}
 	else

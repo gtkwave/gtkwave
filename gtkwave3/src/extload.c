@@ -1695,7 +1695,7 @@ int patched_len = 0;
 
 last_modification_check();
 sprintf(sbuff, "%s -info %s 2>&1", EXTLOAD_PATH, fname);
-GLOBALS->extload = popen(sbuff, "r");
+GLOBALS->extload = popen_san(sbuff, "r");
 for(;;)
 	{
 	char * rc = fgets(sbuff, 65536, GLOBALS->extload);
@@ -1900,7 +1900,7 @@ fstReaderClose(GLOBALS->extload_xc); /* corresponds to fstReaderOpenForUtilities
 
 if(!last_modification_check()) { GLOBALS->extload_already_errored = 1; return(LLDescriptor(0)); }
 sprintf(sbuff, "%s -hier_tree %s 2>&1", EXTLOAD_PATH, fname);
-GLOBALS->extload = popen(sbuff, "r");
+GLOBALS->extload = popen_san(sbuff, "r");
 
 /* do your stuff here..all useful info has been initialized by now */
 
@@ -2256,7 +2256,7 @@ if(last_modification_check()) /* place array height check here in an "&&" branch
 	TimeType tim;
 
 	sprintf(sbuff, "%s -vc -vidcode %d %s 2>&1", EXTLOAD_PATH, txidx_in_trace, GLOBALS->loaded_file_name);
-	GLOBALS->extload = popen(sbuff, "r");
+	GLOBALS->extload = popen_san(sbuff, "r");
 
 	for(;;)
 		{

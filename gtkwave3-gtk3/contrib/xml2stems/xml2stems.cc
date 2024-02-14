@@ -138,6 +138,9 @@ while(!feof(fi))
 						{
 						const char *nam = (*xmt)[string("name")].c_str();
 						const char *fl = (*xmt)[string("fl")].c_str();
+						const char *loc = (*xmt)[string("loc")].c_str();
+					    	int loc_offset = 0;
+						if(!fl || !strlen(fl)) { fl = loc; loc_offset = 1; }
 
 						if(!oneline) 
 							{
@@ -148,7 +151,8 @@ while(!feof(fi))
 								const char *s = fl; char *d = fl_dup;
 								while(isalpha(*s)) { *(d++) = *(s++); }
 								*d = 0;
-	
+
+								s+=loc_offset;	
 								unsigned int lineno = atoi(s);
 								const char *mnam = fId[fl_dup].c_str();
 
@@ -194,6 +198,9 @@ while(!feof(fi))
 						const char *fl = (*xmt)[string("fl")].c_str();
 						const char *nam = (*xmt)[string("name")].c_str();
 						const char *tms = (*xmt)[string("topModule")].c_str();
+						const char *loc = (*xmt)[string("loc")].c_str();
+					    	int loc_offset = 0;
+						if(!fl || !strlen(fl)) { fl = loc; loc_offset = 1; }
 
 						if(fl && nam && tms)
 							{
@@ -205,7 +212,8 @@ while(!feof(fi))
 							const char *s = fl; char *d = fl_dup;
 							while(isalpha(*s)) { *(d++) = *(s++); }
 							*d = 0;
-	
+
+							s += loc_offset;	
 							unsigned int lineno = atoi(s);
 							const char *mnam = fId[fl_dup].c_str();
 							fprintf(fo, "++ module %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */
@@ -233,7 +241,7 @@ while(!feof(fi))
 				func_nesting_cnt = (!endtag) ? (func_nesting_cnt+1) : (func_nesting_cnt-1);
 				}
 			else
-			if(!strncmp(pnt, "files", 5))
+			if((!strncmp(pnt, "files", 5)) || (!strncmp(pnt, "module_files", 12)))
 				{
 				in_files = (!endtag);
 				}
@@ -293,7 +301,10 @@ while(!feof(fi))
 						{
 						const char *fl = (*xmt)[string("fl")].c_str();
 						const char *nam = (*xmt)[string("name")].c_str();
-	
+						const char *loc = (*xmt)[string("loc")].c_str();
+					    	int loc_offset = 0;
+						if(!fl || !strlen(fl)) { fl = loc; loc_offset = 1; }
+
 						if(fl && nam)
 							{
 							mId.push(nam);
@@ -303,6 +314,7 @@ while(!feof(fi))
 							while(isalpha(*s)) { *(d++) = *(s++); }
 							*d = 0;
 	
+							s += loc_offset;
 							unsigned int lineno = atoi(s);
 							const char *mnam = fId[fl_dup].c_str();
 							fprintf(fo, "++ udp %s file %s lines %d - %d\n", nam, mnam, lineno, lineno); /* don't need line number it truly ends at */

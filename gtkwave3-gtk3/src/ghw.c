@@ -102,6 +102,16 @@ static ghw_Tree * ghw_splay (void *i, ghw_Tree * t) {
     return t;
 }
 
+// Exit the program with return value 1 and print calling line
+__attribute__((noreturn)) static void
+ghw_error_exit_line (char const *file, int line)
+{
+  fprintf(stderr, "Failed to load ghw file due to invalid data. Terminating.\n");
+  fprintf(stderr, "Error raised at %s:%d.\n", file, line);
+  exit(1);
+}
+
+#define ghw_error_exit() ghw_error_exit_line(__FILE__, __LINE__)
 
 static ghw_Tree * ghw_insert(void *i, ghw_Tree * t, int val, struct symbol *sym) {
 /* Insert i into the tree t, unless it's already there.    */
@@ -480,6 +490,7 @@ build_hierarchy_array (struct ghw_handler *h, union ghw_type *arr, int dim,
 	int len;
 
 	/* last = NULL; */
+	if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_i32) ghw_error_exit();
 	r = &arr->sa.rngs[dim]->i32;
 	len = ghw_get_range_length ((union ghw_range *)r);
 	if (len <= 0)
@@ -511,6 +522,7 @@ build_hierarchy_array (struct ghw_handler *h, union ghw_type *arr, int dim,
 	int len;
 
 	/* last = NULL; */
+	if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_e8) ghw_error_exit();
 	r = &arr->sa.rngs[dim]->e8;
 	len = ghw_get_range_length ((union ghw_range *)r);
 	if (len <= 0)
@@ -542,6 +554,7 @@ build_hierarchy_array (struct ghw_handler *h, union ghw_type *arr, int dim,
 	int len;
 
 	/* last = NULL; */
+	if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_b2) ghw_error_exit();
 	r = &arr->sa.rngs[dim]->b2;
 	len = ghw_get_range_length ((union ghw_range *)r);
 	if (len <= 0)
@@ -607,9 +620,13 @@ build_hierarchy_type (struct ghw_handler *h, union ghw_type *t,
       GLOBALS->nbr_sig_ref_ghw_c_1++;
       res = (struct tree *) calloc_2(1, sizeof (struct tree) + strlen(pfx) + 1);
       strcpy(res->name, (char *)pfx);
+      // last element is GHW_NO_SIG, don't increment beyond it
+      if (**sig == GHW_NO_SIG) ghw_error_exit();
       res->t_which = *(*sig)++;
 
-      s->n = GLOBALS->nxp_ghw_c_1[res->t_which];
+      size_t nxp_idx = (size_t)res->t_which;
+      if (nxp_idx >= GLOBALS->nbr_sigs_ghw_c_1) ghw_error_exit();
+      s->n = GLOBALS->nxp_ghw_c_1[nxp_idx];
       return res;
     case ghdl_rtik_subtype_array:
     case ghdl_rtik_subtype_array_ptr:
@@ -889,7 +906,9 @@ set_fac_name_1 (struct tree *t)
 	struct symbol *s = sc->symbol;
 
 	s->name = strdup_2(GLOBALS->fac_name_ghw_c_1);
-	s->n = GLOBALS->nxp_ghw_c_1[t->t_which];
+	size_t nxp_idx = (size_t)t->t_which;
+	if (nxp_idx > GLOBALS->nbr_sigs_ghw_c_1) ghw_error_exit();
+	s->n = GLOBALS->nxp_ghw_c_1[nxp_idx];
 	if(!s->n->nname) s->n->nname = s->name;
 
 	t->t_which = GLOBALS->sym_which_ghw_c_1++; /* patch in gtkwave "which" as node is correct */
@@ -1003,11 +1022,14 @@ add_history (struct ghw_handler *h, struct Node *n, int sig_num)
 	he->v.h_val = sig->val->b2 == 0 ? AN_0 : AN_1;
       else
         {
-	he->v.h_vector = (char *)sig->type->en.lits[sig->val->b2];
+        if (sig->val->b2 >= sig->type->en.nbr) ghw_error_exit();
+        he->v.h_vector = (char *)sig->type->en.lits[sig->val->b2];
 	is_vector = 1;
         }
       break;
     case ghdl_rtik_type_e8:
+      {
+      unsigned char val_e8 = sig->val->e8;
       if (GLOBALS->xlat_1164_ghw_c_1 && sig_type->en.wkt == ghw_wkt_std_ulogic)
 	{
 	  /* Res: 0->0, 1->X, 2->Z, 3->1 */
@@ -1016,14 +1038,17 @@ add_history (struct ghw_handler *h, struct Node *n, int sig_num)
             /* Z */ AN_Z, /* W */ AN_W, /* L */ AN_L, /* H */ AN_H,
             /* - */ AN_DASH
           };
-	  he->v.h_val = map_su2vlg[sig->val->e8];
+          if (val_e8 >= sizeof(map_su2vlg)/sizeof(map_su2vlg[0])) ghw_error_exit();
+	  he->v.h_val = map_su2vlg[val_e8];
 	}
       else
         {
-	he->v.h_vector = (char *)sig_type->en.lits[sig->val->e8];
+        if (val_e8 >= sig_type->en.nbr) ghw_error_exit();
+	he->v.h_vector = (char *)sig_type->en.lits[val_e8];
 	is_vector = 1;
         }
       break;
+      }
     case ghdl_rtik_type_f64:
       {
 #ifdef WAVE_HAS_H_DOUBLE
@@ -1196,7 +1221,11 @@ read_traces (struct ghw_handler *h)
 		    GLOBALS->max_time = h->snap_time;
 
 		  for (i = 0; (sig = list[i]) != 0; i++)
-		    add_history (h, GLOBALS->nxp_ghw_c_1[sig], sig);
+                    {
+                      size_t nxp_idx = (size_t)sig;
+                      if (nxp_idx > GLOBALS->nbr_sigs_ghw_c_1) ghw_error_exit();
+                      add_history (h, GLOBALS->nxp_ghw_c_1[nxp_idx], sig);
+                    }
 		}
 	      res = ghw_read_cycle_next (h);
 	      if (res != 1)
@@ -1220,7 +1249,7 @@ read_traces (struct ghw_handler *h)
 TimeType
 ghw_main(char *fname)
 {
-  struct ghw_handler handle;
+  struct ghw_handler handle = {0};
   int i;
   unsigned int ui;
   int rc;
@@ -1249,11 +1278,20 @@ ghw_main(char *fname)
      return(LLDescriptor(0));        /* look at return code in caller for success status... */
    }
 
+ if (handle.hie == NULL)
+   {
+     free_2(GLOBALS->asbuf);
+     GLOBALS->asbuf = NULL;
+     fprintf (stderr, "Error in ghw file '%s': NO HIE.\n", fname);
+     return(LLDescriptor(0));        /* look at return code in caller for success status... */
+   }
+
  GLOBALS->min_time = 0;
  GLOBALS->max_time = 0;
 
  GLOBALS->nbr_sig_ref_ghw_c_1 = 0;
 
+ GLOBALS->nbr_sigs_ghw_c_1 = handle.nbr_sigs;
  GLOBALS->nxp_ghw_c_1 =(struct Node **)calloc_2(handle.nbr_sigs, sizeof(struct Node *));
  for(ui=0;ui<handle.nbr_sigs;ui++)
 	{

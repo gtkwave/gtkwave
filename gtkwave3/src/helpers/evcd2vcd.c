@@ -37,6 +37,16 @@
 #endif
 #include <unistd.h>
 
+/*
+ * report abort messages
+ */
+static void chk_report_abort(const char *s)
+{
+fprintf(stderr,"Triggered %s security check, exiting.\n", s);
+abort();
+}
+
+
 ssize_t getline_replace(char **buf, size_t *len, FILE *f)
 {
 char *fgets_rc;
@@ -234,6 +244,10 @@ while(!feof(f))
 		if(!node)
 			{
 			Jval val;
+			if((len < 0) || (len > 32768))
+				{
+				chk_report_abort("TALOS-2023-1803");
+				}
 			jrb_insert_int(vcd_ids, hash, val)->val2.i = len;
 			}
 

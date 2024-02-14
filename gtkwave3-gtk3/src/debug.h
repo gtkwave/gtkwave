@@ -187,5 +187,6 @@ int determine_gtkwave_filetype(const char *path);
 
 GtkWidget *X_gtk_entry_new_with_max_length (gint max);
 
-#endif
+FILE *popen_san(const char *command, const char *type); /* TALOS-2023-1786 */
 
+#endif

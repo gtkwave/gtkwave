@@ -1054,7 +1054,16 @@ for(GLOBALS->yytext_vcd_recoder_c_3[len++]=ch;;GLOBALS->yytext_vcd_recoder_c_3[l
 	{
 	if(len==GLOBALS->T_MAX_STR_vcd_recoder_c_3)
 		{
-		GLOBALS->yytext_vcd_recoder_c_3=(char *)realloc_2(GLOBALS->yytext_vcd_recoder_c_3, (GLOBALS->T_MAX_STR_vcd_recoder_c_3=GLOBALS->T_MAX_STR_vcd_recoder_c_3*2)+1);
+		if(!GLOBALS->varsplit_vcd_recoder_c_3)
+			{
+			GLOBALS->yytext_vcd_recoder_c_3=(char *)realloc_2(GLOBALS->yytext_vcd_recoder_c_3, (GLOBALS->T_MAX_STR_vcd_recoder_c_3=GLOBALS->T_MAX_STR_vcd_recoder_c_3*2)+1);
+			}
+		else /* TALOS-2023-1806 */
+			{
+			int vsplit_len = GLOBALS->varsplit_vcd_recoder_c_3 - GLOBALS->yytext_vcd_recoder_c_3; /* save old len */
+			GLOBALS->yytext_vcd_recoder_c_3=(char *)realloc_2(GLOBALS->yytext_vcd_recoder_c_3, (GLOBALS->T_MAX_STR_vcd_recoder_c_3=GLOBALS->T_MAX_STR_vcd_recoder_c_3*2)+1);
+			GLOBALS->varsplit_vcd_recoder_c_3 = GLOBALS->yytext_vcd_recoder_c_3+vsplit_len; /* reconstruct old len in new buffer */
+			}
 		}
 
 	ch=getch();
@@ -1587,7 +1596,7 @@ for(;;)
 			sync_end(NULL);
 			break;
 		case T_VAR:
-			if((GLOBALS->header_over_vcd_recoder_c_3)&&(0))
+			if(GLOBALS->header_over_vcd_recoder_c_3) /* reinstated because of TALOS-2023-1805 */
 			{
 			fprintf(stderr,"$VAR encountered after $ENDDEFINITIONS near byte %d.  VCD is malformed, exiting.\n",
 				(int)(GLOBALS->vcdbyteno_vcd_recoder_c_3+(GLOBALS->vst_vcd_recoder_c_3-GLOBALS->vcdbuf_vcd_recoder_c_3)));
@@ -2816,7 +2825,7 @@ if(suffix_check(fname, ".gz") || suffix_check(fname, ".zip"))
 	str=wave_alloca(strlen(fname)+dlen+1);
 	strcpy(str,WAVE_DECOMPRESSOR);
 	strcpy(str+dlen,fname);
-	GLOBALS->vcd_handle_vcd_recoder_c_2=popen(str,"r");
+	GLOBALS->vcd_handle_vcd_recoder_c_2=popen_san(str,"r");
 	GLOBALS->vcd_is_compressed_vcd_recoder_c_2=~0;
 	}
 	else

@@ -736,3 +736,42 @@ gtk_entry_set_max_length(GTK_ENTRY(w), max);
 
 return(w);
 }
+
+/******************************************************/
+
+FILE *popen_san(const char *command, const char *type) /* TALOS-2023-1786 */
+{
+const char *p = command;
+int is_ok = 1;
+char ch;
+
+while(p && (ch = *(p++)))
+	{
+	switch(ch)
+		{
+		case '&':
+		case '|':
+		case ';':
+		case '\n':
+		case '`':
+		case '$':
+			is_ok = 0;
+
+		default:
+			break;
+		}
+	}
+
+if(is_ok)
+	{
+	return(popen(command, type));
+	}
+else
+	{
+	fprintf(stderr, "GTKWAVE | TALOS-2023-1786: popen() command string '%s' may not be properly sanitized, blocking command.\n", command);
+	errno = EPIPE;
+	return(NULL);
+	}
+}
+
+/******************************************************/

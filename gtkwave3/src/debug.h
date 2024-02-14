@@ -202,6 +202,6 @@ enum GtkwaveFileTypes { G_FT_UNKNOWN, G_FT_LXT, G_FT_LXT2, G_FT_VZT, G_FT_FST };
 
 int determine_gtkwave_filetype(const char *path);
 
+FILE *popen_san(const char *command, const char *type); /* TALOS-2023-1786 */
 
 #endif
-
