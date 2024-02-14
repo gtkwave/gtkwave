@@ -363,6 +363,7 @@ JRB enum_nptrs_jrb;
  * ghw.c
  */
 struct Node **nxp_ghw_c_1; /* from ghw.c 95 */
+uint32_t nbr_sigs_ghw_c_1;
 int sym_which_ghw_c_1; /* from ghw.c 98 */
 struct ghw_tree_node *gwt_ghw_c_1; /* from ghw.c 99 */
 struct ghw_tree_node *gwt_corr_ghw_c_1; /* from ghw.c 100 */
