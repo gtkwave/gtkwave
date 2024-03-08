@@ -1814,10 +1814,11 @@
 		TALOS-2023-1824
 		TALOS-2023-1826
 		TALOS-2023-1827
-3.3.119 03mar24 Remove FST_DO_MISALIGNED_OPS.
+3.3.119 08mar24 Remove FST_DO_MISALIGNED_OPS.
 		Update lz4 to current version from github.
 		Change LZ4_compress to LZ4_compress_default.
 		Update libghw.c/.h to latest upstream version.
 		Fix for -Wsign-compare in fstapi.c.
 		Security fixes for GHW.
 		Fix left shift of a negative number warning in fstapi.c.
+		Fix ctrl-A behavior for SST filter entry.

@@ -795,8 +795,21 @@ if(GLOBALS->dnd_sigview)
 		  if(event->state & GDK_CONTROL_MASK)
 #endif
 		    {
-		      treeview_select_all_callback();
-		      rc = TRUE;
+#ifdef WAVE_USE_GTK2
+                      if(!gtk_widget_has_focus(GLOBALS->filter_entry))
+                                {
+                                treeview_select_all_callback();
+                                rc = TRUE;
+                                }
+                      else
+                                {
+                                gtk_editable_select_region (GTK_EDITABLE (GLOBALS->filter_entry),0, gtk_entry_get_text_length(GTK_ENTRY(GLOBALS->filter_entry)));
+                                rc = TRUE;
+                                }
+#else
+                                treeview_select_all_callback();
+                                rc = TRUE;
+#endif
 		    }
 		  break;
 
@@ -807,8 +820,21 @@ if(GLOBALS->dnd_sigview)
 		  if(event->state & GDK_CONTROL_MASK)
 #endif
 		    {
-		      treeview_unselect_all_callback();
-		      rc = TRUE;
+#ifdef WAVE_USE_GTK2
+                      if(!gtk_widget_has_focus(GLOBALS->filter_entry))
+                                {
+                                treeview_unselect_all_callback();
+                                rc = TRUE;
+                                }
+                        else
+                                {
+                                gtk_editable_select_region (GTK_EDITABLE (GLOBALS->filter_entry),0, 0);
+                                rc = TRUE;
+                                }
+#else
+                                treeview_unselect_all_callback();
+                                rc = TRUE;
+#endif
 		    }
 		default:
 		  break;
