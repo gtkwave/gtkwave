@@ -2210,7 +2210,7 @@ savefile_bail:
 #else
         GLOBALS->dual_ctx = shmat(GLOBALS->dual_attach_id_main_c_1, NULL, 0);
 #endif
-        if (GLOBALS->dual_ctx) {
+        if (GLOBALS->dual_ctx != (void *) -1) {
             if (memcmp(GLOBALS->dual_ctx[GLOBALS->dual_id].matchword, DUAL_MATCHWORD, 4)) {
                 fprintf(stderr, "Not a valid shared memory ID for dual head operation, exiting.\n");
                 exit(255);
@@ -2605,9 +2605,11 @@ void activate_stems_reader(char *stems_name)
         if (shmid >= 0) {
             struct shmid_ds ds;
 
-            GLOBALS->anno_ctx = shmat(shmid, NULL, 0);
-            if (GLOBALS->anno_ctx) {
+            struct gtkwave_annotate_ipc_t *anno_ctx = shmat(shmid, NULL, 0);
+            if (anno_ctx != (void *) -1) {
                 pid_t pid;
+
+                GLOBALS->anno_ctx = anno_ctx;
 
                 memset(GLOBALS->anno_ctx, 0, sizeof(struct gtkwave_annotate_ipc_t));
 
