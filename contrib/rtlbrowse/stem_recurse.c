@@ -306,7 +306,7 @@ if(i==len)
 #else
 	anno_ctx = shmat(shmid, NULL, 0);
 #endif
-	if(anno_ctx)
+	if(anno_ctx != (void *) -1)
 		{
 		if((!memcmp(anno_ctx->matchword, WAVE_MATCHWORD, 4))&&(anno_ctx->aet_type > WAVE_ANNO_NONE)&&(anno_ctx->aet_type < WAVE_ANNO_MAX))
 			{

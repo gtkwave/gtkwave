@@ -367,7 +367,7 @@ int main(int argc, char **argv)
         struct shmid_ds ds;
 
         dual_ctx = shmat(shmid, NULL, 0);
-        if (dual_ctx) {
+        if (dual_ctx != (void *) -1) {
             memset(dual_ctx, 0, 2 * sizeof(struct gtkwave_dual_ipc_t));
             memcpy(&dual_ctx[0].matchword, DUAL_MATCHWORD, 4);
             memcpy(&dual_ctx[1].matchword, DUAL_MATCHWORD, 4);
