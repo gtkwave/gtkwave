@@ -3255,12 +3255,12 @@ if(GLOBALS->stems_type != WAVE_ANNO_NONE)
 	if(shmid >=0)
 		{
 		struct shmid_ds ds;
-
-		GLOBALS->anno_ctx = shmat(shmid, NULL, 0);
-		if(GLOBALS->anno_ctx)
+		struct gtkwave_annotate_ipc_t *anno_ctx = shmat(shmid, NULL, 0);
+		if(anno_ctx != (void *) -1)
 			{
 			pid_t pid;
 
+			GLOBALS->anno_ctx = anno_ctx;
 			memset(GLOBALS->anno_ctx, 0, sizeof(struct gtkwave_annotate_ipc_t));
 
 			memcpy(GLOBALS->anno_ctx->matchword, WAVE_MATCHWORD, 4);
