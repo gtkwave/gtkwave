@@ -231,7 +231,7 @@ This allows characters other than '/' to be used to delimit levels in the hierar
 A nonzero value indicates that the signal pane ignores escapes in identifiers when determining the hierarchy maximum depth.  Default is disabled so that escapes are examined.
 .TP 
 \fBhier_max_level\fR <\fIvalue\fP>
-Sets the maximum hierarchy depth (from the right side) to display for trace names. Note that a value of zero displays the full hierarchy name.
+Sets the maximum hierarchy depth (from the right side) to display for trace names. Note that a value of zero displays the full hierarchy name. A negative value sets the number of hierarchy levels to hide from the left side.
 .TP 
 \fBhighlight_wavewindow\fR <\fIvalue\fP>
 When enabled, this causes traces highlighted in the signal window also to be highlighted in the wave window.

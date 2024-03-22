@@ -778,8 +778,6 @@ void set_hier_cleanup(GtkWidget *widget, gpointer data, int level)
     int i;
 
     GLOBALS->hier_max_level = level;
-    if (GLOBALS->hier_max_level < 0)
-        GLOBALS->hier_max_level = 0;
 
     for (i = 0; i < 2; i++) {
         if (i == 0)
