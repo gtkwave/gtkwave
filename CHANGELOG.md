@@ -14,7 +14,8 @@ if there is enough interest by users. Please notify us on GitHub if you require 
 of these features.
 
 - Removed the interactive VCD mode.
-- Removed support for LXT, LXT2, VZT, and AET2 formats.
+- Removed support for LXT, LXT2, VZT, FSDB, and AET2 formats.
+- Removed support compressed hierarchy names.
 
 ### Changed
 
@@ -41,16 +42,20 @@ of these features.
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed legacy VCD loader.
 - Removed VCD fastload and support for vlist spillfiles.
+- Removed VCD autosave.
 - Removed rc variables:
     - `alt_wheel_mode`
     - `append_vcd_hier`
     - `atomic_vectors`
+    - `disable_auto_comphier`
     - `disable_ae2_alias`
+    - `enable_vcd_autosave`
     - `force_toolbars`
     - `hide_sst`
     - `hier_grouping`
     - `hpane_pack`
     - `lxt_clock_compress_to_z`
+    - `max_fsdb_trees`
     - `use_scrollbar_only`
     - `use_scrollwheel_as_y`
     - `use_standard_clicking`
@@ -58,6 +63,8 @@ of these features.
     - `use_toolbutton_interface`
     - `vcd_explicit_zero_subscripts`
     - `vlist_spill`
+    - `zoom_dynamic`
+    - `zoom_dynamic_end`
 
 ### Fixed
 

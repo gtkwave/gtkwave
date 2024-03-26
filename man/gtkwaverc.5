@@ -167,9 +167,6 @@ A nonzero value indicates that if a simulation's max time value exceeds double f
 \fBdisable_antialiasing\fR <\fIvalue\fP>
 Disables waveform display antialiasing to improve performance.
 .TP 
-\fBdisable_auto_comphier\fR <\fIvalue\fP>
-A nonzero value indicates that the loaders that support compressed hierarchies should not automatically turn on compression if the threshold count of signals (500000) has been reached.
-.TP 
 \fBdisable_empty_gui\fR <\fIvalue\fP>
 A nonzero value indicates that if gtkwave is invoked without a dumpfile name, then an empty gtkwave session is to be suppressed.
 Default is a zero value: to bring up an empty session which needs a file loaded or dragged into it.
@@ -205,9 +202,6 @@ lets the user turn on/off the ghost marker during primary marker dragging. Defau
 .TP 
 \fBenable_horiz_grid\fR <\fIvalue\fP>
 A nonzero value indicates that when grid drawing is enabled, horizontal lines are to be drawn. This is the default.
-.TP 
-\fBenable_vcd_autosave\fR <\fIvalue\fP>
-causes the vcd loader to automatically generate a .sav file (vcd_autosave.sav ) in the cwd if a save file is not specified on the command line. Note that this mirrors the VCD $var defs and no attempt is made to coalesce split bitvectors back together.
 .TP 
 \fBenable_vert_grid\fR <\fIvalue\fP>
 A nonzero value indicates that when grid drawing is enabled, vertical lines are to be drawn. This is the default. Note that all possible combinations of enable_horiz_grid and enable_vert_grid values are acceptable.
@@ -375,12 +369,6 @@ allows setting of the zoom base with a value between 1.5 and 10.0. Default is 2.
 \fBzoom_center\fR <\fIvalue\fP>
 a nonzero value enables center zooming, a zero value disables it.
 .TP 
-\fBzoom_dynamic\fR <\fIvalue\fP>
-a nonzero value enables dynamic full zooming when using the partial VCD (incremental) loader, a zero value disables it.
-.TP 
-\fBzoom_dynamic_end\fR <\fIvalue\fP>
-a nonzero value enables dynamic zoom to the end when using the partial VCD (incremental) loader, a zero value disables it.
-.TP
 \fBzoom_pow10_snap\fR <\fIvalue\fP>
 corresponds to the Zoom Pow10 Snap menu option. Default for this is disabled (zero).
 .SH "AUTHORS"

@@ -25,12 +25,13 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_support_commands.h"
 #include "signal_list.h"
 #include "gw-wave-view.h"
+#include "gw-fst-file.h"
+#include "gw-ghw-file.h"
 
 #if !defined __MINGW32__
 #include <sys/types.h>
@@ -196,12 +197,7 @@ static char *extractFullTraceName(GwTrace *t)
         } else if (t->vector) {
             name = strdup_2(t->n.vec->bvname);
         } else {
-            int flagged = HIER_DEPACK_ALLOC;
-
-            name = hier_decompress_flagged(t->n.nd->nname, &flagged);
-            if (!flagged) {
-                name = strdup_2(name);
-            }
+            name = strdup_2(t->n.nd->nname);
         }
     }
     return (name);
@@ -232,7 +228,9 @@ static int gtkwavetcl_getNumFacs(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    int value = GLOBALS->numfacs;
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    int value = gw_facs_get_length(facs);
     return (gtkwavetcl_printInteger(clientData, interp, objc, objv, value));
 }
 
@@ -256,16 +254,18 @@ static int gtkwavetcl_getFacName(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
-            int was_packed = HIER_DEPACK_ALLOC;
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        if ((which >= 0) && (which < numfacs)) {
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[which]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, which);
+
+            hfacname = fac->name;
 
             aobj = Tcl_NewStringObj(hfacname, -1);
             Tcl_SetObjResult(interp, aobj);
-            if (was_packed)
-                free_2(hfacname);
         }
     } else {
         return (gtkwavetcl_badNumArgs(clientData, interp, objc, objv, 1));
@@ -285,10 +285,14 @@ static int gtkwavetcl_getFacDir(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        if ((which >= 0) && (which < numfacs)) {
+            GwSymbol *fac = gw_facs_get(facs, which);
+
             int vardir =
-                GLOBALS->facs[which]
-                    ->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
+                fac->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
             if ((vardir < 0) || (vardir > GW_VAR_DIR_MAX)) {
                 vardir = 0;
             }
@@ -314,27 +318,38 @@ static int gtkwavetcl_getFacVtype(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        gboolean has_supplemental_datatypes =
+            gw_dump_file_has_supplemental_datatypes(GLOBALS->dump_file);
+        gboolean has_supplemental_vartypes =
+            gw_dump_file_has_supplemental_vartypes(GLOBALS->dump_file);
+
+        if ((which >= 0) && (which < numfacs)) {
             unsigned int varxt;
             char *varxt_pnt;
             int vartype;
             int vardt;
 
-            varxt = GLOBALS->facs[which]->n->varxt;
-            varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
+            GwSymbol *fac = gw_facs_get(facs, which);
 
-            vartype = GLOBALS->facs[which]->n->vartype;
+            varxt = fac->n->varxt;
+            varxt_pnt =
+                varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
+                      : NULL;
+
+            vartype = fac->n->vartype;
             if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
                 vartype = 0;
             }
 
-            vardt = GLOBALS->facs[which]->n->vardt;
+            vardt = fac->n->vardt;
             if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
                 vardt = 0;
             }
 
-            aobj = Tcl_NewStringObj((((GLOBALS->supplemental_datatypes_encountered) &&
-                                      (!GLOBALS->supplemental_vartypes_encountered))
+            aobj = Tcl_NewStringObj(((has_supplemental_datatypes && !has_supplemental_vartypes)
                                          ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
                                          : gw_var_type_to_string(vartype)),
                                     -1);
@@ -358,15 +373,22 @@ static int gtkwavetcl_getFacDtype(ClientData clientData,
         char *s = get_Tcl_string(objv[1]);
         int which = atoi(s);
 
-        if ((which >= 0) && (which < GLOBALS->numfacs)) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
+
+        if ((which >= 0) && (which < numfacs)) {
             unsigned int varxt;
             char *varxt_pnt;
             int vardt;
 
-            varxt = GLOBALS->facs[which]->n->varxt;
-            varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
+            GwSymbol *fac = gw_facs_get(facs, which);
 
-            vardt = GLOBALS->facs[which]->n->vardt;
+            varxt = fac->n->varxt;
+            varxt_pnt =
+                varxt ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
+                      : NULL;
+
+            vardt = fac->n->vardt;
             if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
                 vardt = 0;
             }
@@ -386,7 +408,8 @@ static int gtkwavetcl_getMinTime(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->min_time;
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+    GwTime value = gw_time_range_get_start(time_range);
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -395,7 +418,8 @@ static int gtkwavetcl_getMaxTime(ClientData clientData,
                                  int objc,
                                  Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->max_time;
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+    GwTime value = gw_time_range_get_end(time_range);
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -404,7 +428,7 @@ static int gtkwavetcl_getTimeZero(ClientData clientData,
                                   int objc,
                                   Tcl_Obj *CONST objv[])
 {
-    GwTime value = GLOBALS->global_time_offset;
+    GwTime value = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
     return (gtkwavetcl_printTimeType(clientData, interp, objc, objv, value));
 }
 
@@ -420,7 +444,9 @@ static int gtkwavetcl_getTimeDimension(ClientData clientData,
     Tcl_Obj *aobj;
     char reportString[2];
 
-    reportString[0] = GLOBALS->time_dimension;
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+    reportString[0] = time_dimension;
     reportString[1] = 0;
 
     aobj = Tcl_NewStringObj(reportString, -1);
@@ -500,13 +526,7 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
     Tcl_Obj *aobj;
     const char *reportString = "UNKNOWN";
 
-    if (GLOBALS->is_vcd) {
-        if (GLOBALS->partial_vcd) {
-            reportString = "PVCD";
-        } else {
-            reportString = "VCD";
-        }
-    } else if (GLOBALS->is_ghw) {
+    if (GW_IS_GHW_FILE(GLOBALS->dump_file)) {
         reportString = "GHW";
     } else if (GLOBALS->is_lx2) {
         switch (GLOBALS->is_lx2) {
@@ -515,9 +535,6 @@ static int gtkwavetcl_getDumpType(ClientData clientData,
                 break;
             case LXT2_IS_FST:
                 reportString = "FST";
-                break;
-            case LXT2_IS_FSDB:
-                reportString = "FSDB";
                 break;
             default:
                 break;
@@ -923,11 +940,13 @@ static int gtkwavetcl_setMarker(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+        GwTime mrk = unformat_time(s, time_dimension);
 
         GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
 
-        if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
+        if (gw_time_range_contains(time_range, mrk)) {
             gw_marker_set_position(primary_marker, mrk);
             gw_marker_set_enabled(primary_marker, TRUE);
         } else {
@@ -953,11 +972,13 @@ static int gtkwavetcl_setBaselineMarker(ClientData clientData,
 {
     if (objc == 2) {
         char *s = get_Tcl_string(objv[1]);
-        GwTime mrk = unformat_time(s, GLOBALS->time_dimension);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+        GwTime mrk = unformat_time(s, time_dimension);
 
         GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
 
-        if ((mrk >= GLOBALS->min_time) && (mrk <= GLOBALS->max_time)) {
+        if (gw_time_range_contains(time_range, mrk)) {
             gw_marker_set_position(baseline_marker, mrk);
             gw_marker_set_enabled(baseline_marker, TRUE);
         } else {
@@ -990,7 +1011,9 @@ static int gtkwavetcl_setWindowStartTime(ClientData clientData,
             GtkAdjustment *hadj;
             GwTime pageinc;
 
-            gt = unformat_time(s, GLOBALS->time_dimension);
+            GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+            gt = unformat_time(s, time_dimension);
 
             if (gt < GLOBALS->tims.first)
                 gt = GLOBALS->tims.first;
@@ -1009,7 +1032,7 @@ static int gtkwavetcl_setWindowStartTime(ClientData clientData,
                     GLOBALS->tims.timecache = GLOBALS->tims.first;
             }
 
-            reformat_time(timval, GLOBALS->tims.timecache, GLOBALS->time_dimension);
+            reformat_time(timval, GLOBALS->tims.timecache, time_dimension);
 
             time_update();
         }
@@ -1068,10 +1091,12 @@ static int gtkwavetcl_setZoomRangeTimes(ClientData clientData,
         GwTime oldmarker_pos = gw_marker_get_position(primary_marker);
         GwTime oldmarker_enabled = gw_marker_is_enabled(primary_marker);
 
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
         s = get_Tcl_string(objv[1]);
-        time1 = unformat_time(s, GLOBALS->time_dimension);
+        time1 = unformat_time(s, time_dimension);
         t = get_Tcl_string(objv[2]);
-        time2 = unformat_time(t, GLOBALS->time_dimension);
+        time2 = unformat_time(t, time_dimension);
 
         if (time1 < GLOBALS->tims.first) {
             time1 = GLOBALS->tims.first;
@@ -1145,7 +1170,9 @@ static int gtkwavetcl_setNamedMarker(ClientData clientData,
 
         if (marker != NULL) {
             char *t = get_Tcl_string(objv[2]);
-            GwTime gt = unformat_time(t, GLOBALS->time_dimension);
+
+            GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+            GwTime gt = unformat_time(t, time_dimension);
 
             gw_marker_set_position(marker, gt);
             // TODO: dont' use sentinel values for disabled markers
@@ -2054,8 +2081,6 @@ static gint switch_to_tab_number(unsigned int i)
         GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
 
         GLOBALS->scale_to_time_dimension = g_old->scale_to_time_dimension;
-        GLOBALS->zoom_dyn = g_old->zoom_dyn;
-        GLOBALS->zoom_dyne = g_old->zoom_dyne;
 
         gtk_notebook_set_current_page(GTK_NOTEBOOK(GLOBALS->notebook), GLOBALS->this_context_page);
         return (TRUE);

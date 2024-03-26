@@ -16,8 +16,6 @@
 #include "currenttime.h"
 #include "debug.h"
 #include "fgetdynamic.h"
-#include "ghw.h"
-#include "globals.h"
 #include <getopt.h>
 #include "gtk23compat.h"
 #include "main.h"
@@ -38,12 +36,8 @@
 #include "vlist.h"
 #include "lx2.h"
 #include "signal_list.h"
+#include "dump_file_main.h"
 #include "gw-time-display.h"
-
-#include "fst.h"
-#include "hierpack.h"
-
-#include "fsdb_wrapper_api.h"
 
 #ifdef __MINGW32__
 #define sleep(x) Sleep(x * 1000)
@@ -62,7 +56,8 @@ struct Global *GLOBALS = NULL;
 /* make this const so if we try to write to it we coredump */
 static const struct Global globals_base_values = {
     NULL, // project
-    NULL, // stems
+    NULL, // dump_file
+    {0}, // settings
 
     /*
      * analyzer.c
@@ -115,20 +110,13 @@ static const struct Global globals_base_values = {
     /*
      * currenttime.c
      */
-    GW_TIME_CONSTANT(0), /* global_time_offset */
-    0, /* is_vcd 56 */
-    0, /* partial_vcd */
     1, /* use_maxtime_display 57 */
     0, /* use_frequency_delta 58 */
     0, /* cached_currenttimeval_currenttime_c_1 61 */
-    0, /* max_time 63 */
-    -1, /* min_time 64 */
     ~0, /* display_grid 65 */
     0, /* fullscreen */
     1, /* show_toolbar */
     NULL, /* time_box */
-    1, /* time_scale 66 */
-    'n', /* time_dimension 67 */
     0, /* scale_to_time_dimension */
     // 0, /* maxtimewid_currenttime_c_1 69 */
     // 0, /* curtimewid_currenttime_c_1 70 */
@@ -147,37 +135,6 @@ static const struct Global globals_base_values = {
      * entry.c
      */
     NULL, /* entrybox_text 82 */
-
-    /*
-     * extload.c
-     */
-    0, /* extload_ffr_import_count */
-    NULL, /* extload_ffr_ctx */
-    NULL, /* extload */
-    NULL, /* extload_idcodes */
-    NULL, /* extload_inv_idcodes */
-#if !defined __MINGW32__
-    0, /* extload_lastmod */
-    0, /* extload_already_errored */
-#endif
-    NULL, /* extload_namecache */
-    NULL, /* extload_namecache_max */
-    NULL, /* extload_namecache_lens */
-    NULL, /* extload_namecache_patched */
-    NULL, /* extload_sym_block */
-    NULL, /* extload_node_block */
-    NULL, /* extload_xc */
-    NULL, /* extload_prevsymroot */
-    NULL, /* extload_prevsym */
-    NULL, /* extload_npar */
-    0, /* extload_i */
-    0, /* extload_hlen */
-    0, /* extload_vt_prev */
-    0, /* extload_vd_prev */
-    0, /* f_name_build_buf_len */
-    NULL, /* f_name_build_buf */
-    0, /* extload_max_tree */
-    0, /* extload_curr_tree */
 
     /*
      * fetchbuttons.c
@@ -214,38 +171,14 @@ static const struct Global globals_base_values = {
     /*
      * fst.c
      */
-    NULL, /* fst_fst_c_1 */
-    0, /* nonimplicit_direction_encountered */
-    0, /* supplemental_datatypes_encountered */
-    0, /* supplemental_vartypes_encountered */
     0, /* is_vhdl_component_format */
-    NULL, /* xl_enum_filter */
-    0, /* num_xl_enum_filter */
     NULL, /* enum_nptrs_jrb */
-
-    /*
-     * ghw.c
-     */
-    0, /* is_ghw 99 */
 
     /*
      * globals.c
      */
     NULL, /* dead_context */
     NULL, /* gtk_context_bridge_ptr */
-
-    /*
-     * hierpack.c
-     */
-    NULL, /* hp_buf */
-    NULL, /* hp_offs */
-    0, /* hp_prev */
-    0, /* hp_buf_siz */
-    NULL, /* fmem_buf */
-    0, /* fmem_buf_siz */
-    0, /* fmem_buf_offs */
-    0, /* fmem_uncompressed_siz */
-    0, /* disable_auto_comphier */
 
     /*
      * logfile.c
@@ -510,13 +443,6 @@ static const struct Global globals_base_values = {
     NULL, /* wave_splash_pixbuf */
 
     /*
-     * status.c
-     */
-    NULL, /* text_status_c_2 398 */
-    {NULL, NULL, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, NULL}, /* iter_status_c_3 400 */
-    NULL, /* bold_tag_status_c_3 401 */
-
-    /*
      * strace.c
      */
     NULL, /* strace_ctx (defined in strace.h for multiple strace sessions) */
@@ -570,16 +496,9 @@ static const struct Global globals_base_values = {
 /*
  * symbol.c
  */
-#ifdef _WAVE_HAVE_JUDY
-    NULL, /* sym_judy */
-    NULL, /* s_selected */
-#endif
     NULL, /* sym_hash 424 */
-    NULL, /* facs 425 */
     0, /* facs_are_sorted 426 */
     0, /* facs_have_symbols_state_machine */
-    0, /* numfacs 427 */
-    0, /* regions 428 */
     0, /* longestname 429 */
     0, /* hashcache 432 */
 
@@ -617,11 +536,6 @@ static const struct Global globals_base_values = {
 /*
  * tree.c
  */
-#ifdef _WAVE_HAVE_JUDY
-    NULL, /* sym_tree */
-    NULL, /* sym_tree_addresses */
-#endif
-    NULL, /* treeroot 443 */
     NULL, /* mod_tree_parent */
     NULL, /* module_tree_c_1 444 */
     0, /* module_len_tree_c_1 445 */
@@ -629,8 +543,6 @@ static const struct Global globals_base_values = {
     '.', /* hier_delimeter 447 */
     0, /* hier_was_explicitly_set 448 */
     0x00, /* alt_hier_delimeter 449 */
-    NULL, /* facs2_tree_c_1 451 */
-    0, /* facs2_pos_tree_c_1 452 */
     NULL, /* talloc_pool_base */
     0, /* talloc_idx */
     NULL, /* sst_exclude_filename */
@@ -707,30 +619,12 @@ static const struct Global globals_base_values = {
     /*
      * vcd.c
      */
-    0, /* do_hier_compress */
-    NULL, /* prev_hier_uncompressed_name */
     NULL, /* vcd_jmp_buf */
     -1, /* vcd_warning_filesize 472 */
     1, /* autocoalesce 473 */
     0, /* autocoalesce_reversal */
     0, /* convert_to_reals 475 */
-    0, /* make_vcd_save_file 477 */
-    0, /* vcd_preserve_glitches 478 */
-    0, /* vcd_preserve_glitches_real */
-    NULL, /* vcd_save_handle 479 */
-    {0, 0}, /* vcd_hier_delimeter 491 */
     0, /* escaped_names_found_vcd_c_1 494 */
-    NULL, /* slistroot 495 */
-    NULL, /* slistcurr */
-    NULL, /* slisthier 496 */
-    0, /* slisthier_len 497x */
-    NULL, /* he_curr_vcd_c_1 506 */
-    NULL, /* he_fini */
-
-    /*
-     * vcd_recoder.c
-     */
-    NULL, /* vcd_file */
 
     /*
      * vcd_saver.c
@@ -743,7 +637,6 @@ static const struct Global globals_base_values = {
     /*
      * vlist.c
      */
-    0, /* vlist_prepack */
     0, /* vlist_bytes_written */
     4, /* vlist_compression_depth 583 */
 
@@ -769,11 +662,8 @@ static const struct Global globals_base_values = {
     0, /* in_button_press_wavewindow_c_1 601 */
     0, /* left_justify_sigs 602 */
     0, /* zoom_pow10_snap 603 */
-    0, /* zoom_dyn */
-    0, /* zoom_dyne */
     0, /* cursor_snap 604 */
     -1.0, /* old_wvalue 605 */
-    NULL, /* blackout_regions 606 */
     0, /* zoom 607 */
     1, /* scale */
     1, /* nsperframe */
@@ -922,7 +812,7 @@ static int handle_setjmp(void)
         switch (GLOBALS->loaded_file_type) /* on fail, longjmp called in these loaders */
         {
             case VCD_RECODER_FILE:
-                vcd_recoder_main(GLOBALS->loaded_file_name);
+                GLOBALS->dump_file = vcd_recoder_main(GLOBALS->loaded_file_name);
                 break;
             case GHW_FILE:
             case FST_FILE:
@@ -1033,16 +923,6 @@ void reload_into_new_context_2(void)
     if (GLOBALS->in_button_press_wavewindow_c_1) {
         XXX_gdk_pointer_ungrab(GDK_CURRENT_TIME);
     }
-
-    /* let all GTK/X events spin through in order to keep menus from freezing open during reload */
-#ifndef MAC_INTEGRATION
-    if (GLOBALS->text_status_c_2) {
-        wave_gtk_grab_add(
-            GLOBALS->text_status_c_2); /* grab focus to a known widget with no real side effects */
-        gtkwave_main_iteration(); /* spin on GTK event loop */
-        wave_gtk_grab_remove(GLOBALS->text_status_c_2); /* ungrab focus */
-    }
-#endif
 
     printf("GTKWAVE | Reloading waveform...\n");
     gtkwavetcl_setvar(WAVE_TCLCB_RELOAD_BEGIN,
@@ -1196,8 +1076,6 @@ void reload_into_new_context_2(void)
 
     /* rc.c */
     new_globals->scale_to_time_dimension = GLOBALS->scale_to_time_dimension;
-    new_globals->zoom_dyn = GLOBALS->zoom_dyn;
-    new_globals->zoom_dyne = GLOBALS->zoom_dyne;
     new_globals->context_tabposition = GLOBALS->context_tabposition;
     new_globals->dragzoom_threshold = GLOBALS->dragzoom_threshold;
     new_globals->cr_line_width = GLOBALS->cr_line_width;
@@ -1218,8 +1096,6 @@ void reload_into_new_context_2(void)
     new_globals->clipboard_mouseover = GLOBALS->clipboard_mouseover;
     new_globals->keep_xz_colors = GLOBALS->keep_xz_colors;
     new_globals->disable_tooltips = GLOBALS->disable_tooltips;
-    new_globals->do_hier_compress = GLOBALS->do_hier_compress;
-    new_globals->disable_auto_comphier = GLOBALS->disable_auto_comphier;
     new_globals->do_initial_zoom_fit = GLOBALS->do_initial_zoom_fit;
     new_globals->do_initial_zoom_fit_used = GLOBALS->do_initial_zoom_fit_used;
     new_globals->do_resize_signals = GLOBALS->do_resize_signals;
@@ -1227,14 +1103,12 @@ void reload_into_new_context_2(void)
     new_globals->enable_fast_exit = GLOBALS->enable_fast_exit;
     new_globals->enable_ghost_marker = GLOBALS->enable_ghost_marker;
     new_globals->enable_horiz_grid = GLOBALS->enable_horiz_grid;
-    new_globals->make_vcd_save_file = GLOBALS->make_vcd_save_file;
     new_globals->enable_vert_grid = GLOBALS->enable_vert_grid;
     new_globals->sst_expanded = GLOBALS->sst_expanded;
     new_globals->hier_max_level = GLOBALS->hier_max_level;
     new_globals->hier_max_level_shadow = GLOBALS->hier_max_level_shadow;
     new_globals->paned_pack_semantics = GLOBALS->paned_pack_semantics;
     new_globals->left_justify_sigs = GLOBALS->left_justify_sigs;
-    new_globals->extload_max_tree = GLOBALS->extload_max_tree;
     new_globals->ps_maxveclen = GLOBALS->ps_maxveclen;
     new_globals->show_base = GLOBALS->show_base;
     new_globals->display_grid = GLOBALS->display_grid;
@@ -1250,11 +1124,9 @@ void reload_into_new_context_2(void)
     new_globals->use_maxtime_display = GLOBALS->use_maxtime_display;
     new_globals->use_nonprop_fonts = GLOBALS->use_nonprop_fonts;
     new_globals->use_roundcaps = GLOBALS->use_roundcaps;
-    new_globals->vcd_preserve_glitches = GLOBALS->vcd_preserve_glitches;
-    new_globals->vcd_preserve_glitches_real = GLOBALS->vcd_preserve_glitches_real;
     new_globals->vcd_warning_filesize = GLOBALS->vcd_warning_filesize;
     new_globals->vector_padding = GLOBALS->vector_padding;
-    new_globals->vlist_prepack = GLOBALS->vlist_prepack;
+    new_globals->settings = GLOBALS->settings;
     new_globals->vlist_compression_depth = GLOBALS->vlist_compression_depth;
     new_globals->wave_scrolling = GLOBALS->wave_scrolling;
     new_globals->do_zoom_center = GLOBALS->do_zoom_center;
@@ -1364,10 +1236,6 @@ void reload_into_new_context_2(void)
     new_globals->gps = GLOBALS->gps;
 #endif
 
-    /* status.c */
-    new_globals->text_status_c_2 = GLOBALS->text_status_c_2;
-    memcpy(&new_globals->iter_status_c_3, &GLOBALS->iter_status_c_3, sizeof(GtkTextIter));
-
     /* treesearch_gtk2.c */
     new_globals->do_dynamic_treefilter = GLOBALS->do_dynamic_treefilter;
     new_globals->treesearch_gtk2_window_vbox = GLOBALS->treesearch_gtk2_window_vbox;
@@ -1399,12 +1267,14 @@ void reload_into_new_context_2(void)
     new_globals->from_entry = GLOBALS->from_entry;
     new_globals->to_entry = GLOBALS->to_entry;
 
-    if (GLOBALS->tims.first != GLOBALS->min_time) {
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
+    if (GLOBALS->tims.first != gw_time_range_get_start(time_range)) {
         fix_from_time = 1;
         from_time = GLOBALS->tims.first;
     }
 
-    if (GLOBALS->tims.last != GLOBALS->max_time) {
+    if (GLOBALS->tims.last != gw_time_range_get_end(time_range)) {
         fix_to_time = 1;
         to_time = GLOBALS->tims.last;
     }
@@ -1436,41 +1306,7 @@ void reload_into_new_context_2(void)
         GLOBALS->enum_nptrs_jrb = NULL;
     }
 
-#ifdef _WAVE_HAVE_JUDY
-    if (GLOBALS->num_xl_enum_filter) {
-        int ie;
-        for (ie = 0; ie < GLOBALS->num_xl_enum_filter; ie++) {
-            JudyHSFreeArray(&GLOBALS->xl_enum_filter[ie], NULL);
-        }
-
-        GLOBALS->num_xl_enum_filter = 0;
-    }
-#endif
-
-    /* deallocate any loader-related stuff */
-    switch (GLOBALS->loaded_file_type) {
-        case FST_FILE:
-            g_clear_pointer(&GLOBALS->fst_file, fst_file_close);
-            break;
-
-#ifdef EXTLOAD_SUFFIX
-        case EXTLOAD_FILE:
-            if (GLOBALS->extload_ffr_ctx) {
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-                fsdbReaderClose(GLOBALS->extload_ffr_ctx);
-#endif
-                GLOBALS->extload_ffr_ctx = NULL;
-            }
-            break;
-#endif
-
-        case MISSING_FILE:
-        case DUMPLESS_FILE:
-        case GHW_FILE:
-        case VCD_RECODER_FILE:
-        default:
-            /* do nothing */ break;
-    }
+    g_clear_object(&GLOBALS->dump_file);
 
     /* window destruction (of windows that aren't the parent window) */
 
@@ -1609,12 +1445,14 @@ void reload_into_new_context_2(void)
 #endif
 
             case FST_FILE:
-                fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-                load_was_success = (GLOBALS->fst_file != NULL);
+                GLOBALS->dump_file =
+                    fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
+                load_was_success = GLOBALS->dump_file != NULL;
                 break;
 
             case GHW_FILE:
-                load_was_success = (ghw_main(GLOBALS->loaded_file_name) != 0);
+                GLOBALS->dump_file = ghw_main(GLOBALS->loaded_file_name);
+                load_was_success = GLOBALS->dump_file != NULL;
                 break;
 
             case VCD_RECODER_FILE:
@@ -1668,20 +1506,16 @@ void reload_into_new_context_2(void)
     sym_hash_destroy(GLOBALS);
 
     /* Setup timings we probably need to redraw here */
-    GLOBALS->tims.last = GLOBALS->max_time;
-    GLOBALS->tims.first = GLOBALS->min_time;
+    GLOBALS->tims.last = gw_time_range_get_end(time_range);
+    GLOBALS->tims.first = gw_time_range_get_start(time_range);
 
-    if (fix_from_time) {
-        if ((from_time >= GLOBALS->min_time) && (from_time <= GLOBALS->max_time)) {
-            GLOBALS->tims.first = from_time;
-        }
+    if (fix_from_time && gw_time_range_contains(time_range, from_time)) {
+        GLOBALS->tims.first = from_time;
     }
 
-    if (fix_to_time) {
-        if ((to_time >= GLOBALS->min_time) && (to_time <= GLOBALS->max_time) &&
-            (to_time > GLOBALS->tims.first)) {
-            GLOBALS->tims.last = to_time;
-        }
+    if (fix_to_time && gw_time_range_contains(time_range, to_time) &&
+        to_time > GLOBALS->tims.first) {
+        GLOBALS->tims.last = to_time;
     }
 
     if (GLOBALS->tims.start < GLOBALS->tims.first) {
@@ -1709,13 +1543,12 @@ void reload_into_new_context_2(void)
         GLOBALS->tims.laststart = GLOBALS->tims.last;
     }
 
-    reformat_time(timestr,
-                  GLOBALS->tims.first + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr,
-                  GLOBALS->tims.last + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
     /* Change SST - if it exists */
@@ -1895,30 +1728,7 @@ void free_and_destroy_page_context(void)
 {
     int s_ctx_iter;
 
-    /* deallocate any loader-related stuff */
-    switch (GLOBALS->loaded_file_type) {
-        case FST_FILE:
-            g_clear_pointer(&GLOBALS->fst_file, fst_file_close);
-            break;
-
-#ifdef EXTLOAD_SUFFIX
-        case EXTLOAD_FILE:
-            if (GLOBALS->extload_ffr_ctx) {
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-                fsdbReaderClose(GLOBALS->extload_ffr_ctx);
-#endif
-                GLOBALS->extload_ffr_ctx = NULL;
-            }
-            break;
-#endif
-
-        case MISSING_FILE:
-        case DUMPLESS_FILE:
-        case GHW_FILE:
-        case VCD_RECODER_FILE:
-        default:
-            /* do nothing */ break;
-    }
+    g_clear_object(&GLOBALS->dump_file);
 
     /* window destruction (of windows that aren't the parent window) */
 
@@ -2052,8 +1862,6 @@ static gint context_swapper(GtkWindow *w, GdkEvent *event, void *data)
                             GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
 
                             GLOBALS->scale_to_time_dimension = g_old->scale_to_time_dimension;
-                            GLOBALS->zoom_dyn = g_old->zoom_dyn;
-                            GLOBALS->zoom_dyne = g_old->zoom_dyne;
 
                             GLOBALS->ignore_savefile_pane_pos = g_old->ignore_savefile_pane_pos;
                             GLOBALS->ignore_savefile_pos = g_old->ignore_savefile_pos;

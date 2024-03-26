@@ -10,7 +10,6 @@
 #include "globals.h"
 #include <config.h>
 #include "savefile.h"
-#include "hierpack.h"
 #include "lx2.h"
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -82,8 +81,7 @@ bot:
 
 char *append_array_row(GwNode *n)
 {
-    int was_packed = HIER_DEPACK_ALLOC;
-    char *hname = hier_decompress_flagged(n->nname, &was_packed);
+    char *hname = n->nname;
 
 #ifdef WAVE_ARRAY_SUPPORT
     if (!n->array_height)
@@ -96,9 +94,6 @@ char *append_array_row(GwNode *n)
         sprintf(GLOBALS->buf_menu_c_1, "%s{%d}", hname, n->this_row);
     }
 #endif
-
-    if (was_packed)
-        free_2(hname);
 
     return (GLOBALS->buf_menu_c_1);
 }
@@ -1082,7 +1077,7 @@ int parsewavline(char *w, char *alias, int depth)
         return (~0);
     } else if (*w2 == '+') {
         /* handle aliasing */
-        struct symbol *s;
+        GwSymbol *s;
         sscanf(w2 + strlen(prefix), "%s", suffix);
 
         if (suffix[0] == '(') {
@@ -1633,7 +1628,7 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
 
     if (!wild_active) /* short circuit wildcard evaluation with bsearch */
     {
-        struct symbol *s;
+        GwSymbol *s;
 
         if (str[0] == '(') {
             for (i = 1;; i++) {
@@ -1675,9 +1670,13 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
             memcpy(wild, str, len);
             wave_regex_compile(wild, WAVE_REGEX_WILD);
 
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                    lx2_set_fac_process_mask(GLOBALS->facs[i]->n);
+            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+            for (i = 0; i < gw_facs_get_length(facs); i++) {
+                GwSymbol *fac = gw_facs_get(facs, i);
+
+                if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                    lx2_set_fac_process_mask(fac->n);
                     made = ~0;
                     if (quick_return)
                         break;
@@ -1734,7 +1733,7 @@ int makevec_lx2(char *str)
 
             if (!wild_active) /* short circuit wildcard evaluation with bsearch */
             {
-                struct symbol *s;
+                GwSymbol *s;
                 if (wild[0] == '(') {
                     for (i = 1;; i++) {
                         if (wild[i] == 0)
@@ -1757,11 +1756,16 @@ int makevec_lx2(char *str)
                 }
             } else {
                 wave_regex_compile(wild, WAVE_REGEX_WILD);
-                for (i = GLOBALS->numfacs - 1; i >= 0;
+
+                GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+                for (i = gw_facs_get_length(facs) - 1; i >= 0;
                      i--) /* to keep vectors in little endian hi..lo order */
                 {
-                    if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                        lx2_set_fac_process_mask(GLOBALS->facs[i]->n);
+                    GwSymbol *fac = gw_facs_get(facs, i);
+
+                    if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                        lx2_set_fac_process_mask(fac->n);
                         rc = 1;
                     }
                 }
@@ -1860,7 +1864,7 @@ int parsewavline_lx2(char *w, char *alias, int depth)
     } else if (*w2 == '@') {
     } else if (*w2 == '+') {
         /* handle aliasing */
-        struct symbol *s;
+        GwSymbol *s;
         sscanf(w2 + strlen(prefix), "%s", suffix);
 
         if (suffix[0] == '(') {

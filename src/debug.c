@@ -46,9 +46,9 @@ void free_outstanding(void)
     system("date");
 #endif
 
-    if (GLOBALS->s_selected) {
-        destroy_s_selected();
-    }
+    // if (GLOBALS->s_selected) {
+    //     destroy_s_selected();
+    // }
 
     Index = 0;
     for (rcValue = Judy1First(PJArray, &Index, PJE0); rcValue != 0;

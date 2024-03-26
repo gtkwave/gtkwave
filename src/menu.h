@@ -273,8 +273,6 @@ enum WV_MenuItems
     WV_MENU_VRJS,
     WV_MENU_SEP16,
     WV_MENU_VZPS,
-    WV_MENU_VZDYN,
-    WV_MENU_VZDYNE,
     WV_MENU_VFTP,
     WV_MENU_SEP17,
     WV_MENU_RULER,

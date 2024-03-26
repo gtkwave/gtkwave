@@ -79,7 +79,6 @@ int f_dynamic_resizing(const char *str);
 int f_enable_fast_exit(const char *str);
 int f_enable_ghost_marker(const char *str);
 int f_enable_horiz_grid(const char *str);
-int f_enable_vcd_autosave(const char *str);
 int f_enable_vert_grid(const char *str);
 int f_fill_waveform(const char *str);
 int f_fontname_logfile(const char *str);

@@ -406,11 +406,13 @@ static void rendertimes(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors)
     for (;;) {
         renderhash(self, cr, colors, realx, tim);
 
-        if (tim + GLOBALS->global_time_offset) {
-            if (tim != GLOBALS->min_time) {
-                reformat_time(timebuff,
-                              time_trunc(tim) + GLOBALS->global_time_offset,
-                              GLOBALS->time_dimension);
+        GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+        GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
+        if (tim + global_time_offset) {
+            if (tim != gw_time_range_get_start(time_range)) {
+                reformat_time(timebuff, time_trunc(tim) + global_time_offset, time_dimension);
             } else {
                 timebuff[0] = 0;
             }
@@ -624,11 +626,10 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
         cairo_set_line_width(traces_cr, GLOBALS->cr_line_width);
         cairo_set_line_cap(traces_cr, CAIRO_LINE_CAP_SQUARE);
 
-        if (GLOBALS->blackout_regions != NULL) {
-            RenderBlackoutData data = {.cr = traces_cr, .colors = colors};
+        GwBlackoutRegions *blackout_regions = gw_dump_file_get_blackout_regions(GLOBALS->dump_file);
 
-            gw_blackout_regions_foreach(GLOBALS->blackout_regions, renderblackout, &data);
-        }
+        RenderBlackoutData data = {.cr = traces_cr, .colors = colors};
+        gw_blackout_regions_foreach(blackout_regions, renderblackout, &data);
 
         if (GLOBALS->disable_antialiasing) {
             cairo_set_antialias(traces_cr, CAIRO_ANTIALIAS_NONE);

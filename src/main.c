@@ -52,8 +52,6 @@
 #endif
 
 #include "symbol.h"
-#include "ghw.h"
-#include "fst.h"
 #include "main.h"
 #include "menu.h"
 #include "vcd.h"
@@ -66,7 +64,10 @@
 #include "ptranslate.h"
 #include "ttranslate.h"
 #include "signal_list.h"
+#include "dump_file_main.h"
 #include "gw-time-display.h"
+#include "gw-vcd-file.h"
+#include "gw-fst-file.h"
 
 #include "tcl_helper.h"
 #if defined(HAVE_LIBTCL)
@@ -114,8 +115,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
     GLOBALS->keep_xz_colors = g_old->keep_xz_colors;
     GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
-    GLOBALS->zoom_dyn = g_old->zoom_dyn;
-    GLOBALS->zoom_dyne = g_old->zoom_dyne;
     GLOBALS->hier_ignore_escapes = g_old->hier_ignore_escapes;
     GLOBALS->sst_dbl_action_type = g_old->sst_dbl_action_type;
     GLOBALS->use_gestures = g_old->use_gestures;
@@ -123,13 +122,12 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->save_on_exit = g_old->save_on_exit;
     GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
-    reformat_time(timestr,
-                  GLOBALS->tims.first + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr,
-                  GLOBALS->tims.last + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
     update_time_box();
@@ -204,20 +202,6 @@ static void close_all_fst_files(void) /* so mingw does delete of reader tempfile
 }
 #endif
 
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-static void close_all_fsdb_files(
-    void) /* otherwise fsdb can leave around stray files if .gz/.bz2 was in use */
-{
-    unsigned int i;
-    for (i = 0; i < GLOBALS->num_notebook_pages; i++) {
-        if ((*GLOBALS->contexts)[i]->extload_ffr_ctx) {
-            fsdbReaderClose((*GLOBALS->contexts)[i]->extload_ffr_ctx);
-            (*GLOBALS->contexts)[i]->extload_ffr_ctx = NULL;
-        }
-    }
-}
-#endif
-
 void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, int pct)
 {
     if (window && title) {
@@ -248,17 +232,6 @@ void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, i
 
 static void print_help(char *nam)
 {
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-    int slen = strlen(EXTLOAD_SUFFIX);
-    char *ucase_ext = g_alloca(slen + 1);
-    int i;
-
-    for (i = 0; i < slen; i++) {
-        ucase_ext[i] = toupper(EXTLOAD_SUFFIX[i]);
-    }
-    ucase_ext[i] = 0;
-#endif
-
 #if !defined __MINGW32__ && !defined __FreeBSD__ && !defined __CYGWIN__
 #define WAVE_GETOPT_CPUS \
     "  -c, --cpu=NUMCPUS          specify number of CPUs for parallelizable ops\n"
@@ -267,11 +240,7 @@ static void print_help(char *nam)
 #endif
 
 #if !defined __MINGW32__
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-#define VCD_GETOPT "  -o, --optimize             optimize VCD/%s to FST\n"
-#else
 #define VCD_GETOPT "  -o, --optimize             optimize VCD to FST\n"
-#endif
 #else
 #define VCD_GETOPT
 #endif
@@ -327,7 +296,6 @@ static void print_help(char *nam)
         "  -n, --nocli=DIRPATH        use file requester for dumpfile name\n"
         "  -f, --dump=FILE            specify dumpfile name\n" VCD_GETOPT
         "  -a, --save=FILE            specify savefile name\n"
-        "  -A, --autosavename         assume savefile is suffix modified dumpfile name\n"
         "  -r, --rcfile=FILE          specify override .rcfile name\n"
         "  -d, --defaultskip          if missing .rcfile, do not use useful defaults\n" DUAL_GETOPT
         "  -l, --logfile=FILE         specify simulation logfile name for time values\n"
@@ -342,7 +310,6 @@ static void print_help(char *nam)
         "  -5, --sstexclude           specify sst exclusion filter filename\n"
         "  -6, --dark                 set gtk-application-prefer-dark-theme = TRUE\n"
         "  -7, --saveonexit           prompt user to write save file at exit\n"
-        "  -C, --comphier             use compressed hierarchy names (slower)\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
         "  -V, --version              display version banner then exit\n"
@@ -356,14 +323,7 @@ static void print_help(char *nam)
         "SAVEFILE and RCFILE are always optional.\n\n"
 
         "Report bugs to <" PACKAGE_BUGREPORT ">.\n",
-        nam
-#if !defined __MINGW32__
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-        ,
-        ucase_ext
-#endif
-#endif
-    );
+        nam);
 
 #ifdef __MINGW32__
     fflush(stdout); /* fix for possible problem with mingw/msys shells */
@@ -668,7 +628,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 {
     static const char *winprefix = "GTKWave - ";
     static const char *winstd = "GTKWave (stdio) ";
-    static const char *vcd_autosave_name = "vcd_autosave.sav";
     char *output_name = NULL;
     char *chdir_cache = NULL;
 
@@ -687,7 +646,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
     char *override_rc = NULL;
     char *scriptfile = NULL;
     FILE *wave = NULL;
-    FILE *vcd_save_handle_cached = NULL;
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
@@ -737,11 +695,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 #endif
         GLOBALS->vcd_jmp_buf = old_g->vcd_jmp_buf;
 
-        /* status.c */
-        GLOBALS->text_status_c_2 = old_g->text_status_c_2;
-        GLOBALS->iter_status_c_3 = old_g->iter_status_c_3;
-        GLOBALS->bold_tag_status_c_3 = old_g->bold_tag_status_c_3;
-
         /* timeentry.c */
         GLOBALS->from_entry = old_g->from_entry;
         GLOBALS->to_entry = old_g->to_entry;
@@ -772,7 +725,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->enable_horiz_grid = old_g->enable_horiz_grid;
         GLOBALS->fill_waveform = old_g->fill_waveform;
         GLOBALS->lz_removal = old_g->lz_removal;
-        GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->enable_vert_grid = old_g->enable_vert_grid;
         GLOBALS->sst_expanded = old_g->sst_expanded;
         GLOBALS->hier_max_level = old_g->hier_max_level;
@@ -792,16 +744,12 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->use_maxtime_display = old_g->use_maxtime_display;
         GLOBALS->use_nonprop_fonts = old_g->use_nonprop_fonts;
         GLOBALS->use_roundcaps = old_g->use_roundcaps;
-        GLOBALS->vcd_preserve_glitches = old_g->vcd_preserve_glitches;
-        GLOBALS->vcd_preserve_glitches_real = old_g->vcd_preserve_glitches_real;
         GLOBALS->vcd_warning_filesize = old_g->vcd_warning_filesize;
         GLOBALS->vector_padding = old_g->vector_padding;
         GLOBALS->vlist_compression_depth = old_g->vlist_compression_depth;
         GLOBALS->wave_scrolling = old_g->wave_scrolling;
         GLOBALS->do_zoom_center = old_g->do_zoom_center;
         GLOBALS->zoom_pow10_snap = old_g->zoom_pow10_snap;
-        GLOBALS->zoom_dyn = old_g->zoom_dyn;
-        GLOBALS->zoom_dyne = old_g->zoom_dyne;
         GLOBALS->alt_hier_delimeter = old_g->alt_hier_delimeter;
         GLOBALS->cursor_snap = old_g->cursor_snap;
         GLOBALS->hier_delimeter = old_g->hier_delimeter;
@@ -818,7 +766,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->ruler_origin = old_g->ruler_origin;
         GLOBALS->ruler_step = old_g->ruler_step;
 
-        GLOBALS->vlist_prepack = old_g->vlist_prepack;
+        GLOBALS->settings = old_g->settings;
         GLOBALS->do_dynamic_treefilter = old_g->do_dynamic_treefilter;
         GLOBALS->dragzoom_threshold = old_g->dragzoom_threshold;
 
@@ -827,12 +775,8 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->analog_redraw_skip_count = old_g->analog_redraw_skip_count;
         GLOBALS->context_tabposition = old_g->context_tabposition;
         GLOBALS->disable_empty_gui = old_g->disable_empty_gui;
-        GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->strace_repeat_count = old_g->strace_repeat_count;
 
-        GLOBALS->extload_max_tree = old_g->extload_max_tree;
-        GLOBALS->do_hier_compress = old_g->do_hier_compress;
-        GLOBALS->disable_auto_comphier = old_g->disable_auto_comphier;
         GLOBALS->sst_dbl_action_type = old_g->sst_dbl_action_type;
         GLOBALS->use_gestures = old_g->use_gestures;
         GLOBALS->use_dark = old_g->use_dark;
@@ -905,9 +849,6 @@ do_primary_inits:
 #if defined __MINGW32__
         atexit(close_all_fst_files);
 #endif
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-        atexit(close_all_fsdb_files);
-#endif
     }
 
     if (mainwindow_already_built) {
@@ -920,7 +861,6 @@ do_primary_inits:
                                                    {"optimize", 0, 0, 'o'},
                                                    {"nocli", 1, 0, 'n'},
                                                    {"save", 1, 0, 'a'},
-                                                   {"autosavename", 0, 0, 'A'},
                                                    {"rcfile", 1, 0, 'r'},
                                                    {"defaultskip", 0, 0, 'd'},
                                                    {"logfile", 1, 0, 'l'},
@@ -938,7 +878,6 @@ do_primary_inits:
                                                    {"nomenus", 0, 0, 'M'},
                                                    {"dualid", 1, 0, 'D'},
                                                    {"giga", 0, 0, 'g'},
-                                                   {"comphier", 0, 0, 'C'},
                                                    {"tcl_init", 1, 0, 'T'},
                                                    {"wish", 0, 0, 'W'},
                                                    {"repscript", 1, 0, 'R'},
@@ -956,7 +895,7 @@ do_primary_inits:
 
             c = getopt_long(argc,
                             argv,
-                            "zf:Fon:a:Ar:dl:s:e:c:t:NS:vVhxX:MD:IgCR:P:O:WT:1:2:34:5:67",
+                            "zf:Fon:a:r:dl:s:e:c:t:NS:vVhxX:MD:IgCR:P:O:WT:1:2:34:5:67",
                             long_options,
                             &option_index);
 
@@ -1230,10 +1169,6 @@ do_primary_inits:
                     is_giga = 1;
                     break;
 
-                case 'C':
-                    GLOBALS->do_hier_compress = 1;
-                    break;
-
                 case 'R':
                     if (GLOBALS->repscript_name)
                         free_2(GLOBALS->repscript_name);
@@ -1329,24 +1264,6 @@ do_primary_inits:
         exit(255);
     }
 
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-#if !defined(FSDB_IS_PRESENT) || !defined(FSDB_NSYS_IS_PRESENT)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
-#endif
-#if defined(EXT2LOAD_SUFFIX) && defined(EXT2CONV_PATH)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXT2LOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
-#if defined(EXT3LOAD_SUFFIX) && defined(EXT3CONV_PATH)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXT3LOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
-
     /* attempt to load a dump+save file if only a savefile is specified at the command line */
     if ((GLOBALS->loaded_file_name) && (!wname) &&
         (suffix_check(GLOBALS->loaded_file_name, ".gtkw") ||
@@ -1421,7 +1338,7 @@ do_primary_inits:
     }
 
     if (is_giga) {
-        GLOBALS->vlist_prepack = 1;
+        GLOBALS->settings.vlist_prepack = 1;
     }
 
     if (output_name) {
@@ -1479,18 +1396,9 @@ do_primary_inits:
         }
     }
 
-    if ((!wname) && (GLOBALS->make_vcd_save_file)) {
-        vcd_save_handle_cached = GLOBALS->vcd_save_handle = fopen(vcd_autosave_name, "wb");
-        errno = 0; /* just in case */
-        is_smartsave = (GLOBALS->vcd_save_handle !=
-                        NULL); /* use smartsave if for some reason can't open auto savefile */
-    }
-
     if (!GLOBALS->loaded_file_name) {
         GLOBALS->loaded_file_name = strdup_2("[no file loaded]");
         is_missing_file = 1;
-        GLOBALS->min_time = GW_TIME_CONSTANT(0);
-        GLOBALS->max_time = GW_TIME_CONSTANT(0);
         if (!is_wish) {
             fprintf(stderr, "GTKWAVE | Use the -h, --help command line flags to display help.\n");
         }
@@ -1516,32 +1424,9 @@ loader_check_head:
 
     if (is_missing_file) {
         GLOBALS->loaded_file_type = MISSING_FILE;
-    } else
-#if defined(EXTLOAD_SUFFIX)
-        if ((suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX) && !opt_vcd) ||
-            (suffix_check(GLOBALS->loaded_file_name, ".vf") && !opt_vcd) || /* virtual file */
-            (suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX ".gz") &&
-             !opt_vcd) || /* loader automatically does gzip -cd */
-            (suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX ".bz2") &&
-             !opt_vcd) /* loader automatically does bzip2 -cd */
-        ) {
-        GwTime extload_max;
-
-        GLOBALS->loaded_file_type = EXTLOAD_FILE;
-        extload_max =
-            extload_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if ((!GLOBALS->extload) || (GLOBALS->extload_already_errored) || (!extload_max)) {
-            fprintf(stderr,
-                    "GTKWAVE | Could not initialize '%s'%s.\n",
-                    GLOBALS->loaded_file_name,
-                    GLOBALS->vcd_jmp_buf ? "" : ", exiting");
-            vcd_exit(255);
-        }
-    } else
-#endif
-        if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
-            suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
-            suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
+    } else if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
+               suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
+               suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
         fprintf(
             stderr,
             "GTKWAVE | LXT and LXT2 files are no longer supported by this version of GTKWave.\n");
@@ -1552,8 +1437,9 @@ loader_check_head:
         GLOBALS->aet_name = malloc_2(strlen(GLOBALS->loaded_file_name) + 1);
         strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
         GLOBALS->loaded_file_type = FST_FILE;
-        fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if (GLOBALS->fst_file == NULL) {
+        GLOBALS->dump_file =
+            fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
+        if (GLOBALS->dump_file == NULL) {
             fprintf(stderr,
                     "GTKWAVE | Could not initialize '%s'%s.\n",
                     GLOBALS->loaded_file_name,
@@ -1573,7 +1459,8 @@ loader_check_head:
                suffix_check(GLOBALS->loaded_file_name, ".ghw.gz") ||
                suffix_check(GLOBALS->loaded_file_name, ".ghw.bz2")) {
         GLOBALS->loaded_file_type = GHW_FILE;
-        if (!ghw_main(GLOBALS->loaded_file_name)) {
+        GLOBALS->dump_file = ghw_main(GLOBALS->loaded_file_name);
+        if (GLOBALS->dump_file == NULL) {
             /* error message printed in ghw_main() */
             vcd_exit(255);
         }
@@ -1610,7 +1497,7 @@ loader_check_head:
         } else {
             GLOBALS->loaded_file_type = DUMPLESS_FILE;
         }
-        vcd_recoder_main(GLOBALS->loaded_file_name);
+        GLOBALS->dump_file = vcd_recoder_main(GLOBALS->loaded_file_name);
     }
 
     /* deallocate the symbol hash table */
@@ -1620,15 +1507,19 @@ loader_check_head:
     // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
     //     GLOBALS->named_markers[i] = -1; /* reset all named markers */
 
-    GLOBALS->tims.last = GLOBALS->max_time;
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
+    GLOBALS->tims.first = gw_time_range_get_start(time_range);
+    GLOBALS->tims.last = gw_time_range_get_end(time_range);
+    GLOBALS->tims.start = GLOBALS->tims.first;
+    GLOBALS->tims.laststart = GLOBALS->tims.first;
     GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
-    GLOBALS->tims.first = GLOBALS->tims.start = GLOBALS->tims.laststart = GLOBALS->min_time;
     GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
     gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
     gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
     gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
 
-    if (GLOBALS->max_time >> DBL_MANT_DIG) {
+    if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
         fprintf(stderr,
                 "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n",
                 DBL_MANT_DIG);
@@ -1639,17 +1530,13 @@ loader_check_head:
         }
     }
 
-    if ((wname) || (vcd_save_handle_cached) || (is_smartsave)) {
+    if ((wname) || (is_smartsave)) {
         int wave_is_compressed;
         char *str = NULL;
 
         GLOBALS->is_gtkw_save_file = (!wname) || suffix_check(wname, ".gtkw");
 
-        if (vcd_save_handle_cached) {
-            wname = malloc_2(strlen(vcd_autosave_name) + 1);
-            strcpy(wname, vcd_autosave_name);
-            GLOBALS->do_initial_zoom_fit = 1;
-        } else if ((!wname) /* && (is_smartsave) */) {
+        if ((!wname) /* && (is_smartsave) */) {
             char *pnt = g_alloca(strlen(GLOBALS->loaded_file_name) + 1);
             char *pnt2;
             strcpy(pnt, GLOBALS->loaded_file_name);
@@ -1714,13 +1601,10 @@ loader_check_head:
 
                 switch (GLOBALS->is_lx2) {
                     case LXT2_IS_VLIST:
-                        vcd_import_masked(GLOBALS->vcd_file);
+                        gw_vcd_file_import_masked(GW_VCD_FILE(GLOBALS->dump_file));
                         break;
                     case LXT2_IS_FST:
-                        fst_import_masked(GLOBALS->fst_file);
-                        break;
-                    case LXT2_IS_FSDB:
-                        fsdb_import_masked();
+                        gw_fst_file_import_masked(GW_FST_FILE(GLOBALS->dump_file));
                         break;
                     default:
                         g_warn_if_reached();

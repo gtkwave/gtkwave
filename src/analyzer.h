@@ -46,45 +46,19 @@ enum TraceReorderMode
 
 /* vvv   Bit representation   vvv */
 
-enum AnalyzerBits
-{
-    AN_0,
-    AN_X,
-    AN_Z,
-    AN_1,
-    AN_H,
-    AN_U,
-    AN_W,
-    AN_L,
-    AN_DASH,
-    AN_RSV9,
-    AN_RSVA,
-    AN_RSVB,
-    AN_RSVC,
-    AN_RSVD,
-    AN_RSVE,
-    AN_RSVF,
-    AN_COUNT
-};
 #define AN_NORMAL \
     { \
-        AN_0, AN_X, AN_Z, AN_1, AN_H, AN_U, AN_W, AN_L, AN_DASH, AN_DASH, AN_DASH, AN_DASH, \
-            AN_DASH, AN_DASH, AN_DASH, AN_DASH \
+        GW_BIT_0, GW_BIT_X, GW_BIT_Z, GW_BIT_1, GW_BIT_H, GW_BIT_U, GW_BIT_W, GW_BIT_L, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, \
+            GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH \
     }
 #define AN_INVERSE \
     { \
-        AN_1, AN_X, AN_Z, AN_0, AN_L, AN_U, AN_W, AN_H, AN_DASH, AN_DASH, AN_DASH, AN_DASH, \
-            AN_DASH, AN_DASH, AN_DASH, AN_DASH \
+        GW_BIT_1, GW_BIT_X, GW_BIT_Z, GW_BIT_0, GW_BIT_L, GW_BIT_U, GW_BIT_W, GW_BIT_H, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, \
+            GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH \
     }
-
-#define AN_MSK \
-    (AN_COUNT - 1) /* max index into AN_STR, AN_COUNT *must* be a power of two unless logic AND \
-                      with AN_MSK is changed */
 
 /* positional ascii 0123456789ABCDEF, question marks should not happen unless something slips
  * through the cracks as AN_RSVA to AN_RSVF are reserved */
-#define AN_STR "0xz1huwl-???????"
-#define AN_STR_INV "1xz0luwh-???????"
 
 #define AN_USTR "0XZ1HUWL-???????"
 #define AN_USTR_INV "1XZ0LUWH-???????"
@@ -305,7 +279,7 @@ void EnsureGroupsMatch(void);
 #define IsCollapsed(t) (t->flags & TR_COLLAPSED)
 
 unsigned IsShadowed(GwTrace *t);
-char *GetFullName(GwTrace *t, int *was_packed);
+char *GetFullName(GwTrace *t);
 
 void OpenTrace(GwTrace *t);
 void CloseTrace(GwTrace *t);

@@ -551,6 +551,8 @@ int traverse_vector_nodes(GwTrace *t)
     int i;
     int cvt_ok = 0;
 
+    GwTime time_scale = gw_dump_file_get_time_scale(GLOBALS->dump_file);
+
     if ((t->t_filter) && (t->flags & TR_TTRANSLATED) && (t->vector) && (!t->t_filter_converted)) {
 #if !defined __MINGW32__
         int rc = save_nodes_to_trans(GLOBALS->ttrans_filter[t->t_filter]->sout, t);
@@ -638,7 +640,7 @@ int traverse_vector_nodes(GwTrace *t)
                     }
 
                     if (*pnt == '#') {
-                        GwTime tim = atoi_64(pnt + 1) * GLOBALS->time_scale;
+                        GwTime tim = atoi_64(pnt + 1) * time_scale;
                         int slen;
                         char *sp;
 
@@ -703,7 +705,7 @@ int traverse_vector_nodes(GwTrace *t)
                             GwMarker *marker = gw_named_markers_get(markers, which_marker);
 
                             if (marker != NULL) {
-                                GwTime tim = atoi_64(pnt + mlen) * GLOBALS->time_scale;
+                                GwTime tim = atoi_64(pnt + mlen) * time_scale;
                                 int slen;
                                 char *sp;
 

@@ -1,7 +1,6 @@
 #include <config.h>
 #include "gw-mouseover.h"
 #include "analyzer.h"
-#include "hierpack.h"
 
 struct _GwMouseover
 {
@@ -130,16 +129,17 @@ static gchar *local_trace_asciival(GwTrace *t, GwTime tim)
                     if (t->n.nd->vartype == GW_VAR_TYPE_VCD_EVENT) {
                         h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                         ((primary_pos - GLOBALS->shift_timebase) == h_ptr->time)
-                                    ? AN_1
-                                    : AN_0; /* generate impulse */
+                                    ? GW_BIT_1
+                                    : GW_BIT_0; /* generate impulse */
+                    }
+
+                    if (t->flags & TR_INVERT) {
+                        h_val = gw_bit_invert(h_val);
                     }
 
                     str = (char *)calloc_2(1, 2 * sizeof(char));
-                    if (t->flags & TR_INVERT) {
-                        str[0] = AN_STR_INV[h_val];
-                    } else {
-                        str[0] = AN_STR[h_val];
-                    }
+                    str[0] = gw_bit_to_char(h_val);
+
                     return str;
                 } else {
                     if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
@@ -169,10 +169,7 @@ static char *get_fullname(GwTrace *t)
             s = strdup_2(t->n.vec->bvname);
         } else {
             if (!HasAlias(t)) {
-                int flagged = HIER_DEPACK_ALLOC;
-                s = hier_decompress_flagged(t->n.nd->nname, &flagged);
-                if (!flagged)
-                    s = strdup_2(s);
+                s = t->n.nd->nname;
             }
         }
     }

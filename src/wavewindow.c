@@ -397,9 +397,11 @@ static void button_motion_common(gint xin, gint yin, int pressrel, int is_button
         newcurr = GLOBALS->tims.start;
     }
 
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
     newcurr = time_trunc(newcurr);
     if (newcurr < 0)
-        newcurr = GLOBALS->min_time; /* prevents marker from disappearing? */
+        newcurr = gw_time_range_get_start(time_range); /* prevents marker from disappearing? */
 
     if (!is_button_2) {
         GwTime markertime = cook_markertime(newcurr, xin, yin);
@@ -1781,7 +1783,9 @@ void populateBuffer(GwTrace *t, char *altname, char *buf)
 
             if ((tname) && (t->shift)) {
                 ptr[0] = '`';
-                reformat_time(ptr + 1, t->shift, GLOBALS->time_dimension);
+                GwTimeDimension time_dimension =
+                    gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+                reformat_time(ptr + 1, t->shift, time_dimension);
                 ptr = ptr + strlen(ptr + 1) + 1;
                 strcpy(ptr, "\'");
 #ifdef WAVE_ARRAY_SUPPORT
@@ -1970,15 +1974,16 @@ void MaxSignalLength(void)
                                 h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                                 ((gw_marker_get_position(primary_marker) -
                                                   GLOBALS->shift_timebase) == h_ptr->time)
-                                            ? AN_1
-                                            : AN_0; /* generate impulse */
+                                            ? GW_BIT_1
+                                            : GW_BIT_0; /* generate impulse */
                             }
 
                             if (t->flags & TR_INVERT) {
-                                str[1] = AN_STR_INV[h_val];
-                            } else {
-                                str[1] = AN_STR[h_val];
+                                h_val = gw_bit_invert(h_val);
                             }
+
+                            str[1] = gw_bit_to_char(h_val);
+
                             t->asciivalue = str;
                             vlen = font_engine_string_measure(GLOBALS->signalfont, str);
                         } else {
@@ -2196,17 +2201,18 @@ void UpdateSigValue(GwTrace *t)
                             h_val = (h_ptr->time >= GLOBALS->tims.first) &&
                                             ((gw_marker_get_position(primary_marker) -
                                               GLOBALS->shift_timebase) == h_ptr->time)
-                                        ? AN_1
-                                        : AN_0; /* generate impulse */
+                                        ? GW_BIT_1
+                                        : GW_BIT_0; /* generate impulse */
+                        }
+
+                        if (t->flags & TR_INVERT) {
+                            h_val = gw_bit_invert(h_val);
                         }
 
                         str = (char *)calloc_2(1, 3 * sizeof(char));
                         str[0] = '=';
-                        if (t->flags & TR_INVERT) {
-                            str[1] = AN_STR_INV[h_val];
-                        } else {
-                            str[1] = AN_STR[h_val];
-                        }
+                        str[1] = gw_bit_to_char(h_val);
+
                         t->asciivalue = str;
                     } else {
                         char *str2;

@@ -14,7 +14,6 @@
 #include "symbol.h"
 #include "bsearch.h"
 #include "strace.h"
-#include "hierpack.h"
 #include <ctype.h>
 
 static int compar_timechain(const void *s1, const void *s2)
@@ -266,13 +265,12 @@ char *bsearch_trunc_print(char *ascii, int maxlen)
 
 static int compar_facs(const void *key, const void *v2)
 {
-    struct symbol *s2;
+    GwSymbol *s2;
     int rc;
-    int was_packed = HIER_DEPACK_STATIC;
     char *s3;
 
-    s2 = *((struct symbol **)v2);
-    s3 = hier_decompress_flagged(s2->name, &was_packed);
+    s2 = *((GwSymbol **)v2);
+    s3 = s2->name;
     rc = sigcmp((char *)key, s3);
 
     /* if(was_packed) free_2(s3); ...not needed with HIER_DEPACK_STATIC */
@@ -280,9 +278,10 @@ static int compar_facs(const void *key, const void *v2)
     return (rc);
 }
 
-struct symbol *bsearch_facs(char *ascii, unsigned int *rows_return)
+// TODO: move to GwFacs
+GwSymbol *bsearch_facs(char *ascii, unsigned int *rows_return)
 {
-    struct symbol **rc;
+    GwSymbol **rc;
     int len;
 
     if ((!ascii) || (!(len = strlen(ascii))))
@@ -290,6 +289,10 @@ struct symbol *bsearch_facs(char *ascii, unsigned int *rows_return)
     if (rows_return) {
         *rows_return = 0;
     }
+
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    GwSymbol **facs_array = gw_facs_get_array(facs);
+    guint numfacs = gw_facs_get_length(facs);
 
     if (ascii[len - 1] == '}') {
         int i;
@@ -301,11 +304,9 @@ struct symbol *bsearch_facs(char *ascii, unsigned int *rows_return)
                 char *tsc = g_alloca(i + 1);
                 memcpy(tsc, ascii, i + 1);
                 tsc[i] = 0;
-                rc = (struct symbol **)bsearch(tsc,
-                                               GLOBALS->facs,
-                                               GLOBALS->numfacs,
-                                               sizeof(struct symbol *),
-                                               compar_facs);
+
+                rc =
+                    (GwSymbol **)bsearch(tsc, facs_array, numfacs, sizeof(GwSymbol *), compar_facs);
                 if (rc) {
                     unsigned int whichrow = atoi(&ascii[i + 1]);
                     if (rows_return)
@@ -323,8 +324,7 @@ struct symbol *bsearch_facs(char *ascii, unsigned int *rows_return)
         }
     }
 
-    rc = (struct symbol **)
-        bsearch(ascii, GLOBALS->facs, GLOBALS->numfacs, sizeof(struct symbol *), compar_facs);
+    rc = (GwSymbol **)bsearch(ascii, facs_array, numfacs, sizeof(GwSymbol *), compar_facs);
     if (rc)
         return (*rc);
     else

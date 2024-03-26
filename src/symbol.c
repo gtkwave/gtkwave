@@ -24,7 +24,6 @@
 #include "symbol.h"
 #include "vcd.h"
 #include "bsearch.h"
-#include "hierpack.h"
 
 #ifdef _WAVE_HAVE_JUDY
 #include <Judy.h>
@@ -33,41 +32,43 @@
 /*
  * s_selected accessors
  */
-#ifdef _WAVE_HAVE_JUDY
 
-char get_s_selected(struct symbol *s)
-{
-    int rc = Judy1Test(GLOBALS->s_selected, (Word_t)s, PJE0);
+// TODO: reenable judy support
+// #ifdef _WAVE_HAVE_JUDY
+//
+// char get_s_selected(GwSymbol *s)
+// {
+//     int rc = Judy1Test(GLOBALS->s_selected, (Word_t)s, PJE0);
+//
+//     return (rc);
+// }
+//
+// char set_s_selected(GwSymbol *s, char value)
+// {
+//     if (value) {
+//         Judy1Set((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
+//     } else {
+//         Judy1Unset((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
+//     }
+//
+//     return (value);
+// }
+//
+// void destroy_s_selected(void)
+// {
+//     Judy1FreeArray(&GLOBALS->s_selected, PJE0);
+//
+//     GLOBALS->s_selected = NULL;
+// }
+//
+// #else
 
-    return (rc);
-}
-
-char set_s_selected(struct symbol *s, char value)
-{
-    if (value) {
-        Judy1Set((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
-    } else {
-        Judy1Unset((Pvoid_t)&GLOBALS->s_selected, (Word_t)s, PJE0);
-    }
-
-    return (value);
-}
-
-void destroy_s_selected(void)
-{
-    Judy1FreeArray(&GLOBALS->s_selected, PJE0);
-
-    GLOBALS->s_selected = NULL;
-}
-
-#else
-
-char get_s_selected(struct symbol *s)
+char get_s_selected(GwSymbol *s)
 {
     return (s->s_selected);
 }
 
-char set_s_selected(struct symbol *s, char value)
+char set_s_selected(GwSymbol *s, char value)
 {
     return ((s->s_selected = value));
 }
@@ -77,37 +78,39 @@ void destroy_s_selected(void)
     /* nothing */
 }
 
-#endif
+// #endif
 
 /*
  * hash create/destroy
  */
 void sym_hash_initialize(void *g)
 {
-#ifdef _WAVE_HAVE_JUDY
-    ((struct Global *)g)->sym_judy = NULL;
-#else
-    ((struct Global *)g)->sym_hash = (struct symbol **)calloc_2(SYMPRIME, sizeof(struct symbol *));
-#endif
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     ((struct Global *)g)->sym_judy = NULL;
+    // #else
+    ((struct Global *)g)->sym_hash = (GwSymbol **)calloc_2(SYMPRIME, sizeof(GwSymbol *));
+    // #endif
 }
 
 void sym_hash_destroy(void *g)
 {
     struct Global *gg = (struct Global *)g;
 
-#ifdef _WAVE_HAVE_JUDY
-
-    JudySLFreeArray(&gg->sym_judy, PJE0);
-    gg->sym_judy = NULL;
-
-#else
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //
+    //     JudySLFreeArray(&gg->sym_judy, PJE0);
+    //     gg->sym_judy = NULL;
+    //
+    // #else
 
     if (gg->sym_hash) {
         free_2(gg->sym_hash);
         gg->sym_hash = NULL;
     }
 
-#endif
+    // #endif
 }
 
 /*
@@ -115,7 +118,8 @@ void sym_hash_destroy(void *g)
  */
 int hash(char *s)
 {
-#ifndef _WAVE_HAVE_JUDY
+    // TODO: reenable judy support
+    // #ifndef _WAVE_HAVE_JUDY
     char *p;
     char ch;
     unsigned int h = 0, h2 = 0, pos = 0, g;
@@ -133,9 +137,9 @@ int hash(char *s)
 
     h ^= h2; /* combine the two hashes */
     GLOBALS->hashcache = h % SYMPRIME;
-#else
-    (void)s;
-#endif
+    // #else
+    //     (void)s;
+    // #endif
     return (GLOBALS->hashcache);
 }
 
@@ -143,45 +147,47 @@ int hash(char *s)
  * add symbol to table.  no duplicate checking
  * is necessary as aet's are "correct."
  */
-struct symbol *symadd(char *name, int hv)
+GwSymbol *symadd(char *name, int hv)
 {
-    struct symbol *s = (struct symbol *)calloc_2(1, sizeof(struct symbol));
+    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
 
-#ifdef _WAVE_HAVE_JUDY
-    (void)hv;
-
-    PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    *((struct symbol **)PPValue) = s;
-
-#else
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     (void)hv;
+    //
+    //     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
+    //     *((GwSymbol **)PPValue) = s;
+    //
+    // #else
 
     strcpy(s->name = (char *)malloc_2(strlen(name) + 1), name);
     s->sym_next = GLOBALS->sym_hash[hv];
     GLOBALS->sym_hash[hv] = s;
 
-#endif
+    // #endif
     return (s);
 }
 
-struct symbol *symadd_name_exists(char *name, int hv)
+GwSymbol *symadd_name_exists(char *name, int hv)
 {
-    struct symbol *s = (struct symbol *)calloc_2(1, sizeof(struct symbol));
+    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
 
-#ifdef _WAVE_HAVE_JUDY
-    (void)hv;
-
-    PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    *((struct symbol **)PPValue) = s;
-
-    s->name = name; /* redundant for now */
-
-#else
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     (void)hv;
+    //
+    //     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
+    //     *((GwSymbol **)PPValue) = s;
+    //
+    //     s->name = name; /* redundant for now */
+    //
+    // #else
 
     s->name = name;
     s->sym_next = GLOBALS->sym_hash[hv];
     GLOBALS->sym_hash[hv] = s;
 
-#endif
+    // #endif
 
     return (s);
 }
@@ -189,21 +195,20 @@ struct symbol *symadd_name_exists(char *name, int hv)
 /*
  * find a slot already in the table...
  */
-static struct symbol *symfind_2(char *s, unsigned int *rows_return)
+static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
 {
-#ifndef _WAVE_HAVE_JUDY
     int hv;
-    struct symbol *temp;
-#endif
+    GwSymbol *temp;
 
     if (!GLOBALS->facs_are_sorted) {
-#ifdef _WAVE_HAVE_JUDY
-        PPvoid_t PPValue = JudySLGet(GLOBALS->sym_judy, (uint8_t *)s, PJE0);
-
-        if (PPValue) {
-            return (*(struct symbol **)PPValue);
-        }
-#else
+        // TODO: reenable judy support
+        // #ifdef _WAVE_HAVE_JUDY
+        //         PPvoid_t PPValue = JudySLGet(GLOBALS->sym_judy, (uint8_t *)s, PJE0);
+        //
+        //         if (PPValue) {
+        //             return (*(GwSymbol **)PPValue);
+        //         }
+        // #else
         hv = hash(s);
         if (!(GLOBALS->sym_hash) || !(temp = GLOBALS->sym_hash[hv]))
             return (NULL); /* no hash entry, add here wanted to add */
@@ -216,11 +221,11 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
                 break;
             temp = temp->sym_next;
         }
-#endif
+        // #endif
         return (NULL); /* not found, add here if you want to add*/
     } else /* no sense hashing if the facs table is built */
     {
-        struct symbol *sr;
+        GwSymbol *sr;
         DEBUG(printf("BSEARCH: %s\n", s));
 
         sr = bsearch_facs(s, rows_return);
@@ -236,17 +241,21 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
                 return (sr);
             }
 
+            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+            guint numfacs = gw_facs_get_length(facs);
+
             if (GLOBALS->facs_have_symbols_state_machine == 0) {
                 if (GLOBALS->escaped_names_found_vcd_c_1) {
                     mat = 1;
                 } else {
                     mat = 0;
 
-                    for (i = 0; i < GLOBALS->numfacs; i++) {
-                        int was_packed = HIER_DEPACK_STATIC;
+                    for (i = 0; i < numfacs; i++) {
                         char *hfacname = NULL;
 
-                        hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+                        GwSymbol *fac = gw_facs_get(facs, i);
+
+                        hfacname = fac->name;
                         s2 = hfacname;
                         while (*s2) {
                             if (*s2 < GLOBALS->hier_delimeter) {
@@ -273,18 +282,19 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
 
             if (GLOBALS->facs_have_symbols_state_machine == 1) {
                 mat = 0;
-                for (i = 0; i < GLOBALS->numfacs; i++) {
-                    int was_packed = HIER_DEPACK_STATIC;
+                for (i = 0; i < numfacs; i++) {
                     char *hfacname = NULL;
 
-                    hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+                    GwSymbol *fac = gw_facs_get(facs, i);
+
+                    hfacname = fac->name;
                     if (!strcmp(hfacname, s)) {
                         mat = 1;
                     }
 
                     /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
                     if (mat) {
-                        sr = GLOBALS->facs[i];
+                        sr = fac;
                         break;
                     }
                 }
@@ -295,9 +305,9 @@ static struct symbol *symfind_2(char *s, unsigned int *rows_return)
     }
 }
 
-struct symbol *symfind(char *s, unsigned int *rows_return)
+GwSymbol *symfind(char *s, unsigned int *rows_return)
 {
-    struct symbol *s_pnt = symfind_2(s, rows_return);
+    GwSymbol *s_pnt = symfind_2(s, rows_return);
 
     if (!s_pnt) {
         int len = strlen(s);

@@ -17,7 +17,6 @@
 #include "analyzer.h"
 #include "symbol.h"
 #include "lx2.h"
-#include "extload.h"
 #include "debug.h"
 #include "bsearch.h"
 #include "strace.h"
@@ -27,7 +26,6 @@
 #include "main.h"
 #include "menu.h"
 #include "busy.h"
-#include "hierpack.h"
 #include <stdlib.h>
 
 /*
@@ -167,19 +165,12 @@ char *attempt_vecmatch(char *s1, char *s2)
     if (!s1 || !s2) {
         return (pnt);
     } else {
-        int ns1_was_decompressed = HIER_DEPACK_ALLOC;
-        char *ns1 = hier_decompress_flagged(s1, &ns1_was_decompressed);
-        int ns2_was_decompressed = HIER_DEPACK_ALLOC;
-        char *ns2 = hier_decompress_flagged(s2, &ns2_was_decompressed);
+        char *ns1 = s1;
+        char *ns2 = s2;
 
         if (*ns1 && *ns2) {
             pnt = attempt_vecmatch_2(ns1, ns2);
         }
-
-        if (ns1_was_decompressed)
-            free_2(ns1);
-        if (ns2_was_decompressed)
-            free_2(ns2);
 
         return (pnt);
     }
@@ -193,9 +184,7 @@ void import_trace(GwNode *np)
     set_window_busy(NULL);
 
     // needs to be ahead of is_lx2 as now can be is_lx2 with FsdbReader
-    if (GLOBALS->extload) {
-        import_extload_trace(np);
-    } else if (GLOBALS->is_lx2) {
+    if (GLOBALS->is_lx2) {
         import_lx2_trace(np);
     } else {
         fprintf(stderr, "Internal error with mvlfac trace handling, exiting.\n");
@@ -307,54 +296,54 @@ GwBitVector *bits2vector(GwBits *b)
                     switch (enc) /* don't remember if it's preconverted in all cases; being
                                     conservative is OK */
                     {
-                        case AN_0:
+                        case GW_BIT_0:
                         case '0':
-                            enc = AN_1;
+                            enc = GW_BIT_1;
                             break;
 
-                        case AN_1:
+                        case GW_BIT_1:
                         case '1':
-                            enc = AN_0;
+                            enc = GW_BIT_0;
                             break;
 
-                        case AN_H:
+                        case GW_BIT_H:
                         case 'h':
                         case 'H':
-                            enc = AN_L;
+                            enc = GW_BIT_L;
                             break;
 
-                        case AN_L:
+                        case GW_BIT_L:
                         case 'l':
                         case 'L':
-                            enc = AN_H;
+                            enc = GW_BIT_H;
                             break;
 
                         case 'x':
                         case 'X':
-                            enc = AN_X;
+                            enc = GW_BIT_X;
                             break;
 
                         case 'z':
                         case 'Z':
-                            enc = AN_Z;
+                            enc = GW_BIT_Z;
                             break;
 
                         case 'u':
                         case 'U':
-                            enc = AN_U;
+                            enc = GW_BIT_U;
                             break;
 
                         case 'w':
                         case 'W':
-                            enc = AN_W;
+                            enc = GW_BIT_W;
                             break;
 
                         default:
-                            enc = enc & AN_MSK;
+                            enc = enc & GW_BIT_MASK;
                             break;
                     }
                 } else {
-                    enc = ((unsigned char)(h[i]->v.h_val)) & AN_MSK;
+                    enc = ((unsigned char)(h[i]->v.h_val)) & GW_BIT_MASK;
                 }
 
                 vadd->v[i] = enc;
@@ -410,7 +399,7 @@ GwBitVector *bits2vector(GwBits *b)
     vadd = calloc_2(1, sizeof(GwVectorEnt) + numextrabytes);
     vadd->time = MAX_HISTENT_TIME;
     for (i = 0; i < numextrabytes; i++)
-        vadd->v[i] = AN_U; /* formerly 0x55 */
+        vadd->v[i] = GW_BIT_U; /* formerly 0x55 */
     if (vcurr) {
         vcurr->next = vadd;
     } /* scan-build */
@@ -456,7 +445,7 @@ int maketraces(char *str, char *alias, int quick_return)
 
     if (!wild_active) /* short circuit wildcard evaluation with bsearch */
     {
-        struct symbol *s;
+        GwSymbol *s;
         GwNode *nexp;
 
         if (str[0] == '(') {
@@ -518,9 +507,12 @@ int maketraces(char *str, char *alias, int quick_return)
             memcpy(wild, str, len);
             wave_regex_compile(wild, WAVE_REGEX_WILD);
 
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                    AddNode(GLOBALS->facs[i]->n, NULL);
+            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+            for (i = 0; i < gw_facs_get_length(facs); i++) {
+                GwSymbol *fac = gw_facs_get(facs, i);
+                if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                    AddNode(fac->n, NULL);
                     made = ~0;
                     if (quick_return)
                         break;
@@ -579,7 +571,7 @@ GwBits *makevec(char *vec, char *str)
 
             if (!wild_active) /* short circuit wildcard evaluation with bsearch */
             {
-                struct symbol *s;
+                GwSymbol *s;
                 if (wild[0] == '(') {
                     GwNode *nexp;
 
@@ -652,11 +644,14 @@ GwBits *makevec(char *vec, char *str)
                 }
             } else {
                 wave_regex_compile(wild, WAVE_REGEX_WILD);
-                for (i = GLOBALS->numfacs - 1; i >= 0;
-                     i--) /* to keep vectors in little endian hi..lo order */
-                {
-                    if (wave_regex_match(GLOBALS->facs[i]->name, WAVE_REGEX_WILD)) {
-                        n[nodepnt++] = GLOBALS->facs[i]->n;
+
+                GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+                /* decrement to keep vectors in little endian hi..lo order */
+                for (i = gw_facs_get_length(facs) - 1; i >= 0; i--) {
+                    GwSymbol *fac = gw_facs_get(facs, i);
+                    if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
+                        n[nodepnt++] = fac->n;
                         if (nodepnt == BITATTRIBUTES_MAX) {
                             free_2(wild);
                             goto ifnode;
@@ -737,7 +732,7 @@ GwBits *makevec_annotated(char *vec, char *str)
 
             /* no wildcards for annotated! */
             {
-                struct symbol *s;
+                GwSymbol *s;
 
                 if (nodepnt == BITATTRIBUTES_MAX) {
                     free_2(wild);
@@ -850,33 +845,37 @@ ifnode:
 GwBits *makevec_selected(char *vec, int numrows, char direction)
 {
     int nodepnt = 0;
-    int i;
     GwNode *n[BITATTRIBUTES_MAX];
     GwBits *b = NULL;
 
-    if (!direction)
-        for (i = GLOBALS->numfacs - 1; i >= 0; i--) /* to keep vectors in hi..lo order */
-        {
-            if (get_s_selected(GLOBALS->facs[i])) {
-                n[nodepnt++] = GLOBALS->facs[i]->n;
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    if (!direction) {
+        /* to keep vectors in hi..lo order */
+        for (gint i = gw_facs_get_length(facs) - 1; i >= 0; i--) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            if (get_s_selected(fac)) {
+                n[nodepnt++] = fac->n;
                 if ((nodepnt == BITATTRIBUTES_MAX) || (numrows == nodepnt))
                     break;
             }
         }
-    else
-        for (i = 0; i < GLOBALS->numfacs; i++) /* to keep vectors in lo..hi order */
-        {
-            if (get_s_selected(GLOBALS->facs[i])) {
-                n[nodepnt++] = GLOBALS->facs[i]->n;
+    } else {
+        /* to keep vectors in lo..hi order */
+        for (gint i = 0; i < gw_facs_get_length(facs); i++) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            if (get_s_selected(fac)) {
+                n[nodepnt++] = fac->n;
                 if ((nodepnt == BITATTRIBUTES_MAX) || (numrows == nodepnt))
                     break;
             }
         }
+    }
 
     if (nodepnt) {
         b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
-        for (i = 0; i < nodepnt; i++) {
+        for (gint i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
             if (n[i]->mv.mvlfac)
                 import_trace(n[i]);
@@ -896,13 +895,14 @@ GwBits *makevec_selected(char *vec, int numrows, char direction)
  * bit facility_name[x] case never gets hit, but may be used in the
  * future...
  */
-GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
+GwBits *makevec_chain(char *vec, GwSymbol *sym, int len)
 {
     int nodepnt = 0, nodepnt_rev;
     int i;
     GwNode **n;
     GwBits *b = NULL;
-    struct symbol *symhi = NULL, *symlo = NULL;
+    GwSymbol *symhi = NULL;
+    GwSymbol *symlo = NULL;
     char hier_delimeter2 = '[';
 
     n = g_alloca(len * sizeof(GwNode *));
@@ -943,17 +943,11 @@ GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
             strcpy(b->name = (char *)malloc_2(strlen(vec) + 1), vec);
         } else {
             char *s1, *s2;
-            int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
             int root1len = 0, root2len = 0;
             int l1, l2;
 
             s1 = symhi->n->nname;
             s2 = symlo->n->nname;
-
-            if (GLOBALS->do_hier_compress) {
-                s1 = hier_decompress_flagged(s1, &s1_was_packed);
-                s2 = hier_decompress_flagged(s2, &s2_was_packed);
-            }
 
             l1 = strlen(s1);
 
@@ -1042,13 +1036,6 @@ GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
                     *(s1 + l1 - 1) = fixup1;
                 }
             }
-
-            if (GLOBALS->do_hier_compress) {
-                if (s2_was_packed)
-                    free_2(s2);
-                if (s1_was_packed)
-                    free_2(s1);
-            }
         }
     }
 
@@ -1058,7 +1045,7 @@ GwBits *makevec_chain(char *vec, struct symbol *sym, int len)
 /*
  * add vector made in previous function
  */
-int add_vector_chain(struct symbol *s, int len)
+int add_vector_chain(GwSymbol *s, int len)
 {
     GwBitVector *v = NULL;
     GwBits *b = NULL;
@@ -1094,29 +1081,33 @@ int add_vector_chain(struct symbol *s, int len)
 GwBits *makevec_range(char *vec, int lo, int hi, char direction)
 {
     int nodepnt = 0;
-    int i;
     GwNode *n[BITATTRIBUTES_MAX];
     GwBits *b = NULL;
 
-    if (!direction)
-        for (i = hi; i >= lo; i--) /* to keep vectors in hi..lo order */
-        {
-            n[nodepnt++] = GLOBALS->facs[i]->n;
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    if (!direction) {
+        /* to keep vectors in hi..lo order */
+        for (gint i = hi; i >= lo; i--) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            n[nodepnt++] = fac->n;
             if (nodepnt == BITATTRIBUTES_MAX)
                 break;
         }
-    else
-        for (i = lo; i <= hi; i++) /* to keep vectors in lo..hi order */
-        {
-            n[nodepnt++] = GLOBALS->facs[i]->n;
+    } else {
+        /* to keep vectors in lo..hi order */
+        for (gint i = lo; i <= hi; i++) {
+            GwSymbol *fac = gw_facs_get(facs, i);
+            n[nodepnt++] = fac->n;
             if (nodepnt == BITATTRIBUTES_MAX)
                 break;
         }
+    }
 
     if (nodepnt) {
         b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
-        for (i = 0; i < nodepnt; i++) {
+        for (gint i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
             if (n[i]->mv.mvlfac)
                 import_trace(n[i]);
@@ -1127,35 +1118,30 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
         if (vec) {
             strcpy(b->name = (char *)malloc_2(strlen(vec) + 1), vec);
         } else {
+            GwSymbol *fac_hi = gw_facs_get(facs, hi);
+            GwSymbol *fac_lo = gw_facs_get(facs, lo);
+
             char *s1, *s2;
-            int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
-            int root1len = 0, root2len = 0;
-            int l1, l2;
-
             if (!direction) {
-                s1 = GLOBALS->facs[hi]->n->nname;
-                s2 = GLOBALS->facs[lo]->n->nname;
+                s1 = fac_hi->n->nname;
+                s2 = fac_lo->n->nname;
             } else {
-                s1 = GLOBALS->facs[lo]->n->nname;
-                s2 = GLOBALS->facs[hi]->n->nname;
+                s1 = fac_lo->n->nname;
+                s2 = fac_hi->n->nname;
             }
 
-            if (GLOBALS->do_hier_compress) {
-                s1 = hier_decompress_flagged(s1, &s1_was_packed);
-                s2 = hier_decompress_flagged(s2, &s2_was_packed);
-            }
-
-            l1 = strlen(s1);
-
-            for (i = l1 - 1; i >= 0; i--) {
+            gint l1 = strlen(s1);
+            gint root1len = 0;
+            for (gint i = l1 - 1; i >= 0; i--) {
                 if (s1[i] == GLOBALS->hier_delimeter) {
                     root1len = i + 1;
                     break;
                 }
             }
 
-            l2 = strlen(s2);
-            for (i = l2 - 1; i >= 0; i--) {
+            gint l2 = strlen(s2);
+            gint root2len = 0;
+            for (gint i = l2 - 1; i >= 0; i--) {
                 if (s2[i] == GLOBALS->hier_delimeter) {
                     root2len = i + 1;
                     break;
@@ -1215,12 +1201,6 @@ GwBits *makevec_range(char *vec, int lo, int hi, char direction)
                     sprintf(b->name + root1len - 1, "[%s]", s1 + root1len);
                 }
             }
-            if (GLOBALS->do_hier_compress) {
-                if (s2_was_packed)
-                    free_2(s2);
-                if (s1_was_packed)
-                    free_2(s1);
-            }
         }
     }
 
@@ -1235,25 +1215,29 @@ int add_vector_range(char *alias, int lo, int hi, char direction)
     GwBitVector *v = NULL;
     GwBits *b = NULL;
 
-    if (lo != hi) {
-        if ((b = makevec_range(alias, lo, hi, direction))) {
-            if ((v = bits2vector(b))) {
-                v->bits = b; /* only needed for savefile function */
-                AddVector(v, NULL);
-                free_2(b->name);
-                b->name = NULL;
-                return (v != NULL);
-            } else {
-                free_2(b->name);
-                if (b->attribs)
-                    free_2(b->attribs);
-                free_2(b);
-            }
-        }
-        return (v != NULL);
-    } else {
-        return (AddNode(GLOBALS->facs[lo]->n, NULL));
+    if (lo == hi) {
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        GwSymbol *fac = gw_facs_get(facs, lo);
+
+        return AddNode(fac->n, NULL);
     }
+
+    if ((b = makevec_range(alias, lo, hi, direction))) {
+        if ((v = bits2vector(b))) {
+            v->bits = b; /* only needed for savefile function */
+            AddVector(v, NULL);
+            free_2(b->name);
+            b->name = NULL;
+        } else {
+            free_2(b->name);
+            if (b->attribs != NULL) {
+                free_2(b->attribs);
+            }
+            free_2(b);
+        }
+    }
+
+    return v != NULL;
 }
 
 /*
@@ -1425,12 +1409,12 @@ int sigcmp(char *s1, char *s2)
  * that glibc will use a modified mergesort if memory is available, so
  * under linux use the stock qsort instead.
  */
-static struct symbol **hp;
+static GwSymbol **hp;
 static void heapify(int i, int heap_size)
 {
     int l, r;
     int largest;
-    struct symbol *t;
+    GwSymbol *t;
     int maxele = heap_size / 2 - 1; /* points to where heapswaps don't matter anymore */
 
     for (;;) {
@@ -1462,11 +1446,11 @@ static void heapify(int i, int heap_size)
     }
 }
 
-void wave_heapsort(struct symbol **a, int num)
+void wave_heapsort(GwSymbol **a, int num)
 {
     int i;
     int indx = num - 1;
-    struct symbol *t;
+    GwSymbol *t;
 
     hp = a;
 
@@ -1494,14 +1478,14 @@ void wave_heapsort(struct symbol **a, int num)
 
 static int qssigcomp(const void *v1, const void *v2)
 {
-    struct symbol *a1 = *((struct symbol **)v1);
-    struct symbol *a2 = *((struct symbol **)v2);
+    GwSymbol *a1 = *((GwSymbol **)v1);
+    GwSymbol *a2 = *((GwSymbol **)v2);
     return (sigcmp(a1->name, a2->name));
 }
 
-void wave_heapsort(struct symbol **a, int num)
+void wave_heapsort(GwSymbol **a, int num)
 {
-    qsort(a, num, sizeof(struct symbol *), qssigcomp);
+    qsort(a, num, sizeof(GwSymbol *), qssigcomp);
 }
 
 #endif
@@ -1511,14 +1495,14 @@ void wave_heapsort(struct symbol **a, int num)
  * bit facility_name[x] case never gets hit, but may be used in the
  * future...
  */
-char *makename_chain(struct symbol *sym)
+char *makename_chain(GwSymbol *sym)
 {
     int i;
-    struct symbol *symhi = NULL, *symlo = NULL;
+    GwSymbol *symhi = NULL;
+    GwSymbol *symlo = NULL;
     char hier_delimeter2 = '[';
     char *name = NULL;
     char *s1, *s2;
-    int s1_was_packed = HIER_DEPACK_ALLOC, s2_was_packed = HIER_DEPACK_ALLOC;
     int root1len = 0, root2len = 0;
     int l1, l2;
 
@@ -1545,8 +1529,8 @@ char *makename_chain(struct symbol *sym)
         }
     }
 
-    s1 = hier_decompress_flagged(symhi->n->nname, &s1_was_packed);
-    s2 = hier_decompress_flagged(symlo->n->nname, &s2_was_packed);
+    s1 = symhi->n->nname;
+    s2 = symlo->n->nname;
 
     l1 = strlen(s1);
 
@@ -1626,13 +1610,6 @@ char *makename_chain(struct symbol *sym)
         }
     }
 
-    if (s1_was_packed) {
-        free_2(s1);
-    }
-    if (s2_was_packed) {
-        free_2(s2);
-    }
-
     return (name);
 }
 
@@ -1664,7 +1641,6 @@ eptr ExpandNode(GwNode *n)
         DEBUG(fprintf(stderr, "Nothing to expand\n"));
     } else {
         char *namex;
-        int was_packed = HIER_DEPACK_ALLOC;
 
         msb = n->msi;
         lsb = n->lsi;
@@ -1684,11 +1660,7 @@ eptr ExpandNode(GwNode *n)
         rc->lsb = lsb;
         rc->width = width;
 
-        if (GLOBALS->do_hier_compress) {
-            namex = hier_decompress_flagged(n->nname, &was_packed);
-        } else {
-            namex = n->nname;
-        }
+        namex = n->nname;
 
         offset = strlen(namex);
         for (i = offset - 1; i >= 0; i--) {
@@ -1734,10 +1706,6 @@ eptr ExpandNode(GwNode *n)
 
         nam = (char *)g_alloca(offset + 20 + 30);
         memcpy(nam, namex, offset);
-
-        if (was_packed) {
-            free_2(namex);
-        }
 
         if (!n->harray) /* make quick array lookup for aet display--normally this is done in addnode
                          */
@@ -1814,18 +1782,20 @@ eptr ExpandNode(GwNode *n)
             narray[i]->expansion = exp1; /* can be safely deleted if expansion set like here */
         }
 
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
         for (i = 0; i < n->numhist; i++) {
             h = n->harray[i];
-            if ((h->time < GLOBALS->min_time) || (h->time > GLOBALS->max_time)) {
+            if (!gw_time_range_contains(time_range, h->time)) {
                 for (j = 0; j < width; j++) {
                     if (narray[j]->curr) {
                         htemp = calloc_2(1, sizeof(GwHistEnt));
-                        htemp->v.h_val = AN_X; /* 'x' */
+                        htemp->v.h_val = GW_BIT_X; /* 'x' */
                         htemp->time = h->time;
                         narray[j]->curr->next = htemp;
                         narray[j]->curr = htemp;
                     } else {
-                        narray[j]->head.v.h_val = AN_X; /* 'x' */
+                        narray[j]->head.v.h_val = GW_BIT_X; /* 'x' */
                         narray[j]->head.time = h->time;
                         narray[j]->curr = &(narray[j]->head);
                     }
@@ -1837,37 +1807,37 @@ eptr ExpandNode(GwNode *n)
                     unsigned char val = h->v.h_vector[j];
                     switch (val) {
                         case '0':
-                            val = AN_0;
+                            val = GW_BIT_0;
                             break;
                         case '1':
-                            val = AN_1;
+                            val = GW_BIT_1;
                             break;
                         case 'x':
                         case 'X':
-                            val = AN_X;
+                            val = GW_BIT_X;
                             break;
                         case 'z':
                         case 'Z':
-                            val = AN_Z;
+                            val = GW_BIT_Z;
                             break;
                         case 'h':
                         case 'H':
-                            val = AN_H;
+                            val = GW_BIT_H;
                             break;
                         case 'l':
                         case 'L':
-                            val = AN_L;
+                            val = GW_BIT_L;
                             break;
                         case 'u':
                         case 'U':
-                            val = AN_U;
+                            val = GW_BIT_U;
                             break;
                         case 'w':
                         case 'W':
-                            val = AN_W;
+                            val = GW_BIT_W;
                             break;
                         case '-':
-                            val = AN_DASH;
+                            val = GW_BIT_DASH;
                             break;
                         default:
                             break; /* leave val alone as it's been converted already.. */
@@ -1927,7 +1897,6 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
         return (NULL);
     } else {
         char *namex;
-        int was_packed = HIER_DEPACK_ALLOC;
 
         if (n->lsi > n->msi) {
             width = n->lsi - n->msi + 1;
@@ -1946,11 +1915,7 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
             return (NULL);
         }
 
-        if (GLOBALS->do_hier_compress) {
-            namex = hier_decompress_flagged(n->nname, &was_packed);
-        } else {
-            namex = n->nname;
-        }
+        namex = n->nname;
 
         offset = strlen(namex);
         for (i = offset - 1; i >= 0; i--) {
@@ -1996,10 +1961,6 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
 
         nam = (char *)g_alloca(offset + 20);
         memcpy(nam, namex, offset);
-
-        if (was_packed) {
-            free_2(namex);
-        }
 
         if (!n->harray) /* make quick array lookup for aet display--normally this is done in addnode
                          */
@@ -2078,17 +2039,19 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
         exp1->actual = actual; /* actual bitnum in [] */
         np->expansion = exp1; /* can be safely deleted if expansion set like here */
 
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
         for (i = 0; i < n->numhist; i++) {
             h = n->harray[i];
-            if ((h->time < GLOBALS->min_time) || (h->time > GLOBALS->max_time)) {
+            if (!gw_time_range_contains(time_range, h->time)) {
                 if (np->curr) {
                     htemp = calloc_2(1, sizeof(GwHistEnt));
-                    htemp->v.h_val = AN_X; /* 'x' */
+                    htemp->v.h_val = GW_BIT_X; /* 'x' */
                     htemp->time = h->time;
                     np->curr->next = htemp;
                     np->curr = htemp;
                 } else {
-                    np->head.v.h_val = AN_X; /* 'x' */
+                    np->head.v.h_val = GW_BIT_X; /* 'x' */
                     np->head.time = h->time;
                     np->curr = &(np->head);
                 }
@@ -2098,37 +2061,37 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
                 unsigned char val = h->v.h_vector[bit];
                 switch (val) {
                     case '0':
-                        val = AN_0;
+                        val = GW_BIT_0;
                         break;
                     case '1':
-                        val = AN_1;
+                        val = GW_BIT_1;
                         break;
                     case 'x':
                     case 'X':
-                        val = AN_X;
+                        val = GW_BIT_X;
                         break;
                     case 'z':
                     case 'Z':
-                        val = AN_Z;
+                        val = GW_BIT_Z;
                         break;
                     case 'h':
                     case 'H':
-                        val = AN_H;
+                        val = GW_BIT_H;
                         break;
                     case 'l':
                     case 'L':
-                        val = AN_L;
+                        val = GW_BIT_L;
                         break;
                     case 'u':
                     case 'U':
-                        val = AN_U;
+                        val = GW_BIT_U;
                         break;
                     case 'w':
                     case 'W':
-                        val = AN_W;
+                        val = GW_BIT_W;
                         break;
                     case '-':
-                        val = AN_DASH;
+                        val = GW_BIT_DASH;
                         break;
                     default:
                         break; /* leave val alone as it's been converted already.. */

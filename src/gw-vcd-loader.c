@@ -1,55 +1,23 @@
-/*
- * Copyright (c) Tony Bybell 1999-2017.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- */
-
-/*
- * vcd.c 			23jan99ajb
- * evcd parts 			29jun99ajb
- * profiler optimizations 	15jul99ajb
- * more profiler optimizations	25jan00ajb
- * finsim parameter fix		26jan00ajb
- * vector rechaining code	03apr00ajb
- * multiple var section code	06apr00ajb
- * fix for duplicate nets	19dec00ajb
- * support for alt hier seps	23dec00ajb
- * fix for rcs identifiers	16jan01ajb
- * coredump fix for bad VCD	04apr02ajb
- * min/maxid speedup            27feb03ajb
- * bugfix on min/maxid speedup  06jul03ajb
- * escaped hier modification    20feb06ajb
- * added real_parameter vartype 04aug06ajb
- * recoder using vlists         17aug06ajb
- * code cleanup                 04sep06ajb
- * added in/out port vartype    31jan07ajb
- * use gperf for port vartypes  19feb07ajb
- * MTI SV implicit-var fix      05apr07ajb
- * MTI SV len=0 is real var     05apr07ajb
- * VCD fastloading		05mar09ajb
- * Backtracking fix             16oct18ajb
- */
 #include <config.h>
+#include "gw-vcd-loader.h"
+#include "gw-vcd-file.h"
+#include "gw-vcd-file-private.h"
 #include "globals.h"
 #include "vcd.h"
 #include "vlist.h"
 #include "lx2.h"
-#include "hierpack.h"
 
-struct _VcdFile
-{
-    struct vlist_t *time_vlist;
-
-    GwTime start_time;
-    GwTime end_time;
-};
+int vcd_keyword_code(const char *s, unsigned int len);
 
 typedef struct
 {
-    VcdFile *file;
+    gchar *name;
+    GwTreeNode *mod_tree_parent;
+} VcdScope;
+
+struct _GwVcdLoader
+{
+    GwLoader parent_instance;
 
     FILE *vcd_handle;
     gboolean is_compressed;
@@ -57,6 +25,8 @@ typedef struct
 
     gboolean header_over;
 
+    gboolean vlist_prepack;
+    struct vlist_t *time_vlist;
     unsigned int time_vlist_count;
 
     off_t vcdbyteno;
@@ -95,11 +65,37 @@ typedef struct
     gboolean already_backtracked;
 
     GSList *sym_chain;
-} VcdLoader;
+
+    GQueue *scopes;
+    GString *name_prefix;
+
+    GwBlackoutRegions *blackout_regions;
+
+    GwTime time_scale;
+    GwTimeDimension time_dimension;
+    GwTime start_time;
+    GwTime end_time;
+    GwTime global_time_offset;
+
+    GwTreeNode *tree_root;
+
+    guint numfacs;
+    gchar *prev_hier_uncompressed_name;
+};
+
+G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
+
+enum
+{
+    PROP_VLIST_PREPACK = 1,
+    N_PROPERTIES,
+};
+
+static GParamSpec *properties[N_PROPERTIES];
 
 /**/
 
-static void malform_eof_fix(VcdLoader *self)
+static void malform_eof_fix(GwVcdLoader *self)
 {
     if (feof(self->vcd_handle)) {
         memset(self->vcdbuf, ' ', VCD_BSIZ);
@@ -139,37 +135,37 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
     while (*s) {
         switch (*s) {
             case '0':
-                recoded_bit = AN_0;
+                recoded_bit = GW_BIT_0;
                 break;
             case '1':
-                recoded_bit = AN_1;
+                recoded_bit = GW_BIT_1;
                 break;
             case 'x':
             case 'X':
-                recoded_bit = AN_X;
+                recoded_bit = GW_BIT_X;
                 break;
             case 'z':
             case 'Z':
-                recoded_bit = AN_Z;
+                recoded_bit = GW_BIT_Z;
                 break;
             case 'h':
             case 'H':
-                recoded_bit = AN_H;
+                recoded_bit = GW_BIT_H;
                 break;
             case 'u':
             case 'U':
-                recoded_bit = AN_U;
+                recoded_bit = GW_BIT_U;
                 break;
             case 'w':
             case 'W':
-                recoded_bit = AN_W;
+                recoded_bit = GW_BIT_W;
                 break;
             case 'l':
             case 'L':
-                recoded_bit = AN_L;
+                recoded_bit = GW_BIT_L;
                 break;
             default:
-                recoded_bit = AN_DASH;
+                recoded_bit = GW_BIT_DASH;
                 break;
         }
 
@@ -184,7 +180,8 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
         s++;
     }
 
-    recoded_bit = AN_MSK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
+    recoded_bit =
+        GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
     if (!which) {
         accum = (recoded_bit << 4);
     } else {
@@ -196,12 +193,12 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
 
 /**/
 
-static void vlist_emit_uv32(struct vlist_t **vl, unsigned int v)
+static void vlist_emit_uv32(struct vlist_t **vl, unsigned int v, gboolean prepack)
 {
     unsigned int nxt;
     char *pnt;
 
-    if (GLOBALS->vlist_prepack) {
+    if (prepack) {
         vlist_packer_emit_uv32((struct vlist_packer_t **)vl, v);
         return;
     }
@@ -216,11 +213,11 @@ static void vlist_emit_uv32(struct vlist_t **vl, unsigned int v)
     *pnt = (v & 0x7f) | 0x80;
 }
 
-static void vlist_emit_string(struct vlist_t **vl, const char *s)
+static void vlist_emit_string(struct vlist_t **vl, const char *s, gboolean prepack)
 {
     char *pnt;
 
-    if (GLOBALS->vlist_prepack) {
+    if (prepack) {
         vlist_packer_emit_string((struct vlist_packer_t **)vl, s);
         return;
     }
@@ -234,14 +231,14 @@ static void vlist_emit_string(struct vlist_t **vl, const char *s)
     *pnt = 0;
 }
 
-static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s)
+static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s, gboolean prepack)
 {
     char *pnt;
     unsigned int recoded_bit;
     unsigned char which;
     unsigned char accum;
 
-    if (GLOBALS->vlist_prepack) {
+    if (prepack) {
         vlist_packer_emit_mvl9_string((struct vlist_packer_t **)vl, s);
         return;
     }
@@ -251,37 +248,37 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s)
     while (*s) {
         switch (*s) {
             case '0':
-                recoded_bit = AN_0;
+                recoded_bit = GW_BIT_0;
                 break;
             case '1':
-                recoded_bit = AN_1;
+                recoded_bit = GW_BIT_1;
                 break;
             case 'x':
             case 'X':
-                recoded_bit = AN_X;
+                recoded_bit = GW_BIT_X;
                 break;
             case 'z':
             case 'Z':
-                recoded_bit = AN_Z;
+                recoded_bit = GW_BIT_Z;
                 break;
             case 'h':
             case 'H':
-                recoded_bit = AN_H;
+                recoded_bit = GW_BIT_H;
                 break;
             case 'u':
             case 'U':
-                recoded_bit = AN_U;
+                recoded_bit = GW_BIT_U;
                 break;
             case 'w':
             case 'W':
-                recoded_bit = AN_W;
+                recoded_bit = GW_BIT_W;
                 break;
             case 'l':
             case 'L':
-                recoded_bit = AN_L;
+                recoded_bit = GW_BIT_L;
                 break;
             default:
-                recoded_bit = AN_DASH;
+                recoded_bit = GW_BIT_DASH;
                 break;
         }
 
@@ -297,7 +294,8 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s)
         s++;
     }
 
-    recoded_bit = AN_MSK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
+    recoded_bit =
+        GW_BIT_MASK; /* XXX : this is assumed it is going to remain a 4 bit max quantity! */
     if (!which) {
         accum = (recoded_bit << 4);
     } else {
@@ -312,9 +310,8 @@ static void vlist_emit_mvl9_string(struct vlist_t **vl, const char *s)
 
 #undef VCD_BSEARCH_IS_PERFECT /* bsearch is imperfect under linux, but OK under AIX */
 
-static void add_histent(VcdFile *self, GwTime time, GwNode *n, char ch, int regadd, char *vector);
-static void vcd_build_symbols(VcdLoader *self);
-static void vcd_cleanup(VcdLoader *self);
+static void vcd_build_symbols(GwVcdLoader *self);
+static void vcd_cleanup(GwVcdLoader *self);
 static void evcd_strcpy(char *dst, char *src);
 
 /******************************************************************/
@@ -412,7 +409,7 @@ static int vcdsymbsearchcompare(const void *s1, const void *s2)
 /*
  * actual bsearch
  */
-static struct vcdsymbol *bsearch_vcd(VcdLoader *self, char *key, int len)
+static struct vcdsymbol *bsearch_vcd(GwVcdLoader *self, char *key, int len)
 {
     struct vcdsymbol **v;
     struct vcdsymbol *t;
@@ -475,7 +472,7 @@ static int vcdsymcompare(const void *s1, const void *s2)
 /*
  * create sorted (by id) table
  */
-static void create_sorted_table(VcdLoader *self)
+static void create_sorted_table(GwVcdLoader *self)
 {
     struct vcdsymbol *v;
     struct vcdsymbol **pnt;
@@ -515,11 +512,102 @@ static void create_sorted_table(VcdLoader *self)
 
 /******************************************************************/
 
-static unsigned int vlist_emit_finalize(VcdLoader *self)
+static void set_vcd_vartype(struct vcdsymbol *v, GwNode *n)
+{
+    unsigned char nvt;
+
+    switch (v->vartype) {
+        case V_EVENT:
+            nvt = GW_VAR_TYPE_VCD_EVENT;
+            break;
+        case V_PARAMETER:
+            nvt = GW_VAR_TYPE_VCD_PARAMETER;
+            break;
+        case V_INTEGER:
+            nvt = GW_VAR_TYPE_VCD_INTEGER;
+            break;
+        case V_REAL:
+            nvt = GW_VAR_TYPE_VCD_REAL;
+            break;
+        case V_REG:
+            nvt = GW_VAR_TYPE_VCD_REG;
+            break;
+        case V_SUPPLY0:
+            nvt = GW_VAR_TYPE_VCD_SUPPLY0;
+            break;
+        case V_SUPPLY1:
+            nvt = GW_VAR_TYPE_VCD_SUPPLY1;
+            break;
+        case V_TIME:
+            nvt = GW_VAR_TYPE_VCD_TIME;
+            break;
+        case V_TRI:
+            nvt = GW_VAR_TYPE_VCD_TRI;
+            break;
+        case V_TRIAND:
+            nvt = GW_VAR_TYPE_VCD_TRIAND;
+            break;
+        case V_TRIOR:
+            nvt = GW_VAR_TYPE_VCD_TRIOR;
+            break;
+        case V_TRIREG:
+            nvt = GW_VAR_TYPE_VCD_TRIREG;
+            break;
+        case V_TRI0:
+            nvt = GW_VAR_TYPE_VCD_TRI0;
+            break;
+        case V_TRI1:
+            nvt = GW_VAR_TYPE_VCD_TRI1;
+            break;
+        case V_WAND:
+            nvt = GW_VAR_TYPE_VCD_WAND;
+            break;
+        case V_WIRE:
+            nvt = GW_VAR_TYPE_VCD_WIRE;
+            break;
+        case V_WOR:
+            nvt = GW_VAR_TYPE_VCD_WOR;
+            break;
+        case V_PORT:
+            nvt = GW_VAR_TYPE_VCD_PORT;
+            break;
+        case V_STRINGTYPE:
+            nvt = GW_VAR_TYPE_GEN_STRING;
+            break;
+        case V_BIT:
+            nvt = GW_VAR_TYPE_SV_BIT;
+            break;
+        case V_LOGIC:
+            nvt = GW_VAR_TYPE_SV_LOGIC;
+            break;
+        case V_INT:
+            nvt = GW_VAR_TYPE_SV_INT;
+            break;
+        case V_SHORTINT:
+            nvt = GW_VAR_TYPE_SV_SHORTINT;
+            break;
+        case V_LONGINT:
+            nvt = GW_VAR_TYPE_SV_LONGINT;
+            break;
+        case V_BYTE:
+            nvt = GW_VAR_TYPE_SV_BYTE;
+            break;
+        case V_ENUM:
+            nvt = GW_VAR_TYPE_SV_ENUM;
+            break;
+        /* V_SHORTREAL as a type does not exist for VCD: is cast to V_REAL */
+        default:
+            nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
+            break;
+    }
+    n->vartype = nvt;
+}
+
+static unsigned int vlist_emit_finalize(GwVcdLoader *self)
 {
     struct vcdsymbol *v /* , *vprime */; /* scan-build */
     struct vlist_t *vlist;
-    char vlist_prepack = GLOBALS->vlist_prepack;
+    char prepack = self->vlist_prepack;
     int cnt = 0;
 
     v = self->vcdsymroot;
@@ -529,7 +617,7 @@ static unsigned int vlist_emit_finalize(VcdLoader *self)
         set_vcd_vartype(v, n);
 
         if (n->mv.mvlfac_vlist) {
-            if (vlist_prepack) {
+            if (prepack) {
                 vlist_packer_finalize(n->mv.mvlfac_packer_vlist);
                 vlist = n->mv.mvlfac_packer_vlist->v;
                 free_2(n->mv.mvlfac_packer_vlist);
@@ -539,46 +627,46 @@ static unsigned int vlist_emit_finalize(VcdLoader *self)
                 vlist_freeze(&n->mv.mvlfac_vlist);
             }
         } else {
-            n->mv.mvlfac_vlist = vlist_prepack ? ((struct vlist_t *)vlist_packer_create())
-                                               : vlist_create(sizeof(char));
+            n->mv.mvlfac_vlist =
+                prepack ? ((struct vlist_t *)vlist_packer_create()) : vlist_create(sizeof(char));
 
             if ((/* vprime= */ bsearch_vcd(self, v->id, strlen(v->id))) ==
                 v) /* hash mish means dup net */ /* scan-build */
             {
                 switch (v->vartype) {
                     case V_REAL:
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 'R');
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 0);
-                        vlist_emit_string(&n->mv.mvlfac_vlist, "NaN");
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 'R', prepack);
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
+                        vlist_emit_string(&n->mv.mvlfac_vlist, "NaN", prepack);
                         break;
 
                     case V_STRINGTYPE:
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 'S');
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 0);
-                        vlist_emit_string(&n->mv.mvlfac_vlist, "UNDEF");
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 'S', prepack);
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
+                        vlist_emit_string(&n->mv.mvlfac_vlist, "UNDEF", prepack);
                         break;
 
                     default:
                         if (v->size == 1) {
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)'0');
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, RCV_X);
+                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)'0', prepack);
+                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
+                            vlist_emit_uv32(&n->mv.mvlfac_vlist, RCV_X, prepack);
                         } else {
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, 'B');
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, 0);
-                            vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, "x");
+                            vlist_emit_uv32(&n->mv.mvlfac_vlist, 'B', prepack);
+                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
+                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
+                            vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
+                            vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, "x", prepack);
                         }
                         break;
                 }
             }
 
-            if (vlist_prepack) {
+            if (prepack) {
                 vlist_packer_finalize(n->mv.mvlfac_packer_vlist);
                 vlist = n->mv.mvlfac_packer_vlist->v;
                 free_2(n->mv.mvlfac_packer_vlist);
@@ -597,17 +685,60 @@ static unsigned int vlist_emit_finalize(VcdLoader *self)
 
 /******************************************************************/
 
+static void update_name_prefix(GwVcdLoader *self)
+{
+    g_string_truncate(self->name_prefix, 0);
+
+    for (GList *iter = self->scopes->head; iter != NULL; iter = iter->next) {
+        VcdScope *scope = iter->data;
+
+        if (self->name_prefix->len > 0) {
+            g_string_append_c(self->name_prefix, GLOBALS->hier_delimeter);
+        }
+
+        g_string_append(self->name_prefix, scope->name);
+    }
+}
+
+static void push_scope(GwVcdLoader *self, const gchar *name, GwTreeNode *tree_parent)
+{
+    VcdScope *scope = g_new0(VcdScope, 1);
+    scope->name = g_strdup(self->yytext);
+    scope->mod_tree_parent = tree_parent;
+
+    g_queue_push_tail(self->scopes, scope);
+
+    update_name_prefix(self);
+}
+
+static GwTreeNode *pop_scope(GwVcdLoader *self)
+{
+    VcdScope *scope = g_queue_pop_tail(self->scopes);
+    g_assert_nonnull(scope);
+
+    GwTreeNode *tree_parent = scope->mod_tree_parent;
+
+    g_free(scope->name);
+    g_free(scope);
+
+    update_name_prefix(self);
+
+    return tree_parent;
+}
+
+/******************************************************************/
+
 /*
  * single char get inlined/optimized
  */
-static void getch_alloc(VcdLoader *self)
+static void getch_alloc(GwVcdLoader *self)
 {
     self->vcdbuf = calloc_2(1, VCD_BSIZ);
     self->vst = self->vcdbuf;
     self->vend = self->vcdbuf;
 }
 
-static void getch_free(VcdLoader *self)
+static void getch_free(GwVcdLoader *self)
 {
     free_2(self->vcdbuf);
     self->vcdbuf = NULL;
@@ -615,7 +746,7 @@ static void getch_free(VcdLoader *self)
     self->vend = NULL;
 }
 
-static int getch_fetch(VcdLoader *self)
+static int getch_fetch(GwVcdLoader *self)
 {
     size_t rd;
 
@@ -638,21 +769,21 @@ static int getch_fetch(VcdLoader *self)
     return ((int)(*self->vst));
 }
 
-static inline signed char getch(VcdLoader *self)
+static inline signed char getch(GwVcdLoader *self)
 {
     signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
     self->vst++;
     return (ch);
 }
 
-static inline signed char getch_peek(VcdLoader *self)
+static inline signed char getch_peek(GwVcdLoader *self)
 {
     signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
     /* no increment */
     return (ch);
 }
 
-static int getch_patched(VcdLoader *self)
+static int getch_patched(GwVcdLoader *self)
 {
     char ch;
 
@@ -668,7 +799,7 @@ static int getch_patched(VcdLoader *self)
 /*
  * simple tokenizer
  */
-static int get_token(VcdLoader *self)
+static int get_token(GwVcdLoader *self)
 {
     int ch;
     int i, len = 0;
@@ -727,7 +858,7 @@ static int get_token(VcdLoader *self)
     return T_UNKNOWN_KEY;
 }
 
-static int get_vartoken_patched(VcdLoader *self, int match_kw)
+static int get_vartoken_patched(GwVcdLoader *self, int match_kw)
 {
     int ch;
     int len = 0;
@@ -793,7 +924,7 @@ static int get_vartoken_patched(VcdLoader *self, int match_kw)
     return V_STRING;
 }
 
-static int get_vartoken(VcdLoader *self, int match_kw)
+static int get_vartoken(GwVcdLoader *self, int match_kw)
 {
     int ch;
     int len = 0;
@@ -885,7 +1016,7 @@ static int get_vartoken(VcdLoader *self, int match_kw)
     return V_STRING;
 }
 
-static int get_strtoken(VcdLoader *self)
+static int get_strtoken(GwVcdLoader *self)
 {
     int ch;
     int len = 0;
@@ -919,7 +1050,7 @@ static int get_strtoken(VcdLoader *self)
     return V_STRING;
 }
 
-static void sync_end(VcdLoader *self, const char *hdr)
+static void sync_end(GwVcdLoader *self, const char *hdr)
 {
     int tok;
 
@@ -931,7 +1062,7 @@ static void sync_end(VcdLoader *self, const char *hdr)
         if ((tok == T_END) || (tok == T_EOF))
             break;
         if (hdr) {
-            DEBUG(fprintf(stderr, " %s", GLOBALS->yytext_vcd_recoder_c_3));
+            DEBUG(fprintf(stderr, " %s", self->yytext));
         }
     }
     if (hdr) {
@@ -939,7 +1070,7 @@ static void sync_end(VcdLoader *self, const char *hdr)
     }
 }
 
-static int version_sync_end(VcdLoader *self, const char *hdr)
+static int version_sync_end(GwVcdLoader *self, const char *hdr)
 {
     int tok;
     int rc = 0;
@@ -952,7 +1083,7 @@ static int version_sync_end(VcdLoader *self, const char *hdr)
         if ((tok == T_END) || (tok == T_EOF))
             break;
         if (hdr) {
-            DEBUG(fprintf(stderr, " %s", GLOBALS->yytext_vcd_recoder_c_3));
+            DEBUG(fprintf(stderr, " %s", self->yytext));
         }
         /* turn off autocoalesce for Icarus */
         if (strstr(self->yytext, "Icarus") != NULL) {
@@ -966,7 +1097,7 @@ static int version_sync_end(VcdLoader *self, const char *hdr)
     return (rc);
 }
 
-static void parse_valuechange(VcdLoader *self)
+static void parse_valuechange(GwVcdLoader *self)
 {
     struct vcdsymbol *v;
     char *vector;
@@ -1006,13 +1137,16 @@ static void parse_valuechange(VcdLoader *self)
                     if (!n->mv
                              .mvlfac_vlist) /* overloaded for vlist, numhist = last position used */
                     {
-                        n->mv.mvlfac_vlist = (GLOBALS->vlist_prepack)
+                        n->mv.mvlfac_vlist = self->vlist_prepack
                                                  ? ((struct vlist_t *)vlist_packer_create())
                                                  : vlist_create(sizeof(char));
                         vlist_emit_uv32(&n->mv.mvlfac_vlist,
-                                        (unsigned int)'0'); /* represents single bit routine for
-                                                               decompression */
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype);
+                                        (unsigned int)'0',
+                                        self->vlist_prepack); /* represents single bit routine for
+                                            decompression */
+                        vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                        (unsigned int)v->vartype,
+                                        self->vlist_prepack);
                     }
 
                     time_delta = self->time_vlist_count - (unsigned int)n->numhist;
@@ -1053,7 +1187,7 @@ static void parse_valuechange(VcdLoader *self)
                             break;
                     }
 
-                    vlist_emit_uv32(&n->mv.mvlfac_vlist, rcv);
+                    vlist_emit_uv32(&n->mv.mvlfac_vlist, rcv, self->vlist_prepack);
                 }
             } else {
                 fprintf(stderr,
@@ -1100,7 +1234,7 @@ static void parse_valuechange(VcdLoader *self)
                 if (!n->mv.mvlfac_vlist) /* overloaded for vlist, numhist = last position used */
                 {
                     unsigned char typ2 = toupper(typ);
-                    n->mv.mvlfac_vlist = (GLOBALS->vlist_prepack)
+                    n->mv.mvlfac_vlist = self->vlist_prepack
                                              ? ((struct vlist_t *)vlist_packer_create())
                                              : vlist_create(sizeof(char));
 
@@ -1116,26 +1250,31 @@ static void parse_valuechange(VcdLoader *self)
                     }
 
                     vlist_emit_uv32(&n->mv.mvlfac_vlist,
-                                    (unsigned int)toupper(typ2)); /* B/R/P/S for decompress */
-                    vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype);
-                    vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size);
+                                    (unsigned int)toupper(typ2),
+                                    self->vlist_prepack); /* B/R/P/S for decompress */
+                    vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                    (unsigned int)v->vartype,
+                                    self->vlist_prepack);
+                    vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                    (unsigned int)v->size,
+                                    self->vlist_prepack);
                 }
 
                 time_delta = self->time_vlist_count - (unsigned int)n->numhist;
                 n->numhist = self->time_vlist_count;
 
-                vlist_emit_uv32(&n->mv.mvlfac_vlist, time_delta);
+                vlist_emit_uv32(&n->mv.mvlfac_vlist, time_delta, self->vlist_prepack);
 
                 if ((typ == 'b') || (typ == 'B')) {
                     if ((v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
-                        vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, vector);
+                        vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
                     } else {
-                        vlist_emit_string(&n->mv.mvlfac_vlist, vector);
+                        vlist_emit_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
                     }
                 } else {
                     if ((v->vartype == V_REAL) || (v->vartype == V_STRINGTYPE) || (typ == 's') ||
                         (typ == 'S')) {
-                        vlist_emit_string(&n->mv.mvlfac_vlist, vector);
+                        vlist_emit_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
                     } else {
                         char *bits = g_alloca(v->size + 1);
                         int i, j, k = 0;
@@ -1151,7 +1290,7 @@ static void parse_valuechange(VcdLoader *self)
                         }
 
                     bit_term:
-                        vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, bits);
+                        vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, bits, self->vlist_prepack);
                     }
                 }
             }
@@ -1201,7 +1340,26 @@ static void evcd_strcpy(char *dst, char *src)
     *dst = 0; /* null terminate destination */
 }
 
-static void vcd_parse(VcdLoader *self)
+static int strcpy_delimfix(char *too, char *from)
+{
+    char ch;
+    int found = 0;
+
+    do {
+        ch = *(from++);
+        if (ch == GLOBALS->hier_delimeter) {
+            ch = VCDNAM_ESCAPE;
+            found = 1;
+        }
+    } while ((*(too++) = ch));
+
+    if (found)
+        GLOBALS->escaped_names_found_vcd_c_1 = found;
+
+    return (found);
+}
+
+static void vcd_parse(GwVcdLoader *self)
 {
     int tok;
     unsigned char ttype;
@@ -1222,11 +1380,9 @@ static void vcd_parse(VcdLoader *self)
                 int vtok = get_token(self);
                 if ((vtok == T_END) || (vtok == T_EOF))
                     break;
-                GLOBALS->global_time_offset = atoi_64(self->yytext);
+                self->global_time_offset = atoi_64(self->yytext);
 
-                DEBUG(fprintf(stderr,
-                              "TIMEZERO: %" GW_TIME_FORMAT "\n",
-                              GLOBALS->global_time_offset));
+                DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n", self->global_time_offset));
                 sync_end(self, NULL);
             } break;
             case T_TIMESCALE: {
@@ -1238,9 +1394,10 @@ static void vcd_parse(VcdLoader *self)
                 if ((vtok == T_END) || (vtok == T_EOF))
                     break;
                 fractional_timescale_fix(self->yytext);
-                GLOBALS->time_scale = atoi_64(self->yytext);
-                if (!GLOBALS->time_scale)
-                    GLOBALS->time_scale = 1;
+                self->time_scale = atoi_64(self->yytext);
+                if (self->time_scale < 1) {
+                    self->time_scale = 1;
+                }
                 for (i = 0; i < self->yylen; i++) {
                     if (self->yytext[i] < '0' || self->yytext[i] > '9') {
                         prefix = self->yytext[i];
@@ -1262,20 +1419,20 @@ static void vcd_parse(VcdLoader *self)
                     case 'f':
                     case 'a':
                     case 'z':
-                        GLOBALS->time_dimension = prefix;
+                        self->time_dimension = prefix;
                         break;
                     case 's':
-                        GLOBALS->time_dimension = ' ';
+                        self->time_dimension = ' ';
                         break;
                     default: /* unknown */
-                        GLOBALS->time_dimension = 'n';
+                        self->time_dimension = 'n';
                         break;
                 }
 
                 DEBUG(fprintf(stderr,
                               "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
-                              GLOBALS->time_scale,
-                              GLOBALS->time_dimension));
+                              self->time_scale,
+                              self->time_dimension));
                 sync_end(self, NULL);
             } break;
             case T_SCOPE:
@@ -1359,14 +1516,10 @@ static void vcd_parse(VcdLoader *self)
                 }
                 T_GET;
                 if (tok != T_END && tok != T_EOF) {
-                    struct slist *s;
-                    s = (struct slist *)calloc_2(1, sizeof(struct slist));
-                    s->len = self->yylen;
-                    s->str = (char *)malloc_2(self->yylen + 1);
-                    strcpy(s->str, self->yytext);
-                    s->mod_tree_parent = GLOBALS->mod_tree_parent;
+                    push_scope(self, self->yytext, GLOBALS->mod_tree_parent);
 
-                    allocate_and_decorate_module_tree_node(ttype,
+                    allocate_and_decorate_module_tree_node(&self->tree_root,
+                                                           ttype,
                                                            self->yytext,
                                                            NULL,
                                                            self->yylen,
@@ -1374,41 +1527,14 @@ static void vcd_parse(VcdLoader *self)
                                                            0,
                                                            0);
 
-                    if (GLOBALS->slistcurr) {
-                        GLOBALS->slistcurr->next = s;
-                        GLOBALS->slistcurr = s;
-                    } else {
-                        GLOBALS->slistcurr = GLOBALS->slistroot = s;
-                    }
-
-                    build_slisthier();
-                    DEBUG(fprintf(stderr, "SCOPE: %s\n", GLOBALS->slisthier));
+                    DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 }
                 sync_end(self, NULL);
                 break;
             case T_UPSCOPE:
-                if (GLOBALS->slistroot) {
-                    struct slist *s;
-
-                    GLOBALS->mod_tree_parent = GLOBALS->slistcurr->mod_tree_parent;
-                    s = GLOBALS->slistroot;
-                    if (!s->next) {
-                        free_2(s->str);
-                        free_2(s);
-                        GLOBALS->slistroot = GLOBALS->slistcurr = NULL;
-                    } else
-                        for (;;) {
-                            if (!s->next->next) {
-                                free_2(s->next->str);
-                                free_2(s->next);
-                                s->next = NULL;
-                                GLOBALS->slistcurr = s;
-                                break;
-                            }
-                            s = s->next;
-                        }
-                    build_slisthier();
-                    DEBUG(fprintf(stderr, "SCOPE: %s\n", GLOBALS->slisthier));
+                if (!g_queue_is_empty(self->scopes)) {
+                    GLOBALS->mod_tree_parent = pop_scope(self);
+                    DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 } else {
                     GLOBALS->mod_tree_parent = NULL;
                 }
@@ -1501,27 +1627,25 @@ static void vcd_parse(VcdLoader *self)
                         vtok = get_vartoken(self, 0);
                         if (vtok != V_STRING)
                             goto err;
-                        if (GLOBALS->slisthier_len) {
-                            v->name =
-                                (char *)malloc_2(GLOBALS->slisthier_len + 1 + self->yylen + 1);
-                            strcpy(v->name, GLOBALS->slisthier);
-                            strcpy(v->name + GLOBALS->slisthier_len, GLOBALS->vcd_hier_delimeter);
+                        if (self->name_prefix->len > 0) {
+                            v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
+                            strcpy(v->name, self->name_prefix->str);
+                            v->name[self->name_prefix->len] = GLOBALS->hier_delimeter;
                             if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name + GLOBALS->slisthier_len + 1,
+                                strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name + GLOBALS->slisthier_len + 1,
+                                if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
                                                      self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
+                                    char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
-                                    strcpy(sd, GLOBALS->slisthier);
-                                    strcpy(sd + GLOBALS->slisthier_len,
-                                           GLOBALS->vcd_hier_delimeter);
-                                    sd[GLOBALS->slisthier_len + 1] = '\\';
-                                    strcpy(sd + GLOBALS->slisthier_len + 2,
-                                           v->name + GLOBALS->slisthier_len + 1);
+                                    strcpy(sd, self->name_prefix->str);
+                                    sd[self->name_prefix->len] = GLOBALS->hier_delimeter;
+                                    sd[self->name_prefix->len + 1] = '\\';
+                                    strcpy(sd + self->name_prefix->len + 2,
+                                           v->name + self->name_prefix->len + 1);
                                     free_2(v->name);
                                     v->name = sd;
                                 }
@@ -1543,7 +1667,7 @@ static void vcd_parse(VcdLoader *self)
                         }
 
                         if (self->pv != NULL) {
-                            if (!strcmp(GLOBALS->prev_hier_uncompressed_name, v->name) &&
+                            if (!strcmp(self->prev_hier_uncompressed_name, v->name) &&
                                 !disable_autocoalesce && (!strchr(v->name, '\\'))) {
                                 self->pv->chain = v;
                                 v->root = self->rootv;
@@ -1554,13 +1678,13 @@ static void vcd_parse(VcdLoader *self)
                                 self->rootv = v;
                             }
 
-                            free_2(GLOBALS->prev_hier_uncompressed_name);
+                            free_2(self->prev_hier_uncompressed_name);
                         } else {
                             self->rootv = v;
                         }
 
                         self->pv = v;
-                        GLOBALS->prev_hier_uncompressed_name = strdup_2(v->name);
+                        self->prev_hier_uncompressed_name = strdup_2(v->name);
                     } else /* regular vcd var, not an evcd port var */
                     {
                         vtok = get_vartoken(self, 1);
@@ -1593,27 +1717,25 @@ static void vcd_parse(VcdLoader *self)
                         if (vtok != V_STRING)
                             goto err;
 
-                        if (GLOBALS->slisthier_len) {
-                            v->name =
-                                (char *)malloc_2(GLOBALS->slisthier_len + 1 + self->yylen + 1);
-                            strcpy(v->name, GLOBALS->slisthier);
-                            strcpy(v->name + GLOBALS->slisthier_len, GLOBALS->vcd_hier_delimeter);
+                        if (self->name_prefix->len > 0) {
+                            v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
+                            strcpy(v->name, self->name_prefix->str);
+                            v->name[self->name_prefix->len] = GLOBALS->hier_delimeter;
                             if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name + GLOBALS->slisthier_len + 1,
+                                strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name + GLOBALS->slisthier_len + 1,
+                                if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
                                                      self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(GLOBALS->slisthier_len + 1 +
+                                    char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
-                                    strcpy(sd, GLOBALS->slisthier);
-                                    strcpy(sd + GLOBALS->slisthier_len,
-                                           GLOBALS->vcd_hier_delimeter);
-                                    sd[GLOBALS->slisthier_len + 1] = '\\';
-                                    strcpy(sd + GLOBALS->slisthier_len + 2,
-                                           v->name + GLOBALS->slisthier_len + 1);
+                                    strcpy(sd, self->name_prefix->str);
+                                    sd[self->name_prefix->len] = GLOBALS->hier_delimeter;
+                                    sd[self->name_prefix->len + 1] = '\\';
+                                    strcpy(sd + self->name_prefix->len + 2,
+                                           v->name + self->name_prefix->len + 1);
                                     free_2(v->name);
                                     v->name = sd;
                                 }
@@ -1635,7 +1757,7 @@ static void vcd_parse(VcdLoader *self)
                         }
 
                         if (self->pv != NULL) {
-                            if (!strcmp(GLOBALS->prev_hier_uncompressed_name, v->name)) {
+                            if (!strcmp(self->prev_hier_uncompressed_name, v->name)) {
                                 self->pv->chain = v;
                                 v->root = self->rootv;
                                 if (self->pv == self->rootv) {
@@ -1645,12 +1767,12 @@ static void vcd_parse(VcdLoader *self)
                                 self->rootv = v;
                             }
 
-                            free_2(GLOBALS->prev_hier_uncompressed_name);
+                            free_2(self->prev_hier_uncompressed_name);
                         } else {
                             self->rootv = v;
                         }
                         self->pv = v;
-                        GLOBALS->prev_hier_uncompressed_name = strdup_2(v->name);
+                        self->prev_hier_uncompressed_name = strdup_2(v->name);
 
                         vtok = get_vartoken(self, 1);
                         if (vtok == V_END)
@@ -1728,7 +1850,7 @@ static void vcd_parse(VcdLoader *self)
                     v->narray = calloc_2(1, sizeof(GwNode *));
                     v->narray[0] = calloc_2(1, sizeof(GwNode));
                     v->narray[0]->head.time = -1;
-                    v->narray[0]->head.v.h_val = AN_X;
+                    v->narray[0]->head.v.h_val = GW_BIT_X;
 
                     if (self->vcdsymroot == NULL) {
                         self->vcdsymroot = self->vcdsymcurr = v;
@@ -1737,26 +1859,6 @@ static void vcd_parse(VcdLoader *self)
                     }
                     self->vcdsymcurr = v;
                     self->numsyms++;
-
-                    if (GLOBALS->vcd_save_handle) {
-                        if (v->msi == v->lsi) {
-                            if ((v->vartype == V_REAL) || (v->vartype == V_STRINGTYPE)) {
-                                fprintf(GLOBALS->vcd_save_handle, "%s\n", v->name);
-                            } else {
-                                if (v->msi >= 0) {
-                                    fprintf(GLOBALS->vcd_save_handle, "%s[%d]\n", v->name, v->msi);
-                                } else {
-                                    fprintf(GLOBALS->vcd_save_handle, "%s\n", v->name);
-                                }
-                            }
-                        } else {
-                            fprintf(GLOBALS->vcd_save_handle,
-                                    "%s[%d:%d]\n",
-                                    v->name,
-                                    v->msi,
-                                    v->lsi);
-                        }
-                    }
 
                     goto bail;
                 err:
@@ -1816,8 +1918,8 @@ static void vcd_parse(VcdLoader *self)
 
                         tim = atoi_64(self->yytext + 1);
 
-                        if (self->file->start_time < 0) {
-                            self->file->start_time = tim;
+                        if (self->start_time < 0) {
+                            self->start_time = tim;
                         } else {
                             /* backtracking fix */
                             if (tim < self->current_time) {
@@ -1836,11 +1938,11 @@ static void vcd_parse(VcdLoader *self)
                         }
 
                         self->current_time = tim;
-                        if (self->file->end_time < tim)
-                            self->file->end_time = tim; /* in case of malformed vcd files */
+                        if (self->end_time < tim)
+                            self->end_time = tim; /* in case of malformed vcd files */
                         DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
 
-                        tt = vlist_alloc(&self->file->time_vlist, 0);
+                        tt = vlist_alloc(&self->time_vlist, 0);
                         *tt = tim;
                         self->time_vlist_count++;
                     } else {
@@ -1850,10 +1952,9 @@ static void vcd_parse(VcdLoader *self)
                             GwTime tim = GW_TIME_CONSTANT(0);
                             GwTime *tt;
 
-                            self->file->start_time = self->current_time = self->file->end_time =
-                                tim;
+                            self->start_time = self->current_time = self->end_time = tim;
 
-                            tt = vlist_alloc(&self->file->time_vlist, 0);
+                            tt = vlist_alloc(&self->time_vlist, 0);
                             *tt = tim;
                             self->time_vlist_count = 1;
                         }
@@ -1866,16 +1967,16 @@ static void vcd_parse(VcdLoader *self)
                 break; /* just loop through..                 */
             case T_DUMPOFF:
             case T_DUMPPORTSOFF:
-                gw_blackout_regions_add_dumpoff(GLOBALS->blackout_regions, self->current_time);
+                gw_blackout_regions_add_dumpoff(self->blackout_regions, self->current_time);
                 break;
             case T_DUMPON:
             case T_DUMPPORTSON:
-                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, self->current_time);
+                gw_blackout_regions_add_dumpon(self->blackout_regions, self->current_time);
                 break;
             case T_DUMPVARS:
             case T_DUMPPORTS:
                 if (self->current_time < 0) {
-                    self->file->start_time = self->current_time = self->file->end_time = 0;
+                    self->start_time = self->current_time = self->end_time = 0;
                 }
                 break;
             case T_VCDCLOSE:
@@ -1887,12 +1988,12 @@ static void vcd_parse(VcdLoader *self)
                 sync_end(self, NULL); /* skip over unknown keywords */
                 break;
             case T_EOF:
-                gw_blackout_regions_add_dumpon(GLOBALS->blackout_regions, self->current_time);
+                gw_blackout_regions_add_dumpon(self->blackout_regions, self->current_time);
 
                 self->pv = NULL;
-                if (GLOBALS->prev_hier_uncompressed_name) {
-                    free_2(GLOBALS->prev_hier_uncompressed_name);
-                    GLOBALS->prev_hier_uncompressed_name = NULL;
+                if (self->prev_hier_uncompressed_name) {
+                    free_2(self->prev_hier_uncompressed_name);
+                    self->prev_hier_uncompressed_name = NULL;
                 }
 
                 return;
@@ -1904,219 +2005,7 @@ static void vcd_parse(VcdLoader *self)
 
 /*******************************************************************************/
 
-void add_histent(VcdFile *self, GwTime tim, GwNode *n, char ch, int regadd, char *vector)
-{
-    GwHistEnt *he;
-    char heval;
-
-    if (!vector) {
-        if (!n->curr) {
-            he = histent_calloc();
-            he->time = -1;
-            he->v.h_val = AN_X;
-
-            n->curr = he;
-            n->head.next = he;
-
-            add_histent(self, tim, n, ch, regadd, vector);
-        } else {
-            if (regadd) {
-                tim *= (GLOBALS->time_scale);
-            }
-
-            if (ch == '0')
-                heval = AN_0;
-            else if (ch == '1')
-                heval = AN_1;
-            else if ((ch == 'x') || (ch == 'X'))
-                heval = AN_X;
-            else if ((ch == 'z') || (ch == 'Z'))
-                heval = AN_Z;
-            else if ((ch == 'h') || (ch == 'H'))
-                heval = AN_H;
-            else if ((ch == 'u') || (ch == 'U'))
-                heval = AN_U;
-            else if ((ch == 'w') || (ch == 'W'))
-                heval = AN_W;
-            else if ((ch == 'l') || (ch == 'L'))
-                heval = AN_L;
-            else
-                /* if(ch=='-') */ heval = AN_DASH; /* default */
-
-            if ((n->curr->v.h_val != heval) || (tim == self->start_time) ||
-                (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
-                (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
-            {
-                if (n->curr->time == tim) {
-                    DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
-                                 "] Signal [%p], Value [%c->%c].\n",
-                                 tim,
-                                 n,
-                                 AN_STR[n->curr->v.h_val],
-                                 ch));
-                    n->curr->v.h_val = heval; /* we have a glitch! */
-
-                    if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                    }
-                } else {
-                    he = histent_calloc();
-                    he->time = tim;
-                    he->v.h_val = heval;
-
-                    n->curr->next = he;
-                    if (n->curr->v.h_val == heval) {
-                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                    }
-                    n->curr = he;
-                    GLOBALS->regions += regadd;
-                }
-            }
-        }
-    } else {
-        switch (ch) {
-            case 's': /* string */
-            {
-                if (!n->curr) {
-                    he = histent_calloc();
-                    he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
-                    he->time = -1;
-                    he->v.h_vector = NULL;
-
-                    n->curr = he;
-                    n->head.next = he;
-
-                    add_histent(self, tim, n, ch, regadd, vector);
-                } else {
-                    if (regadd) {
-                        tim *= (GLOBALS->time_scale);
-                    }
-
-                    if (n->curr->time == tim) {
-                        DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT
-                                     "] Signal [%p].\n",
-                                     tim,
-                                     n));
-                        if (n->curr->v.h_vector)
-                            free_2(n->curr->v.h_vector);
-                        n->curr->v.h_vector = vector; /* we have a glitch! */
-
-                        if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                            n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                        }
-                    } else {
-                        he = histent_calloc();
-                        he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
-                        he->time = tim;
-                        he->v.h_vector = vector;
-
-                        n->curr->next = he;
-                        n->curr = he;
-                        GLOBALS->regions += regadd;
-                    }
-                }
-                break;
-            }
-            case 'g': /* real number */
-            {
-                if (!n->curr) {
-                    he = histent_calloc();
-                    he->flags = GW_HIST_ENT_FLAG_REAL;
-                    he->time = -1;
-                    he->v.h_double = strtod("NaN", NULL);
-
-                    n->curr = he;
-                    n->head.next = he;
-
-                    add_histent(self, tim, n, ch, regadd, vector);
-                } else {
-                    if (regadd) {
-                        tim *= (GLOBALS->time_scale);
-                    }
-
-                    if ((vector && (n->curr->v.h_double != *(double *)vector)) ||
-                        (tim == self->start_time) || (GLOBALS->vcd_preserve_glitches) ||
-                        (GLOBALS->vcd_preserve_glitches_real)) /* same region == go skip */
-                    {
-                        if (n->curr->time == tim) {
-                            DEBUG(printf("Warning: Real number Glitch at time [%" GW_TIME_FORMAT
-                                         "] Signal [%p].\n",
-                                         tim,
-                                         n));
-                            n->curr->v.h_double = *((double *)vector);
-                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                            }
-                        } else {
-                            he = histent_calloc();
-                            he->flags = GW_HIST_ENT_FLAG_REAL;
-                            he->time = tim;
-                            he->v.h_double = *((double *)vector);
-                            n->curr->next = he;
-                            n->curr = he;
-                            GLOBALS->regions += regadd;
-                        }
-                    } else {
-                    }
-                    free_2(vector);
-                }
-                break;
-            }
-            default: {
-                if (!n->curr) {
-                    he = histent_calloc();
-                    he->time = -1;
-                    he->v.h_vector = NULL;
-
-                    n->curr = he;
-                    n->head.next = he;
-
-                    add_histent(self, tim, n, ch, regadd, vector);
-                } else {
-                    if (regadd) {
-                        tim *= (GLOBALS->time_scale);
-                    }
-
-                    if ((n->curr->v.h_vector && vector && (strcmp(n->curr->v.h_vector, vector))) ||
-                        (tim == self->start_time) || (!n->curr->v.h_vector) ||
-                        (GLOBALS->vcd_preserve_glitches)) /* same region == go skip */
-                    {
-                        if (n->curr->time == tim) {
-                            DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
-                                         "] Signal [%p], Value [%c->%c].\n",
-                                         tim,
-                                         n,
-                                         AN_STR[n->curr->v.h_val],
-                                         ch));
-                            if (n->curr->v.h_vector)
-                                free_2(n->curr->v.h_vector);
-                            n->curr->v.h_vector = vector; /* we have a glitch! */
-
-                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                            }
-                        } else {
-                            he = histent_calloc();
-                            he->time = tim;
-                            he->v.h_vector = vector;
-
-                            n->curr->next = he;
-                            n->curr = he;
-                            GLOBALS->regions += regadd;
-                        }
-                    } else {
-                        free_2(vector);
-                    }
-                }
-                break;
-            }
-        }
-    }
-}
-
-/*******************************************************************************/
-
-static void vcd_build_symbols(VcdLoader *self)
+static void vcd_build_symbols(GwVcdLoader *self)
 {
     int j;
     int max_slen = -1;
@@ -2125,9 +2014,9 @@ static void vcd_build_symbols(VcdLoader *self)
     char hashdirty;
     struct vcdsymbol *v, *vprime;
     char *str = g_alloca(1); /* quiet scan-build null pointer warning below */
-#ifdef _WAVE_HAVE_JUDY
-    int ss_len, longest = 0;
-#endif
+    // #ifdef _WAVE_HAVE_JUDY
+    //     int ss_len, longest = 0;
+    // #endif
 
     v = self->vcdsymroot;
     while (v) {
@@ -2148,7 +2037,7 @@ static void vcd_build_symbols(VcdLoader *self)
             strcpy(str, v->name);
 
             if ((v->msi >= 0) || (v->msi != v->lsi)) {
-                strcpy(str + slen, GLOBALS->vcd_hier_delimeter);
+                str[slen] = GLOBALS->hier_delimeter;
                 slen++;
             }
 
@@ -2166,7 +2055,7 @@ static void vcd_build_symbols(VcdLoader *self)
             }
 
             if ((v->size == 1) && (v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
-                struct symbol *s = NULL;
+                GwSymbol *s = NULL;
 
                 for (j = 0; j < v->size; j++) {
                     if (v->msi >= 0) {
@@ -2176,17 +2065,13 @@ static void vcd_build_symbols(VcdLoader *self)
                     hashdirty = 0;
                     if (symfind(str, NULL)) {
                         char *dupfix = (char *)malloc_2(max_slen + 32);
-#ifndef _WAVE_HAVE_JUDY
+                        // #ifndef _WAVE_HAVE_JUDY
                         hashdirty = 1;
-#endif
+                        // #endif
                         DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                         do
-                            sprintf(dupfix,
-                                    "$DUP%d%s%s",
-                                    duphier++,
-                                    GLOBALS->vcd_hier_delimeter,
-                                    str);
+                            sprintf(dupfix, "$DUP%d%c%s", duphier++, GLOBALS->hier_delimeter, str);
                         while (symfind(dupfix, NULL));
 
                         strcpy(str, dupfix);
@@ -2196,12 +2081,12 @@ static void vcd_build_symbols(VcdLoader *self)
                     /* fallthrough */
                     {
                         s = symadd(str, hashdirty ? hash(str) : GLOBALS->hashcache);
-#ifdef _WAVE_HAVE_JUDY
-                        ss_len = strlen(str);
-                        if (ss_len >= longest) {
-                            longest = ss_len + 1;
-                        }
-#endif
+                        // #ifdef _WAVE_HAVE_JUDY
+                        //                         ss_len = strlen(str);
+                        //                         if (ss_len >= longest) {
+                        //                             longest = ss_len + 1;
+                        //                         }
+                        // #endif
                         s->n = v->narray[j];
                         if (substnode) {
                             GwNode *n;
@@ -2217,20 +2102,20 @@ static void vcd_build_symbols(VcdLoader *self)
                             n->numhist = n2->numhist;
                         }
 
-#ifndef _WAVE_HAVE_JUDY
+                        // #ifndef _WAVE_HAVE_JUDY
                         s->n->nname = s->name;
-#endif
+                        // #endif
                         self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
-                        GLOBALS->numfacs++;
+                        self->numfacs++;
                         DEBUG(fprintf(stderr, "Added: %s\n", str));
                     }
                     msi += delta;
                 }
 
                 if ((j == 1) && (v->root)) {
-                    s->vec_root = (struct symbol *)v->root; /* these will get patched over */
-                    s->vec_chain = (struct symbol *)v->chain; /* these will get patched over */
+                    s->vec_root = (GwSymbol *)v->root; /* these will get patched over */
+                    s->vec_chain = (GwSymbol *)v->chain; /* these will get patched over */
                     v->sym_chain = s;
 
                     sym_chain = g_slist_prepend(sym_chain, s);
@@ -2261,13 +2146,13 @@ static void vcd_build_symbols(VcdLoader *self)
                 hashdirty = 0;
                 if (symfind(str, NULL)) {
                     char *dupfix = (char *)malloc_2(max_slen + 32);
-#ifndef _WAVE_HAVE_JUDY
+                    // #ifndef _WAVE_HAVE_JUDY
                     hashdirty = 1;
-#endif
+                    // #endif
                     DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                     do
-                        sprintf(dupfix, "$DUP%d%s%s", duphier++, GLOBALS->vcd_hier_delimeter, str);
+                        sprintf(dupfix, "$DUP%d%c%s", duphier++, GLOBALS->hier_delimeter, str);
                     while (symfind(dupfix, NULL));
 
                     strcpy(str, dupfix);
@@ -2276,17 +2161,17 @@ static void vcd_build_symbols(VcdLoader *self)
                 }
                 /* fallthrough */
                 {
-                    struct symbol *s;
+                    GwSymbol *s;
 
                     s = symadd(str,
                                hashdirty ? hash(str)
                                          : GLOBALS->hashcache); /* cut down on double lookups.. */
-#ifdef _WAVE_HAVE_JUDY
-                    ss_len = strlen(str);
-                    if (ss_len >= longest) {
-                        longest = ss_len + 1;
-                    }
-#endif
+                    // #ifdef _WAVE_HAVE_JUDY
+                    //                     ss_len = strlen(str);
+                    //                     if (ss_len >= longest) {
+                    //                         longest = ss_len + 1;
+                    //                     }
+                    // #endif
                     s->n = v->narray[0];
                     if (substnode) {
                         GwNode *n;
@@ -2310,12 +2195,12 @@ static void vcd_build_symbols(VcdLoader *self)
                         s->n->extvals = 1;
                     }
 
-#ifndef _WAVE_HAVE_JUDY
+                    // #ifndef _WAVE_HAVE_JUDY
                     s->n->nname = s->name;
-#endif
+                    // #endif
                     self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
-                    GLOBALS->numfacs++;
+                    self->numfacs++;
                     DEBUG(fprintf(stderr, "Added: %s\n", str));
                 }
             }
@@ -2324,26 +2209,28 @@ static void vcd_build_symbols(VcdLoader *self)
         v = v->next;
     }
 
-#ifdef _WAVE_HAVE_JUDY
-    {
-        Pvoid_t PJArray = GLOBALS->sym_judy;
-        PPvoid_t PPValue;
-        char *Index = calloc_2(1, longest);
-
-        for (PPValue = JudySLFirst(PJArray, (uint8_t *)Index, PJE0); PPValue != (PPvoid_t)NULL;
-             PPValue = JudySLNext(PJArray, (uint8_t *)Index, PJE0)) {
-            struct symbol *s = *(struct symbol **)PPValue;
-            s->name = strdup_2(Index);
-            s->n->nname = s->name;
-        }
-
-        free_2(Index);
-    }
-#endif
+    // TODO: reenable judy support
+    // #ifdef _WAVE_HAVE_JUDY
+    //     {
+    //         Pvoid_t PJArray = GLOBALS->sym_judy;
+    //         PPvoid_t PPValue;
+    //         char *Index = calloc_2(1, longest);
+    //
+    //         for (PPValue = JudySLFirst(PJArray, (uint8_t *)Index, PJE0); PPValue !=
+    //         (PPvoid_t)NULL;
+    //              PPValue = JudySLNext(PJArray, (uint8_t *)Index, PJE0)) {
+    //             GwSymbol *s = *(GwSymbol **)PPValue;
+    //             s->name = strdup_2(Index);
+    //             s->n->nname = s->name;
+    //         }
+    //
+    //         free_2(Index);
+    //     }
+    // #endif
 
     if (sym_chain != NULL) {
         for (GSList *iter = sym_chain; iter != NULL; iter = iter->next) {
-            struct symbol *s = iter->data;
+            GwSymbol *s = iter->data;
 
             s->vec_root = ((struct vcdsymbol *)s->vec_root)->sym_chain;
             if ((struct vcdsymbol *)s->vec_chain != NULL) {
@@ -2362,9 +2249,8 @@ static void vcd_build_symbols(VcdLoader *self)
 
 /*******************************************************************************/
 
-static void vcd_cleanup(VcdLoader *self)
+static void vcd_cleanup(GwVcdLoader *self)
 {
-    struct slist *s, *s2;
     struct vcdsymbol *v, *vt;
 
     g_clear_pointer(&self->symbols_indexed, free_2);
@@ -2385,21 +2271,10 @@ static void vcd_cleanup(VcdLoader *self)
     self->vcdsymroot = NULL;
     self->vcdsymcurr = NULL;
 
-    if (GLOBALS->slisthier) {
-        free_2(GLOBALS->slisthier);
-        GLOBALS->slisthier = NULL;
-    }
-    s = GLOBALS->slistroot;
-    while (s) {
-        s2 = s->next;
-        if (s->str)
-            free_2(s->str);
-        free_2(s);
-        s = s2;
-    }
-
-    GLOBALS->slistroot = GLOBALS->slistcurr = NULL;
-    GLOBALS->slisthier_len = 0;
+    g_queue_free_full(self->scopes, g_free);
+    g_string_free(self->name_prefix, TRUE);
+    self->scopes = NULL;
+    self->name_prefix = NULL;
 
     if (self->is_compressed) {
         pclose(self->vcd_handle);
@@ -2411,13 +2286,70 @@ static void vcd_cleanup(VcdLoader *self)
     g_clear_pointer(&self->yytext, free_2);
 }
 
+static GwFacs *vcd_sortfacs(GwVcdLoader *self)
+{
+    GwFacs *facs = gw_facs_new(self->numfacs);
+
+    GSList *iter = self->sym_chain;
+    for (guint i = 0; i < self->numfacs; i++) {
+        GwSymbol *fac = iter->data;
+        gw_facs_set(facs, i, fac);
+
+        int len = strlen(fac->name);
+        if (len > GLOBALS->longestname) {
+            GLOBALS->longestname = len;
+        }
+
+        iter = g_slist_delete_link(iter, iter);
+    }
+
+    gw_facs_sort(facs);
+
+    GLOBALS->facs_are_sorted = 1;
+
+    return facs;
+}
+
+static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
+{
+    init_tree();
+    for (guint i = 0; i < gw_facs_get_length(facs); i++) {
+        GwSymbol *fac = gw_facs_get(facs, i);
+
+        char *n = fac->name;
+        build_tree_from_name(&self->tree_root, n, i);
+
+        if (GLOBALS->escaped_names_found_vcd_c_1) {
+            char *subst, ch;
+            subst = fac->name;
+            while ((ch = (*subst))) {
+                if (ch == VCDNAM_ESCAPE) {
+                    *subst = GLOBALS->hier_delimeter;
+                } /* restore back to normal */
+                subst++;
+            }
+        }
+    }
+
+    GwTree *tree = gw_tree_new(g_steal_pointer(&self->tree_root));
+    gw_tree_graft(tree, GLOBALS->terminals_tchain_tree_c_1);
+    gw_tree_sort(tree);
+
+    if (GLOBALS->escaped_names_found_vcd_c_1) {
+        treenamefix(gw_tree_get_root(tree));
+    }
+
+    return tree;
+}
+
 /*******************************************************************************/
 
-GwTime vcd_recoder_main(char *fname)
+GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **error)
 {
-    GLOBALS->vcd_hier_delimeter[0] = GLOBALS->hier_delimeter;
+    g_return_val_if_fail(fname != NULL, NULL);
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-    GLOBALS->blackout_regions = gw_blackout_regions_new();
+    GwVcdLoader *self = GW_VCD_LOADER(loader);
 
     errno = 0; /* reset in case it's set for some reason */
 
@@ -2425,17 +2357,6 @@ GwTime vcd_recoder_main(char *fname)
     {
         GLOBALS->hier_delimeter = '.';
     }
-
-    VcdLoader loader = {0};
-    VcdLoader *self = &loader;
-    self->current_time = -1;
-    self->file = g_new0(VcdFile, 1);
-    self->file->start_time = -1;
-    self->file->end_time = -1;
-
-    self->T_MAX_STR = 1024;
-    self->yytext = malloc_2(self->T_MAX_STR + 1);
-    self->vcd_minid = G_MAXUINT;
 
     if (suffix_check(fname, ".gz") || suffix_check(fname, ".zip")) {
         char *str;
@@ -2461,7 +2382,7 @@ GwTime vcd_recoder_main(char *fname)
 
             if (GLOBALS->vcd_warning_filesize)
                 if (self->vcd_fsiz > (GLOBALS->vcd_warning_filesize * (1024 * 1024))) {
-                    if (!GLOBALS->vlist_prepack) {
+                    if (!self->vlist_prepack) {
                         fprintf(
                             stderr,
                             "Warning! File size is %d MB.  This might fail in recoding.\n"
@@ -2501,9 +2422,9 @@ GwTime vcd_recoder_main(char *fname)
     sym_hash_initialize(GLOBALS);
     getch_alloc(self); /* alloc membuff for vcd getch buffer */
 
-    build_slisthier();
+    update_name_prefix(self);
 
-    self->file->time_vlist = vlist_create(sizeof(GwTime));
+    self->time_vlist = vlist_create(sizeof(GwTime));
 
     vcd_parse(self);
     if (self->varsplit) {
@@ -2511,7 +2432,7 @@ GwTime vcd_recoder_main(char *fname)
         self->varsplit = NULL;
     }
 
-    vlist_freeze(&self->file->time_vlist);
+    vlist_freeze(&self->time_vlist);
 
     vlist_emit_finalize(self);
 
@@ -2520,15 +2441,10 @@ GwTime vcd_recoder_main(char *fname)
         vcd_exit(255);
     }
 
-    if (GLOBALS->vcd_save_handle) {
-        fclose(GLOBALS->vcd_save_handle);
-        GLOBALS->vcd_save_handle = NULL;
-    }
-
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
-            self->file->start_time * GLOBALS->time_scale,
-            self->file->end_time * GLOBALS->time_scale);
+            self->start_time * self->time_scale,
+            self->end_time * self->time_scale);
 
     if (self->vcd_fsiz > 0) {
         splash_sync(self->vcd_fsiz, self->vcd_fsiz);
@@ -2537,425 +2453,150 @@ GwTime vcd_recoder_main(char *fname)
     }
     self->vcd_fsiz = 0;
 
-    GLOBALS->min_time = self->file->start_time * GLOBALS->time_scale;
-    GLOBALS->max_time = self->file->end_time * GLOBALS->time_scale;
-    GLOBALS->global_time_offset = GLOBALS->global_time_offset * GLOBALS->time_scale;
+    GwTime min_time = self->start_time * self->time_scale;
+    GwTime max_time = self->end_time * self->time_scale;
+    self->global_time_offset *= self->time_scale;
 
-    if ((GLOBALS->min_time == GLOBALS->max_time) && (GLOBALS->max_time == GW_TIME_CONSTANT(-1))) {
+    if (min_time == max_time && max_time == GW_TIME_CONSTANT(-1)) {
         fprintf(stderr, "VCD times range is equal to zero.  Exiting.\n");
         vcd_exit(255);
     }
 
     vcd_build_symbols(self);
-    vcd_sortfacs(self->sym_chain);
+    GwFacs *facs = vcd_sortfacs(self);
+    GwTree *tree = vcd_build_tree(self, facs);
     vcd_cleanup(self);
 
     getch_free(self); /* free membuff for vcd getch buffer */
 
-    gw_blackout_regions_scale(GLOBALS->blackout_regions, GLOBALS->time_scale);
+    gw_blackout_regions_scale(self->blackout_regions, self->time_scale);
 
     /* is_vcd=~0; */
     GLOBALS->is_lx2 = LXT2_IS_VLIST;
-    GLOBALS->vcd_file = self->file;
 
     /* SPLASH */ splash_finalize();
-    return (GLOBALS->max_time);
+
+    GwTimeRange *time_range = gw_time_range_new(min_time, max_time);
+
+    // clang-format off
+    GwVcdFile *dump_file = g_object_new(GW_TYPE_VCD_FILE,
+                                        "tree", tree,
+                                        "facs", facs,
+                                        "blackout-regions", self->blackout_regions,
+                                        "time-scale", self->time_scale,
+                                        "time-dimension", self->time_dimension,
+                                        "time-range", time_range,
+                                        "global-time-offset", self->global_time_offset,
+                                        NULL);
+    // clang-format on
+
+    g_object_unref(self->blackout_regions);
+
+    dump_file->start_time = self->start_time;
+    dump_file->end_time = self->end_time;
+    dump_file->time_vlist = self->time_vlist;
+    dump_file->is_prepacked = self->vlist_prepack;
+
+    dump_file->preserve_glitches = gw_loader_is_preserve_glitches(loader);
+    dump_file->preserve_glitches_real = gw_loader_is_preserve_glitches_real(loader);
+
+    g_object_unref(tree);
+    g_object_unref(time_range);
+
+    return GW_DUMP_FILE(dump_file);
 }
 
-/*******************************************************************************/
-
-void vcd_import_masked(VcdFile *self)
+static void gw_vcd_loader_set_property(GObject *object,
+                                       guint property_id,
+                                       const GValue *value,
+                                       GParamSpec *pspec)
 {
-    /* nothing */
-    (void)self;
+    GwVcdLoader *self = GW_VCD_LOADER(object);
+
+    switch (property_id) {
+        case PROP_VLIST_PREPACK:
+            gw_vcd_loader_set_vlist_prepack(self, g_value_get_boolean(value));
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+            break;
+    }
 }
 
-void vcd_set_fac_process_mask(VcdFile *self, GwNode *np)
+static void gw_vcd_loader_get_property(GObject *object,
+                                       guint property_id,
+                                       GValue *value,
+                                       GParamSpec *pspec)
 {
-    if (np && np->mv.mvlfac_vlist) {
-        import_vcd_trace(self, np);
+    GwVcdLoader *self = GW_VCD_LOADER(object);
+
+    switch (property_id) {
+        case PROP_VLIST_PREPACK:
+            g_value_set_boolean(value, gw_vcd_loader_is_vlist_prepack(self));
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+            break;
     }
 }
 
-#define vlist_locate_import(x, y) \
-    ((GLOBALS->vlist_prepack) ? ((depacked) + (y)) : vlist_locate((x), (y)))
-
-void import_vcd_trace(VcdFile *self, GwNode *np)
+static void gw_vcd_loader_class_init(GwVcdLoaderClass *klass)
 {
-    struct vlist_t *v = np->mv.mvlfac_vlist;
-    int len = 1;
-    unsigned int list_size;
-    unsigned char vlist_type;
-    /* unsigned int vartype = 0; */ /* scan-build */
-    unsigned int vlist_pos = 0;
-    unsigned char *chp;
-    unsigned int time_idx = 0;
-    GwTime *curtime_pnt;
-    unsigned char arr[5];
-    int arr_pos;
-    unsigned int accum;
-    unsigned char ch;
-    double *d;
-    unsigned char *depacked = NULL;
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
 
-    if (!v)
-        return;
-    vlist_uncompress(&v);
+    object_class->set_property = gw_vcd_loader_set_property;
+    object_class->get_property = gw_vcd_loader_get_property;
 
-    if (GLOBALS->vlist_prepack) {
-        depacked = vlist_packer_decompress(v, &list_size);
-        vlist_destroy(v);
-    } else {
-        list_size = vlist_size(v);
+    loader_class->load = gw_vcd_loader_load;
+
+    properties[PROP_VLIST_PREPACK] =
+        g_param_spec_boolean("vlist-prepack",
+                             NULL,
+                             NULL,
+                             FALSE,
+                             G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+    g_object_class_install_properties(object_class, N_PROPERTIES, properties);
+}
+
+static void gw_vcd_loader_init(GwVcdLoader *self)
+{
+    self->current_time = -1;
+    self->start_time = -1;
+    self->end_time = -1;
+
+    self->T_MAX_STR = 1024;
+    self->yytext = malloc_2(self->T_MAX_STR + 1);
+    self->vcd_minid = G_MAXUINT;
+    self->scopes = g_queue_new();
+    self->name_prefix = g_string_new(NULL);
+    self->blackout_regions = gw_blackout_regions_new();
+}
+
+GwLoader *gw_vcd_loader_new(void)
+{
+    return g_object_new(GW_TYPE_VCD_LOADER, NULL);
+}
+
+void gw_vcd_loader_set_vlist_prepack(GwVcdLoader *self, gboolean vlist_prepack)
+{
+    g_return_if_fail(GW_IS_VCD_LOADER(self));
+
+    vlist_prepack = !!vlist_prepack;
+
+    if (self->vlist_prepack != vlist_prepack) {
+        self->vlist_prepack = vlist_prepack;
+
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_VLIST_PREPACK]);
     }
+}
 
-    if (!list_size) {
-        len = 1;
-        vlist_type = '!'; /* possible alias */
-    } else {
-        chp = vlist_locate_import(v, vlist_pos++);
-        if (chp) {
-            switch ((vlist_type = (*chp & 0x7f))) {
-                case '0':
-                    len = 1;
-                    chp = vlist_locate_import(v, vlist_pos++);
-                    if (!chp) {
-                        fprintf(stderr,
-                                "Internal error file '%s' line %d, exiting.\n",
-                                __FILE__,
-                                __LINE__);
-                        exit(255);
-                    }
-                    /* vartype = (unsigned int)(*chp & 0x7f); */ /*scan-build */
-                    break;
+gboolean gw_vcd_loader_is_vlist_prepack(GwVcdLoader *self)
+{
+    g_return_val_if_fail(GW_IS_VCD_LOADER(self), FALSE);
 
-                case 'B':
-                case 'R':
-                case 'S':
-                    chp = vlist_locate_import(v, vlist_pos++);
-                    if (!chp) {
-                        fprintf(stderr,
-                                "Internal error file '%s' line %d, exiting.\n",
-                                __FILE__,
-                                __LINE__);
-                        exit(255);
-                    }
-                    /* vartype = (unsigned int)(*chp & 0x7f); */ /* scan-build */
-
-                    arr_pos = accum = 0;
-
-                    do {
-                        chp = vlist_locate_import(v, vlist_pos++);
-                        if (!chp)
-                            break;
-                        ch = *chp;
-                        arr[arr_pos++] = ch;
-                    } while (!(ch & 0x80));
-
-                    for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                        ch = arr[arr_pos];
-                        accum <<= 7;
-                        accum |= (unsigned int)(ch & 0x7f);
-                    }
-
-                    len = accum;
-
-                    break;
-
-                default:
-                    fprintf(stderr, "Unsupported vlist type '%c', exiting.", vlist_type);
-                    vcd_exit(255);
-                    break;
-            }
-        } else {
-            len = 1;
-            vlist_type = '!'; /* possible alias */
-        }
-    }
-
-    if (vlist_type == '0') /* single bit */
-    {
-        while (vlist_pos < list_size) {
-            unsigned int delta, bitval;
-            char ascval;
-
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
-
-            if (!(accum & 1)) {
-                delta = accum >> 2;
-                bitval = (accum >> 1) & 1;
-                ascval = '0' + bitval;
-            } else {
-                delta = accum >> 4;
-                bitval = (accum >> 1) & 7;
-                ascval = RCV_STR[bitval];
-            }
-            time_idx += delta;
-
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                fprintf(stderr,
-                        "GTKWAVE | malformed bitwise signal data for '%s' after time_idx = %d\n",
-                        np->nname,
-                        time_idx - delta);
-                exit(255);
-            }
-
-            add_histent(self, *curtime_pnt, np, ascval, 1, NULL);
-        }
-
-        add_histent(self, MAX_HISTENT_TIME - 1, np, 'x', 0, NULL);
-        add_histent(self, MAX_HISTENT_TIME, np, 'z', 0, NULL);
-    } else if (vlist_type == 'B') /* bit vector, port type was converted to bit vector already */
-    {
-        char *sbuf = malloc_2(len + 1);
-        int dst_len;
-        char *vector;
-
-        while (vlist_pos < list_size) {
-            unsigned int delta;
-
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
-
-            delta = accum;
-            time_idx += delta;
-
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                fprintf(stderr,
-                        "GTKWAVE | malformed 'b' signal data for '%s' after time_idx = %d\n",
-                        np->nname,
-                        time_idx - delta);
-                exit(255);
-            }
-
-            dst_len = 0;
-            for (;;) {
-                chp = vlist_locate_import(v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                if ((ch >> 4) == AN_MSK)
-                    break;
-                if (dst_len == len) {
-                    if (len != 1)
-                        memmove(sbuf, sbuf + 1, dst_len - 1);
-                    dst_len--;
-                }
-                sbuf[dst_len++] = AN_STR[ch >> 4];
-                if ((ch & AN_MSK) == AN_MSK)
-                    break;
-                if (dst_len == len) {
-                    if (len != 1)
-                        memmove(sbuf, sbuf + 1, dst_len - 1);
-                    dst_len--;
-                }
-                sbuf[dst_len++] = AN_STR[ch & AN_MSK];
-            }
-
-            if (len == 1) {
-                add_histent(self, *curtime_pnt, np, sbuf[0], 1, NULL);
-            } else {
-                vector = malloc_2(len + 1);
-                if (dst_len < len) {
-                    unsigned char extend = (sbuf[0] == '1') ? '0' : sbuf[0];
-                    memset(vector, extend, len - dst_len);
-                    memcpy(vector + (len - dst_len), sbuf, dst_len);
-                } else {
-                    memcpy(vector, sbuf, len);
-                }
-
-                vector[len] = 0;
-                add_histent(self, *curtime_pnt, np, 0, 1, vector);
-            }
-        }
-
-        if (len == 1) {
-            add_histent(self, MAX_HISTENT_TIME - 1, np, 'x', 0, NULL);
-            add_histent(self, MAX_HISTENT_TIME, np, 'z', 0, NULL);
-        } else {
-            add_histent(self, MAX_HISTENT_TIME - 1, np, 'x', 0, (char *)calloc_2(1, sizeof(char)));
-            add_histent(self, MAX_HISTENT_TIME, np, 'z', 0, (char *)calloc_2(1, sizeof(char)));
-        }
-
-        free_2(sbuf);
-    } else if (vlist_type == 'R') /* real */
-    {
-        char *sbuf = malloc_2(64);
-        int dst_len;
-        char *vector;
-
-        while (vlist_pos < list_size) {
-            unsigned int delta;
-
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
-
-            delta = accum;
-            time_idx += delta;
-
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                fprintf(stderr,
-                        "GTKWAVE | malformed 'r' signal data for '%s' after time_idx = %d\n",
-                        np->nname,
-                        time_idx - delta);
-                exit(255);
-            }
-
-            dst_len = 0;
-            do {
-                chp = vlist_locate_import(v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                sbuf[dst_len++] = ch;
-            } while (ch);
-
-            vector = malloc_2(sizeof(double));
-            sscanf(sbuf, "%lg", (double *)vector);
-            add_histent(self, *curtime_pnt, np, 'g', 1, (char *)vector);
-        }
-
-        d = malloc_2(sizeof(double));
-        *d = 1.0;
-        add_histent(self, MAX_HISTENT_TIME - 1, np, 'g', 0, (char *)d);
-
-        d = malloc_2(sizeof(double));
-        *d = 0.0;
-        add_histent(self, MAX_HISTENT_TIME, np, 'g', 0, (char *)d);
-
-        free_2(sbuf);
-    } else if (vlist_type == 'S') /* string */
-    {
-        char *sbuf = malloc_2(list_size); /* being conservative */
-        int dst_len;
-        char *vector;
-
-        while (vlist_pos < list_size) {
-            unsigned int delta;
-
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
-
-            delta = accum;
-            time_idx += delta;
-
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                fprintf(stderr,
-                        "GTKWAVE | malformed 's' signal data for '%s' after time_idx = %d\n",
-                        np->nname,
-                        time_idx - delta);
-                exit(255);
-            }
-
-            dst_len = 0;
-            do {
-                chp = vlist_locate_import(v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                sbuf[dst_len++] = ch;
-            } while (ch);
-
-            vector = malloc_2(dst_len + 1);
-            strcpy(vector, sbuf);
-            add_histent(self, *curtime_pnt, np, 's', 1, (char *)vector);
-        }
-
-        d = malloc_2(sizeof(double));
-        *d = 1.0;
-        add_histent(self, MAX_HISTENT_TIME - 1, np, 'g', 0, (char *)d);
-
-        d = malloc_2(sizeof(double));
-        *d = 0.0;
-        add_histent(self, MAX_HISTENT_TIME, np, 'g', 0, (char *)d);
-
-        free_2(sbuf);
-    } else if (vlist_type == '!') /* error in loading */
-    {
-        GwNode *n2 = (GwNode *)np->curr;
-
-        if ((n2) &&
-            (n2 != np)) /* keep out any possible infinite recursion from corrupt pointer bugs */
-        {
-            import_vcd_trace(self, n2);
-
-            if (GLOBALS->vlist_prepack) {
-                vlist_packer_decompress_destroy((char *)depacked);
-            } else {
-                vlist_destroy(v);
-            }
-            np->mv.mvlfac_vlist = NULL;
-
-            np->head = n2->head;
-            np->curr = n2->curr;
-            return;
-        }
-
-        fprintf(stderr, "Error in decompressing vlist for '%s', exiting.\n", np->nname);
-        vcd_exit(255);
-    }
-
-    if (GLOBALS->vlist_prepack) {
-        vlist_packer_decompress_destroy((char *)depacked);
-    } else {
-        vlist_destroy(v);
-    }
-    np->mv.mvlfac_vlist = NULL;
+    return self->vlist_prepack;
 }

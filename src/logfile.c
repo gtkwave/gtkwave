@@ -169,7 +169,9 @@ static gboolean button_release_event(GtkWidget *text, GdkEventButton *event)
                         sprintf(sel2, "%s%c", sel, (unsigned char)gch);
                     }
 
-                    tm = unformat_time(sel2 ? sel2 : sel, GLOBALS->time_dimension);
+                    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+                    tm = unformat_time(sel2 ? sel2 : sel, time_dimension);
                     if ((tm >= GLOBALS->tims.first) && (tm <= GLOBALS->tims.last)) {
                         GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
                         gw_marker_set_position(primary_marker, tm);

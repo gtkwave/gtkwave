@@ -25,7 +25,6 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "menu.h"
 #include "tcl_helper.h"
 #include "tcl_np.h"
@@ -802,7 +801,7 @@ static char *make_net_name_from_tcl_list(char *s, char **unescaped_str)
  * ----------------------------------------------------------------------------
  */
 
-void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
+void process_tcl_list_2(GwSymbol *s, int which_msb, int which_lsb)
 {
     GwTrace *t;
     GwNode *nexp;
@@ -931,6 +930,9 @@ int process_tcl_list(const char *sl, gboolean prepend)
     most_recent_lbrack_list = calloc_2(c, sizeof(char *));
     most_recent_colon_list = calloc_2(c, sizeof(char *));
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    guint numfacs = gw_facs_get_length(facs);
+
     GLOBALS->default_flags = TR_RJUSTIFY;
     GLOBALS->default_fpshift = 0;
 
@@ -1038,11 +1040,12 @@ int process_tcl_list(const char *sl, gboolean prepend)
         }
 
         unesc_len = strlen(unescaped_str);
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            int was_packed = HIER_DEPACK_ALLOC;
+        for (i = 0; i < numfacs; i++) {
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[curr_srch_idx]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, curr_srch_idx);
+
+            hfacname = fac->name;
 
             if (!strncmp(unescaped_str, hfacname, unesc_len)) {
                 int hfacname_len = strlen(hfacname);
@@ -1051,9 +1054,6 @@ int process_tcl_list(const char *sl, gboolean prepend)
                     found++;
                     match_idx_list[ii] = curr_srch_idx;
                     match_type_list[ii] = 1; /* match was on normal search */
-                    if (was_packed) {
-                        free_2(hfacname);
-                    }
                     if (s_new != unescaped_str) {
                         free_2(unescaped_str);
                     }
@@ -1062,12 +1062,8 @@ int process_tcl_list(const char *sl, gboolean prepend)
             }
 
             curr_srch_idx++;
-            if (curr_srch_idx == GLOBALS->numfacs)
+            if (curr_srch_idx == numfacs)
                 curr_srch_idx = 0; /* optimization for rtlbrowse as names should be in order */
-
-            if (was_packed) {
-                free_2(hfacname);
-            }
         }
 
         if (s_new != unescaped_str) {
@@ -1081,24 +1077,18 @@ int process_tcl_list(const char *sl, gboolean prepend)
         strcat(entry_suffixed, this_regex);
 
         wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            int was_packed = HIER_DEPACK_ALLOC;
+        for (i = 0; i < numfacs; i++) {
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, i);
+
+            hfacname = fac->name;
 
             if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                 found++;
                 match_idx_list[ii] = i;
                 match_type_list[ii] = 1; /* match was on normal search */
-                if (was_packed) {
-                    free_2(hfacname);
-                }
                 goto import;
-            }
-
-            if (was_packed) {
-                free_2(hfacname);
             }
         }
 
@@ -1112,30 +1102,24 @@ int process_tcl_list(const char *sl, gboolean prepend)
             strcat(entry_suffixed, this_regex);
 
             wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                int was_packed = HIER_DEPACK_ALLOC;
+            for (i = 0; i < numfacs; i++) {
                 char *hfacname = NULL;
 
-                hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+                GwSymbol *fac = gw_facs_get(facs, i);
+
+                hfacname = fac->name;
 
                 if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                     found++;
                     match_idx_list[ii] = i;
                     match_type_list[ii] = 2 + lbrack_adj; /* match was on lbrack removal */
-                    if (was_packed) {
-                        free_2(hfacname);
-                    }
                     goto import;
-                }
-
-                if (was_packed) {
-                    free_2(hfacname);
                 }
             }
         }
 
-        import : if (match_type_list[ii]) { struct symbol *s = GLOBALS->facs[match_idx_list[ii]];
-        struct symbol *schain = s->vec_root;
+        import : if (match_type_list[ii]) { GwSymbol *s = gw_facs_get(facs, match_idx_list[ii]);
+        GwSymbol *schain = s->vec_root;
 
         if (GLOBALS->is_lx2) {
             if (schain) {
@@ -1163,7 +1147,7 @@ GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
 for (ii = 0; ii < c; ii++) {
     if (match_type_list[ii]) {
-        struct symbol *s = GLOBALS->facs[match_idx_list[ii]];
+        GwSymbol *s = gw_facs_get(facs, match_idx_list[ii]);
 
         if ((match_type_list[ii] >= 2) && (s->n->extvals)) {
             GwNode *nexp;
@@ -1220,7 +1204,7 @@ for (ii = 0; ii < c; ii++) {
                     which_lsb); /* is complicated, so split out to its own function */
             }
         } else {
-            struct symbol *schain = s->vec_root;
+            GwSymbol *schain = s->vec_root;
 
             if (!schain) {
                 AddNodeUnroll(s->n, NULL);
@@ -1299,10 +1283,11 @@ static char *make_gtkwave_pid(void)
     sprintf(pidstr, "{gtkwave PID %d} ", getpid());
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
     if (gw_marker_is_enabled(primary_marker)) {
         char mrkbuf[128];
-        reformat_time(mrkbuf, gw_marker_get_position(primary_marker), GLOBALS->time_dimension);
+        reformat_time(mrkbuf, gw_marker_get_position(primary_marker), time_dimension);
         sprintf(pidstr + strlen(pidstr), "{marker %s} ", mrkbuf);
     }
 
@@ -1334,18 +1319,12 @@ char *make_single_tcl_list_name(char *s, char *opt_value, int promote_to_bus, in
 
     if (s) {
         int len;
-        int was_packed = HIER_DEPACK_ALLOC;
         char *s2;
 
-        s = hier_decompress_flagged(s, &was_packed);
         len = strlen(s);
         s2 = g_alloca(len + 1);
 
         strcpy(s2, s);
-        if (was_packed) {
-            free_2(s);
-            s = NULL;
-        }
 
         pnt = s2;
 
@@ -1479,7 +1458,7 @@ static char *give_value_string(GwTrace *t)
                 if (h_ptr) {
                     if (!t->n.nd->extvals) {
                         rc = (char *)calloc_2(2, 2 * sizeof(char));
-                        rc[0] = AN_STR[h_ptr->v.h_val];
+                        rc[0] = gw_bit_to_char(h_ptr->v.h_val);
                     } else {
                         if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
                             if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
@@ -1526,7 +1505,7 @@ char *add_dnd_from_searchbox(void)
 
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -1549,7 +1528,7 @@ char *add_dnd_from_searchbox(void)
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -1606,7 +1585,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
     unsigned int mult_len = 0;
     const char *netoff = "{gtkwave NET OFF} ";
     char *trace_val = NULL;
-    static const char xfwd[AN_COUNT] = AN_NORMAL;
+    static const char xfwd[GW_BIT_COUNT] = AN_NORMAL;
     char trace_val_vec_single[2] = {0, 0};
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
@@ -1749,11 +1728,11 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
                                 int bitnum = bits[i];
 
                                 if (bitnum < 0)
-                                    bitnum = AN_DASH;
-                                else if (bitnum >= AN_COUNT)
-                                    bitnum = AN_DASH;
+                                    bitnum = GW_BIT_DASH;
+                                else if (bitnum >= GW_BIT_COUNT)
+                                    bitnum = GW_BIT_DASH;
 
-                                trace_val_vec_single[0] = AN_STR[(int)xfwd[bitnum]];
+                                trace_val_vec_single[0] = gw_bit_to_char((int)xfwd[bitnum]);
                                 one_entry =
                                     make_single_tcl_list_name(str, trace_val_vec_single, 0, 0);
                                 WAVE_OE_ME
@@ -1876,7 +1855,7 @@ static void sig_selection_foreach_dnd(GtkTreeModel *model,
 {
     (void)path;
 
-    GwTree *sel;
+    GwTreeNode *sel;
     int i;
     int low, high;
     struct iter_dnd_strings *it;
@@ -1903,12 +1882,13 @@ static void sig_selection_foreach_dnd(GtkTreeModel *model,
     low = fetchlow(sel)->t_which;
     high = fetchhigh(sel)->t_which;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     /* If signals are vectors, iterate through them if so.  */
     for (i = low; i <= high; i++) {
-        struct symbol *s;
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if ((s->vec_root) && (GLOBALS->autocoalesce)) {
-            struct symbol *t = s->vec_root;
+            GwSymbol *t = s->vec_root;
             while (t) {
                 one_entry = make_single_tcl_list_name(t->n->nname, NULL, 1, 0);
                 WAVE_OE_ME
