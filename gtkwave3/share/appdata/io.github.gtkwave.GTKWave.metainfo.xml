@@ -19,6 +19,8 @@
     </p>
   </description>
 
+  <launchable type="desktop-id">io.github.gtkwave.GTKWave.desktop</launchable>
+
   <url type="homepage">http://gtkwave.sourceforge.net/</url>
   <url type="bugtracker">https://github.com/gtkwave/gtkwave/issues</url>
   <url type="help">https://github.com/gtkwave/gtkwave</url>
@@ -32,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.120" date="2024-03-30">
+      <description>
+        <p>
+	Changes in 3.3.120:
+        </p>
+	<ul>
+            <li>Add launchable tag in io.github.gtkwave.GTKWave.metainfo.xml.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.119" date="2024-03-24">
       <description>
         <p>
