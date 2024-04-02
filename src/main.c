@@ -659,6 +659,61 @@ static void add_plugins_to_menu(GtkWidget *widget)
 }
 #endif
 
+static void on_dbus_method_call(GDBusConnection *connection,
+                                const gchar *sender,
+                                const gchar *object_path,
+                                const gchar *interface_name,
+                                const gchar *method_name,
+                                GVariant *parameters,
+                                GDBusMethodInvocation *invocation,
+                                gpointer user_data
+
+)
+{
+    if (g_strcmp0(method_name, "Reload") == 0) {
+        g_dbus_method_invocation_return_value(invocation, NULL);
+
+        if (in_main_iteration()) {
+            return;
+        }
+        reload_into_new_context();
+    }
+}
+
+static const GDBusInterfaceVTable DBUS_VTABLE = {
+    .method_call = on_dbus_method_call,
+};
+
+static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
+{
+    GDBusNodeInfo *node_info =
+        g_dbus_node_info_new_for_xml("<node><interface name='io.github.gtkwave.GTKWave'><method "
+                                     "name='Reload' /></interface></node>",
+                                     NULL);
+
+    g_dbus_connection_register_object(connection,
+                                      "/io/github/gtkwave/GTKWave",
+                                      node_info->interfaces[0],
+                                      &DBUS_VTABLE,
+                                      NULL,
+                                      NULL,
+                                      NULL);
+
+    g_dbus_node_info_unref(node_info);
+}
+
+static void dbus_init(void)
+{
+    g_bus_own_name(G_BUS_TYPE_SESSION,
+                   "io.github.gtkwave.GTKWave",
+                   G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE,
+                   on_bus_acquired,
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL);
+}
+
 int main(int argc, char *argv[])
 {
     return (main_2(0, argc, argv));
@@ -889,7 +944,7 @@ do_primary_inits:
 #endif
 
     if (!mainwindow_already_built) {
-        wave_gconf_init(argc, argv);
+        dbus_init();
     }
 
     if (!gtkwave_argv0_cached)
@@ -2210,7 +2265,7 @@ savefile_bail:
 #else
         GLOBALS->dual_ctx = shmat(GLOBALS->dual_attach_id_main_c_1, NULL, 0);
 #endif
-        if (GLOBALS->dual_ctx != (void *) -1) {
+        if (GLOBALS->dual_ctx != (void *)-1) {
             if (memcmp(GLOBALS->dual_ctx[GLOBALS->dual_id].matchword, DUAL_MATCHWORD, 4)) {
                 fprintf(stderr, "Not a valid shared memory ID for dual head operation, exiting.\n");
                 exit(255);
@@ -2606,7 +2661,7 @@ void activate_stems_reader(char *stems_name)
             struct shmid_ds ds;
 
             struct gtkwave_annotate_ipc_t *anno_ctx = shmat(shmid, NULL, 0);
-            if (anno_ctx != (void *) -1) {
+            if (anno_ctx != (void *)-1) {
                 pid_t pid;
 
                 GLOBALS->anno_ctx = anno_ctx;
