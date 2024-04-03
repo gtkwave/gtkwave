@@ -194,6 +194,7 @@ test_warning_args = [
     '-Wuninitialized',
     '-Wunused',
 ]
+
 foreach arg: test_warning_args
     if cc.has_multi_arguments(arg)
         warning_args += arg
