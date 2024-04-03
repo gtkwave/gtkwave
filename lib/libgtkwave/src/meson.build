@@ -76,13 +76,15 @@ pkgconfig.generate(
     ],
 )
 
+libgtkwave_dep_sources = []
+
 if get_option('introspection')
     libgtkwave_gir_includes = ['GObject-2.0']
     if get_option('experimental_plugin_support')
         libgtkwave_gir_includes += 'Peas-2'
     endif
 
-    libgtkwave_gir = gnome.generate_gir(
+    libgtkwave_dep_sources += gnome.generate_gir(
         libgtkwave,
         sources: libgtkwave_public_sources + libgtkwave_public_headers,
         namespace: 'Gw',
@@ -101,5 +103,5 @@ libgtkwave_dep = declare_dependency(
     link_with: libgtkwave,
     include_directories: '.',
     dependencies: libgtkwave_dependencies,
-    sources: libgtkwave_gir,
+    sources: libgtkwave_dep_sources,
 )
