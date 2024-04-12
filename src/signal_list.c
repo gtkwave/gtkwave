@@ -1,4 +1,5 @@
 #include "signal_list.h"
+#include "gw-wave-view.h"
 #include "globals.h"
 #include "menu.h"
 
@@ -588,6 +589,10 @@ static gboolean button_release_event(GtkWidget *widget, GdkEventButton *event)
 
             signal_list->dirty = TRUE;
             gtk_widget_queue_draw(widget);
+
+            if (GLOBALS->highlight_wavewindow) {
+                gw_wave_view_force_redraw(GW_WAVE_VIEW(GLOBALS->wavearea));
+            }
         }
     }
 
