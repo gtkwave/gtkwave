@@ -79,9 +79,6 @@ enum TraceReorderMode
 #define RCV_L (1 | (5 << 1))
 #define RCV_D (1 | (6 << 1))
 
-#define RCV_STR "xzhuwl-?"
-/*               01234567 */
-
 /* ^^^   Bit representation   ^^^ */
 
 #define MAX_HISTENT_TIME ((GwTime)(~((GW_UTIME_CONSTANT(-1)) << (sizeof(GwTime) * 8 - 1))))
