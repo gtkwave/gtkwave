@@ -33,7 +33,6 @@
 #include "tree.h"
 #include "vcd.h"
 #include "vcd_saver.h"
-#include "vlist.h"
 #include "lx2.h"
 #include "signal_list.h"
 #include "dump_file_main.h"

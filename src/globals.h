@@ -54,7 +54,6 @@
 #include "tree.h"
 #include "vcd.h"
 #include "vcd_saver.h"
-#include "vlist.h"
 #include "version.h"
 
 #ifdef _WAVE_HAVE_JUDY

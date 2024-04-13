@@ -30,7 +30,6 @@
 #include "main.h"
 #include "menu.h"
 #include "color.h"
-#include "vlist.h"
 #include "rc.h"
 
 #ifdef MAC_INTEGRATION
