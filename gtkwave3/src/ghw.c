@@ -472,6 +472,8 @@ build_hierarchy_array (struct ghw_handler *h, union ghw_type *arr, int dim,
 
       t = build_hierarchy_type (h, arr->sa.el, name, sig);
 
+      free_2(name); /* memory leak from GH commit 7ae937b on devel branch */
+
       if (*res != NULL)
 	(*res)->next = t;
       *res = t;
