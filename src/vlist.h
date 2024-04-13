@@ -8,6 +8,7 @@
  */
 
 #include "globals.h"
+#include <gtkwave.h>
 
 #ifndef WAVE_VLIST_H
 #define WAVE_VLIST_H
@@ -16,14 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "debug.h"
-
-struct vlist_t
-{
-    struct vlist_t *next;
-    unsigned int siz;
-    unsigned int offs;
-    unsigned int elem_siz;
-};
 
 /* experimentation shows that 255 is one of the least common
    bytes found in recoded value change streams */
@@ -36,7 +29,7 @@ struct vlist_t
 
 struct vlist_packer_t
 {
-    struct vlist_t *v;
+    GwVlist *v;
 
     unsigned char buf[WAVE_ZIVWRAP];
 
@@ -50,18 +43,10 @@ struct vlist_packer_t
     unsigned char repdist, repdist2, repdist3, repdist4;
 };
 
-struct vlist_t *vlist_create(unsigned int elem_siz);
-void vlist_destroy(struct vlist_t *v);
-void *vlist_alloc(struct vlist_t **v, int compressable);
-unsigned int vlist_size(struct vlist_t *v);
-void *vlist_locate(struct vlist_t *v, unsigned int idx);
-void vlist_freeze(struct vlist_t **v);
-void vlist_uncompress(struct vlist_t **v);
-
 struct vlist_packer_t *vlist_packer_create(void);
 void vlist_packer_alloc(struct vlist_packer_t *v, unsigned char ch);
 void vlist_packer_finalize(struct vlist_packer_t *v);
-unsigned char *vlist_packer_decompress(struct vlist_t *vl, unsigned int *declen);
+unsigned char *vlist_packer_decompress(GwVlist *vl, unsigned int *declen);
 void vlist_packer_decompress_destroy(char *mem);
 
 #endif

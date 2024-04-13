@@ -248,11 +248,11 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
 }
 
 #define vlist_locate_import(self, x, y) \
-    ((self->is_prepacked) ? ((depacked) + (y)) : vlist_locate((x), (y)))
+    ((self->is_prepacked) ? ((depacked) + (y)) : gw_vlist_locate((x), (y)))
 
 void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 {
-    struct vlist_t *v = np->mv.mvlfac_vlist;
+    GwVlist *v = np->mv.mvlfac_vlist;
     int len = 1;
     unsigned int list_size;
     unsigned char vlist_type;
@@ -270,13 +270,13 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 
     if (!v)
         return;
-    vlist_uncompress(&v);
+    gw_vlist_uncompress(&v);
 
     if (self->is_prepacked) {
         depacked = vlist_packer_decompress(v, &list_size);
-        vlist_destroy(v);
+        gw_vlist_destroy(v);
     } else {
-        list_size = vlist_size(v);
+        list_size = gw_vlist_size(v);
     }
 
     if (!list_size) {
@@ -376,7 +376,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             }
             time_idx += delta;
 
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed bitwise signal data for '%s' after time_idx = %d\n",
@@ -418,7 +418,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             delta = accum;
             time_idx += delta;
 
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed 'b' signal data for '%s' after time_idx = %d\n",
@@ -505,7 +505,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             delta = accum;
             time_idx += delta;
 
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed 'r' signal data for '%s' after time_idx = %d\n",
@@ -565,7 +565,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             delta = accum;
             time_idx += delta;
 
-            curtime_pnt = vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
             if (!curtime_pnt) {
                 fprintf(stderr,
                         "GTKWAVE | malformed 's' signal data for '%s' after time_idx = %d\n",
@@ -609,7 +609,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             if (self->is_prepacked) {
                 vlist_packer_decompress_destroy((char *)depacked);
             } else {
-                vlist_destroy(v);
+                gw_vlist_destroy(v);
             }
             np->mv.mvlfac_vlist = NULL;
 
@@ -625,7 +625,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
     if (self->is_prepacked) {
         vlist_packer_decompress_destroy((char *)depacked);
     } else {
-        vlist_destroy(v);
+        gw_vlist_destroy(v);
     }
     np->mv.mvlfac_vlist = NULL;
 }

@@ -15,6 +15,7 @@ libgtkwave_tests = [
     'gw-time-range',
     'gw-time',
     'gw-tree',
+    'gw-vlist',
 ]
 
 foreach test : libgtkwave_tests
