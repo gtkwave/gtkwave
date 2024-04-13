@@ -50,7 +50,6 @@ gtkwave_sources = [
     'gw-mouseover.c',
     'gw-named-marker-dialog.c',
     'gw-time-display.c',
-    'gw-vcd-file.c',
     'gw-vcd-loader.c',
     'gw-wave-view-traces.c',
     'gw-wave-view.c',

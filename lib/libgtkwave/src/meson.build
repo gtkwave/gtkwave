@@ -22,8 +22,9 @@ libgtkwave_public_sources = [
     'gw-time.c',
     'gw-tree.c',
     'gw-var-enums.c',
-    'gw-vlist.c',
+    'gw-vcd-file.c',
     'gw-vlist-packer.c',
+    'gw-vlist.c',
 ]
 
 libgtkwave_public_headers = [
@@ -57,6 +58,7 @@ libgtkwave_public_headers = [
     'gw-time.h',
     'gw-tree.h',
     'gw-var-enums.h',
+    'gw-vcd-file.h',
     'gw-vector-ent.h',
     'gw-vlist.h',
     'gw-vlist-packer.h',
