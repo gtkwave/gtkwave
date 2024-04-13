@@ -273,7 +273,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
     gw_vlist_uncompress(&v);
 
     if (self->is_prepacked) {
-        depacked = vlist_packer_decompress(v, &list_size);
+        depacked = gw_vlist_packer_decompress(v, &list_size);
         gw_vlist_destroy(v);
     } else {
         list_size = gw_vlist_size(v);
@@ -607,7 +607,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             gw_vcd_file_import_trace(self, n2);
 
             if (self->is_prepacked) {
-                vlist_packer_decompress_destroy((char *)depacked);
+                gw_vlist_packer_decompress_destroy((char *)depacked);
             } else {
                 gw_vlist_destroy(v);
             }
@@ -623,7 +623,7 @@ void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
     }
 
     if (self->is_prepacked) {
-        vlist_packer_decompress_destroy((char *)depacked);
+        gw_vlist_packer_decompress_destroy((char *)depacked);
     } else {
         gw_vlist_destroy(v);
     }

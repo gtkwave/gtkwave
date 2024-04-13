@@ -4,7 +4,6 @@
 #include "gw-vcd-file-private.h"
 #include "globals.h"
 #include "vcd.h"
-#include "vlist.h"
 #include "lx2.h"
 
 int vcd_keyword_code(const char *s, unsigned int len);
@@ -108,28 +107,28 @@ static void malform_eof_fix(GwVcdLoader *self)
 
 /**/
 
-static void vlist_packer_emit_uv32(struct vlist_packer_t **vl, unsigned int v)
+static void gw_vlist_packer_emit_uv32(GwVlistPacker **vl, unsigned int v)
 {
     unsigned int nxt;
 
     while ((nxt = v >> 7)) {
-        vlist_packer_alloc(*vl, v & 0x7f);
+        gw_vlist_packer_alloc(*vl, v & 0x7f);
         v = nxt;
     }
 
-    vlist_packer_alloc(*vl, (v & 0x7f) | 0x80);
+    gw_vlist_packer_alloc(*vl, (v & 0x7f) | 0x80);
 }
 
-static void vlist_packer_emit_string(struct vlist_packer_t **vl, const char *s)
+static void gw_vlist_packer_emit_string(GwVlistPacker **vl, const char *s)
 {
     while (*s) {
-        vlist_packer_alloc(*vl, *s);
+        gw_vlist_packer_alloc(*vl, *s);
         s++;
     }
-    vlist_packer_alloc(*vl, 0);
+    gw_vlist_packer_alloc(*vl, 0);
 }
 
-static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char *s)
+static void gw_vlist_packer_emit_mvl9_string(GwVlistPacker **vl, const char *s)
 {
     unsigned int recoded_bit;
     unsigned char which = 0;
@@ -177,7 +176,7 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
             which = 1;
         } else {
             accum |= recoded_bit;
-            vlist_packer_alloc(*vl, accum);
+            gw_vlist_packer_alloc(*vl, accum);
             which = accum = 0;
         }
         s++;
@@ -191,18 +190,18 @@ static void vlist_packer_emit_mvl9_string(struct vlist_packer_t **vl, const char
         accum |= recoded_bit;
     }
 
-    vlist_packer_alloc(*vl, accum);
+    gw_vlist_packer_alloc(*vl, accum);
 }
 
 /**/
 
-static void vlist_emit_uv32(GwVlist **vl, unsigned int v, gboolean prepack)
+static void gw_vlist_emit_uv32(GwVlist **vl, unsigned int v, gboolean prepack)
 {
     unsigned int nxt;
     char *pnt;
 
     if (prepack) {
-        vlist_packer_emit_uv32((struct vlist_packer_t **)vl, v);
+        gw_vlist_packer_emit_uv32((GwVlistPacker **)vl, v);
         return;
     }
 
@@ -216,12 +215,12 @@ static void vlist_emit_uv32(GwVlist **vl, unsigned int v, gboolean prepack)
     *pnt = (v & 0x7f) | 0x80;
 }
 
-static void vlist_emit_string(GwVlist **vl, const char *s, gboolean prepack)
+static void gw_vlist_emit_string(GwVlist **vl, const char *s, gboolean prepack)
 {
     char *pnt;
 
     if (prepack) {
-        vlist_packer_emit_string((struct vlist_packer_t **)vl, s);
+        gw_vlist_packer_emit_string((GwVlistPacker **)vl, s);
         return;
     }
 
@@ -234,7 +233,7 @@ static void vlist_emit_string(GwVlist **vl, const char *s, gboolean prepack)
     *pnt = 0;
 }
 
-static void vlist_emit_mvl9_string(GwVlist **vl, const char *s, gboolean prepack)
+static void gw_vlist_emit_mvl9_string(GwVlist **vl, const char *s, gboolean prepack)
 {
     char *pnt;
     unsigned int recoded_bit;
@@ -242,7 +241,7 @@ static void vlist_emit_mvl9_string(GwVlist **vl, const char *s, gboolean prepack
     unsigned char accum;
 
     if (prepack) {
-        vlist_packer_emit_mvl9_string((struct vlist_packer_t **)vl, s);
+        gw_vlist_packer_emit_mvl9_string((GwVlistPacker **)vl, s);
         return;
     }
 
@@ -621,9 +620,7 @@ static unsigned int vlist_emit_finalize(GwVcdLoader *self)
 
         if (n->mv.mvlfac_vlist) {
             if (prepack) {
-                vlist_packer_finalize(n->mv.mvlfac_packer_vlist);
-                vlist = n->mv.mvlfac_packer_vlist->v;
-                free_2(n->mv.mvlfac_packer_vlist);
+                vlist = gw_vlist_packer_finalize_and_free(n->mv.mvlfac_packer_vlist);
                 n->mv.mvlfac_vlist = vlist;
                 gw_vlist_freeze(&n->mv.mvlfac_vlist, GLOBALS->vlist_compression_depth);
             } else {
@@ -631,48 +628,51 @@ static unsigned int vlist_emit_finalize(GwVcdLoader *self)
             }
         } else {
             n->mv.mvlfac_vlist =
-                prepack ? ((GwVlist *)vlist_packer_create()) : gw_vlist_create(sizeof(char));
+                prepack ? ((GwVlist *)gw_vlist_packer_new(GLOBALS->vlist_compression_depth))
+                        : gw_vlist_create(sizeof(char));
 
             if ((/* vprime= */ bsearch_vcd(self, v->id, strlen(v->id))) ==
                 v) /* hash mish means dup net */ /* scan-build */
             {
                 switch (v->vartype) {
                     case V_REAL:
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 'R', prepack);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
-                        vlist_emit_string(&n->mv.mvlfac_vlist, "NaN", prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, 'R', prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
+                        gw_vlist_emit_string(&n->mv.mvlfac_vlist, "NaN", prepack);
                         break;
 
                     case V_STRINGTYPE:
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 'S', prepack);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
-                        vlist_emit_string(&n->mv.mvlfac_vlist, "UNDEF", prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, 'S', prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
+                        gw_vlist_emit_string(&n->mv.mvlfac_vlist, "UNDEF", prepack);
                         break;
 
                     default:
                         if (v->size == 1) {
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)'0', prepack);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, RCV_X, prepack);
+                            gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)'0', prepack);
+                            gw_vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                               (unsigned int)v->vartype,
+                                               prepack);
+                            gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, RCV_X, prepack);
                         } else {
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, 'B', prepack);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->vartype, prepack);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
-                            vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
-                            vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, "x", prepack);
+                            gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, 'B', prepack);
+                            gw_vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                               (unsigned int)v->vartype,
+                                               prepack);
+                            gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, (unsigned int)v->size, prepack);
+                            gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, 0, prepack);
+                            gw_vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, "x", prepack);
                         }
                         break;
                 }
             }
 
             if (prepack) {
-                vlist_packer_finalize(n->mv.mvlfac_packer_vlist);
-                vlist = n->mv.mvlfac_packer_vlist->v;
-                free_2(n->mv.mvlfac_packer_vlist);
+                vlist = gw_vlist_packer_finalize_and_free(n->mv.mvlfac_packer_vlist);
                 n->mv.mvlfac_vlist = vlist;
                 gw_vlist_freeze(&n->mv.mvlfac_vlist, GLOBALS->vlist_compression_depth);
             } else {
@@ -1140,16 +1140,17 @@ static void parse_valuechange(GwVcdLoader *self)
                     if (!n->mv
                              .mvlfac_vlist) /* overloaded for vlist, numhist = last position used */
                     {
-                        n->mv.mvlfac_vlist = self->vlist_prepack
-                                                 ? ((GwVlist *)vlist_packer_create())
-                                                 : gw_vlist_create(sizeof(char));
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist,
-                                        (unsigned int)'0',
-                                        self->vlist_prepack); /* represents single bit routine for
-                                            decompression */
-                        vlist_emit_uv32(&n->mv.mvlfac_vlist,
-                                        (unsigned int)v->vartype,
-                                        self->vlist_prepack);
+                        n->mv.mvlfac_vlist =
+                            self->vlist_prepack
+                                ? ((GwVlist *)gw_vlist_packer_new(GLOBALS->vlist_compression_depth))
+                                : gw_vlist_create(sizeof(char));
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                           (unsigned int)'0',
+                                           self->vlist_prepack); /* represents single bit routine
+                                               for decompression */
+                        gw_vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                           (unsigned int)v->vartype,
+                                           self->vlist_prepack);
                     }
 
                     time_delta = self->time_vlist_count - (unsigned int)n->numhist;
@@ -1190,7 +1191,7 @@ static void parse_valuechange(GwVcdLoader *self)
                             break;
                     }
 
-                    vlist_emit_uv32(&n->mv.mvlfac_vlist, rcv, self->vlist_prepack);
+                    gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, rcv, self->vlist_prepack);
                 }
             } else {
                 fprintf(stderr,
@@ -1237,9 +1238,10 @@ static void parse_valuechange(GwVcdLoader *self)
                 if (!n->mv.mvlfac_vlist) /* overloaded for vlist, numhist = last position used */
                 {
                     unsigned char typ2 = toupper(typ);
-                    n->mv.mvlfac_vlist = self->vlist_prepack
-                                             ? ((GwVlist *)vlist_packer_create())
-                                             : gw_vlist_create(sizeof(char));
+                    n->mv.mvlfac_vlist =
+                        self->vlist_prepack
+                            ? ((GwVlist *)gw_vlist_packer_new(GLOBALS->vlist_compression_depth))
+                            : gw_vlist_create(sizeof(char));
 
                     if ((v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
                         if ((typ2 == 'R') || (typ2 == 'S')) {
@@ -1252,32 +1254,32 @@ static void parse_valuechange(GwVcdLoader *self)
                         }
                     }
 
-                    vlist_emit_uv32(&n->mv.mvlfac_vlist,
-                                    (unsigned int)toupper(typ2),
-                                    self->vlist_prepack); /* B/R/P/S for decompress */
-                    vlist_emit_uv32(&n->mv.mvlfac_vlist,
-                                    (unsigned int)v->vartype,
-                                    self->vlist_prepack);
-                    vlist_emit_uv32(&n->mv.mvlfac_vlist,
-                                    (unsigned int)v->size,
-                                    self->vlist_prepack);
+                    gw_vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                       (unsigned int)toupper(typ2),
+                                       self->vlist_prepack); /* B/R/P/S for decompress */
+                    gw_vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                       (unsigned int)v->vartype,
+                                       self->vlist_prepack);
+                    gw_vlist_emit_uv32(&n->mv.mvlfac_vlist,
+                                       (unsigned int)v->size,
+                                       self->vlist_prepack);
                 }
 
                 time_delta = self->time_vlist_count - (unsigned int)n->numhist;
                 n->numhist = self->time_vlist_count;
 
-                vlist_emit_uv32(&n->mv.mvlfac_vlist, time_delta, self->vlist_prepack);
+                gw_vlist_emit_uv32(&n->mv.mvlfac_vlist, time_delta, self->vlist_prepack);
 
                 if ((typ == 'b') || (typ == 'B')) {
                     if ((v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
-                        vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
+                        gw_vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
                     } else {
-                        vlist_emit_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
+                        gw_vlist_emit_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
                     }
                 } else {
                     if ((v->vartype == V_REAL) || (v->vartype == V_STRINGTYPE) || (typ == 's') ||
                         (typ == 'S')) {
-                        vlist_emit_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
+                        gw_vlist_emit_string(&n->mv.mvlfac_vlist, vector, self->vlist_prepack);
                     } else {
                         char *bits = g_alloca(v->size + 1);
                         int i, j, k = 0;
@@ -1293,7 +1295,7 @@ static void parse_valuechange(GwVcdLoader *self)
                         }
 
                     bit_term:
-                        vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, bits, self->vlist_prepack);
+                        gw_vlist_emit_mvl9_string(&n->mv.mvlfac_vlist, bits, self->vlist_prepack);
                     }
                 }
             }
@@ -1945,7 +1947,9 @@ static void vcd_parse(GwVcdLoader *self)
                             self->end_time = tim; /* in case of malformed vcd files */
                         DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
 
-                        tt = gw_vlist_alloc(&self->time_vlist, FALSE, GLOBALS->vlist_compression_depth);
+                        tt = gw_vlist_alloc(&self->time_vlist,
+                                            FALSE,
+                                            GLOBALS->vlist_compression_depth);
                         *tt = tim;
                         self->time_vlist_count++;
                     } else {
@@ -1957,7 +1961,9 @@ static void vcd_parse(GwVcdLoader *self)
 
                             self->start_time = self->current_time = self->end_time = tim;
 
-                            tt = gw_vlist_alloc(&self->time_vlist, FALSE, GLOBALS->vlist_compression_depth);
+                            tt = gw_vlist_alloc(&self->time_vlist,
+                                                FALSE,
+                                                GLOBALS->vlist_compression_depth);
                             *tt = tim;
                             self->time_vlist_count = 1;
                         }

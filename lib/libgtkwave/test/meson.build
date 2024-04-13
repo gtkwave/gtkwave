@@ -15,6 +15,7 @@ libgtkwave_tests = [
     'gw-time-range',
     'gw-time',
     'gw-tree',
+    'gw-vlist-packer',
     'gw-vlist',
 ]
 

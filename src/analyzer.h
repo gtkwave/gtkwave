@@ -14,7 +14,6 @@
 
 #include <gtk/gtk.h>
 #include <stdlib.h>
-#include "vlist.h"
 #include "debug.h"
 
 #ifdef AET2_IS_PRESENT

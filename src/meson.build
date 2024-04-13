@@ -90,7 +90,6 @@ gtkwave_sources = [
     'ttranslate.c',
     'vcd_saver.c',
     'vcd.c',
-    'vlist.c',
     'wavewindow.c',
     'zoombuttons.c',
     'cocoa/cocoa_misc.c',
