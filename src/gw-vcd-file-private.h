@@ -7,7 +7,7 @@ struct _GwVcdFile
     gboolean preserve_glitches;
     gboolean preserve_glitches_real;
 
-    struct vlist_t *time_vlist;
+    GwVlist *time_vlist;
     gboolean is_prepacked;
 
     GwTime start_time;

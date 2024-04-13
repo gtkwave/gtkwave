@@ -2,6 +2,7 @@
 
 #include "gw-types.h"
 #include "gw-hist-ent.h"
+#include "gw-vlist.h"
 
 /* struct Node bitfield widths */
 #define WAVE_VARXT_WIDTH (16)
@@ -37,7 +38,7 @@ struct _GwNode
     {
         GwFac *mvlfac; /* for use with mvlsim aets */
         struct vlist_packer_t *mvlfac_packer_vlist;
-        struct vlist_t *mvlfac_vlist;
+        GwVlist *mvlfac_vlist;
         char *value; /* for use when unrolling ae2 values */
     } mv; /* anon union is a gcc extension so use mv instead.  using this union avoids crazy casting
              warnings */

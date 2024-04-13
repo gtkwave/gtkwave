@@ -26,217 +26,6 @@
 #include "globals.h"
 #include "vlist.h"
 #include <zlib.h>
-#include <string.h>
-
-/* create / destroy
- */
-struct vlist_t *vlist_create(unsigned int elem_siz)
-{
-    struct vlist_t *v;
-
-    v = calloc_2(1, sizeof(struct vlist_t) + elem_siz);
-    v->siz = 1;
-    v->elem_siz = elem_siz;
-
-    return (v);
-}
-
-void vlist_destroy(struct vlist_t *v)
-{
-    struct vlist_t *vt;
-
-    while (v) {
-        vt = v->next;
-        free_2(v);
-        v = vt;
-    }
-}
-
-/* realtime compression/decompression of bytewise vlists
- * this can obviously be extended if elem_siz > 1, but
- * the viewer doesn't need that feature
- */
-struct vlist_t *vlist_compress_block(struct vlist_t *v, unsigned int *rsiz)
-{
-    if (v->siz > 32) {
-        struct vlist_t *vz;
-        unsigned int *ipnt;
-        char *dmem = malloc_2(compressBound(v->siz));
-        unsigned long destlen = v->siz;
-        int rc;
-
-        rc = compress2((unsigned char *)dmem,
-                       &destlen,
-                       (unsigned char *)(v + 1),
-                       v->siz,
-                       GLOBALS->vlist_compression_depth);
-        if ((rc == Z_OK) && ((destlen + sizeof(int)) < v->siz)) {
-            /* printf("siz: %d, dest: %d rc: %d\n", v->siz, (int)destlen, rc); */
-
-            vz = malloc_2(*rsiz = sizeof(struct vlist_t) + sizeof(int) + destlen);
-            memcpy(vz, v, sizeof(struct vlist_t));
-
-            ipnt = (unsigned int *)(vz + 1);
-            ipnt[0] = destlen;
-            memcpy(&ipnt[1], dmem, destlen);
-            vz->offs = (unsigned int)(-(int)v->offs); /* neg value signified compression */
-            free_2(v);
-            v = vz;
-        }
-
-        free_2(dmem);
-    }
-
-    return (v);
-}
-
-void vlist_uncompress(struct vlist_t **v)
-{
-    struct vlist_t *vl = *v;
-    struct vlist_t *vprev = NULL;
-
-    while (vl) {
-        if ((int)vl->offs < 0) {
-            struct vlist_t *vz = malloc_2(sizeof(struct vlist_t) + vl->siz);
-            unsigned int *ipnt;
-            unsigned long sourcelen, destlen;
-            int rc;
-
-            memcpy(vz, vl, sizeof(struct vlist_t));
-            vz->offs = (unsigned int)(-(int)vl->offs);
-
-            ipnt = (unsigned int *)(vl + 1);
-            sourcelen = (unsigned long)ipnt[0];
-            destlen = (unsigned long)vl->siz;
-
-            rc = uncompress((unsigned char *)(vz + 1),
-                            &destlen,
-                            (unsigned char *)&ipnt[1],
-                            sourcelen);
-            if (rc != Z_OK) {
-                fprintf(stderr,
-                        "Error in vlist uncompress(), rc=%d/destlen=%d exiting!\n",
-                        rc,
-                        (int)destlen);
-                exit(255);
-            }
-
-            free_2(vl);
-            vl = vz;
-
-            if (vprev) {
-                vprev->next = vz;
-            } else {
-                *v = vz;
-            }
-        }
-
-        vprev = vl;
-        vl = vl->next;
-    }
-}
-
-/* get pointer to one unit of space
- */
-void *vlist_alloc(struct vlist_t **v, int compressable)
-{
-    struct vlist_t *vl = *v;
-    char *px;
-    struct vlist_t *v2;
-
-    if (vl->offs == vl->siz) {
-        unsigned int siz, rsiz;
-
-        /* 2 times versions are the growable, indexable vlists */
-        siz = 2 * vl->siz;
-
-        rsiz = sizeof(struct vlist_t) + (vl->siz * vl->elem_siz);
-
-        if ((compressable) && (vl->elem_siz == 1)) {
-            if (GLOBALS->vlist_compression_depth >= 0) {
-                vl = vlist_compress_block(vl, &rsiz);
-            }
-        }
-
-        v2 = calloc_2(1, sizeof(struct vlist_t) + (vl->siz * vl->elem_siz));
-        v2->siz = siz;
-        v2->elem_siz = vl->elem_siz;
-        v2->next = vl;
-        *v = v2;
-        vl = *v;
-    } else if (vl->offs * 2 == vl->siz) {
-        v2 = calloc_2(1, sizeof(struct vlist_t) + (vl->siz * vl->elem_siz));
-        memcpy(v2, vl, sizeof(struct vlist_t) + (vl->siz / 2 * vl->elem_siz));
-        free_2(vl);
-
-        *v = v2;
-        vl = *v;
-    }
-
-    px = (((char *)(vl)) + sizeof(struct vlist_t) + ((vl->offs++) * vl->elem_siz));
-    return ((void *)px);
-}
-
-/* vlist_size() and vlist_locate() do not work properly on
-   compressed lists...you'll have to call vlist_uncompress() first!
- */
-unsigned int vlist_size(struct vlist_t *v)
-{
-    return (v->siz - 1 + v->offs);
-}
-
-void *vlist_locate(struct vlist_t *v, unsigned int idx)
-{
-    unsigned int here = v->siz - 1;
-    unsigned int siz = here + v->offs; /* siz is the same as vlist_size() */
-
-    if ((!siz) || (idx >= siz))
-        return (NULL);
-
-    while (idx < here) {
-        v = v->next;
-        here = v->siz - 1;
-    }
-
-    idx -= here;
-
-    return ((void *)(((char *)(v)) + sizeof(struct vlist_t) + (idx * v->elem_siz)));
-}
-
-/* calling this if you don't plan on adding any more elements will free
-   up unused space as well as compress final blocks (if enabled)
- */
-void vlist_freeze(struct vlist_t **v)
-{
-    struct vlist_t *vl = *v;
-    unsigned int siz = vl->offs;
-    unsigned int rsiz = sizeof(struct vlist_t) + (siz * vl->elem_siz);
-
-    if ((vl->elem_siz == 1) && (siz)) {
-        struct vlist_t *w, *v2;
-
-        if (vl->offs * 2 <= vl->siz) /* Electric Fence, change < to <= */
-        {
-            v2 = calloc_2(1,
-                          sizeof(struct vlist_t) + (vl->siz /* * vl->elem_siz */)); /* scan-build */
-            memcpy(v2,
-                   vl,
-                   sizeof(struct vlist_t) + (vl->siz / 2 /* * vl->elem_siz */)); /* scan-build */
-            free_2(vl);
-
-            *v = v2;
-            vl = *v;
-        }
-
-        w = vlist_compress_block(vl, &rsiz);
-        *v = w;
-    } else if (siz != vl->siz) {
-        struct vlist_t *w = malloc_2(rsiz);
-        memcpy(w, vl, rsiz);
-        free_2(vl);
-        *v = w;
-    }
-}
 
 /* this code implements an LZ-based filter that can sit on top
    of the vlists.  it uses a generic escape value of 0xff as
@@ -252,7 +41,7 @@ void vlist_packer_emit_out(struct vlist_packer_t *p, unsigned char byt)
     p->packed_bytes++;
 #endif
 
-    pnt = vlist_alloc(&p->v, 1);
+    pnt = gw_vlist_alloc(&p->v, TRUE, GLOBALS->vlist_compression_depth);
     *pnt = byt;
 }
 
@@ -477,14 +266,14 @@ void vlist_packer_finalize(struct vlist_packer_t *p)
 struct vlist_packer_t *vlist_packer_create(void)
 {
     struct vlist_packer_t *vp = calloc_2(1, sizeof(struct vlist_packer_t));
-    vp->v = vlist_create(sizeof(char));
+    vp->v = gw_vlist_create(sizeof(char));
 
     return (vp);
 }
 
-unsigned char *vlist_packer_decompress(struct vlist_t *v, unsigned int *declen)
+unsigned char *vlist_packer_decompress(GwVlist *v, unsigned int *declen)
 {
-    unsigned int list_size = vlist_size(v);
+    unsigned int list_size = gw_vlist_size(v);
     unsigned int top_of_packed_size = list_size - 1;
     unsigned char *chp;
     unsigned int dec_size = 0;
@@ -494,7 +283,7 @@ unsigned char *vlist_packer_decompress(struct vlist_t *v, unsigned int *declen)
     unsigned int i, j, repcnt, dist;
 
     for (;;) {
-        chp = vlist_locate(v, top_of_packed_size);
+        chp = gw_vlist_locate(v, top_of_packed_size);
 
         dec_size |= ((unsigned int)(*chp & 0x7f)) << shamt;
 
@@ -509,7 +298,7 @@ unsigned char *vlist_packer_decompress(struct vlist_t *v, unsigned int *declen)
     mem = calloc_2(1, WAVE_ZIVWRAP + dec_size);
     dpnt = mem + WAVE_ZIVWRAP;
     for (i = 0; i < top_of_packed_size; i++) {
-        chp = vlist_locate(v, i);
+        chp = gw_vlist_locate(v, i);
         if (*chp != WAVE_ZIVFLAG) {
             *(dpnt++) = *chp;
             continue;
@@ -518,7 +307,7 @@ unsigned char *vlist_packer_decompress(struct vlist_t *v, unsigned int *declen)
         i++;
         repcnt = shamt = 0;
         for (;;) {
-            chp = vlist_locate(v, i);
+            chp = gw_vlist_locate(v, i);
 
             repcnt |= ((unsigned int)(*chp & 0x7f)) << shamt;
 
@@ -537,7 +326,7 @@ unsigned char *vlist_packer_decompress(struct vlist_t *v, unsigned int *declen)
         i++;
         dist = shamt = 0;
         for (;;) {
-            chp = vlist_locate(v, i);
+            chp = gw_vlist_locate(v, i);
 
             dist |= ((unsigned int)(*chp & 0x7f)) << shamt;
 

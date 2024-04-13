@@ -32,3 +32,4 @@
 #include "gw-loader.h"
 #include "gw-ghw-loader.h"
 #include "gw-ghw-file.h"
+#include "gw-vlist.h"
