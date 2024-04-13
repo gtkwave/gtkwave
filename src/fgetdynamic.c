@@ -16,37 +16,32 @@
 
 char *fgetmalloc(FILE *handle)
 {
-    struct vlist_t *v;
-    char *pnt = NULL;
-    int i, ch;
+    GString *line = g_string_new(NULL);
 
-    v = vlist_create(sizeof(char));
-
-    do {
-        for (;;) {
-            ch = fgetc(handle);
-            if ((ch == EOF) || (ch == 0x00) || (ch == '\n') || (ch == '\r'))
+    for (;;) {
+        int ch = fgetc(handle);
+        if (ch == EOF || ch == 0x00 || ch == '\n' || ch == '\r') {
+            if (ch > 0 && line->len == 0) {
+                // skip leading CRs and LFs
+            } else {
                 break;
-
-            pnt = (char *)vlist_alloc(&v, 0);
-            *pnt = (char)ch;
+            }
         }
-    } while (!pnt && ((ch == '\n') || (ch == '\r'))); /* fix for \n\r on \n systems */
 
-    GLOBALS->fgetmalloc_len = vlist_size(v);
-
-    if (!GLOBALS->fgetmalloc_len) {
-        pnt = NULL;
-    } else {
-        pnt = malloc_2(GLOBALS->fgetmalloc_len + 1);
-        for (i = 0; i < GLOBALS->fgetmalloc_len; i++) {
-            pnt[i] = *((char *)vlist_locate(v, i));
-        }
-        pnt[i] = 0;
+        g_string_append_c(line, ch);
     }
 
-    vlist_destroy(v);
-    return (pnt);
+    GLOBALS->fgetmalloc_len = line->len;
+
+    char *ret = NULL;
+    if (GLOBALS->fgetmalloc_len > 0) {
+        ret = malloc_2(GLOBALS->fgetmalloc_len + 1);
+        memcpy(ret, line->str, GLOBALS->fgetmalloc_len + 1);
+    }
+
+    g_string_free(line, TRUE);
+
+    return ret;
 }
 
 /*
