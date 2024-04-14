@@ -597,7 +597,6 @@ struct Global
     char autocoalesce; /* from vcd.c 503 */
     char autocoalesce_reversal; /* from vcd.c 504 */
     char convert_to_reals; /* from vcd.c 506 */
-    int escaped_names_found_vcd_c_1; /* from vcd.c 528 */
 
     /*
      * vcd_saver.c

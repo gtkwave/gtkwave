@@ -19,6 +19,7 @@ typedef struct
     gboolean has_nonimplicit_directions;
     gboolean has_supplemental_datatypes;
     gboolean has_supplemental_vartypes;
+    gboolean has_escaped_names;
 } GwDumpFilePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(GwDumpFile, gw_dump_file, G_TYPE_OBJECT)
@@ -38,6 +39,7 @@ enum
     PROP_HAS_NONIMPLICIT_DIRECTIONS,
     PROP_HAS_SUPPLEMENTAL_DATATYPES,
     PROP_HAS_SUPPLEMENTAL_VARTYPES,
+    PROP_HAS_ESCAPED_NAMES,
     N_PROPERTIES,
 };
 
@@ -160,6 +162,10 @@ static void gw_dump_file_set_property(GObject *object,
             priv->has_supplemental_vartypes = g_value_get_boolean(value);
             break;
 
+        case PROP_HAS_ESCAPED_NAMES:
+            priv->has_escaped_names = g_value_get_boolean(value);
+            break;
+
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
             break;
@@ -224,6 +230,10 @@ static void gw_dump_file_get_property(GObject *object,
 
         case PROP_HAS_SUPPLEMENTAL_VARTYPES:
             g_value_set_boolean(value, gw_dump_file_has_supplemental_vartypes(self));
+            break;
+
+        case PROP_HAS_ESCAPED_NAMES:
+            g_value_set_boolean(value, gw_dump_file_has_escaped_names(self));
             break;
 
         default:
@@ -331,6 +341,13 @@ static void gw_dump_file_class_init(GwDumpFileClass *klass)
 
     properties[PROP_HAS_SUPPLEMENTAL_VARTYPES] =
         g_param_spec_boolean("has-supplemental-vartypes",
+                             NULL,
+                             NULL,
+                             FALSE,
+                             G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+    properties[PROP_HAS_ESCAPED_NAMES] =
+        g_param_spec_boolean("has-escaped-names",
                              NULL,
                              NULL,
                              FALSE,
@@ -564,3 +581,20 @@ gboolean gw_dump_file_has_supplemental_vartypes(GwDumpFile *self)
 
     return priv->has_supplemental_vartypes;
 }
+/**
+ * gw_dump_file_has_escaped_names:
+ * @self: A #GwDumpFile.
+ *
+ * Returns whether the dump file has escaped names.
+ *
+ * Returns: %TRUE, if the dump file has escaped names.
+ */
+gboolean gw_dump_file_has_escaped_names(GwDumpFile *self)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), 0);
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    return priv->has_escaped_names;
+}
+

@@ -237,7 +237,8 @@ static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
             int i;
             int mat;
 
-            if (!GLOBALS->escaped_names_found_vcd_c_1) {
+            gboolean has_escaped_names = gw_dump_file_has_escaped_names(GLOBALS->dump_file);
+            if (!has_escaped_names) {
                 return (sr);
             }
 
@@ -245,7 +246,7 @@ static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
             guint numfacs = gw_facs_get_length(facs);
 
             if (GLOBALS->facs_have_symbols_state_machine == 0) {
-                if (GLOBALS->escaped_names_found_vcd_c_1) {
+                if (has_escaped_names) {
                     mat = 1;
                 } else {
                     mat = 0;

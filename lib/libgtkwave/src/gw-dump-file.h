@@ -35,5 +35,6 @@ GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self);
 gboolean gw_dump_file_has_nonimplicit_directions(GwDumpFile *self);
 gboolean gw_dump_file_has_supplemental_datatypes(GwDumpFile *self);
 gboolean gw_dump_file_has_supplemental_vartypes(GwDumpFile *self);
+gboolean gw_dump_file_has_escaped_names(GwDumpFile *self);
 
 G_END_DECLS
