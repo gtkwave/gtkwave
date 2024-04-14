@@ -21,5 +21,7 @@ void gw_loader_set_preserve_glitches(GwLoader *self, gboolean preserve_glitches)
 gboolean gw_loader_is_preserve_glitches(GwLoader *self);
 void gw_loader_set_preserve_glitches_real(GwLoader *self, gboolean preserve_glitches_real);
 gboolean gw_loader_is_preserve_glitches_real(GwLoader *self);
+void gw_loader_set_hierarchy_delimiter(GwLoader *self, gchar delimiter);
+gchar gw_loader_get_hierarchy_delimiter(GwLoader *self);
 
 G_END_DECLS
