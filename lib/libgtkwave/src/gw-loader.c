@@ -4,6 +4,7 @@ typedef struct
 {
     gboolean preserve_glitches;
     gboolean preserve_glitches_real;
+    gchar hierarchy_delimiter;
 
     gboolean already_used;
 } GwLoaderPrivate;
@@ -14,6 +15,7 @@ enum
 {
     PROP_PRESERVE_GLITCHES = 1,
     PROP_PRESERVE_GLITCHES_REAL,
+    PROP_HIERARCHY_DELIMITER,
     N_PROPERTIES,
 };
 
@@ -33,6 +35,10 @@ static void gw_loader_set_property(GObject *object,
 
         case PROP_PRESERVE_GLITCHES_REAL:
             gw_loader_set_preserve_glitches_real(self, g_value_get_boolean(value));
+            break;
+
+        case PROP_HIERARCHY_DELIMITER:
+            gw_loader_set_hierarchy_delimiter(self, g_value_get_uchar(value));
             break;
 
         default:
@@ -55,6 +61,10 @@ static void gw_loader_get_property(GObject *object,
 
         case PROP_PRESERVE_GLITCHES_REAL:
             g_value_set_boolean(value, gw_loader_is_preserve_glitches_real(self));
+            break;
+
+        case PROP_HIERARCHY_DELIMITER:
+            g_value_set_uchar(value, gw_loader_get_hierarchy_delimiter(self));
             break;
 
         default:
@@ -84,12 +94,24 @@ static void gw_loader_class_init(GwLoaderClass *klass)
                              FALSE,
                              G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
+    // TODO: change type to unicode character
+    properties[PROP_HIERARCHY_DELIMITER] =
+        g_param_spec_uchar("hierarchy-delimiter",
+                           NULL,
+                           NULL,
+                           ' ',
+                           127,
+                           '.',
+                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
     g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }
 
 static void gw_loader_init(GwLoader *self)
 {
-    (void)self;
+    GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
+
+    priv->hierarchy_delimiter = '.';
 }
 
 /**
@@ -166,4 +188,26 @@ gboolean gw_loader_is_preserve_glitches_real(GwLoader *self)
     GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
 
     return priv->preserve_glitches_real;
+}
+
+void gw_loader_set_hierarchy_delimiter(GwLoader *self, gchar delimiter)
+{
+    g_return_if_fail(GW_IS_LOADER(self));
+
+    GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
+
+    if (priv->hierarchy_delimiter != delimiter) {
+        priv->hierarchy_delimiter = delimiter;
+
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_HIERARCHY_DELIMITER]);
+    }
+}
+
+gchar gw_loader_get_hierarchy_delimiter(GwLoader *self)
+{
+    g_return_val_if_fail(GW_IS_LOADER(self), FALSE);
+
+    GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
+
+    return priv->hierarchy_delimiter;
 }

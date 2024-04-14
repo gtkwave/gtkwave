@@ -477,11 +477,13 @@ static void update_name_prefix(GwVcdLoader *self)
 {
     g_string_truncate(self->name_prefix, 0);
 
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+
     for (GList *iter = self->scopes->head; iter != NULL; iter = iter->next) {
         VcdScope *scope = iter->data;
 
         if (self->name_prefix->len > 0) {
-            g_string_append_c(self->name_prefix, GLOBALS->hier_delimeter);
+            g_string_append_c(self->name_prefix, delimiter);
         }
 
         g_string_append(self->name_prefix, scope->name);
@@ -1123,14 +1125,14 @@ static void evcd_strcpy(char *dst, char *src)
     *dst = 0; /* null terminate destination */
 }
 
-static int strcpy_delimfix(char *too, char *from)
+static int strcpy_delimfix(char *too, char *from, gchar delimiter)
 {
     char ch;
     int found = 0;
 
     do {
         ch = *(from++);
-        if (ch == GLOBALS->hier_delimeter) {
+        if (ch == delimiter) {
             ch = VCDNAM_ESCAPE;
             found = 1;
         }
@@ -1147,6 +1149,8 @@ static void vcd_parse(GwVcdLoader *self)
     int tok;
     unsigned char ttype;
     int disable_autocoalesce = 0;
+
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
 
     for (;;) {
         switch (get_token(self)) {
@@ -1413,19 +1417,20 @@ static void vcd_parse(GwVcdLoader *self)
                         if (self->name_prefix->len > 0) {
                             v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
-                            v->name[self->name_prefix->len] = GLOBALS->hier_delimeter;
+                            v->name[self->name_prefix->len] = delimiter;
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
                                 if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
-                                                     self->yytext)) &&
+                                                     self->yytext,
+                                                     delimiter)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
                                     strcpy(sd, self->name_prefix->str);
-                                    sd[self->name_prefix->len] = GLOBALS->hier_delimeter;
+                                    sd[self->name_prefix->len] = delimiter;
                                     sd[self->name_prefix->len + 1] = '\\';
                                     strcpy(sd + self->name_prefix->len + 2,
                                            v->name + self->name_prefix->len + 1);
@@ -1438,7 +1443,7 @@ static void vcd_parse(GwVcdLoader *self)
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name, self->yytext, GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name, self->yytext)) &&
+                                if ((strcpy_delimfix(v->name, self->yytext, delimiter)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->yylen + 2);
                                     sd[0] = '\\';
@@ -1503,19 +1508,20 @@ static void vcd_parse(GwVcdLoader *self)
                         if (self->name_prefix->len > 0) {
                             v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
-                            v->name[self->name_prefix->len] = GLOBALS->hier_delimeter;
+                            v->name[self->name_prefix->len] = delimiter;
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
                                               GLOBALS->alt_hier_delimeter);
                             } else {
                                 if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
-                                                     self->yytext)) &&
+                                                     self->yytext,
+                                                     delimiter)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
                                     strcpy(sd, self->name_prefix->str);
-                                    sd[self->name_prefix->len] = GLOBALS->hier_delimeter;
+                                    sd[self->name_prefix->len] = delimiter;
                                     sd[self->name_prefix->len + 1] = '\\';
                                     strcpy(sd + self->name_prefix->len + 2,
                                            v->name + self->name_prefix->len + 1);
@@ -1528,7 +1534,7 @@ static void vcd_parse(GwVcdLoader *self)
                             if (GLOBALS->alt_hier_delimeter) {
                                 strcpy_vcdalt(v->name, self->yytext, GLOBALS->alt_hier_delimeter);
                             } else {
-                                if ((strcpy_delimfix(v->name, self->yytext)) &&
+                                if ((strcpy_delimfix(v->name, self->yytext, delimiter)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->yylen + 2);
                                     sd[0] = '\\';
@@ -1804,6 +1810,8 @@ static void vcd_build_symbols(GwVcdLoader *self)
     //     int ss_len, longest = 0;
     // #endif
 
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+
     v = self->vcdsymroot;
     while (v) {
         int msi;
@@ -1823,7 +1831,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
             strcpy(str, v->name);
 
             if ((v->msi >= 0) || (v->msi != v->lsi)) {
-                str[slen] = GLOBALS->hier_delimeter;
+                str[slen] = delimiter;
                 slen++;
             }
 
@@ -1857,7 +1865,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                         DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                         do
-                            sprintf(dupfix, "$DUP%d%c%s", duphier++, GLOBALS->hier_delimeter, str);
+                            sprintf(dupfix, "$DUP%d%c%s", duphier++, delimiter, str);
                         while (symfind(dupfix, NULL));
 
                         strcpy(str, dupfix);
@@ -1938,7 +1946,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                     do
-                        sprintf(dupfix, "$DUP%d%c%s", duphier++, GLOBALS->hier_delimeter, str);
+                        sprintf(dupfix, "$DUP%d%c%s", duphier++, delimiter, str);
                     while (symfind(dupfix, NULL));
 
                     strcpy(str, dupfix);
@@ -2108,10 +2116,12 @@ static const char *get_module_name(GwVcdLoader *self, const char *s)
 
     pnt = self->module_tree;
 
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+
     for (;;) {
         ch = *(s++);
 
-        if (((ch == GLOBALS->hier_delimeter) || (ch == '|')) &&
+        if (((ch == delimiter) || (ch == '|')) &&
             (*s)) /* added && null check to allow possible . at end of name */
         {
             *(pnt) = 0;
@@ -2249,6 +2259,8 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
 {
     self->module_tree = (char *)malloc_2(GLOBALS->longestname + 1);
 
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+
     for (guint i = 0; i < gw_facs_get_length(facs); i++) {
         GwSymbol *fac = gw_facs_get(facs, i);
 
@@ -2260,7 +2272,7 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
             subst = fac->name;
             while ((ch = (*subst))) {
                 if (ch == VCDNAM_ESCAPE) {
-                    *subst = GLOBALS->hier_delimeter;
+                    *subst = delimiter;
                 } /* restore back to normal */
                 subst++;
             }
@@ -2288,11 +2300,6 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
     GwVcdLoader *self = GW_VCD_LOADER(loader);
 
     errno = 0; /* reset in case it's set for some reason */
-
-    if (!GLOBALS->hier_was_explicitly_set) /* set default hierarchy split char */
-    {
-        GLOBALS->hier_delimeter = '.';
-    }
 
     if (suffix_check(fname, ".gz") || suffix_check(fname, ".zip")) {
         char *str;
