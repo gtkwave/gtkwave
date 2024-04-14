@@ -24,6 +24,7 @@ libgtkwave_public_sources = [
     'gw-var-enums.c',
     'gw-vcd-file.c',
     'gw-vlist-packer.c',
+    'gw-vlist-writer.c',
     'gw-vlist.c',
 ]
 
@@ -62,6 +63,7 @@ libgtkwave_public_headers = [
     'gw-vector-ent.h',
     'gw-vlist.h',
     'gw-vlist-packer.h',
+    'gw-vlist-writer.h',
 ]
 
 libgtkwave_private_sources = [
