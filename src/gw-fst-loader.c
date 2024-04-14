@@ -657,6 +657,8 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         GLOBALS->hier_delimeter = '.';
     }
 
+    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
+
     for (i = 0; i < numfacs; i++) {
         char buf[65537];
         char *str;
@@ -818,10 +820,10 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
             str = malloc_2(len + 1);
 
-            if (!GLOBALS->alt_hier_delimeter) {
+            if (alt_delimiter == '\0') {
                 memcpy(str, buf, len + 1);
             } else {
-                strcpy_vcdalt(str, buf, GLOBALS->alt_hier_delimeter);
+                strcpy_vcdalt(str, buf, alt_delimiter);
             }
             s = &sym_block[i];
             symadd_name_exists_sym_exists(s, str, 0);
@@ -846,10 +848,10 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 longest_nam_candidate = len;
                 str = malloc_2(len + 1);
 
-                if (!GLOBALS->alt_hier_delimeter) {
+                if (alt_delimiter == '\0') {
                     memcpy(str, buf, len + 1);
                 } else {
-                    strcpy_vcdalt(str, buf, GLOBALS->alt_hier_delimeter);
+                    strcpy_vcdalt(str, buf, alt_delimiter);
                 }
                 s = &sym_block[i];
                 symadd_name_exists_sym_exists(s, str, 0);
@@ -873,10 +875,10 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 longest_nam_candidate = len;
                 str = malloc_2(len + 1);
 
-                if (!GLOBALS->alt_hier_delimeter) {
+                if (alt_delimiter == '\0') {
                     memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
                 } else {
-                    strcpy_vcdalt(str, f_name[(i)&F_NAME_MODULUS], GLOBALS->alt_hier_delimeter);
+                    strcpy_vcdalt(str, f_name[(i)&F_NAME_MODULUS], alt_delimiter);
                 }
                 s = &sym_block[i];
                 symadd_name_exists_sym_exists(s, str, 0);
