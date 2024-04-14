@@ -12,5 +12,7 @@ GwLoader *gw_vcd_loader_new(void);
 
 void gw_vcd_loader_set_vlist_prepack(GwVcdLoader *self, gboolean vlist_prepack);
 gboolean gw_vcd_loader_is_vlist_prepack(GwVcdLoader *self);
+void gw_vcd_loader_set_vlist_compression_level(GwVcdLoader *self, gint level);
+gint gw_vcd_loader_get_vlist_compression_level(GwVcdLoader *self);
 
 G_END_DECLS

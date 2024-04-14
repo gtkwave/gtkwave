@@ -56,7 +56,7 @@ struct Global *GLOBALS = NULL;
 static const struct Global globals_base_values = {
     NULL, // project
     NULL, // dump_file
-    {0}, // settings
+    {.vlist_compression_level = 4}, // settings
 
     /*
      * analyzer.c
@@ -492,9 +492,9 @@ static const struct Global globals_base_values = {
     0, /* strace_current_window */
     1, /* strace_repeat_count */
 
-/*
- * symbol.c
- */
+    /*
+     * symbol.c
+     */
     NULL, /* sym_hash 424 */
     0, /* facs_are_sorted 426 */
     0, /* facs_have_symbols_state_machine */
@@ -532,9 +532,9 @@ static const struct Global globals_base_values = {
     NULL, /* sig_store_translate; */
     NULL, /* sig_selection_translate */
 
-/*
- * tree.c
- */
+    /*
+     * tree.c
+     */
     NULL, /* module_tree_c_1 444 */
     0, /* module_len_tree_c_1 445 */
     '.', /* hier_delimeter 447 */
@@ -617,12 +617,6 @@ static const struct Global globals_base_values = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* buf_vcd_saver_c_3 580 */
     NULL, /* hp_vcd_saver_c_1 581 */
     NULL, /* nhold_vcd_saver_c_1 582 */
-
-    /*
-     * vlist.c
-     */
-    0, /* vlist_bytes_written */
-    4, /* vlist_compression_depth 583 */
 
     /*
      * wavewindow.c
@@ -1111,7 +1105,6 @@ void reload_into_new_context_2(void)
     new_globals->vcd_warning_filesize = GLOBALS->vcd_warning_filesize;
     new_globals->vector_padding = GLOBALS->vector_padding;
     new_globals->settings = GLOBALS->settings;
-    new_globals->vlist_compression_depth = GLOBALS->vlist_compression_depth;
     new_globals->wave_scrolling = GLOBALS->wave_scrolling;
     new_globals->do_zoom_center = GLOBALS->do_zoom_center;
     new_globals->zoom_pow10_snap = GLOBALS->zoom_pow10_snap;
