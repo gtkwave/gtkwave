@@ -1151,6 +1151,7 @@ static void vcd_parse(GwVcdLoader *self)
     int disable_autocoalesce = 0;
 
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     for (;;) {
         switch (get_token(self)) {
@@ -1418,10 +1419,10 @@ static void vcd_parse(GwVcdLoader *self)
                             v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
                             v->name[self->name_prefix->len] = delimiter;
-                            if (GLOBALS->alt_hier_delimeter) {
+                            if (alt_delimiter != '\0') {
                                 strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
-                                              GLOBALS->alt_hier_delimeter);
+                                              alt_delimiter);
                             } else {
                                 if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
                                                      self->yytext,
@@ -1440,8 +1441,8 @@ static void vcd_parse(GwVcdLoader *self)
                             }
                         } else {
                             v->name = (char *)malloc_2(self->yylen + 1);
-                            if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name, self->yytext, GLOBALS->alt_hier_delimeter);
+                            if (alt_delimiter != '\0') {
+                                strcpy_vcdalt(v->name, self->yytext, alt_delimiter);
                             } else {
                                 if ((strcpy_delimfix(v->name, self->yytext, delimiter)) &&
                                     (self->yytext[0] != '\\')) {
@@ -1509,10 +1510,10 @@ static void vcd_parse(GwVcdLoader *self)
                             v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
                             v->name[self->name_prefix->len] = delimiter;
-                            if (GLOBALS->alt_hier_delimeter) {
+                            if (alt_delimiter != '\0') {
                                 strcpy_vcdalt(v->name + self->name_prefix->len + 1,
                                               self->yytext,
-                                              GLOBALS->alt_hier_delimeter);
+                                              alt_delimiter);
                             } else {
                                 if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
                                                      self->yytext,
@@ -1531,8 +1532,8 @@ static void vcd_parse(GwVcdLoader *self)
                             }
                         } else {
                             v->name = (char *)malloc_2(self->yylen + 1);
-                            if (GLOBALS->alt_hier_delimeter) {
-                                strcpy_vcdalt(v->name, self->yytext, GLOBALS->alt_hier_delimeter);
+                            if (alt_delimiter != '\0') {
+                                strcpy_vcdalt(v->name, self->yytext, alt_delimiter);
                             } else {
                                 if ((strcpy_delimfix(v->name, self->yytext, delimiter)) &&
                                     (self->yytext[0] != '\\')) {
