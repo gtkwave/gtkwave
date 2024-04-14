@@ -87,6 +87,8 @@ struct _GwVcdLoader
 
     char *module_tree;
     int module_len_tree;
+
+    gboolean has_escaped_names;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -1125,8 +1127,10 @@ static void evcd_strcpy(char *dst, char *src)
     *dst = 0; /* null terminate destination */
 }
 
-static int strcpy_delimfix(char *too, char *from, gchar delimiter)
+static int strcpy_delimfix(GwVcdLoader *self, char *too, char *from)
 {
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+
     char ch;
     int found = 0;
 
@@ -1138,8 +1142,9 @@ static int strcpy_delimfix(char *too, char *from, gchar delimiter)
         }
     } while ((*(too++) = ch));
 
-    if (found)
-        GLOBALS->escaped_names_found_vcd_c_1 = found;
+    if (found) {
+        self->has_escaped_names = TRUE;
+    }
 
     return (found);
 }
@@ -1424,9 +1429,9 @@ static void vcd_parse(GwVcdLoader *self)
                                               self->yytext,
                                               alt_delimiter);
                             } else {
-                                if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
-                                                     self->yytext,
-                                                     delimiter)) &&
+                                if ((strcpy_delimfix(self,
+                                                     v->name + self->name_prefix->len + 1,
+                                                     self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
@@ -1444,7 +1449,7 @@ static void vcd_parse(GwVcdLoader *self)
                             if (alt_delimiter != '\0') {
                                 strcpy_vcdalt(v->name, self->yytext, alt_delimiter);
                             } else {
-                                if ((strcpy_delimfix(v->name, self->yytext, delimiter)) &&
+                                if ((strcpy_delimfix(self, v->name, self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->yylen + 2);
                                     sd[0] = '\\';
@@ -1515,9 +1520,9 @@ static void vcd_parse(GwVcdLoader *self)
                                               self->yytext,
                                               alt_delimiter);
                             } else {
-                                if ((strcpy_delimfix(v->name + self->name_prefix->len + 1,
-                                                     self->yytext,
-                                                     delimiter)) &&
+                                if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1,
+                                                     self->yytext
+                                                     )) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
@@ -1535,7 +1540,7 @@ static void vcd_parse(GwVcdLoader *self)
                             if (alt_delimiter != '\0') {
                                 strcpy_vcdalt(v->name, self->yytext, alt_delimiter);
                             } else {
-                                if ((strcpy_delimfix(v->name, self->yytext, delimiter)) &&
+                                if ((strcpy_delimfix(self, v->name, self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->yylen + 2);
                                     sd[0] = '\\';
@@ -2268,7 +2273,7 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
         char *n = fac->name;
         build_tree_from_name(self, &self->tree_root, n, i);
 
-        if (GLOBALS->escaped_names_found_vcd_c_1) {
+        if (self->has_escaped_names) {
             char *subst, ch;
             subst = fac->name;
             while ((ch = (*subst))) {
@@ -2284,7 +2289,7 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
     gw_tree_graft(tree, self->terminals_chain);
     gw_tree_sort(tree);
 
-    if (GLOBALS->escaped_names_found_vcd_c_1) {
+    if (self->has_escaped_names) {
         treenamefix(gw_tree_get_root(tree));
     }
 
@@ -2431,6 +2436,7 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
                                         "time-dimension", self->time_dimension,
                                         "time-range", time_range,
                                         "global-time-offset", self->global_time_offset,
+                                        "has-escaped-names", self->has_escaped_names,
                                         NULL);
     // clang-format on
 
@@ -2528,6 +2534,8 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->current_time = -1;
     self->start_time = -1;
     self->end_time = -1;
+    self->time_scale = 1;
+    self->time_dimension = GW_TIME_DIMENSION_NANO;
 
     self->T_MAX_STR = 1024;
     self->yytext = malloc_2(self->T_MAX_STR + 1);
