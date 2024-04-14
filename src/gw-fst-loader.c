@@ -1012,8 +1012,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     /* SPLASH */ splash_sync(2, 5);
     fprintf(stderr, FST_RDLOAD "Building facility hierarchy tree.\n");
 
-    init_tree();
-
     /* SPLASH */ splash_sync(3, 5);
 
     fprintf(stderr, FST_RDLOAD "Sorting facility hierarchy tree.\n");

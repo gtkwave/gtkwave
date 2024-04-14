@@ -535,8 +535,6 @@ static const struct Global globals_base_values = {
     /*
      * tree.c
      */
-    NULL, /* module_tree_c_1 444 */
-    0, /* module_len_tree_c_1 445 */
     '.', /* hier_delimeter 447 */
     0, /* hier_was_explicitly_set 448 */
     0x00, /* alt_hier_delimeter 449 */
