@@ -43,13 +43,6 @@ GwTreeNode *talloc_2(size_t siz)
 }
 #endif
 
-/*
- * init pointers needed for n-way tree
- */
-void init_tree(void)
-{
-    GLOBALS->module_tree_c_1 = (char *)malloc_2(GLOBALS->longestname + 1);
-}
 
 /*
  * decorated module add

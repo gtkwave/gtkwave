@@ -84,6 +84,9 @@ struct _GwVcdLoader
 
     GwTreeNode *terminals_chain;
     GwTreeNode *mod_tree_parent;
+
+    char *module_tree;
+    int module_len_tree;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -2098,12 +2101,12 @@ static GwFacs *vcd_sortfacs(GwVcdLoader *self)
  * hierarchy name.  return ptr to next name if it exists
  * else NULL
  */
-static const char *get_module_name(const char *s)
+static const char *get_module_name(GwVcdLoader *self, const char *s)
 {
     char ch;
     char *pnt;
 
-    pnt = GLOBALS->module_tree_c_1;
+    pnt = self->module_tree;
 
     for (;;) {
         ch = *(s++);
@@ -2112,12 +2115,12 @@ static const char *get_module_name(const char *s)
             (*s)) /* added && null check to allow possible . at end of name */
         {
             *(pnt) = 0;
-            GLOBALS->module_len_tree_c_1 = pnt - GLOBALS->module_tree_c_1;
+            self->module_len_tree = pnt - self->module_tree;
             return (s);
         }
 
         if (!(*(pnt++) = ch)) {
-            GLOBALS->module_len_tree_c_1 = pnt - GLOBALS->module_tree_c_1;
+            self->module_len_tree = pnt - self->module_tree;
             return (NULL); /* nothing left to extract */
         }
     }
@@ -2141,13 +2144,12 @@ static void build_tree_from_name(GwVcdLoader *self,
         prevt = NULL;
         while (s) {
         rs:
-            s = get_module_name(s);
+            s = get_module_name(self, s);
 
             if (s && t &&
-                !strcmp(t->name,
-                        GLOBALS->module_tree_c_1)) /* ajb 300616 added "s &&" to cover case where we
-                                                      can have hierarchy + final name are same, see
-                                                      A.B.C.D notes elsewhere in this file */
+                !strcmp(t->name, self->module_tree)) /* ajb 300616 added "s &&" to cover case where
+                                                        we can have hierarchy + final name are same,
+                                                        see A.B.C.D notes elsewhere in this file */
             {
                 prevt = t;
                 t = t->child;
@@ -2158,7 +2160,7 @@ static void build_tree_from_name(GwVcdLoader *self,
             if (s && t) {
                 nt = t->next;
                 while (nt) {
-                    if (nt && !strcmp(nt->name, GLOBALS->module_tree_c_1)) {
+                    if (nt && !strcmp(nt->name, self->module_tree)) {
                         /* move to front to speed up next compare if in same hier during build */
                         if (prevt) {
                             tchain_iter->next = nt->next;
@@ -2176,8 +2178,8 @@ static void build_tree_from_name(GwVcdLoader *self,
                 }
             }
 
-            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
-            memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
+            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + self->module_len_tree + 1);
+            memcpy(nt->name, self->module_tree, self->module_len_tree);
 
             if (s) {
                 nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
@@ -2202,10 +2204,10 @@ static void build_tree_from_name(GwVcdLoader *self,
             /* blindly clone fac from next part of hier on down */
             t = nt;
             while (s) {
-                s = get_module_name(s);
+                s = get_module_name(self, s);
 
-                nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
-                memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
+                nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + self->module_len_tree + 1);
+                memcpy(nt->name, self->module_tree, self->module_len_tree);
 
                 if (s) {
                     nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
@@ -2222,10 +2224,10 @@ static void build_tree_from_name(GwVcdLoader *self,
     } else {
         /* blindly create first fac in the tree (only ever called once) */
         while (s) {
-            s = get_module_name(s);
+            s = get_module_name(self, s);
 
-            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + GLOBALS->module_len_tree_c_1 + 1);
-            memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
+            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + self->module_len_tree + 1);
+            memcpy(nt->name, self->module_tree, self->module_len_tree);
 
             if (!s)
                 nt->t_which = which;
@@ -2242,9 +2244,11 @@ static void build_tree_from_name(GwVcdLoader *self,
         }
     }
 }
+
 static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
 {
-    init_tree();
+    self->module_tree = (char *)malloc_2(GLOBALS->longestname + 1);
+
     for (guint i = 0; i < gw_facs_get_length(facs); i++) {
         GwSymbol *fac = gw_facs_get(facs, i);
 
