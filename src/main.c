@@ -801,7 +801,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->use_roundcaps = old_g->use_roundcaps;
         GLOBALS->vcd_warning_filesize = old_g->vcd_warning_filesize;
         GLOBALS->vector_padding = old_g->vector_padding;
-        GLOBALS->vlist_compression_depth = old_g->vlist_compression_depth;
         GLOBALS->wave_scrolling = old_g->wave_scrolling;
         GLOBALS->do_zoom_center = old_g->do_zoom_center;
         GLOBALS->zoom_pow10_snap = old_g->zoom_pow10_snap;
@@ -812,7 +811,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->page_divisor = old_g->page_divisor;
         GLOBALS->ps_maxveclen = old_g->ps_maxveclen;
         GLOBALS->vector_padding = old_g->vector_padding;
-        GLOBALS->vlist_compression_depth = old_g->vlist_compression_depth;
         GLOBALS->zoombase = old_g->zoombase;
         GLOBALS->splash_disable = old_g->splash_disable;
         GLOBALS->use_pango_fonts = old_g->use_pango_fonts;

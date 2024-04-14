@@ -71,6 +71,8 @@
 typedef struct
 {
     gboolean vlist_prepack;
+    gint vlist_compression_level;
+
     gboolean preserve_glitches;
     gboolean preserve_glitches_real;
 } Settings;
@@ -606,12 +608,6 @@ struct Global
     char buf_vcd_saver_c_3[16]; /* from vcd_saver.c 631 */
     struct vcdsav_tree_node **hp_vcd_saver_c_1; /* from vcd_saver.c 632 */
     struct namehier *nhold_vcd_saver_c_1; /* from vcd_saver.c 633 */
-
-    /*
-     * vlist.c
-     */
-    off_t vlist_bytes_written;
-    int vlist_compression_depth; /* from vlist.c 634 */
 
     /*
      * wavewindow.c

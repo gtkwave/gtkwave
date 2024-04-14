@@ -25,6 +25,7 @@ struct _GwVcdLoader
     gboolean header_over;
 
     gboolean vlist_prepack;
+    gint vlist_compression_level;
     GwVlist *time_vlist;
     unsigned int time_vlist_count;
 
@@ -90,6 +91,7 @@ G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
 enum
 {
     PROP_VLIST_PREPACK = 1,
+    PROP_VLIST_COMPRESSION_LEVEL,
     N_PROPERTIES,
 };
 
@@ -415,7 +417,7 @@ static unsigned int vlist_emit_finalize(GwVcdLoader *self)
 
         if (n->mv.mvlfac_vlist_writer == NULL) {
             GwVlistWriter *writer =
-                gw_vlist_writer_new(GLOBALS->vlist_compression_depth, self->vlist_prepack);
+                gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
             n->mv.mvlfac_vlist_writer = writer;
 
             if ((/* vprime= */ bsearch_vcd(self, v->id, strlen(v->id))) ==
@@ -921,8 +923,7 @@ static void parse_valuechange(GwVcdLoader *self)
                         NULL) /* overloaded for vlist, numhist = last position used */
                     {
                         n->mv.mvlfac_vlist_writer =
-                            gw_vlist_writer_new(GLOBALS->vlist_compression_depth,
-                                                self->vlist_prepack);
+                            gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
                         gw_vlist_writer_append_uv32(
                             n->mv.mvlfac_vlist_writer,
                             (unsigned int)'0'); /* represents single bit routine
@@ -1018,7 +1019,7 @@ static void parse_valuechange(GwVcdLoader *self)
                 {
                     unsigned char typ2 = toupper(typ);
                     n->mv.mvlfac_vlist_writer =
-                        gw_vlist_writer_new(GLOBALS->vlist_compression_depth, self->vlist_prepack);
+                        gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
 
                     if ((v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
                         if ((typ2 == 'R') || (typ2 == 'S')) {
@@ -1721,9 +1722,8 @@ static void vcd_parse(GwVcdLoader *self)
                             self->end_time = tim; /* in case of malformed vcd files */
                         DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
 
-                        tt = gw_vlist_alloc(&self->time_vlist,
-                                            FALSE,
-                                            GLOBALS->vlist_compression_depth);
+                        tt =
+                            gw_vlist_alloc(&self->time_vlist, FALSE, self->vlist_compression_level);
                         *tt = tim;
                         self->time_vlist_count++;
                     } else {
@@ -1737,7 +1737,7 @@ static void vcd_parse(GwVcdLoader *self)
 
                             tt = gw_vlist_alloc(&self->time_vlist,
                                                 FALSE,
-                                                GLOBALS->vlist_compression_depth);
+                                                self->vlist_compression_level);
                             *tt = tim;
                             self->time_vlist_count = 1;
                         }
@@ -2364,7 +2364,7 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
         self->varsplit = NULL;
     }
 
-    gw_vlist_freeze(&self->time_vlist, GLOBALS->vlist_compression_depth);
+    gw_vlist_freeze(&self->time_vlist, self->vlist_compression_level);
 
     vlist_emit_finalize(self);
 
@@ -2450,6 +2450,10 @@ static void gw_vcd_loader_set_property(GObject *object,
             gw_vcd_loader_set_vlist_prepack(self, g_value_get_boolean(value));
             break;
 
+        case PROP_VLIST_COMPRESSION_LEVEL:
+            gw_vcd_loader_set_vlist_compression_level(self, g_value_get_int(value));
+            break;
+
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
             break;
@@ -2466,6 +2470,10 @@ static void gw_vcd_loader_get_property(GObject *object,
     switch (property_id) {
         case PROP_VLIST_PREPACK:
             g_value_set_boolean(value, gw_vcd_loader_is_vlist_prepack(self));
+            break;
+
+        case PROP_VLIST_COMPRESSION_LEVEL:
+            g_value_set_int(value, gw_vcd_loader_get_vlist_compression_level(self));
             break;
 
         default:
@@ -2491,6 +2499,15 @@ static void gw_vcd_loader_class_init(GwVcdLoaderClass *klass)
                              FALSE,
                              G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
+    properties[PROP_VLIST_COMPRESSION_LEVEL] =
+        g_param_spec_int("vlist-compresion-level",
+                         NULL,
+                         NULL,
+                         Z_DEFAULT_COMPRESSION /* -1 */,
+                         Z_BEST_COMPRESSION /* 9 */,
+                         Z_DEFAULT_COMPRESSION,
+                         G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
     g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }
 
@@ -2506,6 +2523,8 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->scopes = g_queue_new();
     self->name_prefix = g_string_new(NULL);
     self->blackout_regions = gw_blackout_regions_new();
+
+    self->vlist_compression_level = Z_DEFAULT_COMPRESSION;
 }
 
 GwLoader *gw_vcd_loader_new(void)
@@ -2531,4 +2550,24 @@ gboolean gw_vcd_loader_is_vlist_prepack(GwVcdLoader *self)
     g_return_val_if_fail(GW_IS_VCD_LOADER(self), FALSE);
 
     return self->vlist_prepack;
+}
+
+void gw_vcd_loader_set_vlist_compression_level(GwVcdLoader *self, gint level)
+{
+    g_return_if_fail(GW_IS_VCD_LOADER(self));
+
+    level = CLAMP(level, Z_DEFAULT_COMPRESSION, Z_BEST_COMPRESSION);
+
+    if (self->vlist_compression_level != level) {
+        self->vlist_compression_level = level;
+
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_VLIST_COMPRESSION_LEVEL]);
+    }
+}
+
+gint gw_vcd_loader_get_vlist_compression_level(GwVcdLoader *self)
+{
+    g_return_val_if_fail(GW_IS_VCD_LOADER(self), FALSE);
+
+    return self->vlist_compression_level;
 }

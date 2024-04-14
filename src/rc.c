@@ -639,11 +639,9 @@ int f_vector_padding(const char *str)
 int f_vlist_compression(const char *str)
 {
     DEBUG(printf("f_vlist_compression(\"%s\")\n", str));
-    GLOBALS->vlist_compression_depth = atoi_64(str);
-    if (GLOBALS->vlist_compression_depth < 0)
-        GLOBALS->vlist_compression_depth = -1;
-    if (GLOBALS->vlist_compression_depth > 9)
-        GLOBALS->vlist_compression_depth = 9;
+    GLOBALS->settings.vlist_compression_level = atoi_64(str);
+    GLOBALS->settings.vlist_compression_level =
+        CLAMP(GLOBALS->settings.vlist_compression_level, -1, 9);
     return (0);
 }
 
