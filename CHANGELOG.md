@@ -65,6 +65,8 @@ of these features.
     - `vlist_spill`
     - `zoom_dynamic`
     - `zoom_dynamic_end`
+- Removed TCL commands:
+    - `getLongestName`
 
 ### Fixed
 

@@ -900,9 +900,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
         }
 
-        if (longest_nam_candidate > GLOBALS->longestname)
-            GLOBALS->longestname = longest_nam_candidate;
-
         gw_facs_set(facs, i, &sym_block[i]);
         n = &node_block[i];
 

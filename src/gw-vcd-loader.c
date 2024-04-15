@@ -2095,11 +2095,6 @@ static GwFacs *vcd_sortfacs(GwVcdLoader *self)
         GwSymbol *fac = iter->data;
         gw_facs_set(facs, i, fac);
 
-        int len = strlen(fac->name);
-        if (len > GLOBALS->longestname) {
-            GLOBALS->longestname = len;
-        }
-
         iter = g_slist_delete_link(iter, iter);
     }
 
@@ -2263,7 +2258,8 @@ static void build_tree_from_name(GwVcdLoader *self,
 
 static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
 {
-    self->module_tree = (char *)malloc_2(GLOBALS->longestname + 1);
+    // TODO: replace module_tree by GString to dynamically allocate enough memory
+    self->module_tree = (char *)malloc_2(65536);
 
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
 
