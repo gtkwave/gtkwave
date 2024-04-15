@@ -725,7 +725,8 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
     GLOBALS->pdata->oldvalue = -1.0;
     interval = (gfloat)(numfacs / 100.0);
 
-    duplicate_row_buffer = (char *)calloc_2(1, GLOBALS->longestname + 1);
+    // TODO: use GString for duplicate_row_buffer
+    duplicate_row_buffer = (char *)calloc_2(1, 65536);
 
     gtk_list_store_clear(GTK_LIST_STORE(GLOBALS->sig_store_search));
 

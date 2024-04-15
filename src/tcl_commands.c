@@ -234,15 +234,6 @@ static int gtkwavetcl_getNumFacs(ClientData clientData,
     return (gtkwavetcl_printInteger(clientData, interp, objc, objv, value));
 }
 
-static int gtkwavetcl_getLongestName(ClientData clientData,
-                                     Tcl_Interp *interp,
-                                     int objc,
-                                     Tcl_Obj *CONST objv[])
-{
-    int value = GLOBALS->longestname;
-    return (gtkwavetcl_printInteger(clientData, interp, objc, objv, value));
-}
-
 static int gtkwavetcl_getFacName(ClientData clientData,
                                  Tcl_Interp *interp,
                                  int objc,
@@ -2277,7 +2268,6 @@ tcl_cmdstruct gtkwave_commands[] = {
     {"getFromEntry", gtkwavetcl_getFromEntry},
     {"getHierMaxLevel", gtkwavetcl_getHierMaxLevel},
     {"getLeftJustifySigs", gtkwavetcl_getLeftJustifySigs},
-    {"getLongestName", gtkwavetcl_getLongestName},
     {"getMarker", gtkwavetcl_getMarker},
     {"getMaxTime", gtkwavetcl_getMaxTime},
     {"getMinTime", gtkwavetcl_getMinTime},

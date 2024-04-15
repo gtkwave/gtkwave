@@ -33,7 +33,6 @@ struct _GwGhwLoader
 
     GwFacs *facs;
     GwTreeNode *treeroot;
-    int longestname;
     GwTime max_time;
 
     GwHistEntFactory *hist_ent_factory;
@@ -368,17 +367,6 @@ static void incinerate_whichcache_tree(ghw_Tree *t)
 static void ghw_sortfacs(GwGhwLoader *self)
 {
     recurse_tree_build_whichcache(self, self->treeroot);
-
-    for (guint i = 0; i < gw_facs_get_length(self->facs); i++) {
-        char *subst;
-        int len;
-        GwSymbol *curnode = gw_facs_get(self->facs, i);
-
-        subst = curnode->name;
-        if ((len = strlen(subst)) > self->longestname) {
-            self->longestname = len;
-        }
-    }
 
     gw_facs_sort(self->facs);
 
@@ -1247,7 +1235,6 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
 #endif
 
     // GLOBALS->facs_are_sorted = 1;
-    // GLOBALS->longestname = self->longestname;
 
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
