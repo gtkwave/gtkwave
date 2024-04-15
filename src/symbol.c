@@ -118,8 +118,6 @@ void sym_hash_destroy(void *g)
  */
 int hash(char *s)
 {
-    // TODO: reenable judy support
-    // #ifndef _WAVE_HAVE_JUDY
     char *p;
     char ch;
     unsigned int h = 0, h2 = 0, pos = 0, g;
@@ -136,11 +134,8 @@ int hash(char *s)
     }
 
     h ^= h2; /* combine the two hashes */
-    GLOBALS->hashcache = h % SYMPRIME;
-    // #else
-    //     (void)s;
-    // #endif
-    return (GLOBALS->hashcache);
+
+    return h % SYMPRIME;
 }
 
 /*
