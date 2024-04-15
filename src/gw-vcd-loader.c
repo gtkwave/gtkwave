@@ -57,6 +57,7 @@ struct _GwVcdLoader
     guint vcd_maxid;
     guint vcd_hash_max;
     gboolean vcd_hash_kill;
+    gint hash_cache;
 
     char *varsplit;
     char *vsplitcurr;
@@ -1520,9 +1521,9 @@ static void vcd_parse(GwVcdLoader *self)
                                               self->yytext,
                                               alt_delimiter);
                             } else {
-                                if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1,
-                                                     self->yytext
-                                                     )) &&
+                                if ((strcpy_delimfix(self,
+                                                     v->name + self->name_prefix->len + 1,
+                                                     self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
                                     char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
                                                                 self->yylen + 2);
@@ -1880,7 +1881,11 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     }
                     /* fallthrough */
                     {
-                        s = symadd(str, hashdirty ? hash(str) : GLOBALS->hashcache);
+                        if (hashdirty) {
+                            self->hash_cache = hash(str);
+                        }
+                        s = symadd(str, self->hash_cache);
+
                         // #ifdef _WAVE_HAVE_JUDY
                         //                         ss_len = strlen(str);
                         //                         if (ss_len >= longest) {
@@ -1961,11 +1966,12 @@ static void vcd_build_symbols(GwVcdLoader *self)
                 }
                 /* fallthrough */
                 {
-                    GwSymbol *s;
+                    /* cut down on double lookups.. */
+                    if (hashdirty) {
+                        self->hash_cache = hash(str);
+                    }
+                    GwSymbol *s = symadd(str, self->hash_cache);
 
-                    s = symadd(str,
-                               hashdirty ? hash(str)
-                                         : GLOBALS->hashcache); /* cut down on double lookups.. */
                     // #ifdef _WAVE_HAVE_JUDY
                     //                     ss_len = strlen(str);
                     //                     if (ss_len >= longest) {
