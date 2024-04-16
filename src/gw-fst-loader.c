@@ -826,7 +826,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 strcpy_vcdalt(str, buf, alt_delimiter);
             }
             s = &sym_block[i];
-            symadd_name_exists_sym_exists(s, str, 0);
+            s->name = str;
             prevsymroot = prevsym = NULL;
 
             len = sprintf_2_sdd(buf, nnam, node_block[i].msi, node_block[i].lsi);
@@ -854,7 +854,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                     strcpy_vcdalt(str, buf, alt_delimiter);
                 }
                 s = &sym_block[i];
-                symadd_name_exists_sym_exists(s, str, 0);
+                s->name = str;
                 if ((allowed_to_autocoalesce) && (prevsym) && (revcmp) &&
                     (!strchr(f_name[(i)&F_NAME_MODULUS],
                              '\\'))) /* allow chaining for search functions.. */
@@ -881,7 +881,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                     strcpy_vcdalt(str, f_name[(i)&F_NAME_MODULUS], alt_delimiter);
                 }
                 s = &sym_block[i];
-                symadd_name_exists_sym_exists(s, str, 0);
+                s->name = str;
                 prevsymroot = prevsym = NULL;
 
                 if (f->flags & VZT_RD_SYM_F_INTEGER) {

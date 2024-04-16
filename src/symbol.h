@@ -41,14 +41,7 @@ void sym_hash_destroy(void *g);
 
 GwSymbol *symfind(char *, unsigned int *);
 GwSymbol *symadd(char *, int);
-GwSymbol *symadd_name_exists(char *name, int hv);
 int hash(char *s);
-
-/* typically use zero for hashval as it doesn't matter if facs are sorted as symfind will bsearch...
- */
-#define symadd_name_exists_sym_exists(s, nam, hv) \
-    (s)->name = (nam); /* (s)->sym_next=GLOBALS->sym_hash[(hv)]; GLOBALS->sym_hash[(hv)]=(s); \
-                          (obsolete) */
 
 void facsplit(char *, int *, int *);
 int sigcmp(char *, char *);
