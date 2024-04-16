@@ -80,38 +80,6 @@ void destroy_s_selected(void)
 
 // #endif
 
-/*
- * hash create/destroy
- */
-void sym_hash_initialize(void *g)
-{
-    // TODO: reenable judy support
-    // #ifdef _WAVE_HAVE_JUDY
-    //     ((struct Global *)g)->sym_judy = NULL;
-    // #else
-    ((struct Global *)g)->sym_hash = (GwSymbol **)calloc_2(SYMPRIME, sizeof(GwSymbol *));
-    // #endif
-}
-
-void sym_hash_destroy(void *g)
-{
-    struct Global *gg = (struct Global *)g;
-
-    // TODO: reenable judy support
-    // #ifdef _WAVE_HAVE_JUDY
-    //
-    //     JudySLFreeArray(&gg->sym_judy, PJE0);
-    //     gg->sym_judy = NULL;
-    //
-    // #else
-
-    if (gg->sym_hash) {
-        free_2(gg->sym_hash);
-        gg->sym_hash = NULL;
-    }
-
-    // #endif
-}
 
 /*
  * Generic hash function for symbol names...
@@ -138,30 +106,6 @@ int hash(char *s)
     return h % SYMPRIME;
 }
 
-/*
- * add symbol to table.  no duplicate checking
- * is necessary as aet's are "correct."
- */
-GwSymbol *symadd(char *name, int hv)
-{
-    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
-
-    // TODO: reenable judy support
-    // #ifdef _WAVE_HAVE_JUDY
-    //     (void)hv;
-    //
-    //     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    //     *((GwSymbol **)PPValue) = s;
-    //
-    // #else
-
-    strcpy(s->name = (char *)malloc_2(strlen(name) + 1), name);
-    s->sym_next = GLOBALS->sym_hash[hv];
-    GLOBALS->sym_hash[hv] = s;
-
-    // #endif
-    return (s);
-}
 
 
 
@@ -170,32 +114,8 @@ GwSymbol *symadd(char *name, int hv)
  */
 static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
 {
-    int hv;
-    GwSymbol *temp;
-
     if (!GLOBALS->facs_are_sorted) {
-        // TODO: reenable judy support
-        // #ifdef _WAVE_HAVE_JUDY
-        //         PPvoid_t PPValue = JudySLGet(GLOBALS->sym_judy, (uint8_t *)s, PJE0);
-        //
-        //         if (PPValue) {
-        //             return (*(GwSymbol **)PPValue);
-        //         }
-        // #else
-        hv = hash(s);
-        if (!(GLOBALS->sym_hash) || !(temp = GLOBALS->sym_hash[hv]))
-            return (NULL); /* no hash entry, add here wanted to add */
-
-        while (temp) {
-            if (!strcmp(temp->name, s)) {
-                return (temp); /* in table already */
-            }
-            if (!temp->sym_next)
-                break;
-            temp = temp->sym_next;
-        }
-        // #endif
-        return (NULL); /* not found, add here if you want to add*/
+        g_return_val_if_reached(NULL);
     } else /* no sense hashing if the facs table is built */
     {
         GwSymbol *sr;

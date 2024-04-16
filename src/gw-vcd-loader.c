@@ -58,6 +58,7 @@ struct _GwVcdLoader
     guint vcd_hash_max;
     gboolean vcd_hash_kill;
     gint hash_cache;
+    GwSymbol **sym_hash;
 
     char *varsplit;
     char *vsplitcurr;
@@ -315,6 +316,21 @@ static void create_sorted_table(GwVcdLoader *self)
             qsort(self->symbols_sorted, self->numsyms, sizeof(struct vcdsymbol *), vcdsymcompare);
         }
     }
+}
+
+/*
+ * add symbol to table.  no duplicate checking
+ * is necessary as aet's are "correct."
+ */
+static GwSymbol *symadd(GwVcdLoader *self, char *name, int hv)
+{
+    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
+
+    strcpy(s->name = (char *)malloc_2(strlen(name) + 1), name);
+    s->sym_next = self->sym_hash[hv];
+    self->sym_hash[hv] = s;
+
+    return s;
 }
 
 /******************************************************************/
@@ -1804,6 +1820,19 @@ static void vcd_parse(GwVcdLoader *self)
 
 /*******************************************************************************/
 
+static GwSymbol *symfind_unsorted(GwVcdLoader *self, char *s)
+{
+    int hv = hash(s);
+
+    for (GwSymbol *iter = self->sym_hash[hv]; iter != NULL; iter = iter->sym_next) {
+        if (strcmp(iter->name, s) == 0) {
+            return iter; /* in table already */
+        }
+    }
+
+    return NULL; /* not found, add here if you want to add*/
+}
+
 static void vcd_build_symbols(GwVcdLoader *self)
 {
     int j;
@@ -1864,16 +1893,16 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     }
 
                     hashdirty = 0;
-                    if (symfind(str, NULL)) {
+                    if (symfind_unsorted(self, str)) {
                         char *dupfix = (char *)malloc_2(max_slen + 32);
                         // #ifndef _WAVE_HAVE_JUDY
                         hashdirty = 1;
                         // #endif
                         DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
-                        do
+                        do {
                             sprintf(dupfix, "$DUP%d%c%s", duphier++, delimiter, str);
-                        while (symfind(dupfix, NULL));
+                        } while (symfind_unsorted(self, dupfix));
 
                         strcpy(str, dupfix);
                         free_2(dupfix);
@@ -1884,7 +1913,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                         if (hashdirty) {
                             self->hash_cache = hash(str);
                         }
-                        s = symadd(str, self->hash_cache);
+                        s = symadd(self, str, self->hash_cache);
 
                         // #ifdef _WAVE_HAVE_JUDY
                         //                         ss_len = strlen(str);
@@ -1949,16 +1978,17 @@ static void vcd_build_symbols(GwVcdLoader *self)
                 }
 
                 hashdirty = 0;
-                if (symfind(str, NULL)) {
+                if (symfind_unsorted(self, str)) {
                     char *dupfix = (char *)malloc_2(max_slen + 32);
                     // #ifndef _WAVE_HAVE_JUDY
                     hashdirty = 1;
                     // #endif
                     DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
-                    do
+                    do {
                         sprintf(dupfix, "$DUP%d%c%s", duphier++, delimiter, str);
-                    while (symfind(dupfix, NULL));
+
+                    } while (symfind_unsorted(self, dupfix));
 
                     strcpy(str, dupfix);
                     free_2(dupfix);
@@ -1970,7 +2000,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     if (hashdirty) {
                         self->hash_cache = hash(str);
                     }
-                    GwSymbol *s = symadd(str, self->hash_cache);
+                    GwSymbol *s = symadd(self, str, self->hash_cache);
 
                     // #ifdef _WAVE_HAVE_JUDY
                     //                     ss_len = strlen(str);
@@ -2300,7 +2330,16 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
 
 /*******************************************************************************/
 
-GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **error)
+static void gw_vcd_loader_finalize(GObject *object)
+{
+    GwVcdLoader *self = GW_VCD_LOADER(object);
+
+    g_free(self->sym_hash);
+
+    G_OBJECT_CLASS(gw_vcd_loader_parent_class)->finalize(object);
+}
+
+static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **error)
 {
     g_return_val_if_fail(fname != NULL, NULL);
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -2370,7 +2409,6 @@ GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     /* SPLASH */ splash_create();
 
-    sym_hash_initialize(GLOBALS);
     getch_alloc(self); /* alloc membuff for vcd getch buffer */
 
     update_name_prefix(self);
@@ -2507,6 +2545,7 @@ static void gw_vcd_loader_class_init(GwVcdLoaderClass *klass)
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
     GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
 
+    object_class->finalize = gw_vcd_loader_finalize;
     object_class->set_property = gw_vcd_loader_set_property;
     object_class->get_property = gw_vcd_loader_get_property;
 
@@ -2547,6 +2586,8 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->blackout_regions = gw_blackout_regions_new();
 
     self->vlist_compression_level = Z_DEFAULT_COMPRESSION;
+
+    self->sym_hash = g_new0(GwSymbol *, SYMPRIME);
 }
 
 GwLoader *gw_vcd_loader_new(void)

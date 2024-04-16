@@ -495,7 +495,6 @@ static const struct Global globals_base_values = {
     /*
      * symbol.c
      */
-    NULL, /* sym_hash 424 */
     0, /* facs_are_sorted 426 */
     0, /* facs_have_symbols_state_machine */
 
@@ -1473,9 +1472,6 @@ void reload_into_new_context_2(void)
             set_window_idle(NULL);
         }
     }
-
-    /* deallocate the symbol hash table */
-    sym_hash_destroy(GLOBALS);
 
     /* Setup timings we probably need to redraw here */
     GLOBALS->tims.last = gw_time_range_get_end(time_range);

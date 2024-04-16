@@ -1553,9 +1553,6 @@ loader_check_head:
         GLOBALS->dump_file = vcd_recoder_main(GLOBALS->loaded_file_name);
     }
 
-    /* deallocate the symbol hash table */
-    sym_hash_destroy(GLOBALS);
-
     // /* reset/initialize various markers and time values */
     // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
     //     GLOBALS->named_markers[i] = -1; /* reset all named markers */
