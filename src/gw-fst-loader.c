@@ -652,11 +652,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
     /* do your stuff here..all useful info has been initialized by now */
 
-    if (!GLOBALS->hier_was_explicitly_set) /* set default hierarchy split char */
-    {
-        GLOBALS->hier_delimeter = '.';
-    }
-
+    char delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
     gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     for (i = 0; i < numfacs; i++) {
@@ -665,7 +661,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         GwFac *f;
         int hier_len, name_len, tlen;
         unsigned char nvt, nvd, ndt;
-        int longest_nam_candidate = 0;
         char *fnam;
         int len_subst = 0;
 
@@ -695,7 +690,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
 
             memcpy(fnam, self->scope_name, hier_len);
-            fnam[hier_len] = GLOBALS->hier_delimeter;
+            fnam[hier_len] = delimiter;
             memcpy(fnam + hier_len + 1, nnam, name_len + 1);
         } else {
             tlen = name_len;
@@ -816,8 +811,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 node_block[i].lsi = 0;
             }
 
-            longest_nam_candidate = len;
-
             str = malloc_2(len + 1);
 
             if (alt_delimiter == '\0') {
@@ -845,7 +838,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             if (gatecmp) {
                 int len = sprintf_2_sd(buf, f_name[(i)&F_NAME_MODULUS], node_block[i].msi);
 
-                longest_nam_candidate = len;
                 str = malloc_2(len + 1);
 
                 if (alt_delimiter == '\0') {
@@ -872,7 +864,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             } else {
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
-                longest_nam_candidate = len;
                 str = malloc_2(len + 1);
 
                 if (alt_delimiter == '\0') {
