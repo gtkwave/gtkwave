@@ -35,6 +35,7 @@
 #include "gw-vlist.h"
 #include "gw-vlist-packer.h"
 #include "gw-vlist-writer.h"
-#include "gw-fst-file.h"
 #include "gw-vcd-file.h"
 #include "gw-vcd-loader.h"
+#include "gw-fst-file.h"
+#include "gw-fst-loader.h"

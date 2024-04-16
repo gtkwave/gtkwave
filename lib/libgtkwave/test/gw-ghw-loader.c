@@ -39,10 +39,10 @@ static void test_basic()
     GwTreeNode *root = gw_tree_get_root(tree);
 
     assert_tree(root,
-                "top[standard, std_logic_1164, numeric_std, ghw_test[sig_bit(0), "
-                "sig_bit_vector[[1](2), [0](1)], "
-                "sig_std_logic(4), sig_std_logic_vector[[7](12), [6](11), [5](10), [4](9), [3](8), "
-                "[2](7), [1](6), [0](5)], sig_integer(3)]]");
+                "top{standard, std_logic_1164, numeric_std, ghw_test{sig_bit(0), "
+                "sig_bit_vector{[1](2), [0](1)}, "
+                "sig_std_logic(4), sig_std_logic_vector{[7](12), [6](11), [5](10), [4](9), [3](8), "
+                "[2](7), [1](6), [0](5)}, sig_integer(3)}}");
 
     GwTreeNode *sig_bit = get_tree_node(tree, "top.ghw_test.sig_bit");
     GwTreeNode *sig_bit_vector = get_tree_node(tree, "top.ghw_test.sig_bit_vector");

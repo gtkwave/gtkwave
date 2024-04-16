@@ -1855,7 +1855,7 @@ static void vcd_parse(GwVcdLoader *self)
                     /* initial conditions */
                     v->narray = g_new0(GwNode *, 1);
                     v->narray[0] = g_new0(GwNode, 1);
-                    v->narray[0]->head.time = -1;
+                    v->narray[0]->head.time = -2;
                     v->narray[0]->head.v.h_val = GW_BIT_X;
 
                     if (self->vcdsymroot == NULL) {
@@ -2818,7 +2818,7 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->vlist_compression_level = Z_DEFAULT_COMPRESSION;
 
     self->sym_hash = g_new0(GwSymbol *, GW_HASH_PRIME);
-    self->warning_filesize = 256 * 1024 * 1024;
+    self->warning_filesize = 256;
 }
 
 GwLoader *gw_vcd_loader_new(void)
