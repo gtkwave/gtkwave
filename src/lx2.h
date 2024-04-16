@@ -18,8 +18,6 @@
 
 #include "vcd.h"
 
-#define F_NAME_MODULUS (3)
-
 enum LXT2_Loader_Type_Encodings
 {
     LXT2_IS_INACTIVE,
