@@ -33,8 +33,6 @@
 #include "debug.h"
 #include "tree.h"
 
-#define VCD_BSIZ 32768 /* size of getch() emulation buffer--this val should be ok */
-#define VCD_INDEXSIZ (8 * 1024 * 1024)
 
 #define vcd_exit(x) \
     if (GLOBALS->vcd_jmp_buf) { \
@@ -49,79 +47,6 @@ enum VCDName_ByteSubstitutions
     VCDNAM_NULL = 0,
     VCDNAM_ESCAPE
 };
-
-/* fix for contrib/rtlbrowse */
-#ifndef VLEX_DEFINES_H
-enum VarTypes
-{
-    V_EVENT,
-    V_PARAMETER,
-    V_INTEGER,
-    V_REAL,
-    V_REAL_PARAMETER = V_REAL,
-    V_REALTIME = V_REAL,
-    V_SHORTREAL = V_REAL,
-    V_REG,
-    V_SUPPLY0,
-    V_SUPPLY1,
-    V_TIME,
-    V_TRI,
-    V_TRIAND,
-    V_TRIOR,
-    V_TRIREG,
-    V_TRI0,
-    V_TRI1,
-    V_WAND,
-    V_WIRE,
-    V_WOR,
-    V_PORT,
-    V_IN = V_PORT,
-    V_OUT = V_PORT,
-    V_INOUT = V_PORT,
-    V_BIT,
-    V_LOGIC,
-    V_INT,
-    V_SHORTINT,
-    V_LONGINT,
-    V_BYTE,
-    V_ENUM,
-    V_STRINGTYPE,
-    V_END,
-    V_LB,
-    V_COLON,
-    V_RB,
-    V_STRING
-};
-#endif
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-struct vcdsymbol
-{
-    struct vcdsymbol *root, *chain;
-    GwSymbol *sym_chain;
-
-    struct vcdsymbol *next;
-    char *name;
-    char *id;
-    char *value;
-    GwNode **narray;
-    GwHistEnt **tr_array; /* points to synthesized trailers (which can move) */
-    GwHistEnt **app_array; /* points to hptr to append to (which can move) */
-
-    unsigned int nid;
-    int msi, lsi;
-    int size;
-
-    unsigned char vartype;
-};
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
 
 void strcpy_vcdalt(char *too, char *from, char delim);
 

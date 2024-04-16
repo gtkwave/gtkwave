@@ -115,35 +115,6 @@ void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
     }
 }
 
-/*
- * unswizzle extended names in tree
- */
-void treenamefix_str(char *s)
-{
-    while (*s) {
-        if (*s == VCDNAM_ESCAPE)
-            *s = GLOBALS->hier_delimeter;
-        s++;
-    }
-}
-
-void treenamefix(GwTreeNode *t)
-{
-    GwTreeNode *tnext;
-    if (t->child)
-        treenamefix(t->child);
-
-    tnext = t->next;
-
-    while (tnext) {
-        if (tnext->child)
-            treenamefix(tnext->child);
-        treenamefix_str(tnext->name);
-        tnext = tnext->next;
-    }
-
-    treenamefix_str(t->name);
-}
 
 /*
  * for debugging purposes only

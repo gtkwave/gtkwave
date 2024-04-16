@@ -81,31 +81,6 @@ void destroy_s_selected(void)
 // #endif
 
 /*
- * Generic hash function for symbol names...
- */
-int hash(char *s)
-{
-    char *p;
-    char ch;
-    unsigned int h = 0, h2 = 0, pos = 0, g;
-    for (p = s; *p; p++) {
-        ch = *p;
-        h2 <<= 3;
-        h2 -= ((unsigned int)ch + (pos++)); /* this handles stranded vectors quite well.. */
-
-        h = (h << 4) + ch;
-        if ((g = h & 0xf0000000)) {
-            h = h ^ (g >> 24);
-            h = h ^ g;
-        }
-    }
-
-    h ^= h2; /* combine the two hashes */
-
-    return h % SYMPRIME;
-}
-
-/*
  * find a slot already in the table...
  */
 static GwSymbol *symfind_2(char *s, unsigned int *rows_return)

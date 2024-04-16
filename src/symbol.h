@@ -21,7 +21,6 @@
 #include "tree.h"
 #include "debug.h"
 
-#define SYMPRIME 500009
 #define WAVE_DECOMPRESSOR "gzip -cd " /* zcat alone doesn't cut it for AIX */
 
 #include <unistd.h>
@@ -36,7 +35,6 @@ struct string_chain_t
 };
 
 GwSymbol *symfind(char *, unsigned int *);
-int hash(char *s);
 
 void facsplit(char *, int *, int *);
 int sigcmp(char *, char *);

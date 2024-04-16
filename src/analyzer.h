@@ -70,14 +70,6 @@ enum TraceReorderMode
 #define AN_HEX_STR "0123456789ABCDEFxzwu-XZWU"
 #define AN_OCT_STR "01234567xzwu-"
 
-/* now the recoded "extra" values... */
-#define RCV_X (1 | (0 << 1))
-#define RCV_Z (1 | (1 << 1))
-#define RCV_H (1 | (2 << 1))
-#define RCV_U (1 | (3 << 1))
-#define RCV_W (1 | (4 << 1))
-#define RCV_L (1 | (5 << 1))
-#define RCV_D (1 | (6 << 1))
 
 /* ^^^   Bit representation   ^^^ */
 
