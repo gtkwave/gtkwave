@@ -91,6 +91,7 @@ struct _GwVcdLoader
     int module_len_tree;
 
     gboolean has_escaped_names;
+    guint warning_filesize;
 };
 
 G_DEFINE_TYPE(GwVcdLoader, gw_vcd_loader, GW_TYPE_LOADER)
@@ -99,6 +100,7 @@ enum
 {
     PROP_VLIST_PREPACK = 1,
     PROP_VLIST_COMPRESSION_LEVEL,
+    PROP_WARNING_FILESIZE,
     N_PROPERTIES,
 };
 
@@ -2365,14 +2367,10 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
                 fseeko(self->vcd_handle, 0, SEEK_SET);
             }
 
-            if (GLOBALS->vcd_warning_filesize < 0)
-                GLOBALS->vcd_warning_filesize = VCD_SIZE_WARN;
-
-            if (GLOBALS->vcd_warning_filesize)
-                if (self->vcd_fsiz > (GLOBALS->vcd_warning_filesize * (1024 * 1024))) {
-                    if (!self->vlist_prepack) {
-                        fprintf(
-                            stderr,
+            if (self->warning_filesize > 0 &&
+                self->vcd_fsiz > self->warning_filesize * 1024 * 1024) {
+                if (!self->vlist_prepack) {
+                    fprintf(stderr,
                             "Warning! File size is %d MB.  This might fail in recoding.\n"
                             "Consider converting it to the FST database format instead.  (See the\n"
                             "vcd2fst(1) manpage for more information.)\n"
@@ -2383,12 +2381,12 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
                             "or the -g, --giga command line option to use dynamically compressed "
                             "memory.\n\n",
                             (int)(self->vcd_fsiz / (1024 * 1024)));
-                    } else {
-                        fprintf(stderr,
-                                "VCDLOAD | File size is %d MB, using vlist prepacking.\n\n",
-                                (int)(self->vcd_fsiz / (1024 * 1024)));
-                    }
+                } else {
+                    fprintf(stderr,
+                            "VCDLOAD | File size is %d MB, using vlist prepacking.\n\n",
+                            (int)(self->vcd_fsiz / (1024 * 1024)));
                 }
+            }
         } else {
             GLOBALS->splash_disable = 1;
             self->vcd_handle = stdin;
@@ -2510,6 +2508,10 @@ static void gw_vcd_loader_set_property(GObject *object,
             gw_vcd_loader_set_vlist_compression_level(self, g_value_get_int(value));
             break;
 
+        case PROP_WARNING_FILESIZE:
+            gw_vcd_loader_set_warning_filesize(self, g_value_get_uint(value));
+            break;
+
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
             break;
@@ -2530,6 +2532,10 @@ static void gw_vcd_loader_get_property(GObject *object,
 
         case PROP_VLIST_COMPRESSION_LEVEL:
             g_value_set_int(value, gw_vcd_loader_get_vlist_compression_level(self));
+            break;
+
+        case PROP_WARNING_FILESIZE:
+            g_value_set_uint(value, gw_vcd_loader_get_warning_filesize(self));
             break;
 
         default:
@@ -2565,6 +2571,15 @@ static void gw_vcd_loader_class_init(GwVcdLoaderClass *klass)
                          Z_DEFAULT_COMPRESSION,
                          G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
+    properties[PROP_WARNING_FILESIZE] =
+        g_param_spec_uint("warning-filesize",
+                          NULL,
+                          NULL,
+                          0,
+                          G_MAXUINT,
+                          0,
+                          G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
     g_object_class_install_properties(object_class, N_PROPERTIES, properties);
 }
 
@@ -2586,6 +2601,7 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->vlist_compression_level = Z_DEFAULT_COMPRESSION;
 
     self->sym_hash = g_new0(GwSymbol *, SYMPRIME);
+    self->warning_filesize = 256 * 1024 * 1024;
 }
 
 GwLoader *gw_vcd_loader_new(void)
@@ -2631,4 +2647,22 @@ gint gw_vcd_loader_get_vlist_compression_level(GwVcdLoader *self)
     g_return_val_if_fail(GW_IS_VCD_LOADER(self), FALSE);
 
     return self->vlist_compression_level;
+}
+
+void gw_vcd_loader_set_warning_filesize(GwVcdLoader *self, guint warning_filesize)
+{
+    g_return_if_fail(GW_IS_VCD_LOADER(self));
+
+    if (self->warning_filesize != warning_filesize) {
+        self->warning_filesize = warning_filesize;
+
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_WARNING_FILESIZE]);
+    }
+}
+
+guint gw_vcd_loader_get_warning_filesize(GwVcdLoader *self)
+{
+    g_return_val_if_fail(GW_IS_VCD_LOADER(self), FALSE);
+
+    return self->warning_filesize;
 }

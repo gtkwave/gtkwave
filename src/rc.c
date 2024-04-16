@@ -621,7 +621,7 @@ int f_vcd_preserve_glitches_real(const char *str)
 int f_vcd_warning_filesize(const char *str)
 {
     DEBUG(printf("f_vcd_warning_filesize(\"%s\")\n", str));
-    GLOBALS->vcd_warning_filesize = atoi_64(str);
+    GLOBALS->settings.vcd_warning_filesize = atoi_64(str);
     return (0);
 }
 

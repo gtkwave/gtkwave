@@ -33,7 +33,6 @@
 #include "debug.h"
 #include "tree.h"
 
-#define VCD_SIZE_WARN (256) /* number of MB size where converter warning message appears */
 #define VCD_BSIZ 32768 /* size of getch() emulation buffer--this val should be ok */
 #define VCD_INDEXSIZ (8 * 1024 * 1024)
 
