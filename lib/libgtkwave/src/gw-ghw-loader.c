@@ -1234,8 +1234,6 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
  facs_debug();
 #endif
 
-    // GLOBALS->facs_are_sorted = 1;
-
     fprintf(stderr,
             "[%" GW_TIME_FORMAT "] start time.\n[%" GW_TIME_FORMAT "] end time.\n",
             GW_TIME_CONSTANT(0),

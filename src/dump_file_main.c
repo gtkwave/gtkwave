@@ -49,8 +49,6 @@ GwDumpFile *ghw_main(char *fname)
 
     g_object_unref(loader);
 
-    GLOBALS->facs_are_sorted = 1;
-
     return file;
 }
 
