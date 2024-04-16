@@ -27,7 +27,6 @@ gtkwave_sources = [
     'gconf.c',
     'globals.c',
     'gtk23compat.c',
-    'gw-fst-loader.c',
     'gw-mouseover.c',
     'gw-named-marker-dialog.c',
     'gw-time-display.c',

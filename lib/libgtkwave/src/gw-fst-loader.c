@@ -1,11 +1,8 @@
-#include <config.h>
-#include <fstapi.h>
-#include "globals.h"
-#include "lx2.h"
 #include "gw-fst-loader.h"
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
 #include "gw-util.h"
+#include <fstapi.h>
 
 static GwTreeKind fst_scope_type_to_gw_tree_kind(enum fstScopeType scope_type);
 static GwVarType fst_var_type_to_gw_var_type(enum fstVarType var_type);
@@ -22,6 +19,11 @@ static GwVarDataType fst_supplemental_data_type_to_gw_var_data_type(
 #define VZT_RD_SYM_F_ALIAS (1 << 3)
 #define VZT_RD_SYM_F_SYNVEC \
     (1 << 17) /* reader synthesized vector in alias sec'n from non-adjacent vectorizing */
+
+// TODO: remove!
+#define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
+#define WAVE_T_WHICH_COMPNAME_START (-2)
+#define F_NAME_MODULUS (3)
 
 struct _GwFstLoader
 {
@@ -186,7 +188,6 @@ static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
     allocate_and_decorate_module_tree_node(&self->tree_root,
                                            ttype,
                                            scope->name,
-                                           scope->name_length,
                                            component_index,
                                            self->next_var_stem,
                                            self->next_var_istem,
@@ -219,8 +220,8 @@ static void handle_var(GwFstLoader *self,
     char *rb_last = NULL;
 
     if (var->name_length > (*nnam_max)) {
-        free_2(*nam);
-        *nam = malloc_2(((*nnam_max) = var->name_length) + 1);
+        g_free(*nam);
+        *nam = g_malloc(((*nnam_max) = var->name_length) + 1);
     }
 
     char *s = *nam;
@@ -317,7 +318,7 @@ static void handle_supvar(GwFstLoader *self,
         char *attr_pnt;
 
         if (fstReaderGetFileType(self->fst_reader) == FST_FT_VHDL) {
-            char *lc_p = attr_pnt = strdup_2(attr->name);
+            char *lc_p = attr_pnt = g_strdup(attr->name);
 
             while (*lc_p) {
                 *lc_p = tolower(*lc_p); /* convert attrib name to lowercase for VHDL */
@@ -337,7 +338,7 @@ static void handle_supvar(GwFstLoader *self,
             if (self->subvar_jrb_count != WAVE_VARXT_MAX_ID) {
                 *sxt = jv.ui = ++self->subvar_jrb_count;
                 /* subvar_jrb_node = */ jrb_insert_str(self->subvar_jrb,
-                                                       strdup_2(attr_pnt ? attr_pnt : attr->name),
+                                                       g_strdup(attr_pnt ? attr_pnt : attr->name),
                                                        jv);
             } else {
                 sxt = 0;
@@ -352,7 +353,7 @@ static void handle_supvar(GwFstLoader *self,
         }
 
         if (attr_pnt) {
-            free_2(attr_pnt);
+            g_free(attr_pnt);
         }
     }
 
@@ -401,9 +402,9 @@ static void handle_valuelist(GwFstLoader *self, struct fstHierAttr *attr)
 
     /* format is concatenations of [m b xs xe valstring] */
     if (self->synclock_str) {
-        free_2(self->synclock_str);
+        g_free(self->synclock_str);
     }
-    self->synclock_str = strdup_2(attr->name);
+    self->synclock_str = g_strdup(attr->name);
 }
 
 static void handle_enumtable(GwFstLoader *self, struct fstHierAttr *attr)
@@ -541,9 +542,7 @@ static void fst_append_graft_chain(GwFstLoader *self,
                                    int which,
                                    GwTreeNode *par)
 {
-    GwTreeNode *t = talloc_2(sizeof(GwTreeNode) + len + 1);
-
-    memcpy(t->name, nam, len + 1);
+    GwTreeNode *t = gw_tree_node_new(0, nam);
     t->t_which = which;
 
     t->child = par;
@@ -575,6 +574,129 @@ static GwBlackoutRegions *load_blackout_regions(GwFstLoader *self)
     return blackout_regions;
 }
 
+static void strcpy_vcdalt(GwFstLoader *self, char *too, char *from)
+{
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
+
+    char ch;
+
+    do {
+        ch = *(from++);
+        if (ch == alt_delimiter) {
+            ch = delimiter;
+        }
+    } while ((*(too++) = ch));
+}
+
+/*
+ * atoi 64-bit version..
+ * y/on     default to '1'
+ * n/nonnum default to '0'
+ */
+static GwTime unformat_time_atoi_64(const char *str, const gchar **cont)
+{
+    GwTime val = 0;
+    unsigned char ch, nflag = 0;
+    int consumed = 0;
+
+    switch (*str) {
+        case 'y':
+        case 'Y':
+            return (GW_TIME_CONSTANT(1));
+
+        case 'o':
+        case 'O':
+            str++;
+            ch = *str;
+            if ((ch == 'n') || (ch == 'N'))
+                return (GW_TIME_CONSTANT(1));
+            else
+                return (GW_TIME_CONSTANT(0));
+
+        case 'n':
+        case 'N':
+            return (GW_TIME_CONSTANT(0));
+            break;
+
+        default:
+            break;
+    }
+
+    while ((ch = *(str++))) {
+        if ((ch >= '0') && (ch <= '9')) {
+            val = (val * 10 + (ch & 15));
+            consumed = 1;
+        } else if ((ch == '-') && (val == 0) && (!nflag)) {
+            nflag = 1;
+            consumed = 1;
+        } else if (consumed) {
+            *cont = str - 1;
+            break;
+        }
+    }
+    return (nflag ? (-val) : val);
+}
+
+static GwTime unformat_time_simple(const char *buf, char dim)
+{
+    GwTime rval;
+    const char *pnt;
+    const char *offs = NULL;
+    const char *doffs;
+    char ch;
+    int i, ich, delta;
+
+    static const char *TIME_UNITS = " munpfaz";
+
+    const char *cont = NULL;
+    rval = unformat_time_atoi_64(buf, &cont);
+    if ((pnt = cont)) {
+        while ((ch = *(pnt++))) {
+            if ((ch == ' ') || (ch == '\t'))
+                continue;
+
+            ich = tolower((int)ch);
+            if (ich == 's')
+                ich = ' '; /* as in plain vanilla seconds */
+
+            offs = strchr(TIME_UNITS, ich);
+            break;
+        }
+    }
+
+    if (!offs)
+        return (rval);
+    if ((dim == 'S') || (dim == 's')) {
+        doffs = TIME_UNITS;
+    } else {
+        doffs = strchr(TIME_UNITS, (int)dim);
+        if (!doffs)
+            return (rval); /* should *never* happen */
+    }
+
+    delta = (doffs - TIME_UNITS) - (offs - TIME_UNITS);
+
+    if (delta < 0) {
+        for (i = delta; i < 0; i++) {
+            rval = rval / 1000;
+        }
+    } else {
+        for (i = 0; i < delta; i++) {
+            rval = rval * 1000;
+        }
+    }
+
+    return (rval);
+}
+
+// TODO: remove local copy of unformat_time
+// TODO: use full version of unformat_time
+static GwTime unformat_time(const char *buf, char dim)
+{
+    return unformat_time_simple(buf, dim);
+}
+
 static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GError **error)
 {
     GwFstLoader *self = GW_FST_LOADER(loader);
@@ -598,20 +720,23 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     unsigned int nnam_max = 0;
 
     int f_name_build_buf_len = 128;
-    char *f_name_build_buf = malloc_2(f_name_build_buf_len + 1);
+    char *f_name_build_buf = g_malloc(f_name_build_buf_len + 1);
 
     self->fst_reader = fstReaderOpen(fname);
     if (self->fst_reader == NULL) {
         // TODO: set error
         return NULL;
     }
-    /* SPLASH */ splash_create();
 
-    allowed_to_autocoalesce =
-        (strstr(fstReaderGetVersionString(self->fst_reader), "Icarus") == NULL);
-    if (!allowed_to_autocoalesce) {
-        GLOBALS->autocoalesce = 0;
-    }
+    // TODO: update splash
+    // /* SPLASH */ splash_create();
+
+    // TODO: wait for answer to https://github.com/gtkwave/gtkwave/issues/331
+    // allowed_to_autocoalesce =
+    //     (strstr(fstReaderGetVersionString(self->fst_reader), "Icarus") == NULL);
+    // if (!allowed_to_autocoalesce) {
+    //     GLOBALS->autocoalesce = 0;
+    // }
 
     GwTimeScaleAndDimension *scale =
         gw_time_scale_and_dimension_from_exponent(fstReaderGetTimescale(self->fst_reader));
@@ -619,16 +744,17 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     self->time_scale = scale->scale;
     g_free(scale);
 
-    f_name = calloc_2(F_NAME_MODULUS + 1, sizeof(char *));
-    f_name_len = calloc_2(F_NAME_MODULUS + 1, sizeof(int));
-    f_name_max_len = calloc_2(F_NAME_MODULUS + 1, sizeof(int));
+    f_name = g_new0(char *, F_NAME_MODULUS + 1);
+    f_name_len = g_new0(int, F_NAME_MODULUS + 1);
+    f_name_max_len = g_new0(int, F_NAME_MODULUS + 1);
 
     nnam_max = 16;
-    nnam = malloc_2(nnam_max + 1);
+    nnam = g_malloc(nnam_max + 1);
 
-    if (fstReaderGetFileType(self->fst_reader) == FST_FT_VHDL) {
-        GLOBALS->is_vhdl_component_format = 1;
-    }
+    // TODO: reimplement
+    // if (fstReaderGetFileType(self->fst_reader) == FST_FT_VHDL) {
+    //     GLOBALS->is_vhdl_component_format = 1;
+    // }
 
     self->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
     self->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
@@ -636,13 +762,14 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     uint numfacs = fstReaderGetVarCount(self->fst_reader);
 
     GwFacs *facs = gw_facs_new(numfacs);
-    self->mvlfacs = calloc_2(numfacs, sizeof(GwFac));
-    sym_block = calloc_2(numfacs, sizeof(GwSymbol));
-    node_block = calloc_2(numfacs, sizeof(GwNode));
-    self->mvlfacs_rvs_alias = calloc_2(numfacs, sizeof(fstHandle));
+    self->mvlfacs = g_new0(GwFac, numfacs);
+    sym_block = g_new0(GwSymbol, numfacs);
+    node_block = g_new0(GwNode, numfacs);
+    self->mvlfacs_rvs_alias = g_new0(fstHandle, numfacs);
 
     fprintf(stderr, FST_RDLOAD "Processing %d facs.\n", numfacs);
-    /* SPLASH */ splash_sync(1, 5);
+    // TODO: update splash
+    // /* SPLASH */ splash_sync(1, 5);
 
     self->first_cycle = fstReaderGetStartTime(self->fst_reader) * self->time_scale;
     self->last_cycle = fstReaderGetEndTime(self->fst_reader) * self->time_scale;
@@ -683,9 +810,9 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             tlen = hier_len + 1 + name_len;
             if (tlen > f_name_max_len[i & F_NAME_MODULUS]) {
                 if (f_name[i & F_NAME_MODULUS])
-                    free_2(f_name[i & F_NAME_MODULUS]);
+                    g_free(f_name[i & F_NAME_MODULUS]);
                 f_name_max_len[i & F_NAME_MODULUS] = tlen;
-                fnam = malloc_2(tlen + 1);
+                fnam = g_malloc(tlen + 1);
             } else {
                 fnam = f_name[i & F_NAME_MODULUS];
             }
@@ -697,9 +824,9 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             tlen = name_len;
             if (tlen > f_name_max_len[i & F_NAME_MODULUS]) {
                 if (f_name[i & F_NAME_MODULUS])
-                    free_2(f_name[i & F_NAME_MODULUS]);
+                    g_free(f_name[i & F_NAME_MODULUS]);
                 f_name_max_len[i & F_NAME_MODULUS] = tlen;
-                fnam = malloc_2(tlen + 1);
+                fnam = g_malloc(tlen + 1);
             } else {
                 fnam = f_name[i & F_NAME_MODULUS];
             }
@@ -779,7 +906,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 syn_jv.s = self->synclock_str;
                 jrb_insert_int(self->synclock_jrb, i, syn_jv);
             } else {
-                free_2(self->synclock_str);
+                g_free(self->synclock_str);
             }
 
             /* under malloc_2() control for true if() branch, so not lost */
@@ -812,12 +939,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 node_block[i].lsi = 0;
             }
 
-            str = malloc_2(len + 1);
+            str = g_malloc(len + 1);
 
             if (alt_delimiter == '\0') {
                 memcpy(str, buf, len + 1);
             } else {
-                strcpy_vcdalt(str, buf, alt_delimiter);
+                strcpy_vcdalt(self, str, buf);
             }
             s = &sym_block[i];
             s->name = str;
@@ -839,12 +966,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             if (gatecmp) {
                 int len = sprintf_2_sd(buf, f_name[(i)&F_NAME_MODULUS], node_block[i].msi);
 
-                str = malloc_2(len + 1);
+                str = g_malloc(len + 1);
 
                 if (alt_delimiter == '\0') {
                     memcpy(str, buf, len + 1);
                 } else {
-                    strcpy_vcdalt(str, buf, alt_delimiter);
+                    strcpy_vcdalt(self, str, buf);
                 }
                 s = &sym_block[i];
                 s->name = str;
@@ -865,12 +992,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             } else {
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
-                str = malloc_2(len + 1);
+                str = g_malloc(len + 1);
 
                 if (alt_delimiter == '\0') {
                     memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
                 } else {
-                    strcpy_vcdalt(str, f_name[(i)&F_NAME_MODULUS], alt_delimiter);
+                    strcpy_vcdalt(self, str, f_name[(i)&F_NAME_MODULUS]);
                 }
                 s = &sym_block[i];
                 s->name = str;
@@ -951,38 +1078,38 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     } /* for(i) of facs parsing */
 
     if (f_name_max_len) {
-        free_2(f_name_max_len);
+        g_free(f_name_max_len);
         f_name_max_len = NULL;
     }
     if (nnam) {
-        free_2(nnam);
+        g_free(nnam);
         nnam = NULL;
     }
     if (f_name_build_buf) {
-        free_2(f_name_build_buf);
+        g_free(f_name_build_buf);
         f_name_build_buf = NULL;
     }
 
     for (i = 0; i <= F_NAME_MODULUS; i++) {
         if (f_name[i]) {
-            free_2(f_name[i]);
+            g_free(f_name[i]);
             f_name[i] = NULL;
         }
     }
-    free_2(f_name);
+    g_free(f_name);
     f_name = NULL;
-    free_2(f_name_len);
+    g_free(f_name_len);
     f_name_len = NULL;
 
     if (numvars != numfacs) {
-        self->mvlfacs_rvs_alias = realloc_2(self->mvlfacs_rvs_alias, numvars * sizeof(fstHandle));
+        self->mvlfacs_rvs_alias = g_realloc(self->mvlfacs_rvs_alias, numvars * sizeof(fstHandle));
     }
 
     /* generate lookup table for typenames explicitly given as attributes */
     gchar **subvar_pnt = NULL;
     if (self->subvar_jrb_count > 0) {
         JRB subvar_jrb_node = NULL;
-        subvar_pnt = calloc_2(self->subvar_jrb_count + 1, sizeof(char *));
+        subvar_pnt = g_new0(char *, self->subvar_jrb_count + 1);
 
         jrb_traverse(subvar_jrb_node, self->subvar_jrb)
         {
@@ -1001,10 +1128,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             numalias,
             (numalias == 1) ? "" : "es");
 
-    /* SPLASH */ splash_sync(2, 5);
+    // TODO: update splash
+    // /* SPLASH */ splash_sync(2, 5);
     fprintf(stderr, FST_RDLOAD "Building facility hierarchy tree.\n");
 
-    /* SPLASH */ splash_sync(3, 5);
+    // TODO: update splash
+    // /* SPLASH */ splash_sync(3, 5);
 
     fprintf(stderr, FST_RDLOAD "Sorting facility hierarchy tree.\n");
 
@@ -1013,10 +1142,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     gw_tree_graft(tree, self->terminals_chain);
     gw_tree_sort(tree);
 
-    /* SPLASH */ splash_sync(4, 5);
+    // TODO: update splash
+    // /* SPLASH */ splash_sync(4, 5);
     gw_facs_order_from_tree(facs, tree);
 
-    /* SPLASH */ splash_sync(5, 5);
+    // TODO: update splash
+    // /* SPLASH */ splash_sync(5, 5);
 
 #if 0
 {
@@ -1041,7 +1172,8 @@ if(num_dups)
     /* to avoid bin -> ascii -> bin double swap */
     fstReaderIterBlocksSetNativeDoublesOnCallback(self->fst_reader, 1);
 
-    /* SPLASH */ splash_finalize();
+    // TODO: update splash
+    // /* SPLASH */ splash_finalize();
 
     GwTimeRange *time_range;
 
@@ -1092,7 +1224,7 @@ if(num_dups)
 
     dump_file->fst_reader = g_steal_pointer(&self->fst_reader);
     dump_file->fst_maxhandle = numvars;
-    dump_file->fst_table = calloc_2(numfacs, sizeof(GwLx2Entry));
+    dump_file->fst_table = g_new0(GwLx2Entry, numfacs);
     dump_file->mvlfacs = g_steal_pointer(&self->mvlfacs);
     dump_file->mvlfacs_rvs_alias = g_steal_pointer(&self->mvlfacs_rvs_alias);
     dump_file->subvar_jrb = g_steal_pointer(&self->subvar_jrb);

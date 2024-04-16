@@ -61,23 +61,6 @@ void init_tree(void);
 void treedebug(GwTreeNode *t, char *s);
 
 char *leastsig_hiername(char *nam);
-void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
-                                            unsigned char ttype,
-                                            const char *scopename,
-                                            uint32_t scopename_len,
-                                            gint component_index,
-                                            uint32_t t_stem,
-                                            uint32_t t_istem,
-                                            GwTreeNode **mod_tree_parent);
-void treenamefix(GwTreeNode *t);
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#define WAVE_TALLOC_POOL_SIZE (64 * 1024)
-#define WAVE_TALLOC_ALTREQ_SIZE (4 * 1024)
-GwTreeNode *talloc_2(size_t siz);
-#else
-#define talloc_2(x) calloc_2(1, (x))
-#endif
 
 /* #define WAVE_DISABLE_FAST_TREE */
 
