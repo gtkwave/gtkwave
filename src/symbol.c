@@ -163,29 +163,7 @@ GwSymbol *symadd(char *name, int hv)
     return (s);
 }
 
-GwSymbol *symadd_name_exists(char *name, int hv)
-{
-    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
 
-    // TODO: reenable judy support
-    // #ifdef _WAVE_HAVE_JUDY
-    //     (void)hv;
-    //
-    //     PPvoid_t PPValue = JudySLIns(&GLOBALS->sym_judy, (uint8_t *)name, PJE0);
-    //     *((GwSymbol **)PPValue) = s;
-    //
-    //     s->name = name; /* redundant for now */
-    //
-    // #else
-
-    s->name = name;
-    s->sym_next = GLOBALS->sym_hash[hv];
-    GLOBALS->sym_hash[hv] = s;
-
-    // #endif
-
-    return (s);
-}
 
 /*
  * find a slot already in the table...
