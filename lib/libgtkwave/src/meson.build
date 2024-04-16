@@ -11,6 +11,7 @@ libgtkwave_public_sources = [
     'gw-fst-file.c',
     'gw-ghw-file.c',
     'gw-ghw-loader.c',
+    'gw-hash.c',
     'gw-hist-ent-factory.c',
     'gw-loader.c',
     'gw-marker.c',
@@ -23,6 +24,7 @@ libgtkwave_public_sources = [
     'gw-tree.c',
     'gw-var-enums.c',
     'gw-vcd-file.c',
+    'gw-vcd-loader.c',
     'gw-vlist-packer.c',
     'gw-vlist-writer.c',
     'gw-vlist.c',
@@ -46,6 +48,7 @@ libgtkwave_public_headers = [
     'gw-fst-file.h',
     'gw-ghw-file.h',
     'gw-ghw-loader.h',
+    'gw-hash.h',
     'gw-hist-ent-factory.h',
     'gw-hist-ent.h',
     'gw-loader.h',
@@ -60,6 +63,7 @@ libgtkwave_public_headers = [
     'gw-tree.h',
     'gw-var-enums.h',
     'gw-vcd-file.h',
+    'gw-vcd-loader.h',
     'gw-vector-ent.h',
     'gw-vlist.h',
     'gw-vlist-packer.h',
@@ -96,9 +100,28 @@ libgtkwave_enums = gnome.mkenums_simple('gw-enums',
     sources: libgtkwave_public_headers
 )
 
+vcd_keywords_c = custom_target(
+    'vcd-keywords.c',
+    input: 'vcd-keywords.gperf',
+    output: 'vcd-keywords.c',
+    command: [
+        gperf,
+        '-i', '1',
+        '-L', 'ANSI-C',
+        '-C',
+        '-k', '1,\044',
+        '-H', 'keyword_hash',
+        '-N', 'check_identifier',
+        '-tT',
+        '--initializer-suffix=,0',
+        '--output-file', '@OUTPUT@',
+        '@INPUT@',
+    ],
+)
+
 libgtkwave = shared_library(
     'gtkwave',
-    sources: libgtkwave_public_sources + libgtkwave_private_sources + libgtkwave_enums,
+    sources: libgtkwave_public_sources + libgtkwave_private_sources + libgtkwave_enums + vcd_keywords_c,
     dependencies: libgtkwave_dependencies,
     include_directories: config_inc,
     install: true,

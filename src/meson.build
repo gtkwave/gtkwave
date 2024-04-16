@@ -2,25 +2,6 @@ subdir('helpers')
 
 # gtkwave
 
-vcd_keywords_c = custom_target(
-    'vcd_keywords.c',
-    input: 'vcd_keywords.gperf',
-    output: 'vcd_keywords.c',
-    command: [
-        gperf,
-        '-i', '1',
-        '-L', 'ANSI-C',
-        '-C',
-        '-k', '1,\044',
-        '-H', 'keyword_hash',
-        '-N', 'check_identifier',
-        '-tT',
-        '--initializer-suffix=,0',
-        '--output-file', '@OUTPUT@',
-        '@INPUT@',
-    ],
-)
-
 gtkwave_resources = gnome.compile_resources(
     'gtkwave-resources',
     'io.github.gtkwave.GTKWave.gresource.xml',
@@ -50,7 +31,6 @@ gtkwave_sources = [
     'gw-mouseover.c',
     'gw-named-marker-dialog.c',
     'gw-time-display.c',
-    'gw-vcd-loader.c',
     'gw-wave-view-traces.c',
     'gw-wave-view.c',
     'logfile.c',

@@ -7,7 +7,7 @@
 
 #include <config.h>
 #include <string.h>
-#include "vcd.h"
+#include "vcd-keywords.h"
 
 struct vcd_keyword { const char *name; int token; };
 

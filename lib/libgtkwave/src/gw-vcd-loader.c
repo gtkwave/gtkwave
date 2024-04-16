@@ -1,12 +1,57 @@
-#include <config.h>
 #include "gw-vcd-loader.h"
 #include "gw-vcd-file.h"
 #include "gw-vcd-file-private.h"
-#include "globals.h"
-#include "vcd.h"
-#include "lx2.h"
+#include "gw-util.h"
+#include "gw-hash.h"
+#include "vcd-keywords.h"
+#include <stdio.h>
+#include <fstapi.h>
 
-int vcd_keyword_code(const char *s, unsigned int len);
+#define VCD_BSIZ 32768 /* size of getch() emulation buffer--this val should be ok */
+#define VCD_INDEXSIZ (8 * 1024 * 1024)
+// TODO: remove VCDNAM_ESCAPE
+#define VCDNAM_ESCAPE 1
+// TODO: remove!
+#define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
+#define WAVE_DECOMPRESSOR "gzip -cd " /* zcat alone doesn't cut it for AIX */
+
+#ifdef WAVE_USE_STRUCT_PACKING
+#pragma pack(push)
+#pragma pack(1)
+#endif
+
+struct vcdsymbol
+{
+    struct vcdsymbol *root, *chain;
+    GwSymbol *sym_chain;
+
+    struct vcdsymbol *next;
+    char *name;
+    char *id;
+    char *value;
+    GwNode **narray;
+    GwHistEnt **tr_array; /* points to synthesized trailers (which can move) */
+    GwHistEnt **app_array; /* points to hptr to append to (which can move) */
+
+    unsigned int nid;
+    int msi, lsi;
+    int size;
+
+    unsigned char vartype;
+};
+
+#ifdef WAVE_USE_STRUCT_PACKING
+#pragma pack(pop)
+#endif
+
+/* now the recoded "extra" values... */
+#define RCV_X (1 | (0 << 1))
+#define RCV_Z (1 | (1 << 1))
+#define RCV_H (1 | (2 << 1))
+#define RCV_U (1 | (3 << 1))
+#define RCV_W (1 | (4 << 1))
+#define RCV_L (1 | (5 << 1))
+#define RCV_D (1 | (6 << 1))
 
 typedef struct
 {
@@ -106,6 +151,20 @@ enum
 
 static GParamSpec *properties[N_PROPERTIES];
 
+// TODO: improve error handling
+static void vcd_exit(int status)
+{
+    exit(status);
+
+    // old implementation:
+    // if (GLOBALS->vcd_jmp_buf) {
+    //     splash_finalize();
+    //     longjmp(*(GLOBALS->vcd_jmp_buf), x);
+    // } else {
+    //     exit(x);
+    // }
+}
+
 /**/
 
 static void malform_eof_fix(GwVcdLoader *self)
@@ -123,6 +182,50 @@ static void malform_eof_fix(GwVcdLoader *self)
 static void vcd_build_symbols(GwVcdLoader *self);
 static void vcd_cleanup(GwVcdLoader *self);
 static void evcd_strcpy(char *dst, char *src);
+
+// TODO: remove local copy of atoi_64
+static GwTime atoi_64(const char *str)
+{
+    GwTime val = 0;
+    unsigned char ch, nflag = 0;
+    int consumed = 0;
+
+    switch (*str) {
+        case 'y':
+        case 'Y':
+            return (GW_TIME_CONSTANT(1));
+
+        case 'o':
+        case 'O':
+            str++;
+            ch = *str;
+            if ((ch == 'n') || (ch == 'N'))
+                return (GW_TIME_CONSTANT(1));
+            else
+                return (GW_TIME_CONSTANT(0));
+
+        case 'n':
+        case 'N':
+            return (GW_TIME_CONSTANT(0));
+            break;
+
+        default:
+            break;
+    }
+
+    while ((ch = *(str++))) {
+        if ((ch >= '0') && (ch <= '9')) {
+            val = (val * 10 + (ch & 15));
+            consumed = 1;
+        } else if ((ch == '-') && (val == 0) && (!nflag)) {
+            nflag = 1;
+            consumed = 1;
+        } else if (consumed) {
+            break;
+        }
+    }
+    return (nflag ? (-val) : val);
+}
 
 /******************************************************************/
 
@@ -288,14 +391,14 @@ static void create_sorted_table(GwVcdLoader *self)
     struct vcdsymbol **pnt;
     unsigned int vcd_distance;
 
-    g_clear_pointer(&self->symbols_sorted, free_2);
-    g_clear_pointer(&self->symbols_indexed, free_2);
+    g_clear_pointer(&self->symbols_sorted, g_free);
+    g_clear_pointer(&self->symbols_indexed, g_free);
 
     if (self->numsyms > 0) {
         vcd_distance = self->vcd_maxid - self->vcd_minid + 1;
 
         if ((vcd_distance <= VCD_INDEXSIZ) || !self->vcd_hash_kill) {
-            self->symbols_indexed = calloc_2(vcd_distance, sizeof(struct vcdsymbol *));
+            self->symbols_indexed = g_new0(struct vcdsymbol *, vcd_distance);
 
             /* printf("%d symbols span ID range of %d, using indexing... hash_kill = %d\n",
              * self->numsyms, vcd_distance, GLOBALS->vcd_hash_kill);  */
@@ -308,7 +411,7 @@ static void create_sorted_table(GwVcdLoader *self)
                 v = v->next;
             }
         } else {
-            pnt = self->symbols_sorted = calloc_2(self->numsyms, sizeof(struct vcdsymbol *));
+            pnt = self->symbols_sorted = g_new0(struct vcdsymbol *, self->numsyms);
             v = self->vcdsymroot;
             while (v) {
                 *(pnt++) = v;
@@ -326,9 +429,9 @@ static void create_sorted_table(GwVcdLoader *self)
  */
 static GwSymbol *symadd(GwVcdLoader *self, char *name, int hv)
 {
-    GwSymbol *s = (GwSymbol *)calloc_2(1, sizeof(GwSymbol));
+    GwSymbol *s = g_new0(GwSymbol, 1);
 
-    strcpy(s->name = (char *)malloc_2(strlen(name) + 1), name);
+    strcpy(s->name = g_malloc(strlen(name) + 1), name);
     s->sym_next = self->sym_hash[hv];
     self->sym_hash[hv] = s;
 
@@ -544,14 +647,14 @@ static GwTreeNode *pop_scope(GwVcdLoader *self)
  */
 static void getch_alloc(GwVcdLoader *self)
 {
-    self->vcdbuf = calloc_2(1, VCD_BSIZ);
+    self->vcdbuf = g_malloc0(VCD_BSIZ);
     self->vst = self->vcdbuf;
     self->vend = self->vcdbuf;
 }
 
 static void getch_free(GwVcdLoader *self)
 {
-    free_2(self->vcdbuf);
+    g_free(self->vcdbuf);
     self->vcdbuf = NULL;
     self->vst = NULL;
     self->vend = NULL;
@@ -573,8 +676,9 @@ static int getch_fetch(GwVcdLoader *self)
         return (-1);
 
     if (self->vcd_fsiz > 0) {
-        splash_sync(self->vcdbyteno, self->vcd_fsiz); /* gnome 2.18 seems to set errno so splash
-                                                                            moved here... */
+        // TODO: update splash
+        // splash_sync(self->vcdbyteno, self->vcd_fsiz); /* gnome 2.18 seems to set errno so splash
+        //                                                                     moved here... */
     }
 
     return ((int)(*self->vst));
@@ -642,7 +746,7 @@ static int get_token(GwVcdLoader *self)
     for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
         if (len == self->T_MAX_STR) {
             self->T_MAX_STR *= 2;
-            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
+            self->yytext = g_realloc(self->yytext, self->T_MAX_STR + 1);
         }
         ch = getch(self);
         if (ch <= ' ')
@@ -678,7 +782,7 @@ static int get_vartoken_patched(GwVcdLoader *self, int match_kw)
         for (;;) {
             ch = getch_patched(self);
             if (ch < 0) {
-                free_2(self->varsplit);
+                g_free(self->varsplit);
                 self->varsplit = NULL;
                 return (V_END);
             }
@@ -701,11 +805,11 @@ static int get_vartoken_patched(GwVcdLoader *self, int match_kw)
     for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
         if (len == self->T_MAX_STR) {
             self->T_MAX_STR *= 2;
-            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
+            self->yytext = g_realloc(self->yytext, self->T_MAX_STR + 1);
         }
         ch = getch_patched(self);
         if (ch < 0) {
-            free_2(self->varsplit);
+            g_free(self->varsplit);
             self->varsplit = NULL;
             break;
         }
@@ -720,7 +824,7 @@ static int get_vartoken_patched(GwVcdLoader *self, int match_kw)
         int vr = vcd_keyword_code(self->yytext, len);
         if (vr != V_STRING) {
             if (ch < 0) {
-                free_2(self->varsplit);
+                g_free(self->varsplit);
                 self->varsplit = NULL;
             }
             return (vr);
@@ -729,7 +833,7 @@ static int get_vartoken_patched(GwVcdLoader *self, int match_kw)
 
     self->yylen = len;
     if (ch < 0) {
-        free_2(self->varsplit);
+        g_free(self->varsplit);
         self->varsplit = NULL;
     }
     return V_STRING;
@@ -777,7 +881,7 @@ static int get_vartoken(GwVcdLoader *self, int match_kw)
     for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
         if (len == self->T_MAX_STR) {
             self->T_MAX_STR *= 2;
-            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
+            self->yytext = g_realloc(self->yytext, self->T_MAX_STR + 1);
         }
 
         ch = getch(self);
@@ -804,7 +908,7 @@ static int get_vartoken(GwVcdLoader *self, int match_kw)
     self->yytext[len] = 0; /* absolute terminator */
     if ((self->varsplit) && (self->yytext[len - 1] == ']')) {
         char *vst;
-        vst = malloc_2(strlen(self->varsplit) + 1);
+        vst = g_malloc(strlen(self->varsplit) + 1);
         strcpy(vst, self->varsplit);
 
         *self->varsplit = 0x00; /* zero out var name at the left bracket */
@@ -849,7 +953,7 @@ static int get_strtoken(GwVcdLoader *self)
     for (self->yytext[len++] = ch;; self->yytext[len++] = ch) {
         if (len == self->T_MAX_STR) {
             self->T_MAX_STR *= 2;
-            self->yytext = realloc_2(self->yytext, self->T_MAX_STR + 1);
+            self->yytext = g_realloc(self->yytext, self->T_MAX_STR + 1);
         }
         ch = getch(self);
         if ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r') || (ch < 0))
@@ -866,19 +970,19 @@ static void sync_end(GwVcdLoader *self, const char *hdr)
     int tok;
 
     if (hdr) {
-        DEBUG(fprintf(stderr, "%s", hdr));
+        // DEBUG(fprintf(stderr, "%s", hdr));
     }
     for (;;) {
         tok = get_token(self);
         if ((tok == T_END) || (tok == T_EOF))
             break;
-        if (hdr) {
-            DEBUG(fprintf(stderr, " %s", self->yytext));
-        }
+        // if (hdr) {
+        //     DEBUG(fprintf(stderr, " %s", self->yytext));
+        // }
     }
-    if (hdr) {
-        DEBUG(fprintf(stderr, "\n"));
-    }
+    // if (hdr) {
+    //     DEBUG(fprintf(stderr, "\n"));
+    // }
 }
 
 static int version_sync_end(GwVcdLoader *self, const char *hdr)
@@ -886,16 +990,16 @@ static int version_sync_end(GwVcdLoader *self, const char *hdr)
     int tok;
     int rc = 0;
 
-    if (hdr) {
-        DEBUG(fprintf(stderr, "%s", hdr));
-    }
+    // if (hdr) {
+    //     DEBUG(fprintf(stderr, "%s", hdr));
+    // }
     for (;;) {
         tok = get_token(self);
         if ((tok == T_END) || (tok == T_EOF))
             break;
-        if (hdr) {
-            DEBUG(fprintf(stderr, " %s", self->yytext));
-        }
+        // if (hdr) {
+        //     DEBUG(fprintf(stderr, " %s", self->yytext));
+        // }
 
         // TODO: wait for reply to https://github.com/gtkwave/gtkwave/issues/331
         // /* turn off autocoalesce for Icarus */
@@ -904,9 +1008,9 @@ static int version_sync_end(GwVcdLoader *self, const char *hdr)
         //     rc = 1;
         // }
     }
-    if (hdr) {
-        DEBUG(fprintf(stderr, "\n"));
-    }
+    // if (hdr) {
+    //     DEBUG(fprintf(stderr, "\n"));
+    // }
     return (rc);
 }
 
@@ -1170,6 +1274,156 @@ static int strcpy_delimfix(GwVcdLoader *self, char *too, char *from)
     return (found);
 }
 
+static void fractional_timescale_fix(char *s)
+{
+    char buf[32], sfx[2];
+    int i, len;
+    int prefix_idx = 0;
+
+    if (*s != '0') {
+        char *dot = strchr(s, '.');
+        char *src, *dst;
+        if (dot) {
+            char *pnt = dot + 1;
+            int alpha_found = 0;
+            while (*pnt) {
+                if (isalpha(*pnt)) {
+                    alpha_found = 1;
+                    break;
+                }
+                pnt++;
+            }
+
+            if (alpha_found) {
+                src = pnt;
+                dst = dot;
+                while (*src) {
+                    *dst = *src;
+                    dst++;
+                    src++;
+                }
+                *dst = 0;
+            }
+        }
+        return;
+    }
+
+    len = strlen(s);
+    for (i = 0; i < len; i++) {
+        if ((s[i] != '0') && (s[i] != '1') && (s[i] != '.')) {
+            buf[i] = 0;
+            prefix_idx = i;
+            break;
+        } else {
+            buf[i] = s[i];
+        }
+    }
+
+    if (!strcmp(buf, "0.1")) {
+        strcpy(buf, "100");
+    } else if (!strcmp(buf, "0.01")) {
+        strcpy(buf, "10");
+    } else if (!strcmp(buf, "0.001")) {
+        strcpy(buf, "1");
+    } else {
+        return;
+    }
+
+    static const gchar *WAVE_SI_UNITS = " munpfaz";
+
+    len = strlen(WAVE_SI_UNITS);
+    for (i = 0; i < len - 1; i++) {
+        if (s[prefix_idx] == WAVE_SI_UNITS[i])
+            break;
+    }
+
+    sfx[0] = WAVE_SI_UNITS[i + 1];
+    sfx[1] = 0;
+    strcat(buf, sfx);
+    strcat(buf, "s");
+    /* printf("old time: '%s', new time: '%s'\n", s, buf); */
+    strcpy(s, buf);
+}
+
+static void strcpy_vcdalt(GwVcdLoader *self, char *too, char *from)
+{
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
+
+    char ch;
+
+    do {
+        ch = *(from++);
+        if (ch == alt_delimiter) {
+            ch = delimiter;
+        }
+    } while ((*(too++) = ch));
+}
+
+/*
+ * decorated module add
+ */
+static void allocate_and_decorate_module_tree_node(GwTreeNode **tree_root,
+                                                   unsigned char ttype,
+                                                   const char *scopename,
+                                                   gint component_index,
+                                                   uint32_t t_stem,
+                                                   uint32_t t_istem,
+                                                   GwTreeNode **mod_tree_parent)
+{
+    GwTreeNode *t;
+
+    if (*tree_root != NULL) {
+        if (*mod_tree_parent != NULL) {
+            t = (*mod_tree_parent)->child;
+            while (t) {
+                if (!strcmp(t->name, scopename)) {
+                    *mod_tree_parent = t;
+                    return;
+                }
+                t = t->next;
+            }
+
+            t = gw_tree_node_new(ttype, scopename);
+            t->t_which = component_index;
+            t->t_stem = t_stem;
+            t->t_istem = t_istem;
+
+            if ((*mod_tree_parent)->child) {
+                t->next = (*mod_tree_parent)->child;
+            }
+            (*mod_tree_parent)->child = t;
+            *mod_tree_parent = t;
+        } else {
+            t = *tree_root;
+            while (t) {
+                if (!strcmp(t->name, scopename)) {
+                    *mod_tree_parent = t;
+                    return;
+                }
+                t = t->next;
+            }
+
+            t = gw_tree_node_new(ttype, scopename);
+            t->t_which = component_index;
+            t->t_stem = t_stem;
+            t->t_istem = t_istem;
+
+            t->next = *tree_root;
+            *tree_root = t;
+            *mod_tree_parent = t;
+        }
+    } else {
+        t = gw_tree_node_new(ttype, scopename);
+        t->t_which = component_index;
+        t->t_stem = t_stem;
+        t->t_istem = t_istem;
+
+        *tree_root = t;
+        *mod_tree_parent = t;
+    }
+}
+
 static void vcd_parse(GwVcdLoader *self)
 {
     int tok;
@@ -1196,7 +1450,8 @@ static void vcd_parse(GwVcdLoader *self)
                     break;
                 self->global_time_offset = atoi_64(self->yytext);
 
-                DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n", self->global_time_offset));
+                // DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n",
+                // self->global_time_offset));
                 sync_end(self, NULL);
             } break;
             case T_TIMESCALE: {
@@ -1243,10 +1498,10 @@ static void vcd_parse(GwVcdLoader *self)
                         break;
                 }
 
-                DEBUG(fprintf(stderr,
-                              "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
-                              self->time_scale,
-                              self->time_dimension));
+                // DEBUG(fprintf(stderr,
+                //               "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
+                //               self->time_scale,
+                //               self->time_dimension));
                 sync_end(self, NULL);
             } break;
             case T_SCOPE:
@@ -1335,20 +1590,19 @@ static void vcd_parse(GwVcdLoader *self)
                     allocate_and_decorate_module_tree_node(&self->tree_root,
                                                            ttype,
                                                            self->yytext,
-                                                           self->yylen,
                                                            -1,
                                                            0,
                                                            0,
                                                            &self->mod_tree_parent);
 
-                    DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
+                    // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 }
                 sync_end(self, NULL);
                 break;
             case T_UPSCOPE:
                 if (!g_queue_is_empty(self->scopes)) {
                     self->mod_tree_parent = pop_scope(self);
-                    DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
+                    // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
                 } else {
                     self->mod_tree_parent = NULL;
                 }
@@ -1368,14 +1622,14 @@ static void vcd_parse(GwVcdLoader *self)
 
                     self->var_prevch = 0;
                     if (self->varsplit) {
-                        free_2(self->varsplit);
+                        g_free(self->varsplit);
                         self->varsplit = NULL;
                     }
                     vtok = get_vartoken(self, 1);
                     if (vtok > V_STRINGTYPE)
                         goto bail;
 
-                    v = (struct vcdsymbol *)calloc_2(1, sizeof(struct vcdsymbol));
+                    v = g_new0(struct vcdsymbol, 1);
                     v->vartype = vtok;
                     v->msi = v->lsi = -1;
 
@@ -1419,7 +1673,7 @@ static void vcd_parse(GwVcdLoader *self)
                         vtok = get_strtoken(self);
                         if (vtok == V_END)
                             goto err;
-                        v->id = (char *)malloc_2(self->yylen + 1);
+                        v->id = g_malloc(self->yylen + 1);
                         strcpy(v->id, self->yytext);
                         v->nid = vcdid_hash(self->yytext, self->yylen);
 
@@ -1442,40 +1696,40 @@ static void vcd_parse(GwVcdLoader *self)
                         if (vtok != V_STRING)
                             goto err;
                         if (self->name_prefix->len > 0) {
-                            v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
+                            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
                             v->name[self->name_prefix->len] = delimiter;
                             if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(v->name + self->name_prefix->len + 1,
-                                              self->yytext,
-                                              alt_delimiter);
+                                strcpy_vcdalt(self,
+                                              v->name + self->name_prefix->len + 1,
+                                              self->yytext);
                             } else {
                                 if ((strcpy_delimfix(self,
                                                      v->name + self->name_prefix->len + 1,
                                                      self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
-                                                                self->yylen + 2);
+                                    char *sd =
+                                        g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
                                     strcpy(sd, self->name_prefix->str);
                                     sd[self->name_prefix->len] = delimiter;
                                     sd[self->name_prefix->len + 1] = '\\';
                                     strcpy(sd + self->name_prefix->len + 2,
                                            v->name + self->name_prefix->len + 1);
-                                    free_2(v->name);
+                                    g_free(v->name);
                                     v->name = sd;
                                 }
                             }
                         } else {
-                            v->name = (char *)malloc_2(self->yylen + 1);
+                            v->name = g_malloc(self->yylen + 1);
                             if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(v->name, self->yytext, alt_delimiter);
+                                strcpy_vcdalt(self, v->name, self->yytext);
                             } else {
                                 if ((strcpy_delimfix(self, v->name, self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(self->yylen + 2);
+                                    char *sd = g_malloc(self->yylen + 2);
                                     sd[0] = '\\';
                                     strcpy(sd + 1, v->name);
-                                    free_2(v->name);
+                                    g_free(v->name);
                                     v->name = sd;
                                 }
                             }
@@ -1493,13 +1747,13 @@ static void vcd_parse(GwVcdLoader *self)
                                 self->rootv = v;
                             }
 
-                            free_2(self->prev_hier_uncompressed_name);
+                            g_free(self->prev_hier_uncompressed_name);
                         } else {
                             self->rootv = v;
                         }
 
                         self->pv = v;
-                        self->prev_hier_uncompressed_name = strdup_2(v->name);
+                        self->prev_hier_uncompressed_name = g_strdup(v->name);
                     } else /* regular vcd var, not an evcd port var */
                     {
                         vtok = get_vartoken(self, 1);
@@ -1509,7 +1763,7 @@ static void vcd_parse(GwVcdLoader *self)
                         vtok = get_strtoken(self);
                         if (vtok == V_END)
                             goto err;
-                        v->id = (char *)malloc_2(self->yylen + 1);
+                        v->id = g_malloc(self->yylen + 1);
                         strcpy(v->id, self->yytext);
                         v->nid = vcdid_hash(self->yytext, self->yylen);
 
@@ -1533,40 +1787,40 @@ static void vcd_parse(GwVcdLoader *self)
                             goto err;
 
                         if (self->name_prefix->len > 0) {
-                            v->name = malloc_2(self->name_prefix->len + 1 + self->yylen + 1);
+                            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
                             strcpy(v->name, self->name_prefix->str);
                             v->name[self->name_prefix->len] = delimiter;
                             if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(v->name + self->name_prefix->len + 1,
-                                              self->yytext,
-                                              alt_delimiter);
+                                strcpy_vcdalt(self,
+                                              v->name + self->name_prefix->len + 1,
+                                              self->yytext);
                             } else {
                                 if ((strcpy_delimfix(self,
                                                      v->name + self->name_prefix->len + 1,
                                                      self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(self->name_prefix->len + 1 +
-                                                                self->yylen + 2);
+                                    char *sd =
+                                        g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
                                     strcpy(sd, self->name_prefix->str);
                                     sd[self->name_prefix->len] = delimiter;
                                     sd[self->name_prefix->len + 1] = '\\';
                                     strcpy(sd + self->name_prefix->len + 2,
                                            v->name + self->name_prefix->len + 1);
-                                    free_2(v->name);
+                                    g_free(v->name);
                                     v->name = sd;
                                 }
                             }
                         } else {
-                            v->name = (char *)malloc_2(self->yylen + 1);
+                            v->name = g_malloc(self->yylen + 1);
                             if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(v->name, self->yytext, alt_delimiter);
+                                strcpy_vcdalt(self, v->name, self->yytext);
                             } else {
                                 if ((strcpy_delimfix(self, v->name, self->yytext)) &&
                                     (self->yytext[0] != '\\')) {
-                                    char *sd = (char *)malloc_2(self->yylen + 2);
+                                    char *sd = g_malloc(self->yylen + 2);
                                     sd[0] = '\\';
                                     strcpy(sd + 1, v->name);
-                                    free_2(v->name);
+                                    g_free(v->name);
                                     v->name = sd;
                                 }
                             }
@@ -1583,12 +1837,12 @@ static void vcd_parse(GwVcdLoader *self)
                                 self->rootv = v;
                             }
 
-                            free_2(self->prev_hier_uncompressed_name);
+                            g_free(self->prev_hier_uncompressed_name);
                         } else {
                             self->rootv = v;
                         }
                         self->pv = v;
-                        self->prev_hier_uncompressed_name = strdup_2(v->name);
+                        self->prev_hier_uncompressed_name = g_strdup(v->name);
 
                         vtok = get_vartoken(self, 1);
                         if (vtok == V_END)
@@ -1663,8 +1917,8 @@ static void vcd_parse(GwVcdLoader *self)
                     }
 
                     /* initial conditions */
-                    v->narray = calloc_2(1, sizeof(GwNode *));
-                    v->narray[0] = calloc_2(1, sizeof(GwNode));
+                    v->narray = g_new0(GwNode *, 1);
+                    v->narray[0] = g_new0(GwNode, 1);
                     v->narray[0]->head.time = -1;
                     v->narray[0]->head.v.h_val = GW_BIT_X;
 
@@ -1685,15 +1939,15 @@ static void vcd_parse(GwVcdLoader *self)
                                     "Near byte %d, $VAR parse error encountered with '%s'\n",
                                     (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
                                     v->name);
-                            free_2(v->name);
+                            g_free(v->name);
                         } else {
                             fprintf(stderr,
                                     "Near byte %d, $VAR parse error encountered\n",
                                     (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
                         }
                         if (v->id)
-                            free_2(v->id);
-                        free_2(v);
+                            g_free(v->id);
+                        g_free(v);
                         v = NULL;
                         self->pv = NULL;
                     }
@@ -1701,8 +1955,8 @@ static void vcd_parse(GwVcdLoader *self)
                 bail:
                     if (vtok != V_END)
                         sync_end(self, NULL);
-                    break;
                 }
+                break;
             case T_ENDDEFINITIONS:
                 self->header_over = TRUE; /* do symbol table management here */
                 create_sorted_table(self);
@@ -1756,7 +2010,7 @@ static void vcd_parse(GwVcdLoader *self)
                         self->current_time = tim;
                         if (self->end_time < tim)
                             self->end_time = tim; /* in case of malformed vcd files */
-                        DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
+                        // DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
 
                         tt =
                             gw_vlist_alloc(&self->time_vlist, FALSE, self->vlist_compression_level);
@@ -1811,13 +2065,14 @@ static void vcd_parse(GwVcdLoader *self)
 
                 self->pv = NULL;
                 if (self->prev_hier_uncompressed_name) {
-                    free_2(self->prev_hier_uncompressed_name);
+                    g_free(self->prev_hier_uncompressed_name);
                     self->prev_hier_uncompressed_name = NULL;
                 }
 
                 return;
-            default:
-                DEBUG(fprintf(stderr, "UNKNOWN TOKEN\n"));
+            default: {
+                // DEBUG(fprintf(stderr, "UNKNOWN TOKEN\n"));
+            }
         }
     }
 }
@@ -1826,7 +2081,7 @@ static void vcd_parse(GwVcdLoader *self)
 
 static GwSymbol *symfind_unsorted(GwVcdLoader *self, char *s)
 {
-    int hv = hash(s);
+    int hv = gw_hash(s);
 
     for (GwSymbol *iter = self->sym_hash[hv]; iter != NULL; iter = iter->sym_next) {
         if (strcmp(iter->name, s) == 0) {
@@ -1898,24 +2153,24 @@ static void vcd_build_symbols(GwVcdLoader *self)
 
                     hashdirty = 0;
                     if (symfind_unsorted(self, str)) {
-                        char *dupfix = (char *)malloc_2(max_slen + 32);
+                        char *dupfix = g_malloc(max_slen + 32);
                         // #ifndef _WAVE_HAVE_JUDY
                         hashdirty = 1;
                         // #endif
-                        DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
+                        // DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                         do {
                             sprintf(dupfix, "$DUP%d%c%s", duphier++, delimiter, str);
                         } while (symfind_unsorted(self, dupfix));
 
                         strcpy(str, dupfix);
-                        free_2(dupfix);
+                        g_free(dupfix);
                         duphier = 0; /* reset for next duplicate resolution */
                     }
                     /* fallthrough */
                     {
                         if (hashdirty) {
-                            self->hash_cache = hash(str);
+                            self->hash_cache = gw_hash(str);
                         }
                         s = symadd(self, str, self->hash_cache);
 
@@ -1946,7 +2201,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                         self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
                         self->numfacs++;
-                        DEBUG(fprintf(stderr, "Added: %s\n", str));
+                        // DEBUG(fprintf(stderr, "Added: %s\n", str));
                     }
                     msi += delta;
                 }
@@ -1983,11 +2238,11 @@ static void vcd_build_symbols(GwVcdLoader *self)
 
                 hashdirty = 0;
                 if (symfind_unsorted(self, str)) {
-                    char *dupfix = (char *)malloc_2(max_slen + 32);
+                    char *dupfix = g_malloc(max_slen + 32);
                     // #ifndef _WAVE_HAVE_JUDY
                     hashdirty = 1;
                     // #endif
-                    DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
+                    // DEBUG(fprintf(stderr, "Warning: %s is a duplicate net name.\n", str));
 
                     do {
                         sprintf(dupfix, "$DUP%d%c%s", duphier++, delimiter, str);
@@ -1995,14 +2250,14 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     } while (symfind_unsorted(self, dupfix));
 
                     strcpy(str, dupfix);
-                    free_2(dupfix);
+                    g_free(dupfix);
                     duphier = 0; /* reset for next duplicate resolution */
                 }
                 /* fallthrough */
                 {
                     /* cut down on double lookups.. */
                     if (hashdirty) {
-                        self->hash_cache = hash(str);
+                        self->hash_cache = gw_hash(str);
                     }
                     GwSymbol *s = symadd(self, str, self->hash_cache);
 
@@ -2041,7 +2296,7 @@ static void vcd_build_symbols(GwVcdLoader *self)
                     self->sym_chain = g_slist_prepend(self->sym_chain, s);
 
                     self->numfacs++;
-                    DEBUG(fprintf(stderr, "Added: %s\n", str));
+                    // DEBUG(fprintf(stderr, "Added: %s\n", str));
                 }
             }
         }
@@ -2077,10 +2332,10 @@ static void vcd_build_symbols(GwVcdLoader *self)
                 s->vec_chain = ((struct vcdsymbol *)s->vec_chain)->sym_chain;
             }
 
-            DEBUG(printf("Link: ('%s') '%s' -> '%s'\n",
-                         sym_curr->val->vec_root->name,
-                         sym_curr->val->name,
-                         sym_curr->val->vec_chain ? sym_curr->val->vec_chain->name : "(END)"));
+            // DEBUG(printf("Link: ('%s') '%s' -> '%s'\n",
+            //              sym_curr->val->vec_root->name,
+            //              sym_curr->val->name,
+            //              sym_curr->val->vec_chain ? sym_curr->val->vec_chain->name : "(END)"));
         }
 
         g_slist_free(sym_chain);
@@ -2093,20 +2348,17 @@ static void vcd_cleanup(GwVcdLoader *self)
 {
     struct vcdsymbol *v, *vt;
 
-    g_clear_pointer(&self->symbols_indexed, free_2);
-    g_clear_pointer(&self->symbols_sorted, free_2);
+    g_clear_pointer(&self->symbols_indexed, g_free);
+    g_clear_pointer(&self->symbols_sorted, g_free);
 
     v = self->vcdsymroot;
     while (v) {
-        if (v->name)
-            free_2(v->name);
-        if (v->id)
-            free_2(v->id);
-        if (v->narray)
-            free_2(v->narray);
+        g_free(v->name);
+        g_free(v->id);
+        g_free(v->narray);
         vt = v;
         v = v->next;
-        free_2(vt);
+        g_free(vt);
     }
     self->vcdsymroot = NULL;
     self->vcdsymcurr = NULL;
@@ -2123,7 +2375,7 @@ static void vcd_cleanup(GwVcdLoader *self)
     }
     self->vcd_handle = NULL;
 
-    g_clear_pointer(&self->yytext, free_2);
+    g_clear_pointer(&self->yytext, g_free);
 }
 
 static GwFacs *vcd_sortfacs(GwVcdLoader *self)
@@ -2227,8 +2479,7 @@ static void build_tree_from_name(GwVcdLoader *self,
                 }
             }
 
-            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + self->module_len_tree + 1);
-            memcpy(nt->name, self->module_tree, self->module_len_tree);
+            nt = gw_tree_node_new(0, self->module_tree);
 
             if (s) {
                 nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
@@ -2254,9 +2505,7 @@ static void build_tree_from_name(GwVcdLoader *self,
             t = nt;
             while (s) {
                 s = get_module_name(self, s);
-
-                nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + self->module_len_tree + 1);
-                memcpy(nt->name, self->module_tree, self->module_len_tree);
+                nt = gw_tree_node_new(0, self->module_tree);
 
                 if (s) {
                     nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
@@ -2275,8 +2524,7 @@ static void build_tree_from_name(GwVcdLoader *self,
         while (s) {
             s = get_module_name(self, s);
 
-            nt = (GwTreeNode *)talloc_2(sizeof(GwTreeNode) + self->module_len_tree + 1);
-            memcpy(nt->name, self->module_tree, self->module_len_tree);
+            nt = gw_tree_node_new(0, self->module_tree);
 
             if (!s)
                 nt->t_which = which;
@@ -2294,10 +2542,40 @@ static void build_tree_from_name(GwVcdLoader *self,
     }
 }
 
+/*
+ * unswizzle extended names in tree
+ */
+static void treenamefix_str(char *s, char delimiter)
+{
+    while (*s) {
+        if (*s == VCDNAM_ESCAPE)
+            *s = delimiter;
+        s++;
+    }
+}
+
+static void treenamefix(GwTreeNode *t, char delimiter)
+{
+    GwTreeNode *tnext;
+    if (t->child)
+        treenamefix(t->child, delimiter);
+
+    tnext = t->next;
+
+    while (tnext) {
+        if (tnext->child)
+            treenamefix(tnext->child, delimiter);
+        treenamefix_str(tnext->name, delimiter);
+        tnext = tnext->next;
+    }
+
+    treenamefix_str(t->name, delimiter);
+}
+
 static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
 {
     // TODO: replace module_tree by GString to dynamically allocate enough memory
-    self->module_tree = (char *)malloc_2(65536);
+    self->module_tree = g_malloc0(65536);
 
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
 
@@ -2324,7 +2602,7 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
     gw_tree_sort(tree);
 
     if (self->has_escaped_names) {
-        treenamefix(gw_tree_get_root(tree));
+        treenamefix(gw_tree_get_root(tree), delimiter);
     }
 
     return tree;
@@ -2350,7 +2628,7 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
 
     errno = 0; /* reset in case it's set for some reason */
 
-    if (suffix_check(fname, ".gz") || suffix_check(fname, ".zip")) {
+    if (g_str_has_suffix(fname, ".gz") || g_str_has_suffix(fname, ".zip")) {
         char *str;
         int dlen;
         dlen = strlen(WAVE_DECOMPRESSOR);
@@ -2406,7 +2684,8 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
         vcd_exit(255);
     }
 
-    /* SPLASH */ splash_create();
+    // TODO: update splash
+    // /* SPLASH */ splash_create();
 
     getch_alloc(self); /* alloc membuff for vcd getch buffer */
 
@@ -2416,7 +2695,7 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
 
     vcd_parse(self);
     if (self->varsplit) {
-        free_2(self->varsplit);
+        g_free(self->varsplit);
         self->varsplit = NULL;
     }
 
@@ -2434,11 +2713,12 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
             self->start_time * self->time_scale,
             self->end_time * self->time_scale);
 
-    if (self->vcd_fsiz > 0) {
-        splash_sync(self->vcd_fsiz, self->vcd_fsiz);
-    } else if (self->is_compressed) {
-        splash_sync(1, 1);
-    }
+    // TODO: udpate splash
+    // if (self->vcd_fsiz > 0) {
+    //     splash_sync(self->vcd_fsiz, self->vcd_fsiz);
+    // } else if (self->is_compressed) {
+    //     splash_sync(1, 1);
+    // }
     self->vcd_fsiz = 0;
 
     GwTime min_time = self->start_time * self->time_scale;
@@ -2459,7 +2739,8 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
 
     gw_blackout_regions_scale(self->blackout_regions, self->time_scale);
 
-    /* SPLASH */ splash_finalize();
+    // TODO: update splash
+    // /* SPLASH */ splash_finalize();
 
     GwTimeRange *time_range = gw_time_range_new(min_time, max_time);
 
@@ -2592,7 +2873,7 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->time_dimension = GW_TIME_DIMENSION_NANO;
 
     self->T_MAX_STR = 1024;
-    self->yytext = malloc_2(self->T_MAX_STR + 1);
+    self->yytext = g_malloc(self->T_MAX_STR + 1);
     self->vcd_minid = G_MAXUINT;
     self->scopes = g_queue_new();
     self->name_prefix = g_string_new(NULL);
@@ -2600,7 +2881,7 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
 
     self->vlist_compression_level = Z_DEFAULT_COMPRESSION;
 
-    self->sym_hash = g_new0(GwSymbol *, SYMPRIME);
+    self->sym_hash = g_new0(GwSymbol *, GW_HASH_PRIME);
     self->warning_filesize = 256 * 1024 * 1024;
 }
 

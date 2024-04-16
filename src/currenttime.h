@@ -26,7 +26,6 @@
 
 /* currenttime.c protos */
 
-void fractional_timescale_fix(char *);
 void update_time_box(void);
 void update_currenttime(GwTime val);
 void reformat_time(char *buf, GwTime val, GwTimeDimension dim);
