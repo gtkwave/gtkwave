@@ -486,7 +486,6 @@ struct Global
 /*
  * symbol.c
  */
-    GwSymbol **sym_hash; /* from symbol.c 453 */
     char facs_are_sorted; /* from symbol.c 455 */
     char facs_have_symbols_state_machine; /* from symbol.c */
 

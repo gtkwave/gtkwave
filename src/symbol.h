@@ -35,12 +35,7 @@ struct string_chain_t
     char *str;
 };
 
-/* hash create/destroy */
-void sym_hash_initialize(void *g);
-void sym_hash_destroy(void *g);
-
 GwSymbol *symfind(char *, unsigned int *);
-GwSymbol *symadd(char *, int);
 int hash(char *s);
 
 void facsplit(char *, int *, int *);
