@@ -896,11 +896,13 @@ static int version_sync_end(GwVcdLoader *self, const char *hdr)
         if (hdr) {
             DEBUG(fprintf(stderr, " %s", self->yytext));
         }
-        /* turn off autocoalesce for Icarus */
-        if (strstr(self->yytext, "Icarus") != NULL) {
-            GLOBALS->autocoalesce = 0;
-            rc = 1;
-        }
+
+        // TODO: wait for reply to https://github.com/gtkwave/gtkwave/issues/331
+        // /* turn off autocoalesce for Icarus */
+        // if (strstr(self->yytext, "Icarus") != NULL) {
+        //     GLOBALS->autocoalesce = 0;
+        //     rc = 1;
+        // }
     }
     if (hdr) {
         DEBUG(fprintf(stderr, "\n"));
@@ -2388,7 +2390,8 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
                 }
             }
         } else {
-            GLOBALS->splash_disable = 1;
+            // TODO: Fix splash update
+            // GLOBALS->splash_disable = 1;
             self->vcd_handle = stdin;
         }
         self->is_compressed = 0;
@@ -2455,9 +2458,6 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
     getch_free(self); /* free membuff for vcd getch buffer */
 
     gw_blackout_regions_scale(self->blackout_regions, self->time_scale);
-
-    /* is_vcd=~0; */
-    GLOBALS->is_lx2 = LXT2_IS_VLIST;
 
     /* SPLASH */ splash_finalize();
 

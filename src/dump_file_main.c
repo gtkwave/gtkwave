@@ -4,8 +4,7 @@
 #include "gw-vcd-loader.h"
 #include "gw-ghw-loader.h"
 #include "gw-fst-loader.h"
-#include "gw-fst-file.h"
-#include "gw-fst-file-private.h"
+#include "lx2.h"
 
 static void set_common_settings(GwLoader *loader)
 {
@@ -38,6 +37,8 @@ GwDumpFile *vcd_recoder_main(char *fname)
 
     g_object_unref(loader);
 
+    GLOBALS->is_lx2 = LXT2_IS_VLIST;
+
     return file;
 }
 
@@ -66,6 +67,8 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
 
     g_object_unref(loader);
+
+    GLOBALS->is_lx2 = LXT2_IS_FST;
 
     return file;
 }
