@@ -31,6 +31,8 @@ GwDumpFile *vcd_recoder_main(char *fname)
     gw_vcd_loader_set_vlist_prepack(GW_VCD_LOADER(loader), global_settings->vlist_prepack);
     gw_vcd_loader_set_vlist_compression_level(GW_VCD_LOADER(loader),
                                               global_settings->vlist_compression_level);
+    gw_vcd_loader_set_warning_filesize(GW_VCD_LOADER(loader),
+                                       global_settings->vcd_warning_filesize);
 
     GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
 

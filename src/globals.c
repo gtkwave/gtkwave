@@ -56,7 +56,10 @@ struct Global *GLOBALS = NULL;
 static const struct Global globals_base_values = {
     NULL, // project
     NULL, // dump_file
-    {.vlist_compression_level = 4}, // settings
+    {
+        .vlist_compression_level = 4,
+        .vcd_warning_filesize = 256,
+    }, // settings
 
     /*
      * analyzer.c
@@ -598,7 +601,6 @@ static const struct Global globals_base_values = {
      * vcd.c
      */
     NULL, /* vcd_jmp_buf */
-    -1, /* vcd_warning_filesize 472 */
     1, /* autocoalesce 473 */
     0, /* autocoalesce_reversal */
     0, /* convert_to_reals 475 */
@@ -1095,7 +1097,6 @@ void reload_into_new_context_2(void)
     new_globals->use_maxtime_display = GLOBALS->use_maxtime_display;
     new_globals->use_nonprop_fonts = GLOBALS->use_nonprop_fonts;
     new_globals->use_roundcaps = GLOBALS->use_roundcaps;
-    new_globals->vcd_warning_filesize = GLOBALS->vcd_warning_filesize;
     new_globals->vector_padding = GLOBALS->vector_padding;
     new_globals->settings = GLOBALS->settings;
     new_globals->wave_scrolling = GLOBALS->wave_scrolling;

@@ -75,6 +75,8 @@ typedef struct
 
     gboolean preserve_glitches;
     gboolean preserve_glitches_real;
+
+    gsize vcd_warning_filesize;
 } Settings;
 
 struct Global
@@ -589,7 +591,6 @@ struct Global
      * vcd.c
      */
     jmp_buf *vcd_jmp_buf; /* from vcd.c */
-    int vcd_warning_filesize; /* from vcd.c 502 */
     char autocoalesce; /* from vcd.c 503 */
     char autocoalesce_reversal; /* from vcd.c 504 */
     char convert_to_reals; /* from vcd.c 506 */
