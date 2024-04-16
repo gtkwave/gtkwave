@@ -20,13 +20,13 @@ static void test_to_string(void)
     assert_tree(root, "root, root_sibling");
 
     root->child = alloc_node("child");
-    assert_tree(root, "root[child], root_sibling");
+    assert_tree(root, "root{child}, root_sibling");
 
     root->child->child = alloc_node("child2");
-    assert_tree(root, "root[child[child2]], root_sibling");
+    assert_tree(root, "root{child{child2}}, root_sibling");
 
     root->child->child->next = alloc_node("child3");
-    assert_tree(root, "root[child[child2, child3]], root_sibling");
+    assert_tree(root, "root{child{child2, child3}}, root_sibling");
 }
 
 static void test_sort(void)
@@ -70,7 +70,7 @@ static void test_sort(void)
 
     tree = gw_tree_new(root);
     gw_tree_sort(tree);
-    assert_tree(gw_tree_get_root(tree), "c[n10, n2], b, a");
+    assert_tree(gw_tree_get_root(tree), "c{n10, n2}, b, a");
     g_object_unref(tree);
 }
 
@@ -116,7 +116,7 @@ static void test_graft(void)
 
     tree = gw_tree_new(p1);
     gw_tree_graft(tree, c1);
-    assert_tree(gw_tree_get_root(tree), "parent1[child2, child1], parent2[child3]");
+    assert_tree(gw_tree_get_root(tree), "parent1{child2, child1}, parent2{child3}");
     g_object_unref(tree);
 }
 
