@@ -174,7 +174,6 @@ static const struct Global globals_base_values = {
      * fst.c
      */
     0, /* is_vhdl_component_format */
-    NULL, /* enum_nptrs_jrb */
 
     /*
      * globals.c
@@ -1270,11 +1269,6 @@ void reload_into_new_context_2(void)
         strcpy2_into_new_context(new_globals,
                                  &new_globals->unoptimized_vcd_file_name,
                                  &GLOBALS->unoptimized_vcd_file_name);
-    }
-
-    if (GLOBALS->enum_nptrs_jrb) {
-        jrb_free_tree(GLOBALS->enum_nptrs_jrb);
-        GLOBALS->enum_nptrs_jrb = NULL;
     }
 
     g_clear_object(&GLOBALS->dump_file);

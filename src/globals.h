@@ -197,7 +197,6 @@ struct Global
      * fst.c
      */
     char is_vhdl_component_format;
-    JRB enum_nptrs_jrb;
 
     /*
      * globals.c
