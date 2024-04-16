@@ -1045,8 +1045,6 @@ if(num_dups)
 }
 #endif
 
-    GLOBALS->is_lx2 = LXT2_IS_FST;
-
     /* to avoid bin -> ascii -> bin double swap */
     fstReaderIterBlocksSetNativeDoublesOnCallback(self->fst_reader, 1);
 
