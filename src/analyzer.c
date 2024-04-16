@@ -25,6 +25,8 @@
 #include "ptranslate.h"
 #include "ttranslate.h"
 #include "analyzer.h"
+#include <gtkwave.h>
+#include <gw-fst-file-private.h>
 
 void UpdateTraceSelection(GwTrace *t);
 int traverse_vector_nodes(GwTrace *t);
@@ -232,17 +234,22 @@ static void AddTrace(GwTrace *t)
     else
         t->flags = (t->flags & TR_NUMMASK) | GLOBALS->default_flags;
 
-    if (!t->vector && GLOBALS->enum_nptrs_jrb) {
-        JRB enum_nptr = jrb_find_vptr(GLOBALS->enum_nptrs_jrb, t->n.nd);
-        if (enum_nptr) {
-            int e_filter = enum_nptr->val.ui;
+    // TODO: don't access GwFstFile struct directly
+    if (GW_IS_FST_FILE(GLOBALS->dump_file)) {
+        JRB enum_nptrs_jrb = GW_FST_FILE(GLOBALS->dump_file)->enum_nptrs_jrb;
 
-            GwEnumFilterList *filters = gw_dump_file_get_enum_filters(GLOBALS->dump_file);
-            if (e_filter > 0 && gw_enum_filter_list_get(filters, e_filter - 1) != NULL) {
-                t->e_filter = e_filter;
-                if (!(GLOBALS->default_flags & TR_NUMMASK))
-                    t->flags = (t->flags & (~TR_NUMMASK)) | TR_ENUM |
-                               TR_BIN; /* need to downgrade to bin to make visible */
+        if (!t->vector && enum_nptrs_jrb) {
+            JRB enum_nptr = jrb_find_vptr(enum_nptrs_jrb, t->n.nd);
+            if (enum_nptr) {
+                int e_filter = enum_nptr->val.ui;
+
+                GwEnumFilterList *filters = gw_dump_file_get_enum_filters(GLOBALS->dump_file);
+                if (e_filter > 0 && gw_enum_filter_list_get(filters, e_filter - 1) != NULL) {
+                    t->e_filter = e_filter;
+                    if (!(GLOBALS->default_flags & TR_NUMMASK))
+                        t->flags = (t->flags & (~TR_NUMMASK)) | TR_ENUM |
+                                TR_BIN; /* need to downgrade to bin to make visible */
+                }
             }
         }
     }

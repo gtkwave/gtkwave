@@ -38,6 +38,7 @@ struct _GwFstFile
     char **subvar_pnt;
 
     JRB synclock_jrb;
+    JRB enum_nptrs_jrb;
 
     GwTime time_scale;
 

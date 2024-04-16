@@ -58,6 +58,7 @@ struct _GwFstLoader
     gboolean subvar_jrb_count_locked;
 
     JRB synclock_jrb;
+    JRB enum_nptrs_jrb;
 
     GwTreeNode *tree_root;
 
@@ -899,9 +900,10 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             jv.ui = self->queued_xl_enum_filter;
             self->queued_xl_enum_filter = 0;
 
-            if (!GLOBALS->enum_nptrs_jrb)
-                GLOBALS->enum_nptrs_jrb = make_jrb();
-            jrb_insert_vptr(GLOBALS->enum_nptrs_jrb, n, jv);
+            if (self->enum_nptrs_jrb == NULL) {
+                self->enum_nptrs_jrb = make_jrb();
+            }
+            jrb_insert_vptr(self->enum_nptrs_jrb, n, jv);
         }
 
         n->nname = s->name;
@@ -1096,6 +1098,7 @@ if(num_dups)
     dump_file->subvar_jrb = g_steal_pointer(&self->subvar_jrb);
     dump_file->subvar_pnt = subvar_pnt;
     dump_file->synclock_jrb = g_steal_pointer(&self->synclock_jrb);
+    dump_file->enum_nptrs_jrb = g_steal_pointer(&self->enum_nptrs_jrb);
     dump_file->time_scale = self->time_scale;
 
     g_object_unref(blackout_regions);

@@ -28,6 +28,7 @@ static void gw_fst_file_finalize(GObject *object)
     g_clear_pointer(&self->fst_reader, fstReaderClose);
     g_clear_pointer(&self->subvar_jrb, jrb_free_tree);
     g_clear_pointer(&self->synclock_jrb, jrb_free_tree);
+    g_clear_pointer(&self->enum_nptrs_jrb, jrb_free_tree);
 
     G_OBJECT_CLASS(gw_fst_file_parent_class)->finalize(object);
 }
