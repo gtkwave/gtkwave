@@ -1024,7 +1024,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     gw_facs_order_from_tree(facs, tree);
 
     /* SPLASH */ splash_sync(5, 5);
-    GLOBALS->facs_are_sorted = 1;
 
 #if 0
 {

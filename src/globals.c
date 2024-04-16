@@ -495,7 +495,6 @@ static const struct Global globals_base_values = {
     /*
      * symbol.c
      */
-    0, /* facs_are_sorted 426 */
     0, /* facs_have_symbols_state_machine */
 
     /*

@@ -2136,8 +2136,6 @@ static GwFacs *vcd_sortfacs(GwVcdLoader *self)
 
     gw_facs_sort(facs);
 
-    GLOBALS->facs_are_sorted = 1;
-
     return facs;
 }
 

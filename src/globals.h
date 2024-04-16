@@ -486,7 +486,6 @@ struct Global
 /*
  * symbol.c
  */
-    char facs_are_sorted; /* from symbol.c 455 */
     char facs_have_symbols_state_machine; /* from symbol.c */
 
     /*

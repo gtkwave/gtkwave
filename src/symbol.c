@@ -80,7 +80,6 @@ void destroy_s_selected(void)
 
 // #endif
 
-
 /*
  * Generic hash function for symbol names...
  */
@@ -106,97 +105,89 @@ int hash(char *s)
     return h % SYMPRIME;
 }
 
-
-
-
 /*
  * find a slot already in the table...
  */
 static GwSymbol *symfind_2(char *s, unsigned int *rows_return)
 {
-    if (!GLOBALS->facs_are_sorted) {
-        g_return_val_if_reached(NULL);
-    } else /* no sense hashing if the facs table is built */
-    {
-        GwSymbol *sr;
-        DEBUG(printf("BSEARCH: %s\n", s));
+    GwSymbol *sr;
+    DEBUG(printf("BSEARCH: %s\n", s));
 
-        sr = bsearch_facs(s, rows_return);
-        if (sr) {
-        } else {
-            /* this is because . is > in ascii than chars like $ but . was converted to 0x1 on sort
-             */
-            char *s2;
-            int i;
-            int mat;
+    sr = bsearch_facs(s, rows_return);
+    if (sr) {
+    } else {
+        /* this is because . is > in ascii than chars like $ but . was converted to 0x1 on sort
+         */
+        char *s2;
+        int i;
+        int mat;
 
-            gboolean has_escaped_names = gw_dump_file_has_escaped_names(GLOBALS->dump_file);
-            if (!has_escaped_names) {
-                return (sr);
-            }
+        gboolean has_escaped_names = gw_dump_file_has_escaped_names(GLOBALS->dump_file);
+        if (!has_escaped_names) {
+            return (sr);
+        }
 
-            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
-            guint numfacs = gw_facs_get_length(facs);
+        GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+        guint numfacs = gw_facs_get_length(facs);
 
-            if (GLOBALS->facs_have_symbols_state_machine == 0) {
-                if (has_escaped_names) {
-                    mat = 1;
-                } else {
-                    mat = 0;
-
-                    for (i = 0; i < numfacs; i++) {
-                        char *hfacname = NULL;
-
-                        GwSymbol *fac = gw_facs_get(facs, i);
-
-                        hfacname = fac->name;
-                        s2 = hfacname;
-                        while (*s2) {
-                            if (*s2 < GLOBALS->hier_delimeter) {
-                                mat = 1;
-                                break;
-                            }
-                            s2++;
-                        }
-
-                        /* if(was_packed) { free_2(hfacname); } ...not needed with
-                         * HIER_DEPACK_STATIC */
-                        if (mat) {
-                            break;
-                        }
-                    }
-                }
-
-                if (mat) {
-                    GLOBALS->facs_have_symbols_state_machine = 1;
-                } else {
-                    GLOBALS->facs_have_symbols_state_machine = 2;
-                } /* prevent code below from executing */
-            }
-
-            if (GLOBALS->facs_have_symbols_state_machine == 1) {
+        if (GLOBALS->facs_have_symbols_state_machine == 0) {
+            if (has_escaped_names) {
+                mat = 1;
+            } else {
                 mat = 0;
+
                 for (i = 0; i < numfacs; i++) {
                     char *hfacname = NULL;
 
                     GwSymbol *fac = gw_facs_get(facs, i);
 
                     hfacname = fac->name;
-                    if (!strcmp(hfacname, s)) {
-                        mat = 1;
+                    s2 = hfacname;
+                    while (*s2) {
+                        if (*s2 < GLOBALS->hier_delimeter) {
+                            mat = 1;
+                            break;
+                        }
+                        s2++;
                     }
 
-                    /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
+                    /* if(was_packed) { free_2(hfacname); } ...not needed with
+                     * HIER_DEPACK_STATIC */
                     if (mat) {
-                        sr = fac;
                         break;
                     }
                 }
             }
+
+            if (mat) {
+                GLOBALS->facs_have_symbols_state_machine = 1;
+            } else {
+                GLOBALS->facs_have_symbols_state_machine = 2;
+            } /* prevent code below from executing */
         }
 
-        return (sr);
+        if (GLOBALS->facs_have_symbols_state_machine == 1) {
+            mat = 0;
+            for (i = 0; i < numfacs; i++) {
+                char *hfacname = NULL;
+
+                GwSymbol *fac = gw_facs_get(facs, i);
+
+                hfacname = fac->name;
+                if (!strcmp(hfacname, s)) {
+                    mat = 1;
+                }
+
+                /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
+                if (mat) {
+                    sr = fac;
+                    break;
+                }
+            }
+        }
     }
+
+    return (sr);
 }
 
 GwSymbol *symfind(char *s, unsigned int *rows_return)
