@@ -370,6 +370,8 @@ static void gw_dump_file_init(GwDumpFile *self)
  * @self: A #GwDumpFile.
  * @nodes: (array zero-terminated=1): The nodes to import.
  * @error: A location for a #GError, or %NULL.
+ *
+ * Returns: %TRUE on success
  */
 gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **error)
 {
@@ -382,6 +384,42 @@ gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **e
     }
 
     return GW_DUMP_FILE_GET_CLASS(self)->import_traces(self, nodes, error);
+}
+
+/**
+ * gw_dump_file_import_all:
+ * @self: A #GwDumpFile.
+ * @error: A location for a #GError, or %NULL.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean gw_dump_file_import_all(GwDumpFile *self, GError **error)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+    if (GW_DUMP_FILE_GET_CLASS(self)->import_traces == NULL) {
+        return TRUE;
+    }
+
+    GwFacs *facs = gw_dump_file_get_facs(self);
+    if (gw_facs_get_length(facs) == 0) {
+        return TRUE;
+    }
+
+    GPtrArray *nodes = g_ptr_array_new();
+    for (guint i = 0; i < gw_facs_get_length(facs); i++) {
+        GwSymbol *s = gw_facs_get(facs, i);
+        g_ptr_array_add(nodes, s->n);
+    }
+    g_ptr_array_add(nodes, NULL);
+
+    gboolean ret =
+        GW_DUMP_FILE_GET_CLASS(self)->import_traces(self, (GwNode **)nodes->pdata, error);
+
+    g_ptr_array_free(nodes, TRUE);
+
+    return ret;
 }
 
 /**
