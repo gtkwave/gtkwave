@@ -12,6 +12,14 @@
 
 G_BEGIN_DECLS
 
+GQuark gw_dump_file_error_quark(void);
+#define GW_DUMP_FILE_ERROR (gw_dump_file_error_quark())
+
+typedef enum
+{
+    GW_DUMP_FILE_ERROR_UNKNOWN,
+} GwDumpFileErrorEnum;
+
 #define GW_TYPE_DUMP_FILE (gw_dump_file_get_type())
 G_DECLARE_DERIVABLE_TYPE(GwDumpFile, gw_dump_file, GW, DUMP_FILE, GObject)
 

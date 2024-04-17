@@ -7,7 +7,6 @@
 #include "gw-ghw-file-private.h"
 #include "gw-time.h"
 
-
 // TODO: remove!
 #define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
 
@@ -126,12 +125,11 @@ static ghw_Tree *ghw_splay(void *i, ghw_Tree *t)
 }
 
 // Exit the program with return value 1 and print calling line
-__attribute__((noreturn)) static void
-ghw_error_exit_line (char const *file, int line)
+__attribute__((noreturn)) static void ghw_error_exit_line(char const *file, int line)
 {
-  fprintf(stderr, "Failed to load ghw file due to invalid data. Terminating.\n");
-  fprintf(stderr, "Error raised at %s:%d.\n", file, line);
-  exit(1);
+    fprintf(stderr, "Failed to load ghw file due to invalid data. Terminating.\n");
+    fprintf(stderr, "Error raised at %s:%d.\n", file, line);
+    exit(1);
 }
 
 #define ghw_error_exit() ghw_error_exit_line(__FILE__, __LINE__)
@@ -334,25 +332,22 @@ static void incinerate_whichcache_tree(ghw_Tree *t)
     g_ptr_array_add(pending_nodes, t);
     size_t n_pending = 1;
 
-    while (n_pending > 0)
-    {
+    while (n_pending > 0) {
         // Process the last entry in ptr_array to avoid shifts during removal
-        ghw_Tree *p_current = g_ptr_array_index(pending_nodes, n_pending-1);
+        ghw_Tree *p_current = g_ptr_array_index(pending_nodes, n_pending - 1);
         ghw_Tree current = *p_current; // store a temporary copy to use after free
 
         // Free the current node
         g_free(p_current);
-        g_ptr_array_remove_index(pending_nodes, n_pending-1);
+        g_ptr_array_remove_index(pending_nodes, n_pending - 1);
         n_pending--;
 
         // Process the children of this node next
-        if (current.left)
-        {
+        if (current.left) {
             g_ptr_array_add(pending_nodes, current.left);
             n_pending++;
         }
-        if (current.right)
-        {
+        if (current.right) {
             g_ptr_array_add(pending_nodes, current.right);
             n_pending++;
         }
@@ -455,7 +450,8 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int len;
 
             /* last = NULL; */
-            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_i32) ghw_error_exit();
+            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_i32)
+                ghw_error_exit();
             r = &arr->sa.rngs[dim]->i32;
             len = ghw_get_range_length((union ghw_range *)r);
             if (len <= 0)
@@ -484,7 +480,8 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int len;
 
             /* last = NULL; */
-            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_e8) ghw_error_exit();
+            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_e8)
+                ghw_error_exit();
             r = &arr->sa.rngs[dim]->e8;
             len = ghw_get_range_length((union ghw_range *)r);
             if (len <= 0)
@@ -513,7 +510,8 @@ static void build_hierarchy_array(GwGhwLoader *self,
             int len;
 
             /* last = NULL; */
-            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_b2) ghw_error_exit();
+            if (arr->sa.rngs[dim]->kind != ghdl_rtik_type_b2)
+                ghw_error_exit();
             r = &arr->sa.rngs[dim]->b2;
             len = ghw_get_range_length((union ghw_range *)r);
             if (len <= 0)
@@ -563,11 +561,13 @@ static GwTreeNode *build_hierarchy_type(GwGhwLoader *self,
             GwTreeNode *res = g_malloc0(sizeof(GwTreeNode) + strlen(pfx) + 1);
             strcpy(res->name, (char *)pfx);
             // last element is GHW_NO_SIG, don't increment beyond it
-            if (**sig == GHW_NO_SIG) ghw_error_exit();
+            if (**sig == GHW_NO_SIG)
+                ghw_error_exit();
             res->t_which = *(*sig)++;
 
             size_t nxp_idx = (size_t)res->t_which;
-            if (nxp_idx >= self->h->nbr_sigs) ghw_error_exit();
+            if (nxp_idx >= self->h->nbr_sigs)
+                ghw_error_exit();
             s->n = self->nxp[nxp_idx];
             return res;
         }
@@ -845,7 +845,8 @@ static void set_fac_name_1(GwGhwLoader *self, GwTreeNode *t)
 
             s->name = g_strdup(self->fac_name);
             size_t nxp_idx = (size_t)t->t_which;
-            if (nxp_idx > self->h->nbr_sigs) ghw_error_exit();
+            if (nxp_idx > self->h->nbr_sigs)
+                ghw_error_exit();
             s->n = self->nxp[nxp_idx];
             if (!s->n->nname)
                 s->n->nname = s->name;
@@ -952,8 +953,9 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
             if (sig_type->en.wkt == ghw_wkt_bit)
                 he->v.h_val = sig->val->b2 == 0 ? GW_BIT_0 : GW_BIT_1;
             else {
-                if (sig->val->b2 >= sig->type->en.nbr) ghw_error_exit();
-                he->v.h_vector = (char *) sig->type->en.lits[sig->val->b2];
+                if (sig->val->b2 >= sig->type->en.nbr)
+                    ghw_error_exit();
+                he->v.h_vector = (char *)sig->type->en.lits[sig->val->b2];
                 is_vector = 1;
             }
             break;
@@ -971,10 +973,12 @@ static void add_history(GwGhwLoader *self, GwNode *n, int sig_num)
                                                    /* L */ GW_BIT_L,
                                                    /* H */ GW_BIT_H,
                                                    /* - */ GW_BIT_DASH};
-                if (val_e8 >= sizeof(map_su2vlg)/sizeof(map_su2vlg[0])) ghw_error_exit();
+                if (val_e8 >= sizeof(map_su2vlg) / sizeof(map_su2vlg[0]))
+                    ghw_error_exit();
                 he->v.h_val = map_su2vlg[val_e8];
             } else {
-                if (val_e8 >= sig_type->en.nbr) ghw_error_exit();
+                if (val_e8 >= sig_type->en.nbr)
+                    ghw_error_exit();
                 he->v.h_vector = (char *)sig_type->en.lits[val_e8];
                 is_vector = 1;
             }
@@ -1123,7 +1127,8 @@ static void read_traces(GwGhwLoader *self)
 
                         for (i = 0; (sig = list[i]) != 0; i++) {
                             size_t nxp_idx = (size_t)sig;
-                            if (nxp_idx > self->h->nbr_sigs) ghw_error_exit();
+                            if (nxp_idx > self->h->nbr_sigs)
+                                ghw_error_exit();
                             add_history(self, self->nxp[nxp_idx], sig);
                         }
                     }
@@ -1163,8 +1168,12 @@ GwDumpFile *gw_ghw_loader_load(GwLoader *loader, const gchar *fname, GError **er
 
     handle.flag_verbose = 0;
     if ((rc = ghw_open(&handle, fname)) < 0) {
-        fprintf(stderr, "Error opening ghw file '%s', rc=%d.\n", fname, rc);
-        return NULL; /* look at return code in caller for success status... */
+        g_set_error(error,
+                    GW_DUMP_FILE_ERROR,
+                    GW_DUMP_FILE_ERROR_UNKNOWN,
+                    "Failed to open GHW file (error code %d)",
+                    rc);
+        return NULL;
     }
 
     if (ghw_read_base(&handle) < 0) {

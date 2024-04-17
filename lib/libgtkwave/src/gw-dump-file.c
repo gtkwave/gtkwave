@@ -2,6 +2,10 @@
 #include "gw-enums.h"
 #include "gw-string-table.h"
 
+// clang-format off
+G_DEFINE_QUARK(gw-dump-file-error-quark, gw_dump_file_error)
+// clang-format on
+
 typedef struct
 {
     GwTree *tree;
@@ -367,7 +371,8 @@ static void gw_dump_file_init(GwDumpFile *self)
  * @nodes: (array zero-terminated=1): The nodes to import.
  * @error: A location for a #GError, or %NULL.
  */
-gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **error) {
+gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **error)
+{
     g_return_val_if_fail(GW_IS_DUMP_FILE(self), FALSE);
     g_return_val_if_fail(nodes != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);

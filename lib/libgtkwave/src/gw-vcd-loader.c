@@ -2612,12 +2612,13 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
     }
 
     if (self->vcd_handle == NULL) {
-        fprintf(stderr,
-                "Error opening %s .vcd file '%s'.\n",
-                self->is_compressed ? "compressed" : "",
-                fname);
-        perror("Why");
-        vcd_exit(255);
+        g_set_error(error,
+                    GW_DUMP_FILE_ERROR,
+                    GW_DUMP_FILE_ERROR_UNKNOWN,
+                    "Error opening %s .vcd file '%s'.\n",
+                    self->is_compressed ? "compressed" : "",
+                    fname);
+        return FALSE;
     }
 
     // TODO: update splash
