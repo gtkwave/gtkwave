@@ -18,7 +18,11 @@ G_DECLARE_DERIVABLE_TYPE(GwDumpFile, gw_dump_file, GW, DUMP_FILE, GObject)
 struct _GwDumpFileClass
 {
     GObjectClass parent_class;
+
+    gboolean (*import_traces)(GwDumpFile *self, GwNode **nodes, GError **error);
 };
+
+gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **error);
 
 GwTree *gw_dump_file_get_tree(GwDumpFile *self);
 GwFacs *gw_dump_file_get_facs(GwDumpFile *self);

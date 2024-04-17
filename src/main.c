@@ -1648,17 +1648,7 @@ loader_check_head:
                     free_2(iline);
                 }
 
-                switch (GLOBALS->is_lx2) {
-                    case LXT2_IS_VLIST:
-                        gw_vcd_file_import_masked(GW_VCD_FILE(GLOBALS->dump_file));
-                        break;
-                    case LXT2_IS_FST:
-                        gw_fst_file_import_masked(GW_FST_FILE(GLOBALS->dump_file));
-                        break;
-                    default:
-                        g_warn_if_reached();
-                        break;
-                }
+                lx2_import_masked();
 
                 if (wave_is_compressed) {
                     pclose(wave);
