@@ -51,6 +51,19 @@ static gboolean gw_fst_file_import_traces(GwDumpFile *dump_file, GwNode **nodes,
     return TRUE;
 }
 
+static guint gw_fst_file_get_enum_filter_for_node(GwDumpFile *dump_file, GwNode *node)
+{
+    GwFstFile *self = GW_FST_FILE(dump_file);
+
+    if (self->enum_nptrs_jrb == NULL) {
+        return NULL;
+    }
+
+    JRB enum_nptr = jrb_find_vptr(self->enum_nptrs_jrb, node);
+
+    return enum_nptr != NULL ? enum_nptr->val.ui : 0;
+}
+
 static void gw_fst_file_class_init(GwFstFileClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -60,6 +73,7 @@ static void gw_fst_file_class_init(GwFstFileClass *klass)
     object_class->finalize = gw_fst_file_finalize;
 
     dump_file_class->import_traces = gw_fst_file_import_traces;
+    dump_file_class->get_enum_filter_for_node = gw_fst_file_get_enum_filter_for_node;
 }
 
 static void gw_fst_file_init(GwFstFile *self)

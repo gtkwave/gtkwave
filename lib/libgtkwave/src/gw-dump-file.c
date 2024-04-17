@@ -525,6 +525,28 @@ GwEnumFilterList *gw_dump_file_get_enum_filters(GwDumpFile *self)
 }
 
 /**
+ * gw_dump_file_get_enum_filters:
+ * @self: A #GwDumpFile.
+ * @node: The #GwNode.
+ *
+ * Returns the enum filter that is associated with the given node.
+ *
+ * Returns: The index of the enum filter or %0 if no enum filter is set.
+ */
+// TODO: Return a pointer to the enum filter instead of an index.
+guint gw_dump_file_get_enum_filter_for_node(GwDumpFile *self, GwNode *node)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), 0);
+    g_return_val_if_fail(node != NULL, 0);
+
+    if (GW_DUMP_FILE_GET_CLASS(self)->get_enum_filter_for_node == NULL) {
+        return 0;
+    }
+
+    return GW_DUMP_FILE_GET_CLASS(self)->get_enum_filter_for_node(self, node);
+}
+
+/**
  * gw_dump_file_get_time_scale:
  * @self: A #GwDumpFile.
  *
