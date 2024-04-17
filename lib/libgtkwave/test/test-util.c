@@ -115,19 +115,11 @@ void common_basic_vcd_and_fst_test(GwDumpFile *file)
     g_assert_cmpint(gw_dump_file_get_time_dimension(file), ==, GW_TIME_DIMENSION_NANO);
     g_assert_cmpint(gw_dump_file_get_global_time_offset(file), ==, 0);
 
-    // Import everything
+    // Import all facs
 
     GwFacs *facs = gw_dump_file_get_facs(file);
     g_assert_cmpint(gw_facs_get_length(facs), ==, 4 * 2);
-
-    GPtrArray *nodes = g_ptr_array_new();
-    for (guint i = 0; i < gw_facs_get_length(facs); i++) {
-        GwSymbol *s = gw_facs_get(facs, i);
-        g_ptr_array_add(nodes, s->n);
-    }
-    g_ptr_array_add(nodes, NULL);
-
-    g_assert_true(gw_dump_file_import_traces(file, (GwNode**)nodes->pdata, NULL));
+    g_assert_true(gw_dump_file_import_all(file, NULL));
 
     // Check hierarchy
 

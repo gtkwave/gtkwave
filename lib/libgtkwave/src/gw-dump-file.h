@@ -31,6 +31,7 @@ struct _GwDumpFileClass
 };
 
 gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **error);
+gboolean gw_dump_file_import_all(GwDumpFile *self, GError **error);
 
 GwTree *gw_dump_file_get_tree(GwDumpFile *self);
 GwFacs *gw_dump_file_get_facs(GwDumpFile *self);
