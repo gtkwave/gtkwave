@@ -724,7 +724,11 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
     self->fst_reader = fstReaderOpen(fname);
     if (self->fst_reader == NULL) {
-        // TODO: set error
+        // TODO: report more detailed errors
+        g_set_error(error,
+                    GW_DUMP_FILE_ERROR,
+                    GW_DUMP_FILE_ERROR_UNKNOWN,
+                    "Failed to open FST file");
         return NULL;
     }
 

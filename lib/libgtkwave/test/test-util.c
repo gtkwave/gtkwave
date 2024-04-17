@@ -1,5 +1,5 @@
 #include "test-util.h"
-#include "gw-fst-file.h"
+#include "gw-dump-file.h"
 #include "gw-vcd-file.h"
 
 static void tree_to_string_recursive(GwTreeNode *node, GString *str)
