@@ -362,6 +362,24 @@ static void gw_dump_file_init(GwDumpFile *self)
 }
 
 /**
+ * gw_dump_file_import_traces:
+ * @self: A #GwDumpFile.
+ * @nodes: (array zero-terminated=1): The nodes to import.
+ * @error: A location for a #GError, or %NULL.
+ */
+gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **error) {
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), FALSE);
+    g_return_val_if_fail(nodes != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+    if (GW_DUMP_FILE_GET_CLASS(self)->import_traces == NULL) {
+        return TRUE;
+    }
+
+    return GW_DUMP_FILE_GET_CLASS(self)->import_traces(self, nodes, error);
+}
+
+/**
  * gw_dump_file_get_tree:
  * @self: A #GwDumpFile.
  *
@@ -597,4 +615,3 @@ gboolean gw_dump_file_has_escaped_names(GwDumpFile *self)
 
     return priv->has_escaped_names;
 }
-

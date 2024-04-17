@@ -120,21 +120,14 @@ void common_basic_vcd_and_fst_test(GwDumpFile *file)
     GwFacs *facs = gw_dump_file_get_facs(file);
     g_assert_cmpint(gw_facs_get_length(facs), ==, 4 * 2);
 
+    GPtrArray *nodes = g_ptr_array_new();
     for (guint i = 0; i < gw_facs_get_length(facs); i++) {
         GwSymbol *s = gw_facs_get(facs, i);
-        if (GW_IS_FST_FILE(file)) {
-            gw_fst_file_set_fac_process_mask(GW_FST_FILE(file), s->n);
-        } else if (GW_IS_VCD_FILE(file)) {
-            gw_vcd_file_set_fac_process_mask(GW_VCD_FILE(file), s->n);
-        } else {
-            g_return_if_reached();
-        }
+        g_ptr_array_add(nodes, s->n);
     }
-    if (GW_IS_FST_FILE(file)) {
-        gw_fst_file_import_masked(GW_FST_FILE(file));
-    } else if (GW_IS_VCD_FILE(file)) {
-        gw_vcd_file_import_masked(GW_VCD_FILE(file));
-    }
+    g_ptr_array_add(nodes, NULL);
+
+    g_assert_true(gw_dump_file_import_traces(file, (GwNode**)nodes->pdata, NULL));
 
     // Check hierarchy
 

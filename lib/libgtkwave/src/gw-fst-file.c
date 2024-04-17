@@ -12,6 +12,9 @@
 
 G_DEFINE_TYPE(GwFstFile, gw_fst_file, GW_TYPE_DUMP_FILE)
 
+static void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np);
+static void gw_fst_file_import_masked(GwFstFile *self);
+
 static void gw_fst_file_dispose(GObject *object)
 {
     GwFstFile *self = GW_FST_FILE(object);
@@ -33,12 +36,30 @@ static void gw_fst_file_finalize(GObject *object)
     G_OBJECT_CLASS(gw_fst_file_parent_class)->finalize(object);
 }
 
+static gboolean gw_fst_file_import_traces(GwDumpFile *dump_file, GwNode **nodes, GError **error)
+{
+    GwFstFile *self = GW_FST_FILE(dump_file);
+    (void)error;
+
+    for (GwNode **iter = nodes; *iter != NULL; iter++) {
+        GwNode *node = *iter;
+
+        gw_fst_file_set_fac_process_mask(self, node);
+    }
+    gw_fst_file_import_masked(self);
+
+    return TRUE;
+}
+
 static void gw_fst_file_class_init(GwFstFileClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GwDumpFileClass *dump_file_class = GW_DUMP_FILE_CLASS(klass);
 
     object_class->dispose = gw_fst_file_dispose;
     object_class->finalize = gw_fst_file_finalize;
+
+    dump_file_class->import_traces = gw_fst_file_import_traces;
 }
 
 static void gw_fst_file_init(GwFstFile *self)
@@ -293,7 +314,7 @@ static void fst_resolver(GwNode *np, GwNode *resolve)
 /*
  * actually import a fst trace but don't do it if it's already been imported
  */
-void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
+static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
 {
     GwHistEnt *htemp;
     GwHistEnt *htempx = NULL;
@@ -485,7 +506,7 @@ static void expand_synvec(GwFstFile *self, int txidx, const char *s)
 /*
  * pre-import many traces at once so function above doesn't have to iterate...
  */
-void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np)
+static void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np)
 {
     GwFac *f;
     int txidx;
@@ -520,7 +541,7 @@ void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np)
     }
 }
 
-void gw_fst_file_import_masked(GwFstFile *self)
+static void gw_fst_file_import_masked(GwFstFile *self)
 {
     unsigned int txidxi;
     int i, cnt;

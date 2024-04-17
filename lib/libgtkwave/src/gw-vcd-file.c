@@ -6,6 +6,24 @@ G_DEFINE_TYPE(GwVcdFile, gw_vcd_file, GW_TYPE_DUMP_FILE)
 
 #define RCV_STR "xzhuwl-?"
 
+static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np);
+
+static gboolean gw_vcd_file_import_traces(GwDumpFile *dump_file, GwNode **nodes, GError **error)
+{
+    GwVcdFile *self = GW_VCD_FILE(dump_file);
+    (void)error;
+
+    for (GwNode **iter = nodes; *iter != NULL; iter++) {
+        GwNode *node = *iter;
+
+        if (node->mv.mvlfac_vlist != NULL) {
+            gw_vcd_file_import_trace(self, node);
+        }
+    }
+
+    return TRUE;
+}
+
 static void gw_vcd_file_dispose(GObject *object)
 {
     GwVcdFile *self = GW_VCD_FILE(object);
@@ -18,26 +36,16 @@ static void gw_vcd_file_dispose(GObject *object)
 static void gw_vcd_file_class_init(GwVcdFileClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GwDumpFileClass *dump_file_class = GW_DUMP_FILE_CLASS(klass);
 
     object_class->dispose = gw_vcd_file_dispose;
+
+    dump_file_class->import_traces = gw_vcd_file_import_traces;
 }
 
 static void gw_vcd_file_init(GwVcdFile *self)
 {
     self->hist_ent_factory = gw_hist_ent_factory_new();
-}
-
-void gw_vcd_file_import_masked(GwVcdFile *self)
-{
-    /* nothing */
-    (void)self;
-}
-
-void gw_vcd_file_set_fac_process_mask(GwVcdFile *self, GwNode *np)
-{
-    if (np && np->mv.mvlfac_vlist) {
-        gw_vcd_file_import_trace(self, np);
-    }
 }
 
 static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int regadd, char *vector)
@@ -253,7 +261,7 @@ static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int reg
 #define vlist_locate_import(self, x, y) \
     ((self->is_prepacked) ? ((depacked) + (y)) : gw_vlist_locate((x), (y)))
 
-void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
+static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 {
     GwVlist *v = np->mv.mvlfac_vlist;
     int len = 1;
