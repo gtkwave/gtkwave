@@ -28,6 +28,7 @@ struct _GwDumpFileClass
     GObjectClass parent_class;
 
     gboolean (*import_traces)(GwDumpFile *self, GwNode **nodes, GError **error);
+    guint (*get_enum_filter_for_node)(GwDumpFile *self, GwNode *node);
 };
 
 gboolean gw_dump_file_import_traces(GwDumpFile *self, GwNode **nodes, GError **error);
@@ -39,6 +40,7 @@ GwBlackoutRegions *gw_dump_file_get_blackout_regions(GwDumpFile *self);
 GwStems *gw_dump_file_get_stems(GwDumpFile *self);
 GwStringTable *gw_dump_file_get_component_names(GwDumpFile *self);
 GwEnumFilterList *gw_dump_file_get_enum_filters(GwDumpFile *self);
+guint gw_dump_file_get_enum_filter_for_node(GwDumpFile *self, GwNode *node);
 
 GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self);
 GwTime gw_dump_file_get_time_scale(GwDumpFile *self);
