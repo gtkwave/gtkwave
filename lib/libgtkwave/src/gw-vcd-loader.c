@@ -280,11 +280,6 @@ static const char *tokens[] = {"var",
 
 #define NUM_TOKENS 19
 
-#define T_GET \
-    tok = get_token(self); \
-    if ((tok == T_END) || (tok == T_EOF)) \
-        break;
-
 /******************************************************************/
 
 static unsigned int vcdid_hash(char *s, int len)
@@ -985,10 +980,10 @@ static void sync_end(GwVcdLoader *self, const char *hdr)
     // }
 }
 
-static int version_sync_end(GwVcdLoader *self, const char *hdr)
+static gboolean version_sync_end(GwVcdLoader *self, const char *hdr)
 {
     int tok;
-    int rc = 0;
+    gboolean rc = FALSE;
 
     // if (hdr) {
     //     DEBUG(fprintf(stderr, "%s", hdr));
@@ -1011,7 +1006,7 @@ static int version_sync_end(GwVcdLoader *self, const char *hdr)
     // if (hdr) {
     //     DEBUG(fprintf(stderr, "\n"));
     // }
-    return (rc);
+    return rc;
 }
 
 static void parse_valuechange(GwVcdLoader *self)
@@ -1360,642 +1355,680 @@ static void strcpy_vcdalt(GwVcdLoader *self, char *too, char *from)
     } while ((*(too++) = ch));
 }
 
-static void vcd_parse(GwVcdLoader *self)
+static void vcd_parse_timezero(GwVcdLoader *self)
 {
-    int tok;
-    unsigned char ttype;
-    int disable_autocoalesce = 0;
+    int vtok = get_token(self);
+    if (vtok == T_END || vtok == T_EOF) {
+        return;
+    }
 
+    self->global_time_offset = atoi_64(self->yytext);
+
+    // DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n",
+    // self->global_time_offset));
+    sync_end(self, NULL);
+}
+
+static void vcd_parse_timescale(GwVcdLoader *self)
+{
+    int vtok;
+    int i;
+    char prefix = ' ';
+
+    vtok = get_token(self);
+    if (vtok == T_END || vtok == T_EOF) {
+        return;
+    }
+
+    fractional_timescale_fix(self->yytext);
+    self->time_scale = atoi_64(self->yytext);
+    if (self->time_scale < 1) {
+        self->time_scale = 1;
+    }
+    for (i = 0; i < self->yylen; i++) {
+        if (self->yytext[i] < '0' || self->yytext[i] > '9') {
+            prefix = self->yytext[i];
+            break;
+        }
+    }
+    if (prefix == ' ') {
+        vtok = get_token(self);
+        if (vtok == T_END || vtok == T_EOF) {
+            return;
+        }
+        prefix = self->yytext[0];
+    }
+
+    switch (prefix) {
+        case ' ':
+        case 'm':
+        case 'u':
+        case 'n':
+        case 'p':
+        case 'f':
+        case 'a':
+        case 'z':
+            self->time_dimension = prefix;
+            break;
+        case 's':
+            self->time_dimension = ' ';
+            break;
+        default: /* unknown */
+            self->time_dimension = 'n';
+            break;
+    }
+
+    // DEBUG(fprintf(stderr,
+    //               "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
+    //               self->time_scale,
+    //               self->time_dimension));
+    sync_end(self, NULL);
+}
+
+static void vcd_parse_scope(GwVcdLoader *self)
+{
+    int tok = get_token(self);
+    if (tok == T_END || tok == T_EOF) {
+        return;
+    }
+
+    unsigned char ttype;
+    switch (self->yytext[0]) {
+        case 'm':
+            ttype = GW_TREE_KIND_VCD_ST_MODULE;
+            break;
+        case 't':
+            ttype = GW_TREE_KIND_VCD_ST_TASK;
+            break;
+        case 'f':
+            ttype =
+                (self->yytext[1] == 'u') ? GW_TREE_KIND_VCD_ST_FUNCTION : GW_TREE_KIND_VCD_ST_FORK;
+            break;
+        case 'b':
+            ttype = GW_TREE_KIND_VCD_ST_BEGIN;
+            break;
+        case 'g':
+            ttype = GW_TREE_KIND_VCD_ST_GENERATE;
+            break;
+        case 's':
+            ttype = GW_TREE_KIND_VCD_ST_STRUCT;
+            break;
+        case 'u':
+            ttype = GW_TREE_KIND_VCD_ST_UNION;
+            break;
+        case 'c':
+            ttype = GW_TREE_KIND_VCD_ST_CLASS;
+            break;
+        case 'i':
+            ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
+            break;
+        case 'p':
+            ttype = (self->yytext[1] == 'r') ? GW_TREE_KIND_VCD_ST_PROGRAM
+                                             : GW_TREE_KIND_VCD_ST_PACKAGE;
+            break;
+
+        case 'v': {
+            char *vht = self->yytext;
+            if (!strncmp(vht, "vhdl_", 5)) {
+                switch (vht[5]) {
+                    case 'a':
+                        ttype = GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
+                        break;
+                    case 'r':
+                        ttype = GW_TREE_KIND_VHDL_ST_RECORD;
+                        break;
+                    case 'b':
+                        ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
+                        break;
+                    case 'g':
+                        ttype = GW_TREE_KIND_VHDL_ST_GENERATE;
+                        break;
+                    case 'i':
+                        ttype = GW_TREE_KIND_VHDL_ST_GENIF;
+                        break;
+                    case 'f':
+                        ttype = (vht[6] == 'u') ? GW_TREE_KIND_VHDL_ST_FUNCTION
+                                                : GW_TREE_KIND_VHDL_ST_GENFOR;
+                        break;
+                    case 'p':
+                        ttype = (!strncmp(vht + 6, "roces", 5)) ? GW_TREE_KIND_VHDL_ST_PROCESS
+                                                                : GW_TREE_KIND_VHDL_ST_PROCEDURE;
+                        break;
+                    default:
+                        ttype = GW_TREE_KIND_UNKNOWN;
+                        break;
+                }
+            } else {
+                ttype = GW_TREE_KIND_UNKNOWN;
+            }
+        } break;
+
+        default:
+            ttype = GW_TREE_KIND_UNKNOWN;
+            break;
+    }
+
+    tok = get_token(self);
+    if (tok == T_END || tok == T_EOF) {
+        return;
+    }
+    push_scope(self, self->yytext, self->mod_tree_parent);
+
+    allocate_and_decorate_module_tree_node(&self->tree_root,
+                                           ttype,
+                                           self->yytext,
+                                           -1,
+                                           0,
+                                           0,
+                                           &self->mod_tree_parent);
+
+    // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
+    sync_end(self, NULL);
+}
+
+static void vcd_parse_upscope(GwVcdLoader *self)
+{
+    if (!g_queue_is_empty(self->scopes)) {
+        self->mod_tree_parent = pop_scope(self);
+        // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
+    } else {
+        self->mod_tree_parent = NULL;
+    }
+    sync_end(self, NULL);
+}
+
+static void vcd_parse_var(GwVcdLoader *self, gboolean disable_autocoalesce)
+{
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
     gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
-    for (;;) {
-        switch (get_token(self)) {
-            case T_COMMENT:
-                sync_end(self, "COMMENT:");
-                break;
-            case T_DATE:
-                sync_end(self, "DATE:");
-                break;
-            case T_VERSION:
-                disable_autocoalesce = version_sync_end(self, "VERSION:");
-                break;
-            case T_TIMEZERO: {
-                int vtok = get_token(self);
-                if ((vtok == T_END) || (vtok == T_EOF))
-                    break;
-                self->global_time_offset = atoi_64(self->yytext);
+    // TODO: why was this disabled?
+    // if ((self->header_over) && (0)) {
+    //     fprintf(stderr,
+    //             "$VAR encountered after $ENDDEFINITIONS near byte %d.  VCD is malformed, "
+    //             "exiting.\n",
+    //             (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
+    //     vcd_exit(255);
+    // } else {
 
-                // DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n",
-                // self->global_time_offset));
-                sync_end(self, NULL);
-            } break;
-            case T_TIMESCALE: {
-                int vtok;
-                int i;
-                char prefix = ' ';
+    int vtok;
+    struct vcdsymbol *v = NULL;
 
-                vtok = get_token(self);
-                if ((vtok == T_END) || (vtok == T_EOF))
-                    break;
-                fractional_timescale_fix(self->yytext);
-                self->time_scale = atoi_64(self->yytext);
-                if (self->time_scale < 1) {
-                    self->time_scale = 1;
-                }
-                for (i = 0; i < self->yylen; i++) {
-                    if (self->yytext[i] < '0' || self->yytext[i] > '9') {
-                        prefix = self->yytext[i];
-                        break;
-                    }
-                }
-                if (prefix == ' ') {
-                    vtok = get_token(self);
-                    if ((vtok == T_END) || (vtok == T_EOF))
-                        break;
-                    prefix = self->yytext[0];
-                }
-                switch (prefix) {
-                    case ' ':
-                    case 'm':
-                    case 'u':
-                    case 'n':
-                    case 'p':
-                    case 'f':
-                    case 'a':
-                    case 'z':
-                        self->time_dimension = prefix;
-                        break;
-                    case 's':
-                        self->time_dimension = ' ';
-                        break;
-                    default: /* unknown */
-                        self->time_dimension = 'n';
-                        break;
-                }
+    self->var_prevch = 0;
+    if (self->varsplit) {
+        g_free(self->varsplit);
+        self->varsplit = NULL;
+    }
+    vtok = get_vartoken(self, 1);
+    if (vtok > V_STRINGTYPE)
+        goto bail;
 
-                // DEBUG(fprintf(stderr,
-                //               "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
-                //               self->time_scale,
-                //               self->time_dimension));
-                sync_end(self, NULL);
-            } break;
-            case T_SCOPE:
-                T_GET;
-                {
-                    switch (self->yytext[0]) {
-                        case 'm':
-                            ttype = GW_TREE_KIND_VCD_ST_MODULE;
-                            break;
-                        case 't':
-                            ttype = GW_TREE_KIND_VCD_ST_TASK;
-                            break;
-                        case 'f':
-                            ttype = (self->yytext[1] == 'u') ? GW_TREE_KIND_VCD_ST_FUNCTION
-                                                             : GW_TREE_KIND_VCD_ST_FORK;
-                            break;
-                        case 'b':
-                            ttype = GW_TREE_KIND_VCD_ST_BEGIN;
-                            break;
-                        case 'g':
-                            ttype = GW_TREE_KIND_VCD_ST_GENERATE;
-                            break;
-                        case 's':
-                            ttype = GW_TREE_KIND_VCD_ST_STRUCT;
-                            break;
-                        case 'u':
-                            ttype = GW_TREE_KIND_VCD_ST_UNION;
-                            break;
-                        case 'c':
-                            ttype = GW_TREE_KIND_VCD_ST_CLASS;
-                            break;
-                        case 'i':
-                            ttype = GW_TREE_KIND_VCD_ST_INTERFACE;
-                            break;
-                        case 'p':
-                            ttype = (self->yytext[1] == 'r') ? GW_TREE_KIND_VCD_ST_PROGRAM
-                                                             : GW_TREE_KIND_VCD_ST_PACKAGE;
-                            break;
+    v = g_new0(struct vcdsymbol, 1);
+    v->vartype = vtok;
+    v->msi = v->lsi = -1;
 
-                        case 'v': {
-                            char *vht = self->yytext;
-                            if (!strncmp(vht, "vhdl_", 5)) {
-                                switch (vht[5]) {
-                                    case 'a':
-                                        ttype = GW_TREE_KIND_VHDL_ST_ARCHITECTURE;
-                                        break;
-                                    case 'r':
-                                        ttype = GW_TREE_KIND_VHDL_ST_RECORD;
-                                        break;
-                                    case 'b':
-                                        ttype = GW_TREE_KIND_VHDL_ST_BLOCK;
-                                        break;
-                                    case 'g':
-                                        ttype = GW_TREE_KIND_VHDL_ST_GENERATE;
-                                        break;
-                                    case 'i':
-                                        ttype = GW_TREE_KIND_VHDL_ST_GENIF;
-                                        break;
-                                    case 'f':
-                                        ttype = (vht[6] == 'u') ? GW_TREE_KIND_VHDL_ST_FUNCTION
-                                                                : GW_TREE_KIND_VHDL_ST_GENFOR;
-                                        break;
-                                    case 'p':
-                                        ttype = (!strncmp(vht + 6, "roces", 5))
-                                                    ? GW_TREE_KIND_VHDL_ST_PROCESS
-                                                    : GW_TREE_KIND_VHDL_ST_PROCEDURE;
-                                        break;
-                                    default:
-                                        ttype = GW_TREE_KIND_UNKNOWN;
-                                        break;
-                                }
-                            } else {
-                                ttype = GW_TREE_KIND_UNKNOWN;
-                            }
-                        } break;
+    if (vtok == V_PORT) {
+        vtok = get_vartoken(self, 1);
+        if (vtok == V_STRING) {
+            v->size = atoi_64(self->yytext);
+            if (!v->size)
+                v->size = 1;
+        } else if (vtok == V_LB) {
+            vtok = get_vartoken(self, 1);
+            if (vtok == V_END)
+                goto err;
+            if (vtok != V_STRING)
+                goto err;
+            v->msi = atoi_64(self->yytext);
+            vtok = get_vartoken(self, 0);
+            if (vtok == V_RB) {
+                v->lsi = v->msi;
+                v->size = 1;
+            } else {
+                if (vtok != V_COLON)
+                    goto err;
+                vtok = get_vartoken(self, 0);
+                if (vtok != V_STRING)
+                    goto err;
+                v->lsi = atoi_64(self->yytext);
+                vtok = get_vartoken(self, 0);
+                if (vtok != V_RB)
+                    goto err;
 
-                        default:
-                            ttype = GW_TREE_KIND_UNKNOWN;
-                            break;
-                    }
-                }
-                T_GET;
-                if (tok != T_END && tok != T_EOF) {
-                    push_scope(self, self->yytext, self->mod_tree_parent);
-
-                    allocate_and_decorate_module_tree_node(&self->tree_root,
-                                                           ttype,
-                                                           self->yytext,
-                                                           -1,
-                                                           0,
-                                                           0,
-                                                           &self->mod_tree_parent);
-
-                    // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
-                }
-                sync_end(self, NULL);
-                break;
-            case T_UPSCOPE:
-                if (!g_queue_is_empty(self->scopes)) {
-                    self->mod_tree_parent = pop_scope(self);
-                    // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
+                if (v->msi > v->lsi) {
+                    v->size = v->msi - v->lsi + 1;
                 } else {
-                    self->mod_tree_parent = NULL;
+                    v->size = v->lsi - v->msi + 1;
                 }
-                sync_end(self, NULL);
-                break;
-            case T_VAR:
-                if ((self->header_over) && (0)) {
-                    fprintf(
-                        stderr,
-                        "$VAR encountered after $ENDDEFINITIONS near byte %d.  VCD is malformed, "
-                        "exiting.\n",
-                        (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
-                    vcd_exit(255);
-                } else {
-                    int vtok;
-                    struct vcdsymbol *v = NULL;
+            }
+        } else
+            goto err;
 
-                    self->var_prevch = 0;
-                    if (self->varsplit) {
-                        g_free(self->varsplit);
-                        self->varsplit = NULL;
-                    }
-                    vtok = get_vartoken(self, 1);
-                    if (vtok > V_STRINGTYPE)
-                        goto bail;
+        vtok = get_strtoken(self);
+        if (vtok == V_END)
+            goto err;
+        v->id = g_malloc(self->yylen + 1);
+        strcpy(v->id, self->yytext);
+        v->nid = vcdid_hash(self->yytext, self->yylen);
 
-                    v = g_new0(struct vcdsymbol, 1);
-                    v->vartype = vtok;
-                    v->msi = v->lsi = -1;
+        if (v->nid == (self->vcd_hash_max + 1)) {
+            self->vcd_hash_max = v->nid;
+        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
+            /* general case with aliases */
+        } else {
+            self->vcd_hash_kill = TRUE;
+        }
 
-                    if (vtok == V_PORT) {
-                        vtok = get_vartoken(self, 1);
-                        if (vtok == V_STRING) {
-                            v->size = atoi_64(self->yytext);
-                            if (!v->size)
-                                v->size = 1;
-                        } else if (vtok == V_LB) {
-                            vtok = get_vartoken(self, 1);
-                            if (vtok == V_END)
-                                goto err;
-                            if (vtok != V_STRING)
-                                goto err;
-                            v->msi = atoi_64(self->yytext);
-                            vtok = get_vartoken(self, 0);
-                            if (vtok == V_RB) {
-                                v->lsi = v->msi;
-                                v->size = 1;
-                            } else {
-                                if (vtok != V_COLON)
-                                    goto err;
-                                vtok = get_vartoken(self, 0);
-                                if (vtok != V_STRING)
-                                    goto err;
-                                v->lsi = atoi_64(self->yytext);
-                                vtok = get_vartoken(self, 0);
-                                if (vtok != V_RB)
-                                    goto err;
+        if (v->nid < self->vcd_minid) {
+            self->vcd_minid = v->nid;
+        }
+        if (v->nid > self->vcd_maxid) {
+            self->vcd_maxid = v->nid;
+        }
 
-                                if (v->msi > v->lsi) {
-                                    v->size = v->msi - v->lsi + 1;
-                                } else {
-                                    v->size = v->lsi - v->msi + 1;
-                                }
-                            }
-                        } else
-                            goto err;
-
-                        vtok = get_strtoken(self);
-                        if (vtok == V_END)
-                            goto err;
-                        v->id = g_malloc(self->yylen + 1);
-                        strcpy(v->id, self->yytext);
-                        v->nid = vcdid_hash(self->yytext, self->yylen);
-
-                        if (v->nid == (self->vcd_hash_max + 1)) {
-                            self->vcd_hash_max = v->nid;
-                        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
-                            /* general case with aliases */
-                        } else {
-                            self->vcd_hash_kill = TRUE;
-                        }
-
-                        if (v->nid < self->vcd_minid) {
-                            self->vcd_minid = v->nid;
-                        }
-                        if (v->nid > self->vcd_maxid) {
-                            self->vcd_maxid = v->nid;
-                        }
-
-                        vtok = get_vartoken(self, 0);
-                        if (vtok != V_STRING)
-                            goto err;
-                        if (self->name_prefix->len > 0) {
-                            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
-                            strcpy(v->name, self->name_prefix->str);
-                            v->name[self->name_prefix->len] = delimiter;
-                            if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(self,
-                                              v->name + self->name_prefix->len + 1,
-                                              self->yytext);
-                            } else {
-                                if ((strcpy_delimfix(self,
-                                                     v->name + self->name_prefix->len + 1,
-                                                     self->yytext)) &&
-                                    (self->yytext[0] != '\\')) {
-                                    char *sd =
-                                        g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
-                                    strcpy(sd, self->name_prefix->str);
-                                    sd[self->name_prefix->len] = delimiter;
-                                    sd[self->name_prefix->len + 1] = '\\';
-                                    strcpy(sd + self->name_prefix->len + 2,
-                                           v->name + self->name_prefix->len + 1);
-                                    g_free(v->name);
-                                    v->name = sd;
-                                }
-                            }
-                        } else {
-                            v->name = g_malloc(self->yylen + 1);
-                            if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(self, v->name, self->yytext);
-                            } else {
-                                if ((strcpy_delimfix(self, v->name, self->yytext)) &&
-                                    (self->yytext[0] != '\\')) {
-                                    char *sd = g_malloc(self->yylen + 2);
-                                    sd[0] = '\\';
-                                    strcpy(sd + 1, v->name);
-                                    g_free(v->name);
-                                    v->name = sd;
-                                }
-                            }
-                        }
-
-                        if (self->pv != NULL) {
-                            if (!strcmp(self->prev_hier_uncompressed_name, v->name) &&
-                                !disable_autocoalesce && (!strchr(v->name, '\\'))) {
-                                self->pv->chain = v;
-                                v->root = self->rootv;
-                                if (self->pv == self->rootv) {
-                                    self->pv->root = self->rootv;
-                                }
-                            } else {
-                                self->rootv = v;
-                            }
-
-                            g_free(self->prev_hier_uncompressed_name);
-                        } else {
-                            self->rootv = v;
-                        }
-
-                        self->pv = v;
-                        self->prev_hier_uncompressed_name = g_strdup(v->name);
-                    } else /* regular vcd var, not an evcd port var */
-                    {
-                        vtok = get_vartoken(self, 1);
-                        if (vtok == V_END)
-                            goto err;
-                        v->size = atoi_64(self->yytext);
-                        vtok = get_strtoken(self);
-                        if (vtok == V_END)
-                            goto err;
-                        v->id = g_malloc(self->yylen + 1);
-                        strcpy(v->id, self->yytext);
-                        v->nid = vcdid_hash(self->yytext, self->yylen);
-
-                        if (v->nid == (self->vcd_hash_max + 1)) {
-                            self->vcd_hash_max = v->nid;
-                        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
-                            /* general case with aliases */
-                        } else {
-                            self->vcd_hash_kill = 1;
-                        }
-
-                        if (v->nid < self->vcd_minid) {
-                            self->vcd_minid = v->nid;
-                        }
-                        if (v->nid > self->vcd_maxid) {
-                            self->vcd_maxid = v->nid;
-                        }
-
-                        vtok = get_vartoken(self, 0);
-                        if (vtok != V_STRING)
-                            goto err;
-
-                        if (self->name_prefix->len > 0) {
-                            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
-                            strcpy(v->name, self->name_prefix->str);
-                            v->name[self->name_prefix->len] = delimiter;
-                            if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(self,
-                                              v->name + self->name_prefix->len + 1,
-                                              self->yytext);
-                            } else {
-                                if ((strcpy_delimfix(self,
-                                                     v->name + self->name_prefix->len + 1,
-                                                     self->yytext)) &&
-                                    (self->yytext[0] != '\\')) {
-                                    char *sd =
-                                        g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
-                                    strcpy(sd, self->name_prefix->str);
-                                    sd[self->name_prefix->len] = delimiter;
-                                    sd[self->name_prefix->len + 1] = '\\';
-                                    strcpy(sd + self->name_prefix->len + 2,
-                                           v->name + self->name_prefix->len + 1);
-                                    g_free(v->name);
-                                    v->name = sd;
-                                }
-                            }
-                        } else {
-                            v->name = g_malloc(self->yylen + 1);
-                            if (alt_delimiter != '\0') {
-                                strcpy_vcdalt(self, v->name, self->yytext);
-                            } else {
-                                if ((strcpy_delimfix(self, v->name, self->yytext)) &&
-                                    (self->yytext[0] != '\\')) {
-                                    char *sd = g_malloc(self->yylen + 2);
-                                    sd[0] = '\\';
-                                    strcpy(sd + 1, v->name);
-                                    g_free(v->name);
-                                    v->name = sd;
-                                }
-                            }
-                        }
-
-                        if (self->pv != NULL) {
-                            if (!strcmp(self->prev_hier_uncompressed_name, v->name)) {
-                                self->pv->chain = v;
-                                v->root = self->rootv;
-                                if (self->pv == self->rootv) {
-                                    self->pv->root = self->rootv;
-                                }
-                            } else {
-                                self->rootv = v;
-                            }
-
-                            g_free(self->prev_hier_uncompressed_name);
-                        } else {
-                            self->rootv = v;
-                        }
-                        self->pv = v;
-                        self->prev_hier_uncompressed_name = g_strdup(v->name);
-
-                        vtok = get_vartoken(self, 1);
-                        if (vtok == V_END)
-                            goto dumpv;
-                        if (vtok != V_LB)
-                            goto err;
-                        vtok = get_vartoken(self, 0);
-                        if (vtok != V_STRING)
-                            goto err;
-                        v->msi = atoi_64(self->yytext);
-                        vtok = get_vartoken(self, 0);
-                        if (vtok == V_RB) {
-                            v->lsi = v->msi;
-                            goto dumpv;
-                        }
-                        if (vtok != V_COLON)
-                            goto err;
-                        vtok = get_vartoken(self, 0);
-                        if (vtok != V_STRING)
-                            goto err;
-                        v->lsi = atoi_64(self->yytext);
-                        vtok = get_vartoken(self, 0);
-                        if (vtok != V_RB)
-                            goto err;
-                    }
-
-                dumpv:
-                    if (v->size == 0) {
-                        if (v->vartype != V_EVENT) {
-                            if (v->vartype != V_STRINGTYPE) {
-                                v->vartype = V_REAL;
-                            }
-                        } else {
-                            v->size = 1;
-                        }
-
-                    } /* MTI fix */
-
-                    if ((v->vartype == V_REAL) || (v->vartype == V_STRINGTYPE)) {
-                        v->size = 1; /* override any data we parsed in */
-                        v->msi = v->lsi = 0;
-                    } else if ((v->size > 1) && (v->msi <= 0) && (v->lsi <= 0)) {
-                        if (v->vartype == V_EVENT) {
-                            v->size = 1;
-                        } else {
-                            /* any criteria for the direction here? */
-                            v->msi = v->size - 1;
-                            v->lsi = 0;
-                        }
-                    } else if ((v->msi > v->lsi) && ((v->msi - v->lsi + 1) != v->size)) {
-                        if ((v->vartype != V_EVENT) && (v->vartype != V_PARAMETER)) {
-                            if ((v->msi - v->lsi + 1) > v->size) /* if() is 2d add */
-                            {
-                                v->msi = v->size - 1;
-                                v->lsi = 0;
-                            }
-                            /* all this formerly was goto err; */
-                        } else {
-                            v->size = v->msi - v->lsi + 1;
-                        }
-                    } else if ((v->lsi >= v->msi) && ((v->lsi - v->msi + 1) != v->size)) {
-                        if ((v->vartype != V_EVENT) && (v->vartype != V_PARAMETER)) {
-                            if ((v->lsi - v->msi + 1) > v->size) /* if() is 2d add */
-                            {
-                                v->lsi = v->size - 1;
-                                v->msi = 0;
-                            }
-                            /* all this formerly was goto err; */
-                        } else {
-                            v->size = v->lsi - v->msi + 1;
-                        }
-                    }
-
-                    /* initial conditions */
-                    v->narray = g_new0(GwNode *, 1);
-                    v->narray[0] = g_new0(GwNode, 1);
-                    v->narray[0]->head.time = -2;
-                    v->narray[0]->head.v.h_val = GW_BIT_X;
-
-                    if (self->vcdsymroot == NULL) {
-                        self->vcdsymroot = self->vcdsymcurr = v;
-                    } else {
-                        self->vcdsymcurr->next = v;
-                    }
-                    self->vcdsymcurr = v;
-                    self->numsyms++;
-
-                    goto bail;
-                err:
-                    if (v) {
-                        self->error_count++;
-                        if (v->name) {
-                            fprintf(stderr,
-                                    "Near byte %d, $VAR parse error encountered with '%s'\n",
-                                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
-                                    v->name);
-                            g_free(v->name);
-                        } else {
-                            fprintf(stderr,
-                                    "Near byte %d, $VAR parse error encountered\n",
-                                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
-                        }
-                        if (v->id)
-                            g_free(v->id);
-                        g_free(v);
-                        v = NULL;
-                        self->pv = NULL;
-                    }
-
-                bail:
-                    if (vtok != V_END)
-                        sync_end(self, NULL);
+        vtok = get_vartoken(self, 0);
+        if (vtok != V_STRING)
+            goto err;
+        if (self->name_prefix->len > 0) {
+            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
+            strcpy(v->name, self->name_prefix->str);
+            v->name[self->name_prefix->len] = delimiter;
+            if (alt_delimiter != '\0') {
+                strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
+            } else {
+                if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
+                    (self->yytext[0] != '\\')) {
+                    char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
+                    strcpy(sd, self->name_prefix->str);
+                    sd[self->name_prefix->len] = delimiter;
+                    sd[self->name_prefix->len + 1] = '\\';
+                    strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
+                    g_free(v->name);
+                    v->name = sd;
                 }
-                break;
-            case T_ENDDEFINITIONS:
-                self->header_over = TRUE; /* do symbol table management here */
-                create_sorted_table(self);
-                if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
-                    fprintf(stderr, "No symbols in VCD file..nothing to do!\n");
-                    vcd_exit(255);
+            }
+        } else {
+            v->name = g_malloc(self->yylen + 1);
+            if (alt_delimiter != '\0') {
+                strcpy_vcdalt(self, v->name, self->yytext);
+            } else {
+                if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+                    char *sd = g_malloc(self->yylen + 2);
+                    sd[0] = '\\';
+                    strcpy(sd + 1, v->name);
+                    g_free(v->name);
+                    v->name = sd;
                 }
-                if (self->error_count > 0) {
-                    fprintf(stderr,
-                            "\n%d VCD parse errors encountered, exiting.\n",
-                            self->error_count);
-                    vcd_exit(255);
+            }
+        }
+
+        if (self->pv != NULL) {
+            if (!strcmp(self->prev_hier_uncompressed_name, v->name) && !disable_autocoalesce &&
+                (!strchr(v->name, '\\'))) {
+                self->pv->chain = v;
+                v->root = self->rootv;
+                if (self->pv == self->rootv) {
+                    self->pv->root = self->rootv;
                 }
+            } else {
+                self->rootv = v;
+            }
 
-                break;
-            case T_STRING:
-                if (!self->header_over) {
-                    self->header_over = TRUE; /* do symbol table management here */
-                    create_sorted_table(self);
-                    if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
-                        break;
-                    }
+            g_free(self->prev_hier_uncompressed_name);
+        } else {
+            self->rootv = v;
+        }
+
+        self->pv = v;
+        self->prev_hier_uncompressed_name = g_strdup(v->name);
+    } else /* regular vcd var, not an evcd port var */
+    {
+        vtok = get_vartoken(self, 1);
+        if (vtok == V_END)
+            goto err;
+        v->size = atoi_64(self->yytext);
+        vtok = get_strtoken(self);
+        if (vtok == V_END)
+            goto err;
+        v->id = g_malloc(self->yylen + 1);
+        strcpy(v->id, self->yytext);
+        v->nid = vcdid_hash(self->yytext, self->yylen);
+
+        if (v->nid == (self->vcd_hash_max + 1)) {
+            self->vcd_hash_max = v->nid;
+        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
+            /* general case with aliases */
+        } else {
+            self->vcd_hash_kill = 1;
+        }
+
+        if (v->nid < self->vcd_minid) {
+            self->vcd_minid = v->nid;
+        }
+        if (v->nid > self->vcd_maxid) {
+            self->vcd_maxid = v->nid;
+        }
+
+        vtok = get_vartoken(self, 0);
+        if (vtok != V_STRING)
+            goto err;
+
+        if (self->name_prefix->len > 0) {
+            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
+            strcpy(v->name, self->name_prefix->str);
+            v->name[self->name_prefix->len] = delimiter;
+            if (alt_delimiter != '\0') {
+                strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
+            } else {
+                if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
+                    (self->yytext[0] != '\\')) {
+                    char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
+                    strcpy(sd, self->name_prefix->str);
+                    sd[self->name_prefix->len] = delimiter;
+                    sd[self->name_prefix->len + 1] = '\\';
+                    strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
+                    g_free(v->name);
+                    v->name = sd;
                 }
-                {
-                    /* catchall for events when header over */
-                    if (self->yytext[0] == '#') {
-                        GwTime tim;
-                        GwTime *tt;
+            }
+        } else {
+            v->name = g_malloc(self->yylen + 1);
+            if (alt_delimiter != '\0') {
+                strcpy_vcdalt(self, v->name, self->yytext);
+            } else {
+                if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+                    char *sd = g_malloc(self->yylen + 2);
+                    sd[0] = '\\';
+                    strcpy(sd + 1, v->name);
+                    g_free(v->name);
+                    v->name = sd;
+                }
+            }
+        }
 
-                        tim = atoi_64(self->yytext + 1);
+        if (self->pv != NULL) {
+            if (!strcmp(self->prev_hier_uncompressed_name, v->name)) {
+                self->pv->chain = v;
+                v->root = self->rootv;
+                if (self->pv == self->rootv) {
+                    self->pv->root = self->rootv;
+                }
+            } else {
+                self->rootv = v;
+            }
 
-                        if (self->start_time < 0) {
-                            self->start_time = tim;
-                        } else {
-                            /* backtracking fix */
-                            if (tim < self->current_time) {
-                                if (!self->already_backtracked) {
-                                    self->already_backtracked = TRUE;
-                                    fprintf(stderr,
-                                            "VCDLOAD | Time backtracking detected in VCD file!\n");
-                                }
-                            }
+            g_free(self->prev_hier_uncompressed_name);
+        } else {
+            self->rootv = v;
+        }
+        self->pv = v;
+        self->prev_hier_uncompressed_name = g_strdup(v->name);
+
+        vtok = get_vartoken(self, 1);
+        if (vtok == V_END)
+            goto dumpv;
+        if (vtok != V_LB)
+            goto err;
+        vtok = get_vartoken(self, 0);
+        if (vtok != V_STRING)
+            goto err;
+        v->msi = atoi_64(self->yytext);
+        vtok = get_vartoken(self, 0);
+        if (vtok == V_RB) {
+            v->lsi = v->msi;
+            goto dumpv;
+        }
+        if (vtok != V_COLON)
+            goto err;
+        vtok = get_vartoken(self, 0);
+        if (vtok != V_STRING)
+            goto err;
+        v->lsi = atoi_64(self->yytext);
+        vtok = get_vartoken(self, 0);
+        if (vtok != V_RB)
+            goto err;
+    }
+
+dumpv:
+    if (v->size == 0) {
+        if (v->vartype != V_EVENT) {
+            if (v->vartype != V_STRINGTYPE) {
+                v->vartype = V_REAL;
+            }
+        } else {
+            v->size = 1;
+        }
+
+    } /* MTI fix */
+
+    if ((v->vartype == V_REAL) || (v->vartype == V_STRINGTYPE)) {
+        v->size = 1; /* override any data we parsed in */
+        v->msi = v->lsi = 0;
+    } else if ((v->size > 1) && (v->msi <= 0) && (v->lsi <= 0)) {
+        if (v->vartype == V_EVENT) {
+            v->size = 1;
+        } else {
+            /* any criteria for the direction here? */
+            v->msi = v->size - 1;
+            v->lsi = 0;
+        }
+    } else if ((v->msi > v->lsi) && ((v->msi - v->lsi + 1) != v->size)) {
+        if ((v->vartype != V_EVENT) && (v->vartype != V_PARAMETER)) {
+            if ((v->msi - v->lsi + 1) > v->size) /* if() is 2d add */
+            {
+                v->msi = v->size - 1;
+                v->lsi = 0;
+            }
+            /* all this formerly was goto err; */
+        } else {
+            v->size = v->msi - v->lsi + 1;
+        }
+    } else if ((v->lsi >= v->msi) && ((v->lsi - v->msi + 1) != v->size)) {
+        if ((v->vartype != V_EVENT) && (v->vartype != V_PARAMETER)) {
+            if ((v->lsi - v->msi + 1) > v->size) /* if() is 2d add */
+            {
+                v->lsi = v->size - 1;
+                v->msi = 0;
+            }
+            /* all this formerly was goto err; */
+        } else {
+            v->size = v->lsi - v->msi + 1;
+        }
+    }
+
+    /* initial conditions */
+    v->narray = g_new0(GwNode *, 1);
+    v->narray[0] = g_new0(GwNode, 1);
+    v->narray[0]->head.time = -2;
+    v->narray[0]->head.v.h_val = GW_BIT_X;
+
+    if (self->vcdsymroot == NULL) {
+        self->vcdsymroot = self->vcdsymcurr = v;
+    } else {
+        self->vcdsymcurr->next = v;
+    }
+    self->vcdsymcurr = v;
+    self->numsyms++;
+
+    goto bail;
+err:
+    if (v) {
+        self->error_count++;
+        if (v->name) {
+            fprintf(stderr,
+                    "Near byte %d, $VAR parse error encountered with '%s'\n",
+                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
+                    v->name);
+            g_free(v->name);
+        } else {
+            fprintf(stderr,
+                    "Near byte %d, $VAR parse error encountered\n",
+                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
+        }
+        if (v->id)
+            g_free(v->id);
+        g_free(v);
+        v = NULL;
+        self->pv = NULL;
+    }
+
+bail:
+    if (vtok != V_END)
+        sync_end(self, NULL);
+}
+
+static void vcd_parse_enddefinitions(GwVcdLoader *self)
+{
+    self->header_over = TRUE; /* do symbol table management here */
+    create_sorted_table(self);
+    if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
+        fprintf(stderr, "No symbols in VCD file..nothing to do!\n");
+        vcd_exit(255);
+    }
+    if (self->error_count > 0) {
+        fprintf(stderr, "\n%d VCD parse errors encountered, exiting.\n", self->error_count);
+        vcd_exit(255);
+    }
+}
+
+static void vcd_parse_string(GwVcdLoader *self)
+{
+    if (!self->header_over) {
+        self->header_over = TRUE; /* do symbol table management here */
+        create_sorted_table(self);
+        if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
+            return;
+        }
+    }
+
+    /* catchall for events when header over */
+    if (self->yytext[0] == '#') {
+        GwTime tim;
+        GwTime *tt;
+
+        tim = atoi_64(self->yytext + 1);
+
+        if (self->start_time < 0) {
+            self->start_time = tim;
+        } else {
+            /* backtracking fix */
+            if (tim < self->current_time) {
+                if (!self->already_backtracked) {
+                    self->already_backtracked = TRUE;
+                    fprintf(stderr, "VCDLOAD | Time backtracking detected in VCD file!\n");
+                }
+            }
 #if 0
 						if(tim < GLOBALS->current_time_vcd_recoder_c_3) /* avoid backtracking time counts which can happen on malformed files */
 							{
 							tim = GLOBALS->current_time_vcd_recoder_c_3;
 							}
 #endif
-                        }
+        }
 
-                        self->current_time = tim;
-                        if (self->end_time < tim)
-                            self->end_time = tim; /* in case of malformed vcd files */
-                        // DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
+        self->current_time = tim;
+        if (self->end_time < tim)
+            self->end_time = tim; /* in case of malformed vcd files */
+        // DEBUG(fprintf(stderr, "#%" GW_TIME_FORMAT "\n", tim));
 
-                        tt =
-                            gw_vlist_alloc(&self->time_vlist, FALSE, self->vlist_compression_level);
-                        *tt = tim;
-                        self->time_vlist_count++;
-                    } else {
-                        if (self->time_vlist_count) {
-                            /* OK, otherwise fix for System C which doesn't emit time zero... */
-                        } else {
-                            GwTime tim = GW_TIME_CONSTANT(0);
-                            GwTime *tt;
+        tt = gw_vlist_alloc(&self->time_vlist, FALSE, self->vlist_compression_level);
+        *tt = tim;
+        self->time_vlist_count++;
+    } else {
+        if (self->time_vlist_count) {
+            /* OK, otherwise fix for System C which doesn't emit time zero... */
+        } else {
+            GwTime tim = GW_TIME_CONSTANT(0);
+            GwTime *tt;
 
-                            self->start_time = self->current_time = self->end_time = tim;
+            self->start_time = self->current_time = self->end_time = tim;
 
-                            tt = gw_vlist_alloc(&self->time_vlist,
-                                                FALSE,
-                                                self->vlist_compression_level);
-                            *tt = tim;
-                            self->time_vlist_count = 1;
-                        }
-                        parse_valuechange(self);
-                    }
-                }
+            tt = gw_vlist_alloc(&self->time_vlist, FALSE, self->vlist_compression_level);
+            *tt = tim;
+            self->time_vlist_count = 1;
+        }
+        parse_valuechange(self);
+    }
+}
+
+static void vcd_parse(GwVcdLoader *self)
+{
+    gboolean disable_autocoalesce = FALSE;
+
+    for (;;) {
+        switch (get_token(self)) {
+            case T_COMMENT:
+                sync_end(self, "COMMENT:");
                 break;
+
+            case T_DATE:
+                sync_end(self, "DATE:");
+                break;
+
+            case T_VERSION:
+                disable_autocoalesce = version_sync_end(self, "VERSION:");
+                break;
+
+            case T_TIMEZERO:
+                vcd_parse_timezero(self);
+                break;
+
+            case T_TIMESCALE:
+                vcd_parse_timescale(self);
+                break;
+
+            case T_SCOPE:
+                vcd_parse_scope(self);
+                break;
+
+            case T_UPSCOPE:
+                vcd_parse_upscope(self);
+                break;
+
+            case T_VAR:
+                vcd_parse_var(self, disable_autocoalesce);
+                break;
+
+            case T_ENDDEFINITIONS:
+                vcd_parse_enddefinitions(self);
+                break;
+
+            case T_STRING:
+                vcd_parse_string(self);
+                break;
+
             case T_DUMPALL: /* dump commands modify vals anyway so */
             case T_DUMPPORTSALL:
                 break; /* just loop through..                 */
+
             case T_DUMPOFF:
             case T_DUMPPORTSOFF:
                 gw_blackout_regions_add_dumpoff(self->blackout_regions, self->current_time);
                 break;
+
             case T_DUMPON:
             case T_DUMPPORTSON:
                 gw_blackout_regions_add_dumpon(self->blackout_regions, self->current_time);
                 break;
+
             case T_DUMPVARS:
             case T_DUMPPORTS:
                 if (self->current_time < 0) {
                     self->start_time = self->current_time = self->end_time = 0;
                 }
                 break;
+
             case T_VCDCLOSE:
                 sync_end(self, "VCDCLOSE:");
                 break; /* next token will be '#' time related followed by $end */
+
             case T_END: /* either closure for dump commands or */
                 break; /* it's spurious                       */
+
             case T_UNKNOWN_KEY:
                 sync_end(self, NULL); /* skip over unknown keywords */
                 break;
+
             case T_EOF:
                 gw_blackout_regions_add_dumpon(self->blackout_regions, self->current_time);
 
@@ -2006,6 +2039,7 @@ static void vcd_parse(GwVcdLoader *self)
                 }
 
                 return;
+
             default: {
                 // DEBUG(fprintf(stderr, "UNKNOWN TOKEN\n"));
             }
