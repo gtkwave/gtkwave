@@ -79,8 +79,17 @@ GwTree *gw_tree_new(GwTreeNode *root)
 {
     return g_object_new(GW_TYPE_TREE, "root", root, NULL);
 }
-
+/**
+ * gw_tree_get_root: (skip)
+ */
 GwTreeNode *gw_tree_get_root(GwTree *self)
+{
+    g_return_val_if_fail(GW_IS_TREE(self), NULL);
+
+    return self->root;
+}
+
+const GwTreeNode *gw_tree_get_root_const(GwTree *self)
 {
     g_return_val_if_fail(GW_IS_TREE(self), NULL);
 
@@ -209,4 +218,11 @@ GwTreeNode *gw_tree_node_new(GwTreeKind kind, const gchar *name)
     strcpy(node->name, name);
 
     return node;
+}
+
+const gchar *gw_tree_node_get_name(GwTreeNode *self)
+{
+    g_return_val_if_fail(self != NULL, NULL);
+
+    return self->name;
 }

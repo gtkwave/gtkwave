@@ -13,6 +13,8 @@ GwFacs *gw_facs_new(guint length);
 
 void gw_facs_set(GwFacs *self, guint index, GwSymbol *symbol);
 GwSymbol *gw_facs_get(GwFacs *self, guint index);
+const GwSymbol *gw_facs_get_const(GwFacs *self, guint index);
+
 guint gw_facs_get_length(GwFacs *self);
 GwSymbol **gw_facs_get_array(GwFacs *self);
 

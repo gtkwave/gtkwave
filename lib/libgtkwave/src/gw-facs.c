@@ -102,7 +102,18 @@ void gw_facs_set(GwFacs *self, guint index, GwSymbol *symbol)
     g_ptr_array_index(self->facs, index) = symbol;
 }
 
+/**
+ * gw_facs_get: (skip)
+ */
 GwSymbol *gw_facs_get(GwFacs *self, guint index)
+{
+    g_return_val_if_fail(GW_IS_FACS(self), NULL);
+    g_return_val_if_fail(index < self->facs->len, NULL);
+
+    return g_ptr_array_index(self->facs, index);
+}
+
+const GwSymbol *gw_facs_get_const(GwFacs *self, guint index)
 {
     g_return_val_if_fail(GW_IS_FACS(self), NULL);
     g_return_val_if_fail(index < self->facs->len, NULL);
