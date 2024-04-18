@@ -1537,11 +1537,261 @@ static void vcd_parse_upscope(GwVcdLoader *self)
     sync_end(self, NULL);
 }
 
-static void vcd_parse_var(GwVcdLoader *self, gboolean disable_autocoalesce)
+static gboolean vcd_parse_var_evcd(GwVcdLoader *self,
+                                   struct vcdsymbol *v,
+                                   gint *vtok,
+                                   gboolean disable_autocoalesce)
 {
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
     gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
+    *vtok = get_vartoken(self, 1);
+    if (*vtok == V_STRING) {
+        v->size = atoi_64(self->yytext);
+        if (!v->size)
+            v->size = 1;
+    } else if (*vtok == V_LB) {
+        *vtok = get_vartoken(self, 1);
+        if (*vtok == V_END || *vtok != V_STRING) {
+            return FALSE;
+        }
+        v->msi = atoi_64(self->yytext);
+        *vtok = get_vartoken(self, 0);
+        if (*vtok == V_RB) {
+            v->lsi = v->msi;
+            v->size = 1;
+        } else {
+            if (*vtok != V_COLON) {
+                return FALSE;
+            }
+            *vtok = get_vartoken(self, 0);
+            if (*vtok != V_STRING) {
+                return FALSE;
+            }
+            v->lsi = atoi_64(self->yytext);
+            *vtok = get_vartoken(self, 0);
+            if (*vtok != V_RB) {
+                return FALSE;
+            }
+
+            if (v->msi > v->lsi) {
+                v->size = v->msi - v->lsi + 1;
+            } else {
+                v->size = v->lsi - v->msi + 1;
+            }
+        }
+    } else {
+        return FALSE;
+    }
+
+    *vtok = get_strtoken(self);
+    if (*vtok == V_END) {
+        return FALSE;
+    }
+    v->id = g_malloc(self->yylen + 1);
+    strcpy(v->id, self->yytext);
+    v->nid = vcdid_hash(self->yytext, self->yylen);
+
+    if (v->nid == (self->vcd_hash_max + 1)) {
+        self->vcd_hash_max = v->nid;
+    } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
+        /* general case with aliases */
+    } else {
+        self->vcd_hash_kill = TRUE;
+    }
+
+    if (v->nid < self->vcd_minid) {
+        self->vcd_minid = v->nid;
+    }
+    if (v->nid > self->vcd_maxid) {
+        self->vcd_maxid = v->nid;
+    }
+
+    *vtok = get_vartoken(self, 0);
+    if (*vtok != V_STRING) {
+        return FALSE;
+    }
+    if (self->name_prefix->len > 0) {
+        v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
+        strcpy(v->name, self->name_prefix->str);
+        v->name[self->name_prefix->len] = delimiter;
+        if (alt_delimiter != '\0') {
+            strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
+        } else {
+            if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
+                (self->yytext[0] != '\\')) {
+                char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
+                strcpy(sd, self->name_prefix->str);
+                sd[self->name_prefix->len] = delimiter;
+                sd[self->name_prefix->len + 1] = '\\';
+                strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
+                g_free(v->name);
+                v->name = sd;
+            }
+        }
+    } else {
+        v->name = g_malloc(self->yylen + 1);
+        if (alt_delimiter != '\0') {
+            strcpy_vcdalt(self, v->name, self->yytext);
+        } else {
+            if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+                char *sd = g_malloc(self->yylen + 2);
+                sd[0] = '\\';
+                strcpy(sd + 1, v->name);
+                g_free(v->name);
+                v->name = sd;
+            }
+        }
+    }
+
+    if (self->pv != NULL) {
+        if (!strcmp(self->prev_hier_uncompressed_name, v->name) && !disable_autocoalesce &&
+            (!strchr(v->name, '\\'))) {
+            self->pv->chain = v;
+            v->root = self->rootv;
+            if (self->pv == self->rootv) {
+                self->pv->root = self->rootv;
+            }
+        } else {
+            self->rootv = v;
+        }
+
+        g_free(self->prev_hier_uncompressed_name);
+    } else {
+        self->rootv = v;
+    }
+
+    self->pv = v;
+    self->prev_hier_uncompressed_name = g_strdup(v->name);
+
+    return TRUE;
+}
+
+static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, int *vtok)
+{
+    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
+
+    *vtok = get_vartoken(self, 1);
+    if (*vtok == V_END) {
+        return FALSE;
+    }
+    v->size = atoi_64(self->yytext);
+    *vtok = get_strtoken(self);
+    if (*vtok == V_END) {
+        return FALSE;
+    }
+    v->id = g_malloc(self->yylen + 1);
+    strcpy(v->id, self->yytext);
+    v->nid = vcdid_hash(self->yytext, self->yylen);
+
+    if (v->nid == (self->vcd_hash_max + 1)) {
+        self->vcd_hash_max = v->nid;
+    } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
+        /* general case with aliases */
+    } else {
+        self->vcd_hash_kill = 1;
+    }
+
+    if (v->nid < self->vcd_minid) {
+        self->vcd_minid = v->nid;
+    }
+    if (v->nid > self->vcd_maxid) {
+        self->vcd_maxid = v->nid;
+    }
+
+    *vtok = get_vartoken(self, 0);
+    if (*vtok != V_STRING) {
+        return FALSE;
+    }
+
+    if (self->name_prefix->len > 0) {
+        v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
+        strcpy(v->name, self->name_prefix->str);
+        v->name[self->name_prefix->len] = delimiter;
+        if (alt_delimiter != '\0') {
+            strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
+        } else {
+            if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
+                (self->yytext[0] != '\\')) {
+                char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
+                strcpy(sd, self->name_prefix->str);
+                sd[self->name_prefix->len] = delimiter;
+                sd[self->name_prefix->len + 1] = '\\';
+                strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
+                g_free(v->name);
+                v->name = sd;
+            }
+        }
+    } else {
+        v->name = g_malloc(self->yylen + 1);
+        if (alt_delimiter != '\0') {
+            strcpy_vcdalt(self, v->name, self->yytext);
+        } else {
+            if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+                char *sd = g_malloc(self->yylen + 2);
+                sd[0] = '\\';
+                strcpy(sd + 1, v->name);
+                g_free(v->name);
+                v->name = sd;
+            }
+        }
+    }
+
+    if (self->pv != NULL) {
+        if (!strcmp(self->prev_hier_uncompressed_name, v->name)) {
+            self->pv->chain = v;
+            v->root = self->rootv;
+            if (self->pv == self->rootv) {
+                self->pv->root = self->rootv;
+            }
+        } else {
+            self->rootv = v;
+        }
+
+        g_free(self->prev_hier_uncompressed_name);
+    } else {
+        self->rootv = v;
+    }
+    self->pv = v;
+    self->prev_hier_uncompressed_name = g_strdup(v->name);
+
+    *vtok = get_vartoken(self, 1);
+    if (*vtok == V_END) {
+        return TRUE;
+    }
+
+    if (*vtok != V_LB) {
+        return FALSE;
+    }
+    *vtok = get_vartoken(self, 0);
+    if (*vtok != V_STRING) {
+        return FALSE;
+    }
+    v->msi = atoi_64(self->yytext);
+    *vtok = get_vartoken(self, 0);
+    if (*vtok == V_RB) {
+        v->lsi = v->msi;
+        return TRUE;
+    }
+    if (*vtok != V_COLON) {
+        return FALSE;
+    }
+    *vtok = get_vartoken(self, 0);
+    if (*vtok != V_STRING) {
+        return FALSE;
+    }
+    v->lsi = atoi_64(self->yytext);
+    *vtok = get_vartoken(self, 0);
+    if (*vtok != V_RB) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void vcd_parse_var(GwVcdLoader *self, gboolean disable_autocoalesce)
+{
     // TODO: why was this disabled?
     // if ((self->header_over) && (0)) {
     //     fprintf(stderr,
@@ -1568,228 +1818,15 @@ static void vcd_parse_var(GwVcdLoader *self, gboolean disable_autocoalesce)
     v->msi = v->lsi = -1;
 
     if (vtok == V_PORT) {
-        vtok = get_vartoken(self, 1);
-        if (vtok == V_STRING) {
-            v->size = atoi_64(self->yytext);
-            if (!v->size)
-                v->size = 1;
-        } else if (vtok == V_LB) {
-            vtok = get_vartoken(self, 1);
-            if (vtok == V_END)
-                goto err;
-            if (vtok != V_STRING)
-                goto err;
-            v->msi = atoi_64(self->yytext);
-            vtok = get_vartoken(self, 0);
-            if (vtok == V_RB) {
-                v->lsi = v->msi;
-                v->size = 1;
-            } else {
-                if (vtok != V_COLON)
-                    goto err;
-                vtok = get_vartoken(self, 0);
-                if (vtok != V_STRING)
-                    goto err;
-                v->lsi = atoi_64(self->yytext);
-                vtok = get_vartoken(self, 0);
-                if (vtok != V_RB)
-                    goto err;
-
-                if (v->msi > v->lsi) {
-                    v->size = v->msi - v->lsi + 1;
-                } else {
-                    v->size = v->lsi - v->msi + 1;
-                }
-            }
-        } else
+        if (!vcd_parse_var_evcd(self, v, &vtok, disable_autocoalesce)) {
             goto err;
-
-        vtok = get_strtoken(self);
-        if (vtok == V_END)
+        }
+    } else {
+        if (!vcd_parse_var_regular(self, v, &vtok)) {
             goto err;
-        v->id = g_malloc(self->yylen + 1);
-        strcpy(v->id, self->yytext);
-        v->nid = vcdid_hash(self->yytext, self->yylen);
-
-        if (v->nid == (self->vcd_hash_max + 1)) {
-            self->vcd_hash_max = v->nid;
-        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
-            /* general case with aliases */
-        } else {
-            self->vcd_hash_kill = TRUE;
         }
-
-        if (v->nid < self->vcd_minid) {
-            self->vcd_minid = v->nid;
-        }
-        if (v->nid > self->vcd_maxid) {
-            self->vcd_maxid = v->nid;
-        }
-
-        vtok = get_vartoken(self, 0);
-        if (vtok != V_STRING)
-            goto err;
-        if (self->name_prefix->len > 0) {
-            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
-            strcpy(v->name, self->name_prefix->str);
-            v->name[self->name_prefix->len] = delimiter;
-            if (alt_delimiter != '\0') {
-                strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
-            } else {
-                if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
-                    (self->yytext[0] != '\\')) {
-                    char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
-                    strcpy(sd, self->name_prefix->str);
-                    sd[self->name_prefix->len] = delimiter;
-                    sd[self->name_prefix->len + 1] = '\\';
-                    strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
-                    g_free(v->name);
-                    v->name = sd;
-                }
-            }
-        } else {
-            v->name = g_malloc(self->yylen + 1);
-            if (alt_delimiter != '\0') {
-                strcpy_vcdalt(self, v->name, self->yytext);
-            } else {
-                if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
-                    char *sd = g_malloc(self->yylen + 2);
-                    sd[0] = '\\';
-                    strcpy(sd + 1, v->name);
-                    g_free(v->name);
-                    v->name = sd;
-                }
-            }
-        }
-
-        if (self->pv != NULL) {
-            if (!strcmp(self->prev_hier_uncompressed_name, v->name) && !disable_autocoalesce &&
-                (!strchr(v->name, '\\'))) {
-                self->pv->chain = v;
-                v->root = self->rootv;
-                if (self->pv == self->rootv) {
-                    self->pv->root = self->rootv;
-                }
-            } else {
-                self->rootv = v;
-            }
-
-            g_free(self->prev_hier_uncompressed_name);
-        } else {
-            self->rootv = v;
-        }
-
-        self->pv = v;
-        self->prev_hier_uncompressed_name = g_strdup(v->name);
-    } else /* regular vcd var, not an evcd port var */
-    {
-        vtok = get_vartoken(self, 1);
-        if (vtok == V_END)
-            goto err;
-        v->size = atoi_64(self->yytext);
-        vtok = get_strtoken(self);
-        if (vtok == V_END)
-            goto err;
-        v->id = g_malloc(self->yylen + 1);
-        strcpy(v->id, self->yytext);
-        v->nid = vcdid_hash(self->yytext, self->yylen);
-
-        if (v->nid == (self->vcd_hash_max + 1)) {
-            self->vcd_hash_max = v->nid;
-        } else if ((v->nid > 0) && (v->nid <= self->vcd_hash_max)) {
-            /* general case with aliases */
-        } else {
-            self->vcd_hash_kill = 1;
-        }
-
-        if (v->nid < self->vcd_minid) {
-            self->vcd_minid = v->nid;
-        }
-        if (v->nid > self->vcd_maxid) {
-            self->vcd_maxid = v->nid;
-        }
-
-        vtok = get_vartoken(self, 0);
-        if (vtok != V_STRING)
-            goto err;
-
-        if (self->name_prefix->len > 0) {
-            v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
-            strcpy(v->name, self->name_prefix->str);
-            v->name[self->name_prefix->len] = delimiter;
-            if (alt_delimiter != '\0') {
-                strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
-            } else {
-                if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
-                    (self->yytext[0] != '\\')) {
-                    char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
-                    strcpy(sd, self->name_prefix->str);
-                    sd[self->name_prefix->len] = delimiter;
-                    sd[self->name_prefix->len + 1] = '\\';
-                    strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
-                    g_free(v->name);
-                    v->name = sd;
-                }
-            }
-        } else {
-            v->name = g_malloc(self->yylen + 1);
-            if (alt_delimiter != '\0') {
-                strcpy_vcdalt(self, v->name, self->yytext);
-            } else {
-                if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
-                    char *sd = g_malloc(self->yylen + 2);
-                    sd[0] = '\\';
-                    strcpy(sd + 1, v->name);
-                    g_free(v->name);
-                    v->name = sd;
-                }
-            }
-        }
-
-        if (self->pv != NULL) {
-            if (!strcmp(self->prev_hier_uncompressed_name, v->name)) {
-                self->pv->chain = v;
-                v->root = self->rootv;
-                if (self->pv == self->rootv) {
-                    self->pv->root = self->rootv;
-                }
-            } else {
-                self->rootv = v;
-            }
-
-            g_free(self->prev_hier_uncompressed_name);
-        } else {
-            self->rootv = v;
-        }
-        self->pv = v;
-        self->prev_hier_uncompressed_name = g_strdup(v->name);
-
-        vtok = get_vartoken(self, 1);
-        if (vtok == V_END)
-            goto dumpv;
-        if (vtok != V_LB)
-            goto err;
-        vtok = get_vartoken(self, 0);
-        if (vtok != V_STRING)
-            goto err;
-        v->msi = atoi_64(self->yytext);
-        vtok = get_vartoken(self, 0);
-        if (vtok == V_RB) {
-            v->lsi = v->msi;
-            goto dumpv;
-        }
-        if (vtok != V_COLON)
-            goto err;
-        vtok = get_vartoken(self, 0);
-        if (vtok != V_STRING)
-            goto err;
-        v->lsi = atoi_64(self->yytext);
-        vtok = get_vartoken(self, 0);
-        if (vtok != V_RB)
-            goto err;
     }
 
-dumpv:
     if (v->size == 0) {
         if (v->vartype != V_EVENT) {
             if (v->vartype != V_STRINGTYPE) {
