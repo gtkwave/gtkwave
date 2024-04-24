@@ -170,14 +170,13 @@ static void load_ttrans_filter(int which, char *name)
 
     result = fscanf(stream, "%s", abs_path);
 
-    if ((strlen(abs_path) == 0) || (!result)) {
-        status_text("Could not find transaction filter process!\n");
-        pclose(stream); /* cppcheck */
-        return;
-    }
-
     pclose(stream);
     free_2(cmd);
+
+    if ((strlen(abs_path) == 0) || (!result)) {
+        status_text("Could not find transaction filter process!\n");
+        return;
+    }
 #else
     strcpy(abs_path, exec_name);
 #endif
