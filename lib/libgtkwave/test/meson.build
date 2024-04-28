@@ -47,9 +47,11 @@ dump_executable = executable(
 diff = find_program('diff')
 
 dumpfile_tests = [
+    'autocoalesce.fst',
+    'autocoalesce.vcd',
     'basic.fst',
-    'basic.vcd',
     'basic.ghw',
+    'basic.vcd',
 ]
 
 foreach test : dumpfile_tests
@@ -62,6 +64,7 @@ foreach test : dumpfile_tests
         command: [dump_executable, '@INPUT@'],
         output: test + '.dump',
         capture: true,
+        build_always_stale: true,
     )
 
     test(

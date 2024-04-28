@@ -1,0 +1,147 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_NANO
+range: 0 - 7
+global time offset: 0
+
+Tree
+----
+w[2] (kind=GW_TREE_KIND_UNKNOWN, t_which=5)
+w[1] (kind=GW_TREE_KIND_UNKNOWN, t_which=4)
+w[0] (kind=GW_TREE_KIND_UNKNOWN, t_which=3)
+v[2] (kind=GW_TREE_KIND_UNKNOWN, t_which=2)
+v[1] (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+v[0] (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+v[0]
+    vec_root: v[0]
+    vec_chain: v[1]
+    node: v[0]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 12
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 1
+            0 @ 2
+            1 @ 3
+            0 @ 4
+            1 @ 5
+            0 @ 6
+            1 @ 7
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+v[1]
+    vec_root: v[0]
+    vec_chain: v[2]
+    node: v[1]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 1, 1
+        numhist: 8
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 2
+            0 @ 4
+            1 @ 6
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+v[2]
+    vec_root: v[0]
+    node: v[2]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 2, 2
+        numhist: 6
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 4
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+w[0]
+    vec_root: w[2]
+    node: w[0]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 12
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 1
+            0 @ 2
+            1 @ 3
+            0 @ 4
+            1 @ 5
+            0 @ 6
+            1 @ 7
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+w[1]
+    vec_root: w[2]
+    vec_chain: w[0]
+    node: w[1]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 1, 1
+        numhist: 8
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 2
+            0 @ 4
+            1 @ 6
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+w[2]
+    vec_root: w[2]
+    vec_chain: w[1]
+    node: w[2]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 2, 2
+        numhist: 6
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 4
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+
+Aliases
+-------
+v[0], w[0]
+v[1], w[1]
+v[2], w[2]
+

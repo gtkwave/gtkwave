@@ -716,7 +716,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     GwTreeNode *npar = NULL;
     char **f_name = NULL;
     int *f_name_len = NULL, *f_name_max_len = NULL;
-    int allowed_to_autocoalesce;
+    int allowed_to_autocoalesce = 1;
     unsigned int nnam_max = 0;
 
     int f_name_build_buf_len = 128;
