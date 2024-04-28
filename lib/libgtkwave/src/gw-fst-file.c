@@ -12,6 +12,7 @@
 
 G_DEFINE_TYPE(GwFstFile, gw_fst_file, GW_TYPE_DUMP_FILE)
 
+static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np);
 static void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np);
 static void gw_fst_file_import_masked(GwFstFile *self);
 
@@ -56,7 +57,7 @@ static guint gw_fst_file_get_enum_filter_for_node(GwDumpFile *dump_file, GwNode 
     GwFstFile *self = GW_FST_FILE(dump_file);
 
     if (self->enum_nptrs_jrb == NULL) {
-        return NULL;
+        return 0;
     }
 
     JRB enum_nptr = jrb_find_vptr(self->enum_nptrs_jrb, node);
@@ -533,10 +534,13 @@ static void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np)
     if (np->mv.mvlfac->flags & VZT_RD_SYM_F_ALIAS) {
         txidx = self->mvlfacs[txidx].node_alias;
         txidx = self->mvlfacs_rvs_alias[txidx];
+        GwNode *nold = np;
         np = self->mvlfacs[txidx].working_node;
 
-        if (!(np->mv.mvlfac))
+        if (!(np->mv.mvlfac)) {
+            fst_resolver(nold, np);
             return; /* already imported */
+        }
     }
 
     if (np->mv.mvlfac->flags & VZT_RD_SYM_F_SYNVEC) {

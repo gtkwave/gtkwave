@@ -1,0 +1,214 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_NANO
+range: 0 - 9
+global time offset: 0
+
+Tree
+----
+variables (kind=GW_TREE_KIND_VCD_ST_MODULE, t_which=-1)
+    vector[7:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=7)
+    string (kind=GW_TREE_KIND_UNKNOWN, t_which=6)
+    real (kind=GW_TREE_KIND_UNKNOWN, t_which=5)
+    bit (kind=GW_TREE_KIND_UNKNOWN, t_which=4)
+aliases (kind=GW_TREE_KIND_VCD_ST_MODULE, t_which=-1)
+    vector_alias[7:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=3)
+    string_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=2)
+    real_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+    bit_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+aliases.bit_alias
+    node: aliases.bit_alias
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+aliases.real_alias
+    node: aliases.real_alias
+        vartype: GW_VAR_TYPE_VCD_REAL
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 7, 0
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+aliases.string_alias
+    node: aliases.string_alias
+        vartype: GW_VAR_TYPE_GEN_STRING
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: -1, -1
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+aliases.vector_alias[7:0]
+    node: aliases.vector_alias[7:0]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 7, 0
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+variables.bit
+    node: variables.bit
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+variables.real
+    node: variables.real
+        vartype: GW_VAR_TYPE_VCD_REAL
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 7, 0
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+variables.string
+    node: variables.string
+        vartype: GW_VAR_TYPE_GEN_STRING
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: -1, -1
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+variables.vector[7:0]
+    node: variables.vector[7:0]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 7, 0
+        numhist: 13
+        transitions:
+            -2
+            -1
+            0
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9223372036854775806
+            9223372036854775807
+
+Aliases
+-------
+aliases.bit_alias, variables.bit
+aliases.real_alias, variables.real
+aliases.string_alias, variables.string
+aliases.vector_alias[7:0], variables.vector[7:0]
+

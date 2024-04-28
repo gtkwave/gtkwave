@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gw-types.h"
+#include "gw-enums.h"
 #include "gw-bit.h"
 #include "gw-time.h"
 #include "gw-time-range.h"
