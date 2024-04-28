@@ -1,0 +1,354 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_FEMTO
+range: 0 - 10000000
+global time offset: 0
+
+Tree
+----
+top (kind=GW_TREE_KIND_VHDL_ST_DESIGN, t_which=-1)
+    standard (kind=GW_TREE_KIND_VHDL_ST_PACKAGE, t_which=-1)
+    std_logic_1164 (kind=GW_TREE_KIND_VHDL_ST_PACKAGE, t_which=-1)
+    numeric_std (kind=GW_TREE_KIND_VHDL_ST_PACKAGE, t_which=-1)
+    ghw_test (kind=GW_TREE_KIND_VHDL_ST_INSTANCE, t_which=-1)
+        sig_bit (kind=GW_TREE_KIND_VHDL_ST_SIGNAL, t_which=0)
+        sig_bit_vector (kind=GW_TREE_KIND_VHDL_ST_SIGNAL, t_which=-1)
+            [1] (kind=GW_TREE_KIND_UNKNOWN, t_which=2)
+            [0] (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+        sig_std_logic (kind=GW_TREE_KIND_VHDL_ST_SIGNAL, t_which=4)
+        sig_std_logic_vector (kind=GW_TREE_KIND_VHDL_ST_SIGNAL, t_which=-1)
+            [7] (kind=GW_TREE_KIND_UNKNOWN, t_which=12)
+            [6] (kind=GW_TREE_KIND_UNKNOWN, t_which=11)
+            [5] (kind=GW_TREE_KIND_UNKNOWN, t_which=10)
+            [4] (kind=GW_TREE_KIND_UNKNOWN, t_which=9)
+            [3] (kind=GW_TREE_KIND_UNKNOWN, t_which=8)
+            [2] (kind=GW_TREE_KIND_UNKNOWN, t_which=7)
+            [1] (kind=GW_TREE_KIND_UNKNOWN, t_which=6)
+            [0] (kind=GW_TREE_KIND_UNKNOWN, t_which=5)
+        sig_integer (kind=GW_TREE_KIND_VHDL_ST_SIGNAL, t_which=3)
+
+Facs
+----
+top.ghw_test.sig_bit
+    node: top.ghw_test.sig_bit
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_bit_vector[0]
+    vec_root: top.ghw_test.sig_bit_vector[1]
+    node: top.ghw_test.sig_bit_vector[0]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_bit_vector[1]
+    vec_root: top.ghw_test.sig_bit_vector[1]
+    vec_chain: top.ghw_test.sig_bit_vector[0]
+    node: top.ghw_test.sig_bit_vector[1]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_integer
+    node: top.ghw_test.sig_integer
+        vartype: GW_VAR_TYPE_VCD_INTEGER
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 31, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic
+    node: top.ghw_test.sig_std_logic
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[0]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    node: top.ghw_test.sig_std_logic_vector[0]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[1]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    vec_chain: top.ghw_test.sig_std_logic_vector[0]
+    node: top.ghw_test.sig_std_logic_vector[1]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[2]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    vec_chain: top.ghw_test.sig_std_logic_vector[1]
+    node: top.ghw_test.sig_std_logic_vector[2]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[3]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    vec_chain: top.ghw_test.sig_std_logic_vector[2]
+    node: top.ghw_test.sig_std_logic_vector[3]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[4]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    vec_chain: top.ghw_test.sig_std_logic_vector[3]
+    node: top.ghw_test.sig_std_logic_vector[4]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[5]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    vec_chain: top.ghw_test.sig_std_logic_vector[4]
+    node: top.ghw_test.sig_std_logic_vector[5]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[6]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    vec_chain: top.ghw_test.sig_std_logic_vector[5]
+    node: top.ghw_test.sig_std_logic_vector[6]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            1000000
+            2000000
+            3000000
+            4000000
+            5000000
+            6000000
+            7000000
+            8000000
+            9000000
+            10000000
+            9223372036854775806
+            9223372036854775807
+top.ghw_test.sig_std_logic_vector[7]
+    vec_root: top.ghw_test.sig_std_logic_vector[7]
+    vec_chain: top.ghw_test.sig_std_logic_vector[6]
+    node: top.ghw_test.sig_std_logic_vector[7]
+        vartype: GW_VAR_TYPE_UNSPECIFIED_DEFAULT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            -2
+            -1
+            0
+            9223372036854775806
+            9223372036854775807
+
