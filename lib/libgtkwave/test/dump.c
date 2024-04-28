@@ -93,8 +93,39 @@ static void dump_node(GwDumpFile *file, GwNode *node)
     g_print("        numhist: %d\n", node->numhist);
 
     g_print("        transitions:\n");
+
+    // TODO: use gw_hist_ent_to_string
     for (GwHistEnt *iter = &node->head; iter != NULL; iter = iter->next) {
-        g_print("            %" GW_TIME_FORMAT "\n", iter->time);
+        g_print("            ");
+        if (iter->flags & (GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING)) {
+            if (iter->flags & GW_HIST_ENT_FLAG_STRING) {
+                if (iter->time < 0) {
+                    g_print("?");
+                } else {
+                    g_print("\"%s\"", iter->v.h_vector);
+                }
+            } else {
+                g_print("%f", iter->v.h_double);
+            }
+        } else if (node->msi == node->lsi) {
+            g_print("%c", gw_bit_to_char(iter->v.h_val));
+        } else {
+            // TODO: VCD files with aliased vectors cause a segfault without this check
+            if (iter->time < 0) {
+                g_print("?");
+            } else {
+                gint bits = ABS(node->msi - node->lsi + 1);
+                for (gint i = 0; i < bits; i++) {
+                    // TODO: h_vector shouldn't contain values that are not in GwBit
+                    if (iter->v.h_vector[i] < '0') {
+                        g_print("%c", gw_bit_to_char(iter->v.h_vector[i]));
+                    } else {
+                        g_print("%c", iter->v.h_vector[i]);
+                    }
+                }
+            }
+        }
+        g_print(" @ %" GW_TIME_FORMAT "\n", iter->time);
     }
 }
 
