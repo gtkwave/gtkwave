@@ -599,8 +599,14 @@ static void gw_fst_file_import_masked(GwFstFile *self)
             histent_tail = htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             if (len > 1) {
                 htemp->v.h_vector = g_malloc(len);
-                for (i = 0; i < len; i++)
-                    htemp->v.h_vector[i] = GW_BIT_Z;
+                for (i = 0; i < len; i++) {
+                    if (f->flags & VZT_RD_SYM_F_STRING) {
+                        htemp->v.h_vector[i] = 0;
+                        htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
+                    } else {
+                        htemp->v.h_vector[i] = GW_BIT_Z;
+                    }
+                }
             } else {
                 htemp->v.h_val = GW_BIT_Z; /* z */
             }

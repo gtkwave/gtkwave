@@ -77,6 +77,6 @@ foreach test : dumpfile_tests
     test(
         'test-dump-' + test,
         diff,
-        args: [golden_file, dump_target],
+        args: ['-u', golden_file, dump_target],
     )
 endforeach

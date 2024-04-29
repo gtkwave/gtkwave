@@ -87,8 +87,8 @@ aliases.string_alias
             "str-6" @ 6
             "str-7" @ 7
             "str-8" @ 8
-            1.000000 @ 9223372036854775806
-            0.000000 @ 9223372036854775807
+            "UNDEF" @ 9223372036854775806
+            "" @ 9223372036854775807
 aliases.vector_alias[7:0]
     node: aliases.vector_alias[7:0]
         vartype: GW_VAR_TYPE_VCD_WIRE
@@ -178,8 +178,8 @@ variables.string
             "str-6" @ 6
             "str-7" @ 7
             "str-8" @ 8
-            1.000000 @ 9223372036854775806
-            0.000000 @ 9223372036854775807
+            "UNDEF" @ 9223372036854775806
+            "" @ 9223372036854775807
 variables.vector[7:0]
     node: variables.vector[7:0]
         vartype: GW_VAR_TYPE_VCD_WIRE
