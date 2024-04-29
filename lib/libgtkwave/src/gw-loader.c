@@ -4,6 +4,7 @@ typedef struct
 {
     gboolean preserve_glitches;
     gboolean preserve_glitches_real;
+    gboolean autocoalesce;
 
     gchar hierarchy_delimiter;
     gchar alternate_hierarchy_delimiter;
@@ -17,6 +18,7 @@ enum
 {
     PROP_PRESERVE_GLITCHES = 1,
     PROP_PRESERVE_GLITCHES_REAL,
+    PROP_AUTOCOALESCE,
     PROP_HIERARCHY_DELIMITER,
     PROP_ALTERNATE_HIERARCHY_DELIMITER,
     N_PROPERTIES,
@@ -38,6 +40,10 @@ static void gw_loader_set_property(GObject *object,
 
         case PROP_PRESERVE_GLITCHES_REAL:
             gw_loader_set_preserve_glitches_real(self, g_value_get_boolean(value));
+            break;
+
+        case PROP_AUTOCOALESCE:
+            gw_loader_set_autocoalesce(self, g_value_get_boolean(value));
             break;
 
         case PROP_HIERARCHY_DELIMITER:
@@ -68,6 +74,10 @@ static void gw_loader_get_property(GObject *object,
 
         case PROP_PRESERVE_GLITCHES_REAL:
             g_value_set_boolean(value, gw_loader_is_preserve_glitches_real(self));
+            break;
+
+        case PROP_AUTOCOALESCE:
+            g_value_set_boolean(value, gw_loader_is_autocoalesce(self));
             break;
 
         case PROP_HIERARCHY_DELIMITER:
@@ -105,6 +115,13 @@ static void gw_loader_class_init(GwLoaderClass *klass)
                              FALSE,
                              G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
+    properties[PROP_AUTOCOALESCE] =
+        g_param_spec_boolean("autocoalesce",
+                             NULL,
+                             NULL,
+                             TRUE,
+                             G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
     // TODO: change type to unicode character
     properties[PROP_HIERARCHY_DELIMITER] =
         g_param_spec_uchar("hierarchy-delimiter",
@@ -132,6 +149,7 @@ static void gw_loader_init(GwLoader *self)
 {
     GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
 
+    priv->autocoalesce = TRUE;
     priv->hierarchy_delimiter = '.';
 }
 
@@ -209,6 +227,30 @@ gboolean gw_loader_is_preserve_glitches_real(GwLoader *self)
     GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
 
     return priv->preserve_glitches_real;
+}
+
+void gw_loader_set_autocoalesce(GwLoader *self, gboolean autocoalesce)
+{
+    g_return_if_fail(GW_IS_LOADER(self));
+
+    GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
+
+    autocoalesce = !!autocoalesce;
+
+    if (priv->autocoalesce != autocoalesce) {
+        priv->autocoalesce = autocoalesce;
+
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_AUTOCOALESCE]);
+    }
+}
+
+gboolean gw_loader_is_autocoalesce(GwLoader *self)
+{
+    g_return_val_if_fail(GW_IS_LOADER(self), FALSE);
+
+    GwLoaderPrivate *priv = gw_loader_get_instance_private(self);
+
+    return priv->autocoalesce;
 }
 
 void gw_loader_set_hierarchy_delimiter(GwLoader *self, gchar delimiter)
