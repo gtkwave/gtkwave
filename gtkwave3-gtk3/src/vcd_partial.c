@@ -334,13 +334,13 @@ return((int)(*GLOBALS->vst_vcd_partial_c_2));
 static inline signed char getch(void) {
   signed char ch = ((GLOBALS->vst_vcd_partial_c_2!=GLOBALS->vend_vcd_partial_c_2)?((int)(*GLOBALS->vst_vcd_partial_c_2)):(getch_fetch()));
   if(ch>=0) { GLOBALS->vst_vcd_partial_c_2++; };
-  return(ch);
+  return(ch ? ch : -1);
 }
 
 static inline signed char getch_peek(void) {
   signed char ch = ((GLOBALS->vst_vcd_partial_c_2!=GLOBALS->vend_vcd_partial_c_2)?((int)(*GLOBALS->vst_vcd_partial_c_2)):(getch_fetch()));
   /* no increment */
-  return(ch);
+  return(ch ? ch : -1);
 }
 
 

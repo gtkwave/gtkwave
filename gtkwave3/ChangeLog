@@ -1823,6 +1823,7 @@
 		Fix left shift of a negative number warning in fstapi.c.
 		Fix ctrl-A behavior for SST filter entry.
 		Fix for	bad shmat return value in main.c.
-3.3.120 24apr24 Add launchable tag in io.github.gtkwave.GTKWave.metainfo.xml.
+3.3.120 29apr24 Add launchable tag in io.github.gtkwave.GTKWave.metainfo.xml.
 		Fix memory leak on name in build_hierarchy_array().
 		Fix memory leak in ptranslate/ttranslate.
+		Fix case of missing newline at EOF for VCD loaders.
