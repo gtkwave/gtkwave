@@ -665,6 +665,7 @@ static int getch_fetch(GwVcdLoader *self)
     }
 
     self->vcdbyteno += (self->vend - self->vcdbuf);
+    memset(self->vcdbuf, 0, VCD_BSIZ);
     rd = fread(self->vcdbuf, sizeof(char), VCD_BSIZ, self->vcd_handle);
     self->vend = (self->vst = self->vcdbuf) + rd;
 
