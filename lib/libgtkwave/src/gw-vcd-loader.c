@@ -642,7 +642,7 @@ static GwTreeNode *pop_scope(GwVcdLoader *self)
  */
 static void getch_alloc(GwVcdLoader *self)
 {
-    self->vcdbuf = g_malloc0(VCD_BSIZ);
+    self->vcdbuf = g_malloc0(VCD_BSIZ + 1);
     self->vst = self->vcdbuf;
     self->vend = self->vcdbuf;
 }
@@ -660,15 +660,17 @@ static int getch_fetch(GwVcdLoader *self)
     size_t rd;
 
     errno = 0;
-    if (feof(self->vcd_handle))
+    if (feof(self->vcd_handle)) {
         return (-1);
+    }
 
     self->vcdbyteno += (self->vend - self->vcdbuf);
     rd = fread(self->vcdbuf, sizeof(char), VCD_BSIZ, self->vcd_handle);
     self->vend = (self->vst = self->vcdbuf) + rd;
 
-    if ((!rd) || (errno))
+    if ((!rd) || (errno)) {
         return (-1);
+    }
 
     if (self->vcd_fsiz > 0) {
         // TODO: update splash
@@ -681,14 +683,30 @@ static int getch_fetch(GwVcdLoader *self)
 
 static inline signed char getch(GwVcdLoader *self)
 {
-    signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
+    signed char ch;
+    if (self->vst == self->vend) {
+        ch = getch_fetch(self);
+    } else {
+        ch = (signed char)*self->vst;
+        if (ch == 0) {
+            return -1;
+        }
+    }
     self->vst++;
     return (ch);
 }
 
 static inline signed char getch_peek(GwVcdLoader *self)
 {
-    signed char ch = (self->vst != self->vend) ? ((int)(*self->vst)) : (getch_fetch(self));
+    signed char ch;
+    if (self->vst == self->vend) {
+        ch = getch_fetch(self);
+    } else {
+        ch = (signed char)*self->vst;
+        if (ch == 0) {
+            return -1;
+        }
+    }
     /* no increment */
     return (ch);
 }
@@ -960,53 +978,30 @@ static int get_strtoken(GwVcdLoader *self)
     return V_STRING;
 }
 
-static void sync_end(GwVcdLoader *self, const char *hdr)
+static void sync_end(GwVcdLoader *self)
 {
-    int tok;
-
-    if (hdr) {
-        // DEBUG(fprintf(stderr, "%s", hdr));
-    }
     for (;;) {
-        tok = get_token(self);
-        if ((tok == T_END) || (tok == T_EOF))
+        int tok = get_token(self);
+        if (tok == T_END || tok == T_EOF) {
             break;
-        // if (hdr) {
-        //     DEBUG(fprintf(stderr, " %s", self->yytext));
-        // }
+        }
     }
-    // if (hdr) {
-    //     DEBUG(fprintf(stderr, "\n"));
-    // }
 }
 
-static gboolean version_sync_end(GwVcdLoader *self, const char *hdr)
+static void version_sync_end(GwVcdLoader *self)
 {
-    int tok;
-    gboolean rc = FALSE;
-
-    // if (hdr) {
-    //     DEBUG(fprintf(stderr, "%s", hdr));
-    // }
     for (;;) {
-        tok = get_token(self);
-        if ((tok == T_END) || (tok == T_EOF))
+        int tok = get_token(self);
+        if (tok == T_END || tok == T_EOF) {
             break;
-        // if (hdr) {
-        //     DEBUG(fprintf(stderr, " %s", self->yytext));
-        // }
+        }
 
-        // TODO: wait for reply to https://github.com/gtkwave/gtkwave/issues/331
-        // /* turn off autocoalesce for Icarus */
-        // if (strstr(self->yytext, "Icarus") != NULL) {
-        //     GLOBALS->autocoalesce = 0;
-        //     rc = 1;
-        // }
+        // Turn off autocoalesce for Icarus.
+        // see https://github.com/gtkwave/gtkwave/issues/331 for additional information
+        if (strstr(self->yytext, "Icarus") != NULL) {
+            gw_loader_set_autocoalesce(GW_LOADER(self), FALSE);
+        }
     }
-    // if (hdr) {
-    //     DEBUG(fprintf(stderr, "\n"));
-    // }
-    return rc;
 }
 
 static void parse_valuechange(GwVcdLoader *self)
@@ -1366,7 +1361,7 @@ static void vcd_parse_timezero(GwVcdLoader *self)
 
     // DEBUG(fprintf(stderr, "TIMEZERO: %" GW_TIME_FORMAT "\n",
     // self->global_time_offset));
-    sync_end(self, NULL);
+    sync_end(self);
 }
 
 static void vcd_parse_timescale(GwVcdLoader *self)
@@ -1422,7 +1417,7 @@ static void vcd_parse_timescale(GwVcdLoader *self)
     //               "TIMESCALE: %" GW_TIME_FORMAT " %cs\n",
     //               self->time_scale,
     //               self->time_dimension));
-    sync_end(self, NULL);
+    sync_end(self);
 }
 
 static void vcd_parse_scope(GwVcdLoader *self)
@@ -1523,7 +1518,7 @@ static void vcd_parse_scope(GwVcdLoader *self)
                                            &self->mod_tree_parent);
 
     // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
-    sync_end(self, NULL);
+    sync_end(self);
 }
 
 static void vcd_parse_upscope(GwVcdLoader *self)
@@ -1534,13 +1529,10 @@ static void vcd_parse_upscope(GwVcdLoader *self)
     } else {
         self->mod_tree_parent = NULL;
     }
-    sync_end(self, NULL);
+    sync_end(self);
 }
 
-static gboolean vcd_parse_var_evcd(GwVcdLoader *self,
-                                   struct vcdsymbol *v,
-                                   gint *vtok,
-                                   gboolean disable_autocoalesce)
+static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint *vtok)
 {
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
     gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
@@ -1645,8 +1637,8 @@ static gboolean vcd_parse_var_evcd(GwVcdLoader *self,
     }
 
     if (self->pv != NULL) {
-        if (!strcmp(self->prev_hier_uncompressed_name, v->name) && !disable_autocoalesce &&
-            (!strchr(v->name, '\\'))) {
+        if (!strcmp(self->prev_hier_uncompressed_name, v->name) &&
+            gw_loader_is_autocoalesce(GW_LOADER(self)) && (!strchr(v->name, '\\'))) {
             self->pv->chain = v;
             v->root = self->rootv;
             if (self->pv == self->rootv) {
@@ -1790,7 +1782,7 @@ static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, in
     return TRUE;
 }
 
-static void vcd_parse_var(GwVcdLoader *self, gboolean disable_autocoalesce)
+static void vcd_parse_var(GwVcdLoader *self)
 {
     // TODO: why was this disabled?
     // if ((self->header_over) && (0)) {
@@ -1818,7 +1810,7 @@ static void vcd_parse_var(GwVcdLoader *self, gboolean disable_autocoalesce)
     v->msi = v->lsi = -1;
 
     if (vtok == V_PORT) {
-        if (!vcd_parse_var_evcd(self, v, &vtok, disable_autocoalesce)) {
+        if (!vcd_parse_var_evcd(self, v, &vtok)) {
             goto err;
         }
     } else {
@@ -1911,7 +1903,7 @@ err:
 
 bail:
     if (vtok != V_END)
-        sync_end(self, NULL);
+        sync_end(self);
 }
 
 static void vcd_parse_enddefinitions(GwVcdLoader *self)
@@ -1990,20 +1982,18 @@ static void vcd_parse_string(GwVcdLoader *self)
 
 static void vcd_parse(GwVcdLoader *self)
 {
-    gboolean disable_autocoalesce = FALSE;
-
     for (;;) {
         switch (get_token(self)) {
             case T_COMMENT:
-                sync_end(self, "COMMENT:");
+                sync_end(self);
                 break;
 
             case T_DATE:
-                sync_end(self, "DATE:");
+                sync_end(self);
                 break;
 
             case T_VERSION:
-                disable_autocoalesce = version_sync_end(self, "VERSION:");
+                version_sync_end(self);
                 break;
 
             case T_TIMEZERO:
@@ -2023,7 +2013,7 @@ static void vcd_parse(GwVcdLoader *self)
                 break;
 
             case T_VAR:
-                vcd_parse_var(self, disable_autocoalesce);
+                vcd_parse_var(self);
                 break;
 
             case T_ENDDEFINITIONS:
@@ -2056,14 +2046,14 @@ static void vcd_parse(GwVcdLoader *self)
                 break;
 
             case T_VCDCLOSE:
-                sync_end(self, "VCDCLOSE:");
+                sync_end(self);
                 break; /* next token will be '#' time related followed by $end */
 
             case T_END: /* either closure for dump commands or */
                 break; /* it's spurious                       */
 
             case T_UNKNOWN_KEY:
-                sync_end(self, NULL); /* skip over unknown keywords */
+                sync_end(self);
                 break;
 
             case T_EOF:
