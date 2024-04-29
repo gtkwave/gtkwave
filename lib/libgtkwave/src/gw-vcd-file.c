@@ -582,13 +582,8 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             add_histent(self, *curtime_pnt, np, 's', 1, (char *)vector);
         }
 
-        d = g_malloc(sizeof(double));
-        *d = 1.0;
-        add_histent(self, GW_TIME_MAX - 1, np, 'g', 0, (char *)d);
-
-        d = g_malloc(sizeof(double));
-        *d = 0.0;
-        add_histent(self, GW_TIME_MAX, np, 'g', 0, (char *)d);
+        add_histent(self, GW_TIME_MAX - 1, np, 's', 0, g_strdup("UNDEF"));
+        add_histent(self, GW_TIME_MAX, np, 's', 0, g_strdup(""));
 
         g_free(sbuf);
     } else if (vlist_type == '!') /* error in loading */
