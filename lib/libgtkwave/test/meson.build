@@ -52,6 +52,13 @@ dumpfile_tests = [
     'basic.fst',
     'basic.ghw',
     'basic.vcd',
+    'timescale_100fs_fractional.vcd',
+    'timescale_100fs.fst',
+    'timescale_100fs.vcd',
+    'timescale_1ms.fst',
+    'timescale_1ms.vcd',
+    'timezero.vcd',
+    'timezero.fst',
 ]
 
 foreach test : dumpfile_tests

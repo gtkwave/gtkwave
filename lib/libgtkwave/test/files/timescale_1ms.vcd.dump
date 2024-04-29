@@ -1,0 +1,38 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_MILLI
+range: 0 - 10
+global time offset: 0
+
+Tree
+----
+bit (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+bit
+    node: bit
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 10
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 1
+            0 @ 2
+            1 @ 3
+            0 @ 4
+            1 @ 5
+            0 @ 6
+            1 @ 7
+            0 @ 8
+            1 @ 9
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+
