@@ -1,0 +1,35 @@
+name: 'docs'
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: pip install -r docs/requirements.txt
+
+    - name: Build docs
+      run: make -C docs html
+
+    - name: '🚀 Publish site'
+      if: github.event_name != 'pull_request' && github.ref_name == 'master'
+      run: |
+        cd docs/_build/html
+        touch .nojekyll
+        git init
+        cp ../../../.git/config ./.git/config
+
+        git add .
+        git config --local user.email "Pages@GitHubActions"
+        git config --local user.name "GitHub Actions"
+        git commit -a -m "update $GITHUB_SHA"
+
+        git push -u origin +HEAD:gh-pages
