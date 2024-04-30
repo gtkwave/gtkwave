@@ -20,6 +20,24 @@ static void set_common_settings(GwLoader *loader)
     gw_loader_set_alternate_hierarchy_delimiter(loader, GLOBALS->alt_hier_delimeter);
 }
 
+static GwDumpFile *load(GwLoader *loader, const gchar *fname)
+{
+    GError *error = NULL;
+    GwDumpFile *file = gw_loader_load(loader, fname, &error);
+    if (file == NULL) {
+        g_printerr("Error loading %s: ", fname);
+        if (error != NULL) {
+            g_printerr("%s\n", error->message);
+            g_error_free(error);
+        } else {
+            g_printerr("Unknown error\n");
+        }
+        exit(EXIT_FAILURE);
+    }
+
+    return file;
+}
+
 // TODO: remove
 GwDumpFile *vcd_recoder_main(char *fname)
 {
@@ -33,7 +51,7 @@ GwDumpFile *vcd_recoder_main(char *fname)
     gw_vcd_loader_set_warning_filesize(GW_VCD_LOADER(loader),
                                        global_settings->vcd_warning_filesize);
 
-    GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
+    GwDumpFile *file = load(loader, fname);
 
     g_object_unref(loader);
 
@@ -48,7 +66,7 @@ GwDumpFile *ghw_main(char *fname)
     GwLoader *loader = gw_ghw_loader_new();
     set_common_settings(loader);
 
-    GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
+    GwDumpFile *file = load(loader, fname);
 
     g_object_unref(loader);
 
@@ -64,7 +82,7 @@ GwDumpFile *fst_main(char *fname, char *skip_start, char *skip_end)
     gw_fst_loader_set_start_time(GW_FST_LOADER(loader), skip_start);
     gw_fst_loader_set_end_time(GW_FST_LOADER(loader), skip_end);
 
-    GwDumpFile *file = gw_loader_load(loader, fname, NULL); // TODO: use error
+    GwDumpFile *file = load(loader, fname);
 
     g_object_unref(loader);
 
