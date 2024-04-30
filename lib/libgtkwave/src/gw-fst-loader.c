@@ -214,6 +214,8 @@ static void handle_var(GwFstLoader *self,
                        gint *namlen,
                        guint *nnam_max)
 {
+    (void)self;
+
     char *pnt;
     char *lb_last = NULL;
     char *col_last = NULL;
@@ -426,18 +428,14 @@ static void handle_enumtable(GwFstLoader *self, struct fstHierAttr *attr)
     }
 
     GwEnumFilter *filter = gw_enum_filter_new();
-    for (int i = 0; i < fe->elem_count; i++) {
+    for (guint i = 0; i < fe->elem_count; i++) {
         gw_enum_filter_insert(filter, fe->val_arr[i], fe->literal_arr[i]);
     }
 
     guint index = gw_enum_filter_list_add(self->enum_filters, filter);
 
     if (index + 1 != attr->arg) {
-        // TODO: convert into error/warning
-        fprintf(stderr,
-                FST_RDLOAD "Internal error, nonsequential enum tables "
-                           "definition encountered, exiting.\n");
-        exit(255);
+        g_error("nonsequential enum tables definition encountered");
     }
 
     fstUtilityFreeEnumTable(fe);
@@ -537,7 +535,6 @@ static struct fstHier *extractNextVar(GwFstLoader *self,
 }
 
 static void fst_append_graft_chain(GwFstLoader *self,
-                                   int len,
                                    char *nam,
                                    int which,
                                    GwTreeNode *par)
@@ -701,13 +698,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 {
     GwFstLoader *self = GW_FST_LOADER(loader);
 
-    int i;
     GwNode *n;
     GwSymbol *s;
     GwSymbol *prevsymroot = NULL;
     GwSymbol *prevsym = NULL;
-    int numalias = 0;
-    int numvars = 0;
+    guint numalias = 0;
+    guint numvars = 0;
     GwSymbol *sym_block = NULL;
     GwNode *node_block = NULL;
     struct fstHier *h = NULL;
@@ -755,11 +751,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     nnam_max = 16;
     nnam = g_malloc(nnam_max + 1);
 
-    // TODO: reimplement
-    // if (fstReaderGetFileType(self->fst_reader) == FST_FT_VHDL) {
-    //     GLOBALS->is_vhdl_component_format = 1;
-    // }
-
     self->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
     self->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
 
@@ -787,7 +778,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     char delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
     gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
-    for (i = 0; i < numfacs; i++) {
+    for (guint i = 0; i < numfacs; i++) {
         char buf[65537];
         char *str;
         GwFac *f;
@@ -955,7 +946,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             prevsymroot = prevsym = NULL;
 
             len = sprintf_2_sdd(buf, nnam, node_block[i].msi, node_block[i].lsi);
-            fst_append_graft_chain(self, len, buf, i, npar);
+            fst_append_graft_chain(self, buf, i, npar);
         } else {
             int gatecmp = (f->len == 1) &&
                           (!(f->flags &
@@ -992,7 +983,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 }
 
                 len = sprintf_2_sd(buf, nnam, node_block[i].msi);
-                fst_append_graft_chain(self, len, buf, i, npar);
+                fst_append_graft_chain(self, buf, i, npar);
             } else {
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
@@ -1019,7 +1010,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                     }
                 }
 
-                fst_append_graft_chain(self, strlen(nnam), nnam, i, npar);
+                fst_append_graft_chain(self, nnam, i, npar);
             }
         }
 
@@ -1094,7 +1085,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         f_name_build_buf = NULL;
     }
 
-    for (i = 0; i <= F_NAME_MODULUS; i++) {
+    for (guint i = 0; i <= F_NAME_MODULUS; i++) {
         if (f_name[i]) {
             g_free(f_name[i]);
             f_name[i] = NULL;
@@ -1223,6 +1214,7 @@ if(num_dups)
                                         "has-nonimplicit-directions", self->has_nonimplicit_directions,
                                         "has-supplemental-datatypes", self->has_supplemental_datatypes,
                                         "has-supplemental-vartypes", self->has_supplemental_vartypes,
+                                        "uses-vhdl-component-format", fstReaderGetFileType(self->fst_reader) == FST_FT_VHDL,
                                         NULL);
     // clang-format on
 

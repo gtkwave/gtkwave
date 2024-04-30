@@ -194,11 +194,6 @@ struct Global
     char use_pango_fonts;
 
     /*
-     * fst.c
-     */
-    char is_vhdl_component_format;
-
-    /*
      * globals.c
      */
     struct Global **

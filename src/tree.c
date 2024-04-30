@@ -140,7 +140,7 @@ static void XXX_maketree_nodes(GwTreeNode *t2, GtkTreeIter *iter)
             if (component != NULL) {
                 int tlen = strlen(t2->name) + 2 + 1 + strlen(component) + 1 + 1;
                 tmp = g_alloca(tlen);
-                if (!GLOBALS->is_vhdl_component_format) {
+                if (!gw_dump_file_get_uses_vhdl_component_format(GLOBALS->dump_file)) {
                     sprintf(tmp, "%s  (%s)", t2->name, component);
                 } else {
                     sprintf(tmp, "%s  : %s", t2->name, component);

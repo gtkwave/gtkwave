@@ -171,11 +171,6 @@ static const struct Global globals_base_values = {
     1, /* use_pango_fonts */
 
     /*
-     * fst.c
-     */
-    0, /* is_vhdl_component_format */
-
-    /*
      * globals.c
      */
     NULL, /* dead_context */
