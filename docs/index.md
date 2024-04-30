@@ -9,12 +9,44 @@ GTKWave is a fully featured GTK based wave viewer for Unix, Win32, and Mac OSX w
 
 ```{toctree}
 :hidden:
-introduction
-compiling
-quickstart
-user-interface
-menu
-tcl
+:caption: Introduction
+intro/overview
+intro/why
+intro/what
+```
+
+```{toctree}
+:hidden:
+:caption: Compiling and Installing
+install/unix_linux
+install/win
+install/mac
+```
+
+```{toctree}
+:hidden:
+:caption: Quick Start
+quickstart/sample
+quickstart/launching
+quickstart/displaying
+quickstart/filters
+quickstart/debugging
+```
+
+```{toctree}
+:hidden:
+:caption: User Interface
+ui/gtkwave
+ui/twinwave
+ui/rtlbrowse
+ui/extras
+```
+
+```{toctree}
+:hidden:
+:caption: Tcl Command Syntax
+tcl/commands
+tcl/callbacks
 ```
 
 ```{toctree}
