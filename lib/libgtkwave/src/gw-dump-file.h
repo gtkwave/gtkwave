@@ -51,5 +51,6 @@ gboolean gw_dump_file_has_nonimplicit_directions(GwDumpFile *self);
 gboolean gw_dump_file_has_supplemental_datatypes(GwDumpFile *self);
 gboolean gw_dump_file_has_supplemental_vartypes(GwDumpFile *self);
 gboolean gw_dump_file_has_escaped_names(GwDumpFile *self);
+gboolean gw_dump_file_get_uses_vhdl_component_format(GwDumpFile *self);
 
 G_END_DECLS
