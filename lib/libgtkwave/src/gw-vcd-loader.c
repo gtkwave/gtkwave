@@ -151,20 +151,6 @@ enum
 
 static GParamSpec *properties[N_PROPERTIES];
 
-// TODO: improve error handling
-static void vcd_exit(int status)
-{
-    exit(status);
-
-    // old implementation:
-    // if (GLOBALS->vcd_jmp_buf) {
-    //     splash_finalize();
-    //     longjmp(*(GLOBALS->vcd_jmp_buf), x);
-    // } else {
-    //     exit(x);
-    // }
-}
-
 /**/
 
 static void malform_eof_fix(GwVcdLoader *self)
@@ -1907,17 +1893,22 @@ bail:
         sync_end(self);
 }
 
-static void vcd_parse_enddefinitions(GwVcdLoader *self)
+static void vcd_parse_enddefinitions(GwVcdLoader *self, GError **error)
 {
     self->header_over = TRUE; /* do symbol table management here */
     create_sorted_table(self);
     if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
-        fprintf(stderr, "No symbols in VCD file..nothing to do!\n");
-        vcd_exit(255);
+        g_set_error(error,
+                    GW_DUMP_FILE_ERROR,
+                    GW_DUMP_FILE_ERROR_NO_SYMBOLS,
+                    "No symbols in VCD file");
+        return;
     }
+
+    // TODO: report more detailed error
     if (self->error_count > 0) {
-        fprintf(stderr, "\n%d VCD parse errors encountered, exiting.\n", self->error_count);
-        vcd_exit(255);
+        g_set_error(error, GW_DUMP_FILE_ERROR, GW_DUMP_FILE_ERROR_UNKNOWN, "VCD parse error");
+        return;
     }
 }
 
@@ -1981,9 +1972,11 @@ static void vcd_parse_string(GwVcdLoader *self)
     }
 }
 
-static void vcd_parse(GwVcdLoader *self)
+static void vcd_parse(GwVcdLoader *self, GError **error)
 {
-    for (;;) {
+    g_assert(error != NULL && *error == NULL);
+
+    while (*error == NULL) {
         switch (get_token(self)) {
             case T_COMMENT:
                 sync_end(self);
@@ -2018,7 +2011,7 @@ static void vcd_parse(GwVcdLoader *self)
                 break;
 
             case T_ENDDEFINITIONS:
-                vcd_parse_enddefinitions(self);
+                vcd_parse_enddefinitions(self, error);
                 break;
 
             case T_STRING:
@@ -2692,7 +2685,14 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
 
     self->time_vlist = gw_vlist_create(sizeof(GwTime));
 
-    vcd_parse(self);
+    GError *error_internal = NULL;
+    vcd_parse(self, &error_internal);
+    if (error_internal != NULL) {
+        // TODO: cleanup memory
+        g_propagate_error(error, error_internal);
+        return NULL;
+    }
+
     if (self->varsplit) {
         g_free(self->varsplit);
         self->varsplit = NULL;
@@ -2703,8 +2703,12 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
     vlist_emit_finalize(self);
 
     if (self->symbols_sorted == NULL && self->symbols_indexed == NULL) {
-        fprintf(stderr, "No symbols in VCD file..is it malformed?  Exiting!\n");
-        vcd_exit(255);
+        g_set_error(error,
+                    GW_DUMP_FILE_ERROR,
+                    GW_DUMP_FILE_ERROR_NO_SYMBOLS,
+                    "No symbols in VCD file..is it malformed?");
+        // TODO: cleanup memory
+        return NULL;
     }
 
     fprintf(stderr,
@@ -2725,8 +2729,12 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
     self->global_time_offset *= self->time_scale;
 
     if (min_time == max_time && max_time == GW_TIME_CONSTANT(-1)) {
-        fprintf(stderr, "VCD times range is equal to zero.  Exiting.\n");
-        vcd_exit(255);
+        g_set_error(error,
+                    GW_DUMP_FILE_ERROR,
+                    GW_DUMP_FILE_ERROR_NO_TRANSITIONS,
+                    "No transitions in VCD file");
+        // TODO: cleanup memory
+        return NULL;
     }
 
     vcd_build_symbols(self);

@@ -18,6 +18,8 @@ GQuark gw_dump_file_error_quark(void);
 typedef enum
 {
     GW_DUMP_FILE_ERROR_UNKNOWN,
+    GW_DUMP_FILE_ERROR_NO_SYMBOLS,
+    GW_DUMP_FILE_ERROR_NO_TRANSITIONS,
 } GwDumpFileErrorEnum;
 
 #define GW_TYPE_DUMP_FILE (gw_dump_file_get_type())
