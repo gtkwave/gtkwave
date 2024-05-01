@@ -52,6 +52,7 @@ dumpfile_tests = [
     'basic.fst',
     'basic.ghw',
     'basic.vcd',
+    'synvec.fst',
     'timescale_100fs_fractional.vcd',
     'timescale_100fs.fst',
     'timescale_100fs.vcd',
