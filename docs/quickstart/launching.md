@@ -30,5 +30,6 @@ the GTKWave main window and an RTLBrowse hierarchy window will appear.
 We are now ready to start experimenting with various features of the
 wave viewer and RTLBrowse.
 
-The RTLBrowse window will come up as seen in on page, however none of
-the tree nodes will be opened yet.
+The RTLBrowse window will come up as seen in
+[The RTLBrowse RTL Design Hierarchy window](#the-rtlbrowse-rtl-design-hierarchy-window), 
+however none of the tree nodes will be opened yet.

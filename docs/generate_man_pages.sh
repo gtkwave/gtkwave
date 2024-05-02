@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for m in ../gtkwave3-gtk3/man/*.[15]
+for m in ../man/*.[15]
 do
 	BASE=$(basename "$m")
 	TITLE=${BASE//\.[0-9]/}

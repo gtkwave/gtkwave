@@ -14,7 +14,7 @@ inclusion of an embedded Signal Search Tree (SST) expander to the left
 of the signal section. The viewer typically appears as below when the
 embedded SST is disabled.
 
-:::{figure-md}
+:::{figure-md} the-gtkwave-main-window
 
 ![The GTKWave main window](../_static/images/main-window.png)
 
@@ -95,7 +95,8 @@ appears. Recent versions of the viewer have this variable set to "on"
 which modifies the viewer to use GTK themes and a more compact button
 layout as shown below.
 
-:::{figure-md}
+:::{figure-md} the-main-window-using-the-toolbutton-interface
+
 
 ![The main window using the toolbutton interface](../_static/images/toolbutton-interface.png)
 
@@ -320,12 +321,12 @@ replaced with a Base Time label that indicates the value of the baseline
 marker.
 
 With some dumpfile types, a reload button can be found at the extreme
-right side of the Navigation and Status Panel. It may be seen in on page
-.
+right side of the Navigation and Status Panel. It may be seen in
+[The GTKWave main window](#the-gtkwave-main-window).
+//NOTE: dose that button still exists?
 
-Menu Bar
+## Menu Bar
 
 There are seven submenus in the menu bar: File, Edit, Search, Time,
 Markers, View, and Help. The functions of the individual items in each
-of those submenus will be covered in GTKWave Menu Functions on page
-[35](#anchor-24).
+of those submenus will be covered in [GTKWave Menu Functions](menu.md#gtkwave-menu-functions).

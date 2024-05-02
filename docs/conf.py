@@ -18,17 +18,20 @@ extensions = [
     'sphinx_design',
 ]
 
+templates_path = ['_templates']
+exclude_patterns = []
+
+master_doc = 'index'
+
+# -- Options for MyST ----------------------------------------------------------
+
 myst_enable_extensions = [
     'attrs_inline',
     'colon_fence',
     'deflist',
 ]
 
-templates_path = ['_templates']
-exclude_patterns = []
-
-master_doc = 'index'
-
+myst_heading_anchors = 2
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

@@ -2,10 +2,12 @@
 
 In the preceding section, the viewer was brought up with a save file so
 when the viewer did appear, the main window already had signals present
-as seen in on page . All the signals in a model do not appear on their
-own as this would be unwieldy for large models. Instead, it is up to the
+as seen in [Launching GTKWave](launching.md#launching-gtkwave).
+All the signals in a model do not appear on their own as this would be
+unwieldy for large models. Instead, it is up to the
 user to import signals manually. An exception to this exists for VCD files, see
-the definition of the [`enable_vcd_autosave` *.gtkwaverc* variable](#anchor-6).
+the definition of the
+[`enable_vcd_autosave` *.gtkwaverc* variable](../man/gtkwaverc.5.md#options).
 That said, several requesters exist for importing signals into the main window.
 
 ## Signal Search
@@ -68,21 +70,25 @@ components and signals are intermixed in this gadget rather than being
 separated such that all the components for a given level of hierarchy
 are listed alphabetically at the top and all signals are listed
 alphabetically at the bottom. In order to do this, toggle the Search
-submenu item Search Hierarchy Grouping as described on page
-[43](#anchor-18).
+submenu item Search Hierarchy Grouping as described in
+[Search Hierarchy Grouping](#search-hierarchy-grouping).
+
+// todo: add a before & after
 
 ## Tree Search
 
 The Tree Search Requester is the requester that most users will feel
 comfortable using and is also the requester that can optionally be
 embedded in the main window on versions of GTK greater than or equal to
-2.4. See on page for an example of this.
+2.4. See [The main window using the toolbutton interface](#the-main-window-using-the-toolbutton-interface)
+for an example of this. // todo: use another image here. That one
+is too small
 
 The Tree Search Requester is composed of a top tree selection box, a
 signals box, and a POSIX regular expression filter. The tree selection
 box is used to navigate at the hierarchy level. Click on an item in
-order to show the signals at that level of hierarchy. In the figure on
-page , the "top" level of hierarchy is selected and the signals box
+order to show the signals at that level of hierarchy. In the following
+figure , the "top" level of hierarchy is selected and the signals box
 shows what signals are available at that level of hierarchy. Signals may
 be individually or multiply selected and can be dragged and dropped into
 the signal window. In addition, a POSIX filter can be specified that
@@ -124,7 +130,8 @@ The Pattern Search Requester
 :::
 
 The edges as they are marked by the configuration of
-the Requester in Figure can be seen in on page .
+the Requester can be seen in on
+[The main window using the toolbutton interface](#the-main-window-using-the-toolbutton-interface).
 
 To remove pattern marks, either select another pattern or select the
 View submenu option Remove Pattern Marks. Note that pattern marks save

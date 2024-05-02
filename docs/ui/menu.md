@@ -316,6 +316,7 @@ The Search submenu is used to perform searches on net names and values.
 `Autoname Bundles`
 : *Autoname Bundles* when enabled modifies the bundle up/down operations in the hierarchy and tree searches such that a NULL bundle name is implicitly created which informs GTKWave to create bundle and signal names based on the position in the hierarchy. When disabled, it modifies the bundle up/down operations in the hierarchy and tree searches such that a NULL bundle name is not implicitly created. This informs GTKWave to create bundle and signal names based on the position in the hierarchy only if the user enters a zero-length bundle name. This behavior is the default.
 
+(search-hierarchy-grouping)=
 `Search Hierarchy Grouping`
 : *Search Hierarchy Grouping* when enabled ensures that new members added to the "Tree Search" and "Hierarchy Search" widgets are added alphanumerically: first hierarchy names as a group followed by signal names as a group. This is the default and is recommended. When disabled, hierarchy names and signal names are interleaved together in strict alphanumerical ordering. Note that due to the caching mechanism in "Tree Search", dynamically changing this flag when the widget is active may not produce immediately obvious results. Closing the widget then opening it up again will ensure that it follows the behavior of this flag.
 
