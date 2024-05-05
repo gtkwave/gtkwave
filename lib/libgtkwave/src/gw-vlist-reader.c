@@ -14,6 +14,8 @@ struct _GwVlistReader
 
     guint position;
     guint size;
+
+    GString *string_buffer;
 };
 
 G_DEFINE_TYPE(GwVlistReader, gw_vlist_reader, G_TYPE_OBJECT)
@@ -33,6 +35,7 @@ static void gw_vlist_reader_finalize(GObject *object)
 
     g_clear_pointer(&self->vlist, gw_vlist_destroy);
     g_clear_pointer(&self->depacked, gw_vlist_packer_decompress_destroy);
+    g_string_free(self->string_buffer, TRUE);
 
     G_OBJECT_CLASS(gw_vlist_reader_parent_class)->finalize(object);
 }
@@ -99,7 +102,7 @@ static void gw_vlist_reader_class_init(GwVlistReaderClass *klass)
 
 static void gw_vlist_reader_init(GwVlistReader *self)
 {
-    (void)self;
+    self->string_buffer = g_string_new(NULL);
 }
 
 GwVlistReader *gw_vlist_reader_new(GwVlist *vlist, gboolean prepacked)
@@ -159,6 +162,23 @@ guint32 gw_vlist_reader_read_uv32(GwVlistReader *self)
     }
 
     return accum;
+}
+
+const gchar *gw_vlist_reader_read_string(GwVlistReader *self)
+{
+    g_return_val_if_fail(GW_IS_VLIST_READER(self), NULL);
+
+    g_string_truncate(self->string_buffer, 0);
+
+    while (TRUE) {
+        gint c = gw_vlist_reader_next(self);
+        if (c <= 0) {
+            break;
+        }
+        g_string_append_c(self->string_buffer, c);
+    };
+
+    return self->string_buffer->str;
 }
 
 gboolean gw_vlist_reader_is_done(GwVlistReader *self)
