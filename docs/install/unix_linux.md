@@ -6,7 +6,7 @@ unix_linux_4
 ```
 
 This section focus on compiling and installing GTKWave 3.3 LTS.
-For trying the GTKWave 4, please refer to
+If you want to try the GTKWave 4, please refer to
 [Compiling GTKWave 4](unix_linux_4.md).
 
 Compiling GTKWave on Unix or Linux operating systems should be a
@@ -18,16 +18,15 @@ Linux and AIX.
 Debian, Ubuntu:
 ```bash
 sudo apt install build-essential libbz2-dev liblzma-dev
-sudo apt install gperf
-sudo apt install libgtk-3-dev
-sudo apt install tcl-dev tk-dev # for tcl support
+sudo apt install gperf libgtk-3-dev automake
+sudo apt install tcl-dev tk-dev
 sudo apt install libjudy-dev # optional
-#TODO: Is that all?
 ```
 
 ## Compiling and Installing
 
-Download the source tarball from https://gtkwave.sourceforge.net/
+Download the source tarball from
+[https://gtkwave.sourceforge.net/](https://gtkwave.sourceforge.net/)
 or clone the sources from the git repository:
 
 ```bash
@@ -44,13 +43,13 @@ install into a specific prefix, use the double dash
 For example, to install in `/opt`
 
 ```bash
-./configure --enable-gtk3 --enable-judy --with-gconf --prefix=/opt
+./configure --enable-gtk3 --enable-judy --prefix=/opt
 ```
 
 Or, to install GTKWave globally
 
 ```bash
-./configure --enable-gtk3 --enable-judy --with-gconf
+./configure --enable-gtk3 --enable-judy
 ```
 Use the \--*help* flag to see which options are available.
 

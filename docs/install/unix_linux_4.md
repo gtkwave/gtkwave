@@ -10,8 +10,10 @@ for all notable changes.
 Debian, Ubuntu:
 
 ```bash
-sudo apt install build-essential meson gperf flex desktop-file-utils libgtk-3-dev \
-            libbz2-dev libjudy-dev
+sudo apt install build-essential meson gperf libbz2-dev
+sudo apt install flex desktop-file-utils libgtk-3-dev git
+sudo apt install libgirepository1.0-dev
+sudo apt install libjudy-dev # optional
 ```
 
 Fedora:
@@ -62,8 +64,5 @@ To install GTKWave, run
 sudo meson install -C build
 ```
 
-GTKWave is now installed on your Unix or Linux system. To use it, make
-sure that the *bin/* directory of the install point is in your path.
-For example, if the install point is */usr/local*, ensure that
-*/usr/local/bin* is in your path. How to do this will vary from shell to
-shell.
+GTKWave is now installed on your Unix or Linux system. You can
+find it in your Application launcher.
