@@ -362,7 +362,7 @@ unsigned char *gw_vlist_packer_decompress(GwVlist *v, unsigned int *declen)
     return (mem + WAVE_ZIVWRAP);
 }
 
-void gw_vlist_packer_decompress_destroy(char *mem)
+void gw_vlist_packer_decompress_destroy(guchar *mem)
 {
     g_free(mem - WAVE_ZIVWRAP);
 }

@@ -1,5 +1,6 @@
 #include "gw-vcd-file.h"
 #include "gw-vcd-file-private.h"
+#include "gw-vlist-reader.h"
 #include <stdio.h>
 
 G_DEFINE_TYPE(GwVcdFile, gw_vcd_file, GW_TYPE_DUMP_FILE)
@@ -255,113 +256,65 @@ static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, char ch, 
     }
 }
 
-#define vlist_locate_import(self, x, y) \
-    ((self->is_prepacked) ? ((depacked) + (y)) : gw_vlist_locate((x), (y)))
-
 static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 {
-    GwVlist *v = np->mv.mvlfac_vlist;
     int len = 1;
-    unsigned int list_size;
-    unsigned char vlist_type;
-    /* unsigned int vartype = 0; */ /* scan-build */
-    unsigned int vlist_pos = 0;
-    unsigned char *chp;
+    guint32 vlist_type;
     unsigned int time_idx = 0;
     GwTime *curtime_pnt;
-    unsigned char arr[5];
-    int arr_pos;
-    unsigned int accum;
-    unsigned char ch;
-    unsigned char *depacked = NULL;
 
-    if (!v)
+    if (np->mv.mvlfac_vlist == NULL) {
         return;
-    gw_vlist_uncompress(&v);
-
-    if (self->is_prepacked) {
-        depacked = gw_vlist_packer_decompress(v, &list_size);
-        gw_vlist_destroy(v);
-    } else {
-        list_size = gw_vlist_size(v);
     }
 
-    if (!list_size) {
+    gw_vlist_uncompress(&np->mv.mvlfac_vlist);
+
+    GwVlistReader *reader =
+        gw_vlist_reader_new(g_steal_pointer(&np->mv.mvlfac_vlist), self->is_prepacked);
+
+    if (gw_vlist_reader_is_done(reader)) {
         len = 1;
         vlist_type = '!'; /* possible alias */
     } else {
-        chp = vlist_locate_import(self, v, vlist_pos++);
-        if (chp) {
-            switch ((vlist_type = (*chp & 0x7f))) {
-                case '0':
-                    len = 1;
-                    chp = vlist_locate_import(self, v, vlist_pos++);
-                    if (!chp) {
-                        g_error("Internal error file '%s' line %d", __FILE__, __LINE__);
-                    }
-                    /* vartype = (unsigned int)(*chp & 0x7f); */ /*scan-build */
-                    break;
-
-                case 'B':
-                case 'R':
-                case 'S':
-                    chp = vlist_locate_import(self, v, vlist_pos++);
-                    if (!chp) {
-                        g_error("Internal error file '%s' line %d", __FILE__, __LINE__);
-                    }
-                    /* vartype = (unsigned int)(*chp & 0x7f); */ /* scan-build */
-
-                    arr_pos = accum = 0;
-
-                    do {
-                        chp = vlist_locate_import(self, v, vlist_pos++);
-                        if (!chp)
-                            break;
-                        ch = *chp;
-                        arr[arr_pos++] = ch;
-                    } while (!(ch & 0x80));
-
-                    for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                        ch = arr[arr_pos];
-                        accum <<= 7;
-                        accum |= (unsigned int)(ch & 0x7f);
-                    }
-
-                    len = accum;
-
-                    break;
-
-                default:
-                    g_error("Unsupported vlist type '%c'", vlist_type);
-                    break;
+        vlist_type = gw_vlist_reader_read_uv32(reader);
+        switch (vlist_type) {
+            case '0': {
+                len = 1;
+                gint c = gw_vlist_reader_next(reader);
+                if (c < 0) {
+                    g_error("Internal error file '%s' line %d", __FILE__, __LINE__);
+                }
+                /* vartype = (unsigned int)(*chp & 0x7f); */ /*scan-build */
+                break;
             }
-        } else {
-            len = 1;
-            vlist_type = '!'; /* possible alias */
+
+            case 'B':
+            case 'R':
+            case 'S': {
+                gint c = gw_vlist_reader_next(reader);
+                if (c < 0) {
+                    g_error("Internal error file '%s' line %d", __FILE__, __LINE__);
+                }
+                /* vartype = (unsigned int)(*chp & 0x7f); */ /* scan-build */
+
+                len = gw_vlist_reader_read_uv32(reader);
+
+                break;
+            }
+
+            default:
+                g_error("Unsupported vlist type '%c'", vlist_type);
+                break;
         }
     }
 
     if (vlist_type == '0') /* single bit */
     {
-        while (vlist_pos < list_size) {
+        while (!gw_vlist_reader_is_done(reader)) {
             unsigned int delta, bitval;
             char ascval;
 
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(self, v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
+            guint32 accum = gw_vlist_reader_read_uv32(reader);
 
             if (!(accum & 1)) {
                 delta = accum >> 2;
@@ -392,26 +345,8 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         int dst_len;
         char *vector;
 
-        while (vlist_pos < list_size) {
-            unsigned int delta;
-
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(self, v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
-
-            delta = accum;
+        while (!gw_vlist_reader_is_done(reader)) {
+            guint delta = gw_vlist_reader_read_uv32(reader);
             time_idx += delta;
 
             curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
@@ -423,26 +358,27 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 
             dst_len = 0;
             for (;;) {
-                chp = vlist_locate_import(self, v, vlist_pos++);
-                if (!chp)
+                gint c = gw_vlist_reader_next(reader);
+                if (c < 0) {
                     break;
-                ch = *chp;
-                if ((ch >> 4) == GW_BIT_MASK)
+                }
+                if ((c >> 4) == GW_BIT_MASK) {
+                    break;
+                }
+                if (dst_len == len) {
+                    if (len != 1)
+                        memmove(sbuf, sbuf + 1, dst_len - 1);
+                    dst_len--;
+                }
+                sbuf[dst_len++] = gw_bit_to_char(c >> 4);
+                if ((c & GW_BIT_MASK) == GW_BIT_MASK)
                     break;
                 if (dst_len == len) {
                     if (len != 1)
                         memmove(sbuf, sbuf + 1, dst_len - 1);
                     dst_len--;
                 }
-                sbuf[dst_len++] = gw_bit_to_char(ch >> 4);
-                if ((ch & GW_BIT_MASK) == GW_BIT_MASK)
-                    break;
-                if (dst_len == len) {
-                    if (len != 1)
-                        memmove(sbuf, sbuf + 1, dst_len - 1);
-                    dst_len--;
-                }
-                sbuf[dst_len++] = gw_bit_to_char(ch & GW_BIT_MASK);
+                sbuf[dst_len++] = gw_bit_to_char(c & GW_BIT_MASK);
             }
 
             if (len == 1) {
@@ -482,26 +418,10 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         char *sbuf = g_malloc(64);
         int dst_len;
 
-        while (vlist_pos < list_size) {
+        while (!gw_vlist_reader_is_done(reader)) {
             unsigned int delta;
 
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(self, v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
-
-            delta = accum;
+            delta = gw_vlist_reader_read_uv32(reader);
             time_idx += delta;
 
             curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
@@ -512,13 +432,14 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             }
 
             dst_len = 0;
+            gint c = 0;
             do {
-                chp = vlist_locate_import(self, v, vlist_pos++);
-                if (!chp)
+                c = gw_vlist_reader_next(reader);
+                if (c < 0) {
                     break;
-                ch = *chp;
-                sbuf[dst_len++] = ch;
-            } while (ch);
+                }
+                sbuf[dst_len++] = c;
+            } while (c);
 
             gdouble value = 0.0;
             sscanf(sbuf, "%lg", &value);
@@ -531,29 +452,12 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         g_free(sbuf);
     } else if (vlist_type == 'S') /* string */
     {
-        char *sbuf = g_malloc(list_size); /* being conservative */
+        // TODO: use GString
+        char *sbuf = g_malloc(1000); /* being conservative */
         int dst_len;
 
-        while (vlist_pos < list_size) {
-            unsigned int delta;
-
-            arr_pos = accum = 0;
-
-            do {
-                chp = vlist_locate_import(self, v, vlist_pos++);
-                if (!chp)
-                    break;
-                ch = *chp;
-                arr[arr_pos++] = ch;
-            } while (!(ch & 0x80));
-
-            for (--arr_pos; arr_pos >= 0; arr_pos--) {
-                ch = arr[arr_pos];
-                accum <<= 7;
-                accum |= (unsigned int)(ch & 0x7f);
-            }
-
-            delta = accum;
+        while (!gw_vlist_reader_is_done(reader)) {
+            unsigned int delta = gw_vlist_reader_read_uv32(reader);
             time_idx += delta;
 
             curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
@@ -564,13 +468,14 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             }
 
             dst_len = 0;
+            gint c;
             do {
-                chp = vlist_locate_import(self, v, vlist_pos++);
-                if (!chp)
+                c = gw_vlist_reader_next(reader);
+                if (c < 0) {
                     break;
-                ch = *chp;
-                sbuf[dst_len++] = ch;
-            } while (ch);
+                }
+                sbuf[dst_len++] = c;
+            } while (c != 0);
 
             add_histent_string(self, *curtime_pnt, np, 1, sbuf);
         }
@@ -588,12 +493,7 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         {
             gw_vcd_file_import_trace(self, n2);
 
-            if (self->is_prepacked) {
-                gw_vlist_packer_decompress_destroy((char *)depacked);
-            } else {
-                gw_vlist_destroy(v);
-            }
-            np->mv.mvlfac_vlist = NULL;
+            g_clear_object(&reader);
 
             np->head = n2->head;
             np->curr = n2->curr;
@@ -603,10 +503,5 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         g_error("Error in decompressing vlist for '%s'", np->nname);
     }
 
-    if (self->is_prepacked) {
-        gw_vlist_packer_decompress_destroy((char *)depacked);
-    } else {
-        gw_vlist_destroy(v);
-    }
-    np->mv.mvlfac_vlist = NULL;
+    g_clear_object(&reader);
 }

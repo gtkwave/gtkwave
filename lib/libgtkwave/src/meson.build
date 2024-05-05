@@ -69,6 +69,7 @@ libgtkwave_public_headers = [
 libgtkwave_private_sources = [
     'gw-util.c',
     'gw-vlist-packer.c',
+    'gw-vlist-reader.c',
     'gw-vlist-writer.c',
     'gw-vlist.c',
 ]
