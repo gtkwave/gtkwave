@@ -48,211 +48,208 @@ static void gw_vcd_file_init(GwVcdFile *self)
     self->hist_ent_factory = gw_hist_ent_factory_new();
 }
 
-static void add_histent(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int regadd, char *vector)
+static void add_histent_string(GwVcdFile *self, GwTime tim, GwNode *n, int regadd, const char *str)
+{
+    if (!n->curr) {
+        GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+        he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
+        he->time = -1;
+        he->v.h_vector = NULL;
+
+        n->curr = he;
+        n->head.next = he;
+
+        add_histent_string(self, tim, n, regadd, str);
+    } else {
+        if (regadd) {
+            GwTime time_scale = gw_dump_file_get_time_scale(GW_DUMP_FILE(self));
+            tim *= time_scale;
+        }
+
+        if (n->curr->time == tim) {
+            // TODO: add warning
+            // DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT
+            //              "] Signal [%p].\n",
+            //              tim,
+            //              n));
+            g_free(n->curr->v.h_vector);
+            n->curr->v.h_vector = g_strdup(str); /* we have a glitch! */
+
+            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
+            }
+        } else {
+            GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+            he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
+            he->time = tim;
+            he->v.h_vector = g_strdup(str);
+
+            n->curr->next = he;
+            n->curr = he;
+        }
+    }
+}
+
+static void add_histent_real(GwVcdFile *self, GwTime tim, GwNode *n, int regadd, gdouble value)
+{
+    if (!n->curr) {
+        GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+        he->flags = GW_HIST_ENT_FLAG_REAL;
+        he->time = -1;
+        he->v.h_double = strtod("NaN", NULL);
+
+        n->curr = he;
+        n->head.next = he;
+
+        add_histent_real(self, tim, n, regadd, value);
+    } else {
+        if (regadd) {
+            GwTime time_scale = gw_dump_file_get_time_scale(GW_DUMP_FILE(self));
+            tim *= time_scale;
+        }
+
+        if ((n->curr->v.h_double != value) || (tim == self->start_time) ||
+            (self->preserve_glitches) ||
+            (self->preserve_glitches_real)) /* same region == go skip */
+        {
+            if (n->curr->time == tim) {
+                // TODO: add warning
+                // DEBUG(printf("Warning: Real number Glitch at time [%" GW_TIME_FORMAT
+                //              "] Signal [%p].\n",
+                //              tim,
+                //              n));
+                n->curr->v.h_double = value;
+                if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                    n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
+                }
+            } else {
+                GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+                he->flags = GW_HIST_ENT_FLAG_REAL;
+                he->time = tim;
+                he->v.h_double = value;
+                n->curr->next = he;
+                n->curr = he;
+            }
+        }
+    }
+}
+
+static void add_histent_vector(GwVcdFile *self, GwTime tim, GwNode *n, int regadd, char *vector)
+{
+    if (!n->curr) {
+        GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+        he->time = -1;
+        he->v.h_vector = NULL;
+
+        n->curr = he;
+        n->head.next = he;
+
+        add_histent_vector(self, tim, n, regadd, vector);
+    } else {
+        if (regadd) {
+            GwTime time_scale = gw_dump_file_get_time_scale(GW_DUMP_FILE(self));
+            tim *= time_scale;
+        }
+
+        if ((n->curr->v.h_vector && vector && (strcmp(n->curr->v.h_vector, vector))) ||
+            (tim == self->start_time) || (!n->curr->v.h_vector) ||
+            (self->preserve_glitches)) /* same region == go skip */
+        {
+            if (n->curr->time == tim) {
+                // TODO: add warning
+                // DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
+                //              "] Signal [%p], Value [%c->%c].\n",
+                //              tim,
+                //              n,
+                //              gw_bit_to_char(n->curr->v.h_val),
+                //              ch));
+                g_free(n->curr->v.h_vector);
+                n->curr->v.h_vector = vector; /* we have a glitch! */
+
+                if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                    n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
+                }
+            } else {
+                GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+                he->time = tim;
+                he->v.h_vector = vector;
+
+                n->curr->next = he;
+                n->curr = he;
+            }
+        } else {
+            g_free(vector);
+        }
+    }
+}
+
+static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, char ch, int regadd)
 {
     GwHistEnt *he;
     char heval;
 
     GwTime time_scale = gw_dump_file_get_time_scale(GW_DUMP_FILE(self));
 
-    if (!vector) {
-        if (!n->curr) {
-            he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-            he->time = -1;
-            he->v.h_val = GW_BIT_X;
+    if (!n->curr) {
+        he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+        he->time = -1;
+        he->v.h_val = GW_BIT_X;
 
-            n->curr = he;
-            n->head.next = he;
+        n->curr = he;
+        n->head.next = he;
 
-            add_histent(self, tim, n, ch, regadd, vector);
-        } else {
-            if (regadd) {
-                tim *= time_scale;
-            }
-
-            if (ch == '0')
-                heval = GW_BIT_0;
-            else if (ch == '1')
-                heval = GW_BIT_1;
-            else if ((ch == 'x') || (ch == 'X'))
-                heval = GW_BIT_X;
-            else if ((ch == 'z') || (ch == 'Z'))
-                heval = GW_BIT_Z;
-            else if ((ch == 'h') || (ch == 'H'))
-                heval = GW_BIT_H;
-            else if ((ch == 'u') || (ch == 'U'))
-                heval = GW_BIT_U;
-            else if ((ch == 'w') || (ch == 'W'))
-                heval = GW_BIT_W;
-            else if ((ch == 'l') || (ch == 'L'))
-                heval = GW_BIT_L;
-            else
-                /* if(ch=='-') */ heval = GW_BIT_DASH; /* default */
-
-            if ((n->curr->v.h_val != heval) || (tim == self->start_time) ||
-                (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
-                (self->preserve_glitches)) /* same region == go skip */
-            {
-                if (n->curr->time == tim) {
-                    // TODO: add warning
-                    // DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
-                    //              "] Signal [%p], Value [%c->%c].\n",
-                    //              tim,
-                    //              n,
-                    //              gw_bit_to_char(n->curr->v.h_val),
-                    //              ch));
-                    n->curr->v.h_val = heval; /* we have a glitch! */
-
-                    if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                    }
-                } else {
-                    he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-                    he->time = tim;
-                    he->v.h_val = heval;
-
-                    n->curr->next = he;
-                    if (n->curr->v.h_val == heval) {
-                        n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                    }
-                    n->curr = he;
-                }
-            }
-        }
+        add_histent_scalar(self, tim, n, ch, regadd);
     } else {
-        switch (ch) {
-            case 's': /* string */
-            {
-                if (!n->curr) {
-                    he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-                    he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
-                    he->time = -1;
-                    he->v.h_vector = NULL;
+        if (regadd) {
+            tim *= time_scale;
+        }
 
-                    n->curr = he;
-                    n->head.next = he;
+        if (ch == '0')
+            heval = GW_BIT_0;
+        else if (ch == '1')
+            heval = GW_BIT_1;
+        else if ((ch == 'x') || (ch == 'X'))
+            heval = GW_BIT_X;
+        else if ((ch == 'z') || (ch == 'Z'))
+            heval = GW_BIT_Z;
+        else if ((ch == 'h') || (ch == 'H'))
+            heval = GW_BIT_H;
+        else if ((ch == 'u') || (ch == 'U'))
+            heval = GW_BIT_U;
+        else if ((ch == 'w') || (ch == 'W'))
+            heval = GW_BIT_W;
+        else if ((ch == 'l') || (ch == 'L'))
+            heval = GW_BIT_L;
+        else
+            /* if(ch=='-') */ heval = GW_BIT_DASH; /* default */
 
-                    add_histent(self, tim, n, ch, regadd, vector);
-                } else {
-                    if (regadd) {
-                        tim *= time_scale;
-                    }
+        if ((n->curr->v.h_val != heval) || (tim == self->start_time) ||
+            (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
+            (self->preserve_glitches)) /* same region == go skip */
+        {
+            if (n->curr->time == tim) {
+                // TODO: add warning
+                // DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
+                //              "] Signal [%p], Value [%c->%c].\n",
+                //              tim,
+                //              n,
+                //              gw_bit_to_char(n->curr->v.h_val),
+                //              ch));
+                n->curr->v.h_val = heval; /* we have a glitch! */
 
-                    if (n->curr->time == tim) {
-                        // TODO: add warning
-                        // DEBUG(printf("Warning: String Glitch at time [%" GW_TIME_FORMAT
-                        //              "] Signal [%p].\n",
-                        //              tim,
-                        //              n));
-                        g_free(n->curr->v.h_vector);
-                        n->curr->v.h_vector = vector; /* we have a glitch! */
-
-                        if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                            n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                        }
-                    } else {
-                        he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-                        he->flags = (GW_HIST_ENT_FLAG_STRING | GW_HIST_ENT_FLAG_REAL);
-                        he->time = tim;
-                        he->v.h_vector = vector;
-
-                        n->curr->next = he;
-                        n->curr = he;
-                    }
+                if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
+                    n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                 }
-                break;
-            }
-            case 'g': /* real number */
-            {
-                if (!n->curr) {
-                    he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-                    he->flags = GW_HIST_ENT_FLAG_REAL;
-                    he->time = -1;
-                    he->v.h_double = strtod("NaN", NULL);
+            } else {
+                he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
+                he->time = tim;
+                he->v.h_val = heval;
 
-                    n->curr = he;
-                    n->head.next = he;
-
-                    add_histent(self, tim, n, ch, regadd, vector);
-                } else {
-                    if (regadd) {
-                        tim *= time_scale;
-                    }
-
-                    if ((vector && (n->curr->v.h_double != *(double *)vector)) ||
-                        (tim == self->start_time) || (self->preserve_glitches) ||
-                        (self->preserve_glitches_real)) /* same region == go skip */
-                    {
-                        if (n->curr->time == tim) {
-                            // TODO: add warning
-                            // DEBUG(printf("Warning: Real number Glitch at time [%" GW_TIME_FORMAT
-                            //              "] Signal [%p].\n",
-                            //              tim,
-                            //              n));
-                            n->curr->v.h_double = *((double *)vector);
-                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                            }
-                        } else {
-                            he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-                            he->flags = GW_HIST_ENT_FLAG_REAL;
-                            he->time = tim;
-                            he->v.h_double = *((double *)vector);
-                            n->curr->next = he;
-                            n->curr = he;
-                        }
-                    } else {
-                        g_free(vector);
-                    }
+                n->curr->next = he;
+                if (n->curr->v.h_val == heval) {
+                    n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
                 }
-                break;
-            }
-            default: {
-                if (!n->curr) {
-                    he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-                    he->time = -1;
-                    he->v.h_vector = NULL;
-
-                    n->curr = he;
-                    n->head.next = he;
-
-                    add_histent(self, tim, n, ch, regadd, vector);
-                } else {
-                    if (regadd) {
-                        tim *= time_scale;
-                    }
-
-                    if ((n->curr->v.h_vector && vector && (strcmp(n->curr->v.h_vector, vector))) ||
-                        (tim == self->start_time) || (!n->curr->v.h_vector) ||
-                        (self->preserve_glitches)) /* same region == go skip */
-                    {
-                        if (n->curr->time == tim) {
-                            // TODO: add warning
-                            // DEBUG(printf("Warning: Glitch at time [%" GW_TIME_FORMAT
-                            //              "] Signal [%p], Value [%c->%c].\n",
-                            //              tim,
-                            //              n,
-                            //              gw_bit_to_char(n->curr->v.h_val),
-                            //              ch));
-                            g_free(n->curr->v.h_vector);
-                            n->curr->v.h_vector = vector; /* we have a glitch! */
-
-                            if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
-                                n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
-                            }
-                        } else {
-                            he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
-                            he->time = tim;
-                            he->v.h_vector = vector;
-
-                            n->curr->next = he;
-                            n->curr = he;
-                        }
-                    } else {
-                        g_free(vector);
-                    }
-                }
-                break;
+                n->curr = he;
             }
         }
     }
@@ -276,7 +273,6 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
     int arr_pos;
     unsigned int accum;
     unsigned char ch;
-    double *d;
     unsigned char *depacked = NULL;
 
     if (!v)
@@ -385,11 +381,11 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                         time_idx - delta);
             }
 
-            add_histent(self, *curtime_pnt, np, ascval, 1, NULL);
+            add_histent_scalar(self, *curtime_pnt, np, ascval, 1);
         }
 
-        add_histent(self, GW_TIME_MAX - 1, np, 'x', 0, NULL);
-        add_histent(self, GW_TIME_MAX, np, 'z', 0, NULL);
+        add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x', 0);
+        add_histent_scalar(self, GW_TIME_MAX, np, 'z', 0);
     } else if (vlist_type == 'B') /* bit vector, port type was converted to bit vector already */
     {
         char *sbuf = g_malloc(len + 1);
@@ -450,7 +446,7 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             }
 
             if (len == 1) {
-                add_histent(self, *curtime_pnt, np, sbuf[0], 1, NULL);
+                add_histent_scalar(self, *curtime_pnt, np, sbuf[0], 1);
             } else {
                 vector = g_malloc(len + 1);
                 if (dst_len < len) {
@@ -462,13 +458,13 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                 }
 
                 vector[len] = 0;
-                add_histent(self, *curtime_pnt, np, 0, 1, vector);
+                add_histent_vector(self, *curtime_pnt, np, 1, vector);
             }
         }
 
         if (len == 1) {
-            add_histent(self, GW_TIME_MAX - 1, np, 'x', 0, NULL);
-            add_histent(self, GW_TIME_MAX, np, 'z', 0, NULL);
+            add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x', 0);
+            add_histent_scalar(self, GW_TIME_MAX, np, 'z', 0);
         } else {
             char *x = g_malloc0(len);
             memset(x, 'x', len);
@@ -476,8 +472,8 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             char *z = g_malloc0(len);
             memset(z, 'z', len);
 
-            add_histent(self, GW_TIME_MAX - 1, np, 'x', 0, x);
-            add_histent(self, GW_TIME_MAX, np, 'z', 0, z);
+            add_histent_vector(self, GW_TIME_MAX - 1, np, 0, x);
+            add_histent_vector(self, GW_TIME_MAX, np, 0, z);
         }
 
         g_free(sbuf);
@@ -485,7 +481,6 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
     {
         char *sbuf = g_malloc(64);
         int dst_len;
-        char *vector;
 
         while (vlist_pos < list_size) {
             unsigned int delta;
@@ -525,25 +520,19 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                 sbuf[dst_len++] = ch;
             } while (ch);
 
-            vector = g_malloc(sizeof(double));
-            sscanf(sbuf, "%lg", (double *)vector);
-            add_histent(self, *curtime_pnt, np, 'g', 1, (char *)vector);
+            gdouble value = 0.0;
+            sscanf(sbuf, "%lg", &value);
+            add_histent_real(self, *curtime_pnt, np, 1, value);
         }
 
-        d = g_malloc(sizeof(double));
-        *d = 1.0;
-        add_histent(self, GW_TIME_MAX - 1, np, 'g', 0, (char *)d);
-
-        d = g_malloc(sizeof(double));
-        *d = 0.0;
-        add_histent(self, GW_TIME_MAX, np, 'g', 0, (char *)d);
+        add_histent_real(self, GW_TIME_MAX - 1, np, 0, 1.0);
+        add_histent_real(self, GW_TIME_MAX, np, 0, 0.0);
 
         g_free(sbuf);
     } else if (vlist_type == 'S') /* string */
     {
         char *sbuf = g_malloc(list_size); /* being conservative */
         int dst_len;
-        char *vector;
 
         while (vlist_pos < list_size) {
             unsigned int delta;
@@ -583,13 +572,11 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
                 sbuf[dst_len++] = ch;
             } while (ch);
 
-            vector = g_malloc(dst_len + 1);
-            strcpy(vector, sbuf);
-            add_histent(self, *curtime_pnt, np, 's', 1, (char *)vector);
+            add_histent_string(self, *curtime_pnt, np, 1, sbuf);
         }
 
-        add_histent(self, GW_TIME_MAX - 1, np, 's', 0, g_strdup("UNDEF"));
-        add_histent(self, GW_TIME_MAX, np, 's', 0, g_strdup(""));
+        add_histent_string(self, GW_TIME_MAX - 1, np, 0, "UNDEF");
+        add_histent_string(self, GW_TIME_MAX, np, 0, "");
 
         g_free(sbuf);
     } else if (vlist_type == '!') /* error in loading */
