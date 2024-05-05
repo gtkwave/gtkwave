@@ -10,61 +10,75 @@ $end
 $scope module variables $end
 $var wire 1 ! bit $end
 $var wire 8 " vector $end
-$var real 64 # real $end
-$var string 0 $ string $end
+$var integer 32 # integer $end
+$var real 64 $ real $end
+$var string 0 % string $end
+$var wire 1 & one_transition $end
 $upscope $end
 $scope module aliases $end
 $var wire 1 ! bit_alias $end
 $var wire 8 " vector_alias $end
-$var real 64 # real_alias $end
-$var string 0 $ string_alias $end
+$var integer 32 # integer_alias $end
+$var real 64 $ real_alias $end
+$var string 0 % string_alias $end
+$var wire 1 & one_transition_alias $end
 $upscope $end
 $enddefinitions $end
 #0
 $dumpvars
-sstr-0 $
-r0 #
+sstr-0 %
+r0.5 $
+b00000000000000000000000000000000 #
 b00000000 "
 0!
 $end
 #1
 x!
 b00000001 "
-r1 #
-sstr-1 $
+b00000000000000000000000000000001 #
+r1.5 $
+sstr-1 %
 #2
-sstr-2 $
-r2 #
+sstr-2 %
+r2.5 $
+b00000000000000000000000000000010 #
 b00000010 "
 z!
 #3
 1!
 b00000011 "
-r3 #
-sstr-3 $
+b00000000000000000000000000000011 #
+r3.5 $
+sstr-3 %
 #4
-sstr-4 $
-r4 #
+sstr-4 %
+r4.5 $
+b00000000000000000000000000000100 #
 b00000100 "
 h!
+0&
 #5
 u!
 b00000101 "
-r5 #
-sstr-5 $
+b00000000000000000000000000000101 #
+r5.5 $
+sstr-5 %
 #6
-sstr-6 $
-r6 #
+sstr-6 %
+r6.5 $
+b00000000000000000000000000000110 #
 b00000110 "
 w!
 #7
 l!
 b00000111 "
-r7 #
-sstr-7 $
+b00000000000000000000000000000111 #
+r7.5 $
+sstr-7 %
 #8
-sstr-8 $
-r8 #
+sstr-8 %
+r8.5 $
+b00000000000000000000000000001000 #
 b00001000 "
 -!
 #9
