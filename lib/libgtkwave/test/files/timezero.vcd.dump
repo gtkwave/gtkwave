@@ -110,7 +110,8 @@ aliases.vector_alias[7:0]
             00000110 @ 6
             00000111 @ 7
             00001000 @ 8
-            00000000 @ 9223372036854775806
+            xxxxxxxx @ 9223372036854775806
+            zzzzzzzz @ 9223372036854775807
 variables.bit
     node: variables.bit
         vartype: GW_VAR_TYPE_VCD_WIRE
@@ -201,7 +202,8 @@ variables.vector[7:0]
             00000110 @ 6
             00000111 @ 7
             00001000 @ 8
-            00000000 @ 9223372036854775806
+            xxxxxxxx @ 9223372036854775806
+            zzzzzzzz @ 9223372036854775807
 
 Aliases
 -------

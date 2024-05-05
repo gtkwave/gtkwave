@@ -8,14 +8,18 @@ global time offset: 0
 Tree
 ----
 variables (kind=GW_TREE_KIND_VCD_ST_MODULE, t_which=-1)
-    vector[7:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=7)
-    string (kind=GW_TREE_KIND_UNKNOWN, t_which=6)
-    real (kind=GW_TREE_KIND_UNKNOWN, t_which=5)
-    bit (kind=GW_TREE_KIND_UNKNOWN, t_which=4)
+    vector[7:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=11)
+    string (kind=GW_TREE_KIND_UNKNOWN, t_which=10)
+    real (kind=GW_TREE_KIND_UNKNOWN, t_which=9)
+    one_transition (kind=GW_TREE_KIND_UNKNOWN, t_which=8)
+    integer (kind=GW_TREE_KIND_UNKNOWN, t_which=7)
+    bit (kind=GW_TREE_KIND_UNKNOWN, t_which=6)
 aliases (kind=GW_TREE_KIND_VCD_ST_MODULE, t_which=-1)
-    vector_alias[7:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=3)
-    string_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=2)
-    real_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+    vector_alias[7:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=5)
+    string_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=4)
+    real_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=3)
+    one_transition_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=2)
+    integer_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
     bit_alias (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
 
 Facs
@@ -43,6 +47,44 @@ aliases.bit_alias
             - @ 8
             x @ 9223372036854775806
             z @ 9223372036854775807
+aliases.integer_alias
+    node: aliases.integer_alias
+        vartype: GW_VAR_TYPE_VCD_INTEGER
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 31, 0
+        numhist: 13
+        transitions:
+            ? @ -2
+            ? @ -1
+            00000000000000000000000000000000 @ 0
+            00000000000000000000000000000001 @ 1
+            00000000000000000000000000000010 @ 2
+            00000000000000000000000000000011 @ 3
+            00000000000000000000000000000100 @ 4
+            00000000000000000000000000000101 @ 5
+            00000000000000000000000000000110 @ 6
+            00000000000000000000000000000111 @ 7
+            00000000000000000000000000001000 @ 8
+            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx @ 9223372036854775806
+            zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz @ 9223372036854775807
+aliases.one_transition_alias
+    node: aliases.one_transition_alias
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 5
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 4
+            x @ 9223372036854775806
+            z @ 9223372036854775807
 aliases.real_alias
     node: aliases.real_alias
         vartype: GW_VAR_TYPE_VCD_REAL
@@ -55,15 +97,15 @@ aliases.real_alias
         transitions:
             0.000000 @ -2
             nan @ -1
-            0.000000 @ 0
-            1.000000 @ 1
-            2.000000 @ 2
-            3.000000 @ 3
-            4.000000 @ 4
-            5.000000 @ 5
-            6.000000 @ 6
-            7.000000 @ 7
-            8.000000 @ 8
+            0.500000 @ 0
+            1.500000 @ 1
+            2.500000 @ 2
+            3.500000 @ 3
+            4.500000 @ 4
+            5.500000 @ 5
+            6.500000 @ 6
+            7.500000 @ 7
+            8.500000 @ 8
             nan @ 9223372036854775806
             zzzzzzzz @ 9223372036854775807
 aliases.string_alias
@@ -135,6 +177,44 @@ variables.bit
             - @ 8
             x @ 9223372036854775806
             z @ 9223372036854775807
+variables.integer
+    node: variables.integer
+        vartype: GW_VAR_TYPE_VCD_INTEGER
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 31, 0
+        numhist: 13
+        transitions:
+            ? @ -2
+            ? @ -1
+            00000000000000000000000000000000 @ 0
+            00000000000000000000000000000001 @ 1
+            00000000000000000000000000000010 @ 2
+            00000000000000000000000000000011 @ 3
+            00000000000000000000000000000100 @ 4
+            00000000000000000000000000000101 @ 5
+            00000000000000000000000000000110 @ 6
+            00000000000000000000000000000111 @ 7
+            00000000000000000000000000001000 @ 8
+            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx @ 9223372036854775806
+            zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz @ 9223372036854775807
+variables.one_transition
+    node: variables.one_transition
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 5
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 4
+            x @ 9223372036854775806
+            z @ 9223372036854775807
 variables.real
     node: variables.real
         vartype: GW_VAR_TYPE_VCD_REAL
@@ -147,15 +227,15 @@ variables.real
         transitions:
             0.000000 @ -2
             nan @ -1
-            0.000000 @ 0
-            1.000000 @ 1
-            2.000000 @ 2
-            3.000000 @ 3
-            4.000000 @ 4
-            5.000000 @ 5
-            6.000000 @ 6
-            7.000000 @ 7
-            8.000000 @ 8
+            0.500000 @ 0
+            1.500000 @ 1
+            2.500000 @ 2
+            3.500000 @ 3
+            4.500000 @ 4
+            5.500000 @ 5
+            6.500000 @ 6
+            7.500000 @ 7
+            8.500000 @ 8
             nan @ 9223372036854775806
             zzzzzzzz @ 9223372036854775807
 variables.string
@@ -208,6 +288,8 @@ variables.vector[7:0]
 Aliases
 -------
 aliases.bit_alias, variables.bit
+aliases.integer_alias, variables.integer
+aliases.one_transition_alias, variables.one_transition
 aliases.real_alias, variables.real
 aliases.string_alias, variables.string
 aliases.vector_alias[7:0], variables.vector[7:0]

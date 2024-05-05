@@ -470,8 +470,14 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
             add_histent(self, GW_TIME_MAX - 1, np, 'x', 0, NULL);
             add_histent(self, GW_TIME_MAX, np, 'z', 0, NULL);
         } else {
-            add_histent(self, GW_TIME_MAX - 1, np, 'x', 0, g_malloc0(sizeof(char)));
-            add_histent(self, GW_TIME_MAX, np, 'z', 0, g_malloc0(sizeof(char)));
+            char *x = g_malloc0(len);
+            memset(x, 'x', len);
+
+            char *z = g_malloc0(len);
+            memset(z, 'z', len);
+
+            add_histent(self, GW_TIME_MAX - 1, np, 'x', 0, x);
+            add_histent(self, GW_TIME_MAX, np, 'z', 0, z);
         }
 
         g_free(sbuf);
