@@ -10,7 +10,7 @@ Debian, Ubuntu:
 
 ```sh
 apt install build-essential meson gperf flex desktop-file-utils libgtk-3-dev \
-            libbz2-dev libjudy-dev
+            libbz2-dev libjudy-dev libgirepository1.0-dev
 ```
 
 Fedora:
