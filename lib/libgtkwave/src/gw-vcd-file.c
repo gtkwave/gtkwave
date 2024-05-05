@@ -256,12 +256,175 @@ static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, char ch, 
     }
 }
 
+static void gw_vcd_file_import_trace_scalar(GwVcdFile *self, GwNode *np, GwVlistReader *reader)
+{
+    unsigned int time_idx = 0;
+
+    while (!gw_vlist_reader_is_done(reader)) {
+        unsigned int delta, bitval;
+        char ascval;
+
+        guint32 accum = gw_vlist_reader_read_uv32(reader);
+
+        if (!(accum & 1)) {
+            delta = accum >> 2;
+            bitval = (accum >> 1) & 1;
+            ascval = '0' + bitval;
+        } else {
+            delta = accum >> 4;
+            bitval = (accum >> 1) & 7;
+            ascval = RCV_STR[bitval];
+        }
+        time_idx += delta;
+
+        GwTime *curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+        if (!curtime_pnt) {
+            g_error("malformed bitwise signal data for '%s' after time_idx = %d",
+                    np->nname,
+                    time_idx - delta);
+        }
+
+        add_histent_scalar(self, *curtime_pnt, np, ascval, 1);
+    }
+
+    add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x', 0);
+    add_histent_scalar(self, GW_TIME_MAX, np, 'z', 0);
+}
+
+static void gw_vcd_file_import_trace_vector(GwVcdFile *self,
+                                            GwNode *np,
+                                            GwVlistReader *reader,
+                                            guint32 len)
+{
+    unsigned int time_idx = 0;
+    char *sbuf = g_malloc(len + 1);
+
+    while (!gw_vlist_reader_is_done(reader)) {
+        guint delta = gw_vlist_reader_read_uv32(reader);
+        time_idx += delta;
+
+        GwTime *curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+        if (!curtime_pnt) {
+            g_error("malformed 'b' signal data for '%s' after time_idx = %d",
+                    np->nname,
+                    time_idx - delta);
+        }
+
+        guint32 dst_len = 0;
+        for (;;) {
+            gint c = gw_vlist_reader_next(reader);
+            if (c < 0) {
+                break;
+            }
+            if ((c >> 4) == GW_BIT_MASK) {
+                break;
+            }
+            if (dst_len == len) {
+                if (len != 1)
+                    memmove(sbuf, sbuf + 1, dst_len - 1);
+                dst_len--;
+            }
+            sbuf[dst_len++] = gw_bit_to_char(c >> 4);
+            if ((c & GW_BIT_MASK) == GW_BIT_MASK)
+                break;
+            if (dst_len == len) {
+                if (len != 1)
+                    memmove(sbuf, sbuf + 1, dst_len - 1);
+                dst_len--;
+            }
+            sbuf[dst_len++] = gw_bit_to_char(c & GW_BIT_MASK);
+        }
+
+        if (len == 1) {
+            add_histent_scalar(self, *curtime_pnt, np, sbuf[0], 1);
+        } else {
+            char *vector = g_malloc(len + 1);
+            if (dst_len < len) {
+                unsigned char extend = (sbuf[0] == '1') ? '0' : sbuf[0];
+                memset(vector, extend, len - dst_len);
+                memcpy(vector + (len - dst_len), sbuf, dst_len);
+            } else {
+                memcpy(vector, sbuf, len);
+            }
+
+            vector[len] = 0;
+            add_histent_vector(self, *curtime_pnt, np, 1, vector);
+        }
+    }
+
+    if (len == 1) {
+        add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x', 0);
+        add_histent_scalar(self, GW_TIME_MAX, np, 'z', 0);
+    } else {
+        char *x = g_malloc0(len);
+        memset(x, 'x', len);
+
+        char *z = g_malloc0(len);
+        memset(z, 'z', len);
+
+        add_histent_vector(self, GW_TIME_MAX - 1, np, 0, x);
+        add_histent_vector(self, GW_TIME_MAX, np, 0, z);
+    }
+
+    g_free(sbuf);
+}
+
+static void gw_vcd_file_import_trace_real(GwVcdFile *self, GwNode *np, GwVlistReader *reader)
+{
+    unsigned int time_idx = 0;
+
+    while (!gw_vlist_reader_is_done(reader)) {
+        unsigned int delta;
+
+        delta = gw_vlist_reader_read_uv32(reader);
+        time_idx += delta;
+
+        GwTime *curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+        if (!curtime_pnt) {
+            g_error("malformed 'r' signal data for '%s' after time_idx = %d\n",
+                    np->nname,
+                    time_idx - delta);
+        }
+
+        const gchar *str = gw_vlist_reader_read_string(reader);
+
+        gdouble value = 0.0;
+        sscanf(str, "%lg", &value);
+
+        add_histent_real(self, *curtime_pnt, np, 1, value);
+    }
+
+    add_histent_real(self, GW_TIME_MAX - 1, np, 0, 1.0);
+    add_histent_real(self, GW_TIME_MAX, np, 0, 0.0);
+}
+
+static void gw_vcd_file_import_trace_string(GwVcdFile *self, GwNode *np, GwVlistReader *reader)
+{
+    unsigned int time_idx = 0;
+
+    while (!gw_vlist_reader_is_done(reader)) {
+        unsigned int delta = gw_vlist_reader_read_uv32(reader);
+        time_idx += delta;
+
+        GwTime *curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
+        if (!curtime_pnt) {
+            g_error("malformed 's' signal data for '%s' after time_idx = %d",
+                    np->nname,
+                    time_idx - delta);
+        }
+
+        const gchar *str = gw_vlist_reader_read_string(reader);
+        add_histent_string(self, *curtime_pnt, np, 1, str);
+    }
+
+    add_histent_string(self, GW_TIME_MAX - 1, np, 0, "UNDEF");
+    add_histent_string(self, GW_TIME_MAX, np, 0, "");
+}
+
 static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
 {
-    int len = 1;
+    guint32 len = 1;
     guint32 vlist_type;
-    unsigned int time_idx = 0;
-    GwTime *curtime_pnt;
 
     if (np->mv.mvlfac_vlist == NULL) {
         return;
@@ -308,182 +471,14 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
         }
     }
 
-    if (vlist_type == '0') /* single bit */
-    {
-        while (!gw_vlist_reader_is_done(reader)) {
-            unsigned int delta, bitval;
-            char ascval;
-
-            guint32 accum = gw_vlist_reader_read_uv32(reader);
-
-            if (!(accum & 1)) {
-                delta = accum >> 2;
-                bitval = (accum >> 1) & 1;
-                ascval = '0' + bitval;
-            } else {
-                delta = accum >> 4;
-                bitval = (accum >> 1) & 7;
-                ascval = RCV_STR[bitval];
-            }
-            time_idx += delta;
-
-            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                g_error("malformed bitwise signal data for '%s' after time_idx = %d",
-                        np->nname,
-                        time_idx - delta);
-            }
-
-            add_histent_scalar(self, *curtime_pnt, np, ascval, 1);
-        }
-
-        add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x', 0);
-        add_histent_scalar(self, GW_TIME_MAX, np, 'z', 0);
-    } else if (vlist_type == 'B') /* bit vector, port type was converted to bit vector already */
-    {
-        char *sbuf = g_malloc(len + 1);
-        int dst_len;
-        char *vector;
-
-        while (!gw_vlist_reader_is_done(reader)) {
-            guint delta = gw_vlist_reader_read_uv32(reader);
-            time_idx += delta;
-
-            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                g_error("malformed 'b' signal data for '%s' after time_idx = %d",
-                        np->nname,
-                        time_idx - delta);
-            }
-
-            dst_len = 0;
-            for (;;) {
-                gint c = gw_vlist_reader_next(reader);
-                if (c < 0) {
-                    break;
-                }
-                if ((c >> 4) == GW_BIT_MASK) {
-                    break;
-                }
-                if (dst_len == len) {
-                    if (len != 1)
-                        memmove(sbuf, sbuf + 1, dst_len - 1);
-                    dst_len--;
-                }
-                sbuf[dst_len++] = gw_bit_to_char(c >> 4);
-                if ((c & GW_BIT_MASK) == GW_BIT_MASK)
-                    break;
-                if (dst_len == len) {
-                    if (len != 1)
-                        memmove(sbuf, sbuf + 1, dst_len - 1);
-                    dst_len--;
-                }
-                sbuf[dst_len++] = gw_bit_to_char(c & GW_BIT_MASK);
-            }
-
-            if (len == 1) {
-                add_histent_scalar(self, *curtime_pnt, np, sbuf[0], 1);
-            } else {
-                vector = g_malloc(len + 1);
-                if (dst_len < len) {
-                    unsigned char extend = (sbuf[0] == '1') ? '0' : sbuf[0];
-                    memset(vector, extend, len - dst_len);
-                    memcpy(vector + (len - dst_len), sbuf, dst_len);
-                } else {
-                    memcpy(vector, sbuf, len);
-                }
-
-                vector[len] = 0;
-                add_histent_vector(self, *curtime_pnt, np, 1, vector);
-            }
-        }
-
-        if (len == 1) {
-            add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x', 0);
-            add_histent_scalar(self, GW_TIME_MAX, np, 'z', 0);
-        } else {
-            char *x = g_malloc0(len);
-            memset(x, 'x', len);
-
-            char *z = g_malloc0(len);
-            memset(z, 'z', len);
-
-            add_histent_vector(self, GW_TIME_MAX - 1, np, 0, x);
-            add_histent_vector(self, GW_TIME_MAX, np, 0, z);
-        }
-
-        g_free(sbuf);
-    } else if (vlist_type == 'R') /* real */
-    {
-        char *sbuf = g_malloc(64);
-        int dst_len;
-
-        while (!gw_vlist_reader_is_done(reader)) {
-            unsigned int delta;
-
-            delta = gw_vlist_reader_read_uv32(reader);
-            time_idx += delta;
-
-            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                g_error("malformed 'r' signal data for '%s' after time_idx = %d\n",
-                        np->nname,
-                        time_idx - delta);
-            }
-
-            dst_len = 0;
-            gint c = 0;
-            do {
-                c = gw_vlist_reader_next(reader);
-                if (c < 0) {
-                    break;
-                }
-                sbuf[dst_len++] = c;
-            } while (c);
-
-            gdouble value = 0.0;
-            sscanf(sbuf, "%lg", &value);
-            add_histent_real(self, *curtime_pnt, np, 1, value);
-        }
-
-        add_histent_real(self, GW_TIME_MAX - 1, np, 0, 1.0);
-        add_histent_real(self, GW_TIME_MAX, np, 0, 0.0);
-
-        g_free(sbuf);
-    } else if (vlist_type == 'S') /* string */
-    {
-        // TODO: use GString
-        char *sbuf = g_malloc(1000); /* being conservative */
-        int dst_len;
-
-        while (!gw_vlist_reader_is_done(reader)) {
-            unsigned int delta = gw_vlist_reader_read_uv32(reader);
-            time_idx += delta;
-
-            curtime_pnt = gw_vlist_locate(self->time_vlist, time_idx ? time_idx - 1 : 0);
-            if (!curtime_pnt) {
-                g_error("malformed 's' signal data for '%s' after time_idx = %d",
-                        np->nname,
-                        time_idx - delta);
-            }
-
-            dst_len = 0;
-            gint c;
-            do {
-                c = gw_vlist_reader_next(reader);
-                if (c < 0) {
-                    break;
-                }
-                sbuf[dst_len++] = c;
-            } while (c != 0);
-
-            add_histent_string(self, *curtime_pnt, np, 1, sbuf);
-        }
-
-        add_histent_string(self, GW_TIME_MAX - 1, np, 0, "UNDEF");
-        add_histent_string(self, GW_TIME_MAX, np, 0, "");
-
-        g_free(sbuf);
+    if (vlist_type == '0') {
+        gw_vcd_file_import_trace_scalar(self, np, reader);
+    } else if (vlist_type == 'B') {
+        gw_vcd_file_import_trace_vector(self, np, reader, len);
+    } else if (vlist_type == 'R') {
+        gw_vcd_file_import_trace_real(self, np, reader);
+    } else if (vlist_type == 'S') {
+        gw_vcd_file_import_trace_string(self, np, reader);
     } else if (vlist_type == '!') /* error in loading */
     {
         GwNode *n2 = (GwNode *)np->curr;
