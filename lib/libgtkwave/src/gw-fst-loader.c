@@ -31,9 +31,6 @@ struct _GwFstLoader
 
     void *fst_reader;
 
-    const char *scope_name;
-    int scope_name_len;
-
     guint32 next_var_stem;
     guint32 next_var_istem;
 
@@ -62,7 +59,7 @@ struct _GwFstLoader
     JRB synclock_jrb;
     JRB enum_nptrs_jrb;
 
-    GwTreeNode *tree_root;
+    GwTreeBuilder *tree_builder;
 
     // TODO: don't use strings for start and end time
     gchar *start_time;
@@ -75,7 +72,6 @@ struct _GwFstLoader
     gboolean has_supplemental_vartypes;
 
     GwTreeNode *terminals_chain;
-    GwTreeNode *mod_tree_parent;
 
     GwStringTable *component_names;
 };
@@ -170,11 +166,6 @@ static int sprintf_2_sdd(char *s, char *c, int d, int d2)
 
 static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
 {
-    void *fst_reader = self->fst_reader;
-
-    self->scope_name = fstReaderPushScope(fst_reader, scope->name, self->mod_tree_parent);
-    self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
-
     unsigned char ttype = fst_scope_type_to_gw_tree_kind(scope->typ);
 
     gint component_index = WAVE_T_WHICH_UNDEFINED_COMPNAME;
@@ -185,13 +176,10 @@ static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
         component_index = WAVE_T_WHICH_COMPNAME_START - index;
     }
 
-    allocate_and_decorate_module_tree_node(&self->tree_root,
-                                           ttype,
-                                           scope->name,
-                                           component_index,
-                                           self->next_var_stem,
-                                           self->next_var_istem,
-                                           &self->mod_tree_parent);
+    GwTreeNode *node = gw_tree_builder_push_scope(self->tree_builder, ttype, scope->name);
+    node->t_which = component_index;
+    node->t_stem = self->next_var_stem;
+    node->t_istem = self->next_var_istem;
 
     self->next_var_stem = 0;
     self->next_var_istem = 0;
@@ -199,11 +187,7 @@ static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
 
 static void handle_upscope(GwFstLoader *self)
 {
-    void *fst_reader = self->fst_reader;
-
-    self->mod_tree_parent = fstReaderGetCurrentScopeUserInfo(fst_reader);
-    self->scope_name = fstReaderPopScope(fst_reader);
-    self->scope_name_len = fstReaderGetCurrentScopeLen(fst_reader);
+    gw_tree_builder_pop_scope(self->tree_builder);
 }
 
 static void handle_var(GwFstLoader *self,
@@ -534,10 +518,7 @@ static struct fstHier *extractNextVar(GwFstLoader *self,
     return (NULL);
 }
 
-static void fst_append_graft_chain(GwFstLoader *self,
-                                   char *nam,
-                                   int which,
-                                   GwTreeNode *par)
+static void fst_append_graft_chain(GwFstLoader *self, char *nam, int which, GwTreeNode *par)
 {
     GwTreeNode *t = gw_tree_node_new(0, nam);
     t->t_which = which;
@@ -694,6 +675,14 @@ static GwTime unformat_time(const char *buf, char dim)
     return unformat_time_simple(buf, dim);
 }
 
+static void gw_fst_loader_dispose(GObject *object) {
+    GwFstLoader *self = GW_FST_LOADER(object);
+
+    g_clear_object(&self->tree_builder);
+
+    G_OBJECT_CLASS(gw_fst_loader_parent_class)->dispose(object);
+}
+
 static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GError **error)
 {
     GwFstLoader *self = GW_FST_LOADER(loader);
@@ -799,8 +788,10 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
         }
 
-        npar = self->mod_tree_parent;
-        hier_len = self->scope_name ? self->scope_name_len : 0;
+        npar = gw_tree_builder_get_current_scope(self->tree_builder);
+        const gchar *name_prefix = gw_tree_builder_get_name_prefix(self->tree_builder);
+
+        hier_len = name_prefix != NULL ? strlen(name_prefix) : 0;
         if (hier_len) {
             tlen = hier_len + 1 + name_len;
             if (tlen > f_name_max_len[i & F_NAME_MODULUS]) {
@@ -812,7 +803,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 fnam = f_name[i & F_NAME_MODULUS];
             }
 
-            memcpy(fnam, self->scope_name, hier_len);
+            memcpy(fnam, name_prefix, hier_len);
             fnam[hier_len] = delimiter;
             memcpy(fnam + hier_len + 1, nnam, name_len + 1);
         } else {
@@ -1132,8 +1123,8 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
     fprintf(stderr, FST_RDLOAD "Sorting facility hierarchy tree.\n");
 
-    // TODO: add GwTree to GwDumpFile
-    GwTree *tree = gw_tree_new(g_steal_pointer(&self->tree_root));
+    GwTreeNode *root = gw_tree_builder_build(self->tree_builder);
+    GwTree *tree = gw_tree_new(root);
     gw_tree_graft(tree, self->terminals_chain);
     gw_tree_sort(tree);
 
@@ -1266,6 +1257,7 @@ static void gw_fst_loader_class_init(GwFstLoaderClass *klass)
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
     GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
 
+    object_class->dispose = gw_fst_loader_dispose;
     object_class->set_property = gw_fst_loader_set_property;
 
     loader_class->load = gw_fst_loader_load;
@@ -1287,6 +1279,7 @@ static void gw_fst_loader_class_init(GwFstLoaderClass *klass)
 
 static void gw_fst_loader_init(GwFstLoader *self)
 {
+    self->tree_builder = gw_tree_builder_new('.'); // TODO: use prop
     self->stems = gw_stems_new();
     self->component_names = gw_string_table_new();
     self->enum_filters = gw_enum_filter_list_new();

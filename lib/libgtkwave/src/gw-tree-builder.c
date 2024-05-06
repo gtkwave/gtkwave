@@ -169,3 +169,15 @@ GwTreeNode *gw_tree_builder_build(GwTreeBuilder *self)
     GwTreeNode *root = g_ptr_array_index(self->scopes, 0);
     return g_steal_pointer(&root->child);
 }
+
+GwTreeNode *gw_tree_builder_get_current_scope(GwTreeBuilder *self)
+{
+    g_return_val_if_fail(GW_IS_TREE_BUILDER(self), NULL);
+
+    // Return NULL instead of the root scope
+    if (self->scopes->len <= 1) {
+        return NULL;
+    }
+
+    return g_ptr_array_index(self->scopes, self->scopes->len - 1);
+}

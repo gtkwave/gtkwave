@@ -13,5 +13,6 @@ GwTreeNode *gw_tree_builder_push_scope(GwTreeBuilder *self, GwTreeKind kind, con
 void gw_tree_builder_pop_scope(GwTreeBuilder *self);
 const gchar *gw_tree_builder_get_name_prefix(GwTreeBuilder *self);
 GwTreeNode *gw_tree_builder_build(GwTreeBuilder *self);
+GwTreeNode *gw_tree_builder_get_current_scope(GwTreeBuilder *self);
 
 G_END_DECLS
