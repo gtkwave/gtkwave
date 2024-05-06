@@ -1,7 +1,7 @@
 # Compiling GTKWave 4
 
 GTKWave 4 is the development version with a lots of 
-improvement and changes. Please refer to the
+improvements and changes. Please refer to the
 [changelog](https://github.com/gtkwave/gtkwave/blob/master/CHANGELOG.md)
 for all notable changes.
 

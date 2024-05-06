@@ -32,7 +32,7 @@ Linux](./unix_linux.md#compiling-and-installing).
 
 ### Launching
 
-To launch the GTKWave within the Cygwin environment,begin
+To launch the GTKWave within the Cygwin environment, begin
 by initiating an X session using:
 
 ```bash
