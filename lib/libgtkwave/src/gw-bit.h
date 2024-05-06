@@ -26,4 +26,5 @@ typedef enum
 #define GW_BIT_MASK (GW_BIT_COUNT - 1)
 
 gchar gw_bit_to_char(GwBit self);
+GwBit gw_bit_from_char(gchar c);
 GwBit gw_bit_invert(GwBit self);

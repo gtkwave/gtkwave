@@ -148,6 +148,10 @@ static void fst_callback2(void *user_callback_data_pointer,
                 evcd_memcpy(h_vector, (const char *)value, f->len);
             }
 
+            for (gint i = 0; i < f->len; i++) {
+                h_vector[i] = gw_bit_from_char(h_vector[i]);
+            }
+
             if ((l2e->histent_curr) &&
                 (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
             {
@@ -164,45 +168,7 @@ static void fst_callback2(void *user_callback_data_pointer,
             unsigned char h_val;
 
             if (vt != GW_VAR_TYPE_VCD_PORT) {
-                switch (*value) {
-                    case '0':
-                        h_val = GW_BIT_0;
-                        break;
-                    case '1':
-                        h_val = GW_BIT_1;
-                        break;
-                    case 'X':
-                    case 'x':
-                        h_val = GW_BIT_X;
-                        break;
-                    case 'Z':
-                    case 'z':
-                        h_val = GW_BIT_Z;
-                        break;
-                    case 'H':
-                    case 'h':
-                        h_val = GW_BIT_H;
-                        break;
-                    case 'U':
-                    case 'u':
-                        h_val = GW_BIT_U;
-                        break;
-                    case 'W':
-                    case 'w':
-                        h_val = GW_BIT_W;
-                        break;
-                    case 'L':
-                    case 'l':
-                        h_val = GW_BIT_L;
-                        break;
-                    case '-':
-                        h_val = GW_BIT_DASH;
-                        break;
-
-                    default:
-                        h_val = GW_BIT_X;
-                        break;
-                }
+                h_val = gw_bit_from_char(*value);
             } else {
                 char membuf[1];
                 evcd_memcpy(membuf, (const char *)value, 1);

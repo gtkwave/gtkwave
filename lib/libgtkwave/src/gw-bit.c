@@ -32,3 +32,44 @@ GwBit gw_bit_invert(GwBit self)
 
     return INVERSE[self];
 }
+
+GwBit gw_bit_from_char(gchar c)
+{
+    switch (c) {
+        case '0':
+            return GW_BIT_0;
+
+        case '1':
+            return GW_BIT_1;
+
+        case 'X':
+        case 'x':
+            return GW_BIT_X;
+
+        case 'Z':
+        case 'z':
+            return GW_BIT_Z;
+
+        case 'H':
+        case 'h':
+            return GW_BIT_H;
+
+        case 'U':
+        case 'u':
+            return GW_BIT_U;
+
+        case 'W':
+        case 'w':
+            return GW_BIT_W;
+
+        case 'L':
+        case 'l':
+            return GW_BIT_L;
+
+        case '-':
+            return GW_BIT_DASH;
+
+        default:
+            g_return_val_if_reached(GW_BIT_X);
+    }
+}
