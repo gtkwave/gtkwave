@@ -8,11 +8,13 @@ menu
 ## Main Window
 
 The GTKWave visualization tool main window is comprised of a menu bar
-section, a status window, several groups of buttons, a time status
-section, and signal and wave value sections. New with GTKWave 3.0 is the
-inclusion of an embedded Signal Search Tree (SST) expander to the left
-of the signal section. The viewer typically appears as below when the
-embedded SST is disabled.
+section, an embedded Signal Search Tree (SST) expander, several buttons,
+a time status section, and signal and wave value sections.
+
+The main window size and position can be saved between sessions as well
+as the current viewer state. (i.e., which signals are visible, any
+attributes set for those signals such as alignment and inversion, where
+the markers are set, and what pattern marking is active.)
 
 :::{figure-md} the-gtkwave-main-window
 
@@ -21,38 +23,39 @@ embedded SST is disabled.
 The GTKWave main window
 :::
 
-To the extreme left in a frame marked "Signals" is the signal section.
-Signal names can be left or right aligned (left aligned being useful for
-detection of hierarchy differences) and the number of levels of
-hierarchy (as counting from the rightmost side of a signal name)
-displayed can be set by the user.
+To the middle left in a frame marked "Signals" is the signal section.
+Signal names can be left or right aligned, and the number of levels of
+hierarchy displayed can be set by the user. See `Set Max Hier` in
+[Menu-Edit](./menu.md#edit) for more.
 
 To the right of the signal section is the wave section in a frame marked
-"Waves". The top line is used as a timescale and all other lines are
-used to render trace value data with respect the timescale. The vertical
-blue lines in the trace value data section are not normally present. In
-this case they are the result of keying on the rising edge of the
-digital signal "pll_divclk". Analog traces of varying heights can be
-seen as well. Analog traces can dynamically be made as tall or short as
-desired in order to make the viewing of them easier, however the size is
-limited to integer multiples of the height of one digital trace.
+"Waves". The top line is used as a timescale, and all other lines are
+used to render trace value data with respect to the timescale.
+Analog traces of varying heights can be seen as well. Analog traces can
+dynamically be made as tall or short as desired in order to make the
+viewing of them easier. However, the size is limited to integer
+multiples of the height of one digital trace.
 
-With GTK versions greater than or equal to 2.4, an embedded SST is
-available. Drag and Drop of signals from the "Signals" pane inside the
-SST into the "Signals" pane outside of the SST is a convenient way to
-import signals into the viewer.
+To the left of the signal section is the embedded SST section. Users
+can select the desired block from the tree hierarchy. Then Drag and Drop
+the signals from the lower portion of the SST into the "Signals"
+section to import traces.
+
+In addition, signal direction and type information may be displayed in
+the lower portion of the SST section as shown. To filter signals based on
+the I/O port direction, prefix the search regular expression with
+specific case-insensitive identifiers: `+I+` for inputs, `+IO+` for
+input/output, `+O+` for outputs, `+L+` for linkage (in VHDL), and `+B+` for
+buffers (in VHDL). Negative matching filters are also available,where `--`
+only displays I/O ports, `-I-` excludes inputs, and `-O-` excludes outputs.
+Conversely, `++` excludes all I/O ports.
 
 :::{figure-md}
 
-![The main window with an embedded SST](../_static/images/main-window-sst.png)
+![I/O and type information in SST frame with / without filter](../_static/images/SST-filter.png)
 
-The main window with an embedded SST
+I/O and type information in SST frame with / without filter
 :::
-
-The main window size and position can be saved between sessions as well
-as the current viewer state. (i.e., which signals are visible, any
-attributes set for those signals such as alignment and inversion, where
-the markers are set, and what pattern marking is active.)
 
 Depending on the capabilities of the file format loaded into GTKWave,
 the SST frame/window may also depict the type of hierarchy being shown.
@@ -72,97 +75,56 @@ Verilog hierarchy type icons in SST frame
 VHDL (not GHDL) hierarchy type icons in SST frame
 :::
 
-In addition, signal direction and type information may be displayed in
-the lower portion of the SST frame/window as shown. To filter based on
-I/O port direction, prefix the search regular expression with
-case-insensitive +I+ for input, +IO+ for input/output, +O+ for output,
-+L+ for linkage (VHDL), and +B+ for buffer (VHDL). Negative matching
-occurs such that \-- only displays I/O ports, -I- displays all but
-inputs, and -O- displays all but outputs. In a similar fashion, ++
-displays all except I/O ports.
+## Signal Frame
 
 :::{figure-md}
 
-![Verilog I/O and type information in SST frame](../_static/images/sst-verilog.png)
+![Signal frame with scrollbar](../_static/images/signals1.png)
 
-Verilog I/O and type information in SST frame
+Signal frame with scrollbar
 :::
 
-## Toolbutton Interface
-
-The use_toolbutton_interface rc variable controls how the user interface
-appears. Recent versions of the viewer have this variable set to "on"
-which modifies the viewer to use GTK themes and a more compact button
-layout as shown below.
-
-:::{figure-md} the-main-window-using-the-toolbutton-interface
-
-
-![The main window using the toolbutton interface](../_static/images/toolbutton-interface.png)
-
-The main window using the toolbutton interface
-:::
-
-For those who wish to use the old interface, the rc variable must be set
-to "off." In future versions of the viewer, it will be possible for the
-layout of the Toolbutton bar to be specified by a user\'s configuration.
-
-## Signal Subwindow
-
-:::{figure-md}
-
-![Signal subwindow with scrollbar and an "open" collapsible trace](../_static/images/signals1.png)
-
-Signal subwindow with scrollbar and an "open" collapsible trace
-:::
-
-The signal subwindow is nothing more than a list of
-signals, optional comments, and optional blank lines. The following is a
-sample view of the signal subwindow showing a highlighted trace ("clk")
-and a comment trace, "Non-clock Traces \*\*\*". In between the two is a
+The signal frame is nothing more than a list of signals,
+optional comments, and optional blank lines. The following is a
+sample view of the signal frame showing a highlighted trace `clk`
+and a comment trace, `*** Other Traces ***`. In between the two is a
 blank trace inserted by the user. Note that the highlighting of a trace
-can be accomplished by clicking the left mouse button on an entry in the
-signal subwindow. (Use {kbd}`Control+Click` to deselect.)
+can be achieved by clicking the left mouse button on an entry in the
+signal frame. (Use {kbd}`Control+Click` to deselect.)
 
-You will notice that the scrollbar along the bottom of the subwindow in
+You will notice that the scrollbar along the bottom of the frame
 indicates that there is a hidden section to the right. This hidden area
-contains the values of the signals shown. The scrollbar can be manually
-moved to show this area or the pane to the right of the signal subwindow
-can be enlarged in order to allow full viewing of the subwindow.
+contains the values of the signals, any time the primary marker is nailed
+down. The scrollbar can be manually moved to show this area or the pane to the
+right of the signal frame can be enlarged to allow full viewing of the frame.
+
 
 :::{figure-md}
 
-![Signal subwindow with no hidden area from left to right](../_static/images/signals2.png)
+![Signal frame with no hidden area from left to right](../_static/images/signals2.png)
 
-Signal subwindow with no hidden area from left to right
+Signal frame with no hidden area from left to right
 :::
 
-Expanding the size of the subwindow by increasing the
-width of the pane is illustrated in . No area is hidden as reflected by
-the scrollbar which is completely filled in from left to right along its
-length. In addition, the signal values which are present can be read.
-Any time the primary marker is nailed down, there will be an equals
-("=") sign indicating that signal values are present.
-
-:::{figure-md}
-
-![Signal subwindow with left justified signal names](../_static/images/signals2.png)
-
-Signal subwindow with left justified signal names
-:::
-
-As seen in both and , the signal names are right justified and are flush
+As seen above, the signal names are right justified and are flush
 against the equals signs. This is only a matter of personal preference,
-and if desired, as shown in , the signals can be left justified against
-the left margin of the signal subwindow by pressing the key combination
-of {kbd}`Shift+Home`. This is useful when looking at signals if one is
-attempting to determine where hierarchies for different net names
-differ. Press {kbd}`Shift+End` to right justify the signal names. (Right
+and if desired, the signals can be left justified against
+the left margin of the signal frame by pressing the key combination
+of {kbd}`Shift+Home`. This is useful for detection hierarchy differences
+for different net names. Press {kbd}`Shift+End` to right justify the signal names. (Right
 justification is the default behavior). Regardless of the state of
 signal name justification, the signal values are left justified against
-the equals sign and cannot be moved.
+the equal sign and cannot be moved.
 
-Note that the signal subwindow supports a form of self-contained Drag
+
+:::{figure-md}
+
+![Signal frame with left justified signal names](../_static/images/signals3.png)
+
+Signal frame with left justified signal names
+:::
+
+Note that the signal frame supports a form of self-contained Drag
 and Drop such that the right mouse button can be used to harvest all the
 highlighted traces in the window. By holding the right button and moving
 the mouse up and down, a destination for the traces can be selected.
@@ -173,52 +135,49 @@ Multiple traces can be selected by marking the first trace to highlight,
 move the cursor to the destination trace, and {kbd}`Shift+Click` with the left
 mouse button. All the traces between the two will highlight or
 unhighlight accordingly. To highlight all the traces in the signal
-subwindow, {kbd}`Alt+H` can be pressed. To unhighlight them, also press the
+frame, {kbd}`Alt+H` can be pressed. To unhighlight them, also press the
 {kbd}`Shift` key in conjunction with {kbd}`Alt-H`. (This can also be achieved by
 clocking on Highlight All or Unhighlight All in the Edit menu.)
 
 Highlighting or unhighlighting traces by entering regular expressions
 will be covered in the menu section.
 
-Note: the rc variable use_standard_clicking no longer has any effect.
-Regular GTK semantics for this subwindow are always enabled: shift and
-control function as most users expect. In addition, the scroll wheel
-will scroll the traces up and down provided the signal subwindow has
-input focus.
+In addition, the scroll wheel will scroll the traces up and down when the
+signal frame has input focus.
 
-## Wave Subwindow
+## Wave Frame
 
 :::{figure-md}
 
 ![A typical view of the wave subwindow](../_static/images/wave.png)
 
-A typical view of the wave subwindow
+A typical view of the wave frame
 :::
 
-The wave subwindow reformats simulation data into a
-visual format similar to that seen for digital storage scopes. As seen
-in, the wave subwindow contains two scrollbars and a viewing area.
+The wave frame reformats simulation data into a visual format similar
+to that seen for digital storage scopes. The wave frame contains two
+scrollbars and a viewing area.
 
-The scrollbar on the right scrolls not only the wave subwindow, but the
-signal subwindow in lockstep as well. The scrollbar on the bottom is
+The scrollbar on the right controls not only the wave frame, but the
+signal frame in lockstep as well. The scrollbar on the bottom is
 used to scroll the simulation data with respect to the timescale that is
-shown on the top line of the wave subwindow.
+shown on the top line of the wave frame.
 
 The simulation data itself is shown as a horizontal series of traces.
 Values for multi-bit signals can be displayed in varying numeric bases
 such as binary, octal, hexadecimal, decimal, and ASCII. Values for
 single-bit traces are shown as "high" for zero and "low" for one, "z"
 (middle), and "x" (filled-in box). VHDL values are represented in a
-similar fashion but with different colors. The signal subwindow can
-always be used to verify the value of a value, so don't be too
+similar fashion but with different colors. The signal frame can
+always be used to verify the value of a value. So don't be too
 concerned right now if you are not sure of what the single-bit
 representation of a signal looks like or are not sure if you can
 remember.
 
-Two functional markers are available: the primary marker (red, left
-mouse button) which the signal window uses as its pointer for value
-data, and the baseline marker (white, middle mouse button) which is used
-to perform time measurements with respect to the primary marker.
+Two functional markers are available: the primary marker (red, use left
+mouse button to drop) which the signal window uses as its pointer for value
+data, and the baseline marker (white, use middle mouse button to drop) which
+is used to perform time measurements with respect to the primary marker.
 Twenty-six lettered markers "A" through "Z" (dropped or collected
 through menu options) are provided to the user as convenience markers
 for indexing various points of interest in a simulation.
@@ -227,14 +186,14 @@ The primary marker can also be used to navigate with respect to time. It
 can be dropped with the right mouse button and dragged to "open" up a
 region for zooming in closer or out farther in time. It can also be used
 to scroll by holding down the left mouse button and dragging the mouse
-outside the signal subwindow. The simulation data outside of the window
-will then scroll into view with the scrolling being in the opposite
-direction that the primary marker is "pulling" outside of the subwindow.
+outside the signal frame. The simulation data outside the window will
+then scroll into view with the scrolling being in the opposite
+direction that the primary marker is "pulling" outside the frame.
 
-Trace data in the signal subwindow can also be timeshifted as shown in .
-In order to timeshift a trace, highlight the trace in the signal window
-the move over to the wave subwindow and then hold down the left mouse
-button in order to set the primary marker. Press the {kbd}`Control` key then move
+Trace data in the signal frame can also be timeshifted as shown below.
+To timeshift a trace, highlight the trace in the signal window the
+move over to the wave frame and then hold down the left mouse
+button to set the primary marker. Press the {kbd}`Control` key then move
 the primary marker left or right. When the timeshift is as desired,
 release the mouse button then release {kbd}`Control`. If you do not wish to go
 through with the timeshift, release the {kbd}`Control` key before releasing the
@@ -248,16 +207,14 @@ pre-shifted position.
 An example of both positively and negatively timeshifted traces
 :::
 
-To achieve a finer level of granularity for
-timeshifting, menu options are available that allow the user to set
-specific values for a time shift. In this way, the pixel resolution of
-zoom is not the limiting factor in achieving an "exact" shift that suits
-a user's needs.
+To achieve a finer level of granularity for timeshifting, menu options
+are available that allow the user to set specific values for a time shift.
+In this way, the pixel resolution of zoom is not the limiting factor in
+achieving an "exact" shift that suits a user's needs.
 
-## Navigation and Status Panel
+## Navigation Panel and Status Panel
 
-The navigation and status panel occupies the top part of the main window
-just below the menu bar.
+The navigation occupies the top part of the main window.
 
 :::{figure-md}
 
@@ -266,45 +223,72 @@ just below the menu bar.
 The Navigation and Status Panel
 :::
 
-The leftmost part contains a status window used for
-displaying various relevant messages to the user such as the dumpfile
-type, the number of facilities (nets) in a dumpfile, and any other
-information such as an operation that fails or completes successfully.
+The Navigation Panel contains useful tools like `Zoom In/Out` and 
+`Find Edge`.
 
-The Zoom subframe contains six buttons. Three are magnifying glass
-icons. The one marked with a minus ("-") zooms out which displays a
-larger amount of simulation time. The one marked with a plus ("+") zooms
-in closer, displaying less simulation time. The one with a square in it
-is "Zoom Full" which is used either to zoom out to display the full
-range of simulation time or zooms between the primary and baseline
-marker when the baseline marker is set. The remaining non-magnifying
-glass buttons are a back arrow which is a zoom undo. The left arrow
-"zooms" to the start time of simulation and the right arrow zooms to the
-end time. The left and right arrows do not affect the zoom level in or
-out like the plus and minus buttons do; they simply are a shortcut to
-keep from having to move the scrollbar at the bottom of the wave
-subwindow.
+`Menu`
+: _Menu_ will open the Menu of GTKWave.
 
-The Page subframe contains left and right arrows. It scrolls the wave
-window left or right the granularity of one page. It is similar to
-clicking to the left or right of the "visible" gadget in a scrollbar,
-however, given the limited resolution of the GTK scrollbar (floating
-point), for simulations that have large time values, it might be
-necessary to use the page buttons rather than the scrollbar.
+`Cut Traces`
+: _Cut Traces_ removes highlighted signals from the display and places 
+them in an offscreen cut/copy buffer for later Paste operations.
+It also implicitly destroys the previous contents of the cut/copy buffer.
 
-The Shift subframe contains similar arrows that scroll the display one
-pixel or timestep (depending on what the zoom level is).
+`Copy Traces`
+: _Copy Traces_ copies highlighted signals from the display
+and places them in an offscreen cut/copy buffer for later Paste operations.
+It also implicitly destroys the previous contents of the cut/copy buffer.
 
-The "From" and "To" boxes indicate the start and end times for what part
+`Paste Traces`
+: _Paste Traces_ pastes signals from an offscreen cut/copy buffer and
+places them in a group after the last highlighted signal, or at the
+end of the display if no signal is highlighted.
+
+`Zoom Fit`
+: _Zoom Fit_ zoom out to display the full range of simulation time.
+If the baseline marker is set, zooms between the baseline marker
+and the primary marker.
+
+`Zoom In`
+: _Zoom In_ is used to increase the zoom factor around the marker.
+Same as {kbd}`Control+ScrollwheelUp`.
+
+`Zoom Out`
+: _Zoom Out_ is used to decrease the zoom factor around the marker.
+Same as {kbd}`Control+ScrollwheelDown`.
+
+`Zoom Undo`
+: _Zoom Undo_ is used to revert to the previous zoom value used.
+Undo only works one level deep.
+
+`Zoom to Start`
+: _Zoom to Start_ is used to jump to the trace's beginning.
+
+`Zoom to End`
+: _Zoom to End_ is used to jump to the trace's end.
+
+`Find Previous Edge`
+: _Find Previous Edge_ moves the marker to the nearest transition
+on the left side of the primary marker of the last highlighted trace.
+Same as {kbd}`Alt+ScrollwheelUp`.
+If the primary marker is not located, it starts from max time.
+
+`Find Next Edge`
+: _Find Next Edge_ moves the marker to the nearest transition
+on the right side of the primary marker of the last highlighted trace.
+Same as {kbd}`Alt+ScrollwheelDown`.
+If the primary marker is not located, it starts from min time.
+
+`From / To boxes`
+: _The "From" and "To" boxes_ indicate the start and end times for what part
 of the simulation run shall be visible and can be navigated inside the
-wave subwindow. Values can directly be entered into these boxes and
-units (e.g., ns, ps, fs) can also be affixed to values.
+wave frame. Values can directly be entered into these boxes, and
+units (e.g., ns, ps, fs) can also be affixed to values. Named marker
+is also supported, use `MX` for named marker `X`.
 
-The Fetch and Discard subframes modify the "From" and "To" box times.
-Clicking the left Fetch arrow decreases the "From" value. Clicking the
-right Fetch arrow increases the "To" value. Clicking the left Discard
-value increases the "From" value and clicking the right Discard button
-decreases the "To" value.
+`Reload`
+: _Reload_ will reload the currently displayed waveform.
+Only available with some dumpfile types.
 
 The Marker Time label indicates where the primary marker is located. If
 it is not present, a double-dash ("\--") is displayed. The Current Time
@@ -314,18 +298,12 @@ the primary marker. Note that when the primary marker is being
 click-dragged, the Marker Time label will indicate the delta time off
 the initial marker click.
 
-When the baseline marker is set, the Marker Time and Current Time labels
-change. The Marker time label indicates the delta time between the
-baseline marker and the primary marker. The Current Time label is
-replaced with a Base Time label that indicates the value of the baseline
-marker.
+When the baseline marker is set. The Current Time label is replaced
+with the Base Time label that indicates the value of the baseline
+marker. Then the Marker time label indicates the delta time between
+the baseline marker and the primary marker.
 
-With some dumpfile types, a reload button can be found at the extreme
-right side of the Navigation and Status Panel. It may be seen in
-[The GTKWave main window](#the-gtkwave-main-window).
-//NOTE: dose that button still exists?
-
-## Menu Bar
+## Menu
 
 There are seven submenus in the menu bar: File, Edit, Search, Time,
 Markers, View, and Help. The functions of the individual items in each
