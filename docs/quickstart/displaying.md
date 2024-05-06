@@ -80,7 +80,7 @@ submenu item Search Hierarchy Grouping as described in
 The Tree Search Requester is the requester that most users will feel
 comfortable using and is also the requester that can optionally be
 embedded in the main window on versions of GTK greater than or equal to
-2.4. See [The main window using the toolbutton interface](#the-main-window-using-the-toolbutton-interface)
+2.4. See [The GTKWave main window](#the-gtkwave-main-window)
 for an example of this. // todo: use another image here. That one
 is too small
 
@@ -131,7 +131,7 @@ The Pattern Search Requester
 
 The edges as they are marked by the configuration of
 the Requester can be seen in on
-[The main window using the toolbutton interface](#the-main-window-using-the-toolbutton-interface).
+[The GTKWave main window](#the-gtkwave-main-window).
 
 To remove pattern marks, either select another pattern or select the
 View submenu option Remove Pattern Marks. Note that pattern marks save

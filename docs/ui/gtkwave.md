@@ -212,7 +212,7 @@ are available that allow the user to set specific values for a time shift.
 In this way, the pixel resolution of zoom is not the limiting factor in
 achieving an "exact" shift that suits a user's needs.
 
-## Navigation Panel and Status Panel
+## Navigation and Status Panel
 
 The navigation occupies the top part of the main window.
 
