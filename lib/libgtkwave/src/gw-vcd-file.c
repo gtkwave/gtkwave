@@ -5,8 +5,6 @@
 
 G_DEFINE_TYPE(GwVcdFile, gw_vcd_file, GW_TYPE_DUMP_FILE)
 
-#define RCV_STR "xzhuwl-?"
-
 static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np);
 
 static gboolean gw_vcd_file_import_traces(GwDumpFile *dump_file, GwNode **nodes, GError **error)
@@ -120,7 +118,7 @@ static void add_histent_real(GwVcdFile *self, GwTime tim, GwNode *n, gdouble val
     }
 }
 
-static void add_histent_vector(GwVcdFile *self, GwTime tim, GwNode *n, char *vector)
+static void add_histent_vector(GwVcdFile *self, GwTime tim, GwNode *n, guint8 *vector, guint len)
 {
     if (!n->curr) {
         GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
@@ -131,7 +129,7 @@ static void add_histent_vector(GwVcdFile *self, GwTime tim, GwNode *n, char *vec
         n->head.next = he;
     }
 
-    if ((n->curr->v.h_vector && vector && (strcmp(n->curr->v.h_vector, vector))) ||
+    if ((n->curr->v.h_vector && vector && memcmp(n->curr->v.h_vector, vector, len) != 0) ||
         (tim == self->start_time) || (!n->curr->v.h_vector) ||
         (self->preserve_glitches)) /* same region == go skip */
     {
@@ -162,7 +160,7 @@ static void add_histent_vector(GwVcdFile *self, GwTime tim, GwNode *n, char *vec
     }
 }
 
-static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, char ch)
+static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, GwBit bit)
 {
     if (!n->curr) {
         GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
@@ -173,27 +171,7 @@ static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, char ch)
         n->head.next = he;
     }
 
-    GwBit heval;
-    if (ch == '0')
-        heval = GW_BIT_0;
-    else if (ch == '1')
-        heval = GW_BIT_1;
-    else if ((ch == 'x') || (ch == 'X'))
-        heval = GW_BIT_X;
-    else if ((ch == 'z') || (ch == 'Z'))
-        heval = GW_BIT_Z;
-    else if ((ch == 'h') || (ch == 'H'))
-        heval = GW_BIT_H;
-    else if ((ch == 'u') || (ch == 'U'))
-        heval = GW_BIT_U;
-    else if ((ch == 'w') || (ch == 'W'))
-        heval = GW_BIT_W;
-    else if ((ch == 'l') || (ch == 'L'))
-        heval = GW_BIT_L;
-    else
-        /* if(ch=='-') */ heval = GW_BIT_DASH; /* default */
-
-    if ((n->curr->v.h_val != heval) || (tim == self->start_time) ||
+    if ((n->curr->v.h_val != bit) || (tim == self->start_time) ||
         (n->vartype == GW_VAR_TYPE_VCD_EVENT) ||
         (self->preserve_glitches)) /* same region == go skip */
     {
@@ -205,7 +183,7 @@ static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, char ch)
             //              n,
             //              gw_bit_to_char(n->curr->v.h_val),
             //              ch));
-            n->curr->v.h_val = heval; /* we have a glitch! */
+            n->curr->v.h_val = bit; /* we have a glitch! */
 
             if (!(n->curr->flags & GW_HIST_ENT_FLAG_GLITCH)) {
                 n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
@@ -213,10 +191,10 @@ static void add_histent_scalar(GwVcdFile *self, GwTime tim, GwNode *n, char ch)
         } else {
             GwHistEnt *he = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             he->time = tim;
-            he->v.h_val = heval;
+            he->v.h_val = bit;
 
             n->curr->next = he;
-            if (n->curr->v.h_val == heval) {
+            if (n->curr->v.h_val == bit) {
                 n->curr->flags |= GW_HIST_ENT_FLAG_GLITCH; /* set the glitch flag */
             }
             n->curr = he;
@@ -229,20 +207,21 @@ static void gw_vcd_file_import_trace_scalar(GwVcdFile *self, GwNode *np, GwVlist
     GwTime time_scale = gw_dump_file_get_time_scale(GW_DUMP_FILE(self));
     unsigned int time_idx = 0;
 
-    while (!gw_vlist_reader_is_done(reader)) {
-        unsigned int delta, bitval;
-        char ascval;
+    static const GwBit EXTRA_VALUES[] =
+        {GW_BIT_X, GW_BIT_Z, GW_BIT_H, GW_BIT_U, GW_BIT_W, GW_BIT_L, GW_BIT_DASH, GW_BIT_X};
 
+    while (!gw_vlist_reader_is_done(reader)) {
         guint32 accum = gw_vlist_reader_read_uv32(reader);
 
+        GwBit bit;
+        guint delta;
         if (!(accum & 1)) {
             delta = accum >> 2;
-            bitval = (accum >> 1) & 1;
-            ascval = '0' + bitval;
+            bit = accum & 2 ? GW_BIT_1 : GW_BIT_0;
         } else {
             delta = accum >> 4;
-            bitval = (accum >> 1) & 7;
-            ascval = RCV_STR[bitval];
+            guint index = (accum >> 1) & 7;
+            bit = EXTRA_VALUES[index];
         }
         time_idx += delta;
 
@@ -254,11 +233,11 @@ static void gw_vcd_file_import_trace_scalar(GwVcdFile *self, GwNode *np, GwVlist
         }
 
         GwTime t = *curtime_pnt * time_scale;
-        add_histent_scalar(self, t, np, ascval);
+        add_histent_scalar(self, t, np, bit);
     }
 
-    add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x');
-    add_histent_scalar(self, GW_TIME_MAX, np, 'z');
+    add_histent_scalar(self, GW_TIME_MAX - 1, np, GW_BIT_X);
+    add_histent_scalar(self, GW_TIME_MAX, np, GW_BIT_Z);
 }
 
 static void gw_vcd_file_import_trace_vector(GwVcdFile *self,
@@ -268,7 +247,7 @@ static void gw_vcd_file_import_trace_vector(GwVcdFile *self,
 {
     GwTime time_scale = gw_dump_file_get_time_scale(GW_DUMP_FILE(self));
     unsigned int time_idx = 0;
-    char *sbuf = g_malloc(len + 1);
+    guint8 *sbuf = g_malloc(len + 1);
 
     while (!gw_vlist_reader_is_done(reader)) {
         guint delta = gw_vlist_reader_read_uv32(reader);
@@ -296,7 +275,7 @@ static void gw_vcd_file_import_trace_vector(GwVcdFile *self,
                     memmove(sbuf, sbuf + 1, dst_len - 1);
                 dst_len--;
             }
-            sbuf[dst_len++] = gw_bit_to_char(c >> 4);
+            sbuf[dst_len++] = c >> 4;
             if ((c & GW_BIT_MASK) == GW_BIT_MASK)
                 break;
             if (dst_len == len) {
@@ -304,15 +283,15 @@ static void gw_vcd_file_import_trace_vector(GwVcdFile *self,
                     memmove(sbuf, sbuf + 1, dst_len - 1);
                 dst_len--;
             }
-            sbuf[dst_len++] = gw_bit_to_char(c & GW_BIT_MASK);
+            sbuf[dst_len++] = c & GW_BIT_MASK;
         }
 
         if (len == 1) {
             add_histent_scalar(self, t, np, sbuf[0]);
         } else {
-            char *vector = g_malloc(len + 1);
+            guint8 *vector = g_malloc(len + 1);
             if (dst_len < len) {
-                unsigned char extend = (sbuf[0] == '1') ? '0' : sbuf[0];
+                GwBit extend = (sbuf[0] == GW_BIT_1) ? GW_BIT_0 : sbuf[0];
                 memset(vector, extend, len - dst_len);
                 memcpy(vector + (len - dst_len), sbuf, dst_len);
             } else {
@@ -320,22 +299,22 @@ static void gw_vcd_file_import_trace_vector(GwVcdFile *self,
             }
 
             vector[len] = 0;
-            add_histent_vector(self, t, np, vector);
+            add_histent_vector(self, t, np, vector, len);
         }
     }
 
     if (len == 1) {
-        add_histent_scalar(self, GW_TIME_MAX - 1, np, 'x');
-        add_histent_scalar(self, GW_TIME_MAX, np, 'z');
+        add_histent_scalar(self, GW_TIME_MAX - 1, np, GW_BIT_X);
+        add_histent_scalar(self, GW_TIME_MAX, np, GW_BIT_Z);
     } else {
-        char *x = g_malloc0(len);
-        memset(x, 'x', len);
+        guint8 *x = g_malloc0(len);
+        memset(x, GW_BIT_X, len);
 
-        char *z = g_malloc0(len);
-        memset(z, 'z', len);
+        guint8 *z = g_malloc0(len);
+        memset(z, GW_BIT_Z, len);
 
-        add_histent_vector(self, GW_TIME_MAX - 1, np, x);
-        add_histent_vector(self, GW_TIME_MAX, np, z);
+        add_histent_vector(self, GW_TIME_MAX - 1, np, x, len);
+        add_histent_vector(self, GW_TIME_MAX, np, z, len);
     }
 
     g_free(sbuf);

@@ -116,12 +116,7 @@ static void dump_node(GwDumpFile *file, GwNode *node)
             } else {
                 gint bits = ABS(node->msi - node->lsi + 1);
                 for (gint i = 0; i < bits; i++) {
-                    // TODO: h_vector shouldn't contain values that are not in GwBit
-                    if (iter->v.h_vector[i] < '0') {
-                        g_print("%c", gw_bit_to_char(iter->v.h_vector[i]));
-                    } else {
-                        g_print("%c", iter->v.h_vector[i]);
-                    }
+                    g_print("%c", gw_bit_to_char(iter->v.h_vector[i]));
                 }
             }
         }
