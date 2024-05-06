@@ -226,3 +226,20 @@ const gchar *gw_tree_node_get_name(GwTreeNode *self)
 
     return self->name;
 }
+
+void gw_tree_node_free(GwTreeNode *self)
+{
+    if (self == NULL) {
+        return;
+    }
+
+    for (GwTreeNode *iter = self; iter != NULL;) {
+        if (iter->child != NULL) {
+            gw_tree_node_free(self->child);
+        }
+
+        GwTreeNode *next = iter->next;
+        g_free(iter);
+        iter = next;
+    }
+}

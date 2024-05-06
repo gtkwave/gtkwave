@@ -22,7 +22,8 @@
 
 struct vcdsymbol
 {
-    struct vcdsymbol *root, *chain;
+    struct vcdsymbol *root;
+    struct vcdsymbol *chain;
     GwSymbol *sym_chain;
 
     struct vcdsymbol *next;
@@ -30,8 +31,6 @@ struct vcdsymbol
     char *id;
     char *value;
     GwNode **narray;
-    GwHistEnt **tr_array; /* points to synthesized trailers (which can move) */
-    GwHistEnt **app_array; /* points to hptr to append to (which can move) */
 
     unsigned int nid;
     int msi, lsi;
@@ -52,12 +51,6 @@ struct vcdsymbol
 #define RCV_W (1 | (4 << 1))
 #define RCV_L (1 | (5 << 1))
 #define RCV_D (1 | (6 << 1))
-
-typedef struct
-{
-    gchar *name;
-    GwTreeNode *mod_tree_parent;
-} VcdScope;
 
 struct _GwVcdLoader
 {
@@ -113,9 +106,6 @@ struct _GwVcdLoader
 
     GSList *sym_chain;
 
-    GQueue *scopes;
-    GString *name_prefix;
-
     GwBlackoutRegions *blackout_regions;
 
     GwTime time_scale;
@@ -130,7 +120,7 @@ struct _GwVcdLoader
     gchar *prev_hier_uncompressed_name;
 
     GwTreeNode *terminals_chain;
-    GwTreeNode *mod_tree_parent;
+    GwTreeBuilder *tree_builder;
 
     char *module_tree;
     int module_len_tree;
@@ -574,51 +564,6 @@ static unsigned int vlist_emit_finalize(GwVcdLoader *self)
     }
 
     return (cnt);
-}
-
-/******************************************************************/
-
-static void update_name_prefix(GwVcdLoader *self)
-{
-    g_string_truncate(self->name_prefix, 0);
-
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-
-    for (GList *iter = self->scopes->head; iter != NULL; iter = iter->next) {
-        VcdScope *scope = iter->data;
-
-        if (self->name_prefix->len > 0) {
-            g_string_append_c(self->name_prefix, delimiter);
-        }
-
-        g_string_append(self->name_prefix, scope->name);
-    }
-}
-
-static void push_scope(GwVcdLoader *self, const gchar *name, GwTreeNode *tree_parent)
-{
-    VcdScope *scope = g_new0(VcdScope, 1);
-    scope->name = g_strdup(self->yytext);
-    scope->mod_tree_parent = tree_parent;
-
-    g_queue_push_tail(self->scopes, scope);
-
-    update_name_prefix(self);
-}
-
-static GwTreeNode *pop_scope(GwVcdLoader *self)
-{
-    VcdScope *scope = g_queue_pop_tail(self->scopes);
-    g_assert_nonnull(scope);
-
-    GwTreeNode *tree_parent = scope->mod_tree_parent;
-
-    g_free(scope->name);
-    g_free(scope);
-
-    update_name_prefix(self);
-
-    return tree_parent;
 }
 
 /******************************************************************/
@@ -1494,15 +1439,9 @@ static void vcd_parse_scope(GwVcdLoader *self)
     if (tok == T_END || tok == T_EOF) {
         return;
     }
-    push_scope(self, self->yytext, self->mod_tree_parent);
 
-    allocate_and_decorate_module_tree_node(&self->tree_root,
-                                           ttype,
-                                           self->yytext,
-                                           -1,
-                                           0,
-                                           0,
-                                           &self->mod_tree_parent);
+    GwTreeNode *scope = gw_tree_builder_push_scope(self->tree_builder, ttype, self->yytext);
+    scope->t_which = -1;
 
     // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
     sync_end(self);
@@ -1510,12 +1449,9 @@ static void vcd_parse_scope(GwVcdLoader *self)
 
 static void vcd_parse_upscope(GwVcdLoader *self)
 {
-    if (!g_queue_is_empty(self->scopes)) {
-        self->mod_tree_parent = pop_scope(self);
-        // DEBUG(fprintf(stderr, "SCOPE: %s\n", self->name_prefix->str));
-    } else {
-        self->mod_tree_parent = NULL;
-    }
+    // TODO: add warning for upscope without scope
+    gw_tree_builder_pop_scope(self->tree_builder);
+
     sync_end(self);
 }
 
@@ -1590,20 +1526,23 @@ static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint 
     if (*vtok != V_STRING) {
         return FALSE;
     }
-    if (self->name_prefix->len > 0) {
-        v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
-        strcpy(v->name, self->name_prefix->str);
-        v->name[self->name_prefix->len] = delimiter;
+
+    const gchar *name_prefix = gw_tree_builder_get_name_prefix(self->tree_builder);
+    if (name_prefix != NULL) {
+        gsize name_prefix_len = strlen(name_prefix);
+        v->name = g_malloc(name_prefix_len + 1 + self->yylen + 1);
+        strcpy(v->name, name_prefix);
+        v->name[name_prefix_len] = delimiter;
         if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
+            strcpy_vcdalt(self, v->name + name_prefix_len + 1, self->yytext);
         } else {
-            if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
+            if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
                 (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
-                strcpy(sd, self->name_prefix->str);
-                sd[self->name_prefix->len] = delimiter;
-                sd[self->name_prefix->len + 1] = '\\';
-                strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
+                char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
+                strcpy(sd, name_prefix);
+                sd[name_prefix_len] = delimiter;
+                sd[name_prefix_len + 1] = '\\';
+                strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
                 g_free(v->name);
                 v->name = sd;
             }
@@ -1684,20 +1623,22 @@ static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, in
         return FALSE;
     }
 
-    if (self->name_prefix->len > 0) {
-        v->name = g_malloc(self->name_prefix->len + 1 + self->yylen + 1);
-        strcpy(v->name, self->name_prefix->str);
-        v->name[self->name_prefix->len] = delimiter;
+    const gchar *name_prefix = gw_tree_builder_get_name_prefix(self->tree_builder);
+    if (name_prefix != NULL) {
+        gsize name_prefix_len = strlen(name_prefix);
+        v->name = g_malloc(name_prefix_len + 1 + self->yylen + 1);
+        strcpy(v->name, name_prefix);
+        v->name[name_prefix_len] = delimiter;
         if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name + self->name_prefix->len + 1, self->yytext);
+            strcpy_vcdalt(self, v->name + name_prefix_len + 1, self->yytext);
         } else {
-            if ((strcpy_delimfix(self, v->name + self->name_prefix->len + 1, self->yytext)) &&
+            if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
                 (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(self->name_prefix->len + 1 + self->yylen + 2);
-                strcpy(sd, self->name_prefix->str);
-                sd[self->name_prefix->len] = delimiter;
-                sd[self->name_prefix->len + 1] = '\\';
-                strcpy(sd + self->name_prefix->len + 2, v->name + self->name_prefix->len + 1);
+                char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
+                strcpy(sd, name_prefix);
+                sd[name_prefix_len] = delimiter;
+                sd[name_prefix_len + 1] = '\\';
+                strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
                 g_free(v->name);
                 v->name = sd;
             }
@@ -2354,10 +2295,7 @@ static void vcd_cleanup(GwVcdLoader *self)
     self->vcdsymroot = NULL;
     self->vcdsymcurr = NULL;
 
-    g_queue_free_full(self->scopes, g_free);
-    g_string_free(self->name_prefix, TRUE);
-    self->scopes = NULL;
-    self->name_prefix = NULL;
+    g_clear_object(&self->tree_builder);
 
     if (self->is_compressed) {
         pclose(self->vcd_handle);
@@ -2681,8 +2619,6 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
 
     getch_alloc(self); /* alloc membuff for vcd getch buffer */
 
-    update_name_prefix(self);
-
     self->time_vlist = gw_vlist_create(sizeof(GwTime));
 
     GError *error_internal = NULL;
@@ -2739,7 +2675,10 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
 
     vcd_build_symbols(self);
     GwFacs *facs = vcd_sortfacs(self);
+
+    self->tree_root = gw_tree_builder_build(self->tree_builder);
     GwTree *tree = vcd_build_tree(self, facs);
+
     vcd_cleanup(self);
 
     getch_free(self); /* free membuff for vcd getch buffer */
@@ -2882,8 +2821,7 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->T_MAX_STR = 1024;
     self->yytext = g_malloc(self->T_MAX_STR + 1);
     self->vcd_minid = G_MAXUINT;
-    self->scopes = g_queue_new();
-    self->name_prefix = g_string_new(NULL);
+    self->tree_builder = gw_tree_builder_new('.'); // TODO: use hierarchy delimiter property
     self->blackout_regions = gw_blackout_regions_new();
 
     self->vlist_compression_level = Z_DEFAULT_COMPRESSION;

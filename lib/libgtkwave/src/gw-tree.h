@@ -98,6 +98,7 @@ struct _GwTreeNode
 
 GwTreeNode *gw_tree_node_new(GwTreeKind kind, const gchar *name);
 const gchar *gw_tree_node_get_name(GwTreeNode *self);
+void gw_tree_node_free(GwTreeNode *self);
 
 #define GW_TYPE_TREE (gw_tree_get_type())
 G_DECLARE_FINAL_TYPE(GwTree, gw_tree, GW, TREE, GObject)
