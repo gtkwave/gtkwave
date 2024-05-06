@@ -23,6 +23,7 @@
 #include "gw-stems.h"
 #include "gw-var-enums.h"
 #include "gw-tree.h"
+#include "gw-tree-builder.h"
 #include "gw-blackout-regions.h"
 #include "gw-symbol.h"
 #include "gw-string-table.h"
