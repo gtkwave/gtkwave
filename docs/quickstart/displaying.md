@@ -78,10 +78,10 @@ alphabetically at the bottom. In order to do this, toggle the Search
 submenu item Search Hierarchy Grouping as described in
 [Search Hierarchy Grouping](#search-hierarchy-grouping).
 
-However, Hierarchy Search is deprecated and will be removed in
-GTKWave 4. Please use the [Signal Search Tree](#signal-search-tree)
-instead.
-
+:::{attention}
+Deprecated and will be removed in GTKWave 4.
+Please use the [Signal Search Tree](#signal-search-tree) instead.
+:::
 
 ## Signal Search Tree
 
