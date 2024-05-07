@@ -255,11 +255,9 @@ and the primary marker.
 
 `Zoom In`
 : _Zoom In_ is used to increase the zoom factor around the marker.
-Same as {kbd}`Control+ScrollwheelUp`.
 
 `Zoom Out`
 : _Zoom Out_ is used to decrease the zoom factor around the marker.
-Same as {kbd}`Control+ScrollwheelDown`.
 
 `Zoom Undo`
 : _Zoom Undo_ is used to revert to the previous zoom value used.
@@ -274,13 +272,11 @@ Undo only works one level deep.
 `Find Previous Edge`
 : _Find Previous Edge_ moves the marker to the nearest transition
 on the left side of the primary marker of the last highlighted trace.
-Same as {kbd}`Alt+ScrollwheelUp`.
 If the primary marker is not located, it starts from max time.
 
 `Find Next Edge`
 : _Find Next Edge_ moves the marker to the nearest transition
 on the right side of the primary marker of the last highlighted trace.
-Same as {kbd}`Alt+ScrollwheelDown`.
 If the primary marker is not located, it starts from min time.
 
 `From / To boxes`
