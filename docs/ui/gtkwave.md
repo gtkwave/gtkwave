@@ -7,7 +7,7 @@ menu
 
 ## Main Window
 
-The GTKWave visualization tool main window is comprised of a menu bar
+The GTKWave visualization tool main window consists of a menu bar
 section, an embedded Signal Search Tree (SST) expander, several buttons,
 a time status section, and signal and wave value sections.
 
@@ -36,10 +36,14 @@ dynamically be made as tall or short as desired in order to make the
 viewing of them easier. However, the size is limited to integer
 multiples of the height of one digital trace.
 
-To the left of the signal section is the embedded SST section. Users
-can select the desired block from the tree hierarchy. Then Drag and Drop
-the signals from the lower portion of the SST into the "Signals"
-section to import traces.
+To the left of the signal section is the embedded SST section.
+
+## Signal Search Tree
+
+Users can select the desired block from the SST tree hierarchy.
+Then Drag and Drop the signals from the lower portion of the SST
+into the "Signals" section to import traces.
+
 
 In addition, signal direction and type information may be displayed in
 the lower portion of the SST section as shown. To filter signals based on
