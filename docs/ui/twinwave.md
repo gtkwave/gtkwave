@@ -17,5 +17,5 @@ twinwave with the arguments for each gtkwave session listed fully
 separating them with a plus sign.
 
 ```bash
-twinwave a.vcd a.sav + b.vcd b.sav
+twinwave a.vcd a.gtkw + b.vcd b.gtkw
 ```
