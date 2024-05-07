@@ -1,5 +1,10 @@
 # LXT File Format
 
+:::{attention}
+Deprecated and will be removed in GTKWave 4.
+Please use `FST` instead.
+:::
+
 ## LXT Framing
 
 The three most important values in an LXT(interLaced eXtensible Trace)
