@@ -78,7 +78,7 @@ shell.
 
 :::{figure-md}
 
-![GTKWave running under Linux.](../_static/images/gtkwave-linux.png)
+![GTKWave running under Linux.](../_static/images/gtkwave.png)
 
 GTKWave running under Linux.
 :::
