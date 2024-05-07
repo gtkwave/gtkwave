@@ -53,20 +53,29 @@ Filter configurations load and save properly to and from save files.
 
 An external process that accepts one line in from stdin and returns with
 data on stdout can be used as a process filter. An example of this is
-disassemblers. The following sample code would show how to interface
+disassemblers. 
+
+:::{figure-md}
+
+![An Example of Translate Filters Process](../_static/images/translate-filter-process.png)
+
+An Example of Translate Filters Process
+:::
+
+The following sample code would show how to interface
 with a disassembler function in C:
 
 ```c
 int main(int argc, char **argv)
 {
+    char buf[1025], buf2[1025];
     while (!feof(stdin)) {
-        char buf[1025], buf2[1025];
         buf[0] = 0;
         fscanf(stdin, "%s", buf);
         if (buf[0]) {
             int hx;
             sscanf(buf, "%x", &hx);
-            ppc_dasm_one(buf2, 0, hx);
+            rv32_dasm_one(buf2, 0, hx);
             printf("%s\n", buf2);
             fflush(stdout);
         }
@@ -103,8 +112,8 @@ name surrounded by '?' characters as follows:
 ?lavender?lwz r2,0(r7)
 ```
 
-Legal color names may be found in the `rgb.c` file in the source code
-distribution.
+Legal color names may be found in the `rgb.c` (or `gw-color.c` for GTKWave 4)
+file in the source code distribution.
 
 ## Transaction Filters Process
 
@@ -207,18 +216,8 @@ To turn off the filter:
 1. Highlight the signals you want unfiltered.
 2. Edit->Data Format->Transaction Filter Process->Disable
 
-Note: In order to use the filter to modify the background color of a
-trace, you can prefix the return string to stdout with the X11 color
-name surrounded by '?' characters as follows:
-
-```text
-?CadetBlue?isync
-?red?xor r0,r0,r0
-?lavender?lwz r2,0(r7)
-```
-
-Legal color names may be found in the rgb.c file in the source code
-distribution.
+Transaction Filters Process also supports modifying the background color
+of traces.
 
 Users can find an example of Transaction Filter Process in `examples/transaction.c`.
 
