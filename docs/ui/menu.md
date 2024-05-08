@@ -1,4 +1,7 @@
-# GTKWave Menu Functions
+# Menu
+
+There are seven submenus in the menu bar: File, Edit, Search, Time,
+Markers, View, and Help.
 
 ## File
 
