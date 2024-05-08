@@ -9,11 +9,26 @@ This section focus on compiling and installing GTKWave 3.3 LTS.
 If you want to try the GTKWave 4, please refer to
 [Compiling GTKWave 4](unix_linux_4.md).
 
+## Installing GTKWave From Package Manager
+
+Using a package manager is the easiest way to get started.
+
+To install GTKWave from package manager:
+```bash
+sudo apt install gtkwave # for Debian, Ubuntu
+# Or
+sudo pacman -Syu gtkwave # for Arch, Manjaro
+# Or install using flatpak for any distro
+flatpak install flathub io.github.gtkwave.GTKWave
+```
+
+## Building and Installing GTKWave from Source
+
 Compiling GTKWave on Unix or Linux operating systems should be a
 relatively straightforward process as GTKWave was developed under both
 Linux and AIX.
 
-## Installing dependencies
+### Installing dependencies
 
 Debian, Ubuntu:
 ```bash
@@ -23,7 +38,7 @@ sudo apt install tcl-dev tk-dev
 sudo apt install libjudy-dev # optional
 ```
 
-## Compiling and Installing
+### Compiling and Installing
 
 Download the source tarball from
 [https://gtkwave.sourceforge.net/](https://gtkwave.sourceforge.net/)
