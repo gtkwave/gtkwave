@@ -31,7 +31,7 @@ myst_enable_extensions = [
     'deflist',
 ]
 
-myst_heading_anchors = 2
+myst_heading_anchors = 3
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

@@ -40,7 +40,6 @@ For Verilog, GTKWave allows users to debug simulation results at both
 the net level by providing a bird\'s eye view of multiple signal values
 over varying periods of time and also at the RTL level through
 annotation of signal values back into the RTL for a given timestep
-(see [RTLBrowser](ui/rtlbrowse.md#rtlbrowse)). The
 (see [RTLBrowser](tools/rtlbrowse.md#rtlbrowse)). The
 RTL browser frees up users from needing to be concerned with the actual
 location of where a given module resides in the RTL as the view provided
@@ -77,20 +76,29 @@ install/mac
 
 quickstart/sample
 quickstart/launching
-quickstart/displaying
 quickstart/filters
-quickstart/debugging
+quickstart/pattern-search
 ```
 
 ```{toctree}
 :hidden:
 :caption: User Interface
 
-ui/gtkwave
-ui/twinwave
-ui/rtlbrowse
+ui/overview
+ui/mainwindow
+ui/toolbar
+ui/menu
 ui/extras
 ```
+
+```{toctree}
+:hidden:
+:caption: Additional tools
+
+tools/twinwave
+tools/rtlbrowse
+```
+
 
 ```{toctree}
 :hidden:
