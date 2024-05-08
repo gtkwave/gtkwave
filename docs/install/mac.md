@@ -2,7 +2,7 @@
 
 ## OSX / Macports
 
-An older build of GTKWave LTS for OSX can be found on SourceForge:
+An older build of GTKWave LTS for macOS can be found on SourceForge:
 [download](https://gtkwave.sourceforge.net/gtkwave.zip)
 
 However, this version is not compatible with current versions of macOS.
