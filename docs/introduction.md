@@ -110,10 +110,10 @@ tcl/callbacks
 
 ```{toctree}
 :hidden:
-:caption: Appendix
+:glob:
+:caption: GTKWave internals
 
-vcd-recoding
-lxt-file-format
+internals/*
 ```
 
 ```{toctree}
