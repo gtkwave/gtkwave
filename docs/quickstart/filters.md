@@ -65,7 +65,8 @@ An Example of Translate Filters Process
 The following sample code would show how to interface
 with a disassembler function in C:
 
-```c
+```{code-block} c
+:caption: Example filter
 int main(int argc, char **argv)
 {
     char buf[1025], buf2[1025];
