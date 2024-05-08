@@ -1,5 +1,17 @@
 # VCD Recoding
 
+Recent versions of GTKWave default to dynamic VCD
+recoding in memory through some interesting tricks with zlib
+compressed VLists.
+This greatly reduces the amount of memory
+required to store a large, full VCD trace in
+memory such that in many cases, less memory is required than the
+actual size of the trace itself. Nevertheless, using one of the
+database formats will almost always be more efficient for larger
+traces, especially if they are to be viewed repeatedly. (i.e., the
+speed hit for converting a trace to a database format is offset by
+the repeated cost of recoding VCD every time the trace is viewed.)
+
 ## VList Recoding Stategy
 
 VCD files can now be recoded in gtkwave on a per-signal basis using a
