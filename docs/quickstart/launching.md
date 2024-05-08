@@ -24,7 +24,7 @@ The main window with viewer state loaded from a save file
 After the splash screen, the GTKWave main window and an RTLBrowse hierarchy
 window will appear. We are now ready to start experimenting with
 various features of the wave viewer and RTLBrowse.
-Refer to the [RTLBrowse description](../ui/rtlbrowse.md#rtlbrowse)
+Refer to the [RTLBrowse description](../tools/rtlbrowse.md#rtlbrowse)
 to learn how to use RTLBrowse.
 
 # Displaying Waveforms

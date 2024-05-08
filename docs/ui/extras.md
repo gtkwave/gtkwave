@@ -4,7 +4,7 @@
 
 Users with a scroll wheel mouse have some extra one-handed operations
 options available which correspond to some functions found in the
-[Navigation and Status Panel](gtkwave.md#navigation-and-status-panel).
+[Toolbar](toolbar.md#toolbar).
 
 | Function           | Shortcut                         |
 |--------------------|----------------------------------|
