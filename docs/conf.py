@@ -21,7 +21,7 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = []
 
-master_doc = 'introduction'
+master_doc = 'index'
 
 # -- Options for MyST ----------------------------------------------------------
 
