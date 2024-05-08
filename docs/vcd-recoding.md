@@ -1,9 +1,5 @@
 # VCD Recoding
 
-:::{attention}
-Deprecated and will be removed in GTKWave 4.
-:::
-
 ## VList Recoding Stategy
 
 VCD files can now be recoded in gtkwave on a per-signal basis using a
