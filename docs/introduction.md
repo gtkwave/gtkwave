@@ -41,6 +41,7 @@ the net level by providing a bird\'s eye view of multiple signal values
 over varying periods of time and also at the RTL level through
 annotation of signal values back into the RTL for a given timestep
 (see [RTLBrowser](ui/rtlbrowse.md#rtlbrowse)). The
+(see [RTLBrowser](tools/rtlbrowse.md#rtlbrowse)). The
 RTL browser frees up users from needing to be concerned with the actual
 location of where a given module resides in the RTL as the view provided
 by the RTL browser defaults to the module level. This provides quick
