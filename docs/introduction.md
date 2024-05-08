@@ -15,7 +15,7 @@ PostScript and FrameMaker formats for hard copy documentation.
 
 :::{figure-md}
 
-![GTKWave Screenshot](../_static/images/gtkwave.png)
+![GTKWave Screenshot](_static/images/gtkwave.png)
 
 GTKWave Screenshot
 :::
@@ -40,7 +40,7 @@ For Verilog, GTKWave allows users to debug simulation results at both
 the net level by providing a bird\'s eye view of multiple signal values
 over varying periods of time and also at the RTL level through
 annotation of signal values back into the RTL for a given timestep
-(see [RTLBrowser](../ui/rtlbrowse.md#rtlbrowse)). The
+(see [RTLBrowser](ui/rtlbrowse.md#rtlbrowse)). The
 RTL browser frees up users from needing to be concerned with the actual
 location of where a given module resides in the RTL as the view provided
 by the RTL browser defaults to the module level. This provides quick
@@ -51,3 +51,66 @@ design.
 Source code annotation is currently not available for VHDL. However, all
 of GTKWave\'s other debug features are readily accessible. VHDL support
 is planned for a future release.
+
+
+```{toctree}
+:hidden:
+:caption: Introduction
+
+self
+intro/formats
+```
+
+```{toctree}
+:hidden:
+:caption: Compiling and Installing
+
+install/unix_linux
+install/win
+install/mac
+```
+
+```{toctree}
+:hidden:
+:caption: Quick Start
+
+quickstart/sample
+quickstart/launching
+quickstart/displaying
+quickstart/filters
+quickstart/debugging
+```
+
+```{toctree}
+:hidden:
+:caption: User Interface
+
+ui/gtkwave
+ui/twinwave
+ui/rtlbrowse
+ui/extras
+```
+
+```{toctree}
+:hidden:
+:caption: Tcl Command Syntax
+
+tcl/commands
+tcl/callbacks
+```
+
+```{toctree}
+:hidden:
+:caption: Appendix
+
+vcd-recoding
+lxt-file-format
+```
+
+```{toctree}
+:hidden:
+:glob:
+:caption: Man pages
+
+man/*
+```
