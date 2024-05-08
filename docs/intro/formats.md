@@ -26,7 +26,7 @@ GTKWave supports various file formats.
   performance is the slowest of all the formats, however reading them
   can be extremely fast on multiprocessor machines as the file format
   has been designed such that the reader was able to be parallelized.
-- `IDX`: VCD Recoder Index File. This format ussed to be written by
+- `IDX`: VCD Recoder Index File. This format used to be written by
   GTKWave when instructed to generate fastload files. 
 - `GHW`: GHDL Wave file. This is a nine state ("01XZHUWL-") file format
   written by the VHDL simulator GHDL.
