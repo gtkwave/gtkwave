@@ -5,8 +5,8 @@ conversion of VCD files, let's use the `-o` option. The `-t` option is used
 to specify the `stems` file. The `.gtkw` file is a "save file" that contains
 GTKWave scope state.
 
-```text
-gtkwave/examples> gtkwave -o -t des.stems des.vcd des.gtkw
+```console
+$ gtkwave -o -t des.stems des.vcd des.gtkw
 GTKWave Analyzer v3.3.118 (w)1999-2023 BSI
 FSTLOAD | Processing 1432 facs.
 FSTLOAD | Built 1287 signals and 145 aliases.
