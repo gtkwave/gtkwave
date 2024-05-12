@@ -38,10 +38,6 @@ time values per 2k block of nets. This may be fixed in later versions of
 
 :   Emit flattened hierarchies.
 
-```{=html}
-<!-- -->
-```
-
 **-n,\--notruncate**
 
 :   Do not shorten bitvectors. This disables binary value compression as

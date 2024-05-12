@@ -5,51 +5,66 @@
 The best way to run GTKWave under Windows is to compile it to run under
 Cygwin. This will provide the same functionality as compared to the
 Unix/Linux version and better graphical performance than the native
-binary version. Follow the directions for Unix compiles in the preceding
-section. Note that launching RTLBrowse requires Cygserver to be enabled.
-Please see the Cygwin documentation for information on how to enable
-Cygserver for your version of Cygwin.
+binary version. Note that launching RTLBrowse requires Cygserver to
+be enabled. Please see the Cygwin documentation for information on
+how to enable Cygserver for your version of Cygwin.
 (<http://www.cygwin.com/cygwin-ug-net/using-cygserver.html>)
 
-## MinGW versus VC++ for Native Binaries
+### Installing dependencies
 
-It is recommended that Windows compiles and installs are done in the
-MinGW environment in order to mimic the Unix shell environment as well
-as produce binaries that are natively usable on Windows. Producing
-native binaries with VisualC++ has not been attempted for some time so
-it is currently untested.
+First, download Cygwin installer from its
+[official website](https://www.cygwin.com/install.html).
 
-## MinGW with GTK-1.2
+After installing Cygwin, use the following commands to
+install the build dependencies for GTKWave:
 
-If you are missing a working version of *gtk-config*, you will need a
-fake *gtk-config* file in order to compile under GTK-1.2. It will look
-like this with the include and linker search directories modified
-accordingly:
-
-```bash
-#!/bin/sh
-
-if [ "$1" == "--libs" ]
-then
-    echo -L/home/bybell/libs -lgck -lgdk-1.3 -lgimp-1.2 -lgimpi -lgimpui-1.2 \
-    -lglib-1.3 -lgmodule-1.3 -lgnu-intl -lgobject-1.3 -lgthr ead-1.3 -lgtk-1.3 \
-    -liconv-1.3 -ljpeg -llibgplugin_a -llibgplugin_b -lpng -lpthread32 \
-    -ltiff-lzw -ltiff-nolzw -ltiff
-fi
-
-if [ "$1" == "--cflags" ]
-then
-    echo " -mms-bitfields -I/home/bybell/src/glib
-    -I/home/bybell/src/gtk+/gtk -I/home/bybell/src/gtk+/gdk
-    -I/home/bybell/src/gtk+ "
-fi
+```bat
+.\setup-x86_64.exe -q -P gcc-g++,gperf,libbz2-devel
+.\setup-x86_64.exe -q -P liblzma-devel,zlib-devel,libgtk3-devel
+.\setup-x86_64.exe -q -P make,git,xinit,tcl-tk-devel
 ```
 
-Compiling as under Unix/Linux is the same.
+### Compiling and Installing
 
-## MinGW with GTK-2.0
+For compilation and installation instructions, please refer
+to the section on [Compiling and Installing for Unix and
+Linux](./unix_linux.md#compiling-and-installing).
 
-You do not need to do anything special except ensure that *pkg-config*
-is pointed to by your PATH environment variable. Proceed as with
-GTK-1.2. Pre-made binaries can be found at the
-<http://www.dspia.com/gtkwave.html> website.
+### Launching
+
+To launch the GTKWave within the Cygwin environment, begin
+by initiating an X session using:
+
+```bash
+startxwin
+```
+
+Then, right-click the X11 icon in system tray to open another Cygwin
+terminal and type `gtkwave` to launch the application.
+
+## MSYS2
+
+For users perferring native Windows binaries. MSYS2 is an
+excellent alternative.
+
+### Installing dependencies
+
+Follow the installation guide for MSYS2 on its [official website](https://www.msys2.org/).
+
+After installing MSYS2. Open the `MSYS2 MINGW64` shell from the start menu.
+And run the following commands to install the necessary build dependencies
+for GTKWave:
+
+```bash
+pacman -Syuu
+pacman -Syuu  # Please run this twice as recommended.
+# Or mingw-w64-ucrt-x86_64 for UCRT64
+pacman -S mingw-w64-x86_64-gcc base-devel mingw-w64-x86_64-tk
+pacman -S mingw-w64-x86_64-gtk3 mingw-w64-x86_64-gperf git
+```
+
+### Compiling and Installing
+
+For compilation and installation instructions, please refer
+to the section on [Compiling and Installing for Unix and
+Linux](./unix_linux.md#compiling-and-installing).

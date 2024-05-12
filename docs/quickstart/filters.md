@@ -1,7 +1,125 @@
-# Transaction Filters
+# Filtering
+
+GTKWave supports signal aliasing (filtering) through both plaintext
+filters and through external program filters.
+
+## Translate Filter File
+
+For text filters, the viewer looks at an ASCII text file of the
+following format:
+
+```text
+#
+# this is a comment
+#
+00 Idle
+01 Advance
+10 Stop
+11 Reset
+```
+
+The first non-whitespace item is treated as a literal value that would
+normally be printed by the viewer, and the remaining items on the line
+are substitution text. Any time this text is encountered if the filter
+is active, it will replace the left-hand side text with the right-hand
+side. Leading and trailing whitespaces are removed from the right-hand
+side item.
+
+Note that signal aliasing is a strict
+one-to-one correspondence, so the value represented in the viewer must
+exactly represent what format your filter expects. (e.g., binary,
+hexadecimal, with leading base markers, etc.) For your convenience, the
+comparisons are case-insensitive.
+
+To turn on the filter:
+
+1. Highlight the signals you want filtered
+2. Edit->Data Format->Translate Filter File->Enable and Select
+3. Add Filter to List
+4. Click on filter filename
+5. Select filter filename from list
+6. OK
+
+To turn off the filter:
+
+1. Highlight the signals you want unfiltered.
+2. Edit->Data Format->Translate Filter File->Disable
+
+::: {note}
+Filter configurations load and save properly to and from save files.
+:::
+
+## Translate Filter Process
+
+An external process that accepts one line in from stdin and returns with
+data on stdout can be used as a process filter. An example of this is
+disassemblers. 
+
+:::{figure-md}
+
+![An Example of Translate Filters Process](../_static/images/translate-filter-process.png)
+
+An Example of Translate Filters Process
+:::
+
+The following sample code would show how to interface
+with a disassembler function in C:
+
+```{code-block} c
+:caption: Example filter
+int main(int argc, char **argv)
+{
+    char buf[1025], buf2[1025];
+    while (!feof(stdin)) {
+        buf[0] = 0;
+        fscanf(stdin, "%s", buf);
+        if (buf[0]) {
+            int hx;
+            sscanf(buf, "%x", &hx);
+            rv32_dasm_one(buf2, 0, hx);
+            printf("%s\n", buf2);
+            fflush(stdout);
+        }
+     }
+    return 0;
+}
+```
+
+Note that the `fflush(stdout)` is necessary, otherwise GTKWave will
+hang. Also note that every line of input needs to generate a line of
+output or the viewer will hang too.
+
+To turn on the filter:
+
+1. Highlight the signals you want filtered
+2. Edit->Data Format->Translate Filter Process->Enable and Select
+3. Add Proc Filter to List
+4. Click on filter filename
+5. Select filter filename from list
+6. OK
+
+To turn off the filter:
+
+1. Highlight the signals you want unfiltered.
+2. Edit->Data Format->Translate Filter Process->Disable
+
+Note: In order to use the filter to modify the background color of a
+trace, you can prefix the return string to stdout with the X11 color
+name surrounded by '?' characters as follows:
+
+```text
+?CadetBlue?isync
+?red?xor r0,r0,r0
+?lavender?lwz r2,0(r7)
+```
+
+Legal color names may be found in the `rgb.c` (or `gw-color.c` for GTKWave 4)
+file in the source code distribution.
+
+## Transaction Filters Process
 
 Either single traces or grouped vector data (created by Combine Down
-(F4) on some signals) can be used to signify a transaction that can be
+{kbd}`F4` on some signals) can be used to signify a transaction that can be
 parsed by an external process.
 
 An external process that can accept a simplified VCD file from stdin and
@@ -10,19 +128,21 @@ example of the VCD file received from stdin is the following:
 
 ```text
 $comment data_start 0x124c0798 $end
-$comment val[7:0] $end
+$comment name val[7:0] $end
 $timescale 1ms $end
 $comment min_time 0 $end
 $comment max_time 348927 $end
 $comment max_seqn 1 $end
+$comment args "0" $end
 $scope module top $end
 $comment seqn 1 top.val[7:0] $end
 $var wire 8 1 val[7:0] $end
 $upscope $end
 $enddefinitions $end
-$dumpvars
 #0
+$dumpvars
 b10000000 1
+$end
 #1
 b10000101 1
 #2
@@ -77,35 +197,34 @@ Lines that start with M are used to place the markers A-Z.
 
 * `$name` indicates the name to give to the trace.
 * `$next` indicated that more trace data follows for a new trace.
-* `$finish` is used to signal to gtkwave that there is no more trace data.
+* `$finish` is used to signal to GTKWave that there is no more trace data.
 
-The data received by gtkwave will be used to generate transaction traces
+The data received by GTKWave will be used to generate transaction traces
 in the viewer. In order to make traces created by `$next` visible, insert
 blank lines under the trace that the transaction filter has been added.
 
 To turn on the filter:
 
 1. Highlight the signals you want filtered
-1. Edit->Data Format->Transaction Filter Process->Enable and Select
-1. Add Transaction Filter to List
-1. Click on filter filename
-1. Select filter filename from list
-1. OK
+2. Edit->Data Format->Transaction Filter Process->Enable and Select
+3. Add Transaction Filter to List
+4. Click on filter filename
+5. Select filter filename from list
+6. OK
 
 To turn off the filter:
 
 1. Highlight the signals you want unfiltered.
-1. Edit->Data Format->Transaction Filter Process->Disable
+2. Edit->Data Format->Transaction Filter Process->Disable
 
-Note: In order to use the filter to modify the background color of a
-trace, you can prefix the return string to stdout with the X11 color
-name surrounded by '?' characters as follows:
+Transaction Filters Process also supports modifying the background color
+of traces.
 
-```text
-?CadetBlue?isync
-?red?xor r0,r0,r0
-?lavender?lwz r2,0(r7)
-```
+Users can find an example of Transaction Filter Process in `examples/transaction.c`.
 
-Legal color names may be found in the rgb.c file in the source code
-distribution.
+:::{figure-md}
+
+![An Example of Transaction Filters Process](../_static/images/transaction-filter-process.png)
+
+An Example of Transaction Filters Process
+:::

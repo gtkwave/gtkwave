@@ -1,61 +1,99 @@
 # Unix and Linux
 
+```{toctree}
+:hidden:
+unix_linux_4
+```
+
+This section focus on compiling and installing GTKWave 3.3 LTS.
+If you want to try the GTKWave 4, please refer to
+[Compiling GTKWave 4](unix_linux_4.md).
+
+## Installing GTKWave From Package Manager
+
+Using a package manager is the easiest way to get started.
+
+To install GTKWave from package manager:
+```bash
+sudo apt install gtkwave # for Debian, Ubuntu
+# Or
+sudo pacman -Syu gtkwave # for Arch, Manjaro
+# Or install using flatpak for any distro
+flatpak install flathub io.github.gtkwave.GTKWave
+```
+
+## Building and Installing GTKWave from Source
+
 Compiling GTKWave on Unix or Linux operating systems should be a
 relatively straightforward process as GTKWave was developed under both
-Linux and AIX. External software packages required are GTK
-([http://www.gtk.org](http://www.gtk.org/)) with versions 1.3 or 2.x
-(3.x not yet supported), and *gperf* (for RTLBrowse) which can be
-downloaded from the GNU website
-([http://www.gnu.org](http://www.gnu.org/)). The compression libraries
-libz (*zlib*) and libbz2 (*bzip2*) are not required to be installed on a
-target system as their source code is already included in the GTKWave
-tarball, however the system ones will be used if located.
+Linux and AIX.
 
-## Compiling and Installing
+### Installing dependencies
 
-Un-tar the source code into any temporary directory then change
-directory into it. After doing this, invoke the configure script. Note
-that if you wish to change the install point, use the double dash
-\--*prefix* option to point to the absolute pathname. For example, to
-install in /usr, type ***./configure \--prefix=/usr***.
-
+Debian, Ubuntu:
 ```bash
-1 :/tmp/gtkwave-3.1.3\> ./configure
+sudo apt install build-essential libbz2-dev liblzma-dev
+sudo apt install gperf libgtk-3-dev automake
+sudo apt install tcl-dev tk-dev
+sudo apt install libjudy-dev # optional
 ```
 
-Use the \--*help* flag to see which options are available. Typically,
-outside of \--*prefix*, no flags are needed.
+### Compiling and Installing
+
+Download the source tarball from
+[https://gtkwave.sourceforge.net/](https://gtkwave.sourceforge.net/)
+or clone the sources from the git repository:
 
 ```bash
-2 :/tmp/gtkwave-3.1.3\> make
+git clone https://github.com/gtkwave/gtkwave/ -b lts gtkwave
+cd gtkwave/gtkwave3-gtk3 && ./autogen.sh
 ```
 
-Wait for the compile to finish. This will take some amount of time. Then
-log on as the superuser.
+After doing this, you must decide how you're going
+to install GTKWave onto your system. By default, the
+software is installed in `/usr/local/`. If you wish to
+install into a specific prefix, use the double dash
+\--*prefix* option to point to the absolute pathname. 
+
+For example, to install in `/opt`
 
 ```bash
-3 :/tmp/gtkwave-3.1.3\> **su**
-Password:
-[root@localhost gtkwave-3.1.3]# make install
+./configure --enable-gtk3 --enable-judy --prefix=/opt
+```
+
+Or, to install GTKWave globally
+
+```bash
+./configure --enable-gtk3 --enable-judy
+```
+Use the \--*help* flag to see which options are available.
+
+After invoking the configure script. Use *make* to compile GTKWave
+```bash
+make -j
+```
+
+Then wait for the compile to finish. This will take some amount of
+time.
+
+To install GTKWave, run
+
+```bash
+sudo make install
 ```
 
 Wait for the install to finish. It should proceed relatively quickly.
-When finished, exit as superuser.
 
-```bash
-[root@localhost gtkwave-3.1.3]# exit
-exit
-```
 
 GTKWave is now installed on your Unix or Linux system. To use it, make
-sure that the *bin/* directory off the install point is in your path.
+sure that the *bin/* directory of the install point is in your path.
 For example, if the install point is */usr/local*, ensure that
 */usr/local/bin* is in your path. How to do this will vary from shell to
 shell.
 
 :::{figure-md}
 
-![GTKWave running under Linux.](../_static/images/gtkwave-linux.png)
+![GTKWave running under Linux.](../_static/images/gtkwave.png)
 
 GTKWave running under Linux.
 :::
