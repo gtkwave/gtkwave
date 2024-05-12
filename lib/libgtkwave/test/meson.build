@@ -53,6 +53,7 @@ dumpfile_tests = [
     'basic.fst',
     'basic.ghw',
     'basic.vcd',
+    'hashkill.vcd',
     'left_extension.vcd',
     'synvec.fst',
     'timescale_100fs_fractional.vcd',
