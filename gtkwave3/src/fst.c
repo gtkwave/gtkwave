@@ -215,17 +215,24 @@ while((h = fstReaderIterateHier(xc)))
 			s = *nam;
 			pnts = h->u.var.name;
 			pntd = s;
+
+			int esc_sm = 0;
 			while(*pnts)
 				{
+				if(*pnts == '\\') esc_sm = 1;
 				if(*pnts != ' ')
 					{
-					if(*pnts == '[') { lb_last = pntd; col_last = NULL; rb_last = NULL; }
-					else if(*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL) { col_last = pntd; }
-					else if(*pnts == ']' && lb_last != NULL && rb_last == NULL) { rb_last = pntd; }
-					else if(lb_last != NULL && rb_last == NULL && (isdigit((int)(unsigned char)*pnts) || (*pnts == '-'))) { }
+					if(*pnts == '[' && !esc_sm) { lb_last = pntd; col_last = NULL; rb_last = NULL; }
+					else if(*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL && !esc_sm) { col_last = pntd; }
+					else if(*pnts == ']' && lb_last != NULL && rb_last == NULL && !esc_sm) { rb_last = pntd; }
+					else if(lb_last != NULL && rb_last == NULL && (isdigit((int)(unsigned char)*pnts) || (*pnts == '-')) && !esc_sm) { }
 					else { lb_last = NULL; col_last = NULL; rb_last = NULL; }
 
 					*(pntd++) = *pnts;
+					}
+				else
+					{
+					esc_sm = 0;
 					}
 				pnts++;
 				}
