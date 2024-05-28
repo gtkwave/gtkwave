@@ -975,7 +975,7 @@ for(i=0;i<GLOBALS->numfacs;i++)
 				}
 			s=&sym_block[i];
 		        symadd_name_exists_sym_exists(s,str,0);
-			if((allowed_to_autocoalesce)&&(prevsym)&&(revcmp)&&(!strchr(f_name[(i)&F_NAME_MODULUS], '\\')))	/* allow chaining for search functions.. */
+			if((allowed_to_autocoalesce)&&(prevsym)&&(revcmp)) /* allow chaining for search functions.. NOTE: removed &&(!strchr(f_name[(i)&F_NAME_MODULUS], '\\')) because of esc_sm fix */
 				{
 				prevsym->vec_root = prevsymroot;
 				prevsym->vec_chain = s;
