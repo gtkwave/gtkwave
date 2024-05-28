@@ -16,6 +16,7 @@ author = 'GTKWave Authors'
 extensions = [
     'myst_parser',
     'sphinx_design',
+    'sphinx.ext.githubpages'
 ]
 
 templates_path = ['_templates']
