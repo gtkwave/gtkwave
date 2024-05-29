@@ -53,6 +53,7 @@ Facs
             x @ 9223372036854775806
             z @ 9223372036854775807
 \y[0][0]
+    vec_root: \y[0][1]
     node: \y[0][0]
         vartype: GW_VAR_TYPE_VCD_WIRE
         vardt: GW_VAR_DATA_TYPE_NONE
@@ -68,6 +69,8 @@ Facs
             x @ 9223372036854775806
             z @ 9223372036854775807
 \y[0][1]
+    vec_root: \y[0][1]
+    vec_chain: \y[0][0]
     node: \y[0][1]
         vartype: GW_VAR_TYPE_VCD_WIRE
         vardt: GW_VAR_DATA_TYPE_NONE

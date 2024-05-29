@@ -213,18 +213,25 @@ static void handle_var(GwFstLoader *self,
     char *s = *nam;
     const char *pnts = var->name;
     char *pntd = s;
+
+    int esc_sm = 0;
     while (*pnts) {
+        if (*pnts == '\\') {
+            esc_sm = 1;
+        }
+
         if (*pnts != ' ') {
-            if (*pnts == '[') {
+            if (*pnts == '[' && !esc_sm) {
                 lb_last = pntd;
                 col_last = NULL;
                 rb_last = NULL;
-            } else if (*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL) {
+            } else if (*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL &&
+                       !esc_sm) {
                 col_last = pntd;
-            } else if (*pnts == ']' && lb_last != NULL && rb_last == NULL) {
+            } else if (*pnts == ']' && lb_last != NULL && rb_last == NULL && !esc_sm) {
                 rb_last = pntd;
             } else if (lb_last != NULL && rb_last == NULL &&
-                       (g_ascii_isdigit(*pnts) || (*pnts == '-'))) {
+                       (g_ascii_isdigit(*pnts) || (*pnts == '-')) && !esc_sm) {
             } else {
                 lb_last = NULL;
                 col_last = NULL;
@@ -232,6 +239,8 @@ static void handle_var(GwFstLoader *self,
             }
 
             *(pntd++) = *pnts;
+        } else {
+            esc_sm = 0;
         }
         pnts++;
     }
@@ -675,7 +684,8 @@ static GwTime unformat_time(const char *buf, char dim)
     return unformat_time_simple(buf, dim);
 }
 
-static void gw_fst_loader_dispose(GObject *object) {
+static void gw_fst_loader_dispose(GObject *object)
+{
     GwFstLoader *self = GW_FST_LOADER(object);
 
     g_clear_object(&self->tree_builder);
@@ -961,9 +971,8 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 }
                 s = &sym_block[i];
                 s->name = str;
-                if ((allowed_to_autocoalesce) && (prevsym) && (revcmp) &&
-                    (!strchr(f_name[(i)&F_NAME_MODULUS],
-                             '\\'))) /* allow chaining for search functions.. */
+                if (allowed_to_autocoalesce && prevsym &&
+                    revcmp) /* allow chaining for search functions.. */
                 {
                     prevsym->vec_root = prevsymroot;
                     prevsym->vec_chain = s;
