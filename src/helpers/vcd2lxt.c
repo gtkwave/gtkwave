@@ -231,11 +231,8 @@ static unsigned int vcdid_hash(char *s, int len)
  */
 static int vcdsymbsearchcompare(const void *s1, const void *s2)
 {
-    char *v1;
-    struct vcdsymbol *v2;
-
-    v1 = (char *)s1;
-    v2 = *((struct vcdsymbol **)s2);
+    const char *v1 = (const char *)s1;
+    const struct vcdsymbol *v2 = (const struct vcdsymbol *)s2;
 
     return (strcmp(v1, v2->id));
 }
@@ -280,10 +277,8 @@ static struct vcdsymbol *bsearch_vcd(char *key, int len)
  */
 static int vcdsymcompare(const void *s1, const void *s2)
 {
-    struct vcdsymbol *v1, *v2;
-
-    v1 = *((struct vcdsymbol **)s1);
-    v2 = *((struct vcdsymbol **)s2);
+    const struct vcdsymbol *v1 = (const struct vcdsymbol *)s1;
+    const struct vcdsymbol *v2 = (const struct vcdsymbol *)s2;
 
     return (strcmp(v1->id, v2->id));
 }
