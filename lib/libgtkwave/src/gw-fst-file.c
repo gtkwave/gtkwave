@@ -2,14 +2,6 @@
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
 
-#define VZT_RD_SYM_F_BITS (0)
-#define VZT_RD_SYM_F_INTEGER (1 << 0)
-#define VZT_RD_SYM_F_DOUBLE (1 << 1)
-#define VZT_RD_SYM_F_STRING (1 << 2)
-#define VZT_RD_SYM_F_ALIAS (1 << 3)
-#define VZT_RD_SYM_F_SYNVEC \
-    (1 << 17) /* reader synthesized vector in alias sec'n from non-adjacent vectorizing */
-
 G_DEFINE_TYPE(GwFstFile, gw_fst_file, GW_TYPE_DUMP_FILE)
 
 static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np);
@@ -134,7 +126,7 @@ static void fst_callback2(void *user_callback_data_pointer,
 
     /* fprintf(stderr, "%lld %d '%s'\n", tim, facidx, value); */
 
-    if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
+    if (!(f->flags & (GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) {
         unsigned char vt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
         if (f->working_node) {
             vt = f->working_node->vartype;
@@ -199,7 +191,7 @@ static void fst_callback2(void *user_callback_data_pointer,
             htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             htemp->v.h_val = h_val;
         }
-    } else if (f->flags & VZT_RD_SYM_F_DOUBLE) {
+    } else if (f->flags & GW_FAC_FLAG_DOUBLE) {
         if ((l2e->histent_curr) && (l2e->histent_curr->v.h_vector)) /* remove duplicate values */
         {
             if (!memcmp(&l2e->histent_curr->v.h_double, value, sizeof(double))) {
@@ -309,7 +301,7 @@ static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
         return; /* already imported */
 
     txidx = f - self->mvlfacs;
-    if (np->mv.mvlfac->flags & VZT_RD_SYM_F_ALIAS) {
+    if (np->mv.mvlfac->flags & GW_FAC_FLAG_ALIAS) {
         /* this is to map to fstHandles, so even non-aliased are remapped */
         txidx = self->mvlfacs[txidx].node_alias;
         txidx = self->mvlfacs_rvs_alias[txidx];
@@ -321,7 +313,7 @@ static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
         }
     }
 
-    if (!(f->flags & VZT_RD_SYM_F_SYNVEC)) /* block debug message for synclk */
+    if (!(f->flags & GW_FAC_FLAG_SYNVEC)) /* block debug message for synclk */
     {
         fprintf(stderr, "Import: %s\n", np->nname); /* normally this never happens */
     }
@@ -331,7 +323,7 @@ static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
 
     /* check here for array height in future */
 
-    if (!(f->flags & VZT_RD_SYM_F_SYNVEC)) {
+    if (!(f->flags & GW_FAC_FLAG_SYNVEC)) {
         fstReaderSetFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
         fstReaderIterBlocks2(self->fst_reader, fst_callback, fst_callback2, self, NULL);
         fstReaderClrFacProcessMask(self->fst_reader, self->mvlfacs[txidx].node_alias + 1);
@@ -349,8 +341,8 @@ static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
 
     htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
     if (len > 1) {
-        if (!(f->flags & VZT_RD_SYM_F_DOUBLE)) {
-            if (!(f->flags & VZT_RD_SYM_F_STRING)) {
+        if (!(f->flags & GW_FAC_FLAG_DOUBLE)) {
+            if (!(f->flags & GW_FAC_FLAG_STRING)) {
                 htemp->v.h_vector = g_malloc(len);
                 for (i = 0; i < len; i++)
                     htemp->v.h_vector[i] = GW_BIT_X;
@@ -375,7 +367,7 @@ static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
         htemp = self->fst_table[txidx].histent_head;
     }
 
-    if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
+    if (!(f->flags & (GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) {
         if (len > 1) {
             np->head.v.h_vector = g_malloc(len);
             for (i = 0; i < len; i++)
@@ -385,7 +377,7 @@ static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np)
         }
     } else {
         np->head.flags = GW_HIST_ENT_FLAG_REAL;
-        if (f->flags & VZT_RD_SYM_F_STRING) {
+        if (f->flags & GW_FAC_FLAG_STRING) {
             np->head.flags |= GW_HIST_ENT_FLAG_STRING;
         }
     }
@@ -497,7 +489,7 @@ static void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np)
 
     txidx = f - self->mvlfacs;
 
-    if (np->mv.mvlfac->flags & VZT_RD_SYM_F_ALIAS) {
+    if (np->mv.mvlfac->flags & GW_FAC_FLAG_ALIAS) {
         txidx = self->mvlfacs[txidx].node_alias;
         txidx = self->mvlfacs_rvs_alias[txidx];
         GwNode *nold = np;
@@ -509,7 +501,7 @@ static void gw_fst_file_set_fac_process_mask(GwFstFile *self, GwNode *np)
         }
     }
 
-    if (np->mv.mvlfac->flags & VZT_RD_SYM_F_SYNVEC) {
+    if (np->mv.mvlfac->flags & GW_FAC_FLAG_SYNVEC) {
         JRB fi = jrb_find_int(self->synclock_jrb, txidx);
         if (fi) {
             expand_synvec(self, self->mvlfacs[txidx].node_alias + 1, fi->val.s);
@@ -566,7 +558,7 @@ static void gw_fst_file_import_masked(GwFstFile *self)
             if (len > 1) {
                 htemp->v.h_vector = g_malloc(len);
                 for (i = 0; i < len; i++) {
-                    if (f->flags & VZT_RD_SYM_F_STRING) {
+                    if (f->flags & GW_FAC_FLAG_STRING) {
                         htemp->v.h_vector[i] = 0;
                         htemp->flags = GW_HIST_ENT_FLAG_REAL | GW_HIST_ENT_FLAG_STRING;
                     } else {
@@ -580,8 +572,8 @@ static void gw_fst_file_import_masked(GwFstFile *self)
 
             htemp = gw_hist_ent_factory_alloc(self->hist_ent_factory);
             if (len > 1) {
-                if (!(f->flags & VZT_RD_SYM_F_DOUBLE)) {
-                    if (!(f->flags & VZT_RD_SYM_F_STRING)) {
+                if (!(f->flags & GW_FAC_FLAG_DOUBLE)) {
+                    if (!(f->flags & GW_FAC_FLAG_STRING)) {
                         htemp->v.h_vector = g_malloc(len);
                         for (i = 0; i < len; i++)
                             htemp->v.h_vector[i] = GW_BIT_X;
@@ -607,7 +599,7 @@ static void gw_fst_file_import_masked(GwFstFile *self)
                 htemp = self->fst_table[txidx].histent_head;
             }
 
-            if (!(f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
+            if (!(f->flags & (GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) {
                 if (len > 1) {
                     np->head.v.h_vector = g_malloc(len);
                     for (i = 0; i < len; i++)
@@ -617,7 +609,7 @@ static void gw_fst_file_import_masked(GwFstFile *self)
                 }
             } else {
                 np->head.flags = GW_HIST_ENT_FLAG_REAL;
-                if (f->flags & VZT_RD_SYM_F_STRING) {
+                if (f->flags & GW_FAC_FLAG_STRING) {
                     np->head.flags |= GW_HIST_ENT_FLAG_STRING;
                 }
             }
