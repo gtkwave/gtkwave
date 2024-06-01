@@ -16,10 +16,6 @@
 #include <stdlib.h>
 #include "debug.h"
 
-#ifdef AET2_IS_PRESENT
-#define WAVE_ARRAY_SUPPORT
-#endif
-
 typedef struct _SearchProgressData
 {
     GtkWidget *window;

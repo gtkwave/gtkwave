@@ -535,23 +535,7 @@ int AddNode(GwNode *nd, char *aliasname)
 /* add multiple nodes (if array) */
 int AddNodeUnroll(GwNode *nd, char *aliasname)
 {
-#ifdef WAVE_ARRAY_SUPPORT
-    if (nd->array_height <= 1)
-#endif
-    {
-        return (AddNodeTraceReturn(nd, aliasname, NULL));
-    }
-#ifdef WAVE_ARRAY_SUPPORT
-    else {
-        unsigned int i;
-        int rc = 1;
-
-        for (i = 0; i < nd->array_height; i++) {
-            rc |= AddNodeTraceReturn(nd + i, aliasname, NULL);
-        }
-        return (rc);
-    }
-#endif
+    return (AddNodeTraceReturn(nd, aliasname, NULL));
 }
 
 /*

@@ -47,11 +47,6 @@ struct lxt2_rd_trace *lx2=NULL;
 void *fst=NULL;
 int64_t timezero = 0; /* only currently used for FST */
 
-#ifdef AET2_IS_PRESENT
-FILE *aetf;
-AE2_HANDLE ae2 = NULL;
-#endif
-
 static int bwsigcmp(char *s1, char *s2)
 {
 unsigned char c1, c2;
@@ -217,9 +212,6 @@ if(txt2)
 	free(txt2);
 	}
 }
-
-
-
 
 void rec_tree(ds_Tree *t, int *cnt)
 {
@@ -413,11 +405,6 @@ rec_tree_populate(modules, &mod_cnt, mod_list);
 return(0);
 }
 
-
-/**********************************************************/
-/**********************************************************/
-/**********************************************************/
-
 void bwmaketree(void)
 {
 int i;
@@ -467,47 +454,6 @@ gtk_tree_view_append_column (GTK_TREE_VIEW (treeview_main), column);
 
 gtk_widget_show(treeview_main);
 }
-
-/**********************************************************/
-/**********************************************************/
-
-#ifdef AET2_IS_PRESENT
-
-static void *alloc_fn(size_t size)
-{
-void *pnt = calloc(1, size);
-return(pnt);
-}
-
-static void free_fn(void* ptr, size_t size)
-{
-(void)size;
-
-free(ptr);
-}
-
-static void error_fn(const char *format, ...)
-{
-va_list ap;
-va_start(ap, format);
-vfprintf(stderr, format, ap);
-fprintf(stderr, "\n");
-va_end(ap);
-exit(255);
-}
-
-static void msg_fn(int sev, const char *format, ...)
-{
-va_list ap;
-va_start(ap, format);
-
-fprintf(stderr, "AE2 %03d | ", sev);
-vfprintf(stderr, format, ap);
-fprintf(stderr, "\n");
-va_end(ap);
-}
-
-#endif
 
 /**********************************************************/
 /**********************************************************/

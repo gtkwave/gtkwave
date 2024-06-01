@@ -1764,12 +1764,7 @@ eptr ExpandNode(GwNode *n)
                     curr_bit += bit_delta;
                 }
             }
-#ifdef WAVE_ARRAY_SUPPORT
-            if (n->array_height) {
-                len = offset + strlen(nam + offset);
-                sprintf(nam + len, "{%d}", n->this_row);
-            }
-#endif
+
             len = offset + strlen(nam + offset);
             narray[i]->nname = (char *)malloc_2(len + 1);
             strcpy(narray[i]->nname, nam);
@@ -2022,12 +2017,6 @@ GwNode *ExtractNodeSingleBit(GwNode *n, int bit)
             sprintf(nam + offset, "[%d][%d]", curr_row, curr_bit);
         }
 
-#ifdef WAVE_ARRAY_SUPPORT
-        if (n->array_height) {
-            len = offset + strlen(nam + offset);
-            sprintf(nam + len, "{%d}", n->this_row);
-        }
-#endif
         len = offset + strlen(nam + offset);
 
         np->nname = (char *)malloc_2(len + 1);

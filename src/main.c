@@ -299,8 +299,8 @@ static void print_help(char *nam)
         "  -r, --rcfile=FILE          specify override .rcfile name\n"
         "  -d, --defaultskip          if missing .rcfile, do not use useful defaults\n" DUAL_GETOPT
         "  -l, --logfile=FILE         specify simulation logfile name for time values\n"
-        "  -s, --start=TIME           specify start time for LXT2/VZT block skip\n"
-        "  -e, --end=TIME             specify end time for LXT2/VZT block skip\n" STEMS_GETOPT
+        "  -s, --start=TIME           specify start time for FST skip\n"
+        "  -e, --end=TIME             specify end time for for FST skip\n" STEMS_GETOPT
             WAVE_GETOPT_CPUS
         "  -N, --nowm                 disable window manager for most windows\n"
         "  -M, --nomenus              do not render menubar (for making applets)\n"
