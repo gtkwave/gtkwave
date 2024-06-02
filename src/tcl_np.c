@@ -66,10 +66,8 @@ extern int NpLoadLibrary(HMODULE *tclHandle, char *dllName, int dllNameSize, cha
 {
     char *envdll, libname[MAX_PATH];
     HMODULE handle = (HMODULE)NULL;
-
     char path[MAX_PATH], *p;
-    /* #include <windows.h> */
-    /* #include <iostream> */
+
     if (!GetModuleFileName(NULL, path, MAX_PATH)) {
         printf("GetModuleFileName() failed\n");
     } else {

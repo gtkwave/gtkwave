@@ -45,9 +45,6 @@
 #if !defined __MINGW32__
 #include <unistd.h>
 #include <sys/mman.h>
-#else
-#include <windows.h>
-#include <io.h>
 #endif
 
 struct Global *GLOBALS = NULL;
