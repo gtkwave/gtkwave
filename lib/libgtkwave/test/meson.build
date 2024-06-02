@@ -53,6 +53,8 @@ dumpfile_tests = [
     'basic.fst',
     'basic.ghw',
     'basic.vcd',
+    'evcd.fst',
+    'evcd.vcd',
     'hashkill.vcd',
     'left_extension.vcd',
     'synvec.fst',
