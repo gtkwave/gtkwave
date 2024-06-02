@@ -98,9 +98,9 @@ if get_option('experimental_plugin_support')
     libgtkwave_dependencies += libpeas_dep
 endif
 
-libgtkwave_enums = gnome.mkenums_simple('gw-enums',
-    sources: libgtkwave_public_headers
-)
+libgtkwave_enums = gnome.mkenums_simple('gw-enums', sources: libgtkwave_public_headers)
+libgtkwave_enums_c = libgtkwave_enums[0]
+libgtkwave_enums_h = libgtkwave_enums[1]
 
 vcd_keywords_c = custom_target(
     'vcd-keywords.c',
@@ -123,14 +123,17 @@ vcd_keywords_c = custom_target(
 
 libgtkwave = shared_library(
     'gtkwave',
-    sources: libgtkwave_public_sources + libgtkwave_private_sources + libgtkwave_enums + vcd_keywords_c,
+    sources: libgtkwave_public_sources
+    + libgtkwave_private_sources
+    + libgtkwave_enums_c
+    + libgtkwave_enums_h
+    + vcd_keywords_c,
     dependencies: libgtkwave_dependencies,
     include_directories: config_inc,
     install: true,
 )
 
 install_headers(libgtkwave_public_headers, subdir: 'libgtkwave')
-
 
 pkgconfig.generate(
     libgtkwave,
@@ -144,7 +147,7 @@ pkgconfig.generate(
     ],
 )
 
-libgtkwave_dep_sources = []
+libgtkwave_dep_sources = [libgtkwave_enums_h]
 
 if get_option('introspection')
     libgtkwave_gir_includes = ['GObject-2.0']
