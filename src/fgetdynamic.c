@@ -22,7 +22,7 @@ char *fgetmalloc(FILE *handle)
         int ch = fgetc(handle);
         if (ch == EOF || ch == 0x00 || ch == '\n' || ch == '\r') {
             if (ch > 0 && line->len == 0) {
-                // skip leading CRs and LFs
+                continue; // skip leading CRs and LFs
             } else {
                 break;
             }
