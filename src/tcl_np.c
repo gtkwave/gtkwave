@@ -127,7 +127,7 @@ extern int NpLoadLibrary(HMODULE *tclHandle, char *dllName, int dllNameSize, cha
         /*
          * Try based on ActiveTcl registry entry
          */
-        char path[MAX_PATH], vers[MAX_PATH];
+        char vers[MAX_PATH];
         DWORD result, size = MAX_PATH;
         HKEY regKey;
 #define TCL_REG_DIR_KEY "Software\\ActiveState\\ActiveTcl"
@@ -200,7 +200,7 @@ extern int NpLoadLibrary(HMODULE *tclHandle, char *dllName, int dllNameSize, cha
                                     (char *)&msgPtr,
                                     0,
                                     NULL);
-            NpLog3("GetModuleFileNameA ERROR: %d (%s)\n",
+            NpLog3("GetModuleFileNameA ERROR: %lu (%s)\n",
                    code,
                    ((length == 0) ? "unknown error" : msgPtr));
             if (length > 0) {
