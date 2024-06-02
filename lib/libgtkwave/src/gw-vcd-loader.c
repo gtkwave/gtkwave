@@ -6,6 +6,7 @@
 #include "vcd-keywords.h"
 #include <stdio.h>
 #include <fstapi.h>
+#include <errno.h>
 
 #define VCD_BSIZ 32768 /* size of getch() emulation buffer--this val should be ok */
 #define VCD_INDEXSIZ (8 * 1024 * 1024)
