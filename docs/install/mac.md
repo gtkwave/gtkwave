@@ -22,13 +22,25 @@ for all notable changes.
 
 ### Installing dependencies
 
-1. **Install Homebrew** (if not already installed):
+1. **Install Xcode Command Line Tools** (if not already installed):
+
+    Xcode Command Line Tools are required for building software on macOS. To install them, open Terminal and run:
+
+    ```shell
+    xcode-select --install
+    ```
+
+    You’ll be prompted to start the installation, and then prompted again to accept a software license. Then the tools will download and install automatically.
+
+2. **Install Homebrew** (if not already installed):
 
     ```shell
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     ```
 
-2. **Install dependencies** using Homebrew:
+3. **Install dependencies** 
+
+    using Homebrew:
 
     ```shell
     brew install desktop-file-utils shared-mime-info gobject-introspection gtk-mac-integration meson ninja pkg-config gtk+3
@@ -54,7 +66,7 @@ meson compile -C build # Start compile
 sudo meson install -C build # Install gtkwave
 ```
 
-gtkwave is now installed on your Macos. You can start it in your terminal, run:
+gtkwave is now installed on your macOS. You can start it in your terminal, run:
 
 ```shell
 gtkwave
