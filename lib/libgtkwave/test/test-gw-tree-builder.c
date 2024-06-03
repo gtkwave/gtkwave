@@ -84,6 +84,22 @@ static void test_duplicate_scope(void) {
     g_object_unref(builder);
 }
 
+static void test_get_symbol_name(void) {
+    GwTreeBuilder *builder = gw_tree_builder_new('.');
+    gchar *name;
+
+    name = gw_tree_builder_get_symbol_name(builder, "sym1");
+    g_assert_cmpstr(name, ==, "sym1");
+    g_free(name);
+
+    gw_tree_builder_push_scope(builder, GW_TREE_KIND_VCD_ST_MODULE, "mod");
+    name = gw_tree_builder_get_symbol_name(builder, "sym2");
+    g_assert_cmpstr(name, ==, "mod.sym2");
+    g_free(name);
+
+    g_object_unref(builder);
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
@@ -91,6 +107,7 @@ int main(int argc, char *argv[])
     g_test_add_func("/tree_builder/build", test_build);
     g_test_add_func("/tree_builder/name_prefix", test_name_prefix);
     g_test_add_func("/tree_builder/duplicate_scope", test_duplicate_scope);
+    g_test_add_func("/tree_builder/get_symbol_name", test_get_symbol_name);
 
     return g_test_run();
 }

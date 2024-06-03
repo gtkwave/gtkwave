@@ -57,6 +57,8 @@ dumpfile_tests = [
     'evcd.vcd',
     'hashkill.vcd',
     'left_extension.vcd',
+    'names_with_delimiters.fst',
+    'names_with_delimiters.vcd',
     'synvec.fst',
     'timescale_100fs_fractional.vcd',
     'timescale_100fs.fst',
@@ -78,6 +80,7 @@ foreach test : dumpfile_tests
         output: test + '.dump',
         capture: true,
         build_always_stale: true,
+        env: ['G_DEBUG=fatal-warnings'],
     )
 
     test(
