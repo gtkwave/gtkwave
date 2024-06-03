@@ -16,9 +16,7 @@
 #include <string.h>
 #include <stdlib.h>
 /* #include <fnmatch.h> */
-#ifdef MAC_INTEGRATION
-#include <cocoa_misc.h>
-#endif
+
 
 
 void fileselbox_old(const char *title,
@@ -149,14 +147,11 @@ void fileselbox(const char *title,
                 const char *pattn,
                 int is_writemode)
 {
-#ifndef MAC_INTEGRATION
     int can_set_filename = 0;
     GtkFileChooserNative *pFileChooseNative;
     GtkWidget *pWindowMain;
     GtkFileFilter *filter;
     struct Global *old_globals = GLOBALS;
-#endif
-
     /* fix problem where ungrab doesn't occur if button pressed + simultaneous accelerator key
      * occurs */
     if (GLOBALS->in_button_press_wavewindow_c_1) {
@@ -206,28 +201,6 @@ void fileselbox(const char *title,
         ok_func();
         return;
     }
-
-#ifdef MAC_INTEGRATION
-
-    GLOBALS->fileselbox_text = filesel_path;
-    GLOBALS->filesel_ok = 0;
-    char *rc = gtk_file_req_bridge(title, *filesel_path, pattn, is_writemode);
-    if (rc) {
-        GLOBALS->filesel_ok = 1;
-
-        if (*GLOBALS->fileselbox_text)
-            free_2(*GLOBALS->fileselbox_text);
-        *GLOBALS->fileselbox_text = strdup_2(rc);
-        g_free(rc);
-        if (ok_func)
-            ok_func();
-    } else {
-        if (notok_func)
-            notok_func();
-    }
-    return;
-
-#else
 
 #if defined __MINGW32__
 
@@ -323,7 +296,9 @@ void fileselbox(const char *title,
         gtk_native_dialog_set_transient_for(GTK_NATIVE_DIALOG(pFileChooseNative), GTK_WINDOW(pWindowMain));
     }
     gtk_native_dialog_set_modal(GTK_NATIVE_DIALOG(pFileChooseNative),TRUE);
-    //wave_gtk_grab_add(pFileChoose);
+#ifdef MAC_INTEGRATION
+    osx_menu_sensitivity(FALSE);
+#endif
 
     /* check against old_globals is because of DnD context swapping so make response fail */
 // 这里处理了一种奇怪的情况，当用户在拖放的同时打开了文件选择器并且释放了拖放，则文件选择器的任何操作不会生效
@@ -386,7 +361,10 @@ void fileselbox(const char *title,
             }
         }
 
-        (printf("Filesel OK %s\n", allocbuf));
+        DEBUG(printf("Filesel OK %s\n", allocbuf));
+#ifdef MAC_INTEGRATION
+        osx_menu_sensitivity(TRUE);
+#endif
         //wave_gtk_grab_remove(pFileChoose);
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
@@ -394,8 +372,10 @@ void fileselbox(const char *title,
         gtkwave_main_iteration();
         ok_func();
     } else {
-        (printf("Filesel Entry Cancel\n"));
-        //wave_gtk_grab_remove(pFileChoose);
+        DEBUG(printf("Filesel Entry Cancel\n"));
+#ifdef MAC_INTEGRATION
+        osx_menu_sensitivity(TRUE);
+#endif
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
 
@@ -406,5 +386,4 @@ void fileselbox(const char *title,
 
 #endif
 
-#endif
 }
