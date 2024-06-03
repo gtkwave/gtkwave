@@ -59,9 +59,9 @@ To build gtkwave, run:
 
 ```shell
 # Use --prefix to specify the installation path
-meson setup build -Dintrospection=false --prefix=/opt
+meson setup build --prefix=/opt
 # Or install to default path (/usr/local):
-# meson setup build -Dintrospection=false
+# meson setup build
 meson compile -C build # Start compile
 sudo meson install -C build # Install gtkwave
 ```
