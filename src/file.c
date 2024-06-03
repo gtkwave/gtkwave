@@ -388,7 +388,7 @@ void fileselbox(const char *title,
 
         (printf("Filesel OK %s\n", allocbuf));
         //wave_gtk_grab_remove(pFileChoose);
-        //gtk_widget_destroy(pFileChoose);
+        gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
 
         gtkwave_main_iteration();
@@ -396,7 +396,7 @@ void fileselbox(const char *title,
     } else {
         (printf("Filesel Entry Cancel\n"));
         //wave_gtk_grab_remove(pFileChoose);
-        //gtk_widget_destroy(pFileChoose);
+        gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
 
         gtkwave_main_iteration();
