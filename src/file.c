@@ -20,10 +20,6 @@
 #include <cocoa_misc.h>
 #endif
 
-#if defined __MINGW32__
-#include <windows.h>
-#endif
-
 #ifndef MAC_INTEGRATION
 static gboolean ffunc(const GtkFileFilterInfo *filter_info, gpointer data)
 {
