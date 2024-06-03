@@ -194,9 +194,8 @@ static void close_all_fst_files(void) /* so mingw does delete of reader tempfile
 {
     unsigned int i;
     for (i = 0; i < GLOBALS->num_notebook_pages; i++) {
-        if ((*GLOBALS->contexts)[i]->fst_fst_c_1) {
-            fstReaderClose((*GLOBALS->contexts)[i]->fst_fst_c_1);
-            (*GLOBALS->contexts)[i]->fst_fst_c_1 = NULL;
+        if ((*GLOBALS->contexts)[i]->dump_file) {
+            g_clear_object(&((*GLOBALS->contexts)[i])->dump_file);
         }
     }
 }
