@@ -227,9 +227,6 @@ void fileselbox(const char *title,
     GtkWidget *pFileChoose;
     GtkWidget *pWindowMain;
     GtkFileFilter *filter;
-    GtkWidget *label;
-    GtkWidget *label_ent;
-    GtkWidget *box;
     struct Global *old_globals = GLOBALS;
 #endif
 
@@ -372,24 +369,6 @@ void fileselbox(const char *title,
         }
     }
 
-    label = gtk_label_new("Custom Filter:");
-    label_ent = X_gtk_entry_new_with_max_length(40);
-
-    gtk_entry_set_text(GTK_ENTRY(label_ent),
-                       GLOBALS->pFileChooseFilterName ? GLOBALS->pFileChooseFilterName : "*");
-    g_signal_connect(label_ent, "changed", G_CALLBACK(press_callback), pFileChoose);
-    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);
-    gtk_widget_show(label);
-    gtk_box_pack_start(GTK_BOX(box), label_ent, FALSE, FALSE, 0);
-    gtk_widget_set_size_request(GTK_WIDGET(label_ent), 300, 22);
-    gtk_tooltips_set_tip_2(label_ent,
-                           "Enter custom pattern match filter here. Note that \"string\" without * "
-                           "or ? achieves a match on \"*string*\".");
-    gtk_widget_show(label_ent);
-    gtk_widget_show(box);
-
-    gtk_file_chooser_set_extra_widget(GTK_FILE_CHOOSER(pFileChoose), box);
 
     if (pattn) {
         int is_gtkw = suffix_check(pattn, ".gtkw");
@@ -408,21 +387,13 @@ void fileselbox(const char *title,
             gtk_file_filter_set_name(filter, pattn2);
             gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
         }
-    }
 
-    if ((!pattn) || (strcmp(pattn, "*"))) {
-        filter = gtk_file_filter_new();
-        gtk_file_filter_add_pattern(filter, "*");
-        gtk_file_filter_set_name(filter, "*");
-        gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
-    }
-
-    filter = gtk_file_filter_new();
-    gtk_file_filter_add_custom(filter, GTK_FILE_FILTER_FILENAME, ffunc, NULL, NULL);
-    gtk_file_filter_set_name(filter, "Custom");
-    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
-    if (GLOBALS->pFileChooseFilterName) {
-        GLOBALS->pPatternSpec = g_pattern_spec_new(GLOBALS->pFileChooseFilterName);
+        if (strcmp(pattn, "*")) {
+            filter = gtk_file_filter_new();
+            gtk_file_filter_add_pattern(filter, "*");
+            gtk_file_filter_set_name(filter, "*");
+            gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
+        }
     }
 
     gtk_dialog_set_default_response(GTK_DIALOG(pFileChoose), GTK_RESPONSE_ACCEPT);
@@ -515,11 +486,6 @@ void fileselbox(const char *title,
         gtkwave_main_iteration();
         if (GLOBALS->bad_cleanup_file_c_1)
             notok_func();
-    }
-
-    if (GLOBALS->pPatternSpec) {
-        g_pattern_spec_free(GLOBALS->pPatternSpec);
-        GLOBALS->pPatternSpec = NULL;
     }
 
 #endif
