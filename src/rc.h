@@ -28,7 +28,6 @@ void read_rc_file(const char *override_rc);
 int insert_rc_variable(char *str);
 
 int f_accel(const char *str);
-int f_alt_hier_delimeter(const char *str);
 int f_autocoalesce(const char *str);
 int f_autocoalesce_reversal(const char *str);
 int f_autoname_bundles(const char *str);

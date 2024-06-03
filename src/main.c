@@ -802,7 +802,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->wave_scrolling = old_g->wave_scrolling;
         GLOBALS->do_zoom_center = old_g->do_zoom_center;
         GLOBALS->zoom_pow10_snap = old_g->zoom_pow10_snap;
-        GLOBALS->alt_hier_delimeter = old_g->alt_hier_delimeter;
         GLOBALS->cursor_snap = old_g->cursor_snap;
         GLOBALS->hier_delimeter = old_g->hier_delimeter;
         GLOBALS->hier_was_explicitly_set = old_g->hier_was_explicitly_set;

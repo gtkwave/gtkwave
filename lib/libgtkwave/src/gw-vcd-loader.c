@@ -1276,21 +1276,6 @@ static void fractional_timescale_fix(char *s)
     strcpy(s, buf);
 }
 
-static void strcpy_vcdalt(GwVcdLoader *self, char *too, char *from)
-{
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
-
-    char ch;
-
-    do {
-        ch = *(from++);
-        if (ch == alt_delimiter) {
-            ch = delimiter;
-        }
-    } while ((*(too++) = ch));
-}
-
 static void vcd_parse_timezero(GwVcdLoader *self)
 {
     int vtok = get_token(self);
@@ -1467,7 +1452,6 @@ static void vcd_parse_upscope(GwVcdLoader *self)
 static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint *vtok)
 {
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     *vtok = get_vartoken(self, 1);
     if (*vtok == V_STRING) {
@@ -1542,32 +1526,24 @@ static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint 
         v->name = g_malloc(name_prefix_len + 1 + self->yylen + 1);
         strcpy(v->name, name_prefix);
         v->name[name_prefix_len] = delimiter;
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name + name_prefix_len + 1, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
-                (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
-                strcpy(sd, name_prefix);
-                sd[name_prefix_len] = delimiter;
-                sd[name_prefix_len + 1] = '\\';
-                strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
+            (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
+            strcpy(sd, name_prefix);
+            sd[name_prefix_len] = delimiter;
+            sd[name_prefix_len + 1] = '\\';
+            strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
+            g_free(v->name);
+            v->name = sd;
         }
     } else {
         v->name = g_malloc(self->yylen + 1);
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(self->yylen + 2);
-                sd[0] = '\\';
-                strcpy(sd + 1, v->name);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(self->yylen + 2);
+            sd[0] = '\\';
+            strcpy(sd + 1, v->name);
+            g_free(v->name);
+            v->name = sd;
         }
     }
 
@@ -1597,7 +1573,6 @@ static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint 
 static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, int *vtok)
 {
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     *vtok = get_vartoken(self, 1);
     if (*vtok == V_END) {
@@ -1638,32 +1613,24 @@ static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, in
         v->name = g_malloc(name_prefix_len + 1 + self->yylen + 1);
         strcpy(v->name, name_prefix);
         v->name[name_prefix_len] = delimiter;
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name + name_prefix_len + 1, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
-                (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
-                strcpy(sd, name_prefix);
-                sd[name_prefix_len] = delimiter;
-                sd[name_prefix_len + 1] = '\\';
-                strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
+            (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
+            strcpy(sd, name_prefix);
+            sd[name_prefix_len] = delimiter;
+            sd[name_prefix_len + 1] = '\\';
+            strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
+            g_free(v->name);
+            v->name = sd;
         }
     } else {
         v->name = g_malloc(self->yylen + 1);
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(self->yylen + 2);
-                sd[0] = '\\';
-                strcpy(sd + 1, v->name);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(self->yylen + 2);
+            sd[0] = '\\';
+            strcpy(sd + 1, v->name);
+            g_free(v->name);
+            v->name = sd;
         }
     }
 

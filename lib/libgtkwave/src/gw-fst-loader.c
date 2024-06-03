@@ -553,21 +553,6 @@ static GwBlackoutRegions *load_blackout_regions(GwFstLoader *self)
     return blackout_regions;
 }
 
-static void strcpy_vcdalt(GwFstLoader *self, char *too, char *from)
-{
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
-
-    char ch;
-
-    do {
-        ch = *(from++);
-        if (ch == alt_delimiter) {
-            ch = delimiter;
-        }
-    } while ((*(too++) = ch));
-}
-
 /*
  * atoi 64-bit version..
  * y/on     default to '1'
@@ -767,7 +752,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     /* do your stuff here..all useful info has been initialized by now */
 
     char delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     for (guint i = 0; i < numfacs; i++) {
         char buf[65537];
@@ -928,12 +912,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
 
             str = g_malloc(len + 1);
-
-            if (alt_delimiter == '\0') {
-                memcpy(str, buf, len + 1);
-            } else {
-                strcpy_vcdalt(self, str, buf);
-            }
+            memcpy(str, buf, len + 1);
             s = &sym_block[i];
             s->name = str;
             prevsymroot = prevsym = NULL;
@@ -955,12 +934,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 int len = sprintf_2_sd(buf, f_name[(i)&F_NAME_MODULUS], node_block[i].msi);
 
                 str = g_malloc(len + 1);
-
-                if (alt_delimiter == '\0') {
-                    memcpy(str, buf, len + 1);
-                } else {
-                    strcpy_vcdalt(self, str, buf);
-                }
+                memcpy(str, buf, len + 1);
                 s = &sym_block[i];
                 s->name = str;
                 if (allowed_to_autocoalesce && prevsym &&
@@ -980,12 +954,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
                 str = g_malloc(len + 1);
-
-                if (alt_delimiter == '\0') {
-                    memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
-                } else {
-                    strcpy_vcdalt(self, str, f_name[(i)&F_NAME_MODULUS]);
-                }
+                memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
                 s = &sym_block[i];
                 s->name = str;
                 prevsymroot = prevsym = NULL;

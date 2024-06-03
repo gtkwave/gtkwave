@@ -25,7 +25,5 @@ void gw_loader_set_autocoalesce(GwLoader *self, gboolean autocoalesce);
 gboolean gw_loader_is_autocoalesce(GwLoader *self);
 void gw_loader_set_hierarchy_delimiter(GwLoader *self, gchar delimiter);
 gchar gw_loader_get_hierarchy_delimiter(GwLoader *self);
-void gw_loader_set_alternate_hierarchy_delimiter(GwLoader *self, gchar delimiter);
-gchar gw_loader_get_alternate_hierarchy_delimiter(GwLoader *self);
 
 G_END_DECLS
