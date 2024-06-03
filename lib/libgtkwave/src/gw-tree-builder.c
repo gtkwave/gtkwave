@@ -9,6 +9,7 @@ struct _GwTreeBuilder
 
     GString *name_prefix;
     gchar hierarchy_delimiter;
+    gchar hierarchy_delimiter_str[2];
 };
 
 G_DEFINE_TYPE(GwTreeBuilder, gw_tree_builder, G_TYPE_OBJECT)
@@ -42,6 +43,7 @@ static void gw_tree_builder_set_property(GObject *object,
     switch (property_id) {
         case PROP_HIERARCHY_DELIMITER:
             self->hierarchy_delimiter = g_value_get_uchar(value);
+            self->hierarchy_delimiter_str[0] = self->hierarchy_delimiter;
             break;
 
         default:
@@ -62,7 +64,7 @@ static void gw_tree_builder_class_init(GwTreeBuilderClass *klass)
         g_param_spec_uchar("hierarchy-delimiter",
                            NULL,
                            NULL,
-                           ' ',
+                           1,
                            127,
                            '.',
                            G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS);
@@ -159,6 +161,18 @@ const gchar *gw_tree_builder_get_name_prefix(GwTreeBuilder *self)
     } else {
         return NULL;
     }
+}
+
+gchar *gw_tree_builder_get_symbol_name(GwTreeBuilder *self, const gchar *identifier)
+{
+    g_return_val_if_fail(GW_IS_TREE_BUILDER(self), NULL);
+    g_return_val_if_fail(identifier != NULL && identifier[0] != '\0', NULL);
+
+    if (self->name_prefix->len == 0) {
+        return g_strdup(identifier);
+    }
+
+    return g_strconcat(self->name_prefix->str, self->hierarchy_delimiter_str, identifier, NULL);
 }
 
 GwTreeNode *gw_tree_builder_build(GwTreeBuilder *self)

@@ -15,3 +15,8 @@ struct _GwVcdFile
 
     GwHistEntFactory *hist_ent_factory;
 };
+
+// The unit separator control character is used to represent the hierarchy
+// delimiter internally.
+#define VCD_HIERARCHY_DELIMITER '\x1F'
+#define VCD_HIERARCHY_DELIMITER_STR "\x1F"

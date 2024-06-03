@@ -10,8 +10,6 @@
 
 #define VCD_BSIZ 32768 /* size of getch() emulation buffer--this val should be ok */
 #define VCD_INDEXSIZ (8 * 1024 * 1024)
-// TODO: remove VCDNAM_ESCAPE
-#define VCDNAM_ESCAPE 1
 // TODO: remove!
 #define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
 #define WAVE_DECOMPRESSOR "gzip -cd " /* zcat alone doesn't cut it for AIX */
@@ -1183,28 +1181,6 @@ static void evcd_strcpy(char *dst, char *src)
     *dst = 0; /* null terminate destination */
 }
 
-static int strcpy_delimfix(GwVcdLoader *self, char *too, char *from)
-{
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-
-    char ch;
-    int found = 0;
-
-    do {
-        ch = *(from++);
-        if (ch == delimiter) {
-            ch = VCDNAM_ESCAPE;
-            found = 1;
-        }
-    } while ((*(too++) = ch));
-
-    if (found) {
-        self->has_escaped_names = TRUE;
-    }
-
-    return (found);
-}
-
 static void fractional_timescale_fix(char *s)
 {
     char buf[32], sfx[2];
@@ -1449,38 +1425,6 @@ static void vcd_parse_upscope(GwVcdLoader *self)
     sync_end(self);
 }
 
-static void vcd_parse_var_name(GwVcdLoader *self, struct vcdsymbol *v)
-{
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-
-    const gchar *name_prefix = gw_tree_builder_get_name_prefix(self->tree_builder);
-    if (name_prefix != NULL) {
-        gsize name_prefix_len = strlen(name_prefix);
-        v->name = g_malloc(name_prefix_len + 1 + self->yylen + 1);
-        strcpy(v->name, name_prefix);
-        v->name[name_prefix_len] = delimiter;
-        if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
-            (self->yytext[0] != '\\')) {
-            char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
-            strcpy(sd, name_prefix);
-            sd[name_prefix_len] = delimiter;
-            sd[name_prefix_len + 1] = '\\';
-            strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
-            g_free(v->name);
-            v->name = sd;
-        }
-    } else {
-        v->name = g_malloc(self->yylen + 1);
-        if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
-            char *sd = g_malloc(self->yylen + 2);
-            sd[0] = '\\';
-            strcpy(sd + 1, v->name);
-            g_free(v->name);
-            v->name = sd;
-        }
-    }
-}
-
 static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint *vtok)
 {
     *vtok = get_vartoken(self, 1);
@@ -1550,7 +1494,7 @@ static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint 
         return FALSE;
     }
 
-    vcd_parse_var_name(self, v);
+    v->name = gw_tree_builder_get_symbol_name(self->tree_builder, self->yytext);
 
     if (self->pv != NULL) {
         if (!strcmp(self->prev_hier_uncompressed_name, v->name) &&
@@ -1610,7 +1554,7 @@ static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, in
         return FALSE;
     }
 
-    vcd_parse_var_name(self, v);
+    v->name = gw_tree_builder_get_symbol_name(self->tree_builder, self->yytext);
 
     if (self->pv != NULL) {
         if (!strcmp(self->prev_hier_uncompressed_name, v->name)) {
@@ -2290,13 +2234,11 @@ static const char *get_module_name(GwVcdLoader *self, const char *s)
 
     pnt = self->module_tree;
 
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-
     for (;;) {
         ch = *(s++);
 
-        if (((ch == delimiter) || (ch == '|')) &&
-            (*s)) /* added && null check to allow possible . at end of name */
+        if (ch == VCD_HIERARCHY_DELIMITER &&
+            *s != '\0') /* added && null check to allow possible . at end of name */
         {
             *(pnt) = 0;
             self->module_len_tree = pnt - self->module_tree;
@@ -2431,7 +2373,7 @@ static void build_tree_from_name(GwVcdLoader *self,
 static void treenamefix_str(char *s, char delimiter)
 {
     while (*s) {
-        if (*s == VCDNAM_ESCAPE)
+        if (*s == VCD_HIERARCHY_DELIMITER)
             *s = delimiter;
         s++;
     }
@@ -2472,7 +2414,7 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
             char *subst, ch;
             subst = fac->name;
             while ((ch = (*subst))) {
-                if (ch == VCDNAM_ESCAPE) {
+                if (ch == VCD_HIERARCHY_DELIMITER) {
                     *subst = delimiter;
                 } /* restore back to normal */
                 subst++;
@@ -2481,7 +2423,9 @@ static GwTree *vcd_build_tree(GwVcdLoader *self, GwFacs *facs)
     }
 
     GwTree *tree = gw_tree_new(g_steal_pointer(&self->tree_root));
-    gw_tree_graft(tree, self->terminals_chain);
+    if (self->terminals_chain != NULL) {
+        gw_tree_graft(tree, self->terminals_chain);
+    }
     gw_tree_sort(tree);
 
     if (self->has_escaped_names) {
@@ -2510,6 +2454,8 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
     GwVcdLoader *self = GW_VCD_LOADER(loader);
 
     errno = 0; /* reset in case it's set for some reason */
+
+    self->has_escaped_names = TRUE;
 
     if (g_str_has_suffix(fname, ".gz") || g_str_has_suffix(fname, ".zip")) {
         char *str;
@@ -2775,7 +2721,7 @@ static void gw_vcd_loader_init(GwVcdLoader *self)
     self->T_MAX_STR = 1024;
     self->yytext = g_malloc(self->T_MAX_STR + 1);
     self->vcd_minid = G_MAXUINT;
-    self->tree_builder = gw_tree_builder_new('.'); // TODO: use hierarchy delimiter property
+    self->tree_builder = gw_tree_builder_new(VCD_HIERARCHY_DELIMITER);
     self->blackout_regions = gw_blackout_regions_new();
 
     self->vlist_compression_level = Z_DEFAULT_COMPRESSION;
