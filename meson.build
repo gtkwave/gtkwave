@@ -137,6 +137,9 @@ config.set('WAVE_DISABLE_FAST_TREE', not get_option('fasttree'))
 
 functions = [
     'fseeko',
+    'realpath',
+    'setenv',
+    'unsetenv'
 ]
 
 foreach function : functions
