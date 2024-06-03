@@ -753,7 +753,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     self->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
     self->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
 
-    uint64_t numfacs = fstReaderGetVarCount(self->fst_reader);
+    guint64 numfacs = fstReaderGetVarCount(self->fst_reader);
 
     GwFacs *facs = gw_facs_new(numfacs);
     self->mvlfacs = g_new0(GwFac, numfacs);
