@@ -18,6 +18,7 @@
 #if defined __MINGW32__
 #include <windows.h>
 #include <io.h>
+#undef interface
 #endif
 
 #define XXX_GDK_DRAWABLE(x) x

@@ -35,13 +35,16 @@ extern "C" {
 
 #ifndef _MSC_VER
 #include <unistd.h>
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
 #else
 typedef long off_t;
 #include <windows.h>
 #include <io.h>
+#endif
+
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#else
+#include <stdint.h>
 #endif
 
 #ifndef HAVE_FSEEKO
@@ -75,34 +78,22 @@ typedef long off_t;
 
 #define LXT2_RD_MAX_BLOCK_MEM_USAGE (64*1024*1024)	/* 64MB */
 
-#ifndef _MSC_VER
 typedef uint8_t 		lxtint8_t;
 typedef uint16_t 		lxtint16_t;
 typedef uint32_t		lxtint32_t;
 typedef uint64_t	 	lxtint64_t;
 typedef int32_t			lxtsint32_t;
 typedef int64_t			lxtsint64_t;
-#ifndef __MINGW32__
+
+#ifdef HAVE_INTTYPES_H
 #define LXT2_RD_LLD "%"PRId64
 #define LXT2_RD_LD "%"PRId32
 #else
-#define LXT2_RD_LLD "%I64d"
+#define LXT2_RD_LLD "%lld"
 #define LXT2_RD_LD "%d"
 #endif
 #define LXT2_RD_LLDESC(x) x##LL
 #define LXT2_RD_ULLDESC(x) x##ULL
-#else
-typedef unsigned __int8		lxtint8_t;
-typedef unsigned __int16	lxtint16_t;
-typedef unsigned __int32	lxtint32_t;
-typedef unsigned __int64	lxtint64_t;
-typedef          __int32	lxtsint32_t;
-typedef          __int64	lxtsint64_t;
-#define LXT2_RD_LLD "%I64d"
-#define LXT2_RD_LD "%d"
-#define LXT2_RD_LLDESC(x) x##i64
-#define LXT2_RD_ULLDESC(x) x##i64
-#endif
 
 #if LXT2_RD_GRANULE_SIZE > 32
 typedef lxtint64_t		granmsk_t;
