@@ -18,7 +18,6 @@
 /* #include <fnmatch.h> */
 
 
-
 void fileselbox_old(const char *title,
                     char **filesel_path,
                     GCallback ok_func,
@@ -202,19 +201,11 @@ void fileselbox(const char *title,
         return;
     }
 
-#if defined __MINGW32__
-
-    fileselbox_old(title, filesel_path, ok_func, notok_func, pattn, is_writemode);
-    return;
-
-#else
-
     pWindowMain = GLOBALS->mainwindow;
     GLOBALS->fileselbox_text = filesel_path;
     GLOBALS->filesel_ok = 0;
 
     if (*GLOBALS->fileselbox_text && (!g_path_is_absolute(*GLOBALS->fileselbox_text))) {
-#if defined __USE_BSD || defined __USE_XOPEN_EXTENDED || defined __CYGWIN__ || defined HAVE_REALPATH
         char *can = realpath_2(*GLOBALS->fileselbox_text, NULL);
 
         if (can) {
@@ -225,11 +216,6 @@ void fileselbox(const char *title,
             free(can);
             can_set_filename = 1;
         }
-#else
-#if __GNUC__
-#warning Absolute file path warnings might be issued by the file chooser dialogue on this system!
-#endif
-#endif
     } else {
         if (*GLOBALS->fileselbox_text) {
             can_set_filename = 1;
@@ -254,7 +240,7 @@ void fileselbox(const char *title,
                                                   );
     }
 
-    //GLOBALS->pFileChoose = pFileChoose;
+    GLOBALS->pFileChoose = pFileChooseNative;
 
     if ((can_set_filename) && (*filesel_path)) {
         int flen = strlen(*filesel_path);
@@ -264,7 +250,6 @@ void fileselbox(const char *title,
             gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(pFileChooseNative), *filesel_path);
         }
     }
-
 
     if (pattn) {
         int is_gtkw = suffix_check(pattn, ".gtkw");
@@ -301,12 +286,12 @@ void fileselbox(const char *title,
 #endif
 
     /* check against old_globals is because of DnD context swapping so make response fail */
-// 这里处理了一种奇怪的情况，当用户在拖放的同时打开了文件选择器并且释放了拖放，则文件选择器的任何操作不会生效
+
     if ((gtk_native_dialog_run(GTK_NATIVE_DIALOG(pFileChooseNative)) == GTK_RESPONSE_ACCEPT) &&
         (GLOBALS == old_globals) && (GLOBALS->fileselbox_text)) {
         const char *allocbuf;
         int alloclen;
-//获取选中的文件名并计算其长度。如果长度有效（大于零），继续处理。
+
         allocbuf = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(pFileChooseNative));
         if ((alloclen = strlen(allocbuf))) {
             int gtkw_test = 0;
@@ -360,15 +345,12 @@ void fileselbox(const char *title,
                 GLOBALS->is_gtkw_save_file = suffix_check(*GLOBALS->fileselbox_text, ".gtkw");
             }
         }
-
         DEBUG(printf("Filesel OK %s\n", allocbuf));
 #ifdef MAC_INTEGRATION
         osx_menu_sensitivity(TRUE);
 #endif
-        //wave_gtk_grab_remove(pFileChoose);
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
-
         gtkwave_main_iteration();
         ok_func();
     } else {
@@ -383,7 +365,4 @@ void fileselbox(const char *title,
         if (GLOBALS->bad_cleanup_file_c_1)
             notok_func();
     }
-
-#endif
-
 }

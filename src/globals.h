@@ -175,7 +175,7 @@ struct Global
     /*
      * file.c
      */
-    GtkWidget *pFileChoose;
+    GtkFileChooserNative *pFileChoose;
     GtkWidget *fs_file_c_1; /* from file.c 87 */
     char **fileselbox_text; /* from file.c 88 */
     char filesel_ok; /* from file.c 89 */
