@@ -74,4 +74,4 @@ gtkwave
 
 ## Troubleshooting
 
-If you encounter any errors during the installation process, please refer to the GitHub issue for additional help and troubleshooting tips.
+If you encounter any errors during the installation process, please refer to the [GitHub issue](https://github.com/gtkwave/gtkwave/issues) for additional help and troubleshooting tips.
