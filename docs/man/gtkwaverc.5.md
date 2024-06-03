@@ -33,15 +33,6 @@ followed by the user\'s home directory.
     accelerator syntax. The special accelerator value of *(null)* means
     that no accelerator is bound to the menu item.
 
-**alt_hier_delimeter** \<*value*\>
-
-:   This allows another character in addition to the hier_delimeter to
-    be used to delimit levels in the hierarchy for VCD. Only the first
-    character in the value is significant. Note that this is normally
-    off. The intended use is to resolve the hierarchies of netlist based
-    models that often contain slashes to delimit hierarchy inside of
-    \$var statements.
-
 **alt_wheel_mode** \<*value*\> 
 
 :   Default is on. Scrollwheel alone pans along a quarter at a time
