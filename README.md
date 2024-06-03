@@ -20,7 +20,8 @@ dnf install meson gperf flex glib2-devel gcc gcc-c++ gtk3-devel \
             gobject-introspection-devel desktop-file-utils tcl
 ```
 
-MacOS:
+macOS:
+
 ```sh
 brew install desktop-file-utils shared-mime-info       \
              gobject-introspection gtk-mac-integration \

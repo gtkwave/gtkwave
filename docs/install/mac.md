@@ -55,7 +55,7 @@ git clone https://github.com/gtkwave/gtkwave.git gtkwave
 cd gtkwave
 ```
 
-To build gtkwave, run:
+To build GTKWave, run:
 
 ```shell
 # Use --prefix to specify the installation path
@@ -66,7 +66,7 @@ meson compile -C build # Start compile
 sudo meson install -C build # Install gtkwave
 ```
 
-gtkwave is now installed on your macOS. You can start it in your terminal, run:
+GTKWave is now installed on your macOS. You can start it in your terminal, run:
 
 ```shell
 gtkwave
