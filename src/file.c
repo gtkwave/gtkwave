@@ -15,129 +15,6 @@
 #include "debug.h"
 #include <string.h>
 #include <stdlib.h>
-/* #include <fnmatch.h> */
-
-
-void fileselbox_old(const char *title,
-                    char **filesel_path,
-                    GCallback ok_func,
-                    GCallback notok_func,
-                    const char *pattn,
-                    int is_writemode)
-{
-#if defined __MINGW32__
-    OPENFILENAME ofn;
-    char szFile[260]; /* buffer for file name */
-    char szPath[260]; /* buffer for path name */
-    char lpstrFilter[260]; /* more than enough room for some patterns */
-    BOOL rc;
-
-    GLOBALS->fileselbox_text = filesel_path;
-    GLOBALS->filesel_ok = 0;
-    GLOBALS->cleanup_file_c_2 = ok_func;
-    GLOBALS->bad_cleanup_file_c_1 = notok_func;
-
-    ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.lpstrFile = szFile;
-    ofn.lpstrFile[0] = '\0';
-    ofn.lpstrFilter = lpstrFilter;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = is_writemode ? (OFN_CREATEPROMPT | OFN_OVERWRITEPROMPT)
-                             : (OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST);
-
-    if ((!pattn) || (!strcmp(pattn, "*"))) {
-        sprintf(lpstrFilter, "%s%c%s%c", "All", 0, "*.*", 0);
-        ofn.nFilterIndex = 0;
-    } else {
-        sprintf(lpstrFilter, "%s%c%s%c%s%c%s%c", pattn, 0, pattn, 0, "All", 0, "*.*", 0); /* cppcheck
-                                                                                           */
-        ofn.nFilterIndex = 0;
-    }
-
-    if (*filesel_path) {
-        char *fsp = *filesel_path;
-        int ch_idx = 0;
-        char ch = 0;
-
-        while (*fsp) {
-            ch = *fsp;
-            szFile[ch_idx++] = (ch != '/') ? ch : '\\';
-            fsp++;
-        }
-
-        szFile[ch_idx] = 0;
-
-        if ((ch == '/') || (ch == '\\')) {
-            strcpy(szPath, szFile);
-            szFile[0] = 0;
-            ofn.lpstrInitialDir = szPath;
-        }
-    }
-
-    rc = is_writemode ? GetSaveFileName(&ofn) : GetOpenFileName(&ofn);
-
-    if (rc == TRUE) {
-        GLOBALS->filesel_ok = 1;
-        if (*GLOBALS->fileselbox_text)
-            free_2(*GLOBALS->fileselbox_text);
-        if (!is_writemode) {
-            *GLOBALS->fileselbox_text = (char *)strdup_2(szFile);
-        } else {
-            char *suf_str = NULL;
-            int suf_add = 0;
-            int szlen = 0;
-            int suflen = 0;
-
-            if (pattn) {
-                suf_str = strstr(pattn, "*.");
-                if (suf_str)
-                    suf_str++;
-            }
-
-            if (suf_str) {
-                szlen = strlen(szFile);
-                suflen = strlen(suf_str);
-                if (suflen > szlen) {
-                    suf_add = 1;
-                } else {
-                    if (strcasecmp(szFile + (szlen - suflen), suf_str)) {
-                        suf_add = 1;
-                    }
-                }
-            }
-
-            if (suf_str && suf_add) {
-                *GLOBALS->fileselbox_text = (char *)malloc_2(szlen + suflen + 1);
-                strcpy(*GLOBALS->fileselbox_text, szFile);
-                strcpy(*GLOBALS->fileselbox_text + szlen, suf_str);
-            } else {
-                *GLOBALS->fileselbox_text = (char *)strdup_2(szFile);
-            }
-        }
-
-        GLOBALS->cleanup_file_c_2();
-    } else {
-        if (GLOBALS->bad_cleanup_file_c_1)
-            GLOBALS->bad_cleanup_file_c_1();
-    }
-
-#else
-    (void)title;
-    (void)filesel_path;
-    (void)ok_func;
-    (void)notok_func;
-    (void)pattn;
-    (void)is_writemode;
-
-    fprintf(stderr, "fileselbox_old no longer supported, exiting.\n");
-    exit(255);
-
-#endif
-}
 
 void fileselbox(const char *title,
                 char **filesel_path,
@@ -362,7 +239,7 @@ void fileselbox(const char *title,
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
 
         gtkwave_main_iteration();
-        if (GLOBALS->bad_cleanup_file_c_1)
+        if (notok_func)
             notok_func();
     }
 }

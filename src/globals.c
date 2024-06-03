@@ -152,8 +152,6 @@ static const struct Global globals_base_values = {
     0, /* fs_file_c_1 86 */
     NULL, /* fileselbox_text 87 */
     0, /* filesel_ok 88 */
-    0, /* cleanup_file_c_2 89 */
-    0, /* bad_cleanup_file_c1 */
 
     /*
      * fonts.c
