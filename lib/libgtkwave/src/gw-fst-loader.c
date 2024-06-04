@@ -94,67 +94,6 @@ static int memrevcmp(int i, const char *s1, const char *s2)
     return (i + 1);
 }
 
-/*
- * fast itoa for decimal numbers
- */
-static char *itoa_2(int value, char *result)
-{
-    char *ptr = result, *ptr1 = result, tmp_char;
-    int tmp_value;
-
-    do {
-        tmp_value = value;
-        value /= 10;
-        *ptr++ = "9876543210123456789"[9 + (tmp_value - value * 10)];
-    } while (value);
-
-    if (tmp_value < 0)
-        *ptr++ = '-';
-    result = ptr;
-    *ptr-- = '\0';
-    while (ptr1 < ptr) {
-        tmp_char = *ptr;
-        *ptr-- = *ptr1;
-        *ptr1++ = tmp_char;
-    }
-    return (result);
-}
-
-/*
- * preformatted sprintf statements which remove parsing latency
- */
-static int sprintf_2_sd(char *s, char *c, int d)
-{
-    char *s2 = s;
-
-    while (*c) {
-        *(s2++) = *(c++);
-    }
-    *(s2++) = '[';
-    s2 = itoa_2(d, s2);
-    *(s2++) = ']';
-    *s2 = 0;
-
-    return (s2 - s);
-}
-
-static int sprintf_2_sdd(char *s, char *c, int d, int d2)
-{
-    char *s2 = s;
-
-    while (*c) {
-        *(s2++) = *(c++);
-    }
-    *(s2++) = '[';
-    s2 = itoa_2(d, s2);
-    *(s2++) = ':';
-    s2 = itoa_2(d2, s2);
-    *(s2++) = ']';
-    *s2 = 0;
-
-    return (s2 - s);
-}
-
 /******************************************************************/
 
 static void handle_scope(GwFstLoader *self, struct fstHierScope *scope)
@@ -790,8 +729,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     GwSymbol *prevsym = NULL;
 
     for (guint i = 0; i < numfacs; i++) {
-        char buf[65537];
-
         int msb = 0;
         int lsb = 0;
         int name_len = 0;
@@ -813,6 +750,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         g_string_truncate(fnam, 0);
 
         const gchar *name_prefix = gw_tree_builder_get_name_prefix(self->tree_builder);
+        gsize name_prefix_len = name_prefix != NULL ? strlen(name_prefix) : 0;
         if (name_prefix != NULL) {
             g_string_append(fnam, name_prefix);
             g_string_append_c(fnam, delimiter);
@@ -875,39 +813,34 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
         GwSymbol *s = &sym_block[i];
         if (f->len > 1 && is_bits) {
-            int len = sprintf_2_sdd(buf, fnam->str, node_block[i].msi, node_block[i].lsi);
-
             // preserve 2d in name, but make 1d internally
             if (len_subst) {
                 node_block[i].msi = var->length - 1;
                 node_block[i].lsi = 0;
             }
 
-            gchar *str = g_malloc(len + 1);
-            memcpy(str, buf, len + 1);
-            s->name = str;
+            s->name = gw_tree_builder_get_symbol_name_with_two_indices(self->tree_builder,
+                                                                       nnam,
+                                                                       node_block[i].msi,
+                                                                       node_block[i].lsi);
+
             prevsymroot = NULL;
             prevsym = NULL;
-
-            len = sprintf_2_sdd(buf, nnam, node_block[i].msi, node_block[i].lsi);
-            fst_append_graft_chain(self, buf, i, npar);
         } else {
             GString *prev_f_name = g_ptr_array_index(self->f_name, (i - 1) & F_NAME_MODULUS);
 
-            int gatecmp =
+            gboolean has_index =
                 f->len == 1 && is_bits && node_block[i].msi != -1 && node_block[i].lsi != -1;
-            int revcmp = gatecmp && i > 0 && fnam->len == prev_f_name->len &&
-                         memrevcmp(fnam->len, fnam->str, prev_f_name->str) == 0;
+            gboolean has_same_name = i > 0 && fnam->len == prev_f_name->len &&
+                                     memrevcmp(fnam->len, fnam->str, prev_f_name->str) == 0;
 
-            if (gatecmp) {
-                int len = sprintf_2_sd(buf, fnam->str, node_block[i].msi);
+            if (has_index) {
+                s->name = gw_tree_builder_get_symbol_name_with_one_index(self->tree_builder,
+                                                                         nnam,
+                                                                         node_block[i].msi);
 
-                gchar *str = g_malloc(len + 1);
-                memcpy(str, buf, len + 1);
-                s->name = str;
-                if (allowed_to_autocoalesce && prevsym &&
-                    revcmp) /* allow chaining for search functions.. */
-                {
+                // allow chaining for search functions..
+                if (allowed_to_autocoalesce && prevsym && has_same_name) {
                     prevsym->vec_root = prevsymroot;
                     prevsym->vec_chain = s;
                     s->vec_root = prevsymroot;
@@ -916,14 +849,9 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                     prevsymroot = prevsym = s;
                 }
 
-                len = sprintf_2_sd(buf, nnam, node_block[i].msi);
-                fst_append_graft_chain(self, buf, i, npar);
             } else {
-                int len = fnam->len;
+                s->name = gw_tree_builder_get_symbol_name(self->tree_builder, nnam);
 
-                gchar *str = g_malloc(len + 1);
-                memcpy(str, fnam->str, len + 1);
-                s->name = str;
                 prevsymroot = NULL;
                 prevsym = NULL;
 
@@ -938,10 +866,18 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                         self->mvlfacs[i].len = 32;
                     }
                 }
-
-                fst_append_graft_chain(self, nnam, i, npar);
             }
         }
+
+        // Get the node name by stripping off the prefix.
+        const gchar *node_name;
+        if (name_prefix_len > 0) {
+            node_name = &s->name[name_prefix_len + 1];
+        } else {
+            node_name = s->name;
+        }
+
+        fst_append_graft_chain(self, node_name, i, npar);
 
         gw_facs_set(facs, i, &sym_block[i]);
 

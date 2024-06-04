@@ -7,12 +7,16 @@ global time offset: 0
 
 Tree
 ----
-w[2] (kind=GW_TREE_KIND_UNKNOWN, t_which=11)
-w[1] (kind=GW_TREE_KIND_UNKNOWN, t_which=10)
-w[0] (kind=GW_TREE_KIND_UNKNOWN, t_which=9)
-v[2] (kind=GW_TREE_KIND_UNKNOWN, t_which=8)
-v[1] (kind=GW_TREE_KIND_UNKNOWN, t_which=7)
-v[0] (kind=GW_TREE_KIND_UNKNOWN, t_which=6)
+w[2] (kind=GW_TREE_KIND_UNKNOWN, t_which=14)
+w[1] (kind=GW_TREE_KIND_UNKNOWN, t_which=13)
+w[0] (kind=GW_TREE_KIND_UNKNOWN, t_which=12)
+v[2] (kind=GW_TREE_KIND_UNKNOWN, t_which=11)
+v[1] (kind=GW_TREE_KIND_UNKNOWN, t_which=10)
+v[0] (kind=GW_TREE_KIND_UNKNOWN, t_which=9)
+mod (kind=GW_TREE_KIND_VCD_ST_MODULE, t_which=-1)
+    v[2] (kind=GW_TREE_KIND_UNKNOWN, t_which=8)
+    v[1] (kind=GW_TREE_KIND_UNKNOWN, t_which=7)
+    v[0] (kind=GW_TREE_KIND_UNKNOWN, t_which=6)
 \z[0][1] (kind=GW_TREE_KIND_UNKNOWN, t_which=5)
 \z[0][0] (kind=GW_TREE_KIND_UNKNOWN, t_which=4)
 \y[0][1] (kind=GW_TREE_KIND_UNKNOWN, t_which=3)
@@ -113,6 +117,56 @@ Facs
             x @ -2
             x @ -1
             0 @ 0
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+mod.v[0]
+    vec_root: mod.v[0]
+    vec_chain: mod.v[1]
+    node: mod.v[0]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 5
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+mod.v[1]
+    vec_root: mod.v[0]
+    vec_chain: mod.v[2]
+    node: mod.v[1]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 1, 1
+        numhist: 5
+        transitions:
+            x @ -2
+            x @ -1
+            1 @ 0
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+mod.v[2]
+    vec_root: mod.v[0]
+    node: mod.v[2]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 2, 2
+        numhist: 5
+        transitions:
+            x @ -2
+            x @ -1
+            z @ 0
             x @ 9223372036854775806
             z @ 9223372036854775807
 v[0]
@@ -218,7 +272,7 @@ w[2]
 
 Aliases
 -------
-\x[0], \y[0][1], \z[0][1], v[0], w[0]
-\x[1], \y[0][0], \z[0][0], v[1], w[1]
-v[2], w[2]
+\x[0], \y[0][1], \z[0][1], mod.v[0], v[0], w[0]
+\x[1], \y[0][0], \z[0][0], mod.v[1], v[1], w[1]
+mod.v[2], v[2], w[2]
 
