@@ -893,7 +893,7 @@ static void sig_selection_foreach(GtkTreeModel *model,
                     add_vector_chain(s->vec_root, len);
             }
         } else {
-            AddNodeUnroll(s->n, NULL);
+            AddNode(s->n, NULL);
         }
     }
 }
@@ -1649,7 +1649,7 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
                     add_vector_chain(s->vec_root, len);
             }
         } else {
-            AddNodeUnroll(s->n, NULL);
+            AddNode(s->n, NULL);
         }
     }
 
@@ -1735,7 +1735,7 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
                     add_vector_chain(s->vec_root, len);
             }
         } else {
-            AddNodeUnroll(s->n, NULL);
+            AddNode(s->n, NULL);
         }
     }
 
@@ -1835,7 +1835,7 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
                     add_vector_chain(s->vec_root, len);
             }
         } else {
-            AddNodeUnroll(s->n, NULL);
+            AddNode(s->n, NULL);
         }
     }
 

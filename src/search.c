@@ -302,7 +302,7 @@ void search_insert_callback(GtkWidget *widget, char is_prepend)
             GLOBALS->pdata->oldvalue = i;
 
             if ((!s->vec_root) || (!GLOBALS->autocoalesce)) {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             } else {
                 len = 0;
                 t = s->vec_root;
@@ -449,7 +449,7 @@ static void replace_callback(GtkWidget *widget, GtkWidget *nothing)
             GLOBALS->pdata->oldvalue = i;
 
             if ((!s->vec_root) || (!GLOBALS->autocoalesce)) {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             } else {
                 len = 0;
                 t = s->vec_root;
@@ -636,7 +636,7 @@ static void ok_callback(GtkWidget *widget, GtkWidget *nothing)
             GLOBALS->pdata->oldvalue = i;
 
             if ((!s->vec_root) || (!GLOBALS->autocoalesce)) {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             } else {
                 len = 0;
                 t = s->vec_root;
