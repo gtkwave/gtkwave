@@ -22,6 +22,12 @@ $comment expected: \z[0][1] and \z[0][0] $end
 $var wire 1 a \z[0][1] $end
 $var wire 1 b \z[0][0] $end
 
+$scope module mod $end
+$var wire 1 a v [0] $end
+$var wire 1 b v [1] $end
+$var wire 1 c v [2] $end
+$upscope $end
+
 $enddefinitions $end
 
 #0

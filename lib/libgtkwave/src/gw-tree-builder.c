@@ -163,16 +163,131 @@ const gchar *gw_tree_builder_get_name_prefix(GwTreeBuilder *self)
     }
 }
 
+static gchar *gw_tree_builder_get_symbol_name_common(GwTreeBuilder *self,
+                                                     const gchar *identifier,
+                                                     gint num_inidices,
+                                                     gint index1,
+                                                     gint index2)
+{
+    // This function temporarily adds the symbol name to the name prefix to
+    // prevent additional allocations. After the string is copied into a new
+    // buffer the original prefix string is restored by truncating it.
+    guint prefix_len = self->name_prefix->len;
+
+    if (self->name_prefix->len > 0) {
+        g_string_append_c(self->name_prefix, self->hierarchy_delimiter);
+    }
+    g_string_append(self->name_prefix, identifier);
+
+    if (num_inidices == 0) {
+        // Nothing
+    } else if (num_inidices == 1) {
+        g_string_append_printf(self->name_prefix, "[%d]", index1);
+    } else if (num_inidices == 2) {
+        g_string_append_printf(self->name_prefix, "[%d:%d]", index1, index2);
+    } else {
+        g_return_val_if_reached(NULL);
+    }
+
+    gchar *ret = g_malloc(self->name_prefix->len + 1);
+    memcpy(ret, self->name_prefix->str, self->name_prefix->len + 1);
+
+    g_string_truncate(self->name_prefix, prefix_len);
+
+    return ret;
+}
+
+// TODO: check how much better the performance is with the original implementation below
+#if 0
+/*
+ * fast itoa for decimal numbers
+ */
+static char *itoa_2(int value, char *result)
+{
+    char *ptr = result, *ptr1 = result, tmp_char;
+    int tmp_value;
+
+    do {
+        tmp_value = value;
+        value /= 10;
+        *ptr++ = "9876543210123456789"[9 + (tmp_value - value * 10)];
+    } while (value);
+
+    if (tmp_value < 0)
+        *ptr++ = '-';
+    result = ptr;
+    *ptr-- = '\0';
+    while (ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr-- = *ptr1;
+        *ptr1++ = tmp_char;
+    }
+    return (result);
+}
+
+/*
+ * preformatted sprintf statements which remove parsing latency
+ */
+static int sprintf_2_sd(char *s, char *c, int d)
+{
+    char *s2 = s;
+
+    while (*c) {
+        *(s2++) = *(c++);
+    }
+    *(s2++) = '[';
+    s2 = itoa_2(d, s2);
+    *(s2++) = ']';
+    *s2 = 0;
+
+    return (s2 - s);
+}
+
+static int sprintf_2_sdd(char *s, char *c, int d, int d2)
+{
+    char *s2 = s;
+
+    while (*c) {
+        *(s2++) = *(c++);
+    }
+    *(s2++) = '[';
+    s2 = itoa_2(d, s2);
+    *(s2++) = ':';
+    s2 = itoa_2(d2, s2);
+    *(s2++) = ']';
+    *s2 = 0;
+
+    return (s2 - s);
+}
+#endif
+
 gchar *gw_tree_builder_get_symbol_name(GwTreeBuilder *self, const gchar *identifier)
 {
     g_return_val_if_fail(GW_IS_TREE_BUILDER(self), NULL);
     g_return_val_if_fail(identifier != NULL && identifier[0] != '\0', NULL);
 
-    if (self->name_prefix->len == 0) {
-        return g_strdup(identifier);
-    }
+    return gw_tree_builder_get_symbol_name_common(self, identifier, 0, 0, 0);
+}
 
-    return g_strconcat(self->name_prefix->str, self->hierarchy_delimiter_str, identifier, NULL);
+gchar *gw_tree_builder_get_symbol_name_with_one_index(GwTreeBuilder *self,
+                                                      const gchar *identifier,
+                                                      gint index)
+{
+    g_return_val_if_fail(GW_IS_TREE_BUILDER(self), NULL);
+    g_return_val_if_fail(identifier != NULL && identifier[0] != '\0', NULL);
+
+    return gw_tree_builder_get_symbol_name_common(self, identifier, 1, index, 0);
+}
+
+gchar *gw_tree_builder_get_symbol_name_with_two_indices(GwTreeBuilder *self,
+                                                        const gchar *identifier,
+                                                        gint index1,
+                                                        gint index2)
+{
+    g_return_val_if_fail(GW_IS_TREE_BUILDER(self), NULL);
+    g_return_val_if_fail(identifier != NULL && identifier[0] != '\0', NULL);
+
+    return gw_tree_builder_get_symbol_name_common(self, identifier, 2, index1, index2);
 }
 
 GwTreeNode *gw_tree_builder_build(GwTreeBuilder *self)
