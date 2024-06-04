@@ -1,0 +1,179 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_FEMTO
+range: 0 - 9000000
+global time offset: 0
+
+Tree
+----
+toggle_bit1 (kind=GW_TREE_KIND_VHDL_ST_ARCHITECTURE, t_which=-1, t_stem=1, t_istem=1)
+    bit_out (kind=GW_TREE_KIND_UNKNOWN, t_which=6)
+sig_std_logic_vector[7:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=5)
+sig_std_logic (kind=GW_TREE_KIND_UNKNOWN, t_which=4)
+sig_real (kind=GW_TREE_KIND_UNKNOWN, t_which=3)
+sig_integer (kind=GW_TREE_KIND_UNKNOWN, t_which=2)
+sig_bit_vector[1:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+sig_bit (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+sig_bit
+    node: sig_bit
+        vartype: GW_VAR_TYPE_VHDL_SIGNAL
+        vardt: GW_VAR_DATA_TYPE_VHDL_BIT
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 1
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 14
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 1000000
+            0 @ 2000000
+            1 @ 3000000
+            0 @ 4000000
+            1 @ 5000000
+            0 @ 6000000
+            1 @ 7000000
+            0 @ 8000000
+            1 @ 9000000
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+sig_bit_vector[1:0]
+    node: sig_bit_vector[1:0]
+        vartype: GW_VAR_TYPE_VHDL_SIGNAL
+        vardt: GW_VAR_DATA_TYPE_VHDL_BIT
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 2
+        extvals: 1
+        msi, lsi: 1, 0
+        numhist: 14
+        transitions:
+            ? @ -2
+            ? @ -1
+            01 @ 0
+            10 @ 1000000
+            01 @ 2000000
+            10 @ 3000000
+            01 @ 4000000
+            10 @ 5000000
+            01 @ 6000000
+            10 @ 7000000
+            01 @ 8000000
+            10 @ 9000000
+            xx @ 9223372036854775806
+            zz @ 9223372036854775807
+sig_integer
+    node: sig_integer
+        vartype: GW_VAR_TYPE_VHDL_SIGNAL
+        vardt: GW_VAR_DATA_TYPE_VHDL_INTEGER
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 5
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 14
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 1000000
+            0 @ 2000000
+            1 @ 3000000
+            0 @ 4000000
+            1 @ 5000000
+            0 @ 6000000
+            1 @ 7000000
+            0 @ 8000000
+            1 @ 9000000
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+sig_real
+    node: sig_real
+        vartype: GW_VAR_TYPE_VHDL_SIGNAL
+        vardt: GW_VAR_DATA_TYPE_VHDL_INTEGER
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 6
+        extvals: 1
+        msi, lsi: 7, 0
+        numhist: 4
+        transitions:
+            0.000000 @ -2
+            nan @ -1
+            nan @ 9223372036854775806
+            zzzzzzzz @ 9223372036854775807
+sig_std_logic
+    node: sig_std_logic
+        vartype: GW_VAR_TYPE_VHDL_SIGNAL
+        vardt: GW_VAR_DATA_TYPE_VHDL_STD_LOGIC
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 3
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 14
+        transitions:
+            x @ -2
+            x @ -1
+            u @ 0
+            x @ 1000000
+            0 @ 2000000
+            1 @ 3000000
+            z @ 4000000
+            w @ 5000000
+            l @ 6000000
+            h @ 7000000
+            - @ 8000000
+            u @ 9000000
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+sig_std_logic_vector[7:0]
+    node: sig_std_logic_vector[7:0]
+        vartype: GW_VAR_TYPE_VHDL_SIGNAL
+        vardt: GW_VAR_DATA_TYPE_VHDL_STD_LOGIC
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 4
+        extvals: 1
+        msi, lsi: 7, 0
+        numhist: 14
+        transitions:
+            ? @ -2
+            ? @ -1
+            1uuuuuu0 @ 0
+            1xxxxxx0 @ 1000000
+            10000000 @ 2000000
+            11111110 @ 3000000
+            1zzzzzz0 @ 4000000
+            1wwwwww0 @ 5000000
+            1llllll0 @ 6000000
+            1hhhhhh0 @ 7000000
+            1------0 @ 8000000
+            1uuuuuu0 @ 9000000
+            xxxxxxxx @ 9223372036854775806
+            zzzzzzzz @ 9223372036854775807
+toggle_bit1.bit_out
+    node: toggle_bit1.bit_out
+        vartype: GW_VAR_TYPE_VHDL_SIGNAL
+        vardt: GW_VAR_DATA_TYPE_VHDL_BIT
+        vardir: GW_VAR_DIR_OUT
+        varxt: 1
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 14
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 1000000
+            0 @ 2000000
+            1 @ 3000000
+            0 @ 4000000
+            1 @ 5000000
+            0 @ 6000000
+            1 @ 7000000
+            0 @ 8000000
+            1 @ 9000000
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+
