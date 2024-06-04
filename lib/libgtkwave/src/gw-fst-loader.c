@@ -674,22 +674,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 {
     GwFstLoader *self = GW_FST_LOADER(loader);
 
-    GwNode *n;
-    GwSymbol *s;
-    GwSymbol *prevsymroot = NULL;
-    GwSymbol *prevsym = NULL;
-    guint numalias = 0;
-    guint numvars = 0;
-    GwSymbol *sym_block = NULL;
-    GwNode *node_block = NULL;
-    struct fstHier *h = NULL;
-    int msb, lsb;
-    char *nnam = NULL;
-    GwTreeNode *npar = NULL;
-    char **f_name = NULL;
-    int *f_name_len = NULL, *f_name_max_len = NULL;
     int allowed_to_autocoalesce = 1;
-    unsigned int nnam_max = 0;
 
     int f_name_build_buf_len = 128;
     char *f_name_build_buf = g_malloc(f_name_build_buf_len + 1);
@@ -720,12 +705,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     self->time_scale = scale->scale;
     g_free(scale);
 
-    f_name = g_new0(char *, F_NAME_MODULUS + 1);
-    f_name_len = g_new0(int, F_NAME_MODULUS + 1);
-    f_name_max_len = g_new0(int, F_NAME_MODULUS + 1);
+    char **f_name = g_new0(char *, F_NAME_MODULUS + 1);
+    int *f_name_len = g_new0(int, F_NAME_MODULUS + 1);
+    int *f_name_max_len = g_new0(int, F_NAME_MODULUS + 1);
 
-    nnam_max = 16;
-    nnam = g_malloc(nnam_max + 1);
+    guint nnam_max = 16;
+    char *nnam = g_malloc(nnam_max + 1);
 
     self->subvar_jrb = make_jrb(); /* only used for attributes such as generated in VHDL, etc. */
     self->synclock_jrb = make_jrb(); /* only used for synthetic clocks */
@@ -733,9 +718,9 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     guint64 numfacs = fstReaderGetVarCount(self->fst_reader);
 
     GwFacs *facs = gw_facs_new(numfacs);
+    GwSymbol *sym_block = g_new0(GwSymbol, numfacs);
+    GwNode *node_block = g_new0(GwNode, numfacs);
     self->mvlfacs = g_new0(GwFac, numfacs);
-    sym_block = g_new0(GwSymbol, numfacs);
-    node_block = g_new0(GwNode, numfacs);
     self->mvlfacs_rvs_alias = g_new0(fstHandle, numfacs);
 
     fprintf(stderr, FST_RDLOAD "Processing %lu facs.\n", numfacs);
@@ -752,17 +737,18 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     /* do your stuff here..all useful info has been initialized by now */
 
     char delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
+    guint numalias = 0;
+    guint numvars = 0;
+    GwSymbol *prevsymroot = NULL;
+    GwSymbol *prevsym = NULL;
 
     for (guint i = 0; i < numfacs; i++) {
         char buf[65537];
-        char *str;
-        GwFac *f;
-        int hier_len, name_len, tlen;
-        unsigned char nvt, nvd, ndt;
-        char *fnam;
-        int len_subst = 0;
 
-        h = extractNextVar(self, &msb, &lsb, &nnam, &name_len, &nnam_max);
+        int msb = 0;
+        int lsb = 0;
+        int name_len = 0;
+        struct fstHier *h = extractNextVar(self, &msb, &lsb, &nnam, &name_len, &nnam_max);
         if (!h) {
             /* this should never happen */
             fstReaderIterateHierRewind(self->fst_reader);
@@ -774,10 +760,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
         }
 
-        npar = gw_tree_builder_get_current_scope(self->tree_builder);
+        GwTreeNode *npar = gw_tree_builder_get_current_scope(self->tree_builder);
         const gchar *name_prefix = gw_tree_builder_get_name_prefix(self->tree_builder);
 
-        hier_len = name_prefix != NULL ? strlen(name_prefix) : 0;
+        int hier_len = name_prefix != NULL ? strlen(name_prefix) : 0;
+        char *fnam = NULL;
+        int tlen = 0;
         if (hier_len) {
             tlen = hier_len + 1 + name_len;
             if (tlen > f_name_max_len[i & F_NAME_MODULUS]) {
@@ -809,6 +797,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         f_name[i & F_NAME_MODULUS] = fnam;
         f_name_len[i & F_NAME_MODULUS] = tlen;
 
+        gboolean len_subst = FALSE;
         if ((h->u.var.length > 1) && (msb == -1) && (lsb == -1)) {
             node_block[i].msi = h->u.var.length - 1;
             node_block[i].lsi = 0;
@@ -819,7 +808,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             {
                 /* printf("h->u.var.length: %d, abslen: %d '%s'\n", h->u.var.length, abslen, fnam);
                  */
-                len_subst = 1;
+                len_subst = TRUE;
             }
 
             node_block[i].msi = msb;
@@ -827,6 +816,8 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         }
         self->mvlfacs[i].len = h->u.var.length;
 
+        GwVarDir nvd = GW_VAR_DIR_IMPLICIT;
+        GwVarType nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
         if (h->u.var.length) {
             nvd = fst_var_dir_to_gw_var_dir(h->u.var.direction);
             if (nvd != GW_VAR_DIR_IMPLICIT) {
@@ -896,8 +887,9 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             numvars++;
         }
 
-        f = &self->mvlfacs[i];
+        GwFac *f = &self->mvlfacs[i];
 
+        GwSymbol *s = NULL;
         if ((f->len > 1) &&
             (!(f->flags & (GW_FAC_FLAG_INTEGER | GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING)))) {
             int len = sprintf_2_sdd(buf,
@@ -911,7 +903,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 node_block[i].lsi = 0;
             }
 
-            str = g_malloc(len + 1);
+            gchar *str = g_malloc(len + 1);
             memcpy(str, buf, len + 1);
             s = &sym_block[i];
             s->name = str;
@@ -933,7 +925,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             if (gatecmp) {
                 int len = sprintf_2_sd(buf, f_name[(i)&F_NAME_MODULUS], node_block[i].msi);
 
-                str = g_malloc(len + 1);
+                gchar *str = g_malloc(len + 1);
                 memcpy(str, buf, len + 1);
                 s = &sym_block[i];
                 s->name = str;
@@ -953,7 +945,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             } else {
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
-                str = g_malloc(len + 1);
+                gchar *str = g_malloc(len + 1);
                 memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
                 s = &sym_block[i];
                 s->name = str;
@@ -976,7 +968,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         }
 
         gw_facs_set(facs, i, &sym_block[i]);
-        n = &node_block[i];
+        GwNode *n = &node_block[i];
 
         if (self->queued_xl_enum_filter != 0) {
             Jval jv;
@@ -1019,8 +1011,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
             n->vartype = nvt;
 
-            ndt = fst_supplemental_data_type_to_gw_var_data_type(h->u.var.sdt_workspace);
-
+            GwVarDataType ndt = fst_supplemental_data_type_to_gw_var_data_type(h->u.var.sdt_workspace);
             n->vardt = ndt;
         }
 
