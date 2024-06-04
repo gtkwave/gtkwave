@@ -5,10 +5,9 @@
 #include <fstapi.h>
 
 static GwTreeKind fst_scope_type_to_gw_tree_kind(enum fstScopeType scope_type);
-static GwVarType fst_var_type_to_gw_var_type(enum fstVarType var_type);
-static GwVarDir fst_var_dir_to_gw_var_dir(enum fstVarDir var_dir);
-static GwVarDataType fst_supplemental_data_type_to_gw_var_data_type(
-    enum fstSupplementalDataType supplemental_data_type);
+static GwVarType fst_var_to_gw_var_type(struct fstHierVar *var_type);
+static GwVarDir fst_var_to_gw_var_dir(struct fstHierVar *var_dir);
+static GwVarDataType fst_var_to_gw_var_data_type(struct fstHierVar *var);
 
 #define FST_RDLOAD "FSTLOAD | "
 
@@ -66,6 +65,8 @@ struct _GwFstLoader
     GwTreeNode *terminals_chain;
 
     GwStringTable *component_names;
+
+    GPtrArray *f_name;
 };
 
 G_DEFINE_TYPE(GwFstLoader, gw_fst_loader, GW_TYPE_LOADER)
@@ -519,7 +520,7 @@ static struct fstHier *extractNextVar(GwFstLoader *self,
     return (NULL);
 }
 
-static void fst_append_graft_chain(GwFstLoader *self, char *nam, int which, GwTreeNode *par)
+static void fst_append_graft_chain(GwFstLoader *self, const char *nam, int which, GwTreeNode *par)
 {
     GwTreeNode *t = gw_tree_node_new(0, nam);
     t->t_which = which;
@@ -670,6 +671,56 @@ static void gw_fst_loader_dispose(GObject *object)
     G_OBJECT_CLASS(gw_fst_loader_parent_class)->dispose(object);
 }
 
+static void gw_fst_loader_finalize(GObject *object)
+{
+    GwFstLoader *self = GW_FST_LOADER(object);
+
+    for (guint i = 0; i < self->f_name->len; i++) {
+        GString *string = g_ptr_array_index(self->f_name, i);
+        g_string_free(string, TRUE);
+    }
+    g_ptr_array_free(self->f_name, TRUE);
+
+    G_OBJECT_CLASS(gw_fst_loader_parent_class)->finalize(object);
+}
+
+static void init_fac_from_var(GwFac *fac, struct fstHierVar *var)
+{
+    fac->len = var->length;
+
+    if (var->length > 0) {
+        switch (var->typ) {
+            case FST_VT_VCD_PARAMETER:
+            case FST_VT_VCD_INTEGER:
+            case FST_VT_SV_INT:
+            case FST_VT_SV_SHORTINT:
+            case FST_VT_SV_LONGINT:
+                fac->flags = GW_FAC_FLAG_INTEGER;
+                break;
+
+            case FST_VT_VCD_REAL:
+            case FST_VT_VCD_REAL_PARAMETER:
+            case FST_VT_VCD_REALTIME:
+            case FST_VT_SV_SHORTREAL:
+                fac->flags = GW_FAC_FLAG_DOUBLE;
+                break;
+
+            case FST_VT_GEN_STRING:
+                fac->flags = GW_FAC_FLAG_STRING;
+                fac->len = 2;
+                break;
+
+            default:
+                fac->flags = GW_FAC_FLAG_BITS;
+                break;
+        }
+    } else {
+        /* convert any variable length records into strings */
+        fac->flags = GW_FAC_FLAG_STRING;
+        fac->len = 2;
+    }
+}
+
 static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GError **error)
 {
     GwFstLoader *self = GW_FST_LOADER(loader);
@@ -704,10 +755,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     self->time_dimension = scale->dimension;
     self->time_scale = scale->scale;
     g_free(scale);
-
-    char **f_name = g_new0(char *, F_NAME_MODULUS + 1);
-    int *f_name_len = g_new0(int, F_NAME_MODULUS + 1);
-    int *f_name_max_len = g_new0(int, F_NAME_MODULUS + 1);
 
     guint nnam_max = 16;
     char *nnam = g_malloc(nnam_max + 1);
@@ -761,103 +808,38 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         }
 
         GwTreeNode *npar = gw_tree_builder_get_current_scope(self->tree_builder);
+
+        GString *fnam = g_ptr_array_index(self->f_name, i & F_NAME_MODULUS);
+        g_string_truncate(fnam, 0);
+
         const gchar *name_prefix = gw_tree_builder_get_name_prefix(self->tree_builder);
-
-        int hier_len = name_prefix != NULL ? strlen(name_prefix) : 0;
-        char *fnam = NULL;
-        int tlen = 0;
-        if (hier_len) {
-            tlen = hier_len + 1 + name_len;
-            if (tlen > f_name_max_len[i & F_NAME_MODULUS]) {
-                if (f_name[i & F_NAME_MODULUS])
-                    g_free(f_name[i & F_NAME_MODULUS]);
-                f_name_max_len[i & F_NAME_MODULUS] = tlen;
-                fnam = g_malloc(tlen + 1);
-            } else {
-                fnam = f_name[i & F_NAME_MODULUS];
-            }
-
-            memcpy(fnam, name_prefix, hier_len);
-            fnam[hier_len] = delimiter;
-            memcpy(fnam + hier_len + 1, nnam, name_len + 1);
-        } else {
-            tlen = name_len;
-            if (tlen > f_name_max_len[i & F_NAME_MODULUS]) {
-                if (f_name[i & F_NAME_MODULUS])
-                    g_free(f_name[i & F_NAME_MODULUS]);
-                f_name_max_len[i & F_NAME_MODULUS] = tlen;
-                fnam = g_malloc(tlen + 1);
-            } else {
-                fnam = f_name[i & F_NAME_MODULUS];
-            }
-
-            memcpy(fnam, nnam, name_len + 1);
+        if (name_prefix != NULL) {
+            g_string_append(fnam, name_prefix);
+            g_string_append_c(fnam, delimiter);
         }
+        g_string_append(fnam, nnam);
 
-        f_name[i & F_NAME_MODULUS] = fnam;
-        f_name_len[i & F_NAME_MODULUS] = tlen;
+        struct fstHierVar *var = &h->u.var;
 
         gboolean len_subst = FALSE;
-        if ((h->u.var.length > 1) && (msb == -1) && (lsb == -1)) {
-            node_block[i].msi = h->u.var.length - 1;
+        if (var->length > 1 && msb == -1 && lsb == -1) {
+            node_block[i].msi = var->length - 1;
             node_block[i].lsi = 0;
         } else {
-            unsigned int abslen = (msb >= lsb) ? (msb - lsb + 1) : (lsb - msb + 1);
+            unsigned int abslen = ABS(msb - lsb) + 1;
 
-            if ((h->u.var.length > abslen) && !(h->u.var.length % abslen)) /* check if 2d array */
-            {
-                /* printf("h->u.var.length: %d, abslen: %d '%s'\n", h->u.var.length, abslen, fnam);
-                 */
+            // check if 2d array
+            if (var->length > abslen && var->length % abslen == 0) {
+                // printf("var->length: %d, abslen: %d '%s'\n", var->length, abslen, fnam);
                 len_subst = TRUE;
             }
 
             node_block[i].msi = msb;
             node_block[i].lsi = lsb;
         }
-        self->mvlfacs[i].len = h->u.var.length;
 
-        GwVarDir nvd = GW_VAR_DIR_IMPLICIT;
-        GwVarType nvt = GW_VAR_TYPE_UNSPECIFIED_DEFAULT;
-        if (h->u.var.length) {
-            nvd = fst_var_dir_to_gw_var_dir(h->u.var.direction);
-            if (nvd != GW_VAR_DIR_IMPLICIT) {
-                self->has_nonimplicit_directions = TRUE;
-            }
-
-            nvt = fst_var_type_to_gw_var_type(h->u.var.typ);
-
-            switch (h->u.var.typ) {
-                case FST_VT_VCD_PARAMETER:
-                case FST_VT_VCD_INTEGER:
-                case FST_VT_SV_INT:
-                case FST_VT_SV_SHORTINT:
-                case FST_VT_SV_LONGINT:
-                    self->mvlfacs[i].flags = GW_FAC_FLAG_INTEGER;
-                    break;
-
-                case FST_VT_VCD_REAL:
-                case FST_VT_VCD_REAL_PARAMETER:
-                case FST_VT_VCD_REALTIME:
-                case FST_VT_SV_SHORTREAL:
-                    self->mvlfacs[i].flags = GW_FAC_FLAG_DOUBLE;
-                    break;
-
-                case FST_VT_GEN_STRING:
-                    self->mvlfacs[i].flags = GW_FAC_FLAG_STRING;
-                    self->mvlfacs[i].len = 2;
-                    break;
-
-                default:
-                    self->mvlfacs[i].flags = GW_FAC_FLAG_BITS;
-                    break;
-            }
-        } else {
-            /* convert any variable length records into strings */
-            nvt = GW_VAR_TYPE_GEN_STRING;
-            nvd = GW_VAR_DIR_IMPLICIT;
-            self->mvlfacs[i].flags = GW_FAC_FLAG_STRING;
-            self->mvlfacs[i].len = 2;
-        }
+        GwFac *f = &self->mvlfacs[i];
+        init_fac_from_var(f, var);
 
         if (self->synclock_str != NULL) {
             if (self->mvlfacs[i].len == 1) /* currently only for single bit signals */
@@ -876,9 +858,9 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             self->synclock_str = NULL;
         }
 
-        if (h->u.var.is_alias) {
+        if (var->is_alias) {
             self->mvlfacs[i].node_alias =
-                h->u.var.handle - 1; /* subtract 1 to scale it with gtkwave-style numbering */
+                var->handle - 1; /* subtract 1 to scale it with gtkwave-style numbering */
             self->mvlfacs[i].flags |= GW_FAC_FLAG_ALIAS;
             numalias++;
         } else {
@@ -887,47 +869,41 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             numvars++;
         }
 
-        GwFac *f = &self->mvlfacs[i];
+        gdouble is_bits =
+            (f->flags & (GW_FAC_FLAG_INTEGER | GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING)) ==
+            GW_FAC_FLAG_BITS;
 
-        GwSymbol *s = NULL;
-        if ((f->len > 1) &&
-            (!(f->flags & (GW_FAC_FLAG_INTEGER | GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING)))) {
-            int len = sprintf_2_sdd(buf,
-                                    f_name[(i)&F_NAME_MODULUS],
-                                    node_block[i].msi,
-                                    node_block[i].lsi);
+        GwSymbol *s = &sym_block[i];
+        if (f->len > 1 && is_bits) {
+            int len = sprintf_2_sdd(buf, fnam->str, node_block[i].msi, node_block[i].lsi);
 
-            if (len_subst) /* preserve 2d in name, but make 1d internally */
-            {
-                node_block[i].msi = h->u.var.length - 1;
+            // preserve 2d in name, but make 1d internally
+            if (len_subst) {
+                node_block[i].msi = var->length - 1;
                 node_block[i].lsi = 0;
             }
 
             gchar *str = g_malloc(len + 1);
             memcpy(str, buf, len + 1);
-            s = &sym_block[i];
             s->name = str;
-            prevsymroot = prevsym = NULL;
+            prevsymroot = NULL;
+            prevsym = NULL;
 
             len = sprintf_2_sdd(buf, nnam, node_block[i].msi, node_block[i].lsi);
             fst_append_graft_chain(self, buf, i, npar);
         } else {
+            GString *prev_f_name = g_ptr_array_index(self->f_name, (i - 1) & F_NAME_MODULUS);
+
             int gatecmp =
-                (f->len == 1) &&
-                (!(f->flags & (GW_FAC_FLAG_INTEGER | GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) &&
-                (node_block[i].msi != -1) && (node_block[i].lsi != -1);
-            int revcmp = gatecmp && (i) &&
-                         (f_name_len[(i)&F_NAME_MODULUS] == f_name_len[(i - 1) & F_NAME_MODULUS]) &&
-                         (!memrevcmp(f_name_len[(i)&F_NAME_MODULUS],
-                                     f_name[(i)&F_NAME_MODULUS],
-                                     f_name[(i - 1) & F_NAME_MODULUS]));
+                f->len == 1 && is_bits && node_block[i].msi != -1 && node_block[i].lsi != -1;
+            int revcmp = gatecmp && i > 0 && fnam->len == prev_f_name->len &&
+                         memrevcmp(fnam->len, fnam->str, prev_f_name->str) == 0;
 
             if (gatecmp) {
-                int len = sprintf_2_sd(buf, f_name[(i)&F_NAME_MODULUS], node_block[i].msi);
+                int len = sprintf_2_sd(buf, fnam->str, node_block[i].msi);
 
                 gchar *str = g_malloc(len + 1);
                 memcpy(str, buf, len + 1);
-                s = &sym_block[i];
                 s->name = str;
                 if (allowed_to_autocoalesce && prevsym &&
                     revcmp) /* allow chaining for search functions.. */
@@ -943,13 +919,13 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 len = sprintf_2_sd(buf, nnam, node_block[i].msi);
                 fst_append_graft_chain(self, buf, i, npar);
             } else {
-                int len = f_name_len[(i)&F_NAME_MODULUS];
+                int len = fnam->len;
 
                 gchar *str = g_malloc(len + 1);
-                memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
-                s = &sym_block[i];
+                memcpy(str, fnam->str, len + 1);
                 s->name = str;
-                prevsymroot = prevsym = NULL;
+                prevsymroot = NULL;
+                prevsym = NULL;
 
                 if (f->flags & GW_FAC_FLAG_INTEGER) {
                     if (f->len != 0) {
@@ -968,6 +944,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         }
 
         gw_facs_set(facs, i, &sym_block[i]);
+
         GwNode *n = &node_block[i];
 
         if (self->queued_xl_enum_filter != 0) {
@@ -985,49 +962,26 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
 
         n->mv.mvlfac = &self->mvlfacs[i];
         self->mvlfacs[i].working_node = n;
-        n->vardir = nvd;
-        n->varxt = h->u.var.sxt_workspace;
-        if ((h->u.var.svt_workspace == FST_SVT_NONE) && (h->u.var.sdt_workspace == FST_SDT_NONE)) {
-            n->vartype = nvt;
-        } else {
-            switch (h->u.var.svt_workspace) {
-                case FST_SVT_VHDL_SIGNAL:
-                    nvt = GW_VAR_TYPE_VHDL_SIGNAL;
-                    break;
-                case FST_SVT_VHDL_VARIABLE:
-                    nvt = GW_VAR_TYPE_VHDL_VARIABLE;
-                    break;
-                case FST_SVT_VHDL_CONSTANT:
-                    nvt = GW_VAR_TYPE_VHDL_CONSTANT;
-                    break;
-                case FST_SVT_VHDL_FILE:
-                    nvt = GW_VAR_TYPE_VHDL_FILE;
-                    break;
-                case FST_SVT_VHDL_MEMORY:
-                    nvt = GW_VAR_TYPE_VHDL_MEMORY;
-                    break;
-                default:
-                    break; /* keep what exists */
-            }
-            n->vartype = nvt;
 
-            GwVarDataType ndt = fst_supplemental_data_type_to_gw_var_data_type(h->u.var.sdt_workspace);
-            n->vardt = ndt;
+        n->vartype = fst_var_to_gw_var_type(var);
+        n->vardir = fst_var_to_gw_var_dir(var);
+        n->varxt = var->sxt_workspace;
+        n->vardt = fst_var_to_gw_var_data_type(var);
+
+        if (n->vardir != GW_VAR_DIR_IMPLICIT) {
+            self->has_nonimplicit_directions = TRUE;
         }
 
-        if ((f->len > 1) || (f->flags & (GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) {
+        if (f->len > 1 || (f->flags & (GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) {
             n->extvals = 1;
         }
 
-        n->head.time = -1; /* mark 1st node as negative time */
+        n->head.time = -1; // mark 1st node as negative time
         n->head.v.h_val = GW_BIT_X;
-        s->n = n;
-    } /* for(i) of facs parsing */
 
-    if (f_name_max_len) {
-        g_free(f_name_max_len);
-        f_name_max_len = NULL;
+        s->n = n;
     }
+
     if (nnam) {
         g_free(nnam);
         nnam = NULL;
@@ -1037,22 +991,11 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         f_name_build_buf = NULL;
     }
 
-    for (guint i = 0; i <= F_NAME_MODULUS; i++) {
-        if (f_name[i]) {
-            g_free(f_name[i]);
-            f_name[i] = NULL;
-        }
-    }
-    g_free(f_name);
-    f_name = NULL;
-    g_free(f_name_len);
-    f_name_len = NULL;
-
     if (numvars != numfacs) {
         self->mvlfacs_rvs_alias = g_realloc(self->mvlfacs_rvs_alias, numvars * sizeof(fstHandle));
     }
 
-    /* generate lookup table for typenames explicitly given as attributes */
+    // generate lookup table for typenames explicitly given as attributes
     gchar **subvar_pnt = NULL;
     if (self->subvar_jrb_count > 0) {
         JRB subvar_jrb_node = NULL;
@@ -1219,6 +1162,7 @@ static void gw_fst_loader_class_init(GwFstLoaderClass *klass)
     GwLoaderClass *loader_class = GW_LOADER_CLASS(klass);
 
     object_class->dispose = gw_fst_loader_dispose;
+    object_class->finalize = gw_fst_loader_finalize;
     object_class->set_property = gw_fst_loader_set_property;
 
     loader_class->load = gw_fst_loader_load;
@@ -1244,6 +1188,11 @@ static void gw_fst_loader_init(GwFstLoader *self)
     self->stems = gw_stems_new();
     self->component_names = gw_string_table_new();
     self->enum_filters = gw_enum_filter_list_new();
+
+    self->f_name = g_ptr_array_new();
+    for (gint i = 0; i < F_NAME_MODULUS + 1; i++) {
+        g_ptr_array_add(self->f_name, g_string_new(NULL));
+    }
 }
 
 GwLoader *gw_fst_loader_new(void)
@@ -1327,9 +1276,31 @@ static GwTreeKind fst_scope_type_to_gw_tree_kind(enum fstScopeType scope_type)
     }
 }
 
-static GwVarType fst_var_type_to_gw_var_type(enum fstVarType var_type)
+static GwVarType fst_var_to_gw_var_type(struct fstHierVar *var)
 {
-    switch (var_type) {
+    if (var->svt_workspace != FST_SVT_NONE || var->sdt_workspace != FST_SDT_NONE) {
+        switch (var->svt_workspace) {
+            case FST_SVT_VHDL_SIGNAL:
+                return GW_VAR_TYPE_VHDL_SIGNAL;
+            case FST_SVT_VHDL_VARIABLE:
+                return GW_VAR_TYPE_VHDL_VARIABLE;
+            case FST_SVT_VHDL_CONSTANT:
+                return GW_VAR_TYPE_VHDL_CONSTANT;
+            case FST_SVT_VHDL_FILE:
+                return GW_VAR_TYPE_VHDL_FILE;
+            case FST_SVT_VHDL_MEMORY:
+                return GW_VAR_TYPE_VHDL_MEMORY;
+            default:
+                g_return_val_if_reached(GW_VAR_TYPE_UNSPECIFIED_DEFAULT);
+        }
+    }
+
+    if (var->length == 0) {
+        // convert any variable length records into strings
+        return GW_VAR_TYPE_GEN_STRING;
+    }
+
+    switch (var->typ) {
         case FST_VT_VCD_EVENT:
             return GW_VAR_TYPE_VCD_EVENT;
         case FST_VT_VCD_INTEGER:
@@ -1396,9 +1367,14 @@ static GwVarType fst_var_type_to_gw_var_type(enum fstVarType var_type)
     }
 }
 
-static GwVarDir fst_var_dir_to_gw_var_dir(enum fstVarDir var_dir)
+static GwVarDir fst_var_to_gw_var_dir(struct fstHierVar *var)
 {
-    switch (var_dir) {
+    if (var->length == 0) {
+        // convert any variable length records into strings
+        return GW_VAR_DIR_IMPLICIT;
+    }
+
+    switch (var->direction) {
         case FST_VD_INPUT:
             return GW_VAR_DIR_IN;
         case FST_VD_OUTPUT:
@@ -1416,10 +1392,13 @@ static GwVarDir fst_var_dir_to_gw_var_dir(enum fstVarDir var_dir)
     }
 }
 
-static GwVarDataType fst_supplemental_data_type_to_gw_var_data_type(
-    enum fstSupplementalDataType supplemental_data_type)
+static GwVarDataType fst_var_to_gw_var_data_type(struct fstHierVar *var)
 {
-    switch (supplemental_data_type) {
+    if (var->svt_workspace == FST_SVT_NONE && var->sdt_workspace == FST_SDT_NONE) {
+        return GW_VAR_DATA_TYPE_NONE;
+    }
+
+    switch (var->sdt_workspace) {
         case FST_SDT_VHDL_BOOLEAN:
             return GW_VAR_DATA_TYPE_VHDL_BOOLEAN;
         case FST_SDT_VHDL_BIT:
