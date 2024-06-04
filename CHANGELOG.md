@@ -67,6 +67,7 @@ of these features.
     - `zoom_dynamic_end`
 - Removed TCL commands:
     - `getLongestName`
+- Removed Custom Filter in fileselbox on linux.
 
 ### Fixed
 
