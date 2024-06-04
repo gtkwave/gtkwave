@@ -55,6 +55,7 @@ dumpfile_tests = [
     'basic.vcd',
     'evcd.fst',
     'evcd.vcd',
+    'ghdl_basic.fst',
     'hashkill.vcd',
     'left_extension.vcd',
     'names_with_delimiters.fst',
