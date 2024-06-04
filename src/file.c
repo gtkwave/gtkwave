@@ -101,20 +101,18 @@ void fileselbox(const char *title,
 
     if (is_writemode) {
         pFileChooseNative = gtk_file_chooser_native_new(title,
-                                                  NULL,
-                                                  GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                  XXX_GTK_STOCK_SAVE,
-                                                  XXX_GTK_STOCK_CANCEL
-                                                  );
+                                                        NULL,
+                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                        XXX_GTK_STOCK_SAVE,
+                                                        XXX_GTK_STOCK_CANCEL);
 
         gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(pFileChooseNative), TRUE);
     } else {
         pFileChooseNative = gtk_file_chooser_native_new(title,
-                                                  NULL,
-                                                  GTK_FILE_CHOOSER_ACTION_OPEN,
-                                                  XXX_GTK_STOCK_OPEN,
-                                                  XXX_GTK_STOCK_CANCEL
-                                                  );
+                                                        NULL,
+                                                        GTK_FILE_CHOOSER_ACTION_OPEN,
+                                                        XXX_GTK_STOCK_OPEN,
+                                                        XXX_GTK_STOCK_CANCEL);
     }
 
     GLOBALS->pFileChoose = pFileChooseNative;
@@ -155,9 +153,10 @@ void fileselbox(const char *title,
     }
 
     if (pWindowMain) {
-        gtk_native_dialog_set_transient_for(GTK_NATIVE_DIALOG(pFileChooseNative), GTK_WINDOW(pWindowMain));
+        gtk_native_dialog_set_transient_for(GTK_NATIVE_DIALOG(pFileChooseNative),
+                                            GTK_WINDOW(pWindowMain));
     }
-    gtk_native_dialog_set_modal(GTK_NATIVE_DIALOG(pFileChooseNative),TRUE);
+    gtk_native_dialog_set_modal(GTK_NATIVE_DIALOG(pFileChooseNative), TRUE);
 #ifdef MAC_INTEGRATION
     osx_menu_sensitivity(FALSE);
 #endif
@@ -237,7 +236,6 @@ void fileselbox(const char *title,
 #endif
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
-
         gtkwave_main_iteration();
         if (notok_func)
             notok_func();
