@@ -226,6 +226,7 @@ void fileselbox(const char *title,
         osx_menu_sensitivity(TRUE);
 #endif
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
+        g_object_unref(pFileChooseNative);
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
         gtkwave_main_iteration();
         ok_func();
@@ -235,6 +236,7 @@ void fileselbox(const char *title,
         osx_menu_sensitivity(TRUE);
 #endif
         gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
+        g_object_unref(pFileChooseNative);
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
         gtkwave_main_iteration();
         if (notok_func)
