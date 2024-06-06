@@ -26,6 +26,7 @@ of these features.
 - Improved the readability of the cursor and marker time display.
 - Migrated from autotools to meson.
 - Changed the fallback text editor from gedit to the default editor that is associated with the source filetype.
+- Changed file dialog to use the native dialog on all platforms.
 
 ### Added
 
@@ -68,7 +69,6 @@ of these features.
     - `zoom_dynamic_end`
 - Removed TCL commands:
     - `getLongestName`
-- Removed Custom Filter in fileselbox on linux.
 
 ### Fixed
 
