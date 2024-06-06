@@ -1,0 +1,49 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_NANO
+range: 0 - 3
+global time offset: 0
+
+Tree
+----
+vector[22:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+bit (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+bit
+    node: bit
+        vartype: GW_VAR_TYPE_VCD_PORT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: -1, -1
+        numhist: 7
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            z @ 1
+            1 @ 2
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+vector[22:0]
+    node: vector[22:0]
+        vartype: GW_VAR_TYPE_VCD_PORT
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 22, 0
+        numhist: 7
+        transitions:
+            ? @ -2
+            ? @ -1
+            00000000000000000000000 @ 0
+            01xz0101xz0101xzxxxxxxz @ 1
+            11111111111111111111111 @ 2
+            xxxxxxxxxxxxxxxxxxxxxxx @ 9223372036854775806
+            zzzzzzzzzzzzzzzzzzzzzzz @ 9223372036854775807
+

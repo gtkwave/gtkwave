@@ -523,7 +523,6 @@ static const struct Global globals_base_values = {
      */
     '.', /* hier_delimeter 447 */
     0, /* hier_was_explicitly_set 448 */
-    0x00, /* alt_hier_delimeter 449 */
     NULL, /* talloc_pool_base */
     0, /* talloc_idx */
     NULL, /* sst_exclude_filename */
@@ -1089,7 +1088,6 @@ void reload_into_new_context_2(void)
     new_globals->wave_scrolling = GLOBALS->wave_scrolling;
     new_globals->do_zoom_center = GLOBALS->do_zoom_center;
     new_globals->zoom_pow10_snap = GLOBALS->zoom_pow10_snap;
-    new_globals->alt_hier_delimeter = GLOBALS->alt_hier_delimeter;
     new_globals->cursor_snap = GLOBALS->cursor_snap;
     new_globals->hier_delimeter = GLOBALS->hier_delimeter;
     new_globals->hier_was_explicitly_set = GLOBALS->hier_was_explicitly_set;

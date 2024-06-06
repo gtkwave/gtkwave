@@ -67,7 +67,7 @@ void free_afl(void)
 /* point to pure signame (remove hierarchy) for fill_sig_store() */
 static char *prune_hierarchy(char *nam)
 {
-    char cmpchar = GLOBALS->alt_hier_delimeter ? GLOBALS->alt_hier_delimeter : '.';
+    char cmpchar = '.';
     char *t = nam;
     char *lastmatch = NULL;
 

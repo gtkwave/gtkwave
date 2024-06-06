@@ -58,16 +58,6 @@ int f_accel(const char *str)
     return (0);
 }
 
-int f_alt_hier_delimeter(const char *str)
-{
-    DEBUG(printf("f_alt_hier_delimeter(\"%s\")\n", str));
-
-    if (strlen(str)) {
-        GLOBALS->alt_hier_delimeter = str[0];
-    }
-    return (0);
-}
-
 int f_analog_redraw_skip_count(const char *str)
 {
     DEBUG(printf("f_analog_redraw_skip_count(\"%s\")\n", str));
@@ -769,7 +759,6 @@ color_make(gmstrd, "signal-list-gmstrd")
  * rc variables...these MUST be in alphabetical order for the bsearch!
  */
 static struct rc_entry rcitems[] = {{"accel", f_accel},
-                                    {"alt_hier_delimeter", f_alt_hier_delimeter},
                                     {"analog_redraw_skip_count", f_analog_redraw_skip_count},
                                     {"autocoalesce", f_autocoalesce},
                                     {"autocoalesce_reversal", f_autocoalesce_reversal},

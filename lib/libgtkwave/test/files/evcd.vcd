@@ -1,0 +1,16 @@
+$timescale
+	1ns
+$end
+$var port 1 <0 bit $end
+$var port [0:22] <1 vector $end
+$enddefinitions $end
+#0
+pD 6 6 <0
+p00000000000000000000000 6 6 <1
+#1
+pT 6 6 <0
+pDUNZduLHXTlh01?FAaBbCcf 6 6 <1
+#2
+pu 6 6 <0
+p11111111111111111111111 6 6 <1
+#3

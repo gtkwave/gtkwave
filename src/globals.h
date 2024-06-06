@@ -517,7 +517,6 @@ struct Global
  */
     char hier_delimeter; /* from tree.c 477 */
     char hier_was_explicitly_set; /* from tree.c 478 */
-    char alt_hier_delimeter; /* from tree.c 479 */
     unsigned char *talloc_pool_base;
     size_t talloc_idx;
     char *sst_exclude_filename;

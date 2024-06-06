@@ -44,6 +44,7 @@ of these features.
 - Removed VCD fastload and support for vlist spillfiles.
 - Removed VCD autosave.
 - Removed rc variables:
+    - `alt_hier_delimeter`
     - `alt_wheel_mode`
     - `append_vcd_hier`
     - `atomic_vectors`

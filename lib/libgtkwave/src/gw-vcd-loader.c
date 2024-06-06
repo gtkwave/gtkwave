@@ -937,14 +937,157 @@ static void version_sync_end(GwVcdLoader *self)
     }
 }
 
-static void parse_valuechange(GwVcdLoader *self)
+static void parse_valuechange_scalar(GwVcdLoader *self)
 {
     struct vcdsymbol *v;
-    char *vector;
-    int vlen;
-    unsigned char typ;
 
-    switch ((typ = self->yytext[0])) {
+    if (self->yylen > 1) {
+        v = bsearch_vcd(self, self->yytext + 1, self->yylen - 1);
+        if (!v) {
+            fprintf(stderr,
+                    "Near byte %d, Unknown VCD identifier: '%s'\n",
+                    (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
+                    self->yytext + 1);
+            malform_eof_fix(self);
+        } else {
+            GwNode *n = v->narray[0];
+            unsigned int time_delta;
+            unsigned int rcv;
+
+            if (n->mv.mvlfac_vlist_writer ==
+                NULL) /* overloaded for vlist, numhist = last position used */
+            {
+                n->mv.mvlfac_vlist_writer =
+                    gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
+                gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer,
+                                            (unsigned int)'0'); /* represents single bit routine
+                                                                 for decompression */
+                gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, (unsigned int)v->vartype);
+            }
+
+            time_delta = self->time_vlist_count - (unsigned int)n->numhist;
+            n->numhist = self->time_vlist_count;
+
+            switch (self->yytext[0]) {
+                case '0':
+                case '1':
+                    rcv = ((self->yytext[0] & 1) << 1) | (time_delta << 2);
+                    break; /* pack more delta bits in for 0/1 vchs */
+
+                case 'x':
+                case 'X':
+                    rcv = RCV_X | (time_delta << 4);
+                    break;
+                case 'z':
+                case 'Z':
+                    rcv = RCV_Z | (time_delta << 4);
+                    break;
+                case 'h':
+                case 'H':
+                    rcv = RCV_H | (time_delta << 4);
+                    break;
+                case 'u':
+                case 'U':
+                    rcv = RCV_U | (time_delta << 4);
+                    break;
+                case 'w':
+                case 'W':
+                    rcv = RCV_W | (time_delta << 4);
+                    break;
+                case 'l':
+                case 'L':
+                    rcv = RCV_L | (time_delta << 4);
+                    break;
+                default:
+                    rcv = RCV_D | (time_delta << 4);
+                    break;
+            }
+
+            gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, rcv);
+        }
+    } else {
+        fprintf(stderr,
+                "Near byte %d, Malformed VCD identifier\n",
+                (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
+        malform_eof_fix(self);
+    }
+}
+
+static void process_binary(GwVcdLoader *self, gchar typ, const gchar *vector, gint vlen)
+{
+    struct vcdsymbol *v = bsearch_vcd(self, self->yytext, self->yylen);
+    if (v == NULL) {
+        fprintf(stderr,
+                "Near byte %d, Unknown VCD identifier: '%s'\n",
+                (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
+                self->yytext + 1);
+        malform_eof_fix(self);
+    }
+
+    GwNode *n = v->narray[0];
+    unsigned int time_delta;
+
+    if (n->mv.mvlfac_vlist_writer == NULL) /* overloaded for vlist, numhist = last position used */
+    {
+        unsigned char typ2 = toupper(typ);
+        n->mv.mvlfac_vlist_writer =
+            gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
+
+        if (v->vartype != V_REAL && v->vartype != V_STRINGTYPE) {
+            if (typ2 == 'R' || typ2 == 'S') {
+                typ2 = 'B'; /* ok, typical case...fix as 'r' on bits variable causes
+                               recoder crash during trace extraction */
+            }
+        } else {
+            if (typ2 == 'B') {
+                typ2 = 'S'; /* should never be necessary...this is defensive */
+            }
+        }
+
+        gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer,
+                                    (unsigned int)toupper(typ2)); /* B/R/P/S for decompress */
+        gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, (unsigned int)v->vartype);
+        gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, (unsigned int)v->size);
+    }
+
+    time_delta = self->time_vlist_count - (unsigned int)n->numhist;
+    n->numhist = self->time_vlist_count;
+
+    gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, time_delta);
+
+    if (typ == 'b' || typ == 'B') {
+        if (v->vartype != V_REAL && v->vartype != V_STRINGTYPE) {
+            gw_vlist_writer_append_mvl9_string(n->mv.mvlfac_vlist_writer, vector);
+        } else {
+            gw_vlist_writer_append_string(n->mv.mvlfac_vlist_writer, vector);
+        }
+    } else {
+        if (v->vartype == V_REAL || v->vartype == V_STRINGTYPE || typ == 's' || typ == 'S') {
+            gw_vlist_writer_append_string(n->mv.mvlfac_vlist_writer, vector);
+        } else {
+            char *bits = g_alloca(v->size + 1);
+            int i, j, k = 0;
+
+            memset(bits, 0x0, v->size + 1);
+
+            for (i = 0; i < vlen; i++) {
+                for (j = 0; j < 8; j++) {
+                    bits[k++] = ((vector[i] >> (7 - j)) & 1) | '0';
+                    if (k >= v->size)
+                        goto bit_term;
+                }
+            }
+
+        bit_term:
+            gw_vlist_writer_append_mvl9_string(n->mv.mvlfac_vlist_writer, bits);
+        }
+    }
+}
+
+static void parse_valuechange(GwVcdLoader *self)
+{
+    unsigned char typ = self->yytext[0];
+    switch (typ) {
         /* encode bits as (time delta<<4) + (enum AnalyzerBits value) */
         case '0':
         case '1':
@@ -961,189 +1104,54 @@ static void parse_valuechange(GwVcdLoader *self)
         case 'l':
         case 'L':
         case '-':
-            if (self->yylen > 1) {
-                v = bsearch_vcd(self, self->yytext + 1, self->yylen - 1);
-                if (!v) {
-                    fprintf(stderr,
-                            "Near byte %d, Unknown VCD identifier: '%s'\n",
-                            (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
-                            self->yytext + 1);
-                    malform_eof_fix(self);
-                } else {
-                    GwNode *n = v->narray[0];
-                    unsigned int time_delta;
-                    unsigned int rcv;
-
-                    if (n->mv.mvlfac_vlist_writer ==
-                        NULL) /* overloaded for vlist, numhist = last position used */
-                    {
-                        n->mv.mvlfac_vlist_writer =
-                            gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
-                        gw_vlist_writer_append_uv32(
-                            n->mv.mvlfac_vlist_writer,
-                            (unsigned int)'0'); /* represents single bit routine
-                                                 for decompression */
-                        gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer,
-                                                    (unsigned int)v->vartype);
-                    }
-
-                    time_delta = self->time_vlist_count - (unsigned int)n->numhist;
-                    n->numhist = self->time_vlist_count;
-
-                    switch (self->yytext[0]) {
-                        case '0':
-                        case '1':
-                            rcv = ((self->yytext[0] & 1) << 1) | (time_delta << 2);
-                            break; /* pack more delta bits in for 0/1 vchs */
-
-                        case 'x':
-                        case 'X':
-                            rcv = RCV_X | (time_delta << 4);
-                            break;
-                        case 'z':
-                        case 'Z':
-                            rcv = RCV_Z | (time_delta << 4);
-                            break;
-                        case 'h':
-                        case 'H':
-                            rcv = RCV_H | (time_delta << 4);
-                            break;
-                        case 'u':
-                        case 'U':
-                            rcv = RCV_U | (time_delta << 4);
-                            break;
-                        case 'w':
-                        case 'W':
-                            rcv = RCV_W | (time_delta << 4);
-                            break;
-                        case 'l':
-                        case 'L':
-                            rcv = RCV_L | (time_delta << 4);
-                            break;
-                        default:
-                            rcv = RCV_D | (time_delta << 4);
-                            break;
-                    }
-
-                    gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, rcv);
-                }
-            } else {
-                fprintf(stderr,
-                        "Near byte %d, Malformed VCD identifier\n",
-                        (int)(self->vcdbyteno + (self->vst - self->vcdbuf)));
-                malform_eof_fix(self);
-            }
+            parse_valuechange_scalar(self);
             break;
 
             /* encode everything else literally as a time delta + a string */
 #ifndef STRICT_VCD_ONLY
         case 's':
-        case 'S':
-            vector = g_alloca(self->yylen);
-            vlen = fstUtilityEscToBin((unsigned char *)vector,
-                                      (unsigned char *)(self->yytext + 1),
-                                      self->yylen - 1);
+        case 'S': {
+            gchar *vector = g_alloca(self->yylen);
+            gint vlen = fstUtilityEscToBin((unsigned char *)vector,
+                                           (unsigned char *)(self->yytext + 1),
+                                           self->yylen - 1);
             vector[vlen] = 0;
 
             get_strtoken(self);
-            goto process_binary;
+            process_binary(self, typ, vector, vlen);
+            break;
+        }
 #endif
+
         case 'b':
         case 'B':
         case 'r':
-        case 'R':
-            vector = g_alloca(self->yylen);
+        case 'R': {
+            gchar *vector = g_alloca(self->yylen);
             strcpy(vector, self->yytext + 1);
-            vlen = self->yylen - 1;
+            gint vlen = self->yylen - 1;
 
             get_strtoken(self);
-        process_binary:
-            v = bsearch_vcd(self, self->yytext, self->yylen);
-            if (!v) {
-                fprintf(stderr,
-                        "Near byte %d, Unknown VCD identifier: '%s'\n",
-                        (int)(self->vcdbyteno + (self->vst - self->vcdbuf)),
-                        self->yytext + 1);
-                malform_eof_fix(self);
-            } else {
-                GwNode *n = v->narray[0];
-                unsigned int time_delta;
 
-                if (n->mv.mvlfac_vlist_writer ==
-                    NULL) /* overloaded for vlist, numhist = last position used */
-                {
-                    unsigned char typ2 = toupper(typ);
-                    n->mv.mvlfac_vlist_writer =
-                        gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
-
-                    if ((v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
-                        if ((typ2 == 'R') || (typ2 == 'S')) {
-                            typ2 = 'B'; /* ok, typical case...fix as 'r' on bits variable causes
-                                           recoder crash during trace extraction */
-                        }
-                    } else {
-                        if (typ2 == 'B') {
-                            typ2 = 'S'; /* should never be necessary...this is defensive */
-                        }
-                    }
-
-                    gw_vlist_writer_append_uv32(
-                        n->mv.mvlfac_vlist_writer,
-                        (unsigned int)toupper(typ2)); /* B/R/P/S for decompress */
-                    gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer,
-                                                (unsigned int)v->vartype);
-                    gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, (unsigned int)v->size);
-                }
-
-                time_delta = self->time_vlist_count - (unsigned int)n->numhist;
-                n->numhist = self->time_vlist_count;
-
-                gw_vlist_writer_append_uv32(n->mv.mvlfac_vlist_writer, time_delta);
-
-                if ((typ == 'b') || (typ == 'B')) {
-                    if ((v->vartype != V_REAL) && (v->vartype != V_STRINGTYPE)) {
-                        gw_vlist_writer_append_mvl9_string(n->mv.mvlfac_vlist_writer, vector);
-                    } else {
-                        gw_vlist_writer_append_string(n->mv.mvlfac_vlist_writer, vector);
-                    }
-                } else {
-                    if ((v->vartype == V_REAL) || (v->vartype == V_STRINGTYPE) || (typ == 's') ||
-                        (typ == 'S')) {
-                        gw_vlist_writer_append_string(n->mv.mvlfac_vlist_writer, vector);
-                    } else {
-                        char *bits = g_alloca(v->size + 1);
-                        int i, j, k = 0;
-
-                        memset(bits, 0x0, v->size + 1);
-
-                        for (i = 0; i < vlen; i++) {
-                            for (j = 0; j < 8; j++) {
-                                bits[k++] = ((vector[i] >> (7 - j)) & 1) | '0';
-                                if (k >= v->size)
-                                    goto bit_term;
-                            }
-                        }
-
-                    bit_term:
-                        gw_vlist_writer_append_mvl9_string(n->mv.mvlfac_vlist_writer, bits);
-                    }
-                }
-            }
+            process_binary(self, typ, vector, vlen);
             break;
+        }
 
         case 'p':
-        case 'P':
+        case 'P': {
             /* extract port dump value.. */
-            vector = g_alloca(self->yylen);
+            gchar *vector = g_alloca(self->yylen);
             evcd_strcpy(vector, self->yytext + 1); /* convert to regular vcd */
-            vlen = self->yylen - 1;
+            gint vlen = self->yylen - 1;
 
             get_strtoken(self); /* throw away 0_strength_component */
             get_strtoken(self); /* throw away 0_strength_component */
             get_strtoken(self); /* this is the id                  */
 
-            typ = 'b'; /* convert to regular vcd */
-            goto process_binary; /* store string literally */
+            // type = 'b', because it was already converted to regular VCD values
+            process_binary(self, 'b', vector, vlen);
+            break;
+        }
 
         default:
             break;
@@ -1266,21 +1274,6 @@ static void fractional_timescale_fix(char *s)
     strcat(buf, "s");
     /* printf("old time: '%s', new time: '%s'\n", s, buf); */
     strcpy(s, buf);
-}
-
-static void strcpy_vcdalt(GwVcdLoader *self, char *too, char *from)
-{
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
-
-    char ch;
-
-    do {
-        ch = *(from++);
-        if (ch == alt_delimiter) {
-            ch = delimiter;
-        }
-    } while ((*(too++) = ch));
 }
 
 static void vcd_parse_timezero(GwVcdLoader *self)
@@ -1459,7 +1452,6 @@ static void vcd_parse_upscope(GwVcdLoader *self)
 static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint *vtok)
 {
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     *vtok = get_vartoken(self, 1);
     if (*vtok == V_STRING) {
@@ -1534,32 +1526,24 @@ static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint 
         v->name = g_malloc(name_prefix_len + 1 + self->yylen + 1);
         strcpy(v->name, name_prefix);
         v->name[name_prefix_len] = delimiter;
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name + name_prefix_len + 1, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
-                (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
-                strcpy(sd, name_prefix);
-                sd[name_prefix_len] = delimiter;
-                sd[name_prefix_len + 1] = '\\';
-                strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
+            (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
+            strcpy(sd, name_prefix);
+            sd[name_prefix_len] = delimiter;
+            sd[name_prefix_len + 1] = '\\';
+            strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
+            g_free(v->name);
+            v->name = sd;
         }
     } else {
         v->name = g_malloc(self->yylen + 1);
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(self->yylen + 2);
-                sd[0] = '\\';
-                strcpy(sd + 1, v->name);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(self->yylen + 2);
+            sd[0] = '\\';
+            strcpy(sd + 1, v->name);
+            g_free(v->name);
+            v->name = sd;
         }
     }
 
@@ -1589,7 +1573,6 @@ static gboolean vcd_parse_var_evcd(GwVcdLoader *self, struct vcdsymbol *v, gint 
 static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, int *vtok)
 {
     gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     *vtok = get_vartoken(self, 1);
     if (*vtok == V_END) {
@@ -1630,32 +1613,24 @@ static gboolean vcd_parse_var_regular(GwVcdLoader *self, struct vcdsymbol *v, in
         v->name = g_malloc(name_prefix_len + 1 + self->yylen + 1);
         strcpy(v->name, name_prefix);
         v->name[name_prefix_len] = delimiter;
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name + name_prefix_len + 1, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
-                (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
-                strcpy(sd, name_prefix);
-                sd[name_prefix_len] = delimiter;
-                sd[name_prefix_len + 1] = '\\';
-                strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name + name_prefix_len + 1, self->yytext)) &&
+            (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(name_prefix_len + 1 + self->yylen + 2);
+            strcpy(sd, name_prefix);
+            sd[name_prefix_len] = delimiter;
+            sd[name_prefix_len + 1] = '\\';
+            strcpy(sd + name_prefix_len + 2, v->name + name_prefix_len + 1);
+            g_free(v->name);
+            v->name = sd;
         }
     } else {
         v->name = g_malloc(self->yylen + 1);
-        if (alt_delimiter != '\0') {
-            strcpy_vcdalt(self, v->name, self->yytext);
-        } else {
-            if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
-                char *sd = g_malloc(self->yylen + 2);
-                sd[0] = '\\';
-                strcpy(sd + 1, v->name);
-                g_free(v->name);
-                v->name = sd;
-            }
+        if ((strcpy_delimfix(self, v->name, self->yytext)) && (self->yytext[0] != '\\')) {
+            char *sd = g_malloc(self->yylen + 2);
+            sd[0] = '\\';
+            strcpy(sd + 1, v->name);
+            g_free(v->name);
+            v->name = sd;
         }
     }
 

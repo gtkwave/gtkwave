@@ -12,14 +12,6 @@ static GwVarDataType fst_supplemental_data_type_to_gw_var_data_type(
 
 #define FST_RDLOAD "FSTLOAD | "
 
-#define VZT_RD_SYM_F_BITS (0)
-#define VZT_RD_SYM_F_INTEGER (1 << 0)
-#define VZT_RD_SYM_F_DOUBLE (1 << 1)
-#define VZT_RD_SYM_F_STRING (1 << 2)
-#define VZT_RD_SYM_F_ALIAS (1 << 3)
-#define VZT_RD_SYM_F_SYNVEC \
-    (1 << 17) /* reader synthesized vector in alias sec'n from non-adjacent vectorizing */
-
 // TODO: remove!
 #define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
 #define WAVE_T_WHICH_COMPNAME_START (-2)
@@ -561,21 +553,6 @@ static GwBlackoutRegions *load_blackout_regions(GwFstLoader *self)
     return blackout_regions;
 }
 
-static void strcpy_vcdalt(GwFstLoader *self, char *too, char *from)
-{
-    gchar delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
-
-    char ch;
-
-    do {
-        ch = *(from++);
-        if (ch == alt_delimiter) {
-            ch = delimiter;
-        }
-    } while ((*(too++) = ch));
-}
-
 /*
  * atoi 64-bit version..
  * y/on     default to '1'
@@ -775,7 +752,6 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
     /* do your stuff here..all useful info has been initialized by now */
 
     char delimiter = gw_loader_get_hierarchy_delimiter(GW_LOADER(self));
-    gchar alt_delimiter = gw_loader_get_alternate_hierarchy_delimiter(GW_LOADER(self));
 
     for (guint i = 0; i < numfacs; i++) {
         char buf[65537];
@@ -865,30 +841,30 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 case FST_VT_SV_INT:
                 case FST_VT_SV_SHORTINT:
                 case FST_VT_SV_LONGINT:
-                    self->mvlfacs[i].flags = VZT_RD_SYM_F_INTEGER;
+                    self->mvlfacs[i].flags = GW_FAC_FLAG_INTEGER;
                     break;
 
                 case FST_VT_VCD_REAL:
                 case FST_VT_VCD_REAL_PARAMETER:
                 case FST_VT_VCD_REALTIME:
                 case FST_VT_SV_SHORTREAL:
-                    self->mvlfacs[i].flags = VZT_RD_SYM_F_DOUBLE;
+                    self->mvlfacs[i].flags = GW_FAC_FLAG_DOUBLE;
                     break;
 
                 case FST_VT_GEN_STRING:
-                    self->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
+                    self->mvlfacs[i].flags = GW_FAC_FLAG_STRING;
                     self->mvlfacs[i].len = 2;
                     break;
 
                 default:
-                    self->mvlfacs[i].flags = VZT_RD_SYM_F_BITS;
+                    self->mvlfacs[i].flags = GW_FAC_FLAG_BITS;
                     break;
             }
-        } else /* convert any variable length records into strings */
-        {
+        } else {
+            /* convert any variable length records into strings */
             nvt = GW_VAR_TYPE_GEN_STRING;
             nvd = GW_VAR_DIR_IMPLICIT;
-            self->mvlfacs[i].flags = VZT_RD_SYM_F_STRING;
+            self->mvlfacs[i].flags = GW_FAC_FLAG_STRING;
             self->mvlfacs[i].len = 2;
         }
 
@@ -898,7 +874,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 Jval syn_jv;
 
                 /* special meaning for this in FST loader--means synthetic signal! */
-                self->mvlfacs[i].flags |= VZT_RD_SYM_F_SYNVEC;
+                self->mvlfacs[i].flags |= GW_FAC_FLAG_SYNVEC;
                 syn_jv.s = self->synclock_str;
                 jrb_insert_int(self->synclock_jrb, i, syn_jv);
             } else {
@@ -912,7 +888,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         if (h->u.var.is_alias) {
             self->mvlfacs[i].node_alias =
                 h->u.var.handle - 1; /* subtract 1 to scale it with gtkwave-style numbering */
-            self->mvlfacs[i].flags |= VZT_RD_SYM_F_ALIAS;
+            self->mvlfacs[i].flags |= GW_FAC_FLAG_ALIAS;
             numalias++;
         } else {
             self->mvlfacs_rvs_alias[numvars] = i;
@@ -923,7 +899,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
         f = &self->mvlfacs[i];
 
         if ((f->len > 1) &&
-            (!(f->flags & (VZT_RD_SYM_F_INTEGER | VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING)))) {
+            (!(f->flags & (GW_FAC_FLAG_INTEGER | GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING)))) {
             int len = sprintf_2_sdd(buf,
                                     f_name[(i)&F_NAME_MODULUS],
                                     node_block[i].msi,
@@ -936,12 +912,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             }
 
             str = g_malloc(len + 1);
-
-            if (alt_delimiter == '\0') {
-                memcpy(str, buf, len + 1);
-            } else {
-                strcpy_vcdalt(self, str, buf);
-            }
+            memcpy(str, buf, len + 1);
             s = &sym_block[i];
             s->name = str;
             prevsymroot = prevsym = NULL;
@@ -949,10 +920,10 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             len = sprintf_2_sdd(buf, nnam, node_block[i].msi, node_block[i].lsi);
             fst_append_graft_chain(self, buf, i, npar);
         } else {
-            int gatecmp = (f->len == 1) &&
-                          (!(f->flags &
-                             (VZT_RD_SYM_F_INTEGER | VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) &&
-                          (node_block[i].msi != -1) && (node_block[i].lsi != -1);
+            int gatecmp =
+                (f->len == 1) &&
+                (!(f->flags & (GW_FAC_FLAG_INTEGER | GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) &&
+                (node_block[i].msi != -1) && (node_block[i].lsi != -1);
             int revcmp = gatecmp && (i) &&
                          (f_name_len[(i)&F_NAME_MODULUS] == f_name_len[(i - 1) & F_NAME_MODULUS]) &&
                          (!memrevcmp(f_name_len[(i)&F_NAME_MODULUS],
@@ -963,12 +934,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 int len = sprintf_2_sd(buf, f_name[(i)&F_NAME_MODULUS], node_block[i].msi);
 
                 str = g_malloc(len + 1);
-
-                if (alt_delimiter == '\0') {
-                    memcpy(str, buf, len + 1);
-                } else {
-                    strcpy_vcdalt(self, str, buf);
-                }
+                memcpy(str, buf, len + 1);
                 s = &sym_block[i];
                 s->name = str;
                 if (allowed_to_autocoalesce && prevsym &&
@@ -988,17 +954,12 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
                 int len = f_name_len[(i)&F_NAME_MODULUS];
 
                 str = g_malloc(len + 1);
-
-                if (alt_delimiter == '\0') {
-                    memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
-                } else {
-                    strcpy_vcdalt(self, str, f_name[(i)&F_NAME_MODULUS]);
-                }
+                memcpy(str, f_name[(i)&F_NAME_MODULUS], len + 1);
                 s = &sym_block[i];
                 s->name = str;
                 prevsymroot = prevsym = NULL;
 
-                if (f->flags & VZT_RD_SYM_F_INTEGER) {
+                if (f->flags & GW_FAC_FLAG_INTEGER) {
                     if (f->len != 0) {
                         node_block[i].msi = f->len - 1;
                         node_block[i].lsi = 0;
@@ -1063,7 +1024,7 @@ static GwDumpFile *gw_fst_loader_load(GwLoader *loader, const char *fname, GErro
             n->vardt = ndt;
         }
 
-        if ((f->len > 1) || (f->flags & (VZT_RD_SYM_F_DOUBLE | VZT_RD_SYM_F_STRING))) {
+        if ((f->len > 1) || (f->flags & (GW_FAC_FLAG_DOUBLE | GW_FAC_FLAG_STRING))) {
             n->extvals = 1;
         }
 
