@@ -839,8 +839,8 @@ void process_tcl_list_2(GwSymbol *s, int which_msb, int which_lsb)
     if (which_msb <= which_lsb) {
         for (i = which_msb; i <= which_lsb; i++) {
             nexp = ExtractNodeSingleBit(s->n, i);
-            //TODO: the else branch changed from "AddNodeUnroll" \
-            //to "AddNode". However, is this if still necessary?
+            //TODO: the else branch changed from "AddNodeUnroll" to "AddNode".
+            //However, is this if still necessary?
             if (nexp) {
                 AddNode(nexp, NULL);
             } else {

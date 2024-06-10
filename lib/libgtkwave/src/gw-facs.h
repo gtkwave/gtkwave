@@ -21,4 +21,6 @@ GwSymbol **gw_facs_get_array(GwFacs *self);
 void gw_facs_order_from_tree(GwFacs *self, GwTree *tree);
 void gw_facs_sort(GwFacs *self);
 
+GwSymbol *gw_facs_lookup(GwFacs *self, const gchar *name);
+
 G_END_DECLS
