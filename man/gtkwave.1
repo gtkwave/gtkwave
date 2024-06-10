@@ -75,21 +75,6 @@ Do not render menubar. This is mainly used for making a restricted applet that c
 on its own, however it also can be used as a workaround in earlier versions of GTK+ that do not handle
 GTKSocket/GTKPlug focus interactions properly.
 .TP
-\fB\-S\fR,\fB\-\-script\fR <\fIfilename\fP>
-Specify Tcl command script file for execution.
-.TP
-\fB\-T\fR,\fB\-\-tcl_init\fR <\fIfilename\fP>
-Specify Tcl command script to be loaded on startup.  Implies \-\-wish command flag.
-.TP 
-\fB\-W\fR,\fB\-\-wish\fR
-Enable Tcl command line on stdio.  All script commands can be typed in on stdin.
-.TP
-\fB\-R\fR,\fB\-\-repscript\fR <\fIfilename\fP>
-Specify Tcl command script for periodic execution.
-.TP
-\fB\-P\fR,\fB\-\-repperiod\fR <\fIvalue\fP>
-Specifies delay in milliseconds between successive executions of the repscript.  Default is 500.
-.TP
 \fB\-X\fR,\fB\-\-xid\fR <\fIXID\fP>
 Specify XID (in hexadecimal) of window for a GtkPlug to connect to.  GTKWave does not directly render to a window but instead renders into a 
 GtkPlug expecting a GtkSocket at the other end.  Note that there are issues with accelerators working properly so menus are

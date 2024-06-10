@@ -21,7 +21,6 @@
 #include "busy.h"
 #include "debug.h"
 #include "tcl_helper.h"
-#include "tcl_support_commands.h"
 #include "signal_list.h"
 #include "gw-fst-file.h"
 
@@ -48,6 +47,11 @@ enum
     DTYPE_COLUMN,
     N_COLUMNS
 };
+
+#define SST_NODE_FOUND 0
+#define SST_NODE_CURRENT 2
+#define SST_NODE_NOT_EXIST 1
+#define SST_TREE_NOT_EXIST -1
 
 /* list of autocoalesced (synthesized) filter names that need to be freed at some point) */
 
@@ -563,9 +567,6 @@ static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
     GLOBALS->sst_sig_root_treesearch_gtk2_c_1 = t;
     GLOBALS->sig_root_treesearch_gtk2_c_1 = t->child;
     fill_sig_store();
-    gtkwavetcl_setvar(WAVE_TCLCB_TREE_SELECT,
-                      GLOBALS->selected_hierarchy_name,
-                      WAVE_TCLCB_TREE_SELECT_FLAGS);
 }
 
 static void XXX_unselect_row_callback(GtkTreeModel *model, GtkTreePath *path)
@@ -578,9 +579,6 @@ static void XXX_unselect_row_callback(GtkTreeModel *model, GtkTreePath *path)
     }
 
     if (GLOBALS->selected_hierarchy_name) {
-        gtkwavetcl_setvar(WAVE_TCLCB_TREE_UNSELECT,
-                          GLOBALS->selected_hierarchy_name,
-                          WAVE_TCLCB_TREE_UNSELECT_FLAGS);
         free_2(GLOBALS->selected_hierarchy_name);
         GLOBALS->selected_hierarchy_name = NULL;
     }
@@ -749,14 +747,8 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
 
     if (is_expand) {
         GLOBALS->open_tree_nodes = xl_insert(tstring, GLOBALS->open_tree_nodes, NULL);
-        if (!found) {
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_EXPAND, tstring, WAVE_TCLCB_TREE_EXPAND_FLAGS);
-        }
     } else {
         GLOBALS->open_tree_nodes = xl_delete(tstring, GLOBALS->open_tree_nodes);
-        if (found) {
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_COLLAPSE, tstring, WAVE_TCLCB_TREE_COLLAPSE_FLAGS);
-        }
     }
 }
 
@@ -1129,11 +1121,6 @@ static gboolean view_selection_func(GtkTreeSelection *selection,
 
         if (!path_currently_selected) {
             GLOBALS->selected_sig_name = strdup_2(name);
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_SIG_SELECT, name, WAVE_TCLCB_TREE_SIG_SELECT_FLAGS);
-        } else {
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_SIG_UNSELECT,
-                              name,
-                              WAVE_TCLCB_TREE_SIG_UNSELECT_FLAGS);
         }
 
         g_free(name);
@@ -1154,9 +1141,6 @@ static gint button_press_event_std(GtkWidget *widget, GdkEventButton *event)
             strcpy(sstr, GLOBALS->selected_hierarchy_name);
             strcat(sstr, GLOBALS->selected_sig_name);
 
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_SIG_DOUBLE_CLICK,
-                              sstr,
-                              WAVE_TCLCB_TREE_SIG_DOUBLE_CLICK_FLAGS);
             action_callback(GLOBALS->sst_dbl_action_type);
         }
     }

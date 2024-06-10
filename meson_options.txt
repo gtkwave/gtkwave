@@ -13,13 +13,6 @@ option(
 )
 
 option(
-    'tcl',
-    type: 'feature',
-    value: 'auto',
-    description: 'Tcl support',
-)
-
-option(
     'judy',
     type: 'feature',
     value: 'auto',

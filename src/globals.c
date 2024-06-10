@@ -191,13 +191,6 @@ static const struct Global globals_base_values = {
     0, /* dumpfile_is_modified */
     NULL, /* missing_file_toolbar */
     NULL, /* argvlist */
-#if defined(HAVE_LIBTCL)
-    NULL, /* interp */
-#endif
-    NULL, /* repscript_name */
-    500, /* repscript_period */
-    NULL, /* tcl_init_cmd */
-    0, /* tcl_running */
     0, /* block_xy_update */
     NULL, /* winname */
     0, /* num_notebook_pages */
@@ -486,12 +479,6 @@ static const struct Global globals_base_values = {
      * tcl_commands.c
      */
     NULL, /* previous_braced_tcl_string */
-
-    /*
-     * tcl_helper.c
-     */
-    0, /* in_tcl_callback */
-    0, /* tcl_menu_toggle_item */
 
     /*
      * timeentry.c
@@ -879,9 +866,6 @@ void reload_into_new_context_2(void)
     }
 
     printf("GTKWAVE | Reloading waveform...\n");
-    gtkwavetcl_setvar(WAVE_TCLCB_RELOAD_BEGIN,
-                      GLOBALS->loaded_file_name,
-                      WAVE_TCLCB_RELOAD_BEGIN_FLAGS);
 
     /* Save state to file */
     save_tmpfilename = tmpnam_2(NULL, &fd_dummy);
@@ -892,7 +876,6 @@ void reload_into_new_context_2(void)
             perror("Why");
             free_2(save_tmpfilename);
         }
-        gtkwavetcl_setvar_nonblocking(WAVE_TCLCB_ERROR, "reload failed", WAVE_TCLCB_ERROR_FLAGS);
         return;
     }
     if (fd_dummy >= 0)
@@ -943,11 +926,6 @@ void reload_into_new_context_2(void)
 
     /* SMP */
     new_globals->num_cpus = GLOBALS->num_cpus;
-
-    /* tcl interpreter */
-#if defined(HAVE_LIBTCL)
-    new_globals->interp = GLOBALS->interp;
-#endif
 
     /* Marker positions */
     // TODO: fix
@@ -1115,9 +1093,6 @@ void reload_into_new_context_2(void)
                              &GLOBALS->fontname_signals);
     strcpy2_into_new_context(new_globals, &new_globals->fontname_waves, &GLOBALS->fontname_waves);
     strcpy2_into_new_context(new_globals, &new_globals->cutcopylist, &GLOBALS->cutcopylist);
-    strcpy2_into_new_context(new_globals, &new_globals->tcl_init_cmd, &GLOBALS->tcl_init_cmd);
-    strcpy2_into_new_context(new_globals, &new_globals->repscript_name, &GLOBALS->repscript_name);
-    new_globals->repscript_period = GLOBALS->repscript_period;
 
     /* search.c */
     new_globals->regex_which_search_c_1 =
@@ -1602,9 +1577,6 @@ void reload_into_new_context_2(void)
     GLOBALS->splash_disable = cached_splash_disable;
 
     printf("GTKWAVE | ...waveform reloaded\n");
-    gtkwavetcl_setvar(WAVE_TCLCB_RELOAD_END,
-                      GLOBALS->loaded_file_name,
-                      WAVE_TCLCB_RELOAD_END_FLAGS);
 
     /* update lower signal set in SST to correct position */
     if ((GLOBALS->dnd_sigview) && ((treeview_vadj_value != 0.0) || (treeview_hadj_value != 0.0))) {
@@ -1939,6 +1911,5 @@ void set_GLOBALS_x(struct Global *g, const char *file, int line)
         }
 
         sprintf(sstr, "%d", GLOBALS->this_context_page);
-        gtkwavetcl_setvar(WAVE_TCLCB_CURRENT_ACTIVE_TAB, sstr, WAVE_TCLCB_CURRENT_ACTIVE_TAB_FLAGS);
     }
 }

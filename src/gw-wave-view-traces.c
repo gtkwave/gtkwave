@@ -254,13 +254,6 @@ void gw_wave_view_render_traces(GwWaveView *self, cairo_t *cr)
             }
         }
     }
-
-    if (GLOBALS->traces.dirty) {
-        char dbuf[32];
-        sprintf(dbuf, "%d", GLOBALS->traces.total);
-        GLOBALS->traces.dirty = 0;
-        gtkwavetcl_setvar(WAVE_TCLCB_TRACES_UPDATED, dbuf, WAVE_TCLCB_TRACES_UPDATED_FLAGS);
-    }
 }
 
 /*

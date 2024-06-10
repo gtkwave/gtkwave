@@ -70,10 +70,6 @@
 #include "gw-fst-file.h"
 
 #include "tcl_helper.h"
-#if defined(HAVE_LIBTCL)
-#include <tcl.h>
-#include <tk.h>
-#endif
 
 #ifdef MAC_INTEGRATION
 #include <gtkosxapplication.h>
@@ -253,23 +249,6 @@ static void print_help(char *nam)
 #define XID_GETOPT
 #endif
 
-#if defined(WIN32) && defined(USE_TCL_STUBS)
-#define WISH_GETOPT
-#else
-#define WISH_GETOPT \
-    "  -T, --tcl_init=FILE        specify Tcl command script file to be loaded on startup\n" \
-    "  -W, --wish                 enable Tcl command line on stdio\n"
-#endif
-
-#if defined(HAVE_LIBTCL)
-#define REPSCRIPT_GETOPT \
-    WISH_GETOPT \
-    "  -R, --repscript=FILE       specify timer-driven Tcl command script file\n" \
-    "  -P, --repperiod=VALUE      specify repscript period in msec (default: 500)\n"
-#else
-#define REPSCRIPT_GETOPT
-#endif
-
 #if !defined __MINGW32__
 #define OUTPUT_GETOPT "  -O, --output=FILE          specify filename for stdout/stderr redirect\n"
 #define CHDIR_GETOPT "  -2, --chdir=DIR            specify new current working directory\n"
@@ -304,7 +283,7 @@ static void print_help(char *nam)
         "  -N, --nowm                 disable window manager for most windows\n"
         "  -M, --nomenus              do not render menubar (for making applets)\n"
         "  -S, --script=FILE          specify Tcl command script file for "
-        "execution\n" REPSCRIPT_GETOPT XID_GETOPT RPC_GETOPT CHDIR_GETOPT RPC_GETOPT3
+        "execution\n" XID_GETOPT RPC_GETOPT CHDIR_GETOPT RPC_GETOPT3
         "  -4, --rcvar                specify single rc variable values individually\n"
         "  -5, --sstexclude           specify sst exclusion filter filename\n"
         "  -6, --dark                 set gtk-application-prefer-dark-theme = TRUE\n"
@@ -360,11 +339,11 @@ static char *wave_get_filename(char *dfile)
 #endif
     }
     fileselbox("GTKWave: Select a dumpfile...",
-                &GLOBALS->ftext_main_main_c_1,
-                G_CALLBACK(wave_get_filename_cleanup),
-                G_CALLBACK(wave_get_filename_cleanup),
-                NULL,
-                0);
+               &GLOBALS->ftext_main_main_c_1,
+               G_CALLBACK(wave_get_filename_cleanup),
+               G_CALLBACK(wave_get_filename_cleanup),
+               NULL,
+               0);
 
     return (GLOBALS->ftext_main_main_c_1);
 }
@@ -688,7 +667,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     int c;
     char is_vcd = 0;
-    char is_wish = 0;
     char is_smartsave = 0;
     char is_giga = 0;
     char fast_exit = 0;
@@ -697,13 +675,11 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     char *wname = NULL;
     char *override_rc = NULL;
-    char *scriptfile = NULL;
     FILE *wave = NULL;
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
     GtkWidget *panedwindow;
-    int tcl_interpreter_needs_making = 0;
     struct Global *old_g = NULL;
 
     int splash_disable_rc_override = 0;
@@ -718,7 +694,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
     if (!GLOBALS) {
         set_GLOBALS(initialize_globals());
         mainwindow_already_built = 0;
-        tcl_interpreter_needs_making = 1;
 
         GLOBALS->logfiles = calloc(1, sizeof(void *)); /* calloc is deliberate! */
     } else {
@@ -743,9 +718,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->logfiles = old_g->logfiles;
 
         /* menu.c */
-#if defined(HAVE_LIBTCL)
-        GLOBALS->interp = old_g->interp;
-#endif
         GLOBALS->vcd_jmp_buf = old_g->vcd_jmp_buf;
 
         /* timeentry.c */
@@ -918,7 +890,6 @@ do_primary_inits:
                                                    {"cpus", 1, 0, 'c'},
                                                    {"stems", 1, 0, 't'},
                                                    {"nowm", 0, 0, 'N'},
-                                                   {"script", 1, 0, 'S'},
                                                    {"vcd", 0, 0, 'v'},
                                                    {"version", 0, 0, 'V'},
                                                    {"help", 0, 0, 'h'},
@@ -927,10 +898,7 @@ do_primary_inits:
                                                    {"nomenus", 0, 0, 'M'},
                                                    {"dualid", 1, 0, 'D'},
                                                    {"giga", 0, 0, 'g'},
-                                                   {"tcl_init", 1, 0, 'T'},
                                                    {"wish", 0, 0, 'W'},
-                                                   {"repscript", 1, 0, 'R'},
-                                                   {"repperiod", 1, 0, 'P'},
                                                    {"output", 1, 0, 'O'},
                                                    {"slider-zoom", 0, 0, 'z'},
                                                    {"rpcid", 1, 0, '1'},
@@ -944,7 +912,7 @@ do_primary_inits:
 
             c = getopt_long(argc,
                             argv,
-                            "zf:Fon:a:r:dl:s:e:c:t:NS:vVhxX:MD:IgCR:P:O:WT:1:2:34:5:67",
+                            "zf:Fon:a:r:dl:s:e:c:t:NvVhxX:MD:IgC:O:1:2:34:5:67",
                             long_options,
                             &option_index);
 
@@ -959,19 +927,6 @@ do_primary_inits:
                                              "warranty; not even for MERCHANTABILITY or FITNESS "
                                              "FOR A PARTICULAR PURPOSE.\n");
                     exit(0);
-
-                case 'W':
-#if defined(HAVE_LIBTCL)
-#if defined(WIN32) && defined(USE_TCL_STUBS)
-#else
-                    is_wish = 1;
-#endif
-#else
-                    fprintf(stderr,
-                            "GTKWAVE | Tcl support not compiled into this executable, exiting.\n");
-                    exit(255);
-#endif
-                    break;
 
                 case 'D': {
                     char *s = optarg;
@@ -1190,14 +1145,6 @@ do_primary_inits:
                     GLOBALS->disable_window_manager = 1;
                     break;
 
-                case 'S':
-                    if (scriptfile)
-                        free_2(scriptfile);
-                    scriptfile = malloc_2(strlen(optarg) + 1);
-                    strcpy(scriptfile, optarg);
-                    splash_disable_rc_override = 1;
-                    break;
-
                 case 'l': {
                     struct logfile_chain *l = calloc_2(1, sizeof(struct logfile_chain));
                     struct logfile_chain *ltraverse;
@@ -1216,50 +1163,6 @@ do_primary_inits:
 
                 case 'g':
                     is_giga = 1;
-                    break;
-
-                case 'R':
-                    if (GLOBALS->repscript_name)
-                        free_2(GLOBALS->repscript_name);
-                    GLOBALS->repscript_name = malloc_2(strlen(optarg) + 1);
-                    strcpy(GLOBALS->repscript_name, optarg);
-                    break;
-
-                case 'P': {
-                    int pd = atoi(optarg);
-                    if (pd > 0) {
-                        GLOBALS->repscript_period = pd;
-                    }
-                } break;
-
-                case 'T':
-#if defined(WIN32) && defined(USE_TCL_STUBS)
-                    fprintf(stderr,
-                            "GTKWAVE | Warning: '%c' option does not exist in this executable\n",
-                            c);
-#else
-                {
-                    char *pos;
-                    is_wish = 1;
-                    if (GLOBALS->tcl_init_cmd) {
-                        int length = strlen(GLOBALS->tcl_init_cmd) + 9 + strlen(optarg);
-                        char *buffer = malloc_2(strlen(GLOBALS->tcl_init_cmd) + 1);
-                        strcpy(buffer, GLOBALS->tcl_init_cmd);
-                        free_2(GLOBALS->tcl_init_cmd);
-                        GLOBALS->tcl_init_cmd = malloc_2(length + 1);
-                        strcpy(GLOBALS->tcl_init_cmd, buffer);
-                        pos = GLOBALS->tcl_init_cmd + strlen(GLOBALS->tcl_init_cmd);
-                        free_2(buffer);
-                    } else {
-                        int length = 9 + strlen(optarg);
-                        GLOBALS->tcl_init_cmd = malloc_2(length + 1);
-                        pos = GLOBALS->tcl_init_cmd;
-                    }
-                    strcpy(pos, "; source ");
-                    pos = GLOBALS->tcl_init_cmd + strlen(GLOBALS->tcl_init_cmd);
-                    strcpy(pos, optarg);
-                }
-#endif
                     break;
 
                 case 'O':
@@ -1304,13 +1207,6 @@ do_primary_inits:
                 break; /* skip any extra args */
             }
         }
-    }
-
-    if (is_wish && is_vcd) {
-        fprintf(stderr,
-                "GTKWAVE | Cannot use --vcd and --wish options together as both use stdin,\n"
-                "GTKWAVE | exiting!\n");
-        exit(255);
     }
 
     /* attempt to load a dump+save file if only a savefile is specified at the command line */
@@ -1438,19 +1334,10 @@ do_primary_inits:
         }
     }
 
-    if (!is_wish) {
-        if (tcl_interpreter_needs_making) {
-            GLOBALS->argvlist = zMergeTclList(argc, (const char **)argv);
-            make_tcl_interpreter(argv);
-        }
-    }
-
     if (!GLOBALS->loaded_file_name) {
         GLOBALS->loaded_file_name = strdup_2("[no file loaded]");
         is_missing_file = 1;
-        if (!is_wish) {
-            fprintf(stderr, "GTKWAVE | Use the -h, --help command line flags to display help.\n");
-        }
+        fprintf(stderr, "GTKWAVE | Use the -h, --help command line flags to display help.\n");
     }
 
     /* load either the vcd or aet file depending on suffix then mode setting */
@@ -2075,16 +1962,6 @@ savefile_bail:
 
     init_busy();
 
-    if (scriptfile
-#if defined(HAVE_LIBTCL)
-        && GLOBALS->interp
-#endif
-    ) {
-        execute_script(scriptfile, 1); /* deallocate the name in the script because context might
-                                          swap out from under us! */
-        scriptfile = NULL;
-    }
-
 #if defined(WAVE_HAVE_GCONF) || defined(WAVE_HAVE_GSETTINGS)
     if (GLOBALS->loaded_file_type != MISSING_FILE) {
         if (!chdir_cache) {
@@ -2274,22 +2151,7 @@ savefile_bail:
             exit(255);
         }
     } else {
-#if defined(HAVE_LIBTCL)
-        if (is_wish) {
-            char *argv_mod[1];
-
-            set_globals_interp(argv[0], 1);
-            addPidToExecutableName(1, argv, argv_mod);
-            Tk_MainEx(1, argv_mod, gtkwaveInterpreterInit, GLOBALS->interp);
-
-            /* note: for(kk=0;kk<argc;kk++) { free_2(argv_mod[kk]); } can't really be done here,
-             * doesn't matter anyway as context free will get it */
-        } else {
-            gtk_main();
-        }
-#else
         gtk_main();
-#endif
     }
 
 #ifdef MAC_INTEGRATION
