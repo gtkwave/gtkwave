@@ -44,9 +44,6 @@ int maketraces(char *, char *, int);
 
 /* additions to bitvec.c because of search.c/menu.c ==> formerly in analyzer.h */
 GwBitVector *bits2vector(GwBits *b);
-GwBits *makevec_selected(char *vec, int numrows, char direction);
-GwBits *makevec_range(char *vec, int lo, int hi, char direction);
-int add_vector_range(char *alias, int lo, int hi, char direction);
 GwBits *makevec_chain(char *vec, GwSymbol *sym, int len);
 int add_vector_chain(GwSymbol *s, int len);
 char *makename_chain(GwSymbol *sym);
