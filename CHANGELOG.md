@@ -26,6 +26,7 @@ of these features.
 - Improved the readability of the cursor and marker time display.
 - Migrated from autotools to meson.
 - Changed the fallback text editor from gedit to the default editor that is associated with the source filetype.
+- Changed file dialog to use the native dialog on all platforms.
 
 ### Added
 
@@ -44,6 +45,7 @@ of these features.
 - Removed VCD fastload and support for vlist spillfiles.
 - Removed VCD autosave.
 - Removed rc variables:
+    - `alt_hier_delimeter`
     - `alt_wheel_mode`
     - `append_vcd_hier`
     - `atomic_vectors`

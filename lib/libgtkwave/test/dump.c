@@ -114,7 +114,7 @@ static void dump_node(GwDumpFile *file, GwNode *node)
             if (iter->time < 0) {
                 g_print("?");
             } else {
-                gint bits = ABS(node->msi - node->lsi + 1);
+                gint bits = ABS(node->msi - node->lsi) + 1;
                 for (gint i = 0; i < bits; i++) {
                     g_print("%c", gw_bit_to_char(iter->v.h_vector[i]));
                 }

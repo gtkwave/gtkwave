@@ -6704,17 +6704,58 @@ GtkWidget *alt_menu_top(GtkWidget *window)
 }
 
 #ifdef MAC_INTEGRATION
-void osx_menu_sensitivity(gboolean tr)
+static void osx_menu_set_sensitive_all(gboolean tr)
 {
     GtkWidget *mw;
     int nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
-    int i;
 
-    for (i = 0; i < nmenu_items; i++) {
+    for (int i = 0; i < nmenu_items; i++) {
         mw = menu_wlist[i];
         if (mw) {
             if (menu_items[i].callback) {
                 gtk_widget_set_sensitive(mw, tr);
+            }
+        }
+    }
+}
+
+/*
+ * Since menu in OSX is outside of the main window
+ * Users can still interact with it even a modal
+ * dialog is popped up
+ */
+void osx_menu_sensitivity(gboolean tr)
+{
+    if(tr == FALSE){
+        // Disabling requires no additional logic
+        osx_menu_set_sensitive_all(FALSE);
+    }else{
+        if (GLOBALS->loaded_file_type != MISSING_FILE) {
+            osx_menu_set_sensitive_all(TRUE);
+        } else {
+            GtkWidget *mw;
+            int nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
+
+            for (int i = 0; i < nmenu_items; i++) {
+                switch (i) {
+                    case WV_MENU_FONVT:
+                    case WV_MENU_WCLOSE:
+#if defined(HAVE_LIBTCL)
+                    case WV_MENU_TCLSCR:
+#endif
+                    case WV_MENU_FQY:
+                    case WV_MENU_HWM:
+                    case WV_MENU_HWV:
+                        mw = menu_wlist[i];
+                        if (mw) {
+                            if (menu_items[i].callback){
+                                gtk_widget_set_sensitive(mw, TRUE);
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -6735,40 +6776,6 @@ void wave_gtk_grab_remove(GtkWidget *w)
     gtk_grab_remove(w);
 
 #ifdef MAC_INTEGRATION
-    if (GLOBALS->loaded_file_type != MISSING_FILE) {
-        osx_menu_sensitivity(TRUE);
-    } else {
-        int i;
-        GtkWidget *mw;
-        int nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
-
-        for (i = 0; i < nmenu_items; i++) {
-            switch (i) {
-                case WV_MENU_FONVT:
-                case WV_MENU_WCLOSE:
-#if defined(HAVE_LIBTCL)
-                case WV_MENU_TCLSCR:
-#endif
-                case WV_MENU_FQY:
-#ifdef MAC_INTEGRATION
-                case WV_MENU_HWM:
-#endif
-                case WV_MENU_HWV:
-                    mw = menu_wlist[i];
-                    if (mw) {
-#ifdef MAC_INTEGRATION
-                        if (menu_items[i].callback)
-#endif
-                        {
-                            gtk_widget_set_sensitive(mw, TRUE);
-                        }
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-        }
-    }
+    osx_menu_sensitivity(TRUE);
 #endif
 }

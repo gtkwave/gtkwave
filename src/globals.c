@@ -45,9 +45,6 @@
 #if !defined __MINGW32__
 #include <unistd.h>
 #include <sys/mman.h>
-#else
-#include <windows.h>
-#include <io.h>
 #endif
 
 struct Global *GLOBALS = NULL;
@@ -152,13 +149,9 @@ static const struct Global globals_base_values = {
      * file.c
      */
     NULL, /* pFileChoose */
-    NULL, /* pFileChooseFilterName */
-    NULL, /* pPatternSpec */
     0, /* fs_file_c_1 86 */
     NULL, /* fileselbox_text 87 */
     0, /* filesel_ok 88 */
-    0, /* cleanup_file_c_2 89 */
-    0, /* bad_cleanup_file_c1 */
 
     /*
      * fonts.c
@@ -530,7 +523,6 @@ static const struct Global globals_base_values = {
      */
     '.', /* hier_delimeter 447 */
     0, /* hier_was_explicitly_set 448 */
-    0x00, /* alt_hier_delimeter 449 */
     NULL, /* talloc_pool_base */
     0, /* talloc_idx */
     NULL, /* sst_exclude_filename */
@@ -1096,7 +1088,6 @@ void reload_into_new_context_2(void)
     new_globals->wave_scrolling = GLOBALS->wave_scrolling;
     new_globals->do_zoom_center = GLOBALS->do_zoom_center;
     new_globals->zoom_pow10_snap = GLOBALS->zoom_pow10_snap;
-    new_globals->alt_hier_delimeter = GLOBALS->alt_hier_delimeter;
     new_globals->cursor_snap = GLOBALS->cursor_snap;
     new_globals->hier_delimeter = GLOBALS->hier_delimeter;
     new_globals->hier_was_explicitly_set = GLOBALS->hier_was_explicitly_set;
@@ -1132,9 +1123,6 @@ void reload_into_new_context_2(void)
     strcpy2_into_new_context(new_globals, &new_globals->tcl_init_cmd, &GLOBALS->tcl_init_cmd);
     strcpy2_into_new_context(new_globals, &new_globals->repscript_name, &GLOBALS->repscript_name);
     new_globals->repscript_period = GLOBALS->repscript_period;
-    strcpy2_into_new_context(new_globals,
-                             &new_globals->pFileChooseFilterName,
-                             &GLOBALS->pFileChooseFilterName);
 
     /* search.c */
     new_globals->regex_which_search_c_1 =

@@ -15,209 +15,6 @@
 #include "debug.h"
 #include <string.h>
 #include <stdlib.h>
-/* #include <fnmatch.h> */
-#ifdef MAC_INTEGRATION
-#include <cocoa_misc.h>
-#endif
-
-#if defined __MINGW32__
-#include <windows.h>
-#endif
-
-#ifndef MAC_INTEGRATION
-static gboolean ffunc(const GtkFileFilterInfo *filter_info, gpointer data)
-{
-    (void)data;
-
-    const char *rms = strrchr(filter_info->filename, '\\');
-    const char *rms2;
-
-    if (!rms)
-        rms = filter_info->filename;
-    else
-        rms++;
-
-    rms2 = strrchr(rms, '/');
-    if (!rms2)
-        rms2 = rms;
-    else
-        rms2++;
-
-    if (!GLOBALS->pFileChooseFilterName || !GLOBALS->pPatternSpec) {
-        return (TRUE);
-    }
-
-    if (!strchr(GLOBALS->pFileChooseFilterName, '*') &&
-        !strchr(GLOBALS->pFileChooseFilterName, '?')) {
-        char *fpos = strstr(rms2, GLOBALS->pFileChooseFilterName);
-        return (fpos != NULL);
-    } else {
-        return (g_pattern_match_string(GLOBALS->pPatternSpec, rms2));
-    }
-}
-
-static void filter_edit_cb(GtkWidget *widget, GdkEventKey *ev, gpointer *data)
-{
-    (void)ev;
-
-    const char *t;
-    gchar *folder_filename;
-
-    if (GLOBALS->pFileChooseFilterName) {
-        free_2((char *)GLOBALS->pFileChooseFilterName);
-        GLOBALS->pFileChooseFilterName = NULL;
-    }
-
-    t = gtk_entry_get_text(GTK_ENTRY(widget));
-
-    if (t == NULL || *t == 0) {
-        GLOBALS->pFileChooseFilterName = NULL;
-    } else {
-        GLOBALS->pFileChooseFilterName = malloc_2(strlen(t) + 1);
-        strcpy(GLOBALS->pFileChooseFilterName, t);
-
-        if (GLOBALS->pPatternSpec)
-            g_pattern_spec_free(GLOBALS->pPatternSpec);
-        GLOBALS->pPatternSpec = g_pattern_spec_new(t);
-    }
-
-    /* now force refresh with new filter */
-    folder_filename = gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(data));
-    if (folder_filename) {
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(data), folder_filename);
-        g_free(folder_filename);
-    }
-}
-
-static void press_callback(GtkWidget *widget, gpointer *data)
-{
-    GdkEventKey ev;
-
-    filter_edit_cb(widget, &ev, data);
-}
-
-#endif
-
-void fileselbox_old(const char *title,
-                    char **filesel_path,
-                    GCallback ok_func,
-                    GCallback notok_func,
-                    const char *pattn,
-                    int is_writemode)
-{
-#if defined __MINGW32__
-    OPENFILENAME ofn;
-    char szFile[260]; /* buffer for file name */
-    char szPath[260]; /* buffer for path name */
-    char lpstrFilter[260]; /* more than enough room for some patterns */
-    BOOL rc;
-
-    GLOBALS->fileselbox_text = filesel_path;
-    GLOBALS->filesel_ok = 0;
-    GLOBALS->cleanup_file_c_2 = ok_func;
-    GLOBALS->bad_cleanup_file_c_1 = notok_func;
-
-    ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.lpstrFile = szFile;
-    ofn.lpstrFile[0] = '\0';
-    ofn.lpstrFilter = lpstrFilter;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = is_writemode ? (OFN_CREATEPROMPT | OFN_OVERWRITEPROMPT)
-                             : (OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST);
-
-    if ((!pattn) || (!strcmp(pattn, "*"))) {
-        sprintf(lpstrFilter, "%s%c%s%c", "All", 0, "*.*", 0);
-        ofn.nFilterIndex = 0;
-    } else {
-        sprintf(lpstrFilter, "%s%c%s%c%s%c%s%c", pattn, 0, pattn, 0, "All", 0, "*.*", 0); /* cppcheck
-                                                                                           */
-        ofn.nFilterIndex = 0;
-    }
-
-    if (*filesel_path) {
-        char *fsp = *filesel_path;
-        int ch_idx = 0;
-        char ch = 0;
-
-        while (*fsp) {
-            ch = *fsp;
-            szFile[ch_idx++] = (ch != '/') ? ch : '\\';
-            fsp++;
-        }
-
-        szFile[ch_idx] = 0;
-
-        if ((ch == '/') || (ch == '\\')) {
-            strcpy(szPath, szFile);
-            szFile[0] = 0;
-            ofn.lpstrInitialDir = szPath;
-        }
-    }
-
-    rc = is_writemode ? GetSaveFileName(&ofn) : GetOpenFileName(&ofn);
-
-    if (rc == TRUE) {
-        GLOBALS->filesel_ok = 1;
-        if (*GLOBALS->fileselbox_text)
-            free_2(*GLOBALS->fileselbox_text);
-        if (!is_writemode) {
-            *GLOBALS->fileselbox_text = (char *)strdup_2(szFile);
-        } else {
-            char *suf_str = NULL;
-            int suf_add = 0;
-            int szlen = 0;
-            int suflen = 0;
-
-            if (pattn) {
-                suf_str = strstr(pattn, "*.");
-                if (suf_str)
-                    suf_str++;
-            }
-
-            if (suf_str) {
-                szlen = strlen(szFile);
-                suflen = strlen(suf_str);
-                if (suflen > szlen) {
-                    suf_add = 1;
-                } else {
-                    if (strcasecmp(szFile + (szlen - suflen), suf_str)) {
-                        suf_add = 1;
-                    }
-                }
-            }
-
-            if (suf_str && suf_add) {
-                *GLOBALS->fileselbox_text = (char *)malloc_2(szlen + suflen + 1);
-                strcpy(*GLOBALS->fileselbox_text, szFile);
-                strcpy(*GLOBALS->fileselbox_text + szlen, suf_str);
-            } else {
-                *GLOBALS->fileselbox_text = (char *)strdup_2(szFile);
-            }
-        }
-
-        GLOBALS->cleanup_file_c_2();
-    } else {
-        if (GLOBALS->bad_cleanup_file_c_1)
-            GLOBALS->bad_cleanup_file_c_1();
-    }
-
-#else
-    (void)title;
-    (void)filesel_path;
-    (void)ok_func;
-    (void)notok_func;
-    (void)pattn;
-    (void)is_writemode;
-
-    fprintf(stderr, "fileselbox_old no longer supported, exiting.\n");
-    exit(255);
-
-#endif
-}
 
 void fileselbox(const char *title,
                 char **filesel_path,
@@ -226,17 +23,11 @@ void fileselbox(const char *title,
                 const char *pattn,
                 int is_writemode)
 {
-#ifndef MAC_INTEGRATION
     int can_set_filename = 0;
-    GtkWidget *pFileChoose;
+    GtkFileChooserNative *pFileChooseNative;
     GtkWidget *pWindowMain;
     GtkFileFilter *filter;
-    GtkWidget *label;
-    GtkWidget *label_ent;
-    GtkWidget *box;
     struct Global *old_globals = GLOBALS;
-#endif
-
     /* fix problem where ungrab doesn't occur if button pressed + simultaneous accelerator key
      * occurs */
     if (GLOBALS->in_button_press_wavewindow_c_1) {
@@ -287,41 +78,11 @@ void fileselbox(const char *title,
         return;
     }
 
-#ifdef MAC_INTEGRATION
-
-    GLOBALS->fileselbox_text = filesel_path;
-    GLOBALS->filesel_ok = 0;
-    char *rc = gtk_file_req_bridge(title, *filesel_path, pattn, is_writemode);
-    if (rc) {
-        GLOBALS->filesel_ok = 1;
-
-        if (*GLOBALS->fileselbox_text)
-            free_2(*GLOBALS->fileselbox_text);
-        *GLOBALS->fileselbox_text = strdup_2(rc);
-        g_free(rc);
-        if (ok_func)
-            ok_func();
-    } else {
-        if (notok_func)
-            notok_func();
-    }
-    return;
-
-#else
-
-#if defined __MINGW32__
-
-    fileselbox_old(title, filesel_path, ok_func, notok_func, pattn, is_writemode);
-    return;
-
-#else
-
     pWindowMain = GLOBALS->mainwindow;
     GLOBALS->fileselbox_text = filesel_path;
     GLOBALS->filesel_ok = 0;
 
     if (*GLOBALS->fileselbox_text && (!g_path_is_absolute(*GLOBALS->fileselbox_text))) {
-#if defined __USE_BSD || defined __USE_XOPEN_EXTENDED || defined __CYGWIN__ || defined HAVE_REALPATH
         char *can = realpath_2(*GLOBALS->fileselbox_text, NULL);
 
         if (can) {
@@ -332,11 +93,6 @@ void fileselbox(const char *title,
             free(can);
             can_set_filename = 1;
         }
-#else
-#if __GNUC__
-#warning Absolute file path warnings might be issued by the file chooser dialogue on this system!
-#endif
-#endif
     } else {
         if (*GLOBALS->fileselbox_text) {
             can_set_filename = 1;
@@ -344,56 +100,31 @@ void fileselbox(const char *title,
     }
 
     if (is_writemode) {
-        pFileChoose = gtk_file_chooser_dialog_new(title,
-                                                  NULL,
-                                                  GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                  XXX_GTK_STOCK_CANCEL,
-                                                  GTK_RESPONSE_CANCEL,
-                                                  XXX_GTK_STOCK_SAVE,
-                                                  GTK_RESPONSE_ACCEPT,
-                                                  NULL);
+        pFileChooseNative = gtk_file_chooser_native_new(title,
+                                                        NULL,
+                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                        XXX_GTK_STOCK_SAVE,
+                                                        XXX_GTK_STOCK_CANCEL);
 
-        gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(pFileChoose), TRUE);
+        gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(pFileChooseNative), TRUE);
     } else {
-        pFileChoose = gtk_file_chooser_dialog_new(title,
-                                                  NULL,
-                                                  GTK_FILE_CHOOSER_ACTION_OPEN,
-                                                  XXX_GTK_STOCK_CANCEL,
-                                                  GTK_RESPONSE_CANCEL,
-                                                  XXX_GTK_STOCK_OPEN,
-                                                  GTK_RESPONSE_ACCEPT,
-                                                  NULL);
+        pFileChooseNative = gtk_file_chooser_native_new(title,
+                                                        NULL,
+                                                        GTK_FILE_CHOOSER_ACTION_OPEN,
+                                                        XXX_GTK_STOCK_OPEN,
+                                                        XXX_GTK_STOCK_CANCEL);
     }
 
-    GLOBALS->pFileChoose = pFileChoose;
+    GLOBALS->pFileChoose = pFileChooseNative;
 
     if ((can_set_filename) && (*filesel_path)) {
         int flen = strlen(*filesel_path);
         if (((*filesel_path)[flen - 1] == '/') || ((*filesel_path)[flen - 1] == '\\')) {
-            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(pFileChoose), *filesel_path);
+            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(pFileChooseNative), *filesel_path);
         } else {
-            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(pFileChoose), *filesel_path);
+            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(pFileChooseNative), *filesel_path);
         }
     }
-
-    label = gtk_label_new("Custom Filter:");
-    label_ent = X_gtk_entry_new_with_max_length(40);
-
-    gtk_entry_set_text(GTK_ENTRY(label_ent),
-                       GLOBALS->pFileChooseFilterName ? GLOBALS->pFileChooseFilterName : "*");
-    g_signal_connect(label_ent, "changed", G_CALLBACK(press_callback), pFileChoose);
-    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);
-    gtk_widget_show(label);
-    gtk_box_pack_start(GTK_BOX(box), label_ent, FALSE, FALSE, 0);
-    gtk_widget_set_size_request(GTK_WIDGET(label_ent), 300, 22);
-    gtk_tooltips_set_tip_2(label_ent,
-                           "Enter custom pattern match filter here. Note that \"string\" without * "
-                           "or ? achieves a match on \"*string*\".");
-    gtk_widget_show(label_ent);
-    gtk_widget_show(box);
-
-    gtk_file_chooser_set_extra_widget(GTK_FILE_CHOOSER(pFileChoose), box);
 
     if (pattn) {
         int is_gtkw = suffix_check(pattn, ".gtkw");
@@ -402,7 +133,7 @@ void fileselbox(const char *title,
         filter = gtk_file_filter_new();
         gtk_file_filter_add_pattern(filter, pattn);
         gtk_file_filter_set_name(filter, pattn);
-        gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
+        gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChooseNative), filter);
 
         if (is_gtkw || is_sav) {
             const char *pattn2 = is_sav ? "*.gtkw" : "*.sav";
@@ -410,46 +141,34 @@ void fileselbox(const char *title,
             filter = gtk_file_filter_new();
             gtk_file_filter_add_pattern(filter, pattn2);
             gtk_file_filter_set_name(filter, pattn2);
-            gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
+            gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChooseNative), filter);
+        }
+
+        if (strcmp(pattn, "*")) {
+            filter = gtk_file_filter_new();
+            gtk_file_filter_add_pattern(filter, "*");
+            gtk_file_filter_set_name(filter, "*");
+            gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChooseNative), filter);
         }
     }
 
-    if ((!pattn) || (strcmp(pattn, "*"))) {
-        filter = gtk_file_filter_new();
-        gtk_file_filter_add_pattern(filter, "*");
-        gtk_file_filter_set_name(filter, "*");
-        gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
-    }
-
-    filter = gtk_file_filter_new();
-    gtk_file_filter_add_custom(filter, GTK_FILE_FILTER_FILENAME, ffunc, NULL, NULL);
-    gtk_file_filter_set_name(filter, "Custom");
-    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(pFileChoose), filter);
-    if (GLOBALS->pFileChooseFilterName) {
-        GLOBALS->pPatternSpec = g_pattern_spec_new(GLOBALS->pFileChooseFilterName);
-    }
-
-    gtk_dialog_set_default_response(GTK_DIALOG(pFileChoose), GTK_RESPONSE_ACCEPT);
-
-    /* gtk_object_set_data(pFileChoose, "FileChooseWindow", pFileChoose); */
-    gtk_container_set_border_width(GTK_CONTAINER(pFileChoose), 10);
-    gtk_window_set_position(GTK_WINDOW(pFileChoose), GTK_WIN_POS_CENTER);
-    gtk_window_set_modal(GTK_WINDOW(pFileChoose), TRUE);
-    gtk_window_set_resizable(GTK_WINDOW(pFileChoose), TRUE); /* some distros need this */
     if (pWindowMain) {
-        gtk_window_set_transient_for(GTK_WINDOW(pFileChoose), GTK_WINDOW(pWindowMain));
+        gtk_native_dialog_set_transient_for(GTK_NATIVE_DIALOG(pFileChooseNative),
+                                            GTK_WINDOW(pWindowMain));
     }
-    gtk_widget_show(pFileChoose);
-    wave_gtk_grab_add(pFileChoose);
+    gtk_native_dialog_set_modal(GTK_NATIVE_DIALOG(pFileChooseNative), TRUE);
+#ifdef MAC_INTEGRATION
+    osx_menu_sensitivity(FALSE);
+#endif
 
     /* check against old_globals is because of DnD context swapping so make response fail */
 
-    if ((gtk_dialog_run(GTK_DIALOG(pFileChoose)) == GTK_RESPONSE_ACCEPT) &&
+    if ((gtk_native_dialog_run(GTK_NATIVE_DIALOG(pFileChooseNative)) == GTK_RESPONSE_ACCEPT) &&
         (GLOBALS == old_globals) && (GLOBALS->fileselbox_text)) {
         const char *allocbuf;
         int alloclen;
 
-        allocbuf = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(pFileChoose));
+        allocbuf = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(pFileChooseNative));
         if ((alloclen = strlen(allocbuf))) {
             int gtkw_test = 0;
 
@@ -502,31 +221,25 @@ void fileselbox(const char *title,
                 GLOBALS->is_gtkw_save_file = suffix_check(*GLOBALS->fileselbox_text, ".gtkw");
             }
         }
-
         DEBUG(printf("Filesel OK %s\n", allocbuf));
-        wave_gtk_grab_remove(pFileChoose);
-        gtk_widget_destroy(pFileChoose);
+#ifdef MAC_INTEGRATION
+        osx_menu_sensitivity(TRUE);
+#endif
+        gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
+        g_object_unref(pFileChooseNative);
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
-
         gtkwave_main_iteration();
         ok_func();
     } else {
         DEBUG(printf("Filesel Entry Cancel\n"));
-        wave_gtk_grab_remove(pFileChoose);
-        gtk_widget_destroy(pFileChoose);
+#ifdef MAC_INTEGRATION
+        osx_menu_sensitivity(TRUE);
+#endif
+        gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(pFileChooseNative));
+        g_object_unref(pFileChooseNative);
         GLOBALS->pFileChoose = NULL; /* keeps DND from firing */
-
         gtkwave_main_iteration();
-        if (GLOBALS->bad_cleanup_file_c_1)
+        if (notok_func)
             notok_func();
     }
-
-    if (GLOBALS->pPatternSpec) {
-        g_pattern_spec_free(GLOBALS->pPatternSpec);
-        GLOBALS->pPatternSpec = NULL;
-    }
-
-#endif
-
-#endif
 }

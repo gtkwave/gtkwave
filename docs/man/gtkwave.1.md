@@ -30,7 +30,7 @@ use IBM EDA toolsets.
 
 **-n**,**\--nocli** \<*directory name*\>
 
-:   Use file requester for dumpfile name.
+:   Use file selection dialog for dumpfile or savefile.
 
 **-f**,**\--dump** \<*filename*\>
 

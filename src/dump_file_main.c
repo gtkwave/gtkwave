@@ -17,7 +17,6 @@ static void set_common_settings(GwLoader *loader)
         GLOBALS->hier_delimeter = '.';
     }
     gw_loader_set_hierarchy_delimiter(loader, GLOBALS->hier_delimeter);
-    gw_loader_set_alternate_hierarchy_delimiter(loader, GLOBALS->alt_hier_delimeter);
 }
 
 static GwDumpFile *load(GwLoader *loader, const gchar *fname)

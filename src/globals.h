@@ -18,6 +18,7 @@
 #if defined __MINGW32__
 #include <windows.h>
 #include <io.h>
+#undef interface
 #endif
 
 #define XXX_GDK_DRAWABLE(x) x
@@ -174,14 +175,10 @@ struct Global
     /*
      * file.c
      */
-    GtkWidget *pFileChoose;
-    char *pFileChooseFilterName;
-    GPatternSpec *pPatternSpec;
+    GtkFileChooserNative *pFileChoose;
     GtkWidget *fs_file_c_1; /* from file.c 87 */
     char **fileselbox_text; /* from file.c 88 */
     char filesel_ok; /* from file.c 89 */
-    void (*cleanup_file_c_2)(void); /* from file.c 90 */
-    void (*bad_cleanup_file_c_1)(void); /* from file.c 91 */
 
     /*
      * fonts.c
@@ -520,7 +517,6 @@ struct Global
  */
     char hier_delimeter; /* from tree.c 477 */
     char hier_was_explicitly_set; /* from tree.c 478 */
-    char alt_hier_delimeter; /* from tree.c 479 */
     unsigned char *talloc_pool_base;
     size_t talloc_idx;
     char *sst_exclude_filename;

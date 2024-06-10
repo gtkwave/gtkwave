@@ -16,20 +16,10 @@
 #include <gtk/gtk.h>
 
 void gtk_open_external_file(const char *fpath);
-char *gtk_file_req_bridge(const char *title,
-                          const char *fpath,
-                          const char *pattn,
-                          int is_writemode);
 int gtk_simplereqbox_req_bridge(const char *title,
                                 const char *default_text,
                                 const char *oktext,
                                 const char *canceltext,
                                 int is_alert);
-int entrybox_req_bridge(const char *title,
-                        int width,
-                        const char *dflt_text,
-                        const char *comment,
-                        int maxch,
-                        char **out_text_entry);
 
 #endif
