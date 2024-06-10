@@ -47,10 +47,6 @@ struct _GwNode
 
     int numhist; /* number of elements in the harray */
 
-#ifdef WAVE_ARRAY_SUPPORT
-    unsigned int array_height, this_row;
-#endif
-
     unsigned varxt : WAVE_VARXT_WIDTH; /* reference inside subvar_pnt[] */
     unsigned vardt : WAVE_VARDT_WIDTH; /* see nodeVarDataType, this is an internal value */
     unsigned vardir : WAVE_VARDIR_WIDTH; /* see nodeVarDir, this is an internal value (currently

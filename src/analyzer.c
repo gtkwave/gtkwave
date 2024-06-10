@@ -428,7 +428,9 @@ int InsertBlankTrace(char *comment, TraceFlagsType different_flags)
 }
 
 /*
- * Adds a single bit signal to the display...
+ * Generate a new trace contains nd and
+ * Adds the trace to the display
+ * Then return the trace through **tret...
  */
 int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret)
 {
@@ -526,32 +528,12 @@ int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret)
     return (1);
 }
 
-/* single node */
+/*
+ * Adds a single node to the display...
+ */
 int AddNode(GwNode *nd, char *aliasname)
 {
     return (AddNodeTraceReturn(nd, aliasname, NULL));
-}
-
-/* add multiple nodes (if array) */
-int AddNodeUnroll(GwNode *nd, char *aliasname)
-{
-#ifdef WAVE_ARRAY_SUPPORT
-    if (nd->array_height <= 1)
-#endif
-    {
-        return (AddNodeTraceReturn(nd, aliasname, NULL));
-    }
-#ifdef WAVE_ARRAY_SUPPORT
-    else {
-        unsigned int i;
-        int rc = 1;
-
-        for (i = 0; i < nd->array_height; i++) {
-            rc |= AddNodeTraceReturn(nd + i, aliasname, NULL);
-        }
-        return (rc);
-    }
-#endif
 }
 
 /*

@@ -82,19 +82,7 @@ bot:
 char *append_array_row(GwNode *n)
 {
     char *hname = n->nname;
-
-#ifdef WAVE_ARRAY_SUPPORT
-    if (!n->array_height)
-#endif
-    {
-        strcpy(GLOBALS->buf_menu_c_1, hname);
-    }
-#ifdef WAVE_ARRAY_SUPPORT
-    else {
-        sprintf(GLOBALS->buf_menu_c_1, "%s{%d}", hname, n->this_row);
-    }
-#endif
-
+    strcpy(GLOBALS->buf_menu_c_1, hname);
     return (GLOBALS->buf_menu_c_1);
 }
 

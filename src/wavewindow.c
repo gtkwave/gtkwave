@@ -1788,17 +1788,7 @@ void populateBuffer(GwTrace *t, char *altname, char *buf)
                 reformat_time(ptr + 1, t->shift, time_dimension);
                 ptr = ptr + strlen(ptr + 1) + 1;
                 strcpy(ptr, "\'");
-#ifdef WAVE_ARRAY_SUPPORT
-                ptr = ptr + strlen(ptr); /* really needed for aet2 only */
-#endif
             }
-
-#ifdef WAVE_ARRAY_SUPPORT
-            if ((!t->vector) && (t->n.nd) && (t->n.nd->array_height)) {
-                sprintf(ptr, "{%d}", t->n.nd->this_row);
-                /* ptr = ptr + strlen(ptr); */ /* scan-build */
-            }
-#endif
         }
 
         if (IsGroupBegin(t)) {

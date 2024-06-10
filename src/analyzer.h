@@ -16,10 +16,6 @@
 #include <stdlib.h>
 #include "debug.h"
 
-#ifdef AET2_IS_PRESENT
-#define WAVE_ARRAY_SUPPORT
-#endif
-
 typedef struct _SearchProgressData
 {
     GtkWidget *window;
@@ -227,7 +223,6 @@ int UpdateTracesVisible(void);
 void DisplayTraces(int val);
 int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret);
 int AddNode(GwNode *nd, char *aliasname);
-int AddNodeUnroll(GwNode *nd, char *aliasname);
 int AddVector(GwBitVector *vec, char *aliasname);
 int AddBlankTrace(char *commentname);
 int InsertBlankTrace(char *comment, TraceFlagsType different_flags);

@@ -312,12 +312,7 @@ GwSymbol *bsearch_facs(char *ascii, unsigned int *rows_return)
                     if (rows_return)
                         *rows_return = whichrow;
 
-#ifdef WAVE_ARRAY_SUPPORT
-                    if (whichrow <= (*rc)->n->array_height)
-#endif
-                    {
-                        return (*rc);
-                    }
+                    return (*rc);
                 }
             }
             break; /* fallthrough to normal handler */

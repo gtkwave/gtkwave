@@ -839,10 +839,12 @@ void process_tcl_list_2(GwSymbol *s, int which_msb, int which_lsb)
     if (which_msb <= which_lsb) {
         for (i = which_msb; i <= which_lsb; i++) {
             nexp = ExtractNodeSingleBit(s->n, i);
+            //TODO: the else branch changed from "AddNodeUnroll" \
+            //to "AddNode". However, is this if still necessary?
             if (nexp) {
                 AddNode(nexp, NULL);
             } else {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             }
         }
     } else {
@@ -851,7 +853,7 @@ void process_tcl_list_2(GwSymbol *s, int which_msb, int which_lsb)
             if (nexp) {
                 AddNode(nexp, NULL);
             } else {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             }
         }
     }
@@ -1195,7 +1197,7 @@ for (ii = 0; ii < c; ii++) {
                 if (nexp) {
                     AddNode(nexp, NULL);
                 } else {
-                    AddNodeUnroll(s->n, NULL);
+                    AddNode(s->n, NULL);
                 }
             } else {
                 process_tcl_list_2(
@@ -1207,7 +1209,7 @@ for (ii = 0; ii < c; ii++) {
             GwSymbol *schain = s->vec_root;
 
             if (!schain) {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             } else {
                 int len = 0;
                 while (schain) {
