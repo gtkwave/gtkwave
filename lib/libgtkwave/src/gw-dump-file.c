@@ -715,3 +715,122 @@ gboolean gw_dump_file_get_uses_vhdl_component_format(GwDumpFile *self)
 
     return priv->uses_vhdl_component_format;
 }
+
+/*
+ * find a slot already in the table...
+ */
+static GwSymbol *symfind_2(GwDumpFile *self, const char *s)
+{
+    GwFacs *facs = gw_dump_file_get_facs(self);
+
+    GwSymbol *sr = gw_facs_lookup(facs, s);
+    if (sr != NULL) {
+        return sr;
+    }
+
+    // this is because . is > in ascii than chars like $ but . was converted to 0x1 on sort
+
+    // char *s2;
+    // int i;
+    // int mat;
+
+    if (!gw_dump_file_has_escaped_names(self)) {
+        return NULL;
+    }
+
+    // TODO: fix support for escaped names
+    g_warning("TODO: implement support for escaped names in gw_dump_file_lookup_symbol");
+
+    return NULL;
+
+    // guint numfacs = gw_facs_get_length(facs);
+
+    // if (GLOBALS->facs_have_symbols_state_machine == 0) {
+    //     if (has_escaped_names) {
+    //         mat = 1;
+    //     } else {
+    //         mat = 0;
+
+    //         for (i = 0; i < numfacs; i++) {
+    //             char *hfacname = NULL;
+
+    //             GwSymbol *fac = gw_facs_get(facs, i);
+
+    //             hfacname = fac->name;
+    //             s2 = hfacname;
+    //             while (*s2) {
+    //                 if (*s2 < GLOBALS->hier_delimeter) {
+    //                     mat = 1;
+    //                     break;
+    //                 }
+    //                 s2++;
+    //             }
+
+    //             /* if(was_packed) { free_2(hfacname); } ...not needed with
+    //              * HIER_DEPACK_STATIC */
+    //             if (mat) {
+    //                 break;
+    //             }
+    //         }
+    //     }
+
+    //     if (mat) {
+    //         GLOBALS->facs_have_symbols_state_machine = 1;
+    //     } else {
+    //         GLOBALS->facs_have_symbols_state_machine = 2;
+    //     } /* prevent code below from executing */
+    // }
+
+    // if (GLOBALS->facs_have_symbols_state_machine == 1) {
+    //     mat = 0;
+    //     for (i = 0; i < numfacs; i++) {
+    //         char *hfacname = NULL;
+
+    //         GwSymbol *fac = gw_facs_get(facs, i);
+
+    //         hfacname = fac->name;
+    //         if (!strcmp(hfacname, s)) {
+    //             mat = 1;
+    //         }
+
+    //         /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
+    //         if (mat) {
+    //             sr = fac;
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // return (sr);
+}
+
+/**
+ * gw_dump_file_lookup_symbol:
+ * @self: A #GwDumpFile.
+ *
+ * Looks up the symbol with the given name.
+ *
+ * Returns: (nullable) (transfer none): The symbol, or %NULL if no symbol with that name exists.
+ */
+GwSymbol *gw_dump_file_lookup_symbol(GwDumpFile *self, const gchar *name)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
+    g_return_val_if_fail(name != NULL && name[0] != '\0', NULL);
+
+    GwSymbol *s_pnt = symfind_2(self, name);
+    if (s_pnt != NULL) {
+        return s_pnt;
+    }
+
+    int len = strlen(name);
+    char last_char = name[len - 1];
+    if (last_char == ']') {
+        return NULL;
+    }
+
+    char *name2 = g_alloca(len + 4);
+    memcpy(name2, name, len);
+    strcpy(name2 + len, "[0]"); /* bluespec vs modelsim */
+
+    return symfind_2(self, name2);
+}

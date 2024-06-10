@@ -476,11 +476,6 @@ struct Global
     int strace_current_window;
     int strace_repeat_count;
 
-/*
- * symbol.c
- */
-    char facs_have_symbols_state_machine; /* from symbol.c */
-
     /*
      * tcl_commands.c
      */

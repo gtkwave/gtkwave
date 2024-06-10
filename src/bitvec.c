@@ -432,7 +432,6 @@ int maketraces(char *str, char *alias, int quick_return)
     int len;
     int i;
     int made = 0;
-    unsigned int rows = 0;
 
     pnt = str;
     while ((ch = *pnt)) {
@@ -458,9 +457,9 @@ int maketraces(char *str, char *alias, int quick_return)
                 }
             }
 
-            s = symfind(str + i, &rows);
+            s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, str + i);
             if (s) {
-                nexp = ExtractNodeSingleBit(&s->n[rows], atoi(str + 1));
+                nexp = ExtractNodeSingleBit(s->n, atoi(str + 1));
                 if (nexp) {
                     AddNode(nexp, alias);
                     return (~0);
@@ -469,8 +468,8 @@ int maketraces(char *str, char *alias, int quick_return)
 
             return (0);
         } else {
-            if ((s = symfind(str, &rows))) {
-                AddNode(&s->n[rows], alias);
+            if ((s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, str))) {
+                AddNode(s->n, alias);
                 return (~0);
             } else {
                 /* in case its a 1-bit bit-blasted signal */
@@ -482,8 +481,8 @@ int maketraces(char *str, char *alias, int quick_return)
                 str2[l + 1] = '0';
                 str2[l + 2] = ']';
                 str2[l + 3] = 0;
-                if ((s = symfind(str2, &rows))) {
-                    AddNode(&s->n[rows], alias);
+                if ((s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, str2))) {
+                    AddNode(s->n, alias);
                     return (~0);
                 } else
                     return (0);
@@ -540,7 +539,6 @@ GwBits *makevec(char *vec, char *str)
     int i;
     GwNode *n[BITATTRIBUTES_MAX];
     GwBits *b = NULL;
-    unsigned int rows = 0;
 
     while (1) {
         pnt = str;
@@ -580,9 +578,9 @@ GwBits *makevec(char *vec, char *str)
                             break;
                         if ((wild[i] == ')') && (wild[i + 1])) {
                             i++;
-                            s = symfind(wild + i, &rows);
+                            s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, wild + i);
                             if (s) {
-                                nexp = ExtractNodeSingleBit(&s->n[rows], atoi(wild + 1));
+                                nexp = ExtractNodeSingleBit(s->n, atoi(wild + 1));
                                 if (nexp) {
                                     n[nodepnt++] = nexp;
                                     if (nodepnt == BITATTRIBUTES_MAX) {
@@ -615,9 +613,9 @@ GwBits *makevec(char *vec, char *str)
                                     sprintf(ns, "%s[%d]", wild + i, actual);
                                     *lp = '[';
 
-                                    s = symfind(ns, &rows);
+                                    s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, ns);
                                     if (s) {
-                                        nexp = &s->n[rows];
+                                        nexp = s->n;
                                         if (nexp) {
                                             n[nodepnt++] = nexp;
                                             if (nodepnt == BITATTRIBUTES_MAX) {
@@ -634,8 +632,8 @@ GwBits *makevec(char *vec, char *str)
                         }
                     }
                 } else {
-                    if ((s = symfind(wild, &rows))) {
-                        n[nodepnt++] = &s->n[rows];
+                    if ((s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, wild))) {
+                        n[nodepnt++] = s->n;
                         if (nodepnt == BITATTRIBUTES_MAX) {
                             free_2(wild);
                             goto ifnode;
@@ -697,7 +695,6 @@ GwBits *makevec_annotated(char *vec, char *str)
     GwBitAttributes ba[BITATTRIBUTES_MAX];
     GwBits *b = NULL;
     int state = 0;
-    unsigned int rows = 0;
 
     memset(ba, 0, sizeof(ba)); /* scan-build */
 
@@ -747,9 +744,9 @@ GwBits *makevec_annotated(char *vec, char *str)
                             break;
                         if ((wild[i] == ')') && (wild[i + 1])) {
                             i++;
-                            s = symfind(wild + i, &rows);
+                            s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, wild + i);
                             if (s) {
-                                nexp = ExtractNodeSingleBit(&s->n[rows], atoi(wild + 1));
+                                nexp = ExtractNodeSingleBit(s->n, atoi(wild + 1));
                                 if (nexp) {
                                     n[nodepnt++] = nexp;
                                     if (nodepnt == BITATTRIBUTES_MAX) {
@@ -782,9 +779,9 @@ GwBits *makevec_annotated(char *vec, char *str)
                                     sprintf(ns, "%s[%d]", wild + i, actual);
                                     *lp = '[';
 
-                                    s = symfind(ns, &rows);
+                                    s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, ns);
                                     if (s) {
-                                        nexp = &s->n[rows];
+                                        nexp = s->n;
                                         if (nexp) {
                                             n[nodepnt++] = nexp;
                                             if (nodepnt == BITATTRIBUTES_MAX) {
@@ -802,8 +799,8 @@ GwBits *makevec_annotated(char *vec, char *str)
                         }
                     }
                 } else {
-                    if ((s = symfind(wild, &rows))) {
-                        n[nodepnt++] = &s->n[rows];
+                    if ((s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, wild))) {
+                        n[nodepnt++] = s->n;
                     }
                 }
             }
