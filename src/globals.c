@@ -483,11 +483,6 @@ static const struct Global globals_base_values = {
     1, /* strace_repeat_count */
 
     /*
-     * symbol.c
-     */
-    0, /* facs_have_symbols_state_machine */
-
-    /*
      * tcl_commands.c
      */
     NULL, /* previous_braced_tcl_string */

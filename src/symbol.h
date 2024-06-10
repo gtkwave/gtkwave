@@ -34,8 +34,6 @@ struct string_chain_t
     char *str;
 };
 
-GwSymbol *symfind(char *, unsigned int *);
-
 void facsplit(char *, int *, int *);
 int sigcmp(char *, char *);
 void quicksort(GwSymbol **, int, int);

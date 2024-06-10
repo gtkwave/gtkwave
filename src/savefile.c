@@ -930,7 +930,6 @@ int parsewavline(char *w, char *alias, int depth)
     int len;
     char *w2;
     GwNode *nexp;
-    unsigned int rows = 0;
     char *prefix, *suffix, *new;
     char *prefix_init, *w2_init;
     unsigned int mode;
@@ -1078,9 +1077,9 @@ int parsewavline(char *w, char *alias, int depth)
                 }
             }
 
-            s = symfind(suffix + i, &rows);
+            s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, suffix + i);
             if (s) {
-                nexp = ExtractNodeSingleBit(&s->n[rows], atoi(suffix + 1));
+                nexp = ExtractNodeSingleBit(s->n, atoi(suffix + 1));
                 if (nexp) {
                     AddNode(nexp, prefix + 1);
                     return (~0);
@@ -1112,10 +1111,10 @@ int parsewavline(char *w, char *alias, int depth)
                     sprintf(ns, "%s[%d]", suffix + i, actual);
                     *lp = '[';
 
-                    s = symfind(ns, &rows);
+                    s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, ns);
                     free_2(ns);
                     if (s) {
-                        AddNode(&s->n[rows], prefix + 1);
+                        AddNode(s->n, prefix + 1);
                         return (~0);
                     }
                 }
@@ -1628,13 +1627,13 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
                 }
             }
 
-            if ((s = symfind(str + i, NULL))) {
+            if ((s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, str + i))) {
                 lx2_set_fac_process_mask(s->n);
                 made = ~0;
             }
             return (made);
         } else {
-            if ((s = symfind(str, NULL))) {
+            if ((s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, str))) {
                 lx2_set_fac_process_mask(s->n);
                 made = ~0;
             }
@@ -1728,7 +1727,7 @@ int makevec_lx2(char *str)
                             break;
                         if ((wild[i] == ')') && (wild[i + 1])) {
                             i++;
-                            s = symfind(wild + i, NULL);
+                            s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, wild + i);
                             if (s) {
                                 lx2_set_fac_process_mask(s->n);
                                 rc = 1;
@@ -1737,7 +1736,7 @@ int makevec_lx2(char *str)
                         }
                     }
                 } else {
-                    if ((s = symfind(wild, NULL))) {
+                    if ((s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, wild))) {
                         lx2_set_fac_process_mask(s->n);
                         rc = 1;
                     }
@@ -1865,7 +1864,7 @@ int parsewavline_lx2(char *w, char *alias, int depth)
                 }
             }
 
-            s = symfind(suffix + i, NULL);
+            s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, suffix + i);
             if (s) {
                 lx2_set_fac_process_mask(s->n);
                 made = ~0;
@@ -1894,7 +1893,7 @@ int parsewavline_lx2(char *w, char *alias, int depth)
                     sprintf(ns, "%s[%d]", suffix + i, actual);
                     *lp = '[';
 
-                    s = symfind(ns, NULL);
+                    s = gw_dump_file_lookup_symbol(GLOBALS->dump_file, ns);
                     free_2(ns);
                     if (s) {
                         lx2_set_fac_process_mask(s->n);
