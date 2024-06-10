@@ -5204,7 +5204,7 @@ void splash_sync(off_t current, off_t total)
         gtk_events_pending_gtk_main_iteration();
     } else {
 #ifdef SPLASH_ADDED_LOADER_MESSAGES
-        if ((GLOBALS->mainwindow) && (!GLOBALS->tcl_running)) {
+        if (GLOBALS->mainwindow) {
             if (!GLOBALS->splash_is_loading) {
                 set_window_busy_no_refresh(GLOBALS->mainwindow);
                 GLOBALS->splash_is_loading = 1;

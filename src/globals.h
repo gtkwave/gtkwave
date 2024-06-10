@@ -220,13 +220,6 @@ struct Global
     gboolean dumpfile_is_modified;
     GtkWidget *missing_file_toolbar;
     char *argvlist;
-#ifdef HAVE_LIBTCL
-    Tcl_Interp *interp;
-#endif
-    char *repscript_name;
-    unsigned int repscript_period;
-    char *tcl_init_cmd;
-    char tcl_running;
     char block_xy_update;
     char *winname;
     unsigned int num_notebook_pages;
@@ -480,12 +473,6 @@ struct Global
      * tcl_commands.c
      */
     char *previous_braced_tcl_string;
-
-    /*
-     * tcl_helper.c
-     */
-    char in_tcl_callback;
-    char tcl_menu_toggle_item;
 
     /*
      * timeentry.c

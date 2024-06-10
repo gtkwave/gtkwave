@@ -16,6 +16,7 @@ of these features.
 - Removed the interactive VCD mode.
 - Removed support for LXT, LXT2, VZT, FSDB, and AET2 formats.
 - Removed support compressed hierarchy names.
+- Removed Tcl scripting support (will be replaced by Python scripting).
 
 ### Changed
 

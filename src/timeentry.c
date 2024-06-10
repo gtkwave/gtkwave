@@ -24,13 +24,11 @@ void update_endcap_times_for_partial_vcd(void)
     if (GLOBALS->from_entry) {
         reformat_time(str, GLOBALS->tims.first + global_time_offset, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), str);
-        gtkwavetcl_setvar(WAVE_TCLCB_FROM_ENTRY_UPDATED, str, WAVE_TCLCB_FROM_ENTRY_UPDATED_FLAGS);
     }
 
     if (GLOBALS->to_entry) {
         reformat_time(str, GLOBALS->tims.last + global_time_offset, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), str);
-        gtkwavetcl_setvar(WAVE_TCLCB_TO_ENTRY_UPDATED, str, WAVE_TCLCB_TO_ENTRY_UPDATED_FLAGS);
     }
 }
 
@@ -71,17 +69,9 @@ void from_entry_callback(GtkWidget *widget, GtkWidget *entry)
         reformat_time(fromstr, GLOBALS->tims.first + global_time_offset, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), fromstr);
         time_update();
-        gtkwavetcl_setvar(WAVE_TCLCB_FROM_ENTRY_UPDATED,
-                          fromstr,
-                          WAVE_TCLCB_FROM_ENTRY_UPDATED_FLAGS);
-        return;
     } else {
         reformat_time(fromstr, GLOBALS->tims.first + global_time_offset, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), fromstr);
-        gtkwavetcl_setvar(WAVE_TCLCB_FROM_ENTRY_UPDATED,
-                          fromstr,
-                          WAVE_TCLCB_FROM_ENTRY_UPDATED_FLAGS);
-        return;
     }
 }
 
@@ -113,13 +103,9 @@ void to_entry_callback(GtkWidget *widget, GtkWidget *entry)
         reformat_time(tostr, GLOBALS->tims.last + global_time_offset, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), tostr);
         time_update();
-        gtkwavetcl_setvar(WAVE_TCLCB_TO_ENTRY_UPDATED, tostr, WAVE_TCLCB_TO_ENTRY_UPDATED_FLAGS);
-        return;
     } else {
         reformat_time(tostr, GLOBALS->tims.last + global_time_offset, time_dimension);
         gtk_entry_set_text(GTK_ENTRY(entry), tostr);
-        gtkwavetcl_setvar(WAVE_TCLCB_TO_ENTRY_UPDATED, tostr, WAVE_TCLCB_TO_ENTRY_UPDATED_FLAGS);
-        return;
     }
 }
 

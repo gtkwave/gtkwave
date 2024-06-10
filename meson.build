@@ -31,8 +31,6 @@ gtk_req = '>=3.24.0'
 gtk_mac_integration_req = '>=3.0.0'
 zlib_req = '>=1.2.0'
 bzip2_req = '>=1.0.0'
-tcl_req = '>=8.6.0'
-tk_req = '>=8.6.0'
 
 # Dependencies
 
@@ -50,8 +48,6 @@ gtk_mac_integration_dep = dependency(
     required: host_machine.system() == 'darwin',
 )
 zlib_dep = dependency('zlib', version: zlib_req)
-tcl_dep = dependency('tcl', version: tcl_req, required: get_option('tcl'))
-tk_dep = dependency('tk', version: tk_req, required: get_option('tcl'))
 m_dep = cc.find_library('m', required: false)
 judy_dep = cc.find_library(
     'Judy',
@@ -127,7 +123,6 @@ config.set('HAVE_FCNTL', cc.has_header('fcntl.h'))
 config.set10('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 config.set('HAVE_LIBPTHREAD', thread_dep.found())
 config.set('_WAVE_HAVE_JUDY', judy_dep.found())
-config.set('HAVE_LIBTCL', tcl_dep.found() and tk_dep.found())
 config.set('WAVE_GTK_UNIX_PRINT', gtk_unix_print_dep.found())
 config.set('WAVE_USE_STRUCT_PACKING', get_option('struct_packing'))
 config.set('WAVE_MANYMARKERS_MODE', get_option('manymarkers'))

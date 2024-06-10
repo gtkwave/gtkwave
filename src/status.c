@@ -25,14 +25,4 @@ void status_text(const char *str)
     char ch = len ? str[len - 1] : 0;
 
     fprintf(stderr, "GTKWAVE | %s%s", str, (ch == '\n') ? "" : "\n");
-
-    {
-        char *stemp = g_alloca(len + 1);
-        strcpy(stemp, str);
-
-        if (ch == '\n') {
-            stemp[len - 1] = 0;
-        }
-        gtkwavetcl_setvar(WAVE_TCLCB_STATUS_TEXT, stemp, WAVE_TCLCB_STATUS_TEXT_FLAGS);
-    }
 }
