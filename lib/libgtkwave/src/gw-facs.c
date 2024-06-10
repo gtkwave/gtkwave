@@ -188,3 +188,29 @@ void gw_facs_sort(GwFacs *self)
     // slow if the facs are already sorted.
     g_ptr_array_sort(self->facs, sigcmp);
 }
+
+static int compar_facs(const void *key, const void *v2)
+{
+    GwSymbol *s2;
+    int rc;
+    char *s3;
+
+    s2 = *((GwSymbol **)v2);
+    s3 = s2->name;
+    rc = gw_signal_name_compare((char *)key, s3);
+
+    /* if(was_packed) free_2(s3); ...not needed with HIER_DEPACK_STATIC */
+
+    return (rc);
+}
+
+GwSymbol *gw_facs_lookup(GwFacs *self, const gchar *name)
+{
+    g_return_val_if_fail(GW_IS_FACS(self), NULL);
+    g_return_val_if_fail(name != NULL && name[0] != '\0', NULL);
+
+    GwSymbol **symbol =
+        bsearch(name, self->facs->pdata, self->facs->len, sizeof(GwSymbol *), compar_facs);
+
+    return symbol != NULL ? *symbol : NULL;
+}

@@ -17,6 +17,5 @@ GwHistEnt *bsearch_node(GwNode *n, GwTime key);
 GwVectorEnt *bsearch_vector(GwBitVector *b, GwTime key);
 char *bsearch_trunc(char *ascii, int maxlen);
 char *bsearch_trunc_print(char *ascii, int maxlen);
-GwSymbol *bsearch_facs(char *ascii, unsigned int *rows_return);
 
 #endif
