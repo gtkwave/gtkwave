@@ -807,6 +807,7 @@ static GwSymbol *symfind_2(GwDumpFile *self, const char *s)
 /**
  * gw_dump_file_lookup_symbol:
  * @self: A #GwDumpFile.
+ * @name: The symbol name to look up.
  *
  * Looks up the symbol with the given name.
  *
@@ -833,4 +834,44 @@ GwSymbol *gw_dump_file_lookup_symbol(GwDumpFile *self, const gchar *name)
     strcpy(name2 + len, "[0]"); /* bluespec vs modelsim */
 
     return symfind_2(self, name2);
+}
+
+/**
+ * gw_dump_file_find_symbols:
+ * @self: A #GwDumpFile.
+ * @regex: The regular expression to search.
+ * @error: Return location for a #GErro or %NULL.
+ *
+ * Searches for all symbols that match the given regular expression.
+ *
+ * Returns: (transfer container) (element-type GwSymbol): A #GPtrArray of #GwSymbol or %NULL in case
+ *          of an error.
+ */
+GPtrArray *gw_dump_file_find_symbols(GwDumpFile *self, const gchar *pattern, GError **error)
+{
+    g_return_val_if_fail(GW_IS_DUMP_FILE(self), NULL);
+    g_return_val_if_fail(pattern != NULL, NULL);
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+    GRegex *regex = g_regex_new(pattern, G_REGEX_CASELESS, 0, error);
+    if (regex == NULL) {
+        return NULL;
+    }
+
+    GPtrArray *symbols = g_ptr_array_new();
+
+    GwFacs *facs = gw_dump_file_get_facs(self);
+    guint facs_count = gw_facs_get_length(facs);
+
+    for (guint i = 0; i < facs_count; i++) {
+        GwSymbol *fac = gw_facs_get(facs, i);
+
+        if (g_regex_match(regex, fac->name, 0, NULL)) {
+            g_ptr_array_add(symbols, fac);
+        }
+    }
+
+    g_regex_unref(regex);
+
+    return symbols;
 }

@@ -25,8 +25,6 @@
 #include "signal_list.h"
 #include "gw-ghw-file.h"
 
-#define WAVE_GHW_DUMMYFACNAME "!!__(dummy)__!!"
-
 enum
 {
     NAME_COLUMN,
@@ -72,10 +70,10 @@ int searchbox_is_active(void)
 
 /***************************************************************************/
 
-static const char *regex_type[] = {"\\(\\[.*\\]\\)*$",
-                                   "\\>.\\([0-9]\\)*$",
-                                   "\\(\\[.*\\]\\)*$",
-                                   "\\>.\\([0-9]\\)*$",
+static const char *regex_type[] = {"(?:\\[.*\\])*$",
+                                   "\\b.[0-9]*$",
+                                   "(?:\\[.*\\])*$",
+                                   "\\b.[0-9]*$",
                                    ""};
 static const char *regex_name[] = {"WRange", "WStrand", "Range", "Strand", "None"};
 
@@ -573,25 +571,19 @@ static void ok_callback(GtkWidget *widget, GtkWidget *nothing)
 
 void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
 {
-    const gchar *entry_text;
-    char *entry_suffixed;
-    int i;
-    char *s, *tmp2;
-    gfloat interval;
-    char *duplicate_row_buffer = NULL;
-
-    if (GLOBALS->is_searching_running_search_c_1)
+    if (GLOBALS->is_searching_running_search_c_1) {
         return;
+    }
     GLOBALS->is_searching_running_search_c_1 = ~0;
     wave_gtk_grab_add(widget);
 
-    entry_text = gtk_entry_get_text(GTK_ENTRY(GLOBALS->entry_search_c_3));
+    const gchar *entry_text = gtk_entry_get_text(GTK_ENTRY(GLOBALS->entry_search_c_3));
     entry_text = entry_text ? entry_text : "";
     DEBUG(printf("Entry contents: %s\n", entry_text));
 
     free_2(GLOBALS->searchbox_text_search_c_1);
 
-    if (strlen(entry_text)) {
+    if (strlen(entry_text) > 0) {
         GLOBALS->searchbox_text_search_c_1 = strdup_2(entry_text);
     } else {
         GLOBALS->searchbox_text_search_c_1 = strdup_2("");
@@ -599,104 +591,91 @@ void search_enter_callback(GtkWidget *widget, GtkWidget *do_warning)
 
     GLOBALS->num_rows_search_c_2 = 0;
 
-    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
-    guint numfacs = gw_facs_get_length(facs);
+    gboolean use_word_boundaries = GLOBALS->regex_which_search_c_1 < 2;
+    const gchar *regex_suffix = regex_type[GLOBALS->regex_which_search_c_1];
 
-    entry_suffixed =
-        g_alloca(strlen(GLOBALS->searchbox_text_search_c_1 /* scan-build, was entry_text */) +
-                 strlen(regex_type[GLOBALS->regex_which_search_c_1]) + 1 +
-                 ((GLOBALS->regex_which_search_c_1 < 2) ? 2 : 0));
-    *entry_suffixed = 0x00;
-    if (GLOBALS->regex_which_search_c_1 < 2)
-        strcpy(entry_suffixed, "\\<"); /* match on word boundary */
-    strcat(entry_suffixed, GLOBALS->searchbox_text_search_c_1); /* scan-build */
-    strcat(entry_suffixed, regex_type[GLOBALS->regex_which_search_c_1]);
-    wave_regex_compile(entry_suffixed, WAVE_REGEX_SEARCH);
-    for (i = 0; i < numfacs; i++) {
-        GwSymbol *fac = gw_facs_get(facs, i);
-        set_s_selected(fac, 0);
+    gchar *regex;
+    if (use_word_boundaries) {
+        regex = g_strconcat("\\b", GLOBALS->searchbox_text_search_c_1, regex_suffix, NULL);
+    } else {
+        regex = g_strconcat(GLOBALS->searchbox_text_search_c_1, regex_suffix, NULL);
     }
 
-    GLOBALS->pdata->oldvalue = -1.0;
-    interval = (gfloat)(numfacs / 100.0);
+    GPtrArray *symbols = gw_dump_file_find_symbols(GLOBALS->dump_file, regex, NULL);
+    if (symbols == NULL) {
+        // TODO: show in UI
+        g_warning("Invalid regex: %s", regex);
+        symbols = g_ptr_array_new();
+    }
 
-    // TODO: use GString for duplicate_row_buffer
-    duplicate_row_buffer = (char *)calloc_2(1, 65536);
+    // GLOBALS->pdata->oldvalue = -1.0;
+    // interval = (gfloat)(numfacs / 100.0);
 
     gtk_list_store_clear(GTK_LIST_STORE(GLOBALS->sig_store_search));
 
-    for (i = 0; i < numfacs; i++) {
-        char *hfacname = NULL;
-        int skiprow;
+    GString *duplicate_row_buffer = g_string_new(NULL);
 
-        GLOBALS->pdata->value = i;
-        if (((int)(GLOBALS->pdata->value / interval)) !=
-            ((int)(GLOBALS->pdata->oldvalue / interval))) {
-            gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(GLOBALS->pdata->pbar),
-                                          i / (gfloat)((numfacs > 1) ? numfacs - 1 : 1));
-            gtkwave_main_iteration();
+    for (guint i = 0; i < symbols->len; i++) {
+        // TODO: update progress bar while `gw_dump_file_find_symbols` is searching for symbols
+        // GLOBALS->pdata->value = i;
+        // if (((int)(GLOBALS->pdata->value / interval)) !=
+        //     ((int)(GLOBALS->pdata->oldvalue / interval))) {
+        //     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(GLOBALS->pdata->pbar),
+        //                                   i / (gfloat)((numfacs > 1) ? numfacs - 1 : 1));
+        //     gtkwave_main_iteration();
+        // }
+        // GLOBALS->pdata->oldvalue = i;
+
+        GwSymbol *fac = g_ptr_array_index(symbols, i);
+
+        if (strcmp(fac->name, duplicate_row_buffer->str) == 0) {
+            continue;
         }
-        GLOBALS->pdata->oldvalue = i;
 
-        GwSymbol *fac = gw_facs_get(facs, i);
+        GtkTreeIter iter;
 
-        hfacname = fac->name;
-        if (!strcmp(hfacname, duplicate_row_buffer)) {
-            skiprow = 1;
+        if (fac->vec_root == NULL) {
+            gtk_list_store_append(GTK_LIST_STORE(GLOBALS->sig_store_search), &iter);
+            gtk_list_store_set(GTK_LIST_STORE(GLOBALS->sig_store_search),
+                               &iter,
+                               NAME_COLUMN,
+                               fac->name,
+                               PTR_COLUMN,
+                               fac,
+                               -1);
         } else {
-            skiprow = 0;
-            strcpy(duplicate_row_buffer, hfacname);
+            gchar *name;
+            if (GLOBALS->autocoalesce) {
+                if (fac->vec_root != fac) {
+                    continue;
+                }
+
+                char *tmp2 = makename_chain(fac);
+                name = g_strconcat("[] ", tmp2, NULL);
+                free_2(tmp2);
+            } else {
+                name = g_strconcat("[] ", fac->name, NULL);
+            }
+
+            gtk_list_store_append(GTK_LIST_STORE(GLOBALS->sig_store_search), &iter);
+            gtk_list_store_set(GTK_LIST_STORE(GLOBALS->sig_store_search),
+                               &iter,
+                               NAME_COLUMN,
+                               name,
+                               PTR_COLUMN,
+                               fac,
+                               -1);
+            g_free(name);
         }
 
-        if ((!skiprow) && wave_regex_match(hfacname, WAVE_REGEX_SEARCH))
-            if (!GW_IS_GHW_FILE(GLOBALS->dump_file) || (strcmp(WAVE_GHW_DUMMYFACNAME, hfacname))) {
-                GtkTreeIter iter;
-
-                if (!fac->vec_root) {
-                    gtk_list_store_append(GTK_LIST_STORE(GLOBALS->sig_store_search), &iter);
-                    gtk_list_store_set(GTK_LIST_STORE(GLOBALS->sig_store_search),
-                                       &iter,
-                                       NAME_COLUMN,
-                                       hfacname,
-                                       PTR_COLUMN,
-                                       fac,
-                                       -1);
-                } else {
-                    if (GLOBALS->autocoalesce) {
-                        if (fac->vec_root != fac)
-                            continue;
-
-                        tmp2 = makename_chain(fac);
-                        s = (char *)malloc_2(strlen(tmp2) + 4);
-                        strcpy(s, "[] ");
-                        strcpy(s + 3, tmp2);
-                        free_2(tmp2);
-                    } else {
-                        s = (char *)malloc_2(strlen(hfacname) + 4);
-                        strcpy(s, "[] ");
-                        strcpy(s + 3, hfacname);
-                    }
-
-                    gtk_list_store_append(GTK_LIST_STORE(GLOBALS->sig_store_search), &iter);
-                    gtk_list_store_set(GTK_LIST_STORE(GLOBALS->sig_store_search),
-                                       &iter,
-                                       NAME_COLUMN,
-                                       s,
-                                       PTR_COLUMN,
-                                       fac,
-                                       -1);
-                    free_2(s);
-                }
-
-                GLOBALS->num_rows_search_c_2++;
-                if (GLOBALS->num_rows_search_c_2 == WAVE_MAX_CLIST_LENGTH) {
-                    /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
-                    break;
-                }
-            }
+        GLOBALS->num_rows_search_c_2++;
+        if (GLOBALS->num_rows_search_c_2 == WAVE_MAX_CLIST_LENGTH) {
+            /* if(was_packed) { free_2(hfacname); } ...not needed with HIER_DEPACK_STATIC */
+            break;
+        }
     }
 
-    free_2(duplicate_row_buffer);
+    g_string_free(duplicate_row_buffer, TRUE);
 
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(GLOBALS->pdata->pbar), 0.0);
     GLOBALS->pdata->oldvalue = -1.0;
