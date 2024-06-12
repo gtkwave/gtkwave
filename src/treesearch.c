@@ -698,7 +698,6 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
     char *tstring;
     char hier_suffix[2];
     GtkTreePath *path2;
-    int found;
 
     if (!gtk_tree_model_get_iter(model, iter, path)) {
         return; /* path describes a non-existing row - should not happen */
@@ -733,16 +732,8 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
         strcat(tstring, hier_suffix);
     }
 
-    if (GLOBALS->open_tree_nodes) /* cut down on chatter to Tcl clients */
-    {
+    if (GLOBALS->open_tree_nodes) {
         GLOBALS->open_tree_nodes = xl_splay(tstring, GLOBALS->open_tree_nodes);
-        if (!strcmp(GLOBALS->open_tree_nodes->item, tstring)) {
-            found = 1;
-        } else {
-            found = 0;
-        }
-    } else {
-        found = 0;
     }
 
     if (is_expand) {
@@ -1562,63 +1553,62 @@ void dnd_setup(GtkWidget *src, gboolean search)
 
 /***************************************************************************/
 
-static void recurse_append_callback(GtkWidget *widget, gpointer data)
+static void select_vec_roots(GwFacs *facs, gint low, gint high)
 {
-    int i;
-
-    if (!GLOBALS->sst_sig_root_treesearch_gtk2_c_1 || !data)
-        return;
-
-    set_window_busy(widget);
-
-    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
-
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        if (i < 0)
+    for (gint i = low; i <= high; i++) {
+        if (i < 0) {
             break; /* GHW */
+        }
+
         GwSymbol *s = gw_facs_get(facs, i);
-        if (s->vec_root) {
+        if (s->vec_root != NULL) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
         }
     }
+}
 
-    /* LX2 */
-    if (GLOBALS->is_lx2) {
-        int pre_import = 0;
+static void import_lx2(GwFacs *facs, gint low, gint high)
+{
+    int pre_import = 0;
 
-        for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            if (i < 0)
-                break; /* GHW */
-            GwSymbol *s = gw_facs_get(facs, i);
-            GwSymbol *t = s->vec_root;
-            if ((t) && (GLOBALS->autocoalesce)) {
-                if (get_s_selected(t)) {
-                    while (t) {
-                        if (t->n->mv.mvlfac) {
-                            lx2_set_fac_process_mask(t->n);
-                            pre_import++;
-                        }
-                        t = t->vec_chain;
+    for (int i = low; i <= high; i++) {
+        if (i < 0) {
+            break; /* GHW */
+        }
+
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
+        if ((t) && (GLOBALS->autocoalesce)) {
+            if (get_s_selected(t)) {
+                while (t) {
+                    if (t->n->mv.mvlfac) {
+                        lx2_set_fac_process_mask(t->n);
+                        pre_import++;
                     }
-                }
-            } else {
-                if (s->n->mv.mvlfac) {
-                    lx2_set_fac_process_mask(s->n);
-                    pre_import++;
+                    t = t->vec_chain;
                 }
             }
-        }
-
-        if (pre_import) {
-            lx2_import_masked();
+        } else {
+            if (s->n->mv.mvlfac) {
+                lx2_set_fac_process_mask(s->n);
+                pre_import++;
+            }
         }
     }
-    /* LX2 */
 
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
+    if (pre_import) {
+        lx2_import_masked();
+    }
+}
+
+static void add_nodes(GwFacs *facs, gint low, gint high)
+{
+    for (gint i = low; i <= high; i++) {
         int len;
-        if (i < 0)
+        if (i < 0) {
             break; /* GHW */
+        }
+
         GwSymbol *s = gw_facs_get(facs, i);
         GwSymbol *t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
@@ -1636,94 +1626,38 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
             AddNode(s->n, NULL);
         }
     }
+}
 
-    set_window_idle(widget);
+static void recurse_append_callback(GwFacs *facs, gint low, gint high)
+{
+    select_vec_roots(facs, low, high);
+
+    if (GLOBALS->is_lx2) {
+        import_lx2(facs, low, high);
+    }
+
+    add_nodes(facs, low, high);
 
     gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
     redraw_signals_and_waves();
 }
 
-static void recurse_insert_callback(GtkWidget *widget, gpointer data)
+static void recurse_insert_callback(GwFacs *facs, gint low, gint high)
 {
     Traces tcache;
-    int i;
-
-    if (!GLOBALS->sst_sig_root_treesearch_gtk2_c_1 || !data)
-        return;
-
     memcpy(&tcache, &GLOBALS->traces, sizeof(Traces));
     GLOBALS->traces.total = 0;
     GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
-    set_window_busy(widget);
-
-    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
-
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        if (i < 0)
-            break; /* GHW */
-        GwSymbol *s = gw_facs_get(facs, i);
-        if (s->vec_root) {
-            set_s_selected(s->vec_root, GLOBALS->autocoalesce);
-        }
-    }
+    select_vec_roots(facs, low, high);
 
     /* LX2 */
     if (GLOBALS->is_lx2) {
-        int pre_import = 0;
-
-        for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            if (i < 0)
-                break; /* GHW */
-            GwSymbol *s = gw_facs_get(facs, i);
-            GwSymbol *t = s->vec_root;
-            if ((t) && (GLOBALS->autocoalesce)) {
-                if (get_s_selected(t)) {
-                    while (t) {
-                        if (t->n->mv.mvlfac) {
-                            lx2_set_fac_process_mask(t->n);
-                            pre_import++;
-                        }
-                        t = t->vec_chain;
-                    }
-                }
-            } else {
-                if (s->n->mv.mvlfac) {
-                    lx2_set_fac_process_mask(s->n);
-                    pre_import++;
-                }
-            }
-        }
-
-        if (pre_import) {
-            lx2_import_masked();
-        }
+        import_lx2(facs, low, high);
     }
     /* LX2 */
 
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        int len;
-        if (i < 0)
-            break; /* GHW */
-        GwSymbol *s = gw_facs_get(facs, i);
-        GwSymbol *t = s->vec_root;
-        if ((t) && (GLOBALS->autocoalesce)) {
-            if (get_s_selected(t)) {
-                set_s_selected(t, 0);
-                len = 0;
-                while (t) {
-                    len++;
-                    t = t->vec_chain;
-                }
-                if (len)
-                    add_vector_chain(s->vec_root, len);
-            }
-        } else {
-            AddNode(s->n, NULL);
-        }
-    }
-
-    set_window_idle(widget);
+    add_nodes(facs, low, high);
 
     GLOBALS->traces.buffercount = GLOBALS->traces.total;
     GLOBALS->traces.buffer = GLOBALS->traces.first;
@@ -1741,89 +1675,24 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
     redraw_signals_and_waves();
 }
 
-static void recurse_replace_callback(GtkWidget *widget, gpointer data)
+static void recurse_replace_callback(GwFacs *facs, gint low, gint high)
 {
     Traces tcache;
     int i;
     GwTrace *tfirst = NULL;
     GwTrace *tlast = NULL;
 
-    if (!GLOBALS->sst_sig_root_treesearch_gtk2_c_1 || !data)
-        return;
-
     memcpy(&tcache, &GLOBALS->traces, sizeof(Traces));
     GLOBALS->traces.total = 0;
     GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
-    set_window_busy(widget);
+    select_vec_roots(facs, low, high);
 
-    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
-
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        if (i < 0)
-            break; /* GHW */
-        GwSymbol *s = gw_facs_get(facs, i);
-        if (s->vec_root) {
-            set_s_selected(s->vec_root, GLOBALS->autocoalesce);
-        }
-    }
-
-    /* LX2 */
     if (GLOBALS->is_lx2) {
-        int pre_import = 0;
-
-        for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            if (i < 0)
-                break; /* GHW */
-            GwSymbol *s = gw_facs_get(facs, i);
-            GwSymbol *t = s->vec_root;
-            if ((t) && (GLOBALS->autocoalesce)) {
-                if (get_s_selected(t)) {
-                    while (t) {
-                        if (t->n->mv.mvlfac) {
-                            lx2_set_fac_process_mask(t->n);
-                            pre_import++;
-                        }
-                        t = t->vec_chain;
-                    }
-                }
-            } else {
-                if (s->n->mv.mvlfac) {
-                    lx2_set_fac_process_mask(s->n);
-                    pre_import++;
-                }
-            }
-        }
-
-        if (pre_import) {
-            lx2_import_masked();
-        }
-    }
-    /* LX2 */
-
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        int len;
-        if (i < 0)
-            break; /* GHW */
-        GwSymbol *s = gw_facs_get(facs, i);
-        GwSymbol *t = s->vec_root;
-        if ((t) && (GLOBALS->autocoalesce)) {
-            if (get_s_selected(t)) {
-                set_s_selected(t, 0);
-                len = 0;
-                while (t) {
-                    len++;
-                    t = t->vec_chain;
-                }
-                if (len)
-                    add_vector_chain(s->vec_root, len);
-            }
-        } else {
-            AddNode(s->n, NULL);
-        }
+        import_lx2(facs, low, high);
     }
 
-    set_window_idle(widget);
+    add_nodes(facs, low, high);
 
     tfirst = GLOBALS->traces.first;
     tlast = GLOBALS->traces.last; /* cache for highlighting */
@@ -1894,45 +1763,82 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
     redraw_signals_and_waves();
 }
 
-void recurse_import(GtkWidget *widget, guint callback_action)
+static void recurse_fetch_high_low(GwTreeNode *t, gint *low, gint *high)
 {
-    if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1) {
-        int fz;
-
-        GLOBALS->fetchlow = GLOBALS->fetchhigh = -1;
-        if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child)
-            recurse_fetch_high_low(GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child);
-        fz = GLOBALS->fetchhigh - GLOBALS->fetchlow + 1;
-        void (*func)(GtkWidget *, gpointer);
-
-        switch (callback_action) {
-            case WV_RECURSE_INSERT:
-                func = recurse_insert_callback;
-                break;
-            case WV_RECURSE_REPLACE:
-                func = recurse_replace_callback;
-                break;
-
-            case WV_RECURSE_APPEND:
-            default:
-                func = recurse_append_callback;
-                break;
+top:
+    if (t->t_which >= 0) {
+        if (t->t_which > *high) {
+            *high = t->t_which;
         }
-
-        if ((GLOBALS->fetchlow >= 0) && (GLOBALS->fetchhigh >= 0)) {
-            widget = GLOBALS->mainwindow; /* otherwise using widget passed from the menu item
-                                             crashes on OSX */
-
-            if (fz > WV_RECURSE_IMPORT_WARN) {
-                char recwarn[128];
-                sprintf(recwarn, "Really import %d facilit%s?", fz, (fz == 1) ? "y" : "ies");
-
-                simplereqbox("Recurse Warning", 300, recwarn, "Yes", "No", G_CALLBACK(func), 1);
-            } else {
-                func(widget, (gpointer)1);
-            }
+        if (*low < 0) {
+            *low = t->t_which;
+        } else if (t->t_which < *low) {
+            *low = t->t_which;
         }
     }
+
+    if (t->child) {
+        recurse_fetch_high_low(t->child, low, high);
+    }
+
+    if (t->next) {
+        t = t->next;
+        goto top;
+    }
+}
+
+void recurse_import(GtkWidget *widget, guint callback_action)
+{
+    if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1 == NULL) {
+        return;
+    }
+
+    gint low = -1;
+    gint high = -1;
+    if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child) {
+        recurse_fetch_high_low(GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child, &low, &high);
+    }
+
+    if (low < 0 || high < 0) {
+        return;
+    }
+    int fz = high - low + 1;
+
+    if (fz > WV_RECURSE_IMPORT_WARN) {
+        char recwarn[128];
+        sprintf(recwarn, "Really import %d facilit%s?", fz, (fz == 1) ? "y" : "ies");
+
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(GLOBALS->mainwindow),
+                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                   GTK_MESSAGE_WARNING,
+                                                   GTK_BUTTONS_YES_NO,
+                                                   "Really import %d facilit%s?",
+                                                   fz,
+                                                   (fz == 1) ? "y" : "ies");
+
+        gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+        if (response != GTK_RESPONSE_YES) {
+            return;
+        }
+    }
+
+    widget = GLOBALS->mainwindow; /* otherwise using widget passed from the menu item
+                                     crashes on OSX */
+    set_window_busy(widget);
+
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    if (callback_action == WV_RECURSE_INSERT) {
+        recurse_insert_callback(facs, low, high);
+    } else if (callback_action == WV_RECURSE_REPLACE) {
+        recurse_replace_callback(facs, low, high);
+    } else { // WV_RECURSE_APPEND
+        recurse_append_callback(facs, low, high);
+    }
+
+    set_window_idle(widget);
 }
 
 /***************************************************************************/
