@@ -544,8 +544,6 @@ static const struct Global globals_base_values = {
     {0, 0, NULL, NULL, NULL, NULL, 0, 0}, /* tcache_treesearch_gtk2_c_2 470 */
     NULL, /* dnd_sigview */
     NULL, /* sst_vpaned */
-    0, /* fetchlow */
-    0, /* fetchhigh */
     NULL, /* treestore_main */
     NULL, /* treeview_main */
     SST_ACTION_INSERT, /* sst_dbl_action_type */

@@ -470,25 +470,3 @@ GwTreeNode *fetchlow(GwTreeNode *t)
     return (t);
 }
 
-void recurse_fetch_high_low(GwTreeNode *t)
-{
-top:
-    if (t->t_which >= 0) {
-        if (t->t_which > GLOBALS->fetchhigh)
-            GLOBALS->fetchhigh = t->t_which;
-        if (GLOBALS->fetchlow < 0) {
-            GLOBALS->fetchlow = t->t_which;
-        } else if (t->t_which < GLOBALS->fetchlow) {
-            GLOBALS->fetchlow = t->t_which;
-        }
-    }
-
-    if (t->child) {
-        recurse_fetch_high_low(t->child);
-    }
-
-    if (t->next) {
-        t = t->next;
-        goto top;
-    }
-}

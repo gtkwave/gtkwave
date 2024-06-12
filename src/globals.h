@@ -538,8 +538,6 @@ struct Global
     Traces tcache_treesearch_gtk2_c_2; /* from treesearch_gtk2.c 500 */
     GtkWidget *dnd_sigview; /* from treesearch_gtk2.c */
     GtkPaned *sst_vpaned; /* from treesearch_gtk2.c */
-    int fetchlow;
-    int fetchhigh;
     GtkTreeStore *treestore_main;
     GtkWidget *treeview_main;
     enum sst_cb_action sst_dbl_action_type;

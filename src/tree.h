@@ -79,6 +79,5 @@ void sst_exclusion_loader(void);
 
 GwTreeNode *fetchhigh(GwTreeNode *t);
 GwTreeNode *fetchlow(GwTreeNode *t);
-void recurse_fetch_high_low(GwTreeNode *t);
 
 #endif
