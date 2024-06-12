@@ -430,7 +430,6 @@ int maketraces(char *str, char *alias, int quick_return)
     char *pnt, *wild;
     char ch, wild_active = 0;
     int len;
-    int i;
     int made = 0;
 
     pnt = str;
@@ -448,6 +447,7 @@ int maketraces(char *str, char *alias, int quick_return)
         GwNode *nexp;
 
         if (str[0] == '(') {
+            gint i;
             for (i = 1;; i++) {
                 if (str[i] == 0)
                     return (0);
@@ -501,21 +501,26 @@ int maketraces(char *str, char *alias, int quick_return)
             len++;
         }
 
-        if (len) {
+        if (len > 0) {
             wild = (char *)calloc_2(1, len + 1);
             memcpy(wild, str, len);
-            wave_regex_compile(wild, WAVE_REGEX_WILD);
 
-            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+            GPtrArray *symbols = gw_dump_file_find_symbols(GLOBALS->dump_file, wild, NULL);
+            if (symbols != NULL) {
+                for (guint i = 0; i < symbols->len; i++) {
+                    GwSymbol *fac = g_ptr_array_index(symbols, i);
 
-            for (i = 0; i < gw_facs_get_length(facs); i++) {
-                GwSymbol *fac = gw_facs_get(facs, i);
-                if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
                     AddNode(fac->n, NULL);
                     made = ~0;
-                    if (quick_return)
+                    if (quick_return) {
                         break;
+                    }
                 }
+
+                g_ptr_array_free(symbols, TRUE);
+            } else {
+                // TODO: show in UI
+                g_warning("Invalid regex: %s", wild);
             }
 
             free_2(wild);
@@ -536,7 +541,6 @@ GwBits *makevec(char *vec, char *str)
     char *pnt, *pnt2, *wild = NULL;
     char ch, ch2, wild_active;
     int len, nodepnt = 0;
-    int i;
     GwNode *n[BITATTRIBUTES_MAX];
     GwBits *b = NULL;
 
@@ -573,7 +577,7 @@ GwBits *makevec(char *vec, char *str)
                 if (wild[0] == '(') {
                     GwNode *nexp;
 
-                    for (i = 1;; i++) {
+                    for (gint i = 1;; i++) {
                         if (wild[i] == 0)
                             break;
                         if ((wild[i] == ')') && (wild[i + 1])) {
@@ -641,20 +645,27 @@ GwBits *makevec(char *vec, char *str)
                     }
                 }
             } else {
-                wave_regex_compile(wild, WAVE_REGEX_WILD);
+                GPtrArray *symbols = gw_dump_file_find_symbols(GLOBALS->dump_file, wild, NULL);
+                if (symbols != NULL) {
+                    if (symbols->len > 0) {
+                        for (guint i = 0; i < symbols->len; i++) {
+                            // iterate in array in reverse to keep vectors in little endian hi..lo
+                            // order
+                            guint index = (symbols->len - 1) - i;
+                            GwSymbol *fac = g_ptr_array_index(symbols, index);
 
-                GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
-
-                /* decrement to keep vectors in little endian hi..lo order */
-                for (i = gw_facs_get_length(facs) - 1; i >= 0; i--) {
-                    GwSymbol *fac = gw_facs_get(facs, i);
-                    if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
-                        n[nodepnt++] = fac->n;
-                        if (nodepnt == BITATTRIBUTES_MAX) {
-                            free_2(wild);
-                            goto ifnode;
+                            n[nodepnt++] = fac->n;
+                            if (nodepnt == BITATTRIBUTES_MAX) {
+                                free_2(wild);
+                                goto ifnode;
+                            }
                         }
                     }
+
+                    g_ptr_array_free(symbols, TRUE);
+                } else {
+                    // TODO: show in UI
+                    g_warning("Invalid regex: %s", wild);
                 }
             }
             free_2(wild);
@@ -669,7 +680,7 @@ ifnode:
     if (nodepnt) {
         b = calloc_2(1, sizeof(GwBits) + (nodepnt) * sizeof(GwNode *));
 
-        for (i = 0; i < nodepnt; i++) {
+        for (gint i = 0; i < nodepnt; i++) {
             b->nodes[i] = n[i];
             if (n[i]->mv.mvlfac)
                 import_trace(n[i]);
@@ -835,7 +846,6 @@ ifnode:
 
     return (b);
 }
-
 
 /***********************************************************************************/
 

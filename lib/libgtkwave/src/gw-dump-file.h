@@ -56,5 +56,6 @@ gboolean gw_dump_file_has_escaped_names(GwDumpFile *self);
 gboolean gw_dump_file_get_uses_vhdl_component_format(GwDumpFile *self);
 
 GwSymbol *gw_dump_file_lookup_symbol(GwDumpFile *self, const gchar *name);
+GPtrArray *gw_dump_file_find_symbols(GwDumpFile *self, const gchar *pattern, GError **error);
 
 G_END_DECLS

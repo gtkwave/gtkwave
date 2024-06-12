@@ -42,12 +42,48 @@ static void test_stems(void)
     g_object_unref(dump_file);
 }
 
+static void test_find_symbols(void)
+{
+    GwLoader *loader = gw_vcd_loader_new();
+    GwDumpFile *file = gw_loader_load(loader, "files/basic.vcd", NULL);
+    g_assert_nonnull(file);
+    g_object_unref(loader);
+
+    GPtrArray *symbols;
+    GError *error = NULL;
+
+    // There are 6 symbols that end in `_alias` in basic.vcd.
+
+    symbols = gw_dump_file_find_symbols(file, ".*_alias", &error);
+    g_assert_nonnull(symbols);
+    g_assert_cmpint(symbols->len, ==, 6);
+    g_ptr_array_free(symbols, TRUE);
+
+    // `gw_dump_file_find_symbol` returns an empty `GPtrArray` when no symbols
+    // matched the regex.
+
+    symbols = gw_dump_file_find_symbols(file, "doesNotExist", &error);
+    g_assert_nonnull(symbols);
+    g_assert_cmpint(symbols->len, ==, 0);
+    g_ptr_array_free(symbols, TRUE);
+
+    // NULL is only returned in case of an error.
+
+    symbols = gw_dump_file_find_symbols(file, "(invalid_regex", &error);
+    g_assert_null(symbols);
+    g_assert_nonnull(error);
+    g_error_free(error);
+
+    g_object_unref(file);
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
 
-    g_test_add_func("/dump-file/blackout-regions", test_blackout_regions);
-    g_test_add_func("/dump-file/stems", test_stems);
+    g_test_add_func("/dump_file/blackout_regions", test_blackout_regions);
+    g_test_add_func("/dump_file/stems", test_stems);
+    g_test_add_func("/dump_file/find_symbols", test_find_symbols);
 
     return g_test_run();
 }

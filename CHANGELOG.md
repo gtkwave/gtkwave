@@ -28,6 +28,7 @@ of these features.
 - Migrated from autotools to meson.
 - Changed the fallback text editor from gedit to the default editor that is associated with the source filetype.
 - Changed file dialog to use the native dialog on all platforms.
+- Changed regular expressions to use PCRE instead of POSIX syntax.
 
 ### Added
 

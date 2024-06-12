@@ -1601,7 +1601,6 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
     char *pnt, *wild;
     char ch, wild_active = 0;
     int len;
-    int i;
     int made = 0;
 
     pnt = str;
@@ -1618,6 +1617,7 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
         GwSymbol *s;
 
         if (str[0] == '(') {
+            gint i;
             for (i = 1;; i++) {
                 if (str[i] == 0)
                     return (0);
@@ -1655,19 +1655,20 @@ int maketraces_lx2(char *str, char *alias, int quick_return)
         if (len) {
             wild = (char *)calloc_2(1, len + 1);
             memcpy(wild, str, len);
-            wave_regex_compile(wild, WAVE_REGEX_WILD);
 
-            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+            GPtrArray *symbols = gw_dump_file_find_symbols(GLOBALS->dump_file, wild, NULL);
+            if (symbols != NULL) {
+                for (guint i = 0; i < symbols->len; i++) {
+                    GwSymbol *fac = g_ptr_array_index(symbols, i);
 
-            for (i = 0; i < gw_facs_get_length(facs); i++) {
-                GwSymbol *fac = gw_facs_get(facs, i);
-
-                if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
                     lx2_set_fac_process_mask(fac->n);
                     made = ~0;
-                    if (quick_return)
+                    if (quick_return) {
                         break;
+                    }
                 }
+
+                g_ptr_array_free(symbols, TRUE);
             }
 
             free_2(wild);
@@ -1688,7 +1689,6 @@ int makevec_lx2(char *str)
     char *pnt, *pnt2, *wild = NULL;
     char ch, ch2, wild_active;
     int len;
-    int i;
     int rc = 0;
 
     while (1) {
@@ -1722,7 +1722,7 @@ int makevec_lx2(char *str)
             {
                 GwSymbol *s;
                 if (wild[0] == '(') {
-                    for (i = 1;; i++) {
+                    for (gint i = 1;; i++) {
                         if (wild[i] == 0)
                             break;
                         if ((wild[i] == ')') && (wild[i + 1])) {
@@ -1742,19 +1742,16 @@ int makevec_lx2(char *str)
                     }
                 }
             } else {
-                wave_regex_compile(wild, WAVE_REGEX_WILD);
+                GPtrArray *symbols = gw_dump_file_find_symbols(GLOBALS->dump_file, wild, NULL);
+                if (symbols != NULL) {
+                    for (gint i = 0; i < symbols->len; i++) {
+                        GwSymbol *fac = g_ptr_array_index(symbols, i);
 
-                GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
-
-                for (i = gw_facs_get_length(facs) - 1; i >= 0;
-                     i--) /* to keep vectors in little endian hi..lo order */
-                {
-                    GwSymbol *fac = gw_facs_get(facs, i);
-
-                    if (wave_regex_match(fac->name, WAVE_REGEX_WILD)) {
                         lx2_set_fac_process_mask(fac->n);
                         rc = 1;
                     }
+
+                    g_ptr_array_free(symbols, TRUE);
                 }
             }
             free_2(wild);
