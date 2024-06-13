@@ -11,6 +11,16 @@
 #define WAVE_VARDIR_WIDTH (3)
 #define WAVE_VARTYPE_WIDTH (6)
 
+// used when expanding atomic vectors
+typedef struct
+{
+    GwNode **narray;
+    int msb, lsb;
+    int width;
+} GwExpandInfo;
+
+void gw_expand_info_free(GwExpandInfo *self);
+
 struct _GwExpandReferences
 {
     GwNode *parent; /* which atomic vec we expanded from */
@@ -58,3 +68,5 @@ struct _GwNode
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(pop)
 #endif
+
+GwExpandInfo *gw_node_expand(GwNode *self);

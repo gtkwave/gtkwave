@@ -1450,7 +1450,13 @@ static unsigned expand_trace(GwTrace *t_top)
                 }
             }
         } else {
-            eptr e = ExpandNode(t->n.nd);
+            GwNode *node = t->n.nd;
+
+            if (node->mv.mvlfac != NULL) {
+                import_trace(node);
+            }
+
+            GwExpandInfo *e = gw_node_expand(node);
             int i;
             if (!e) {
                 /* 		      if(t->n.nd->expansion) t->n.nd->expansion->refcnt++; */
@@ -1460,8 +1466,7 @@ static unsigned expand_trace(GwTrace *t_top)
                     GLOBALS->which_t_color = color;
                     AddNode(e->narray[i], NULL);
                 }
-                free_2(e->narray);
-                free_2(e);
+                gw_expand_info_free(e);
             }
         }
 
@@ -1799,7 +1804,13 @@ GwBitVector *combine_traces(int direction, GwTrace *single_trace_only)
                             }
                         }
                     } else {
-                        eptr e = ExpandNode(t->n.nd);
+                        GwNode *node = t->n.nd;
+
+                        if (node->mv.mvlfac != NULL) {
+                            import_trace(node);
+                        }
+
+                        GwExpandInfo *e = gw_node_expand(node);
                         int ix;
                         if (!e) {
                             if (t->n.nd->expansion)
@@ -1814,8 +1825,7 @@ GwBitVector *combine_traces(int direction, GwTrace *single_trace_only)
                                 n[nodepnt++] = e->narray[ix];
                                 e->narray[ix]->expansion->refcnt++;
                             }
-                            free_2(e->narray);
-                            free_2(e);
+                            gw_expand_info_free(e);
                         }
                     }
                 }

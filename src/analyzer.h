@@ -26,8 +26,6 @@ typedef struct _SearchProgressData
 
 #define BITATTRIBUTES_MAX 32768
 
-typedef struct ExpandInfo *eptr;
-
 typedef unsigned long Ulong;
 typedef unsigned int Uint;
 
@@ -70,13 +68,6 @@ enum TraceReorderMode
 /* ^^^   Bit representation   ^^^ */
 
 #define MAX_HISTENT_TIME ((GwTime)(~((GW_UTIME_CONSTANT(-1)) << (sizeof(GwTime) * 8 - 1))))
-
-typedef struct ExpandInfo /* only used when expanding atomic vex.. */
-{
-    GwNode **narray;
-    int msb, lsb;
-    int width;
-} ExpandInfo;
 
 typedef uint64_t TraceFlagsType;
 #define TRACEFLAGSSCNFMT SCNx64
@@ -238,7 +229,6 @@ int DeleteBuffer(void);
 
 void import_trace(GwNode *np);
 
-eptr ExpandNode(GwNode *n);
 void DeleteNode(GwNode *n);
 GwNode *ExtractNodeSingleBit(GwNode *n, int bit);
 
