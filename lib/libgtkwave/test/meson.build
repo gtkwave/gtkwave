@@ -81,8 +81,10 @@ foreach test : dumpfile_tests
         command: [dump_executable, '@INPUT@'],
         output: test + '.dump',
         capture: true,
-        build_always_stale: true,
         env: ['G_DEBUG=fatal-warnings'],
+        # Without this explicit dependency the generated file isn't update when
+        # libgtkwave changes.
+        depends: libgtkwave,
     )
 
     test(
