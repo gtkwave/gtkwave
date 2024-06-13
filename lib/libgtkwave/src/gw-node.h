@@ -39,7 +39,6 @@ struct _GwNode
         GwFac *mvlfac; /* for use with mvlsim aets */
         GwVlist *mvlfac_vlist;
         GwVlistWriter *mvlfac_vlist_writer;
-        char *value; /* for use when unrolling ae2 values */
     } mv; /* anon union is a gcc extension so use mv instead.  using this union avoids crazy casting
              warnings */
 
