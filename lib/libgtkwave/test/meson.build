@@ -10,6 +10,7 @@ libgtkwave_tests = [
     'test-gw-ghw-loader',
     'test-gw-marker',
     'test-gw-named-markers',
+    'test-gw-node',
     'test-gw-project',
     'test-gw-stems',
     'test-gw-string-table',
