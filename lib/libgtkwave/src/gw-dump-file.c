@@ -542,7 +542,7 @@ GwEnumFilterList *gw_dump_file_get_enum_filters(GwDumpFile *self)
 }
 
 /**
- * gw_dump_file_get_enum_filters:
+ * gw_dump_file_get_enum_filters_for_node:
  * @self: A #GwDumpFile.
  * @node: The #GwNode.
  *
@@ -839,7 +839,7 @@ GwSymbol *gw_dump_file_lookup_symbol(GwDumpFile *self, const gchar *name)
 /**
  * gw_dump_file_find_symbols:
  * @self: A #GwDumpFile.
- * @regex: The regular expression to search.
+ * @pattern: The regular expression to search.
  * @error: Return location for a #GErro or %NULL.
  *
  * Searches for all symbols that match the given regular expression.
