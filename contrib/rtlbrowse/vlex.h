@@ -21,8 +21,6 @@
 
 extern int my_yylineno;
 extern char *v_preproc_name;
-int yylex(void);
-extern char *yytext;
 
 const char *is_builtin_define (register const char *str, register unsigned int len);
 

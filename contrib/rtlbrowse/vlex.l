@@ -7,7 +7,9 @@
  * of the License, or (at your option) any later version.
  */
 
+%option noinput
 %option nounput
+%option noyywrap
 
 %{
         
@@ -22,11 +24,6 @@
 #include "vlex.h"
 
 int my_yylineno = 0;
-
-static int yywrap(void)
-{
-return(1);
-}
 
 static int v_preproc_initialized = 0;
 char *v_preproc_name = NULL;

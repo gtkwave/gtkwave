@@ -104,9 +104,10 @@ gperf = find_program('gperf')
 flex = find_program('flex')
 flex_gen = generator(
     flex,
-    output: '@BASENAME@.c',
+    output: ['@BASENAME@.yy.c', '@BASENAME@.yy.h'],
     arguments: [
-        '--outfile=@OUTPUT@',
+        '--outfile=@OUTPUT0@',
+        '--header-file=@OUTPUT1@',
         '@INPUT@',
     ],
 )
