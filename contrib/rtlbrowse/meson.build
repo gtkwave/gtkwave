@@ -12,7 +12,7 @@ definehash_c = custom_target(
     ],
 )
 
-vlex_c = flex_gen.process('vlex.l', extra_args: ['--noyywrap', '--noyyinput'])
+vlex_c = flex_gen.process('vlex.l')
 
 rtlbrowse_sources = [
     'fgetdynamic.c',
