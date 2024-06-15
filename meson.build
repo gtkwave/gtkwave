@@ -25,8 +25,8 @@ datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 
 # Required dependency versions
 
-glib_req = '>=2.64.0'
-glib_req_macro = 'GLIB_VERSION_2_64'
+glib_req = '>=2.72.0'
+glib_req_macro = 'GLIB_VERSION_2_72'
 gtk_req = '>=3.24.0'
 gtk_mac_integration_req = '>=3.0.0'
 zlib_req = '>=1.2.0'
