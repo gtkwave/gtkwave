@@ -2358,7 +2358,7 @@ void activate_stems_reader(char *stems_name)
 
                 update_time_box();
 
-                rc = CreateProcess("rtlbrowse.exe",
+                rc = CreateProcess(NULL,
                                    mylist,
                                    NULL,
                                    NULL,
