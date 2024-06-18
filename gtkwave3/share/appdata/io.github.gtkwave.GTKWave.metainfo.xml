@@ -34,13 +34,19 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.120" date="2024-03-30">
+    <release version="3.3.120" date="2024-06-14">
       <description>
         <p>
 	Changes in 3.3.120:
         </p>
 	<ul>
             <li>Add launchable tag in io.github.gtkwave.GTKWave.metainfo.xml.</li>
+            <li>Fix memory leak on name in build_hierarchy_array().</li>
+            <li>Fix memory leak in ptranslate/ttranslate.</li>
+            <li>Fix case of missing newline at EOF for VCD loaders.</li>
+            <li>Add escape handling state machine for vars in FST loader.</li>
+            <li>Remove escape check on coalesce in FST loader.</li>
+            <li>CreateFileMapping() warning fix for win32 compiles.</li>
         </ul>
       </description>
     </release>
