@@ -11,13 +11,8 @@
 #define FGET_DYNAMIC_H
 
 #include <stdio.h>
+#include <glib.h>
 #include <stdlib.h>
-
-struct alloc_bytechain
-{
-char val;
-struct alloc_bytechain *next;
-};
 
 char *fgetmalloc(FILE *handle);
 extern int fgetmalloc_len;
