@@ -324,7 +324,7 @@ if(i==len)
 f = fopen(id, "rb");
 if(!f)
 	{
-	fprintf(stderr, "*** Could not open '%s'\n", argv[1]);
+	fprintf(stderr, "*** Could not open '%s'\n", id);
 	perror("Why");
 	exit(255);
 	}
