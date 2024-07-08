@@ -118,14 +118,15 @@ static GtkWidget *window;
 static GCallback cleanup;
 
 
-static void destroy_callback(GtkWidget *widget, GtkWidget *nothing)
+static void destroy_callback(GtkWidget *widget, GtkWidget *nothing, gpointer data)
 {
 (void)widget;
 (void)nothing;
 
+  GApplication *app = G_APPLICATION(data);
   is_active=0;
   gtk_widget_destroy(window);
-  gtk_main_quit();
+  g_application_quit(G_APPLICATION(app));
 }
 
 
@@ -133,7 +134,7 @@ static void destroy_callback(GtkWidget *widget, GtkWidget *nothing)
 /*
  * mainline..
  */
-void treebox(char *title, GCallback func, GtkWidget *old_window)
+void treebox(char *title, GCallback func, GtkWidget *old_window, GtkApplication *app)
 {
 (void)old_window;
 
@@ -151,10 +152,9 @@ void treebox(char *title, GCallback func, GtkWidget *old_window)
     cleanup=func;
 
     /* create a new modal window */
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    window = gtk_application_window_new(GTK_APPLICATION(app));
     gtk_window_set_title(GTK_WINDOW (window), title);
-    g_signal_connect(window, "delete_event",
-                       (GCallback) destroy_callback, NULL);
+    g_signal_connect(window, "delete_event", (GCallback)destroy_callback, app);
     set_winsize(window, 640, 600);
 
     table = gtk_grid_new ();

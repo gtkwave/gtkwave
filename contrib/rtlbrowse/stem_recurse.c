@@ -28,7 +28,7 @@ GtkWidget *treeview_main = NULL;
 #define shmdt(a)
 #endif
 
-void treebox(char *title, GCallback func, GtkWidget *old_window);
+void treebox(char *title, GCallback func, GtkWidget *old_window, GtkApplication *app);
 gboolean update_ctx_when_idle(gpointer dummy);
 
 int verilog_2005 = 0; /* currently 1364-2005 keywords are disabled */
@@ -447,47 +447,54 @@ gtk_tree_view_append_column (GTK_TREE_VIEW (treeview_main), column);
 gtk_widget_show(treeview_main);
 }
 
-int main(int argc, char **argv)
+static void activate(GApplication *application)
 {
-WAVE_LOCALE_FIX
+    if (anno_ctx) {
+        switch (anno_ctx->aet_type) {
+            case WAVE_ANNO_FST:
+                fst = fstReaderOpen(anno_ctx->aet_name);
+            if (!fst) {
+                fprintf(stderr, "Could not initialize '%s', exiting.\n", anno_ctx->aet_name);
+                exit(255);
+            } else {
+                timezero = fstReaderGetTimezero(fst);
+            }
+            break;
 
-parse_args(argc, argv);
-
-if(!gtk_init_check(&argc, &argv))
-        {
-        printf("Could not initialize GTK!  Is DISPLAY env var/xhost set?\n\n");
-        exit(255);
+            default:
+                fprintf(stderr,
+                        "Unsupported wave file type %d encountered, exiting.\n",
+                        anno_ctx->aet_type);
+            exit(255);
+            break;
         }
+    }
 
-if(anno_ctx)
-	{
-	switch(anno_ctx->aet_type)
-		{
-		case WAVE_ANNO_FST:
-			fst=fstReaderOpen(anno_ctx->aet_name);
-			if(!fst)
-			        {
-			        fprintf(stderr, "Could not initialize '%s', exiting.\n", anno_ctx->aet_name);
-			        exit(255);
-			        }
-				else
-				{
-				timezero = fstReaderGetTimezero(fst);
-				}
-			break;
+    treebox("RTL Design Hierarchy", NULL, NULL, GTK_APPLICATION(application));
 
-		default:
-			fprintf(stderr, "Unsupported wave file type %d encountered, exiting.\n", anno_ctx->aet_type);
-			exit(255);
-			break;
-		}
-	}
-
-treebox("RTL Design Hierarchy", NULL, NULL);
-
-g_timeout_add(100, update_ctx_when_idle, NULL);
-gtk_main();
-
-return(0);
+    g_timeout_add(100, update_ctx_when_idle, NULL);
 }
 
+int main(int argc, char **argv)
+{
+    WAVE_LOCALE_FIX
+
+    GtkApplication *app;
+    int status;
+
+    parse_args(argc, argv);
+
+    if (!gtk_init_check(&argc, &argv)) {
+        printf("Could not initialize GTK!  Is DISPLAY env var/xhost set?\n\n");
+        exit(255);
+    }
+
+    app = gtk_application_new("io.github.gtkwave.RTLBrowse",
+                              G_APPLICATION_DEFAULT_FLAGS | G_APPLICATION_NON_UNIQUE);
+
+    g_signal_connect(G_APPLICATION(app), "activate", G_CALLBACK(activate), app);
+    status = g_application_run(G_APPLICATION(app), 0, NULL);
+
+    g_object_unref(app);
+    return status;
+}
