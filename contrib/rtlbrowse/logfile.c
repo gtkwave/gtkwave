@@ -1380,7 +1380,7 @@ while(t)
 	t = t->next;
 	}
 
-if(matched) gtk_widget_destroy(matched);
+if(matched) gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook),matched);
 
 if(ctx)
 	{
