@@ -1214,43 +1214,6 @@ bail:			g_free(sel);
 return(FALSE); /* call remaining handlers... */
 }
 
-static        gint
-scroll_event( GtkWidget * widget, GdkEventScroll * event, gpointer text)
-{
-(void)widget;
-
-  GtkTextView *text_view = GTK_TEXT_VIEW(text);
-  /* GtkAdjustment *hadj = text_view->hadjustment; */
-  GtkAdjustment *vadj = YYY_gtk_text_view_get_vadjustment(YYY_GTK_TEXT_VIEW(text_view));
-
-  gdouble s_val = gtk_adjustment_get_step_increment(vadj);
-  gdouble p_val = gtk_adjustment_get_page_increment(vadj);
-
-  switch ( event->direction )
-  {
-    case GDK_SCROLL_UP:
-	gtk_adjustment_set_value(vadj, gtk_adjustment_get_value(vadj) - s_val);
-	if(gtk_adjustment_get_value(vadj) < gtk_adjustment_get_lower(vadj)) gtk_adjustment_set_value(vadj, gtk_adjustment_get_lower(vadj));
-
-	g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "changed");
-        g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "value_changed");
-
-      break;
-
-    case GDK_SCROLL_DOWN:
-	gtk_adjustment_set_value(vadj, gtk_adjustment_get_value(vadj) + s_val);
-	if(gtk_adjustment_get_value(vadj) > gtk_adjustment_get_upper(vadj) - p_val) gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj) - p_val);
-
-	g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "changed");
-        g_signal_emit_by_name (GTK_ADJUSTMENT(vadj), "value_changed");
-
-    default:
-      break;
-  }
-  return(TRUE);
-}
-
-
 /* Create a scrolled text area that displays a "message" */
 static GtkWidget *create_log_text (GtkWidget **textpnt)
 {
@@ -1299,7 +1262,6 @@ g_signal_connect (text, "realize",
 g_signal_connect(text, "button_release_event",
                        G_CALLBACK(button_release_event), NULL);
 
-g_signal_connect (text, "scroll_event",G_CALLBACK(scroll_event), text);
 gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_CHAR);
 return(scrolled_window);
 }
