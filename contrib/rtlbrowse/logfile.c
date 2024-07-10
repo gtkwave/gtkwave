@@ -1500,12 +1500,11 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
 
         /* make it as small as possible */
 
-        image = gtk_image_new_from_icon_name (XXX_GTK_STOCK_CLOSE, 
-                                          GTK_ICON_SIZE_MENU);
-        gtk_container_add (GTK_CONTAINER (close_button), image);
+	    image = gtk_image_new_from_icon_name(XXX_GTK_STOCK_CLOSE,
+                                             GTK_ICON_SIZE_MENU); // TODO: Adapt to icon size API changes 4
+	    gtk_button_set_image(GTK_BUTTON(close_button), image);
 	/* ...code from gedit */
 
-	gtk_widget_show(image);
         gtk_widget_show(close_button);
 
 	gtk_box_pack_start(GTK_BOX (tbox), l1, FALSE, FALSE, 0);
