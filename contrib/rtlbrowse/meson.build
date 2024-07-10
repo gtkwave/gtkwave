@@ -19,6 +19,7 @@ rtlbrowse_sources = [
     'fgetdynamic.h',
     'jrb.c',
     'logfile.c',
+    'main.c',
     'splay.c',
     'stem_recurse.c',
     'tcl_helper.c',
