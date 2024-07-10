@@ -311,31 +311,26 @@ ds_Tree *load_stems_file(FILE *f)
     return modules;
 }
 
-int parse_args(int argc, char **argv)
+/* Side-effect: mod_cnt, mod_list */
+static void parse_args(const gchar *arg)
 {
     FILE *f;
-    char *id;
+    const char *file_name;
     ds_Tree *modules = NULL;
     int i;
     int len;
 
-    if (argc != 2) {
-        printf("Usage:\n------\n%s stems_filename\n\n", argv[0]);
-        exit(0);
-    }
+    len = strlen(arg);
 
-    id = argv[1];
-    len = strlen(id);
-
-    /* Determine whether argv[1] is file name or shmid */
+    /* Determine whether arg is file name or shmid */
     for (i = 0; i < len; i++) {
-        if (!isxdigit((int)(unsigned char)id[i]))
+        if (!g_ascii_isxdigit(arg[i]))
             break;
     }
     if (i == len) {
         unsigned int shmid;
 
-        sscanf(id, "%x", &shmid);
+        sscanf(arg, "%x", &shmid);
 #ifdef __MINGW32__
         {
             HANDLE hMapFile;
@@ -365,22 +360,22 @@ int parse_args(int argc, char **argv)
         if (anno_ctx != (void *)-1) {
             if ((!memcmp(anno_ctx->matchword, WAVE_MATCHWORD, 4)) &&
                 (anno_ctx->aet_type > WAVE_ANNO_NONE) && (anno_ctx->aet_type < WAVE_ANNO_MAX)) {
-                id = anno_ctx->stems_name;
+                file_name = anno_ctx->stems_name;
             } else {
                 shmdt((void *)anno_ctx);
                 fprintf(stderr, "Not a valid shared memory ID from gtkwave, exiting.\n");
                 exit(255);
             }
         } else {
-            id = argv[1];
+            file_name = arg;
         }
     } else {
-        id = argv[1];
+        file_name = arg;
     }
 
-    f = fopen(id, "rb");
+    f = fopen(file_name, "rb");
     if (!f) {
-        fprintf(stderr, "*** Could not open '%s'\n", id);
+        fprintf(stderr, "*** Could not open '%s'\n", file_name);
         perror("Why");
         exit(255);
     }
@@ -393,8 +388,6 @@ int parse_args(int argc, char **argv)
     mod_list = calloc(mod_cnt ? mod_cnt : 1, sizeof(ds_Tree *));
     mod_cnt = 0;
     rec_tree_populate(modules, &mod_cnt, mod_list);
-
-    return (0);
 }
 
 void bwmaketree(void)
@@ -447,7 +440,7 @@ gtk_tree_view_append_column (GTK_TREE_VIEW (treeview_main), column);
 gtk_widget_show(treeview_main);
 }
 
-static void activate(GApplication *application)
+static void activate(GApplication *app)
 {
     if (anno_ctx) {
         switch (anno_ctx->aet_type) {
@@ -456,9 +449,9 @@ static void activate(GApplication *application)
             if (!fst) {
                 fprintf(stderr, "Could not initialize '%s', exiting.\n", anno_ctx->aet_name);
                 exit(255);
-            } else {
-                timezero = fstReaderGetTimezero(fst);
             }
+            timezero = fstReaderGetTimezero(fst);
+
             break;
 
             default:
@@ -470,9 +463,34 @@ static void activate(GApplication *application)
         }
     }
 
-    treebox("RTL Design Hierarchy", NULL, NULL, GTK_APPLICATION(application));
+    treebox("RTL Design Hierarchy", NULL, NULL, GTK_APPLICATION(app));
 
     g_timeout_add(100, update_ctx_when_idle, NULL);
+}
+
+static gint
+command_line (GApplication            *app,
+              GApplicationCommandLine *cmdline)
+{
+    GVariantDict *options;
+    gchar** cmd;
+
+    options = g_application_command_line_get_options_dict (cmdline);
+    if (!g_variant_dict_lookup (options, G_OPTION_REMAINING, "^a&s", &cmd) ||
+        g_strv_length(cmd) != 1)
+    {
+        // g_option_context_get_help can not be used to render help text here.
+        // Since the `context` it need is constructed inside g_application_parse_command_line,
+        // using private members of GApplication. Is there another way to print the help?
+        g_print("try '%s --help' for help.\n", g_get_prgname());
+        g_application_quit(app);
+        return -1;
+    }
+    parse_args(cmd[0]);
+    g_free(cmd);
+
+    activate(app);
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -481,8 +499,10 @@ int main(int argc, char **argv)
 
     GtkApplication *app;
     int status;
-
-    parse_args(argc, argv);
+    const GOptionEntry entries[] = {
+        { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, NULL, "", NULL },
+      G_OPTION_ENTRY_NULL
+    };
 
     if (!gtk_init_check(&argc, &argv)) {
         printf("Could not initialize GTK!  Is DISPLAY env var/xhost set?\n\n");
@@ -490,10 +510,21 @@ int main(int argc, char **argv)
     }
 
     app = gtk_application_new("io.github.gtkwave.RTLBrowse",
-                              G_APPLICATION_DEFAULT_FLAGS | G_APPLICATION_NON_UNIQUE);
+                                  G_APPLICATION_HANDLES_COMMAND_LINE|G_APPLICATION_NON_UNIQUE);
+
+    g_application_add_main_option_entries(G_APPLICATION(app), entries);
+    g_application_set_option_context_parameter_string(G_APPLICATION(app), "stems_filename");
+    g_application_set_option_context_summary (
+        G_APPLICATION(app),
+        "RTLBrowse is used to view and navigate through RTL source code, often called as\n"
+        "a helper application by GTKWave.\n"
+        "If GTKWave is started with the --stems option, the stems file is parsed and\n"
+        "RTLBrowse is launched.");
+
+    g_signal_connect (app, "command-line", G_CALLBACK (command_line), NULL);
 
     g_signal_connect(G_APPLICATION(app), "activate", G_CALLBACK(activate), app);
-    status = g_application_run(G_APPLICATION(app), 0, NULL);
+    status = g_application_run(G_APPLICATION(app), argc, argv);
 
     g_object_unref(app);
     return status;
