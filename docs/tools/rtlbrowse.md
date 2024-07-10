@@ -34,7 +34,7 @@ source code file for a module, click on the "View Full File" button at
 the bottom of the window.
 
 Note that it is possible to descend deeper into the design hierarchy by
-selecting the component name in the annotated or unannotated source
+double-clicking the component name in the annotated or unannotated source
 code.
 
 

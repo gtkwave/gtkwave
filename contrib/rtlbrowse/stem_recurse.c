@@ -17,9 +17,8 @@
 #include "fgetdynamic.h"
 #include "splay.h"
 #include "wavelink.h"
+#include "tree_widget.h"
 
-GtkTreeStore *treestore_main = NULL;
-GtkWidget *treeview_main = NULL;
 
 void treebox(char *title, GCallback func, GtkWidget *old_window, GtkApplication *app);
 gboolean update_ctx_when_idle(gpointer dummy);
@@ -84,114 +83,81 @@ static int compar_comp_array_bsearch(const void *s1, const void *s2)
     return (bwsigcmp(key, obj));
 }
 
-void recurse_into_modules(char *compname_build,
-                          char *compname,
-                          ds_Tree *t,
-                          int depth,
-                          GtkTreeIter *ti_subtree)
+void recurse_into_modules(char *comp_path_name,
+                          char *comp_name,
+                          ds_Tree *tree,
+                          GListStore *parent)
 {
-    struct ds_component *comp;
-    struct ds_component **comp_array;
-    int i;
-    char *compname_full;
-    char *txt, *txt2 = NULL;
-    ds_Tree *tdup = malloc(sizeof(ds_Tree));
-    int numcomps;
+    struct ds_component *comp; // Current node's comp
+    char *comp_name_full; // e.g. top.adder.add
+    ds_Tree *tree_dup = malloc(sizeof(ds_Tree));
     char *colon;
-    char *compname2 = compname ? strdup(compname) : NULL;
     char *compname_colon = NULL;
 
-    if (compname2) {
-        compname_colon = strchr(compname2, ':');
+    if(comp_name) {
+        compname_colon = strchr(comp_name, ':');
         if (compname_colon) {
             *compname_colon = 0;
         }
     }
 
-    memcpy(tdup, t, sizeof(ds_Tree));
-    t = tdup;
-    colon = strchr(t->item, ':');
-    if (colon) {
+    memcpy(tree_dup, tree, sizeof(ds_Tree));
+    tree = tree_dup;
+    colon = strchr(tree->item, ':');
+    if(colon) {
         *colon = 0; /* remove generate hack */
     }
 
-    t->next_flat = flattened_mod_list_root;
-    flattened_mod_list_root = t;
+    tree->next_flat = flattened_mod_list_root;
+    flattened_mod_list_root = tree;
 
-    if (compname_build) {
-        int cnl = strlen(compname_build);
+    if (comp_path_name) {
+        int path_len = strlen(comp_path_name);
 
-        compname_full = malloc(cnl + 1 + strlen(compname2) + 1);
-        strcpy(compname_full, compname_build);
-        compname_full[cnl] = '.';
-        strcpy(compname_full + cnl + 1, compname2);
+        comp_name_full = malloc(path_len + 1 + strlen(comp_name) + 1);
+        sprintf(comp_name_full, "%s.%s", comp_path_name, comp_name);
     } else {
-        compname_full = strdup(t->item);
+        comp_name_full = strdup(tree->item);
     }
 
-    t->fullname = compname_full;
-    txt = compname_build ? compname2 : t->item;
-    if (!t->filename) {
-        txt2 = malloc(strlen(txt) + strlen(" [MISSING]") + 1);
-        strcpy(txt2, txt);
-        strcat(txt2, " [MISSING]");
-        /* txt = txt2; */ /* scan-build */
-    }
+    tree->fullname = comp_name_full;
 
-    gtk_tree_store_set(treestore_main,
-                       ti_subtree,
-                       XXX_NAME_COLUMN,
-                       compname2 ? compname2 : t->item, /* t->comp->compname? */
-                       XXX_TREE_COLUMN,
-                       t,
-                       -1);
+    GwrModule *node;
+    node = GWR_MODULE(g_object_new(GWR_TYPE_MODULE,
+    "name", comp_name ? strdup(comp_name) : tree->item,
+    "tree", tree,
+    NULL));
 
-    if (colon) {
+    g_list_store_append(parent, node);
+
+    if(colon) {
         *colon = ':';
     }
 
-    free(compname2);
-    compname2 = NULL;
-
-    comp = t->comp;
-    if (comp) {
-        numcomps = 0;
-        while (comp) {
-            numcomps++;
+    comp = tree->comp;
+    if(comp) {
+        int comp_size = 0;
+        struct ds_component **comp_array; // array of every elements in comp linklist
+        while(comp) {
+            comp_size ++;
             comp = comp->next;
         }
 
-        comp_array = calloc(numcomps, sizeof(struct ds_component *));
+        comp_array = calloc(comp_size, sizeof(struct  ds_component*));
 
-        comp = t->comp;
-        for (i = 0; i < numcomps; i++) {
+        comp = tree->comp;
+        for(int i = 0; i < comp_size; i++) {
             comp_array[i] = comp;
             comp = comp->next;
         }
-        qsort(comp_array, numcomps, sizeof(struct ds_component *), compar_comp_array_bsearch);
-        for (i = 0; i < numcomps; i++) {
-            GtkTreeIter iter;
-            gtk_tree_store_append(treestore_main, &iter, ti_subtree);
+        qsort(comp_array, comp_size, sizeof(struct ds_component*), compar_comp_array_bsearch);
 
+        gwr_model_set_children_model(node, G_LIST_MODEL(g_list_store_new(GWR_TYPE_MODULE)));
+        for(int i = 0; i < comp_size; i++) {
             comp = comp_array[i];
-
-            if (0)
-                gtk_tree_store_set(treestore_main,
-                                   &iter,
-                                   XXX_NAME_COLUMN,
-                                   comp->compname,
-                                   XXX_TREE_COLUMN,
-                                   comp->module,
-                                   -1);
-
-            recurse_into_modules(compname_full, comp->compname, comp->module, depth + 1, &iter);
+            recurse_into_modules(comp_name_full, comp->compname, comp->module, G_LIST_STORE(gwr_model_get_children_model(node)));
         }
-
         free(comp_array);
-    }
-
-    if (txt2) {
-        free(txt2);
     }
 }
 
@@ -294,43 +260,20 @@ ds_Tree *load_stems_file(FILE *f)
     return modules;
 }
 
-void bwmaketree(void)
+// Create a suitable data module for tree list from mod_list
+GListModel * create_module(void)
 {
-    int i;
-
-    treestore_main = gtk_tree_store_new(XXX2_NUM_COLUMNS, /* Total number of columns */
-                                        G_TYPE_STRING, /* name */
-                                        G_TYPE_POINTER); /* tree */
-
-    for (i = 0; i < mod_cnt; i++) {
+    GListStore *root = g_list_store_new(GWR_TYPE_MODULE);
+    for (int i = 0; i < mod_cnt; i++) {
         ds_Tree *t = mod_list[i];
 
         if (!t->refcnt) {
             /* printf("TOP: %s\n", t->item); */
-            GtkTreeIter iter;
-            gtk_tree_store_append(treestore_main, &iter, NULL);
-
-            recurse_into_modules(NULL, NULL, t, 0, &iter /* ti_subtree */);
+            // Find the top module
+            recurse_into_modules(NULL, NULL, t, root);
         } else if (!t->resolved) {
             /* printf("MISSING: %s\n", t->item); */
         }
     }
-
-    GtkCellRenderer *renderer_t;
-    GtkTreeViewColumn *column;
-
-    treeview_main = gtk_tree_view_new_with_model(GTK_TREE_MODEL(treestore_main));
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview_main), FALSE);
-    gtk_tree_view_set_enable_tree_lines(GTK_TREE_VIEW(treeview_main), TRUE);
-
-    column = gtk_tree_view_column_new();
-    renderer_t = gtk_cell_renderer_text_new();
-
-    gtk_tree_view_column_pack_start(column, renderer_t, FALSE);
-
-    gtk_tree_view_column_add_attribute(column, renderer_t, "text", XXX2_NAME_COLUMN);
-
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview_main), column);
-
-    gtk_widget_show(treeview_main);
+    return G_LIST_MODEL(root);
 }

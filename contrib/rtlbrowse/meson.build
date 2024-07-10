@@ -27,7 +27,7 @@ rtlbrowse_sources = [
 ]
 
 rtlbrowse_dependencies = [
-    gtk_dep,
+    gtk4_dep,
     libfst_dep,
     libvzt_dep,
     liblxt_dep,

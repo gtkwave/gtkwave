@@ -8,6 +8,7 @@
 #include "fgetdynamic.h"
 #include "splay.h"
 #include "wavelink.h"
+#include "stem_recurse.h"
 
 #include "wave_locale.h"
 
@@ -16,14 +17,10 @@
 #define shmdt(a)
 #endif
 
-extern struct gtkwave_annotate_ipc_t *anno_ctx;
-extern int mod_cnt;
-extern ds_Tree **mod_list;
-
 ds_Tree *load_stems_file(FILE *f);
 void rec_tree(ds_Tree *t, int *cnt);
 void rec_tree_populate(ds_Tree *t, int *cnt, ds_Tree **list_root);
-void treebox(char *title, GtkApplication *app);
+void treebox(const char *title, GtkApplication *app);
 gboolean update_ctx_when_idle(gpointer dummy);
 
 /* Side-effect: mod_cnt, mod_list */
@@ -164,7 +161,7 @@ int main(int argc, char **argv)
         {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, NULL, "", NULL},
         G_OPTION_ENTRY_NULL};
 
-    if (!gtk_init_check(&argc, &argv)) {
+    if (!gtk_init_check()) {
         printf("Could not initialize GTK!  Is DISPLAY env var/xhost set?\n\n");
         exit(255);
     }

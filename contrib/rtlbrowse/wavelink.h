@@ -4,6 +4,10 @@
 /* kill the GLOBALS_H header inclusion as it's not needed here */
 #define GLOBALS_H
 
+/* Workaround: disable the gtk2->3 compats from gtkwave */
+/* Remove this after the gtk2->3 compats got removed from gtkwave */
+#define WAVE_GTK23COMPAT_H
+
 #include "../../src/tree.h"
 #include "../../src/debug.h"
 #include <vzt_read.h>
@@ -16,25 +20,5 @@ extern struct lxt2_rd_trace *lx2;
 extern void *fst;
 extern int64_t timezero;
 
-enum treeview2_columns
-{
-    XXX2_NAME_COLUMN,
-    XXX2_TREE_COLUMN,
-    XXX2_NUM_COLUMNS
-};
-
-/* gtk3->4 deprecated */
-
-#if GTK_CHECK_VERSION(3, 0, 0)
-
-#define YYY_GTK_TEXT_VIEW GTK_SCROLLABLE
-#define YYY_gtk_text_view_get_vadjustment gtk_scrollable_get_vadjustment
-
-#else
-
-#define YYY_GTK_TEXT_VIEW GTK_TEXT_VIEW
-#define YYY_gtk_text_view_get_vadjustment gtk_text_view_get_vadjustment
-
-#endif
 
 #endif

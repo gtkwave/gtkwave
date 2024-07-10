@@ -670,218 +670,218 @@ char *zMergeTclList(int argc, const char **argv)
 
 #define WAVE_DRAG_TAR_NAME_2 "STRING"
 #define WAVE_DRAG_TAR_INFO_2 2
-
-static gboolean DNDDragMotionCB(GtkWidget *widget,
-                                GdkDragContext *dc,
-                                gint xx,
-                                gint yy,
-                                guint tt,
-                                gpointer data)
-{
-    (void)widget;
-    (void)xx;
-    (void)yy;
-    (void)data;
-    GdkDragAction suggested_action;
-
-    /* Respond with default drag action (status). First we check
-     * the dc's list of actions. If the list only contains
-     * move, copy, or link then we select just that, otherwise we
-     * return with our default suggested action.
-     * If no valid actions are listed then we respond with 0.
-     */
-    suggested_action = GDK_ACTION_MOVE;
-
-    /* Only move? */
-    if (gdk_drag_context_get_actions(dc) == GDK_ACTION_MOVE)
-        gdk_drag_status(dc, GDK_ACTION_MOVE, tt);
-    /* Only copy? */
-    else if (gdk_drag_context_get_actions(dc) == GDK_ACTION_COPY)
-        gdk_drag_status(dc, GDK_ACTION_COPY, tt);
-    /* Only link? */
-    else if (gdk_drag_context_get_actions(dc) == GDK_ACTION_LINK)
-        gdk_drag_status(dc, GDK_ACTION_LINK, tt);
-    /* Other action, check if listed in our actions list? */
-    else if (gdk_drag_context_get_actions(dc) & suggested_action)
-        gdk_drag_status(dc, suggested_action, tt);
-    /* All else respond with 0. */
-    else
-        gdk_drag_status(dc, 0, tt);
-
-    return (FALSE);
-}
-
-static void DNDBeginCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
-{
-    (void)widget;
-    (void)dc;
-    (void)data;
-}
-
-static void DNDEndCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
-{
-    (void)widget;
-    (void)dc;
-    (void)data;
-}
-
-/*
- *      DND "drag_data_received" handler. When DNDDataRequestCB()
- *	calls gtk_selection_data_set() to send out the data, this function
- *	receives it and is responsible for handling it.
- *
- *	This is also the only DND callback function where the given
- *	inputs may reflect those of the drop target so we need to check
- *	if this is the same structure or not.
- */
-static void DNDDataReceivedCB(GtkWidget *widget,
-                              GdkDragContext *dc,
-                              gint x,
-                              gint y,
-                              GtkSelectionData *selection_data,
-                              guint info,
-                              guint t,
-                              gpointer data)
-{
-    (void)x;
-    (void)y;
-    (void)t;
-
-    gboolean same;
-    GtkWidget *source_widget;
-
-    if ((widget == NULL) || (data == NULL) || (dc == NULL))
-        return;
-
-    /* Important, check if we actually got data.  Sometimes errors
-     * occure and selection_data will be NULL.
-     */
-    if (selection_data == NULL)
-        return;
-    if (gtk_selection_data_get_length(selection_data) < 0)
-        return;
-
-    /* Source and target widgets are the same? */
-    source_widget = gtk_drag_get_source_widget(dc);
-    same = (source_widget == widget) ? TRUE : FALSE;
-
-    if (same) {
-        return;
-    }
-
-    /* Now check if the data format type is one that we support
-     * (remember, data format type, not data type).
-     *
-     * We check this by testing if info matches one of the info
-     * values that we have defined.
-     *
-     * Note that we can also iterate through the atoms in:
-     *	GList *glist = dc->targets;
-     *
-     *	while(glist != NULL)
-     *	{
-     *	    gchar *name = gdk_atom_name((GdkAtom)glist->data);
-     *	     * strcmp the name to see if it matches
-     *	     * one that we support
-     *	     *
-     *	    glist = glist->next;
-     *	}
-     */
-    if ((info == WAVE_DRAG_TAR_INFO_0) || (info == WAVE_DRAG_TAR_INFO_1) ||
-        (info == WAVE_DRAG_TAR_INFO_2)) {
-        int impcnt = 0;
-        ds_Tree *ft = NULL;
-        int argc = 0;
-        char **zs = zSplitTclList((const char *)gtk_selection_data_get_data(selection_data), &argc);
-        if (zs) {
-            int i;
-            for (i = 0; i < argc; i++) {
-                if ((!strncmp("net ", zs[i], 4)) || (!strncmp("netBus ", zs[i], 7))) {
-                    char *stemp = strdup(zs[i]);
-                    char *ss = strchr(stemp, ' ') + 1;
-                    char *sl = strrchr(stemp, ' ');
-                    char *pnt = ss;
-
-                    if (sl) {
-                        *sl = 0;
-                        while (*pnt) {
-                            if (*pnt == ' ') {
-                                *pnt = '.';
-                            }
-                            pnt++;
-                        }
-                    }
-
-                    ft = flattened_mod_list_root;
-                    while (ft) {
-                        if (!strcmp(ss, ft->fullname)) {
-                            if (!ft->dnd_to_import) {
-                                ft->dnd_to_import = 1;
-                                impcnt++;
-                            }
-                            break;
-                        }
-
-                        ft = ft->next_flat;
-                    }
-
-                    free(stemp);
-                }
-            }
-            free(zs);
-        }
-
-        if (impcnt) {
-            ds_Tree **fta = calloc(impcnt, sizeof(ds_Tree *));
-            int i = 0;
-
-            while (ft) {
-                if (ft->dnd_to_import) {
-                    ft->dnd_to_import = 0;
-                    fta[i++] = ft;
-
-                    if (i == impcnt)
-                        break;
-                }
-
-                ft = ft->next_flat;
-            }
-
-            for (i = impcnt - 1; i >= 0; i--) /* reverse list so it is forwards in rtlbrowse */
-            {
-                if (fta[i]) /* scan-build */
-                {
-                    bwlogbox(fta[i]->fullname, 640 + 8 * 8, fta[i], 0);
-                }
-            }
-
-            free(fta);
-        }
-    }
-}
-
-void setup_dnd(GtkWidget *wid)
-{
-    GtkTargetEntry target_entry[3];
-
-    target_entry[0].target = WAVE_DRAG_TAR_NAME_0;
-    target_entry[0].flags = 0;
-    target_entry[0].info = WAVE_DRAG_TAR_INFO_0;
-    target_entry[1].target = WAVE_DRAG_TAR_NAME_1;
-    target_entry[1].flags = 0;
-    target_entry[1].info = WAVE_DRAG_TAR_INFO_1;
-    target_entry[2].target = WAVE_DRAG_TAR_NAME_2;
-    target_entry[2].flags = 0;
-    target_entry[2].info = WAVE_DRAG_TAR_INFO_2;
-
-    gtk_drag_dest_set(GTK_WIDGET(wid),
-                      GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT | GTK_DEST_DEFAULT_DROP,
-                      target_entry,
-                      sizeof(target_entry) / sizeof(GtkTargetEntry),
-                      GDK_ACTION_COPY);
-
-    g_signal_connect(wid, "drag_data_received", G_CALLBACK(DNDDataReceivedCB), GTK_WIDGET(wid));
-    g_signal_connect(wid, "drag_motion", G_CALLBACK(DNDDragMotionCB), GTK_WIDGET(wid));
-    g_signal_connect(wid, "drag_begin", G_CALLBACK(DNDBeginCB), GTK_WIDGET(wid));
-    g_signal_connect(wid, "drag_end", G_CALLBACK(DNDEndCB), GTK_WIDGET(wid));
-}
+//
+// static gboolean DNDDragMotionCB(GtkWidget *widget,
+//                                 GdkDragContext *dc,
+//                                 gint xx,
+//                                 gint yy,
+//                                 guint tt,
+//                                 gpointer data)
+// {
+//     (void)widget;
+//     (void)xx;
+//     (void)yy;
+//     (void)data;
+//     GdkDragAction suggested_action;
+//
+//     /* Respond with default drag action (status). First we check
+//      * the dc's list of actions. If the list only contains
+//      * move, copy, or link then we select just that, otherwise we
+//      * return with our default suggested action.
+//      * If no valid actions are listed then we respond with 0.
+//      */
+//     suggested_action = GDK_ACTION_MOVE;
+//
+//     /* Only move? */
+//     if (gdk_drag_context_get_actions(dc) == GDK_ACTION_MOVE)
+//         gdk_drag_status(dc, GDK_ACTION_MOVE, tt);
+//     /* Only copy? */
+//     else if (gdk_drag_context_get_actions(dc) == GDK_ACTION_COPY)
+//         gdk_drag_status(dc, GDK_ACTION_COPY, tt);
+//     /* Only link? */
+//     else if (gdk_drag_context_get_actions(dc) == GDK_ACTION_LINK)
+//         gdk_drag_status(dc, GDK_ACTION_LINK, tt);
+//     /* Other action, check if listed in our actions list? */
+//     else if (gdk_drag_context_get_actions(dc) & suggested_action)
+//         gdk_drag_status(dc, suggested_action, tt);
+//     /* All else respond with 0. */
+//     else
+//         gdk_drag_status(dc, 0, tt);
+//
+//     return (FALSE);
+// }
+//
+// static void DNDBeginCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
+// {
+//     (void)widget;
+//     (void)dc;
+//     (void)data;
+// }
+//
+// static void DNDEndCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
+// {
+//     (void)widget;
+//     (void)dc;
+//     (void)data;
+// }
+//
+// /*
+//  *      DND "drag_data_received" handler. When DNDDataRequestCB()
+//  *	calls gtk_selection_data_set() to send out the data, this function
+//  *	receives it and is responsible for handling it.
+//  *
+//  *	This is also the only DND callback function where the given
+//  *	inputs may reflect those of the drop target so we need to check
+//  *	if this is the same structure or not.
+//  */
+// static void DNDDataReceivedCB(GtkWidget *widget,
+//                               GdkDragContext *dc,
+//                               gint x,
+//                               gint y,
+//                               GtkSelectionData *selection_data,
+//                               guint info,
+//                               guint t,
+//                               gpointer data)
+// {
+//     (void)x;
+//     (void)y;
+//     (void)t;
+//
+//     gboolean same;
+//     GtkWidget *source_widget;
+//
+//     if ((widget == NULL) || (data == NULL) || (dc == NULL))
+//         return;
+//
+//     /* Important, check if we actually got data.  Sometimes errors
+//      * occure and selection_data will be NULL.
+//      */
+//     if (selection_data == NULL)
+//         return;
+//     if (gtk_selection_data_get_length(selection_data) < 0)
+//         return;
+//
+//     /* Source and target widgets are the same? */
+//     source_widget = gtk_drag_get_source_widget(dc);
+//     same = (source_widget == widget) ? TRUE : FALSE;
+//
+//     if (same) {
+//         return;
+//     }
+//
+//     /* Now check if the data format type is one that we support
+//      * (remember, data format type, not data type).
+//      *
+//      * We check this by testing if info matches one of the info
+//      * values that we have defined.
+//      *
+//      * Note that we can also iterate through the atoms in:
+//      *	GList *glist = dc->targets;
+//      *
+//      *	while(glist != NULL)
+//      *	{
+//      *	    gchar *name = gdk_atom_name((GdkAtom)glist->data);
+//      *	     * strcmp the name to see if it matches
+//      *	     * one that we support
+//      *	     *
+//      *	    glist = glist->next;
+//      *	}
+//      */
+//     if ((info == WAVE_DRAG_TAR_INFO_0) || (info == WAVE_DRAG_TAR_INFO_1) ||
+//         (info == WAVE_DRAG_TAR_INFO_2)) {
+//         int impcnt = 0;
+//         ds_Tree *ft = NULL;
+//         int argc = 0;
+//         char **zs = zSplitTclList((const char *)gtk_selection_data_get_data(selection_data), &argc);
+//         if (zs) {
+//             int i;
+//             for (i = 0; i < argc; i++) {
+//                 if ((!strncmp("net ", zs[i], 4)) || (!strncmp("netBus ", zs[i], 7))) {
+//                     char *stemp = strdup(zs[i]);
+//                     char *ss = strchr(stemp, ' ') + 1;
+//                     char *sl = strrchr(stemp, ' ');
+//                     char *pnt = ss;
+//
+//                     if (sl) {
+//                         *sl = 0;
+//                         while (*pnt) {
+//                             if (*pnt == ' ') {
+//                                 *pnt = '.';
+//                             }
+//                             pnt++;
+//                         }
+//                     }
+//
+//                     ft = flattened_mod_list_root;
+//                     while (ft) {
+//                         if (!strcmp(ss, ft->fullname)) {
+//                             if (!ft->dnd_to_import) {
+//                                 ft->dnd_to_import = 1;
+//                                 impcnt++;
+//                             }
+//                             break;
+//                         }
+//
+//                         ft = ft->next_flat;
+//                     }
+//
+//                     free(stemp);
+//                 }
+//             }
+//             free(zs);
+//         }
+//
+//         if (impcnt) {
+//             ds_Tree **fta = calloc(impcnt, sizeof(ds_Tree *));
+//             int i = 0;
+//
+//             while (ft) {
+//                 if (ft->dnd_to_import) {
+//                     ft->dnd_to_import = 0;
+//                     fta[i++] = ft;
+//
+//                     if (i == impcnt)
+//                         break;
+//                 }
+//
+//                 ft = ft->next_flat;
+//             }
+//
+//             for (i = impcnt - 1; i >= 0; i--) /* reverse list so it is forwards in rtlbrowse */
+//             {
+//                 if (fta[i]) /* scan-build */
+//                 {
+//                     bwlogbox(fta[i]->fullname, 640 + 8 * 8, fta[i], 0);
+//                 }
+//             }
+//
+//             free(fta);
+//         }
+//     }
+// }
+//
+// void setup_dnd(GtkWidget *wid)
+// {
+//     GtkTargetEntry target_entry[3];
+//
+//     target_entry[0].target = WAVE_DRAG_TAR_NAME_0;
+//     target_entry[0].flags = 0;
+//     target_entry[0].info = WAVE_DRAG_TAR_INFO_0;
+//     target_entry[1].target = WAVE_DRAG_TAR_NAME_1;
+//     target_entry[1].flags = 0;
+//     target_entry[1].info = WAVE_DRAG_TAR_INFO_1;
+//     target_entry[2].target = WAVE_DRAG_TAR_NAME_2;
+//     target_entry[2].flags = 0;
+//     target_entry[2].info = WAVE_DRAG_TAR_INFO_2;
+//
+//     gtk_drag_dest_set(GTK_WIDGET(wid),
+//                       GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT | GTK_DEST_DEFAULT_DROP,
+//                       target_entry,
+//                       sizeof(target_entry) / sizeof(GtkTargetEntry),
+//                       GDK_ACTION_COPY);
+//
+//     g_signal_connect(wid, "drag_data_received", G_CALLBACK(DNDDataReceivedCB), GTK_WIDGET(wid));
+//     g_signal_connect(wid, "drag_motion", G_CALLBACK(DNDDragMotionCB), GTK_WIDGET(wid));
+//     g_signal_connect(wid, "drag_begin", G_CALLBACK(DNDBeginCB), GTK_WIDGET(wid));
+//     g_signal_connect(wid, "drag_end", G_CALLBACK(DNDEndCB), GTK_WIDGET(wid));
+// }
