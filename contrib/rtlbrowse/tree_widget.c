@@ -12,7 +12,7 @@
 #include "splay.h"
 #include "wavelink.h"
 
-#define set_winsize(w,x,y) gtk_window_set_default_size(GTK_WINDOW(w),(x),(y))
+#define set_winsize(w, x, y) gtk_window_set_default_size(GTK_WINDOW(w), (x), (y))
 void create_toolbar(GtkWidget *table);
 
 GtkWidget *notebook = NULL;
@@ -24,141 +24,122 @@ void bwmaketree(void);
 void bwlogbox(char *title, int width, ds_Tree *t, int display_mode);
 void setup_dnd(GtkWidget *wid);
 
-static ds_Tree *selectedtree=NULL;
+static ds_Tree *selectedtree = NULL;
 
-static int is_active=0;
+static int is_active = 0;
 
 int treebox_is_active(void)
 {
-return(is_active);
+    return (is_active);
 }
 
-static void XXX_select_row_callback(
-GtkTreeModel *model,
-GtkTreePath  *path)
+static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
 {
-GtkTreeIter   iter;
-ds_Tree *t = NULL;
+    GtkTreeIter iter;
+    ds_Tree *t = NULL;
 
-if (!gtk_tree_model_get_iter(model, &iter, path))
-        {
-	return; /* path describes a non-existing row - should not happen */
+    if (!gtk_tree_model_get_iter(model, &iter, path)) {
+        return; /* path describes a non-existing row - should not happen */
+    }
+
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_model_get(model, &iter, XXX2_TREE_COLUMN, &t, -1);
+
+    if (t && (selectedtree != t)) {
+        if (t->filename) {
+            /*
+            printf("%s\n", t->fullname);
+            printf("%s -> '%s' %d-%d\n\n", t->item, t->filename, t->s_line, t->e_line);
+            */
+
+            bwlogbox(t->fullname ? t->fullname : "*", 640 + 8 * 8, t, 0);
+        } else {
+            /*
+            printf("%s\n", t->fullname);
+            printf("%s -> *MISSING*\n\n", t->item);
+            */
         }
+    }
 
-gtk_tree_model_get_iter(model, &iter, path);
-gtk_tree_model_get(model, &iter, XXX2_TREE_COLUMN, &t, -1);
-
-if(t && (selectedtree!=t))
-	{
-	if(t->filename)
-	        {
-	        /*
-	        printf("%s\n", t->fullname);
-	        printf("%s -> '%s' %d-%d\n\n", t->item, t->filename, t->s_line, t->e_line);
-	        */
-	
-	        bwlogbox(t->fullname ? t->fullname : "*", 640 + 8*8, t, 0);
-	        }
-	        else
-	        {
-	        /*
-		printf("%s\n", t->fullname);
-	        printf("%s -> *MISSING*\n\n", t->item);
-	        */
-	        }
-	}
-
-selectedtree=t;
+    selectedtree = t;
 }
 
-static void XXX_unselect_row_callback(
-GtkTreeModel *model,
-GtkTreePath  *path)
+static void XXX_unselect_row_callback(GtkTreeModel *model, GtkTreePath *path)
 {
-GtkTreeIter   iter;
-ds_Tree *t = NULL;
+    GtkTreeIter iter;
+    ds_Tree *t = NULL;
 
-if (!gtk_tree_model_get_iter(model, &iter, path))
-        {
-	return; /* path describes a non-existing row - should not happen */
-        }
+    if (!gtk_tree_model_get_iter(model, &iter, path)) {
+        return; /* path describes a non-existing row - should not happen */
+    }
 
-gtk_tree_model_get_iter(model, &iter, path);
-gtk_tree_model_get(model, &iter, XXX2_TREE_COLUMN, &t, -1);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_model_get(model, &iter, XXX2_TREE_COLUMN, &t, -1);
 
-/* selectedtree=NULL; */
+    /* selectedtree=NULL; */
 }
 
-static gboolean
-  XXX_view_selection_func (GtkTreeSelection *selection,
-                       GtkTreeModel     *model,
-                       GtkTreePath	*path,
-                       gboolean          path_currently_selected,
-                       gpointer          userdata)
+static gboolean XXX_view_selection_func(GtkTreeSelection *selection,
+                                        GtkTreeModel *model,
+                                        GtkTreePath *path,
+                                        gboolean path_currently_selected,
+                                        gpointer userdata)
 {
-(void) selection;
-(void) userdata;
+    (void)selection;
+    (void)userdata;
 
-if(!path_currently_selected)
-        {
+    if (!path_currently_selected) {
         XXX_select_row_callback(model, path);
-        }
-	else
-        {
+    } else {
         XXX_unselect_row_callback(model, path);
-        }
+    }
 
-return(TRUE);
+    return (TRUE);
 }
-
 
 /***************************************************************************/
 
 static GtkWidget *window;
 static GCallback cleanup;
 
-
 static void destroy_callback(GtkWidget *widget, GtkWidget *nothing, gpointer data)
 {
-(void)widget;
-(void)nothing;
+    (void)widget;
+    (void)nothing;
 
-  GApplication *app = G_APPLICATION(data);
-  is_active=0;
-  gtk_widget_destroy(window);
-  g_application_quit(G_APPLICATION(app));
+    GApplication *app = G_APPLICATION(data);
+    is_active = 0;
+    gtk_widget_destroy(window);
+    g_application_quit(G_APPLICATION(app));
 }
-
-
 
 /*
  * mainline..
  */
 void treebox(char *title, GCallback func, GtkWidget *old_window, GtkApplication *app)
 {
-(void)old_window;
+    (void)old_window;
 
     GtkWidget *scrolled_win;
     GtkWidget *frame2;
     GtkWidget *table;
 
-    if(is_active)
-	{
-	gdk_window_raise(gtk_widget_get_window(window));
-	return;
-	}
+    if (is_active) {
+        gdk_window_raise(gtk_widget_get_window(window));
+        return;
+    }
 
-    is_active=1;
-    cleanup=func;
+    is_active = 1;
+    cleanup = func;
 
     /* create a new modal window */
     window = gtk_application_window_new(GTK_APPLICATION(app));
-    gtk_window_set_title(GTK_WINDOW (window), title);
+    gtk_window_set_title(GTK_WINDOW(window), title);
     g_signal_connect(window, "delete_event", (GCallback)destroy_callback, app);
     set_winsize(window, 640, 600);
 
-    table = gtk_grid_new ();
-    gtk_widget_show (table);
+    table = gtk_grid_new();
+    gtk_widget_show(table);
 
     frame2 = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_widget_show(frame2);
@@ -173,32 +154,34 @@ void treebox(char *title, GCallback func, GtkWidget *old_window, GtkApplication 
     gtk_widget_show(notebook);
     gtk_paned_pack2(GTK_PANED(frame2), notebook, TRUE, TRUE);
 
-    gtk_grid_attach (GTK_GRID (table), frame2, 0, 0, 1, 255);
-    gtk_widget_set_hexpand (GTK_WIDGET (frame2), TRUE);
-    gtk_widget_set_vexpand (GTK_WIDGET (frame2), TRUE);
+    gtk_grid_attach(GTK_GRID(table), frame2, 0, 0, 1, 255);
+    gtk_widget_set_hexpand(GTK_WIDGET(frame2), TRUE);
+    gtk_widget_set_vexpand(GTK_WIDGET(frame2), TRUE);
 
     bwmaketree();
-    selectedtree=NULL;
+    selectedtree = NULL;
 
-    scrolled_win = gtk_scrolled_window_new (NULL, NULL);
-    gtk_widget_set_size_request( GTK_WIDGET (scrolled_win), 150, 300);
-    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
-                                      GTK_POLICY_AUTOMATIC,
-                                      GTK_POLICY_AUTOMATIC);
+    scrolled_win = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_set_size_request(GTK_WIDGET(scrolled_win), 150, 300);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_win),
+                                   GTK_POLICY_AUTOMATIC,
+                                   GTK_POLICY_AUTOMATIC);
     gtk_widget_show(scrolled_win);
-    gtk_container_add (GTK_CONTAINER (scrolled_win), GTK_WIDGET (treeview_main));
-    gtk_tree_selection_set_select_function (gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview_main)),
-                                                XXX_view_selection_func, NULL, NULL);
-    gtk_tree_selection_set_mode (gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview_main)), GTK_SELECTION_SINGLE);
-
+    gtk_container_add(GTK_CONTAINER(scrolled_win), GTK_WIDGET(treeview_main));
+    gtk_tree_selection_set_select_function(
+        gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview_main)),
+        XXX_view_selection_func,
+        NULL,
+        NULL); // TODO: Stop using APIs to query GdkSurfaces in gtk4
+    gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview_main)),
+                                GTK_SELECTION_SINGLE);
 
     gtk_paned_pack1(GTK_PANED(frame2), scrolled_win, TRUE, TRUE);
 
     create_toolbar(table);
 
-    gtk_container_add (GTK_CONTAINER (window), table);
-
+    gtk_container_add(GTK_CONTAINER(window), table);
+    // TODO: Use gtk_window_set_child in gtk4
     gtk_widget_show(window);
     setup_dnd(window);
 }
-

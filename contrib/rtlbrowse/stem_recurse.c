@@ -31,209 +31,203 @@ ds_Tree **mod_list;
 ds_Tree *flattened_mod_list_root = NULL;
 
 struct gtkwave_annotate_ipc_t *anno_ctx = NULL;
-struct vzt_rd_trace  *vzt=NULL;
-struct lxt2_rd_trace *lx2=NULL;
-void *fst=NULL;
+struct vzt_rd_trace *vzt = NULL;
+struct lxt2_rd_trace *lx2 = NULL;
+void *fst = NULL;
 int64_t timezero = 0; /* only currently used for FST */
 
 static int bwsigcmp(char *s1, char *s2)
 {
-unsigned char c1, c2;
-int u1, u2;
+    unsigned char c1, c2;
+    int u1, u2;
 
-for(;;)
-        {
-        c1=(unsigned char)*(s1++);
-        c2=(unsigned char)*(s2++);
+    for (;;) {
+        c1 = (unsigned char)*(s1++);
+        c2 = (unsigned char)*(s2++);
 
-        if((!c1)&&(!c2)) return(0);
-        if((c1<='9')&&(c2<='9')&&(c2>='0')&&(c1>='0'))
-                {
-                u1=(int)(c1&15);
-                u2=(int)(c2&15);
+        if ((!c1) && (!c2))
+            return (0);
+        if ((c1 <= '9') && (c2 <= '9') && (c2 >= '0') && (c1 >= '0')) {
+            u1 = (int)(c1 & 15);
+            u2 = (int)(c2 & 15);
 
-                while(((c2=(unsigned char)*s2)>='0')&&(c2<='9'))
-                        {
-                        u2*=10;
-                        u2+=(unsigned int)(c2&15);
-                        s2++;
-                        }
+            while (((c2 = (unsigned char)*s2) >= '0') && (c2 <= '9')) {
+                u2 *= 10;
+                u2 += (unsigned int)(c2 & 15);
+                s2++;
+            }
 
-                while(((c2=(unsigned char)*s1)>='0')&&(c2<='9'))
-                        {
-                        u1*=10;
-                        u1+=(unsigned int)(c2&15);
-                        s1++;
-                        }
+            while (((c2 = (unsigned char)*s1) >= '0') && (c2 <= '9')) {
+                u1 *= 10;
+                u1 += (unsigned int)(c2 & 15);
+                s1++;
+            }
 
-                if(u1==u2) continue;
-                        else return((int)u1-(int)u2);
-                }
-                else
-                {
-                if(c1!=c2) return((int)c1-(int)c2);
-                }
+            if (u1 == u2)
+                continue;
+            else
+                return ((int)u1 - (int)u2);
+        } else {
+            if (c1 != c2)
+                return ((int)c1 - (int)c2);
         }
+    }
 }
 
 static int compar_comp_array_bsearch(const void *s1, const void *s2)
 {
-char *key, *obj;
+    char *key, *obj;
 
-key=(*((struct ds_component **)s1))->compname;
-obj=(*((struct ds_component **)s2))->compname;
+    key = (*((struct ds_component **)s1))->compname;
+    obj = (*((struct ds_component **)s2))->compname;
 
-return(bwsigcmp(key, obj));
+    return (bwsigcmp(key, obj));
 }
 
-void recurse_into_modules(char *compname_build, char *compname, ds_Tree *t, int depth, GtkTreeIter *ti_subtree)
+void recurse_into_modules(char *compname_build,
+                          char *compname,
+                          ds_Tree *t,
+                          int depth,
+                          GtkTreeIter *ti_subtree)
 {
-struct ds_component *comp;
-struct ds_component **comp_array;
-int i;
-char *compname_full;
-char *txt, *txt2 = NULL;
-ds_Tree *tdup = malloc(sizeof(ds_Tree));
-int numcomps;
-char *colon;
-char *compname2 = compname ? strdup(compname) : NULL;
-char *compname_colon = NULL;
+    struct ds_component *comp;
+    struct ds_component **comp_array;
+    int i;
+    char *compname_full;
+    char *txt, *txt2 = NULL;
+    ds_Tree *tdup = malloc(sizeof(ds_Tree));
+    int numcomps;
+    char *colon;
+    char *compname2 = compname ? strdup(compname) : NULL;
+    char *compname_colon = NULL;
 
-if(compname2)
-	{
-	compname_colon = strchr(compname2, ':');
-	if(compname_colon)
-		{
-		*compname_colon = 0;
-		}
-	}
+    if (compname2) {
+        compname_colon = strchr(compname2, ':');
+        if (compname_colon) {
+            *compname_colon = 0;
+        }
+    }
 
-memcpy(tdup, t, sizeof(ds_Tree));
-t = tdup;
-colon = strchr(t->item, ':');
-if(colon)
-	{
-	*colon = 0; /* remove generate hack */
-	}
+    memcpy(tdup, t, sizeof(ds_Tree));
+    t = tdup;
+    colon = strchr(t->item, ':');
+    if (colon) {
+        *colon = 0; /* remove generate hack */
+    }
 
-t->next_flat = flattened_mod_list_root;
-flattened_mod_list_root = t;
+    t->next_flat = flattened_mod_list_root;
+    flattened_mod_list_root = t;
 
-if(compname_build)
-	{
-	int cnl = strlen(compname_build);
+    if (compname_build) {
+        int cnl = strlen(compname_build);
 
-	compname_full = malloc(cnl + 1 + strlen(compname2) + 1);
-	strcpy(compname_full, compname_build);
-	compname_full[cnl] = '.';
-	strcpy(compname_full + cnl + 1, compname2);
-	}
-	else
-	{
-	compname_full = strdup(t->item);
-	}
+        compname_full = malloc(cnl + 1 + strlen(compname2) + 1);
+        strcpy(compname_full, compname_build);
+        compname_full[cnl] = '.';
+        strcpy(compname_full + cnl + 1, compname2);
+    } else {
+        compname_full = strdup(t->item);
+    }
 
-t->fullname = compname_full;
-txt = compname_build ? compname2 : t->item;
-if(!t->filename)
-	{
-	txt2 = malloc(strlen(txt) + strlen(" [MISSING]") + 1);
-	strcpy(txt2, txt);
-	strcat(txt2, " [MISSING]");
-	/* txt = txt2; */ /* scan-build */
-	}
+    t->fullname = compname_full;
+    txt = compname_build ? compname2 : t->item;
+    if (!t->filename) {
+        txt2 = malloc(strlen(txt) + strlen(" [MISSING]") + 1);
+        strcpy(txt2, txt);
+        strcat(txt2, " [MISSING]");
+        /* txt = txt2; */ /* scan-build */
+    }
 
-gtk_tree_store_set (treestore_main, ti_subtree,
-                    XXX_NAME_COLUMN, compname2 ? compname2 : t->item, /* t->comp->compname? */
-                    XXX_TREE_COLUMN, t,
-                    -1);
+    gtk_tree_store_set(treestore_main,
+                       ti_subtree,
+                       XXX_NAME_COLUMN,
+                       compname2 ? compname2 : t->item, /* t->comp->compname? */
+                       XXX_TREE_COLUMN,
+                       t,
+                       -1);
 
-if(colon)
-	{
-	*colon = ':';
-	}
+    if (colon) {
+        *colon = ':';
+    }
 
-free(compname2); compname2 = NULL;
+    free(compname2);
+    compname2 = NULL;
 
-comp = t->comp;
-if(comp)
-	{
-	numcomps = 0;
-	while(comp)
-		{
-		numcomps++;
-		comp = comp->next;
-		}
+    comp = t->comp;
+    if (comp) {
+        numcomps = 0;
+        while (comp) {
+            numcomps++;
+            comp = comp->next;
+        }
 
-	comp_array = calloc(numcomps, sizeof(struct ds_component *));
+        comp_array = calloc(numcomps, sizeof(struct ds_component *));
 
-	comp = t->comp;
-	for(i=0;i<numcomps;i++)
-		{
-		comp_array[i] = comp;
-		comp = comp->next;
-		}
-	qsort(comp_array, numcomps, sizeof(struct ds_component *), compar_comp_array_bsearch);
-	for(i=0;i<numcomps;i++)
-		{
-                GtkTreeIter iter;
-                gtk_tree_store_append (treestore_main, &iter, ti_subtree);
+        comp = t->comp;
+        for (i = 0; i < numcomps; i++) {
+            comp_array[i] = comp;
+            comp = comp->next;
+        }
+        qsort(comp_array, numcomps, sizeof(struct ds_component *), compar_comp_array_bsearch);
+        for (i = 0; i < numcomps; i++) {
+            GtkTreeIter iter;
+            gtk_tree_store_append(treestore_main, &iter, ti_subtree);
 
-		comp = comp_array[i];
+            comp = comp_array[i];
 
-		if(0)
-                gtk_tree_store_set (treestore_main, &iter,
-                    XXX_NAME_COLUMN, comp->compname,
-                    XXX_TREE_COLUMN, comp->module,
-                    -1);
+            if (0)
+                gtk_tree_store_set(treestore_main,
+                                   &iter,
+                                   XXX_NAME_COLUMN,
+                                   comp->compname,
+                                   XXX_TREE_COLUMN,
+                                   comp->module,
+                                   -1);
 
-		recurse_into_modules(compname_full, comp->compname, comp->module, depth+1, &iter);
-		}
+            recurse_into_modules(compname_full, comp->compname, comp->module, depth + 1, &iter);
+        }
 
-	free(comp_array);
-	}
+        free(comp_array);
+    }
 
-if(txt2)
-	{
-	free(txt2);
-	}
+    if (txt2) {
+        free(txt2);
+    }
 }
 
 /* Recursively counts the total number of nodes in ds_Tree */
 void rec_tree(ds_Tree *t, int *cnt)
 {
-if(!t) return;
+    if (!t)
+        return;
 
-if(t->left)
-	{
-	rec_tree(t->left, cnt);
-	}
+    if (t->left) {
+        rec_tree(t->left, cnt);
+    }
 
-(*cnt)++;
+    (*cnt)++;
 
-if(t->right)
-	{
-	rec_tree(t->right, cnt);
-	}
+    if (t->right) {
+        rec_tree(t->right, cnt);
+    }
 }
 
 /* Recursively populates an array with ds_tree_node in inorder traversal sequence */
 void rec_tree_populate(ds_Tree *t, int *cnt, ds_Tree **list_root)
 {
-if(!t) return;
+    if (!t)
+        return;
 
-if(t->left)
-	{
-	rec_tree_populate(t->left, cnt, list_root);
-	}
+    if (t->left) {
+        rec_tree_populate(t->left, cnt, list_root);
+    }
 
-list_root[*cnt] = t;
-(*cnt)++;
+    list_root[*cnt] = t;
+    (*cnt)++;
 
-if(t->right)
-	{
-	rec_tree_populate(t->right, cnt, list_root);
-	}
+    if (t->right) {
+        rec_tree_populate(t->right, cnt, list_root);
+    }
 }
 
 ds_Tree *load_stems_file(FILE *f)
@@ -302,50 +296,41 @@ ds_Tree *load_stems_file(FILE *f)
 
 void bwmaketree(void)
 {
-int i;
+    int i;
 
-treestore_main = gtk_tree_store_new (XXX2_NUM_COLUMNS,       /* Total number of columns */
-                                          G_TYPE_STRING,             /* name */
-                                          G_TYPE_POINTER);           /* tree */
+    treestore_main = gtk_tree_store_new(XXX2_NUM_COLUMNS, /* Total number of columns */
+                                        G_TYPE_STRING, /* name */
+                                        G_TYPE_POINTER); /* tree */
 
-for(i=0;i<mod_cnt;i++)
-	{
-	ds_Tree *t = mod_list[i];
+    for (i = 0; i < mod_cnt; i++) {
+        ds_Tree *t = mod_list[i];
 
-	if(!t->refcnt)
-		{
-		/* printf("TOP: %s\n", t->item); */
-                GtkTreeIter iter;
-                gtk_tree_store_append (treestore_main, &iter, NULL);
+        if (!t->refcnt) {
+            /* printf("TOP: %s\n", t->item); */
+            GtkTreeIter iter;
+            gtk_tree_store_append(treestore_main, &iter, NULL);
 
-		recurse_into_modules(NULL, NULL, t, 0, &iter /* ti_subtree */);
-		}
-	else
-	if(!t->resolved)
-		{
-		/* printf("MISSING: %s\n", t->item); */
-		}
-	}
+            recurse_into_modules(NULL, NULL, t, 0, &iter /* ti_subtree */);
+        } else if (!t->resolved) {
+            /* printf("MISSING: %s\n", t->item); */
+        }
+    }
 
+    GtkCellRenderer *renderer_t;
+    GtkTreeViewColumn *column;
 
-GtkCellRenderer *renderer_t;
-GtkTreeViewColumn *column;
+    treeview_main = gtk_tree_view_new_with_model(GTK_TREE_MODEL(treestore_main));
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview_main), FALSE);
+    gtk_tree_view_set_enable_tree_lines(GTK_TREE_VIEW(treeview_main), TRUE);
 
-treeview_main = gtk_tree_view_new_with_model (GTK_TREE_MODEL (treestore_main));
-gtk_tree_view_set_headers_visible (GTK_TREE_VIEW(treeview_main), FALSE);
-gtk_tree_view_set_enable_tree_lines (GTK_TREE_VIEW(treeview_main), TRUE);
+    column = gtk_tree_view_column_new();
+    renderer_t = gtk_cell_renderer_text_new();
 
-column = gtk_tree_view_column_new();
-renderer_t = gtk_cell_renderer_text_new ();
+    gtk_tree_view_column_pack_start(column, renderer_t, FALSE);
 
-gtk_tree_view_column_pack_start (column, renderer_t, FALSE);
+    gtk_tree_view_column_add_attribute(column, renderer_t, "text", XXX2_NAME_COLUMN);
 
-gtk_tree_view_column_add_attribute (column,
-                                    renderer_t,
-                                    "text",
-                                    XXX2_NAME_COLUMN);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview_main), column);
 
-gtk_tree_view_append_column (GTK_TREE_VIEW (treeview_main), column);
-
-gtk_widget_show(treeview_main);
+    gtk_widget_show(treeview_main);
 }

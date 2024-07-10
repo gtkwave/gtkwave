@@ -22,7 +22,6 @@
 extern int my_yylineno;
 extern char *v_preproc_name;
 
-const char *is_builtin_define (register const char *str, register unsigned int len);
+const char *is_builtin_define(register const char *str, register unsigned int len);
 
 #endif
-
