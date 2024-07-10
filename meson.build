@@ -29,6 +29,7 @@ glib_req = '>=2.72.0'
 glib_req_macro = 'GLIB_VERSION_2_72'
 gtk_req = '>=3.24.0'
 gtk_mac_integration_req = '>=3.0.0'
+gtk4_req = '>=4.6'
 zlib_req = '>=1.2.0'
 bzip2_req = '>=1.0.0'
 
@@ -37,6 +38,7 @@ bzip2_req = '>=1.0.0'
 glib_dep = dependency('glib-2.0', version: glib_req)
 gobject_dep = dependency('gobject-2.0', version: glib_req)
 gtk_dep = dependency('gtk+-3.0', version: gtk_req)
+gtk4_dep = dependency('gtk4', version: gtk4_req)
 gtk_unix_print_dep = dependency(
     'gtk+-unix-print-3.0',
     version: gtk_req,
