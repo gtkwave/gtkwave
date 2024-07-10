@@ -21,7 +21,6 @@
 #include <unistd.h>
 #endif
 
-
 extern ds_Tree *flattened_mod_list_root;
 void bwlogbox(char *title, int width, ds_Tree *t, int display_mode);
 
@@ -35,72 +34,89 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode);
  *      number of characters in the backslash sequence.
  *----------------------------------------------------------------------
  */
-static char tclBackslash(const char* src, int* readPtr) {
-    const char* p = src+1;
+static char tclBackslash(const char *src, int *readPtr)
+{
+    const char *p = src + 1;
     char result;
     int count = 2;
 
     switch (*p) {
-	/*
-	 * Note: in the conversions below, use absolute values (e.g.,
-	 * 0xa) rather than symbolic values (e.g. \n) that get converted
-	 * by the compiler.  It's possible that compilers on some
-	 * platforms will do the symbolic conversions differently, which
-	 * could result in non-portable Tcl scripts.
-	 */
-	case 'a': result = 0x7; break;
-	case 'b': result = 0x8; break;
-	case 'f': result = 0xc; break;
-	case 'n': result = 0xa; break;
-	case 'r': result = 0xd; break;
-	case 't': result = 0x9; break;
-	case 'v': result = 0xb; break;
-	case 'x':
-	    if (isxdigit((int)(unsigned char)p[1])) {
-		char* end;
+        /*
+         * Note: in the conversions below, use absolute values (e.g.,
+         * 0xa) rather than symbolic values (e.g. \n) that get converted
+         * by the compiler.  It's possible that compilers on some
+         * platforms will do the symbolic conversions differently, which
+         * could result in non-portable Tcl scripts.
+         */
+        case 'a':
+            result = 0x7;
+            break;
+        case 'b':
+            result = 0x8;
+            break;
+        case 'f':
+            result = 0xc;
+            break;
+        case 'n':
+            result = 0xa;
+            break;
+        case 'r':
+            result = 0xd;
+            break;
+        case 't':
+            result = 0x9;
+            break;
+        case 'v':
+            result = 0xb;
+            break;
+        case 'x':
+            if (isxdigit((int)(unsigned char)p[1])) {
+                char *end;
 
-		result = (char)strtoul(p+1, &end, 16);
-		count = end - src;
-	    } else {
-		count = 2;
-		result = 'x';
-	    }
-	    break;
-	case '\n':
-	    do {
-		p++;
-	    } while ((*p == ' ') || (*p == '\t'));
-	    result = ' ';
-	    count = p - src;
-	    break;
-	case 0:
-	    result = '\\';
-	    count = 1;
-	    break;
-	default:
-	    /* Check for an octal number \oo?o? */
-	    if (isdigit((int)(unsigned char)*p)) {
-		result = *p - '0';
-		p++;
-		if (!isdigit((int)(unsigned char)*p)) break;
+                result = (char)strtoul(p + 1, &end, 16);
+                count = end - src;
+            } else {
+                count = 2;
+                result = 'x';
+            }
+            break;
+        case '\n':
+            do {
+                p++;
+            } while ((*p == ' ') || (*p == '\t'));
+            result = ' ';
+            count = p - src;
+            break;
+        case 0:
+            result = '\\';
+            count = 1;
+            break;
+        default:
+            /* Check for an octal number \oo?o? */
+            if (isdigit((int)(unsigned char)*p)) {
+                result = *p - '0';
+                p++;
+                if (!isdigit((int)(unsigned char)*p))
+                    break;
 
-		count = 3;
-		result = (result << 3) + (*p - '0');
-		p++;
-		if (!isdigit((int)(unsigned char)*p)) break;
+                count = 3;
+                result = (result << 3) + (*p - '0');
+                p++;
+                if (!isdigit((int)(unsigned char)*p))
+                    break;
 
-		count = 4;
-		result = (result << 3) + (*p - '0');
-		break;
-	    }
-	    result = *p;
-	    count = 2;
-	    break;
+                count = 4;
+                result = (result << 3) + (*p - '0');
+                break;
+            }
+            result = *p;
+            count = 2;
+            break;
     }
-    if (readPtr) *readPtr = count;
+    if (readPtr)
+        *readPtr = count;
     return result;
 }
-
 
 /*----------------------------------------------------------------------
  * tclFindElement -- locate the first (or next) element in the list.
@@ -126,8 +142,12 @@ static char tclBackslash(const char* src, int* readPtr) {
  *  sequences.
  *----------------------------------------------------------------------
  */
-static int tclFindElement(const char* list, const char** elementPtr,
-			  const char** nextPtr, int* sizePtr, int *bracePtr) {
+static int tclFindElement(const char *list,
+                          const char **elementPtr,
+                          const char **nextPtr,
+                          int *sizePtr,
+                          int *bracePtr)
+{
     register const char *p;
     int openBraces = 0;
     int inQuotes = 0;
@@ -137,117 +157,122 @@ static int tclFindElement(const char* list, const char** elementPtr,
      * Skim off leading white space and check for an opening brace or
      * quote.
      */
-    while (isspace((int)(unsigned char)*list)) list++;
+    while (isspace((int)(unsigned char)*list))
+        list++;
 
-    if (*list == '{') {			/* } */
-	openBraces = 1;
-	list++;
+    if (*list == '{') { /* } */
+        openBraces = 1;
+        list++;
     } else if (*list == '"') {
-	inQuotes = 1;
-	list++;
+        inQuotes = 1;
+        list++;
     }
-    if (bracePtr) *bracePtr = openBraces;
+    if (bracePtr)
+        *bracePtr = openBraces;
 
     /*
      * Find the end of the element (either a space or a close brace or
      * the end of the string).
      */
-    for (p=list; 1; p++) {
-	switch (*p) {
+    for (p = list; 1; p++) {
+        switch (*p) {
+            /*
+             * Open brace: don't treat specially unless the element is
+             * in braces.  In this case, keep a nesting count.
+             */
+            case '{':
+                if (openBraces)
+                    openBraces++;
+                break;
 
-	    /*
-	     * Open brace: don't treat specially unless the element is
-	     * in braces.  In this case, keep a nesting count.
-	     */
-	    case '{':
-		if (openBraces) openBraces++;
-		break;
+            /*
+             * Close brace: if element is in braces, keep nesting
+             * count and quit when the last close brace is seen.
+             */
+            case '}':
+                if (openBraces == 1) {
+                    size = p - list;
+                    p++;
+                    if (isspace((int)(unsigned char)*p) || (*p == 0))
+                        goto done;
 
-	    /*
-	     * Close brace: if element is in braces, keep nesting
-	     * count and quit when the last close brace is seen.
-	     */
-	    case '}':
-		if (openBraces == 1) {
-		    size = p - list;
-		    p++;
-		    if (isspace((int)(unsigned char)*p) || (*p == 0)) goto done;
+                    /* list element in braces followed by garbage instead of
+                     * space
+                     */
+                    return 0 /*ERROR*/;
+                } else if (openBraces) {
+                    openBraces--;
+                }
+                break;
 
-		    /* list element in braces followed by garbage instead of
-		     * space
-		     */
-		    return 0/*ERROR*/;
-		} else if (openBraces) {
-		    openBraces--;
-		}
-		break;
+            /*
+             * Backslash:  skip over everything up to the end of the
+             * backslash sequence.
+             */
+            case '\\': {
+                int siz;
 
-	    /*
-	     * Backslash:  skip over everything up to the end of the
-	     * backslash sequence.
-	     */
-	    case '\\': {
-		int siz;
+                tclBackslash(p, &siz);
+                p += siz - 1;
+                break;
+            }
 
-		tclBackslash(p, &siz);
-		p += siz - 1;
-		break;
-	    }
+            /*
+             * Space: ignore if element is in braces or quotes;  otherwise
+             * terminate element.
+             */
+            case ' ':
+            case '\f':
+            case '\n':
+            case '\r':
+            case '\t':
+            case '\v':
+                if ((openBraces == 0) && !inQuotes) {
+                    size = p - list;
+                    goto done;
+                }
+                break;
 
-	    /*
-	     * Space: ignore if element is in braces or quotes;  otherwise
-	     * terminate element.
-	     */
-	    case ' ':
-	    case '\f':
-	    case '\n':
-	    case '\r':
-	    case '\t':
-	    case '\v':
-		if ((openBraces == 0) && !inQuotes) {
-		    size = p - list;
-		    goto done;
-		}
-		break;
+            /*
+             * Double-quote:  if element is in quotes then terminate it.
+             */
+            case '"':
+                if (inQuotes) {
+                    size = p - list;
+                    p++;
+                    if (isspace((int)(unsigned char)*p) || (*p == 0))
+                        goto done;
 
-	    /*
-	     * Double-quote:  if element is in quotes then terminate it.
-	     */
-	    case '"':
-		if (inQuotes) {
-		    size = p-list;
-		    p++;
-		    if (isspace((int)(unsigned char)*p) || (*p == 0)) goto done;
+                    /* list element in quotes followed by garbage instead of
+                     * space
+                     */
+                    return 0 /*ERROR*/;
+                }
+                break;
 
-		    /* list element in quotes followed by garbage instead of
-		     * space
-		     */
-		    return 0/*ERROR*/;
-		}
-		break;
-
-	    /*
-	     * End of list:  terminate element.
-	     */
-	    case 0:
-		if (openBraces || inQuotes) {
-		    /* unmatched open brace or quote in list */
-		    return 0/*ERROR*/;
-		}
-		size = p - list;
-		goto done;
-	}
+            /*
+             * End of list:  terminate element.
+             */
+            case 0:
+                if (openBraces || inQuotes) {
+                    /* unmatched open brace or quote in list */
+                    return 0 /*ERROR*/;
+                }
+                size = p - list;
+                goto done;
+        }
     }
 
-  done:
-    while (isspace((int)(unsigned char)*p)) p++;
+done:
+    while (isspace((int)(unsigned char)*p))
+        p++;
 
     *elementPtr = list;
     *nextPtr = p;
-    if (sizePtr) *sizePtr = size;
-    return 1/*OK*/;
+    if (sizePtr)
+        *sizePtr = size;
+    return 1 /*OK*/;
 }
-
 
 /*----------------------------------------------------------------------
  * tclCopyAndCollapse -- Copy a string and eliminate any backslashes that
@@ -266,19 +291,18 @@ static void tclCopyAndCollapse(int count, const char *src, char *dst)
     int numRead;
 
     for (c = *src; count > 0; src++, c = *src, count--) {
-	if (c == '\\') {
-	    *dst = tclBackslash(src, &numRead);
-	    dst++;
-	    src += numRead-1;
-	    count -= numRead-1;
-	} else {
-	    *dst = c;
-	    dst++;
-	}
+        if (c == '\\') {
+            *dst = tclBackslash(src, &numRead);
+            dst++;
+            src += numRead - 1;
+            count -= numRead - 1;
+        } else {
+            *dst = c;
+            dst++;
+        }
     }
     *dst = 0;
 }
-
 
 /* ----------------------------------------------------------------------------
  * zSplitTclList - Splits a list up into its constituent fields.
@@ -299,10 +323,11 @@ static void tclCopyAndCollapse(int count, const char *src, char *dst)
  *	returns not NULL.
  * ----------------------------------------------------------------------------
  */
-char** zSplitTclList(const char* list, int* argcPtr) {
-    char** argv;
-    const char* l;
-    register char* p;
+char **zSplitTclList(const char *list, int *argcPtr)
+{
+    char **argv;
+    const char *l;
+    register char *p;
     int size, i, ok, elSize, brace;
     const char *element;
 
@@ -313,43 +338,44 @@ char** zSplitTclList(const char* list, int* argcPtr) {
      * the number of space characters in the list.
      */
     for (size = 1, l = list; *l != 0; l++) {
-	if (isspace((int)(unsigned char)*l)) size++;
+        if (isspace((int)(unsigned char)*l))
+            size++;
     }
-    size++;				/* Leave space for final NULL */
+    size++; /* Leave space for final NULL */
 
-    i = (size * sizeof(char*)) + (l - list) + 1;
+    i = (size * sizeof(char *)) + (l - list) + 1;
     argv = malloc(i);
 
-    for (i = 0, p = (char*) (argv+size); *list != 0;  i++) {
-	ok = tclFindElement(list, &element, &list, &elSize, &brace);
+    for (i = 0, p = (char *)(argv + size); *list != 0; i++) {
+        ok = tclFindElement(list, &element, &list, &elSize, &brace);
 
-	if (!ok) {
-	    free(argv);
-	    return NULL;
-	}
-	if (*element == 0) break;
+        if (!ok) {
+            free(argv);
+            return NULL;
+        }
+        if (*element == 0)
+            break;
 
-	if (i >= size) {
-	    free(argv);
-	    /* internal error in zSplitTclList */
-	    return NULL;
-	}
-	argv[i] = p;
-	if (brace) {
-	    strncpy(p, element, elSize);
-	    p += elSize;
-	    *p = 0;
-	    p++;
-	} else {
-	    tclCopyAndCollapse(elSize, element, p);
-	    p += elSize+1;
-	}
+        if (i >= size) {
+            free(argv);
+            /* internal error in zSplitTclList */
+            return NULL;
+        }
+        argv[i] = p;
+        if (brace) {
+            strncpy(p, element, elSize);
+            p += elSize;
+            *p = 0;
+            p++;
+        } else {
+            tclCopyAndCollapse(elSize, element, p);
+            p += elSize + 1;
+        }
     }
     argv[i] = NULL;
     *argcPtr = i;
     return argv;
 }
-
 
 /*----------------------------------------------------------------------
  * tclScanElement -- scan a tcl list string to see what needs to be done.
@@ -397,69 +423,70 @@ char** zSplitTclList(const char* list, int* argcPtr) {
  * about the element in the form of a flags word.
  *----------------------------------------------------------------------
  */
-#define DONT_USE_BRACES  1
-#define USE_BRACES       2
+#define DONT_USE_BRACES 1
+#define USE_BRACES 2
 #define BRACES_UNMATCHED 4
 
-static int tclScanElement(const char* string, int* flagPtr) {
+static int tclScanElement(const char *string, int *flagPtr)
+{
     register const char *p;
     int nestingLevel = 0;
     int flags = 0;
 
-    if (string == NULL) string = "";
+    if (string == NULL)
+        string = "";
 
     p = string;
-    if ((*p == '{') || (*p == '"') || (*p == 0)) {	/* } */
-	flags |= USE_BRACES;
+    if ((*p == '{') || (*p == '"') || (*p == 0)) { /* } */
+        flags |= USE_BRACES;
     }
-    for ( ; *p != 0; p++) {
-	switch (*p) {
-	    case '{':
-		nestingLevel++;
-		break;
-	    case '}':
-		nestingLevel--;
-		if (nestingLevel < 0) {
-		    flags |= DONT_USE_BRACES | BRACES_UNMATCHED;
-		}
-		break;
-	    case '[':
-	    case '$':
-	    case ';':
-	    case ' ':
-	    case '\f':
-	    case '\r':
-	    case '\t':
-	    case '\v':
-		flags |= USE_BRACES;
-		break;
-	    case '\n':		/* lld: dont want line breaks inside a list */
-		flags |= DONT_USE_BRACES;
-		break;
-	    case '\\':
-		if ((p[1] == 0) || (p[1] == '\n')) {
-		    flags = DONT_USE_BRACES | BRACES_UNMATCHED;
-		} else {
-		    int size;
+    for (; *p != 0; p++) {
+        switch (*p) {
+            case '{':
+                nestingLevel++;
+                break;
+            case '}':
+                nestingLevel--;
+                if (nestingLevel < 0) {
+                    flags |= DONT_USE_BRACES | BRACES_UNMATCHED;
+                }
+                break;
+            case '[':
+            case '$':
+            case ';':
+            case ' ':
+            case '\f':
+            case '\r':
+            case '\t':
+            case '\v':
+                flags |= USE_BRACES;
+                break;
+            case '\n': /* lld: dont want line breaks inside a list */
+                flags |= DONT_USE_BRACES;
+                break;
+            case '\\':
+                if ((p[1] == 0) || (p[1] == '\n')) {
+                    flags = DONT_USE_BRACES | BRACES_UNMATCHED;
+                } else {
+                    int size;
 
-		    tclBackslash(p, &size);
-		    p += size-1;
-		    flags |= USE_BRACES;
-		}
-		break;
-	}
+                    tclBackslash(p, &size);
+                    p += size - 1;
+                    flags |= USE_BRACES;
+                }
+                break;
+        }
     }
     if (nestingLevel != 0) {
-	flags = DONT_USE_BRACES | BRACES_UNMATCHED;
+        flags = DONT_USE_BRACES | BRACES_UNMATCHED;
     }
     *flagPtr = flags;
 
     /* Allow enough space to backslash every character plus leave
      * two spaces for braces.
      */
-    return 2*(p-string) + 2;
+    return 2 * (p - string) + 2;
 }
-
 
 /*----------------------------------------------------------------------
  *
@@ -480,101 +507,100 @@ static int tclScanElement(const char* string, int* flagPtr) {
  *  terminating NULL character).
  *----------------------------------------------------------------------
  */
-static int tclConvertElement(const char* src, char* dst, int flags)
+static int tclConvertElement(const char *src, char *dst, int flags)
 {
     register char *p = dst;
 
     if ((src == NULL) || (*src == 0)) {
-	p[0] = '{';
-	p[1] = '}';
-	p[2] = 0;
-	return 2;
+        p[0] = '{';
+        p[1] = '}';
+        p[2] = 0;
+        return 2;
     }
     if ((flags & USE_BRACES) && !(flags & DONT_USE_BRACES)) {
-	*p = '{';
-	p++;
-	for ( ; *src != 0; src++, p++) {
-	    *p = *src;
-	}
-	*p = '}';
-	p++;
+        *p = '{';
+        p++;
+        for (; *src != 0; src++, p++) {
+            *p = *src;
+        }
+        *p = '}';
+        p++;
     } else {
-	if (*src == '{') {		/* } */
-	    /* Can't have a leading brace unless the whole element is
-	     * enclosed in braces.  Add a backslash before the brace.
-	     * Furthermore, this may destroy the balance between open
-	     * and close braces, so set BRACES_UNMATCHED.
-	     */
-	    p[0] = '\\';
-	    p[1] = '{';			/* } */
-	    p += 2;
-	    src++;
-	    flags |= BRACES_UNMATCHED;
-	}
-	for (; *src != 0 ; src++) {
-	    switch (*src) {
-		case ']':
-		case '[':
-		case '$':
-		case ';':
-		case ' ':
-		case '\\':
-		case '"':
-		    *p = '\\';
-		    p++;
-		    break;
-		case '{':
-		case '}':
-		    /* It may not seem necessary to backslash braces, but
-		     * it is.  The reason for this is that the resulting
-		     * list element may actually be an element of a sub-list
-		     * enclosed in braces, so there may be a brace mismatch
-		     * if the braces aren't backslashed.
-		     */
-		    if (flags & BRACES_UNMATCHED) {
-			*p = '\\';
-			p++;
-		    }
-		    break;
-		case '\f':
-		    *p = '\\';
-		    p++;
-		    *p = 'f';
-		    p++;
-		    continue;
-		case '\n':
-		    *p = '\\';
-		    p++;
-		    *p = 'n';
-		    p++;
-		    continue;
-		case '\r':
-		    *p = '\\';
-		    p++;
-		    *p = 'r';
-		    p++;
-		    continue;
-		case '\t':
-		    *p = '\\';
-		    p++;
-		    *p = 't';
-		    p++;
-		    continue;
-		case '\v':
-		    *p = '\\';
-		    p++;
-		    *p = 'v';
-		    p++;
-		    continue;
-	    }
-	    *p = *src;
-	    p++;
-	}
+        if (*src == '{') { /* } */
+            /* Can't have a leading brace unless the whole element is
+             * enclosed in braces.  Add a backslash before the brace.
+             * Furthermore, this may destroy the balance between open
+             * and close braces, so set BRACES_UNMATCHED.
+             */
+            p[0] = '\\';
+            p[1] = '{'; /* } */
+            p += 2;
+            src++;
+            flags |= BRACES_UNMATCHED;
+        }
+        for (; *src != 0; src++) {
+            switch (*src) {
+                case ']':
+                case '[':
+                case '$':
+                case ';':
+                case ' ':
+                case '\\':
+                case '"':
+                    *p = '\\';
+                    p++;
+                    break;
+                case '{':
+                case '}':
+                    /* It may not seem necessary to backslash braces, but
+                     * it is.  The reason for this is that the resulting
+                     * list element may actually be an element of a sub-list
+                     * enclosed in braces, so there may be a brace mismatch
+                     * if the braces aren't backslashed.
+                     */
+                    if (flags & BRACES_UNMATCHED) {
+                        *p = '\\';
+                        p++;
+                    }
+                    break;
+                case '\f':
+                    *p = '\\';
+                    p++;
+                    *p = 'f';
+                    p++;
+                    continue;
+                case '\n':
+                    *p = '\\';
+                    p++;
+                    *p = 'n';
+                    p++;
+                    continue;
+                case '\r':
+                    *p = '\\';
+                    p++;
+                    *p = 'r';
+                    p++;
+                    continue;
+                case '\t':
+                    *p = '\\';
+                    p++;
+                    *p = 't';
+                    p++;
+                    continue;
+                case '\v':
+                    *p = '\\';
+                    p++;
+                    *p = 'v';
+                    p++;
+                    continue;
+            }
+            *p = *src;
+            p++;
+        }
     }
     *p = '\0';
-    return p-dst;
+    return p - dst;
 }
-
 
 /* ============================================================================
  * zMergeTclList - Creates a tcl list from a set of element strings.
@@ -589,36 +615,46 @@ static int tclConvertElement(const char* src, char* dst, int flags)
  *      The return value is the address of a dynamically-allocated string.
  * ============================================================================
  */
-char* zMergeTclList(int argc, const char** argv) {
-    enum  {LOCAL_SIZE = 20};
-    int   localFlags[LOCAL_SIZE];
-    int*  flagPtr;
-    int   numChars;
-    int   i;
-    char* result;
-    char* dst;
+char *zMergeTclList(int argc, const char **argv)
+{
+    enum
+    {
+        LOCAL_SIZE = 20
+    };
+    int localFlags[LOCAL_SIZE];
+    int *flagPtr;
+    int numChars;
+    int i;
+    char *result;
+    char *dst;
 
     /* Pass 1: estimate space, gather flags */
-    if (argc <= LOCAL_SIZE) flagPtr = localFlags;
-    else                    flagPtr = malloc(argc*sizeof(int));
+    if (argc <= LOCAL_SIZE)
+        flagPtr = localFlags;
+    else
+        flagPtr = malloc(argc * sizeof(int));
     numChars = 1;
 
-    for (i=0; i<argc; i++) numChars += tclScanElement(argv[i], &flagPtr[i]) + 1;
+    for (i = 0; i < argc; i++)
+        numChars += tclScanElement(argv[i], &flagPtr[i]) + 1;
 
     result = malloc(numChars);
 
     /* Pass two: copy into the result area */
     dst = result;
     for (i = 0; i < argc; i++) {
-	numChars = tclConvertElement(argv[i], dst, flagPtr[i]);
-	dst += numChars;
-	*dst = ' ';
-	dst++;
+        numChars = tclConvertElement(argv[i], dst, flagPtr[i]);
+        dst += numChars;
+        *dst = ' ';
+        dst++;
     }
-    if (dst == result) *dst = 0;
-    else                dst[-1] = 0;
+    if (dst == result)
+        *dst = 0;
+    else
+        dst[-1] = 0;
 
-    if (flagPtr != localFlags) free(flagPtr);
+    if (flagPtr != localFlags)
+        free(flagPtr);
     return result;
 }
 
@@ -626,70 +662,67 @@ char* zMergeTclList(int argc, const char** argv) {
 /*** Dnd, this is specific to rtlbrowse, the above was from gtkwave ***/
 /**********************************************************************/
 
-#define WAVE_DRAG_TAR_NAME_0         "text/plain"
-#define WAVE_DRAG_TAR_INFO_0         0
+#define WAVE_DRAG_TAR_NAME_0 "text/plain"
+#define WAVE_DRAG_TAR_INFO_0 0
 
-#define WAVE_DRAG_TAR_NAME_1         "text/uri-list"         /* not url-list */
-#define WAVE_DRAG_TAR_INFO_1         1
+#define WAVE_DRAG_TAR_NAME_1 "text/uri-list" /* not url-list */
+#define WAVE_DRAG_TAR_INFO_1 1
 
-#define WAVE_DRAG_TAR_NAME_2         "STRING"
-#define WAVE_DRAG_TAR_INFO_2         2
+#define WAVE_DRAG_TAR_NAME_2 "STRING"
+#define WAVE_DRAG_TAR_INFO_2 2
 
-static gboolean DNDDragMotionCB(
-        GtkWidget *widget, GdkDragContext *dc,
-        gint xx, gint yy, guint tt,
-        gpointer data
-)
+static gboolean DNDDragMotionCB(GtkWidget *widget,
+                                GdkDragContext *dc,
+                                gint xx,
+                                gint yy,
+                                guint tt,
+                                gpointer data)
 {
-(void)widget;
-(void)xx;
-(void)yy;
-(void)data;
-	GdkDragAction suggested_action;
+    (void)widget;
+    (void)xx;
+    (void)yy;
+    (void)data;
+    GdkDragAction suggested_action;
 
-        /* Respond with default drag action (status). First we check
-         * the dc's list of actions. If the list only contains
-         * move, copy, or link then we select just that, otherwise we
-         * return with our default suggested action.
-         * If no valid actions are listed then we respond with 0.
-         */
-        suggested_action = GDK_ACTION_MOVE;
+    /* Respond with default drag action (status). First we check
+     * the dc's list of actions. If the list only contains
+     * move, copy, or link then we select just that, otherwise we
+     * return with our default suggested action.
+     * If no valid actions are listed then we respond with 0.
+     */
+    suggested_action = GDK_ACTION_MOVE;
 
-        /* Only move? */
-        if(gdk_drag_context_get_actions(dc) == GDK_ACTION_MOVE)
-            gdk_drag_status(dc, GDK_ACTION_MOVE, tt);
-        /* Only copy? */
-        else if(gdk_drag_context_get_actions(dc) == GDK_ACTION_COPY)
-            gdk_drag_status(dc, GDK_ACTION_COPY, tt);
-        /* Only link? */
-        else if(gdk_drag_context_get_actions(dc) == GDK_ACTION_LINK)
-            gdk_drag_status(dc, GDK_ACTION_LINK, tt);
-        /* Other action, check if listed in our actions list? */
-        else if(gdk_drag_context_get_actions(dc) & suggested_action)
-            gdk_drag_status(dc, suggested_action, tt);
-        /* All else respond with 0. */
-        else
-            gdk_drag_status(dc, 0, tt);
+    /* Only move? */
+    if (gdk_drag_context_get_actions(dc) == GDK_ACTION_MOVE)
+        gdk_drag_status(dc, GDK_ACTION_MOVE, tt);
+    /* Only copy? */
+    else if (gdk_drag_context_get_actions(dc) == GDK_ACTION_COPY)
+        gdk_drag_status(dc, GDK_ACTION_COPY, tt);
+    /* Only link? */
+    else if (gdk_drag_context_get_actions(dc) == GDK_ACTION_LINK)
+        gdk_drag_status(dc, GDK_ACTION_LINK, tt);
+    /* Other action, check if listed in our actions list? */
+    else if (gdk_drag_context_get_actions(dc) & suggested_action)
+        gdk_drag_status(dc, suggested_action, tt);
+    /* All else respond with 0. */
+    else
+        gdk_drag_status(dc, 0, tt);
 
-return(FALSE);
+    return (FALSE);
 }
 
-static void DNDBeginCB(
-        GtkWidget *widget, GdkDragContext *dc, gpointer data
-)
+static void DNDBeginCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
 {
-(void)widget;
-(void)dc;
-(void)data;
+    (void)widget;
+    (void)dc;
+    (void)data;
 }
 
-static void DNDEndCB(
-        GtkWidget *widget, GdkDragContext *dc, gpointer data
-)
+static void DNDEndCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
 {
-(void)widget;
-(void)dc;
-(void)data;
+    (void)widget;
+    (void)dc;
+    (void)data;
 }
 
 /*
@@ -701,33 +734,40 @@ static void DNDEndCB(
  *	inputs may reflect those of the drop target so we need to check
  *	if this is the same structure or not.
  */
-static void DNDDataReceivedCB(
-	GtkWidget *widget, GdkDragContext *dc,
-	gint x, gint y, GtkSelectionData *selection_data,
-	guint info, guint t, gpointer data) {
-(void)x;
-(void)y;
-(void)t;
+static void DNDDataReceivedCB(GtkWidget *widget,
+                              GdkDragContext *dc,
+                              gint x,
+                              gint y,
+                              GtkSelectionData *selection_data,
+                              guint info,
+                              guint t,
+                              gpointer data)
+{
+    (void)x;
+    (void)y;
+    (void)t;
 
     gboolean same;
     GtkWidget *source_widget;
 
-    if((widget == NULL) || (data == NULL) || (dc == NULL)) return;
+    if ((widget == NULL) || (data == NULL) || (dc == NULL))
+        return;
 
     /* Important, check if we actually got data.  Sometimes errors
      * occure and selection_data will be NULL.
      */
-    if(selection_data == NULL)     return;
-    if(gtk_selection_data_get_length(selection_data) < 0) return;
+    if (selection_data == NULL)
+        return;
+    if (gtk_selection_data_get_length(selection_data) < 0)
+        return;
 
     /* Source and target widgets are the same? */
     source_widget = gtk_drag_get_source_widget(dc);
     same = (source_widget == widget) ? TRUE : FALSE;
 
-    if(same)
-	{
-	return;
-	}
+    if (same) {
+        return;
+    }
 
     /* Now check if the data format type is one that we support
      * (remember, data format type, not data type).
@@ -747,115 +787,101 @@ static void DNDDataReceivedCB(
      *	    glist = glist->next;
      *	}
      */
-    if((info == WAVE_DRAG_TAR_INFO_0) ||
-       (info == WAVE_DRAG_TAR_INFO_1) ||
-       (info == WAVE_DRAG_TAR_INFO_2))
-    {
-    int impcnt = 0;
-    ds_Tree *ft = NULL;
-    int argc = 0;
-    char**zs = zSplitTclList((const char *)gtk_selection_data_get_data(selection_data), &argc);
-    if(zs)
-	{
-        int i;
-	for(i=0;i<argc;i++)
-		{
-		if((!strncmp("net ", zs[i], 4)) || (!strncmp("netBus ", zs[i], 7)))
-			{
-			char *stemp = strdup(zs[i]);
-			char *ss = strchr(stemp, ' ') + 1;
-			char *sl = strrchr(stemp, ' ');
-			char *pnt = ss;
+    if ((info == WAVE_DRAG_TAR_INFO_0) || (info == WAVE_DRAG_TAR_INFO_1) ||
+        (info == WAVE_DRAG_TAR_INFO_2)) {
+        int impcnt = 0;
+        ds_Tree *ft = NULL;
+        int argc = 0;
+        char **zs = zSplitTclList((const char *)gtk_selection_data_get_data(selection_data), &argc);
+        if (zs) {
+            int i;
+            for (i = 0; i < argc; i++) {
+                if ((!strncmp("net ", zs[i], 4)) || (!strncmp("netBus ", zs[i], 7))) {
+                    char *stemp = strdup(zs[i]);
+                    char *ss = strchr(stemp, ' ') + 1;
+                    char *sl = strrchr(stemp, ' ');
+                    char *pnt = ss;
 
-			if(sl)
-				{
-				*sl = 0;
-				while(*pnt)
-					{
-					if(*pnt == ' ') { *pnt = '.'; }
-					pnt++;
-					}
-				}
+                    if (sl) {
+                        *sl = 0;
+                        while (*pnt) {
+                            if (*pnt == ' ') {
+                                *pnt = '.';
+                            }
+                            pnt++;
+                        }
+                    }
 
-			ft = flattened_mod_list_root;
-			while(ft)
-			        {
-			        if(!strcmp(ss, ft->fullname))
-			                {
-					if(!ft->dnd_to_import)
-						{
-				                ft->dnd_to_import = 1;
-						impcnt++;
-						}
-			                break;
-			                }
+                    ft = flattened_mod_list_root;
+                    while (ft) {
+                        if (!strcmp(ss, ft->fullname)) {
+                            if (!ft->dnd_to_import) {
+                                ft->dnd_to_import = 1;
+                                impcnt++;
+                            }
+                            break;
+                        }
 
-			        ft = ft->next_flat;
-			        }
+                        ft = ft->next_flat;
+                    }
 
-			free(stemp);
-			}
-		}
-	free(zs);
-	}
+                    free(stemp);
+                }
+            }
+            free(zs);
+        }
 
-    if(impcnt)
-	{
-	ds_Tree **fta = calloc(impcnt, sizeof(ds_Tree *));
-	int i = 0;
+        if (impcnt) {
+            ds_Tree **fta = calloc(impcnt, sizeof(ds_Tree *));
+            int i = 0;
 
-	while(ft)
-	        {
-	        if(ft->dnd_to_import)
-	                {
-			ft->dnd_to_import = 0;
-			fta[i++] = ft;
+            while (ft) {
+                if (ft->dnd_to_import) {
+                    ft->dnd_to_import = 0;
+                    fta[i++] = ft;
 
-			if(i == impcnt) break;
-	                }
+                    if (i == impcnt)
+                        break;
+                }
 
-	        ft = ft->next_flat;
-	        }
+                ft = ft->next_flat;
+            }
 
-	for(i=impcnt-1;i>=0;i--) /* reverse list so it is forwards in rtlbrowse */
-		{
-		if(fta[i]) /* scan-build */
-			{
-		        bwlogbox(fta[i]->fullname, 640 + 8*8, fta[i], 0);
-			}
-		}
+            for (i = impcnt - 1; i >= 0; i--) /* reverse list so it is forwards in rtlbrowse */
+            {
+                if (fta[i]) /* scan-build */
+                {
+                    bwlogbox(fta[i]->fullname, 640 + 8 * 8, fta[i], 0);
+                }
+            }
 
-	free(fta);
-	}
+            free(fta);
+        }
     }
 }
 
 void setup_dnd(GtkWidget *wid)
 {
-	GtkTargetEntry target_entry[3];
+    GtkTargetEntry target_entry[3];
 
-        target_entry[0].target = WAVE_DRAG_TAR_NAME_0;
-        target_entry[0].flags = 0;
-        target_entry[0].info = WAVE_DRAG_TAR_INFO_0;
-        target_entry[1].target = WAVE_DRAG_TAR_NAME_1;
-        target_entry[1].flags = 0;
-        target_entry[1].info = WAVE_DRAG_TAR_INFO_1;
-        target_entry[2].target = WAVE_DRAG_TAR_NAME_2;
-        target_entry[2].flags = 0;
-        target_entry[2].info = WAVE_DRAG_TAR_INFO_2;
+    target_entry[0].target = WAVE_DRAG_TAR_NAME_0;
+    target_entry[0].flags = 0;
+    target_entry[0].info = WAVE_DRAG_TAR_INFO_0;
+    target_entry[1].target = WAVE_DRAG_TAR_NAME_1;
+    target_entry[1].flags = 0;
+    target_entry[1].info = WAVE_DRAG_TAR_INFO_1;
+    target_entry[2].target = WAVE_DRAG_TAR_NAME_2;
+    target_entry[2].flags = 0;
+    target_entry[2].info = WAVE_DRAG_TAR_INFO_2;
 
-        gtk_drag_dest_set(
-                GTK_WIDGET(wid),
-                GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT |
-                GTK_DEST_DEFAULT_DROP,
-                target_entry,
-                sizeof(target_entry) / sizeof(GtkTargetEntry),
-                GDK_ACTION_COPY
-                );
+    gtk_drag_dest_set(GTK_WIDGET(wid),
+                      GTK_DEST_DEFAULT_MOTION | GTK_DEST_DEFAULT_HIGHLIGHT | GTK_DEST_DEFAULT_DROP,
+                      target_entry,
+                      sizeof(target_entry) / sizeof(GtkTargetEntry),
+                      GDK_ACTION_COPY);
 
-        g_signal_connect(wid, "drag_data_received", G_CALLBACK(DNDDataReceivedCB), GTK_WIDGET(wid));
-        g_signal_connect(wid, "drag_motion", G_CALLBACK(DNDDragMotionCB), GTK_WIDGET(wid));
-        g_signal_connect(wid, "drag_begin", G_CALLBACK(DNDBeginCB), GTK_WIDGET(wid));
-        g_signal_connect(wid, "drag_end", G_CALLBACK(DNDEndCB), GTK_WIDGET(wid));
+    g_signal_connect(wid, "drag_data_received", G_CALLBACK(DNDDataReceivedCB), GTK_WIDGET(wid));
+    g_signal_connect(wid, "drag_motion", G_CALLBACK(DNDDragMotionCB), GTK_WIDGET(wid));
+    g_signal_connect(wid, "drag_begin", G_CALLBACK(DNDBeginCB), GTK_WIDGET(wid));
+    g_signal_connect(wid, "drag_end", G_CALLBACK(DNDEndCB), GTK_WIDGET(wid));
 }
-

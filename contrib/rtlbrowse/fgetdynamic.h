@@ -18,4 +18,3 @@ char *fgetmalloc(FILE *handle);
 extern int fgetmalloc_len;
 
 #endif
-
