@@ -23,7 +23,7 @@ extern ds_Tree **mod_list;
 ds_Tree *load_stems_file(FILE *f);
 void rec_tree(ds_Tree *t, int *cnt);
 void rec_tree_populate(ds_Tree *t, int *cnt, ds_Tree **list_root);
-void treebox(char *title, GCallback func, GtkWidget *old_window, GtkApplication *app);
+void treebox(char *title, GtkApplication *app);
 gboolean update_ctx_when_idle(gpointer dummy);
 
 /* Side-effect: mod_cnt, mod_list */
@@ -127,7 +127,7 @@ static void activate(GApplication *app)
         }
     }
 
-    treebox("RTL Design Hierarchy", NULL, NULL, GTK_APPLICATION(app));
+    treebox("RTL Design Hierarchy", GTK_APPLICATION(app));
 
     g_timeout_add(100, update_ctx_when_idle, NULL);
 }
