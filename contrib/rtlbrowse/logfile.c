@@ -481,15 +481,20 @@ tr_search_forward(search_string, forward_noskip);
 
 /* Signal callback for the filter widget.
    This catch the return key to update the signal area.  */
-static
-gboolean find_edit_cb (GtkWidget *widget, GdkEventKey *ev, gpointer *data)
+static gboolean find_edit_cb(
+    GtkEventControllerKey* controller,
+    guint keyval,
+    guint keycode,
+    GdkModifierType* state,
+    GtkWidget*  self
+)
 {
-(void)data;
-
+    (void)keycode;
+    (void)state;
+    (void)controller;
   /* Maybe this test is too strong ?  */
-  if (ev->keyval == GDK_KEY_Return)
-    {
-      const char *t = gtk_entry_get_text (GTK_ENTRY (widget));
+    if (keyval == GDK_KEY_Return) {
+        const char *t = gtk_entry_get_text(GTK_ENTRY(self));
 
       if(search_string) { free(search_string); search_string = NULL; }
       if (t == NULL || *t == 0)
@@ -501,6 +506,7 @@ gboolean find_edit_cb (GtkWidget *widget, GdkEventKey *ev, gpointer *data)
         }
 
     search_forward(NULL, NULL);
+    return TRUE;
     }
   return FALSE;
 }
@@ -517,12 +523,9 @@ tr_search_forward(search_string, TRUE);
 static
 void press_callback (GtkWidget *widget, gpointer *data)
 {
-GdkEventKey ev;
-
-ev.keyval = GDK_KEY_Return;
 
 forward_noskip = TRUE;
-find_edit_cb (widget, &ev, data);
+find_edit_cb(NULL, GDK_KEY_Return, 0, NULL, widget);
 forward_noskip = FALSE;
 }
 
@@ -534,6 +537,7 @@ void create_toolbar(GtkWidget *table)
     GtkWidget *tb;
     GtkWidget *stock;
     GtkWidget *hbox;
+    GtkEventController *controller;
     int tb_pos = 0;
     hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
     gtk_box_set_homogeneous (GTK_BOX(hbox), FALSE);
@@ -551,7 +555,8 @@ void create_toolbar(GtkWidget *table)
     gtk_widget_show (find_entry);
 
     g_signal_connect(find_entry, "changed", G_CALLBACK(press_callback), NULL);
-    g_signal_connect(find_entry, "key_press_event", (GCallback) find_edit_cb, NULL);
+    controller = gtk_event_controller_key_new(find_entry);
+    g_signal_connect(controller, "key-pressed", G_CALLBACK(find_edit_cb), find_entry);
     gtk_box_pack_start (GTK_BOX (hbox), find_entry, FALSE, FALSE, 0);
 
     tb = gtk_toolbar_new();
