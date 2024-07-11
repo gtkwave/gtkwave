@@ -17,9 +17,9 @@
 #include "fgetdynamic.h"
 #include "splay.h"
 #include "wavelink.h"
-#include "tree_widget.h"
+#include "gwr-model.h"
 
-
+extern GtkWidget *notebook;
 void treebox(char *title, GCallback func, GtkWidget *old_window, GtkApplication *app);
 gboolean update_ctx_when_idle(gpointer dummy);
 

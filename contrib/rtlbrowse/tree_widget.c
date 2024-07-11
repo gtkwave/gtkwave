@@ -9,9 +9,8 @@
 
 #include "splay.h"
 #include "wavelink.h"
-#include "tree_widget.h"
+#include "gwr-model.h"
 #include "stem_recurse.h"
-
 void create_toolbar(GtkWidget *grid);
 void switch_page_cb(GtkNotebook* self,GtkWidget* page,guint page_num);
 
@@ -24,87 +23,6 @@ void setup_dnd(GtkWidget *wid);
 ds_Tree *selectedtree = NULL;
 static GtkWidget *window;
 
-struct _GwrModule
-{
-    GObject parent_instance;
-
-    const char *name;
-    ds_Tree* tree;
-    GListModel *children_model;
-};
-
-G_DEFINE_TYPE(GwrModule, gwr_module, G_TYPE_OBJECT);
-
-static GParamSpec *module_properties[GWR_MODULE_N_PROPS] = { NULL, };
-
-static void
-gwr_module_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec) {
-    GwrModule *self = GWR_MODULE (object);
-
-    switch(property_id) {
-        case GWR_MODULE_PROP_NAME:
-            self->name = g_value_get_string(value);
-        break;
-        case GWR_MODULE_PROP_TREE:
-            self->tree = g_value_get_pointer(value);
-        break;
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
-    }
-}
-
-static void
-gwr_module_class_init(GwrModuleClass *class)
-{
-    GObjectClass *gobject_class = G_OBJECT_CLASS (class);
-
-    gobject_class->set_property = gwr_module_set_property;
-
-    module_properties[GWR_MODULE_PROP_NAME] =
-        g_param_spec_string("name",
-                            "name",
-                            "name",
-                            NULL,
-                            G_PARAM_WRITABLE);
-    module_properties[GWR_MODULE_PROP_TREE] =
-        g_param_spec_pointer("tree",
-                             "tree",
-                             "tree",
-                             G_PARAM_WRITABLE);
-
-    g_object_class_install_properties(gobject_class, GWR_MODULE_N_PROPS, module_properties);
-}
-
-static void
-gwr_module_init(GwrModule *object)
-{
-    (void) object;
-}
-
-GListModel *
-gwr_model_get_children_model (GwrModule *self)
-{
-    g_return_val_if_fail (GWR_IS_MODULE (self), NULL);
-
-    return self->children_model;
-}
-
-void
-gwr_model_set_children_model (GwrModule *self,
-                             GListModel       *child)
-{
-    g_return_if_fail (GWR_IS_MODULE (self));
-
-    if(child == NULL) {
-        return;
-    }
-
-    if (self->children_model == child)
-        return;
-
-    self->children_model = child;
-
-}
 /*
  * mainline..
  */
@@ -161,8 +79,8 @@ gwr_model_get_child_model (gpointer item, gpointer user_data)
     (void)user_data;
     GwrModule *self = item;
 
-    if (self->children_model)
-        return g_object_ref (G_LIST_MODEL (self->children_model));
+    if (gwr_model_get_children_model(self))
+        return g_object_ref (G_LIST_MODEL (gwr_model_get_children_model(self)));
 
     return NULL;
 }
@@ -198,6 +116,7 @@ bind_listitem (GtkListItemFactory *factory,
     GtkWidget *expander, *label;
     GtkTreeListRow *row;
     GwrModule *module;
+    gchar *name;
 
     row = (gtk_list_item_get_item(item));
     module = GWR_MODULE(gtk_tree_list_row_get_item(row));
@@ -205,7 +124,9 @@ bind_listitem (GtkListItemFactory *factory,
     expander = gtk_list_item_get_child (item);
     gtk_tree_expander_set_list_row (GTK_TREE_EXPANDER (expander), row);
     label = gtk_tree_expander_get_child (GTK_TREE_EXPANDER (expander));
-    gtk_label_set_label (GTK_LABEL (label), module->name);
+    g_object_get(module, "name", &name, NULL);
+    gtk_label_set_label(GTK_LABEL(label), name);
+    g_free(name);
 
 }
 static void select_row_callback(GtkSingleSelection *sel,
@@ -226,7 +147,7 @@ static void select_row_callback(GtkSingleSelection *sel,
     if(t == NULL) {
         return;
     }
-    tree = t->tree;
+    g_object_get(t, "tree", &tree, NULL);
     if(selectedtree != tree) {
         if(tree->filename) {
             bwlogbox(tree->fullname ? tree->fullname : "*", 640 + 8 * 8, tree, 0);

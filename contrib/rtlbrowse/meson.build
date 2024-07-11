@@ -24,6 +24,7 @@ rtlbrowse_sources = [
     'stem_recurse.c',
     'tcl_helper.c',
     'tree_widget.c',
+    'gwr-model.c',
 ]
 
 rtlbrowse_dependencies = [
