@@ -17,8 +17,8 @@
 #include "jrb.h"
 #include "wavelink.h"
 #include "stem_recurse.h"
-#include "tree_widget.h"
 
+extern GtkWidget *notebook;
 #define XXX_GTK_STOCK_GO_BACK "go-previous"
 #define XXX_GTK_STOCK_GO_FORWARD "go-next"
 #define XXX_GTK_STOCK_CLOSE "window-close"
