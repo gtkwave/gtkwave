@@ -21,7 +21,6 @@ struct ds_tree_node
     struct ds_component *comp;
 
     unsigned resolved : 1;
-    unsigned dnd_to_import : 1;
 };
 
 struct ds_component

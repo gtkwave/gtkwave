@@ -87,24 +87,6 @@ static GtkTextTag *blue_tag = NULL, *fwht_tag = NULL;
 static GtkTextTag *mono_tag = NULL;
 static GtkTextTag *size_tag = NULL;
 
-// The following code is related to DND supports
-// static void *pressWindow = NULL;
-// static gint pressX = 0;
-// static gint pressY = 0;
-//
-// static void button_press_event(GtkGestureClick* self,
-// gint n_press,
-// gdouble x,
-// gdouble y,
-// gpointer user_data)
-// {
-//     pressWindow = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(self));
-//
-//     pressX = x;
-//     pressY = y;
-//
-// }
-
 void
 switch_page_cb (
   GtkNotebook* self,
@@ -526,43 +508,6 @@ void create_toolbar(GtkWidget *grid)
     gtk_box_append(GTK_BOX(hbox), matchcase_checkbutton);
 }
 
-static char *tmpnam_rtlbrowse(char *s, int *fd)
-{
-#if defined __MINGW32__
-
-    *fd = -1;
-    return (tmpnam(s));
-
-#else
-    (void)s;
-
-    char *backpath = "gtkwaveXXXXXX";
-    char *tmpspace;
-    int len = strlen(P_tmpdir);
-    int i;
-
-    unsigned char slash = '/';
-    for (i = 0; i < len; i++) {
-        if ((P_tmpdir[i] == '\\') || (P_tmpdir[i] == '/')) {
-            slash = P_tmpdir[i];
-            break;
-        }
-    }
-
-    tmpspace = malloc(len + 1 + strlen(backpath) + 1);
-    sprintf(tmpspace, "%s%c%s", P_tmpdir, slash, backpath);
-    *fd = mkstemp(tmpspace);
-    if (*fd < 0) {
-        fprintf(stderr, "tmpnam_rtlbrowse() could not create tempfile, exiting.\n");
-        perror("Why");
-        exit(255);
-    }
-
-    return (tmpspace);
-
-#endif
-}
-
 static int is_identifier(char ch)
 {
     int rc = ((ch >= 'a') && (ch <= 'z')) || ((ch >= 'A') && (ch <= 'Z')) ||
@@ -688,256 +633,6 @@ int fst_alpha_strcmpeq(const char *s1, const char *s2)
 
     return (0);
 }
-
-/* for dnd */
-#define WAVE_DRAG_TAR_NAME_0 "text/plain"
-#define WAVE_DRAG_TAR_INFO_0 0
-
-#define WAVE_DRAG_TAR_NAME_1 "text/uri-list" /* not url-list */
-#define WAVE_DRAG_TAR_INFO_1 1
-
-#define WAVE_DRAG_TAR_NAME_2 "STRING"
-#define WAVE_DRAG_TAR_INFO_2 2
-//
-// static void DNDBeginCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
-// {
-//     (void)widget;
-//     (void)dc;
-//     (void)data;
-//
-//     /* nothing */
-// }
-//
-// static void DNDEndCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
-// {
-//     (void)widget;
-//     (void)dc;
-//     (void)data;
-//
-//     /* nothing */
-// }
-//
-// static void DNDDataDeleteCB(GtkWidget *widget, GdkDragContext *dc, gpointer data)
-// {
-//     (void)widget;
-//     (void)dc;
-//     (void)data;
-//
-//     /* nothing */
-// }
-//
-// static void DNDDataRequestCB(GtkWidget *widget,
-//                              GdkDragContext *dc,
-//                              GtkSelectionData *selection_data,
-//                              guint info,
-//                              guint t,
-//                              gpointer data)
-// {
-//     (void)dc;
-//     (void)t;
-//     (void)info;
-//
-//     struct logfile_context_t *ctx = (struct logfile_context_t *)data;
-//     GtkWidget *text = (GtkWidget *)widget;
-//     gchar *sel = NULL;
-//
-//     gchar *sel2 = NULL;
-//     GtkTextIter start;
-//     GtkTextIter end;
-//     int ok = 0;
-//     char ch;
-//
-//     if ((!text) || (!ctx))
-//         return;
-//
-//     if (gtk_text_buffer_get_selection_bounds(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-//                                              &start,
-//                                              &end)) {
-//         ok = 1;
-//     } else if (((void *)gtk_widget_get_window(widget)) == pressWindow) {
-//         GtkTextView *text_view = GTK_TEXT_VIEW(text);
-//         gint buffer_x, buffer_y;
-//         gint s_trailing, e_trailing;
-//
-//         gtk_text_view_window_to_buffer_coords(text_view,
-//                                               GTK_TEXT_WINDOW_WIDGET,
-//                                               pressX,
-//                                               pressY,
-//                                               &buffer_x,
-//                                               &buffer_y);
-//
-//         gtk_text_view_get_iter_at_position(text_view, &start, &s_trailing, buffer_x, buffer_y);
-//         gtk_text_view_get_iter_at_position(text_view, &end, &e_trailing, buffer_x, buffer_y);
-//         gtk_text_iter_forward_char(&end);
-//         ok = 1;
-//     }
-//
-//     pressWindow = NULL;
-//
-//     if (ok) {
-//         if (gtk_text_iter_compare(&start, &end) < 0) {
-//             sel = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-//                                            &start,
-//                                            &end,
-//                                            FALSE);
-//
-//             if (sel && strlen(sel)) {
-//                 while (gtk_text_iter_backward_char(&start)) {
-//                     sel2 = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-//                                                     &start,
-//                                                     &end,
-//                                                     FALSE);
-//                     if (!sel2)
-//                         break;
-//                     ch = *sel2;
-//                     g_free(sel2);
-//                     if (!is_identifier(ch)) {
-//                         gtk_text_iter_forward_char(&start);
-//                         break;
-//                     }
-//                 }
-//
-//                 gtk_text_iter_backward_char(&end);
-//                 for (;;) {
-//                     gtk_text_iter_forward_char(&end);
-//                     sel2 = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-//                                                     &start,
-//                                                     &end,
-//                                                     FALSE);
-//                     if (!sel2)
-//                         break;
-//                     ch = *(sel2 + strlen(sel2) - 1);
-//                     g_free(sel2);
-//                     if (!is_identifier(ch)) {
-//                         gtk_text_iter_backward_char(&end);
-//                         break;
-//                     }
-//                 }
-//
-//                 sel2 = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-//                                                 &start,
-//                                                 &end,
-//                                                 FALSE);
-//
-//                 g_free(sel);
-//                 sel = sel2;
-//                 sel2 = NULL;
-//             }
-//
-//             /* gtk_text_buffer_delete_selection (gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)), 0,
-//              * 0); ...no need to delete because of update_ctx_when_idle() */
-//         }
-//     }
-//
-//     if (sel) {
-//         JRB strs, node;
-//         int fd;
-//         char *fname = tmpnam_rtlbrowse("rtlbrowse", &fd);
-//         FILE *handle = fopen(fname, "wb");
-//         int lx;
-//         int degate = 0;
-//         int cnt = 0;
-//
-//         if (!handle) {
-//             fprintf(stderr, "Could not open cutpaste file '%s'\n", fname);
-//             return;
-//         }
-//         fprintf(handle, "%s", sel);
-//         fclose(handle);
-//         if (fd >= 0)
-//             close(fd);
-//
-//         v_preproc_name = fname;
-//         strs = make_jrb();
-//         while ((lx = yylex())) {
-//             char *pnt = yytext;
-//
-//             if (!verilog_2005) {
-//                 if (lx == V_KW_2005)
-//                     lx = V_ID;
-//             }
-//
-//             if (lx == V_ID) {
-//                 if (!degate) {
-//                     JRB str = jrb_find_str(strs, pnt);
-//                     Jval jv;
-//                     jv.v = NULL;
-//                     if (!str) {
-//                         jrb_insert_str(strs, strdup(pnt), jv);
-//                         cnt++;
-//                     }
-//                 }
-//             } else if (lx == V_IGNORE) {
-//                 if (*pnt == '[')
-//                     degate = 1;
-//                 else if (*pnt == ']')
-//                     degate = 0;
-//             }
-//         }
-//
-//         unlink(fname);
-//         free(fname);
-//
-//         if (cnt) {
-//             int title_len = 5 + strlen(ctx->title) + 1;
-//             char *tpnt = calloc(1, title_len + 1);
-//             char *op = ctx->title;
-//             char *np = tpnt;
-//             char *mlist = NULL;
-//             int mlen = 0;
-//
-//             strcpy(np, "{net ");
-//             np += 5;
-//             while (*op) {
-//                 if (*op == '.')
-//                     *np = ' ';
-//                 else
-//                     *np = *op;
-//                 op++;
-//                 np++;
-//             }
-//             *np = ' ';
-//
-//             jrb_traverse(node, strs)
-//             {
-//                 int slen = strlen(node->key.s);
-//                 int singlen = title_len + slen + 2;
-//                 char *singlist = calloc(1, singlen + 1);
-//                 memcpy(singlist, tpnt, title_len);
-//                 strcpy(singlist + title_len, node->key.s);
-//                 strcpy(singlist + title_len + slen, "} ");
-//
-//                 if (mlist) {
-//                     mlist = realloc(mlist, mlen + singlen + 1);
-//                     strcpy(mlist + mlen, singlist);
-//                     mlen += singlen;
-//                 } else {
-//                     mlist = strdup(singlist);
-//                     mlen = singlen;
-//                 }
-//
-//                 free(singlist);
-//                 free(node->key.s);
-//             }
-//
-//             gtk_selection_data_set(selection_data,
-//                                    GDK_SELECTION_TYPE_STRING,
-//                                    8,
-//                                    (guchar *)mlist,
-//                                    mlen);
-//             free(mlist);
-//
-//             update_ctx_when_idle(text);
-//
-//             free(tpnt);
-//         } else {
-//             update_ctx_when_idle(text);
-//         }
-//
-//         jrb_free_tree(strs);
-//         g_free(sel);
-//     }
-// }
 
 void log_text(GtkWidget *text, gpointer font, char *str)
 {
@@ -1383,8 +1078,6 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     GtkWidget *tbox;
     GtkWidget *l1;
     GtkWidget *close_button;
-    GtkEventController *controller;
-    // GtkGesture *gesture;
     gint pagenum = 0;
     FILE *handle;
     struct logfile_context_t *ctx;
@@ -1438,11 +1131,6 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     gtk_widget_set_vexpand(ctext, TRUE);
     gtk_box_append(GTK_BOX(vbox), ctext);
 
-    // The following code is related to DND supports
-    // gesture = gtk_gesture_click_new ();
-    // g_signal_connect (gesture, "pressed", G_CALLBACK (button_press_event), NULL);
-    // gtk_widget_add_controller (GTK_WIDGET (text), GTK_EVENT_CONTROLLER (gesture));
-
     separator = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_box_append(GTK_BOX(vbox), separator);
 
@@ -1464,33 +1152,6 @@ void bwlogbox(char *title, int width, ds_Tree *t, int display_mode)
     // gtk_window_set_default_widget(GTK_WINDOW(hbox),button1);
 
     bwlogbox_2(ctx, window, close_button, text);
-
-    if (text) {
-        // GtkWidget *src = text;
-        // GtkTargetEntry target_entry[3];
-        // /* Set up the list of data format types that our DND
-        //  * callbacks will accept.
-        //  */
-        // target_entry[0].target = WAVE_DRAG_TAR_NAME_0;
-        // target_entry[0].flags = 0;
-        // target_entry[0].info = WAVE_DRAG_TAR_INFO_0;
-        // target_entry[1].target = WAVE_DRAG_TAR_NAME_1;
-        // target_entry[1].flags = 0;
-        // target_entry[1].info = WAVE_DRAG_TAR_INFO_1;
-        // target_entry[2].target = WAVE_DRAG_TAR_NAME_2;
-        // target_entry[2].flags = 0;
-        // target_entry[2].info = WAVE_DRAG_TAR_INFO_2;
-        //
-        // gtk_drag_source_set(src,
-        //                     GDK_BUTTON2_MASK,
-        //                     target_entry,
-        //                     sizeof(target_entry) / sizeof(GtkTargetEntry),
-        //                     GDK_ACTION_COPY | GDK_ACTION_MOVE);
-        // g_signal_connect(src, "drag_begin", G_CALLBACK(DNDBeginCB), ctx);
-        // g_signal_connect(src, "drag_end", G_CALLBACK(DNDEndCB), ctx);
-        // g_signal_connect(src, "drag_data_get", G_CALLBACK(DNDDataRequestCB), ctx);
-        // g_signal_connect(src, "drag_data_delete", G_CALLBACK(DNDDataDeleteCB), ctx);
-    }
 
     // Page must be appent to the notebook after `bwlogbox_2`
     // Since for the first page Gtk.Notebook::switch-page will be emitted
