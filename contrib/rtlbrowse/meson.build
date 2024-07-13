@@ -22,7 +22,6 @@ rtlbrowse_sources = [
     'main.c',
     'splay.c',
     'stem_recurse.c',
-    'tcl_helper.c',
     'tree_widget.c',
     'gwr-model.c',
 ]

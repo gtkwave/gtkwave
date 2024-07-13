@@ -18,7 +18,6 @@ GtkWidget *notebook = NULL;
 
 static GtkWidget* create_tree(void);
 void bwlogbox(char *title, int width, ds_Tree *t, int display_mode);
-void setup_dnd(GtkWidget *wid);
 
 ds_Tree *selectedtree = NULL;
 static GtkWidget *window;
@@ -70,7 +69,6 @@ void treebox(const char *title, GtkApplication *app)
 
     gtk_window_present(GTK_WINDOW(window));
 
-    //setup_dnd(window);
 }
 
 static GListModel *
