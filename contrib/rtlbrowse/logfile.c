@@ -260,29 +260,43 @@ static gboolean iter_forward_search_caseins(const GtkTextIter *iter,
 void tr_search_forward(char *str, gboolean noskip)
 {
     struct text_find_t *tr = selected_text_via_tab;
+    GtkTextBuffer *tb = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tr->text));
+    GtkTextMark *tm = gtk_text_buffer_get_insert(tb);
+    GtkTextIter iter;
+    gboolean found = FALSE;
+    GtkTextIter match_start;
+    GtkTextIter match_end;
 
-    if ((tr) && (tr->text)) {
-        GtkTextBuffer *tb = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tr->text));
-        GtkTextMark *tm = gtk_text_buffer_get_insert(tb);
-        GtkTextIter iter;
-        gboolean found = FALSE;
-        GtkTextIter match_start;
-        GtkTextIter match_end;
+    if (tr == NULL || tr->text == NULL) {
+        return;
+    }
 
-        gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
+    gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
 
-        tr->line = gtk_text_iter_get_line(&iter);
-        tr->offs = gtk_text_iter_get_line_offset(&iter);
+    tr->line = gtk_text_iter_get_line(&iter);
+    tr->offs = gtk_text_iter_get_line_offset(&iter);
 
-        if (!noskip)
-            if ((tr->line == tr->srch_line) && (tr->offs == tr->srch_offs)) {
-                // Ensure search starts from the next character
-                // Otherwise "Search Forward" or [ENTER] can never jumps to the
-                // next place
-                gtk_text_iter_forward_char(&iter);
-            }
+    if (!noskip)
+        if (tr->line == tr->srch_line && tr->offs == tr->srch_offs) {
+            // Ensure search starts from the next character
+            // Otherwise "Search Forward" or [ENTER] can never jumps to the
+            // next place
+            gtk_text_iter_forward_char(&iter);
+        }
 
-        if (str) {
+    if (str) {
+        if (!matchcase_active) {
+            found = iter_forward_search_caseins(&iter, str, &match_start, &match_end);
+        } else {
+            found = gtk_text_iter_forward_search(&iter,
+                                                 str,
+                                                 GTK_TEXT_SEARCH_TEXT_ONLY,
+                                                 &match_start,
+                                                 &match_end,
+                                                 NULL);
+        }
+        if (!found) {
+            gtk_text_buffer_get_start_iter(tb, &iter);
             if (!matchcase_active) {
                 found = iter_forward_search_caseins(&iter, str, &match_start, &match_end);
             } else {
@@ -293,39 +307,26 @@ void tr_search_forward(char *str, gboolean noskip)
                                                      &match_end,
                                                      NULL);
             }
-            if (!found) {
-                gtk_text_buffer_get_start_iter(tb, &iter);
-                if (!matchcase_active) {
-                    found = iter_forward_search_caseins(&iter, str, &match_start, &match_end);
-                } else {
-                    found = gtk_text_iter_forward_search(&iter,
-                                                         str,
-                                                         GTK_TEXT_SEARCH_TEXT_ONLY,
-                                                         &match_start,
-                                                         &match_end,
-                                                         NULL);
-                }
-            }
         }
+    }
 
-        if (found) {
-            gtk_text_buffer_select_range(tb, &match_start, &match_end);
-            read_insert_position(tr);
-            tr->srch_line = tr->line;
-            tr->srch_offs = tr->offs;
+    if (found) {
+        gtk_text_buffer_select_range(tb, &match_start, &match_end);
+        read_insert_position(tr);
+        tr->srch_line = tr->line;
+        tr->srch_offs = tr->offs;
 
-            /* tm = gtk_text_buffer_get_insert(tb); */ /* scan-build : never read */
+        /* tm = gtk_text_buffer_get_insert(tb); */ /* scan-build : never read */
 
-            gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(tr->text),
-                                         &match_start,
-                                         0.0,
-                                         TRUE,
-                                         0.0,
-                                         0.5);
-        } else {
-            gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
-            gtk_text_buffer_select_range(tb, &iter, &iter);
-        }
+        gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(tr->text),
+                                     &match_start,
+                                     0.0,
+                                     TRUE,
+                                     0.0,
+                                     0.5);
+    } else {
+        gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
+        gtk_text_buffer_select_range(tb, &iter, &iter);
     }
 }
 
@@ -370,24 +371,39 @@ void tr_search_backward(char *str)
 {
     struct text_find_t *tr = selected_text_via_tab;
 
-    if ((tr) && (tr->text)) {
-        GtkTextBuffer *tb = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tr->text));
-        GtkTextMark *tm = gtk_text_buffer_get_insert(tb);
-        GtkTextIter iter;
-        gboolean found = FALSE;
-        GtkTextIter match_start;
-        GtkTextIter match_end;
+    if (tr == NULL || tr->text == NULL) {
+        return;
+    }
 
-        gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
+    GtkTextBuffer *tb = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tr->text));
+    GtkTextMark *tm = gtk_text_buffer_get_insert(tb);
+    GtkTextIter iter;
+    gboolean found = FALSE;
+    GtkTextIter match_start;
+    GtkTextIter match_end;
 
-        tr->line = gtk_text_iter_get_line(&iter);
-        tr->offs = gtk_text_iter_get_line_offset(&iter);
+    gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
 
-        if ((tr->line == tr->srch_line) && (tr->offs == tr->srch_offs)) {
-            gtk_text_iter_backward_char(&iter);
+    tr->line = gtk_text_iter_get_line(&iter);
+    tr->offs = gtk_text_iter_get_line_offset(&iter);
+
+    if (tr->line == tr->srch_line && tr->offs == tr->srch_offs) {
+        gtk_text_iter_backward_char(&iter);
+    }
+
+    if (str) {
+        if (!matchcase_active) {
+            found = iter_backward_search_caseins(&iter, str, &match_start, &match_end);
+        } else {
+            found = gtk_text_iter_backward_search(&iter,
+                                                  str,
+                                                  GTK_TEXT_SEARCH_TEXT_ONLY,
+                                                  &match_start,
+                                                  &match_end,
+                                                  NULL);
         }
-
-        if (str) {
+        if (!found) {
+            gtk_text_buffer_get_end_iter(tb, &iter);
             if (!matchcase_active) {
                 found = iter_backward_search_caseins(&iter, str, &match_start, &match_end);
             } else {
@@ -398,38 +414,25 @@ void tr_search_backward(char *str)
                                                       &match_end,
                                                       NULL);
             }
-            if (!found) {
-                gtk_text_buffer_get_end_iter(tb, &iter);
-                if (!matchcase_active) {
-                    found = iter_backward_search_caseins(&iter, str, &match_start, &match_end);
-                } else {
-                    found = gtk_text_iter_backward_search(&iter,
-                                                          str,
-                                                          GTK_TEXT_SEARCH_TEXT_ONLY,
-                                                          &match_start,
-                                                          &match_end,
-                                                          NULL);
-                }
-            }
         }
+    }
 
-        if (found) {
-            gtk_text_buffer_select_range(tb, &match_start, &match_end);
-            read_insert_position(tr);
-            tr->srch_line = tr->line;
-            tr->srch_offs = tr->offs;
+    if (found) {
+        gtk_text_buffer_select_range(tb, &match_start, &match_end);
+        read_insert_position(tr);
+        tr->srch_line = tr->line;
+        tr->srch_offs = tr->offs;
 
-            /* tm = gtk_text_buffer_get_insert(tb); */ /* scan-build : never read */
-            gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(tr->text),
-                                         &match_start,
-                                         0.0,
-                                         TRUE,
-                                         0.0,
-                                         0.5);
-        } else {
-            gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
-            gtk_text_buffer_select_range(tb, &iter, &iter);
-        }
+        /* tm = gtk_text_buffer_get_insert(tb); */ /* scan-build : never read */
+        gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(tr->text),
+                                     &match_start,
+                                     0.0,
+                                     TRUE,
+                                     0.0,
+                                     0.5);
+    } else {
+        gtk_text_buffer_get_iter_at_mark(tb, &iter, tm);
+        gtk_text_buffer_select_range(tb, &iter, &iter);
     }
 }
 
@@ -1066,75 +1069,75 @@ static void button_release_event(GtkGestureClick *gesture,
     GtkTextIter start;
     GtkTextIter end;
 
-    if (gtk_text_buffer_get_selection_bounds(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+    if(!gtk_text_buffer_get_selection_bounds(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
                                              &start,
                                              &end)) {
-        if (gtk_text_iter_compare(&start, &end) < 0) {
-            sel = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-                                           &start,
-                                           &end,
-                                           FALSE);
+        return; // no text is selected
+    }
 
-            if (sel) {
-                if (strlen(sel)) {
-                    int i, len = strlen(sel);
-                    char *sel2;
-                    char ch;
+    if (gtk_text_iter_compare(&start, &end) >= 0) { // start must less than end
+        return;
+    }
 
-                    for (i = 0; i < len; i++) {
-                        if (!is_identifier(sel[i]))
-                            goto bail;
-                    }
+    sel = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+                                   &start,
+                                   &end,
+                                   FALSE);
 
-                    while (gtk_text_iter_backward_char(&start)) {
-                        sel2 =
-                            gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-                                                     &start,
-                                                     &end,
-                                                     FALSE);
-                        if (!sel2)
-                            break;
-                        ch = *sel2;
-                        g_free(sel2);
-                        if (!is_identifier(ch)) {
-                            gtk_text_iter_forward_char(&start);
-                            break;
-                        }
-                    }
+    if (sel == NULL || strlen(sel) == 0) {
+        return;
+    }
 
-                    gtk_text_iter_backward_char(&end);
-                    for (;;) {
-                        gtk_text_iter_forward_char(&end);
-                        sel2 =
-                            gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-                                                     &start,
-                                                     &end,
-                                                     FALSE);
-                        if (!sel2)
-                            break;
-                        ch = *(sel2 + strlen(sel2) - 1);
-                        g_free(sel2);
-                        if (!is_identifier(ch)) {
-                            gtk_text_iter_backward_char(&end);
-                            break;
-                        }
-                    }
+    int len = strlen(sel);
+    char *sel2;
+    char ch;
 
-                    sel2 = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-                                                    &start,
-                                                    &end,
-                                                    FALSE);
+    for (int i = 0; i < len; i++) {
+        if (!is_identifier(sel[i]))
+            goto bail;
+    }
 
-                    /* oec->set_selection(oe, lft, rgh); */
-
-                    import_doubleclick(text, sel2);
-                    g_free(sel2);
-                }
-            bail:
-                g_free(sel);
-            }
+    while (gtk_text_iter_backward_char(&start)) {
+        sel2 = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+                                        &start,
+                                        &end,
+                                        FALSE);
+        if (sel2 == NULL)
+            break;
+        ch = *sel2;
+        g_free(sel2);
+        if (!is_identifier(ch)) {
+            gtk_text_iter_forward_char(&start);
+            break;
         }
     }
+
+    gtk_text_iter_backward_char(&end);
+    for (;;) {
+        gtk_text_iter_forward_char(&end);
+        sel2 = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+                                        &start,
+                                        &end,
+                                        FALSE);
+        if (sel2 == NULL)
+            break;
+        ch = *(sel2 + strlen(sel2) - 1);
+        g_free(sel2);
+        if (!is_identifier(ch)) {
+            gtk_text_iter_backward_char(&end);
+            break;
+        }
+    }
+
+    sel2 = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+                                    &start,
+                                    &end,
+                                    FALSE);
+
+    import_doubleclick(text, sel2);
+    g_free(sel2);
+bail:
+    g_free(sel);
 }
 
 /* Create a scrolled text area that displays a "message" */
@@ -1235,21 +1238,20 @@ gboolean update_ctx_when_idle(gpointer textview_or_dummy)
 {
     struct text_find_t *t;
 
-    if ((anno_ctx) && (anno_ctx->cygwin_remote_kill)) {
+    if (anno_ctx && anno_ctx->cygwin_remote_kill) {
         anno_ctx->cygwin_remote_kill = 0;
         exit(0); /* remote kill command from gtkwave */
     }
 
     if (textview_or_dummy == NULL) {
-        if (anno_ctx) {
-            if ((anno_ctx->marker_set != old_marker_set) || (old_marker != anno_ctx->marker)) {
-                old_marker_set = anno_ctx->marker_set;
-                old_marker = anno_ctx->marker;
-            } else {
-                return (TRUE);
-            }
+        if (anno_ctx == NULL) {
+            return TRUE;
+        }
+        if (anno_ctx->marker_set != old_marker_set || old_marker != anno_ctx->marker) {
+            old_marker_set = anno_ctx->marker_set;
+            old_marker = anno_ctx->marker;
         } else {
-            return (TRUE);
+            return TRUE;
         }
     }
 
@@ -1300,7 +1302,7 @@ gboolean update_ctx_when_idle(gpointer textview_or_dummy)
         t = t->next;
     }
 
-    return (TRUE);
+    return TRUE;
 }
 
 static void destroy_callback(GtkButton* widget)
