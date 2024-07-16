@@ -869,7 +869,7 @@ static GtkWidget *create_log_text(GtkWidget **textpnt)
                                           "background",
                                           "blue",
                                           NULL);
-#ifdef MAC_INTEGRATION
+#ifdef __APPLE__
     mono_tag = gtk_text_buffer_create_tag(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
                                           "monospace",
                                           "family",
