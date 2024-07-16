@@ -2347,7 +2347,7 @@ void activate_stems_reader(char *stems_name)
             if (GLOBALS->anno_ctx) {
                 char mylist[257];
 
-                sprintf(mylist, "rtlbrowse.exe %08x", shmid);
+                sprintf(mylist, "rtlbrowse.exe --ipc %x", shmid);
 
                 memset(GLOBALS->anno_ctx, 0, sizeof(struct gtkwave_annotate_ipc_t));
 
@@ -2432,7 +2432,7 @@ void activate_stems_reader(char *stems_name)
 #ifdef MAC_INTEGRATION
                         const gchar *p = gtkosx_application_get_executable_path();
 #endif
-                        sprintf(buf, "%08x", shmid);
+                        sprintf(buf, "%x", shmid);
 
 #ifdef MAC_INTEGRATION
                         if (p && strstr(p, "Contents/")) {
@@ -2449,7 +2449,7 @@ void activate_stems_reader(char *stems_name)
                             }
                         }
 #endif
-                        execlp("rtlbrowse", "rtlbrowse", buf, NULL);
+                        execlp("rtlbrowse", "rtlbrowse", "--ipc", buf, NULL);
                         fprintf(stderr,
                                 "GTKWAVE | Could not find rtlbrowse executable, exiting!\n");
                         exit(255); /* control never gets here if successful */

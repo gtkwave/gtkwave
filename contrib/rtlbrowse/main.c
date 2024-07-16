@@ -24,22 +24,13 @@ void treebox(const char *title, GtkApplication *app);
 gboolean update_ctx_when_idle(gpointer dummy);
 
 /* Side-effect: mod_cnt, mod_list */
-static void parse_args(const gchar *arg)
+static void parse_args(const gchar *arg, const gboolean is_ipc_mode)
 {
     FILE *f;
     const char *file_name;
     ds_Tree *modules = NULL;
-    int i;
-    int len;
 
-    len = strlen(arg);
-
-    /* Determine whether arg is file name or shmid */
-    for (i = 0; i < len; i++) {
-        if (!g_ascii_isxdigit(arg[i]))
-            break;
-    }
-    if (i == len) {
+    if (is_ipc_mode) {
         unsigned int shmid;
 
         sscanf(arg, "%x", &shmid);
@@ -69,24 +60,20 @@ static void parse_args(const gchar *arg)
 #else
         anno_ctx = shmat(shmid, NULL, 0);
 #endif
-        if (anno_ctx != (void *)-1) {
-            if ((!memcmp(anno_ctx->matchword, WAVE_MATCHWORD, 4)) &&
-                (anno_ctx->aet_type > WAVE_ANNO_NONE) && (anno_ctx->aet_type < WAVE_ANNO_MAX)) {
-                file_name = anno_ctx->stems_name;
-            } else {
-                shmdt((void *)anno_ctx);
-                fprintf(stderr, "Not a valid shared memory ID from gtkwave, exiting.\n");
-                exit(255);
-            }
+        if (anno_ctx != (void *)-1 && !memcmp(anno_ctx->matchword, WAVE_MATCHWORD, 4) &&
+            anno_ctx->aet_type > WAVE_ANNO_NONE && anno_ctx->aet_type < WAVE_ANNO_MAX) {
+            file_name = anno_ctx->stems_name;
         } else {
-            file_name = arg;
+            shmdt(anno_ctx);
+            fprintf(stderr, "Not a valid shared memory ID from gtkwave, exiting.\n");
+            exit(255);
         }
     } else {
         file_name = arg;
     }
 
     f = fopen(file_name, "rb");
-    if (!f) {
+    if (f == NULL) {
         fprintf(stderr, "*** Could not open '%s'\n", file_name);
         perror("Why");
         exit(255);
@@ -131,21 +118,56 @@ static void activate(GApplication *app)
 
 static gint command_line(GApplication *app, GApplicationCommandLine *cmdline)
 {
-    GVariantDict *options;
-    gchar **cmd;
+    gint argc;
+    gchar **args, **argv;
+    GOptionContext *context;
+    GError *error = NULL;
+    gchar **cmd = NULL;
+    gboolean help = FALSE, is_ipc_mode = FALSE;
 
-    options = g_application_command_line_get_options_dict(cmdline);
-    if (!g_variant_dict_lookup(options, G_OPTION_REMAINING, "^a&s", &cmd) ||
-        g_strv_length(cmd) != 1) {
-        // g_option_context_get_help can not be used to render help text here.
-        // Since the `context` it need is constructed inside g_application_parse_command_line,
-        // using private members of GApplication. Is there another way to print the help?
-        g_print("try '%s --help' for help.\n", g_get_prgname());
-        g_application_quit(app);
+    GOptionEntry entries[] = {
+        {"help", '?', 0, G_OPTION_ARG_NONE, &help, NULL, NULL},
+        {"ipc", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &is_ipc_mode, NULL, NULL},
+        {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &cmd, NULL, NULL},
+        G_OPTION_ENTRY_NULL};
+
+    args = g_application_command_line_get_arguments(cmdline, &argc);
+    /* Keep a reference of the array, since g_option_context_parse()
+     * remove string from the array without freeing them. While
+     * g_application_command_line_get_arguments() requires those to be freed.
+     */
+    argv = g_new(gchar *, argc + 1);
+    for (int i = 0; i <= argc; i++) {
+        argv[i] = args[i];
+    }
+
+    context = g_option_context_new("<stems file name>");
+    g_option_context_set_help_enabled(context, FALSE);
+    g_option_context_add_main_entries(context, entries, NULL);
+
+    if (!g_option_context_parse(context, &argc, &args, &error)) {
+        g_application_command_line_printerr(cmdline, "%s\n", error->message);
+        g_error_free(error);
         return -1;
     }
-    parse_args(cmd[0]);
-    g_free(cmd);
+
+    if (cmd == NULL || g_strv_length(cmd) > 1) {
+        help = TRUE;
+    }
+
+    if (help) {
+        gchar *text;
+        text = g_option_context_get_help(context, FALSE, NULL);
+        g_application_command_line_print(cmdline, "%s", text);
+        g_free(text);
+        g_application_quit(app);
+        return 0;
+    }
+    parse_args(cmd[0], is_ipc_mode);
+
+    g_strfreev(cmd);
+    g_strfreev(argv);
+    g_option_context_free(context);
 
     activate(app);
     return 0;
@@ -157,9 +179,6 @@ int main(int argc, char **argv)
 
     GtkApplication *app;
     int status;
-    const GOptionEntry entries[] = {
-        {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, NULL, "", NULL},
-        G_OPTION_ENTRY_NULL};
 
     if (!gtk_init_check()) {
         printf("Could not initialize GTK!  Is DISPLAY env var/xhost set?\n\n");
@@ -168,15 +187,6 @@ int main(int argc, char **argv)
 
     app = gtk_application_new("io.github.gtkwave.RTLBrowse",
                               G_APPLICATION_HANDLES_COMMAND_LINE | G_APPLICATION_NON_UNIQUE);
-
-    g_application_add_main_option_entries(G_APPLICATION(app), entries);
-    g_application_set_option_context_parameter_string(G_APPLICATION(app), "stems_filename");
-    g_application_set_option_context_summary(
-        G_APPLICATION(app),
-        "RTLBrowse is used to view and navigate through RTL source code, often called as\n"
-        "a helper application by GTKWave.\n"
-        "If GTKWave is started with the --stems option, the stems file is parsed and\n"
-        "RTLBrowse is launched.");
 
     g_signal_connect(app, "command-line", G_CALLBACK(command_line), NULL);
     g_signal_connect(G_APPLICATION(app), "activate", G_CALLBACK(activate), app);
