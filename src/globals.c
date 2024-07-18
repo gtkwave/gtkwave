@@ -1420,6 +1420,8 @@ void reload_into_new_context_2(void)
         }
     }
 
+    time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
     /* Setup timings we probably need to redraw here */
     GLOBALS->tims.last = gw_time_range_get_end(time_range);
     GLOBALS->tims.first = gw_time_range_get_start(time_range);

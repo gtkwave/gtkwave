@@ -154,6 +154,10 @@ static void gw_time_display_update(GwTimeDisplay *self)
         cursor = gw_project_get_cursor(self->project);
     }
 
+    if (GLOBALS->dump_file == NULL) {
+        return;
+    }
+
     GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
     GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
