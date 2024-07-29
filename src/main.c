@@ -118,8 +118,12 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->save_on_exit = g_old->save_on_exit;
     GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
-    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
-    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    GwTime global_time_offset = 0;
+    GwTimeDimension time_dimension = GW_TIME_DIMENSION_BASE;
+    if (GLOBALS->dump_file != NULL) {
+        global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+        time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    }
 
     reformat_time(timestr, GLOBALS->tims.first + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
@@ -278,8 +282,8 @@ static void print_help(char *nam)
         "  -d, --defaultskip          if missing .rcfile, do not use useful defaults\n" DUAL_GETOPT
         "  -l, --logfile=FILE         specify simulation logfile name for time values\n"
         "  -s, --start=TIME           specify start time for FST skip\n"
-        "  -e, --end=TIME             specify end time for for FST skip\n" STEMS_GETOPT
-            WAVE_GETOPT_CPUS
+        "  -e, --end=TIME             specify end time for for FST "
+        "skip\n" STEMS_GETOPT WAVE_GETOPT_CPUS
         "  -N, --nowm                 disable window manager for most windows\n"
         "  -M, --nomenus              do not render menubar (for making applets)\n"
         "  -S, --script=FILE          specify Tcl command script file for "
@@ -1440,26 +1444,29 @@ loader_check_head:
     // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
     //     GLOBALS->named_markers[i] = -1; /* reset all named markers */
 
-    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+    if (GLOBALS->dump_file != NULL) {
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+        GLOBALS->tims.first = gw_time_range_get_start(time_range);
+        GLOBALS->tims.last = gw_time_range_get_end(time_range);
 
-    GLOBALS->tims.first = gw_time_range_get_start(time_range);
-    GLOBALS->tims.last = gw_time_range_get_end(time_range);
-    GLOBALS->tims.start = GLOBALS->tims.first;
-    GLOBALS->tims.laststart = GLOBALS->tims.first;
-    GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
-    GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
-    gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
-    gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
-    gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
+        GLOBALS->tims.start = GLOBALS->tims.first;
+        GLOBALS->tims.laststart = GLOBALS->tims.first;
+        GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
+        GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
+        gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
+        gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
+        gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
 
-    if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
-        fprintf(stderr,
-                "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n",
-                DBL_MANT_DIG);
-        if (!GLOBALS->dbl_mant_dig_override) {
+        if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
             fprintf(stderr,
+                    "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n",
+                    DBL_MANT_DIG);
+            if (!GLOBALS->dbl_mant_dig_override) {
+                fprintf(
+                    stderr,
                     "GTKWAVE | Exiting, use dbl_mant_dig_override rc var set to 1 to disable.\n");
-            exit(255);
+                exit(255);
+            }
         }
     }
 
@@ -2358,16 +2365,7 @@ void activate_stems_reader(char *stems_name)
 
                 update_time_box();
 
-                rc = CreateProcess(NULL,
-                                   mylist,
-                                   NULL,
-                                   NULL,
-                                   FALSE,
-                                   0,
-                                   NULL,
-                                   NULL,
-                                   &si,
-                                   &pi);
+                rc = CreateProcess(NULL, mylist, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 
                 if (!rc) {
                     UnmapViewOfFile(GLOBALS->anno_ctx);
