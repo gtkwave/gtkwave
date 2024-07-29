@@ -237,6 +237,10 @@ void reformat_time(char *buf, GwTime val, GwTimeDimension dim)
 
 void update_time_box(void)
 {
+    if (GLOBALS->project == NULL || GLOBALS->dump_file == NULL) {
+        return;
+    }
+
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
     GwTime time_scale = gw_dump_file_get_time_scale(GLOBALS->dump_file);
     GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);

@@ -607,6 +607,18 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
     set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
     GwWaveformColors *colors = gw_color_theme_get_waveform_colors(GLOBALS->color_theme);
+
+    if (GLOBALS->project == NULL || GLOBALS->dump_file == NULL) {
+        cairo_set_source_rgba(cr,
+                            colors->background.r,
+                            colors->background.g,
+                            colors->background.b,
+                            colors->background.a);
+        cairo_paint(cr);
+
+        return FALSE;
+    }
+
     if (GLOBALS->black_and_white) {
         colors = gw_waveform_colors_new_black_and_white();
     }
