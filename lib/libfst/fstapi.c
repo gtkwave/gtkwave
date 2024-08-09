@@ -130,6 +130,7 @@ void **JenkinsIns(void *base_i, const unsigned char *mem, uint32_t length, uint3
 #define FST_HDR_TIMEZERO_SIZE           (8)
 #define FST_GZIO_LEN                    (32768)
 #define FST_HDR_FOURPACK_DUO_SIZE       (4*1024*1024)
+#define FST_ZWRAPPER_HDR_SIZE           (1+8+8)
 
 #if defined(__APPLE__) && defined(__MACH__)
 #define FST_MACOSX
@@ -4633,9 +4634,14 @@ if(sectype == FST_BL_ZWRAPPER)
                 }
 #endif
 
-        fstReaderFseeko(xc, xc->f, 1+8+8, SEEK_SET);
+        fstReaderFseeko(xc, xc->f, FST_ZWRAPPER_HDR_SIZE, SEEK_SET);
 #ifndef __MINGW32__
         fflush(xc->f);
+#else
+	/* Windows UCRT runtime library reads one byte ahead in the file
+	   even with buffering disabled and does not synchronise the
+	   file position after fseek. */
+	_lseek(fileno(xc->f), FST_ZWRAPPER_HDR_SIZE, SEEK_SET);
 #endif
 
         zfd = dup(fileno(xc->f));
