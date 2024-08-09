@@ -6185,7 +6185,9 @@ struct fstReaderContext *xc = (struct fstReaderContext *)ctx;
 fst_off_t blkpos = 0, prev_blkpos;
 uint64_t beg_tim, end_tim, beg_tim2, end_tim2;
 int sectype;
+#ifdef FST_DEBUG
 unsigned int secnum = 0;
+#endif
 uint64_t seclen;
 uint64_t tsec_uclen = 0, tsec_clen = 0;
 uint64_t tsec_nitems;
@@ -6277,7 +6279,9 @@ for(;;)
                 }
 
         blkpos += seclen;
+#ifdef FST_DEBUG
         secnum++;
+#endif
         }
 
 xc->rvat_beg_tim = beg_tim;
