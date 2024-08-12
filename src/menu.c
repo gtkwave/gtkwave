@@ -2334,7 +2334,14 @@ void menu_new_viewer_cleanup(GtkWidget *widget, gpointer data)
             return;
         }
 
-#ifdef MAC_INTEGRATION
+// Using `open` instead of calling the GTKWave binary directly seems to only be
+// necessary if GTKWave is installed as an `.app` and breaks if GTKWave is
+// installed as a regular binary.
+//
+// See https://github.com/gtkwave/gtkwave/issues/378
+//
+// #ifdef MAC_INTEGRATION
+#if 0
         /* from : @pfx = split(' ', "open -n -W -a gtkwave --args --chdir dummy"); */
         if (GLOBALS->optimize_vcd) {
             execlp("open",
