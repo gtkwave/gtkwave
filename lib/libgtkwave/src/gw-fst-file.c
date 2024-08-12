@@ -262,7 +262,7 @@ static void fst_callback2(void *user_callback_data_pointer,
 }
 
 static void fst_callback(void *user_callback_data_pointer,
-                         guint64 tim,
+                         uint64_t tim,
                          fstHandle txidx,
                          const unsigned char *value)
 {
