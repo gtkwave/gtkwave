@@ -32,6 +32,12 @@ brew install desktop-file-utils shared-mime-info       \
 
 
 ```sh
-meson setup build
-meson compile -C build
+git clone "https://github.com/gtkwave/gtkwave.git"
+cd gtkwave
+meson setup build && cd build && meson install
+```
+
+### Syntax to run vcd files:
+```
+gtkwave [your .vcd file path]
 ```
