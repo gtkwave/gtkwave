@@ -1830,5 +1830,6 @@
 		Add escape handling state machine for vars in FST loader.
 		Remove escape check on coalesce	in FST loader.
 		CreateFileMapping() warning fix for win32 compiles.
-3.3.121	09aug24	Integrate gtkwave/pull/376 and gtkwave/pull/377 updates
+3.3.121	07sep24	Integrate gtkwave/pull/376 and gtkwave/pull/377 updates
 		to the FST loader for windows and warnings fixes.
+		Clang warning fixes in fstapi.c	on dynamic arrays.
