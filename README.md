@@ -37,7 +37,8 @@ cd gtkwave
 meson setup build && cd build && meson install
 ```
 
-### Syntax to run vcd files:
+### Running GTKWave
+```sh
+gtkwave [path to a .vcd, .fst, .ghw dump file or a .gtkw savefile]
 ```
-gtkwave [your .vcd file path]
-```
+For more information about available command line parameters refer to the built in-help (`gtkwave --help`) or the (GTKWave docs)[https://gtkwave.github.io/gtkwave/man/gtkwave.1.html].
