@@ -7361,7 +7361,7 @@ $as_echo "yes" >&6; }
 fi
         GTK_VER=`$PKG_CONFIG gtk+-3.0 --modversion`
 
-        _gdk_tgt=`$PKG_CONFIG --variable=target gdk-3.0`
+        _gdk_tgt=`$PKG_CONFIG --variable=targets gdk-3.0`
         if test "x$_gdk_tgt" = xquartz; then
 
 pkg_failed=no

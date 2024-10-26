@@ -143,6 +143,7 @@ if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
 	use_embedded = 0;
 	}
 #endif
+#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 	{
 	xsocket[0] = gtk_socket_new ();
 	xsocket[1] = gtk_socket_new ();
@@ -152,6 +153,7 @@ if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
 
 if(!twinwayland)
 g_signal_connect(XXX_GTK_OBJECT(xsocket[0]), "plug-removed", G_CALLBACK(plug_removed), NULL);
+#endif
 
 #if GTK_CHECK_VERSION(3,0,0)
 main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -171,12 +173,14 @@ vpan = gtk_vpaned_new ();
 gtk_widget_show (vpan);
 gtk_box_pack_start (GTK_BOX (main_vbox), vpan, TRUE, TRUE, 1);
 
+#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 if(!twinwayland)
 	{
 	gtk_paned_pack1 (GTK_PANED (vpan), xsocket[0], TRUE, FALSE);
 	g_signal_connect(XXX_GTK_OBJECT(xsocket[1]), "plug-removed", G_CALLBACK(plug_removed), NULL);
 	gtk_paned_pack2 (GTK_PANED (vpan), xsocket[1], TRUE, FALSE);
 	}
+#endif
 #endif
 
 #ifdef __MINGW32__
@@ -208,7 +212,7 @@ if(hMapFile != NULL)
 				memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 
 				sprintf(buf, "0+%08X", shmid);
-#ifdef MINGW_USE_XID
+#if defined(MINGW_USE_XID) && defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
 #else
 				sprintf(buf2, "%x", 0);
@@ -279,7 +283,7 @@ if(hMapFile != NULL)
 				memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 
 				sprintf(buf, "1+%08X", shmid);
-#ifdef MINGW_USE_XID
+#if defined(MINGW_USE_XID) && defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
 #else
 				sprintf(buf2, "%x", 0);
@@ -429,10 +433,12 @@ if(shmid >=0)
 				sprintf(buf, "0+%08X", shmid);
 				if(use_embedded)
 					{
+#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 #ifdef MAC_INTEGRATION
 					sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
 #else
 					sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[0])));
+#endif
 #endif
 					}
 					else
@@ -467,10 +473,12 @@ if(shmid >=0)
 			sprintf(buf, "1+%08X", shmid);
 			if(use_embedded)
 				{
+#if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
 #ifdef MAC_INTEGRATION
 				sprintf(buf2, "%x", gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
 #else
 				sprintf(buf2, "%lx", (long)gtk_socket_get_id (GTK_SOCKET(xsocket[1])));
+#endif
 #endif
 				}
 				else
