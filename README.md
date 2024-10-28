@@ -32,6 +32,13 @@ brew install desktop-file-utils shared-mime-info       \
 
 
 ```sh
-meson setup build
-meson compile -C build
+git clone "https://github.com/gtkwave/gtkwave.git"
+cd gtkwave
+meson setup build && cd build && meson install
 ```
+
+### Running GTKWave
+```sh
+gtkwave [path to a .vcd, .fst, .ghw dump file or a .gtkw savefile]
+```
+For more information about available command line parameters refer to the built in-help (`gtkwave --help`) or the [`gtkwave` man page](https://gtkwave.github.io/gtkwave/man/gtkwave.1.html).
