@@ -34,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.122" date="2024-12-31">
+      <description>
+        <p>
+	Changes in 3.3.122:
+        </p>
+	<ul>
+            <li>Buffer warning fix in fstVcdIDForFwrite.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.121" date="2024-08-09">
       <description>
         <p>
