@@ -43,7 +43,7 @@ for all notable changes.
     using Homebrew:
 
     ```shell
-    brew install desktop-file-utils shared-mime-info gobject-introspection gtk-mac-integration meson ninja pkg-config gtk+3
+    brew install desktop-file-utils shared-mime-info gobject-introspection gtk-mac-integration meson ninja pkg-config gtk+3 gtk4
     ```
 
 ### Compiling and Installing

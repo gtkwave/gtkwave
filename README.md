@@ -25,7 +25,7 @@ macOS:
 ```sh
 brew install desktop-file-utils shared-mime-info       \
              gobject-introspection gtk-mac-integration \
-             meson ninja pkg-config gtk+3
+             meson ninja pkg-config gtk+3 gtk4
 ```
 
 ### Building GTKWave
