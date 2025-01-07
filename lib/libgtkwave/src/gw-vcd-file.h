@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gtkwave.h>
+#include "gtkwave.h"
 
 G_BEGIN_DECLS
 
