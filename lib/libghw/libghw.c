@@ -259,7 +259,6 @@ ghw_read_sleb128 (struct ghw_handler *h, int32_t * res)
 int
 ghw_read_lsleb128 (struct ghw_handler *h, int64_t * res)
 {
-  static const int64_t r_mask = -1;
   int64_t r = 0;
   unsigned int off = 0;
 
@@ -273,7 +272,7 @@ ghw_read_lsleb128 (struct ghw_handler *h, int64_t * res)
       if ((v & 0x80) == 0)
 	{
 	  if ((v & 0x40) && off < 64)
-	    r |= r_mask << off;
+	    r |= ~((1 << off)-1);
 	  break;
 	}
     }
