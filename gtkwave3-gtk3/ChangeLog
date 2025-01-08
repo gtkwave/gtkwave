@@ -1907,4 +1907,5 @@
                 to the FST loader for windows and warnings fixes.
 		Clang warning fixes in fstapi.c on dynamic arrays.
 		Updates for MACOS compiles on gtk3.
-3.3.122 31dec24 Buffer warning fix in fstVcdIDForFwrite.
+3.3.122 08jan25 Buffer warning fix in fstVcdIDForFwrite.
+		Warning fixes in vzt_read.c and fstapi.c.

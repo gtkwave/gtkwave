@@ -182,12 +182,12 @@ return((m1<<24)|(m2<<16)|(m3<<8)|m4);
 }
 
 
-static vztint32_t vzt_rd_get_v32(unsigned char **mmx)
+static vztint32_t vzt_rd_get_v32(char **mmx)
 {
-unsigned char *c;
-unsigned char *beg;
+char *c;
+char *beg;
 vztint32_t val;
-unsigned char **mm = mmx;
+char **mm = mmx;
 
 c = *mm;
 beg = c;
@@ -213,12 +213,12 @@ if(!(*c & 0x80))
 return(val);
 }
 
-static vztint64_t vzt_rd_get_v64(unsigned char **mmx)
+static vztint64_t vzt_rd_get_v64(char **mmx)
 {
-unsigned char *c;
-unsigned char *beg;
+char *c;
+char *beg;
 vztint64_t val;
-unsigned char **mm = mmx;
+char **mm = mmx;
 
 c = *mm;
 beg = c;
@@ -325,7 +325,7 @@ vztint64_t *times=NULL;
 vztint32_t *change_dict=NULL;
 vztint32_t *val_dict=NULL;
 unsigned int num_time_ticks, num_sections, num_dict_entries;
-unsigned char *pnt = b->mem;
+char *pnt = b->mem;
 vztint32_t i, j, m, num_dict_words;
 /* vztint32_t *block_end = (vztint32_t *)(pnt + b->uncompressed_siz); */
 vztint32_t *val_tmp;
