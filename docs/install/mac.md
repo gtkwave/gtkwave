@@ -87,6 +87,11 @@ You can find the application in the `macos/build/Release` directory.
 
 Just copy the application to your Applications folder and run it from there.
 
+::: {note}
+This local build of macOS Application has disabled some security features (such as "sandbox") to make it easier to run on macOS.
+These builds aren't meant for distribution.
+:::
+
 ## Troubleshooting
 
 If you encounter any errors during the installation process, please refer to the [GitHub issue](https://github.com/gtkwave/gtkwave/issues) for additional help and troubleshooting tips.
