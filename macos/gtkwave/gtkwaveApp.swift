@@ -4,6 +4,7 @@
 //
 //  Created by Emin017 on 2025/1/9.
 //
+//  Ref: https://github.com/kattrali/rust-mac-app-examples/blob/master/3-packaging-a-mac-app/app/main.swift
 
 import Cocoa
 
