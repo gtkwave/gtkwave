@@ -42,10 +42,15 @@ jobs:
       - name: Setup xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 15.3.0
+          xcode-version: 16.2.0
       - name: Setup meson build
         run: meson setup build
       - name: Compile GTKWave
         run: meson compile -C build
       - name: Run tests
         run: meson test -C build -v
+      - name: Build macOS application
+        run: |
+          export NSUnbufferedIO=YES
+          export IDESkipMacroValidation=YES
+          cd macos && xcodebuild
