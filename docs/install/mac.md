@@ -72,6 +72,24 @@ GTKWave is now installed on your macOS. You can start it in your terminal, run:
 gtkwave
 ```
 
+### Building macOS Application
+Ensure you have installed the dependencies as described [above](#installing-dependencies).
+Then run the following command to build the macOS application:
+```shell
+meson setup build \
+    -Dbuild_macos_app=enabled \
+    -Dset_rpath=enabled \
+    -Dintrospection=false \
+    --prefix=/Applications/GTKWave.app \
+    --datadir=/Applications/GTKWave.app/Contents/Resources/share \
+    --bindir=Contents/Resources/bin
+```
+You can find the application in your Applications folder:
+
+<div align="center">
+<img src="../_static/images/mac-app.png" width="200">
+</div>
+
 ## Troubleshooting
 
 If you encounter any errors during the installation process, please refer to the [GitHub issue](https://github.com/gtkwave/gtkwave/issues) for additional help and troubleshooting tips.
