@@ -21,7 +21,8 @@ cc = meson.get_compiler('c')
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
 link_args = []
 
-datadir_gtkwave = get_option('datadir') / 'gtkwave3'
+datadir_path = get_option('datadir')
+datadir_gtkwave = datadir_path / 'gtkwave3'
 
 # Required dependency versions
 
@@ -205,7 +206,18 @@ endforeach
 # Set excutable rpaths for non standard prefixes
 
 if get_option('set_rpath').enabled() or (get_option('set_rpath').auto() and get_option('prefix') != '/usr')
-    install_rpath = get_option('prefix') / get_option('libdir')
+    if host_machine.system() == 'darwin' and get_option('build_macos_app').enabled()
+            app_path = get_option('prefix')
+            app_contents = app_path / 'Contents'
+
+            install_rpath = app_path
+            install_libs_rpath = app_contents / 'Resources' / 'lib'
+            install_headers_rpath = install_libs_rpath
+    else
+        install_rpath = get_option('prefix') / get_option('libdir')
+        install_libs_rpath = install_rpath
+        install_headers_rpath = install_rpath
+    endif
 else
     install_rpath = ''
 endif
@@ -231,3 +243,44 @@ gnome.post_install(
     update_desktop_database: true,
     gtk_update_icon_cache: true,
 )
+
+if host_machine.system() == 'darwin' and get_option('build_macos_app').enabled()
+    app_macos = app_contents / 'MacOS'
+    app_resources = app_contents / 'Resources'
+
+    install_data(
+        'macos/launcher.sh',
+        rename: 'gtkwave',
+        install_dir: app_macos,
+        install_mode: 'rwxr-xr-x'
+    )
+
+    install_data(
+        'macos/Info.plist',
+        install_dir: app_contents,
+    )
+
+    install_data(
+        'macos/AppIcon.icns',
+        install_dir: app_resources
+    )
+
+    install_data(
+        'macos/gtkwave.entitlements',
+        install_dir: app_contents
+    )
+
+    install_subdir(
+        'man',
+        install_dir: app_resources,
+    )
+
+    install_subdir(
+        'doc',
+        install_dir: app_resources,
+    )
+    install_subdir(
+        'examples',
+        install_dir: app_resources,
+    )
+endif

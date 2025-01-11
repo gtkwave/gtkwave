@@ -14,6 +14,8 @@ liblxt = static_library(
     sources: liblxt_sources,
     dependencies: liblxt_dependencies,
     include_directories: [config_inc, '..'],
+    install: true,
+    install_dir: install_libs_rpath,
 )
 
 liblxt_dep = declare_dependency(
