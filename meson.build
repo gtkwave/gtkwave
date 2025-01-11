@@ -207,12 +207,12 @@ endforeach
 
 if get_option('set_rpath').enabled() or (get_option('set_rpath').auto() and get_option('prefix') != '/usr')
     if host_machine.system() == 'darwin' and get_option('build_macos_app').enabled()
-            app_path = get_option('prefix')
-            app_contents = app_path / 'Contents'
+        app_path = get_option('prefix')
+        app_contents = app_path / 'Contents'
 
-            install_rpath = app_path
-            install_libs_rpath = app_contents / 'Resources' / 'lib'
-            install_headers_rpath = install_libs_rpath
+        install_rpath = app_path
+        install_libs_rpath = app_contents / 'Resources' / 'lib'
+        install_headers_rpath = install_libs_rpath
     else
         install_rpath = get_option('prefix') / get_option('libdir')
         install_libs_rpath = install_rpath
