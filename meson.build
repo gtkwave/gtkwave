@@ -269,18 +269,4 @@ if host_machine.system() == 'darwin' and get_option('build_macos_app').enabled()
         'macos/gtkwave.entitlements',
         install_dir: app_contents
     )
-
-    install_subdir(
-        'man',
-        install_dir: app_resources,
-    )
-
-    install_subdir(
-        'doc',
-        install_dir: app_resources,
-    )
-    install_subdir(
-        'examples',
-        install_dir: app_resources,
-    )
 endif
