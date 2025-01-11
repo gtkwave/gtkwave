@@ -49,3 +49,16 @@ jobs:
         run: meson compile -C build
       - name: Run tests
         run: meson test -C build -v
+      - name: Build and install GTKWave.app
+        run: |
+          rm -rf build
+
+          meson setup build \
+          -Dbuild_macos_app=enabled \
+          -Dset_rpath=enabled \
+          -Dintrospection=false \
+          --prefix=/Applications/GTKWave.app \
+          --datadir=/Applications/GTKWave.app/Contents/Resources/share \
+          --bindir=Contents/Resources/bin
+
+          meson install -C build
