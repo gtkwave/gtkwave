@@ -67,3 +67,10 @@ option(
     value: 'auto',
     description: 'Set rpath for executables (automatically enabled if the prefix is not /usr)',
 )
+
+option(
+    'build_macos_app',
+    type: 'feature',
+    value: 'disabled',
+    description: 'Build MacOS application bundle',
+)

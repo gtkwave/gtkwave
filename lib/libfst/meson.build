@@ -16,6 +16,8 @@ libfst = static_library(
     sources: libfst_sources,
     dependencies: libfst_dependencies,
     include_directories: config_inc,
+    install: true,
+    install_dir: install_libs_rpath,
 )
 
 libfst_dep = declare_dependency(
