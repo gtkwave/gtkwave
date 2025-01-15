@@ -406,13 +406,17 @@ static int (* tcl_createThread)(Tcl_ThreadId *, Tcl_ThreadCreateProc,
 #endif
 
 static Tcl_Interp * (* tcl_createInterp)(void) = NULL;
+#if TCL_MAJOR_VERSION < 9
 static void (* tcl_findExecutable)(const char *) = NULL;
+#else
+static const char * (* tcl_findExecutable)(const char *) = NULL;
+#endif
 /*
  * We want the Tcl_InitStubs func static to ourselves - before Tcl
  * is loaded dynamically and possibly changes it.
  */
 #ifdef USE_TCL_STUBS
-static CONST char *(* tcl_initStubs)(Tcl_Interp *, CONST char *, int)
+static const char *(* tcl_initStubs)(Tcl_Interp *, const char *, int)
     = Tcl_InitStubs;
 #endif
 
@@ -472,14 +476,14 @@ int NpInitInterp(Tcl_Interp *interp, int install_tk) {
    * Tk_InitStubs.
    */
   if (TCL_OK != Tcl_Init(interp)) {
-    CONST char *msg = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY);
+    const char *msg = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY);
     fprintf(stderr, "GTKWAVE | Tcl_Init error: %s\n", msg) ;
     exit(EXIT_FAILURE);
   }
   if (install_tk) {
     NpLog("Tcl_PkgRequire(\"Tk\", \"%s\", 0)\n", TK_VERSION);
     if (1 && Tcl_PkgRequire(interp, "Tk", TK_VERSION, 0) == NULL) {
-      CONST char *msg = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY);
+      const char *msg = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY);
       NpPlatformMsg(msg, "NpInitInterp Tcl_PkgRequire(Tk)");
       NpPlatformMsg("Failed to create initialize Tk", "NpInitInterp");
       return TCL_ERROR;
@@ -542,8 +546,13 @@ Tcl_Interp *NpCreateMainInterp(char *me, int install_tk) {
     DLSYM(tclHandle, "Tcl_CreateThread",
 	  int (*)(Tcl_ThreadId *, Tcl_ThreadCreateProc, ClientData, int, int),
 	  tcl_createThread);
+#if TCL_MAJOR_VERSION < 9
     DLSYM(tclHandle, "Tcl_FindExecutable", void (*)(const char *),
 	  tcl_findExecutable);
+#else
+    DLSYM(tclHandle, "Tcl_FindExecutable", const char * (*)(const char *),
+	  tcl_findExecutable);
+#endif
 
   } else {
     tclHandleCnt++;
