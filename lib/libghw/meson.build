@@ -10,8 +10,6 @@ libghw = static_library(
     sources: libghw_sources,
     dependencies: libghw_dependencies,
     include_directories: config_inc,
-    install: true,
-    install_dir: install_libs_rpath,
 )
 
 libghw_dep = declare_dependency(
