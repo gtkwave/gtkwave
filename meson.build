@@ -21,8 +21,7 @@ cc = meson.get_compiler('c')
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
 link_args = []
 
-datadir_path = get_option('datadir')
-datadir_gtkwave = datadir_path / 'gtkwave3'
+datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 
 # Required dependency versions
 
