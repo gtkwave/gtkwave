@@ -49,3 +49,5 @@ jobs:
         run: meson compile -C build
       - name: Run tests
         run: meson test -C build -v
+      - name: Build and install GTKWave.app
+        run: sh ./macos/build.sh

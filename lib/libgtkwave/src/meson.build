@@ -134,7 +134,10 @@ libgtkwave = shared_library(
     install: true,
 )
 
-install_headers(libgtkwave_public_headers, subdir: 'libgtkwave')
+install_headers(
+    libgtkwave_public_headers, install_dir: install_headers_rpath / 'libgtkwave',
+)
+
 
 pkgconfig.generate(
     libgtkwave,
