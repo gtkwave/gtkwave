@@ -1,3 +1,7 @@
+if not get_option('introspection')
+    error('building the libgtkwave docs requires gobject-introspection')
+endif
+
 gi_docgen = find_program('gi-docgen')
 
 libgtkwave_toml_conf = configuration_data()

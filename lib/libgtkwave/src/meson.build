@@ -156,7 +156,7 @@ if get_option('introspection')
         libgtkwave_gir_includes += 'Peas-2'
     endif
 
-    libgtkwave_dep_sources += gnome.generate_gir(
+    libgtkwave_gir = gnome.generate_gir(
         libgtkwave,
         sources: libgtkwave_public_sources + libgtkwave_public_headers,
         namespace: 'Gw',
@@ -169,6 +169,8 @@ if get_option('introspection')
         header: 'gtkwave.h',
         install: true,
     )
+
+    libgtkwave_dep_sources += libgtkwave_gir[0]
 endif
 
 libgtkwave_dep = declare_dependency(
