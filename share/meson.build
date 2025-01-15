@@ -8,5 +8,5 @@ install_data(
 
 install_data(
     '@0@.metainfo.xml'.format(app_id),
-    install_dir: datadir_path / 'metainfo',
+    install_dir: get_option('datadir') / 'metainfo',
 )
