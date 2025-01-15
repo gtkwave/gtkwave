@@ -29,7 +29,7 @@
 typedef struct
         {
         const char *cmdstr;
-        int (*func)();
+        int (*func)(void *, Tcl_Interp *, int, Tcl_Obj * const *);
         } tcl_cmdstruct;
 
 extern tcl_cmdstruct gtkwave_commands[];
