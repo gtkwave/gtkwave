@@ -3,7 +3,7 @@
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
 meson setup "$DIR/build" \
-    -Dbuild_macos_app=enabled \
+    -Dbuild_macos_app=true \
     -Dset_rpath=enabled \
     -Dintrospection=false \
     --prefix=/Applications/GTKWave.app \
