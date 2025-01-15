@@ -2764,7 +2764,7 @@ g_timeout_add(atoi(WAVE_TCLCB_TIMER_PERIOD_INIT), setvar_timer, (gpointer)interp
 
 
 
-static int menu_func(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
+static int menu_func(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
 gtkwave_mlist_t *ife = (gtkwave_mlist_t *)clientData;
 int i;
