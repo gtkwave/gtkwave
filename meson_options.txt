@@ -70,7 +70,7 @@ option(
 
 option(
     'build_macos_app',
-    type: 'feature',
-    value: 'disabled',
+    type: 'boolean',
+    value: 'false',
     description: 'Build MacOS application bundle',
 )
