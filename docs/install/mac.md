@@ -73,16 +73,11 @@ gtkwave
 ```
 
 ### Building macOS Application
+
 Ensure you have installed the dependencies as described [above](#installing-dependencies).
 Then run the following command to build the macOS application:
 ```shell
-meson setup build \
-    -Dbuild_macos_app=enabled \
-    -Dset_rpath=enabled \
-    -Dintrospection=false \
-    --prefix=/Applications/GTKWave.app \
-    --datadir=/Applications/GTKWave.app/Contents/Resources/share \
-    --bindir=Contents/Resources/bin
+./macos/build.sh
 ```
 You can find the application in your Applications folder:
 
