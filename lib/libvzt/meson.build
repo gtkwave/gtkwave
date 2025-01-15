@@ -17,8 +17,6 @@ libvzt = static_library(
     sources: libvzt_sources,
     dependencies: libvzt_dependencies,
     include_directories: config_inc,
-    install: true,
-    install_dir: install_libs_rpath,
 )
 
 libvzt_dep = declare_dependency(

@@ -8,5 +8,5 @@ mime_files = [
 
 install_data(
     mime_files,
-    install_dir: datadir_path / 'mime/packages',
+    install_dir: get_option('datadir') / 'mime/packages',
 )

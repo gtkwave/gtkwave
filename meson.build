@@ -211,11 +211,9 @@ if get_option('set_rpath').enabled() or (get_option('set_rpath').auto() and get_
         app_contents = app_path / 'Contents'
 
         install_rpath = app_path
-        install_libs_rpath = app_contents / 'Resources' / 'lib'
         install_headers_rpath = install_libs_rpath
     else
         install_rpath = get_option('prefix') / get_option('libdir')
-        install_libs_rpath = install_rpath
         install_headers_rpath = install_rpath
     endif
 else

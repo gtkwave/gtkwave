@@ -1,4 +1,4 @@
-icons_dir = datadir_path / 'icons/hicolor'
+icons_dir = get_option('datadir') / 'icons/hicolor'
 
 install_data(
     '@0@.svg'.format(app_id),

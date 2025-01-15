@@ -3,7 +3,7 @@ subdir('mime')
 
 install_data(
     '@0@.desktop'.format(app_id),
-    install_dir: datadir_path / 'applications',
+    install_dir: get_option('datadir') / 'applications',
 )
 
 install_data(

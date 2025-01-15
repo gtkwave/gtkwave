@@ -132,7 +132,6 @@ libgtkwave = shared_library(
     dependencies: libgtkwave_dependencies,
     include_directories: config_inc,
     install: true,
-    install_dir: install_libs_rpath,
 )
 
 install_headers(
