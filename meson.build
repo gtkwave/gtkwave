@@ -207,11 +207,14 @@ endforeach
 
 if get_option('set_rpath').enabled() or (get_option('set_rpath').auto() and get_option('prefix') != '/usr')
     if host_machine.system() == 'darwin' and get_option('build_macos_app').enabled()
-        app_path = get_option('prefix')
-        app_contents = app_path / 'Contents'
+        macos_app_path = get_option('prefix')
+        macos_app_contents = macos_app_path / 'Contents'
 
-        install_rpath = app_path
-        install_headers_rpath = install_libs_rpath
+        macos_app_exe = macos_app_contents / 'MacOS'
+        macos_app_resources = macos_app_contents / 'Resources'
+
+        install_headers_rpath = macos_app_resources / 'include'
+        install_rpath = macos_app_path
     else
         install_rpath = get_option('prefix') / get_option('libdir')
         install_headers_rpath = install_rpath
@@ -243,28 +246,25 @@ gnome.post_install(
 )
 
 if host_machine.system() == 'darwin' and get_option('build_macos_app').enabled()
-    app_macos = app_contents / 'MacOS'
-    app_resources = app_contents / 'Resources'
-
     install_data(
         'macos/launcher.sh',
         rename: 'gtkwave',
-        install_dir: app_macos,
+        install_dir: macos_app_exe,
         install_mode: 'rwxr-xr-x'
     )
 
     install_data(
         'macos/Info.plist',
-        install_dir: app_contents,
+        install_dir: macos_app_contents
     )
 
     install_data(
         'macos/AppIcon.icns',
-        install_dir: app_resources
+        install_dir: macos_app_resources
     )
 
     install_data(
         'macos/gtkwave.entitlements',
-        install_dir: app_contents
+        install_dir: macos_app_contents
     )
 endif
