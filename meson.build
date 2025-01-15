@@ -267,4 +267,6 @@ if host_machine.system() == 'darwin' and get_option('build_macos_app') == true
         'macos/gtkwave.entitlements',
         install_dir: macos_app_contents
     )
+
+    meson.add_install_script('macos/install_deps.sh')
 endif
