@@ -15,5 +15,4 @@ install_man(
     'vztminer.1',
     'fstminer.1',
     'xml2stems.1',
-    install_dir: get_option('datadir') / 'man'
 )

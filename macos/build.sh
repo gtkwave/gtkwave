@@ -8,6 +8,8 @@ meson setup "$DIR/build" \
     -Dintrospection=false \
     --prefix=/Applications/GTKWave.app \
     --datadir=/Applications/GTKWave.app/Contents/Resources/share \
-    --bindir=Contents/Resources/bin --libdir=Contents/Resources/lib
+    --bindir=Contents/Resources/bin --libdir=Contents/Resources/lib \
+    --includedir=Contents/Resources/include \
+    --mandir=Contents/Resources/share/man
 
 meson install -C "$DIR/build"
