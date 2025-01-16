@@ -212,11 +212,9 @@ if get_option('set_rpath').enabled() or (get_option('set_rpath').auto() and get_
         macos_app_exe = macos_app_contents / 'MacOS'
         macos_app_resources = macos_app_contents / 'Resources'
 
-        install_headers_rpath = macos_app_resources / 'include'
         install_rpath = macos_app_path
     else
         install_rpath = get_option('prefix') / get_option('libdir')
-        install_headers_rpath = install_rpath
     endif
 else
     install_rpath = ''
