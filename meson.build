@@ -231,3 +231,35 @@ gnome.post_install(
     update_desktop_database: true,
     gtk_update_icon_cache: true,
 )
+
+if host_machine.system() == 'darwin' and get_option('build_macos_app') == true
+    macos_app_path = get_option('prefix')
+    macos_app_contents = macos_app_path / 'Contents'
+
+    macos_app_exe = macos_app_contents / 'MacOS'
+    macos_app_resources = macos_app_contents / 'Resources'
+
+    install_data(
+        'macos/launcher.sh',
+        rename: 'gtkwave',
+        install_dir: macos_app_exe,
+        install_mode: 'rwxr-xr-x'
+    )
+
+    install_data(
+        'macos/Info.plist',
+        install_dir: macos_app_contents
+    )
+
+    install_data(
+        'macos/AppIcon.icns',
+        install_dir: macos_app_resources
+    )
+
+    install_data(
+        'macos/gtkwave.entitlements',
+        install_dir: macos_app_contents
+    )
+
+    meson.add_install_script('macos/install_deps.sh')
+endif
