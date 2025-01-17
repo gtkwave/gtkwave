@@ -62,7 +62,7 @@ for exe in $EXECUTABLES; do
             echo "Changing $lib path in $exe"
             install_name_tool -change \
             "/opt/homebrew/opt/$pkg_path/lib/$lib" \
-            "@executable_path/../libs/$lib" \
+            "@executable_path/../lib/$lib" \
             "$exe"
         fi
     done

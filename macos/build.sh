@@ -8,8 +8,9 @@ meson setup "$DIR/build" \
     -Dset_rpath=enabled \
     -Dintrospection=false \
     --prefix=$APP_DIR/GTKWave.app \
-    --datadir=$APP_DIR/GTKWave.app/Contents/Resources/share \
-    --bindir=Contents/Resources/bin --libdir=Contents/Resources/lib \
+    --datadir=Contents/Resources/share \
+    --bindir=Contents/Resources/bin \
+    --libdir=Contents/Resources/lib \
     --includedir=Contents/Resources/include \
     --mandir=Contents/Resources/share/man
 
