@@ -53,18 +53,18 @@ for exe in $EXECUTABLES; do
                 pkg_path="$val"
                 break
             fi
-    done
+        done
 
-    if [ -n "$pkg_path" ]; then
-        echo "Copying $lib from /opt/homebrew/opt/$pkg_path/lib/$lib to $LIBS"
-        cp "/opt/homebrew/opt/$pkg_path/lib/$lib" "$LIBS"
+        if [ -n "$pkg_path" ]; then
+            echo "Copying $lib from /opt/homebrew/opt/$pkg_path/lib/$lib to $LIBS"
+            cp "/opt/homebrew/opt/$pkg_path/lib/$lib" "$LIBS"
 
-        echo "Changing $lib path in $exe"
-        install_name_tool -change \
-        "/opt/homebrew/opt/$pkg_path/lib/$lib" \
-        "@executable_path/../lib/$lib" \
-        "$exe"
-    fi
+            echo "Changing $lib path in $exe"
+            install_name_tool -change \
+            "/opt/homebrew/opt/$pkg_path/lib/$lib" \
+            "@executable_path/../libs/$lib" \
+            "$exe"
+        fi
     done
 
     install_name_tool -add_rpath "@executable_path/../lib" "$exe"
