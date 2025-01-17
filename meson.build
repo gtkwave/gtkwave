@@ -205,17 +205,7 @@ endforeach
 # Set excutable rpaths for non standard prefixes
 
 if get_option('set_rpath').enabled() or (get_option('set_rpath').auto() and get_option('prefix') != '/usr')
-    if host_machine.system() == 'darwin' and get_option('build_macos_app') == true
-        macos_app_path = get_option('prefix')
-        macos_app_contents = macos_app_path / 'Contents'
-
-        macos_app_exe = macos_app_contents / 'MacOS'
-        macos_app_resources = macos_app_contents / 'Resources'
-
-        install_rpath = macos_app_path
-    else
-        install_rpath = get_option('prefix') / get_option('libdir')
-    endif
+    install_rpath = get_option('prefix') / get_option('libdir')
 else
     install_rpath = ''
 endif
@@ -243,6 +233,12 @@ gnome.post_install(
 )
 
 if host_machine.system() == 'darwin' and get_option('build_macos_app') == true
+    macos_app_path = get_option('prefix')
+    macos_app_contents = macos_app_path / 'Contents'
+
+    macos_app_exe = macos_app_contents / 'MacOS'
+    macos_app_resources = macos_app_contents / 'Resources'
+
     install_data(
         'macos/launcher.sh',
         rename: 'gtkwave',
