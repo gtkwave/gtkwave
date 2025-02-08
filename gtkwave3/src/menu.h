@@ -329,6 +329,7 @@ void menu_new_viewer(gpointer null_data, guint callback_action, GtkWidget *widge
 void menu_write_vcd_file(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_write_lxt_file(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_print(gpointer null_data, guint callback_action, GtkWidget *widget);
+void menu_write_save_cleanup(GtkWidget *widget, gpointer data);
 void menu_read_save_file(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_write_save_file(gpointer null_data, guint callback_action, GtkWidget *widget);
 void menu_write_save_file_as(gpointer null_data, guint callback_action, GtkWidget *widget);

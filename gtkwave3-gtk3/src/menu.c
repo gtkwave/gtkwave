@@ -2021,7 +2021,8 @@ if(GLOBALS->helpbox_is_active)
 	return;
 	}
 
-if(GLOBALS->save_on_exit) { menu_write_save_file(NULL, 0, NULL); }
+if(GLOBALS->save_on_exit) { fileselbox("Write Save File On Exit",&GLOBALS->filesel_writesave,G_CALLBACK(menu_write_save_cleanup), G_CALLBACK(NULL), GLOBALS->is_gtkw_save_file ? "*.gtkw" : "*.sav", 1); 
+                            /* was: menu_write_save_file(NULL, 0, NULL); */ }
 
 if(!GLOBALS->enable_fast_exit)
 	{
@@ -2121,6 +2122,9 @@ if(GLOBALS->helpbox_is_active)
         );
         return;
         }
+
+if(GLOBALS->save_on_exit) { fileselbox("Write Save File On Exit",&GLOBALS->filesel_writesave,G_CALLBACK(menu_write_save_cleanup), G_CALLBACK(NULL), GLOBALS->is_gtkw_save_file ? "*.gtkw" : "*.sav", 1);
+                            /* was: menu_write_save_file(NULL, 0, NULL); */ }
 
 if((GLOBALS->num_notebook_pages < 2) && (!GLOBALS->enable_fast_exit))
 	{
@@ -8159,7 +8163,8 @@ int file_quit_cmd_callback (GtkWidget *widget, gpointer data)
 (void)widget;
 (void)data;
 
-if(GLOBALS->save_on_exit) { menu_write_save_file(NULL, 0, NULL); }
+if(GLOBALS->save_on_exit) { fileselbox("Write Save File On Exit",&GLOBALS->filesel_writesave,G_CALLBACK(menu_write_save_cleanup), G_CALLBACK(NULL), GLOBALS->is_gtkw_save_file ? "*.gtkw" : "*.sav", 1); 
+                            /* was: menu_write_save_file(NULL, 0, NULL); */ }
 
 if(!GLOBALS->enable_fast_exit)
 	{
