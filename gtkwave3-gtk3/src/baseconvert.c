@@ -2139,58 +2139,94 @@ if(flags&TR_REVERSE)
 	for(i=0;i<3;i++) *(fwdpnt2++)=xfwd[0];
 	}
 
-
-if(flags&TR_SIGNED)
+if(flags&TR_REAL)
 	{
-	char *parse;
-	TimeType val = 0;
-	unsigned char fail=0;
-
-	parse=newbuff+3;
-	cvt_gray(flags,parse,nbits);
-
-	if((parse[0]==AN_1)||(parse[0]==AN_H))
-		{ val = LLDescriptor(-1); }
-	else
-	if((parse[0]==AN_0)||(parse[0]==AN_L))
-		{ val = LLDescriptor(0); }
-	else
-		{ fail = 1; }
-
-	if(!fail)
-	for(i=1;i<nbits;i++)
+	if((nbits==64) || (nbits == 32)) /* fail (NaN) otherwise */
 		{
-		val<<=1;
+		char *parse;
+		UTimeType val=0;
+		unsigned char fail=0;
+		uint32_t val_32;
 
-		if((parse[i]==AN_1)||(parse[i]==AN_H)) {  val|=LLDescriptor(1); }
-		else if((parse[i]!=AN_0)&&(parse[i]!=AN_L)) { fail=1; break; }
-		}
+		parse=newbuff+3;
+		for(i=0;i<nbits;i++)
+			{
+			val<<=1;
 
-	if(!fail)
-		{
-		retval = val;
+		        if((parse[i]==AN_1)||(parse[i]==AN_H)) {  val|=LLDescriptor(1); }
+		        else if((parse[i]!=AN_0)&&(parse[i]!=AN_L)) { fail=1; break; }
+			}
+
+                if(!fail)
+                        {
+                        if(nbits==64)
+                                {
+                                memcpy(&retval, &val, sizeof(double)); /* otherwise strict-aliasing rules problem if retval = *(double *)&val; */
+                                }
+                                else
+                                {
+                                float f;
+                                val_32 = val;
+                                memcpy(&f, &val_32, sizeof(float)); /* otherwise strict-aliasing rules problem if retval = *(double *)&val; */
+                                retval = (double)f;
+                                }
+                        }
 		}
 	}
-else	/* decimal when all else fails */
-	{
-	char *parse;
-	UTimeType val=0;
-	unsigned char fail=0;
-
-	parse=newbuff+3;
-	cvt_gray(flags,parse,nbits);
-
-	for(i=0;i<nbits;i++)
+    else
+    {
+    if(flags&TR_SIGNED)
 		{
-		val<<=1;
+		char *parse;
+		TimeType val = 0;
+		unsigned char fail=0;
 
-		if((parse[i]==AN_1)||(parse[i]==AN_H)) {  val|=LLDescriptor(1); }
-		else if((parse[i]!=AN_0)&&(parse[i]!=AN_L)) { fail=1; break; }
+		parse=newbuff+3;
+		cvt_gray(flags,parse,nbits);
+
+		if((parse[0]==AN_1)||(parse[0]==AN_H))
+			{ val = LLDescriptor(-1); }
+		else
+		if((parse[0]==AN_0)||(parse[0]==AN_L))
+			{ val = LLDescriptor(0); }
+		else
+			{ fail = 1; }
+
+		if(!fail)
+		for(i=1;i<nbits;i++)
+			{
+			val<<=1;
+	
+			if((parse[i]==AN_1)||(parse[i]==AN_H)) {  val|=LLDescriptor(1); }
+			else if((parse[i]!=AN_0)&&(parse[i]!=AN_L)) { fail=1; break; }
+			}
+
+		if(!fail)
+			{
+			retval = val;
+			}
 		}
-
-	if(!fail)
+	else	/* decimal when all else fails */
 		{
-		retval = val;
+		char *parse;
+		UTimeType val=0;
+		unsigned char fail=0;
+	
+		parse=newbuff+3;
+		cvt_gray(flags,parse,nbits);
+	
+		for(i=0;i<nbits;i++)
+			{
+			val<<=1;
+	
+			if((parse[i]==AN_1)||(parse[i]==AN_H)) {  val|=LLDescriptor(1); }
+			else if((parse[i]!=AN_0)&&(parse[i]!=AN_L)) { fail=1; break; }
+			}
+	
+		if(!fail)
+			{
+			retval = val;
+			}
 		}
 	}
 
