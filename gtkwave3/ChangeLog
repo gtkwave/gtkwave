@@ -1833,8 +1833,9 @@
 3.3.121	07sep24	Integrate gtkwave/pull/376 and gtkwave/pull/377 updates
 		to the FST loader for windows and warnings fixes.
 		Clang warning fixes in fstapi.c	on dynamic arrays.
-3.3.122 17feb25 Buffer warning fix in fstVcdIDForFwrite.
+3.3.122 21feb25 Buffer warning fix in fstVcdIDForFwrite.
 		Warning fixes in vzt_read.c and fstapi.c.
 		Prototype fixes for port to gcc15.
 		Added fixes for	--saveonexit command line option.
 		Fix for convert_real for TR_REAL traces.
+		Fix for popen_san() in vcd2fst using fsdb binaries.

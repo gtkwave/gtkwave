@@ -70,14 +70,23 @@ return(pnt);
 
 /******************************************************/
 
-static FILE *popen_san(const char *command, const char *type) /* TALOS-2023-1786 */
+static FILE *popen_san(const char *command, const char *type, int fsdb_suffix_security_override) /* TALOS-2023-1786 */
 {
 const char *p = command;
 int is_ok = 1;
 char ch;
+int len = command ? strlen(command) : 0;
+const char *mp = NULL;
+
+if(fsdb_suffix_security_override && (len > 5) && !strcmp(" 2>&1", p+len-5))
+	{
+	mp = p+len-5;
+	}
 
 while(p && (ch = *(p++)))
 	{
+	if(p == mp) break; /* ensure fsdb filters can run */
+
 	switch(ch)
 		{
 		case '&':
@@ -318,7 +327,7 @@ FILE *extload;
 void *xc = fstReaderOpenForUtilitiesOnly();
 
 sprintf(sbuff, "%s -info %s 2>&1", EXTLOAD_PATH, fname);
-extload = popen_san(sbuff, "r");
+extload = popen_san(sbuff, "r", 1);
 if(extload)
 	{
 	while(get_info(extload));
@@ -332,7 +341,7 @@ if(numfacs)
 	}
 
 sprintf(sbuff, "%s -tree %s 2>&1", EXTLOAD_PATH, fname);
-extload = popen_san(sbuff, "r");
+extload = popen_san(sbuff, "r", 1);
 if(extload)
 	{
 	while(get_scopename(xc, extload));
@@ -519,7 +528,7 @@ if(!strcmp("-", vname))
 	if(suffix_check(vname, "."EXTLOAD_SUFFIX) || suffix_check(vname, "."EXTLOAD_SUFFIX".gz") || suffix_check(vname, "."EXTLOAD_SUFFIX".bz2"))
 		{
 		sprintf(bin_fixbuff, EXTCONV_PATH" %s", vname);
-		f = popen_san(bin_fixbuff, "r");
+		f = popen_san(bin_fixbuff, "r", 0);
 		is_popen = 1;
 		is_extload = 1;
 #ifndef _WAVE_HAVE_JUDY
@@ -534,7 +543,7 @@ if(!strcmp("-", vname))
 		if(suffix_check(vname, "."EXT2LOAD_SUFFIX))
 			{
 			sprintf(bin_fixbuff, EXT2CONV_PATH" %s", vname);
-			f = popen_san(bin_fixbuff, "r");
+			f = popen_san(bin_fixbuff, "r", 0);
 			is_popen = 1;
 			}
 			else
@@ -543,7 +552,7 @@ if(!strcmp("-", vname))
 		if(suffix_check(vname, "."EXT3LOAD_SUFFIX))
 			{
 			sprintf(bin_fixbuff, EXT3CONV_PATH" %s", vname);
-			f = popen_san(bin_fixbuff, "r");
+			f = popen_san(bin_fixbuff, "r", 0);
 			is_popen = 1;
 			}
 			else

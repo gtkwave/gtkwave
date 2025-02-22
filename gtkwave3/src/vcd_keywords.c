@@ -1,4 +1,4 @@
-/* C code produced by gperf version 3.0.4 */
+/* C code produced by gperf version 3.1 */
 /* Command-line: /usr/bin/gperf -o -i 1 -C -k '1,$' -L C -H keyword_hash -N check_identifier -tT --initializer-suffix=,0 ./vcd_keywords.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -25,7 +25,7 @@
       && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
       && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
-error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
+error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
 #line 1 "./vcd_keywords.gperf"
@@ -60,7 +60,7 @@ inline
 static unsigned int
 keyword_hash (str, len)
      register const char *str;
-     register unsigned int len;
+     register size_t len;
 {
   static const unsigned char asso_values[] =
     {
@@ -94,16 +94,10 @@ keyword_hash (str, len)
   return len + asso_values[(unsigned char)str[len - 1]] + asso_values[(unsigned char)str[0]+1];
 }
 
-#ifdef __GNUC__
-__inline
-#if defined __GNUC_STDC_INLINE__ || defined __GNUC_GNU_INLINE__
-__attribute__ ((__gnu_inline__))
-#endif
-#endif
 const struct vcd_keyword *
 check_identifier (str, len)
      register const char *str;
-     register unsigned int len;
+     register size_t len;
 {
   static const struct vcd_keyword wordlist[] =
     {
@@ -191,9 +185,9 @@ check_identifier (str, len)
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-      register int key = keyword_hash (str, len);
+      register unsigned int key = keyword_hash (str, len);
 
-      if (key <= MAX_HASH_VALUE && key >= 0)
+      if (key <= MAX_HASH_VALUE)
         {
           register const char *s = wordlist[key].name;
 
