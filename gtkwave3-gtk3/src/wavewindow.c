@@ -680,9 +680,9 @@ gdk_window_end_draw_frame(gtk_widget_get_window(GLOBALS->wavearea), gdc);
 cairo_destroy (cr);
 #endif
 
-// #ifdef GDK_WINDOWING_WAYLAND
-// if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) gtk_widget_queue_draw(GLOBALS->wavearea);
-// #endif
+#ifdef GDK_WINDOWING_WAYLAND
+if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) gtk_widget_queue_draw(GLOBALS->wavearea);
+#endif
 }
 
 

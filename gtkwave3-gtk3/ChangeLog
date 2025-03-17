@@ -1907,7 +1907,7 @@
                 to the FST loader for windows and warnings fixes.
 		Clang warning fixes in fstapi.c on dynamic arrays.
 		Updates for MACOS compiles on gtk3.
-3.3.122 11mar25 Buffer warning fix in fstVcdIDForFwrite.
+3.3.122 17mar25 Buffer warning fix in fstVcdIDForFwrite.
 		Warning fixes in vzt_read.c and fstapi.c.
 		Prototype fixes for port to gcc15.
 		Fixes for tcl9 compatibility.
@@ -1915,3 +1915,5 @@
 		Fix for	convert_real for TR_REAL traces.
 		Fix for popen_san() in vcd2fst using fsdb binaries.
 		Added fstWriterGetFlushContextPending() to fstapi.c/.h.
+		Reenable wayland code for primary and baseline markers in
+		wavewindow.c.
