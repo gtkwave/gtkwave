@@ -1341,6 +1341,9 @@ NULL, /* swipe_init_time */
 -1, /* use_gestures */
 FALSE, /*use_dark */
 FALSE, /*save_on_exit */
+#ifdef GDK_WINDOWING_WAYLAND
+0, /* wayland_marker_timer_hack */
+#endif
 
 
 /*

@@ -514,6 +514,10 @@ if((i)&&(time_prefix)) /* scan-build on time_prefix, should not be necessary how
 
 void update_markertime(TimeType val)
 {
+#ifdef GDK_WINDOWING_WAYLAND
+GLOBALS->wayland_marker_timer_hack = 10;
+#endif
+
 if(GLOBALS->anno_ctx)
 	{
 	if(val >= 0)

@@ -681,7 +681,11 @@ cairo_destroy (cr);
 #endif
 
 #ifdef GDK_WINDOWING_WAYLAND
-if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) gtk_widget_queue_draw(GLOBALS->wavearea);
+if(GLOBALS->wayland_marker_timer_hack)
+	{
+	GLOBALS->wayland_marker_timer_hack--;
+	if(GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) gtk_widget_queue_draw(GLOBALS->wavearea); /* we need this, but if called constantly will spike CPU usage */
+	}
 #endif
 }
 

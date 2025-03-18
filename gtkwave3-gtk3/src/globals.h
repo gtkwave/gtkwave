@@ -1364,6 +1364,9 @@ char wavearea_drag_active;
 char use_gestures;
 gboolean use_dark;
 gboolean save_on_exit;
+#ifdef GDK_WINDOWING_WAYLAND
+int wayland_marker_timer_hack;
+#endif
 
 
 /*
