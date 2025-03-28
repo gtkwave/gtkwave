@@ -1,4 +1,3 @@
-subdir('libfst')
 subdir('libghw')
 subdir('libjrb')
 subdir('liblxt')
