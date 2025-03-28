@@ -2,6 +2,8 @@
 #include "gw-fst-file.h"
 #include "gw-fst-file-private.h"
 
+#define FST_RDLOAD "FSTLOAD | "
+
 G_DEFINE_TYPE(GwFstFile, gw_fst_file, GW_TYPE_DUMP_FILE)
 
 static void gw_fst_file_import_trace(GwFstFile *self, GwNode *np);

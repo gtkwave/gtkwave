@@ -83,6 +83,7 @@ libgtkwave_dependencies = [
     libghw_dep,
     libfst_dep,
     libjrb_dep,
+    zlib_dep,
 ]
 
 if get_option('experimental_plugin_support')

@@ -1,0 +1,6 @@
+[wrap-git]
+url = https://github.com/gtkwave/libfst.git
+revision = 74301348450701727776c1a0522a3f512738e9ae
+
+[provide]
+dependency_names = libfst
