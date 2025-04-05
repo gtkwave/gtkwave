@@ -34,6 +34,9 @@
 
 #define FST_RDLOAD "FSTLOAD | "
 
+/* pseudo 2D arrays identified as broken in development version testing: probably will never be fixed in LTS, so removing via ifdef */
+#define FST_LEN_SUBST_IS_BROKEN
+
 /******************************************************************/
 
 /*
@@ -296,6 +299,19 @@ while((h = fstReaderIterateHier(xc)))
 						pnt++;
 						}
 					*lsb = acc * sgnb;
+					}
+
+				unsigned int abslen = (*msb >= *lsb) ? (*msb - *lsb + 1) : (*lsb - *msb + 1);
+				if((h->u.var.length != abslen) && (h->u.var.length))
+					{
+					if (*msb >= *lsb)
+						{
+						*msb = *lsb + h->u.var.length - 1;
+						}
+						else
+						{
+						*lsb = *msb + h->u.var.length - 1;
+						}
 					}
 				}
 
@@ -707,7 +723,9 @@ for(i=0;i<GLOBALS->numfacs;i++)
 	unsigned char nvt, nvd, ndt;
 	int longest_nam_candidate = 0;
 	char *fnam;
+#ifndef FST_LEN_SUBST_IS_BROKEN
 	int len_subst = 0;
+#endif
 
 	h = extractNextVar(GLOBALS->fst_fst_c_1, &msb, &lsb, &nnam, &name_len, &nnam_max);
 	if(!h)
@@ -769,6 +787,7 @@ for(i=0;i<GLOBALS->numfacs;i++)
 		}
 		else
 		{
+#ifndef FST_LEN_SUBST_IS_BROKEN
 		unsigned int abslen = (msb >= lsb) ? (msb - lsb + 1) : (lsb - msb + 1);
 
 		if((h->u.var.length > abslen) && !(h->u.var.length % abslen)) /* check if 2d array */
@@ -776,6 +795,7 @@ for(i=0;i<GLOBALS->numfacs;i++)
 			/* printf("h->u.var.length: %d, abslen: %d '%s'\n", h->u.var.length, abslen, fnam); */
 			len_subst = 1;
 			}
+#endif
 
 		node_block[i].msi = msb;
 		node_block[i].lsi = lsb;
@@ -905,11 +925,13 @@ for(i=0;i<GLOBALS->numfacs;i++)
 		{
 		int len=sprintf_2_sdd(buf, f_name[(i)&F_NAME_MODULUS],node_block[i].msi, node_block[i].lsi);
 
+#ifndef FST_LEN_SUBST_IS_BROKEN
 		if(len_subst) /* preserve 2d in name, but make 1d internally */
 			{
 			node_block[i].msi = h->u.var.length-1;
 			node_block[i].lsi = 0;
 			}
+#endif
 
 		longest_nam_candidate = len;
 
