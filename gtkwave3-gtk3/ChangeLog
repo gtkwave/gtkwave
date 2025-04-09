@@ -1907,7 +1907,7 @@
                 to the FST loader for windows and warnings fixes.
 		Clang warning fixes in fstapi.c on dynamic arrays.
 		Updates for MACOS compiles on gtk3.
-3.3.122 04apr25 Buffer warning fix in fstVcdIDForFwrite.
+3.3.122 09apr25 Buffer warning fix in fstVcdIDForFwrite.
 		Warning fixes in vzt_read.c and fstapi.c.
 		Prototype fixes for port to gcc15.
 		Fixes for tcl9 compatibility.
@@ -1921,3 +1921,8 @@
 		Opaque pointer warning fix for fstapi.c.
                 Remove broken pseudo-2D	array support in fst.c.
                 Fix in fst.c for signals whose MSB/LSB/len mismatch.
+		Libfst #15: fstReaderOpen should not fail on empty FST file.
+		Fix crash introduced in 3.3.120 with legacy VCD loader caused
+		by "Fix case of missing newline at EOF for VCD loaders."
+		#423: fstminer doesn't handle string transitions correctly.
+		Fix in fst.c for duplicate string values.

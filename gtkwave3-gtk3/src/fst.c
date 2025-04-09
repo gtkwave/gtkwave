@@ -1555,7 +1555,7 @@ else	/* string */
 
 	if((l2e->histent_curr)&&(l2e->histent_curr->v.h_vector)) /* remove duplicate values */
 		{
-		if((!strcmp(l2e->histent_curr->v.h_vector, (const char *)value)) && (!GLOBALS->vcd_preserve_glitches))
+		if((!strcmp(l2e->histent_curr->v.h_vector, s)) && (!GLOBALS->vcd_preserve_glitches))
 			{
 			free_2(s);
 			return;

@@ -340,7 +340,7 @@ errno = 0;
 if(feof(GLOBALS->vcd_handle_vcd_c_1)) return(-1);
 
 GLOBALS->vcdbyteno_vcd_c_1+=(GLOBALS->vend_vcd_c_1-GLOBALS->vcdbuf_vcd_c_1);
-memset(GLOBALS->vcdbuf_vcd_recoder_c_3, 0, VCD_BSIZ);
+memset(GLOBALS->vcdbuf_vcd_c_1, 0, VCD_BSIZ);
 rd=fread(GLOBALS->vcdbuf_vcd_c_1, sizeof(char), VCD_BSIZ, GLOBALS->vcd_handle_vcd_c_1);
 GLOBALS->vend_vcd_c_1=(GLOBALS->vst_vcd_c_1=GLOBALS->vcdbuf_vcd_c_1)+rd;
 
