@@ -2170,7 +2170,7 @@ for(;;)
 
 /*******************************************************************************/
 
-void add_histent(TimeType tim, struct Node *n, char ch, int regadd, char *vector)
+static void add_histent(TimeType tim, struct Node *n, char ch, int regadd, char *vector)
 {
 struct HistEnt *he;
 char heval;
@@ -2257,6 +2257,14 @@ switch(ch)
 		{
 		if(regadd) { tim*=(GLOBALS->time_scale); }
 
+                if(
+		  (n->curr->flags != (HIST_STRING|HIST_REAL)) /* because n->curr->v.h_vector could be a double and not a pointer */
+                  	||(n->curr->v.h_vector&&vector&&(strcmp(n->curr->v.h_vector,vector)))
+                        ||(tim==GLOBALS->start_time_vcd_recoder_c_3)
+                        ||(!n->curr->v.h_vector)
+                        ||(GLOBALS->vcd_preserve_glitches)
+                        ) /* same region == go skip */
+                        {
 			if(n->curr->time==tim)
 				{
 				DEBUG(printf("Warning: String Glitch at time ["TTFormat"] Signal [%p].\n",
@@ -2282,6 +2290,11 @@ switch(ch)
 				n->curr=he;
 	                	GLOBALS->regions+=regadd;
 				}
+                        }
+                        else
+                        {
+                        free_2(vector);
+                        }
 	       }
 	break;
 	}
