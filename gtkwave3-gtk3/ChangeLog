@@ -1907,7 +1907,7 @@
                 to the FST loader for windows and warnings fixes.
 		Clang warning fixes in fstapi.c on dynamic arrays.
 		Updates for MACOS compiles on gtk3.
-3.3.122 10apr25 Buffer warning fix in fstVcdIDForFwrite.
+3.3.122 11apr25 Buffer warning fix in fstVcdIDForFwrite.
 		Warning fixes in vzt_read.c and fstapi.c.
 		Prototype fixes for port to gcc15.
 		Fixes for tcl9 compatibility.
@@ -1927,3 +1927,4 @@
 		#423: fstminer doesn't handle string transitions correctly.
 		Fix in fst.c for duplicate string values.
 		Remove duplicate string	values from adjacent value changes.
+		Libghw add from upstream for ghdl_rtik_type_i64.
