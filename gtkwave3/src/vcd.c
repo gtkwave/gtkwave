@@ -1075,6 +1075,8 @@ static void vcd_parse(void)
 int tok;
 unsigned char ttype;
 int disable_autocoalesce = 0;
+int colon_seen = 0;
+int num_seen = 0;
 
 for(;;)
 	{
@@ -1501,11 +1503,14 @@ for(;;)
 					}
                                 GLOBALS->pv_vcd_c_1=v;
 
+				num_seen = 0;
 				vtok=get_vartoken(1);
 				if(vtok==V_END) goto dumpv;
 				if(vtok!=V_LB) goto err;
+				colon_seen = 0;
 				vtok=get_vartoken(0);
 				if(vtok!=V_STRING) goto err;
+				num_seen = 1;
 				v->msi=atoi_64(GLOBALS->yytext_vcd_c_1);
 				vtok=get_vartoken(0);
 				if(vtok==V_RB)
@@ -1514,6 +1519,7 @@ for(;;)
 					goto dumpv;
 					}
 				if(vtok!=V_COLON) goto err;
+				colon_seen = 1;
 				vtok=get_vartoken(0);
 				if(vtok!=V_STRING) goto err;
 				v->lsi=atoi_64(GLOBALS->yytext_vcd_c_1);
@@ -1537,6 +1543,47 @@ for(;;)
                                         }
 
                                 } /* MTI fix */
+                                else
+                                {
+                                unsigned int abslen = (v->msi >= v->lsi) ? (v->msi - v->lsi + 1) : (v->lsi - v->msi + 1);
+
+                                if(!colon_seen)
+                                        {
+                                        if(num_seen)
+                                                {
+                                                char buf[32];
+                                                char *sfix;
+                                                int vname_len = strlen(v->name);
+                                                int num_len = snprintf(buf, 32, "[%d]", v->lsi);
+
+                                                sfix = malloc_2(vname_len + num_len + 1);
+                                                memcpy(sfix, v->name, vname_len);
+                                                memcpy(sfix+vname_len, buf, num_len + 1);
+                                                free_2(v->name);
+                                                v->name = sfix;
+                                                }
+
+                                        if(v->size > 1)
+                                                {
+                                                v->lsi = 0;
+                                                v->msi = v->size - 1;
+                                                }
+                                        }
+                                        else
+                                        {
+                                        if((v->size != abslen) && (num_seen))
+                                                {
+                                                if(v->lsi < v->msi)
+                                                        {
+                                                        v->msi = v->lsi + v->size - 1;
+                                                        }
+                                                        else
+                                                        {
+                                                        v->lsi = v->msi + v->size - 1;
+                                                        }
+                                                }
+                                        }
+                                }
 
 			if((v->vartype==V_REAL)||(v->vartype==V_STRINGTYPE)||((GLOBALS->convert_to_reals)&&((v->vartype==V_INTEGER)||(v->vartype==V_PARAMETER))))
 				{
