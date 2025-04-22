@@ -34,13 +34,32 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.122" date="2024-12-31">
+    <release version="3.3.122" date="2025-04-21">
       <description>
         <p>
         Changes in 3.3.122:
         </p>
         <ul>
             <li>Buffer warning fix in fstVcdIDForFwrite.</li>
+            <li>Warning fixes in vzt_read.c and fstapi.c.</li>
+            <li>Prototype fixes for port to gcc15.</li>
+            <li>Fixes for tcl9 compatibility.</li>
+            <li>Added fixes for --saveonexit command line option.</li>
+            <li>Fix for convert_real for TR_REAL traces.</li>
+            <li>Fix for popen_san() in vcd2fst using fsdb binaries.</li>
+            <li>Added fstWriterGetFlushContextPending() to fstapi.c/.h.</li>
+            <li>Reenable wayland code for primary and baseline markers in wavewindow.c.</li>
+            <li>Unnamed scope fix for fstReader.</li>
+            <li>Opaque pointer warning fix for fstapi.c.</li>
+            <li>Remove broken pseudo-2D array support in fst.c.</li>
+            <li>Fix in fst.c for signals whose MSB/LSB/len mismatch.</li>
+            <li>Libfst #15: fstReaderOpen should not fail on empty FST file.</li>
+            <li>Fix crash introduced in 3.3.120 with legacy VCD loader caused by "Fix case of missing newline at EOF for VCD loaders."</li>
+            <li>#423: fstminer doesn't handle string transitions correctly.</li>
+            <li>Fix in fst.c for duplicate string values.</li>
+            <li>Remove duplicate string values from adjacent value changes.</li>
+            <li>Libghw add from upstream for ghdl_rtik_type_i64.</li>
+            <li>#428: Inconsistent handling of invalid vector bounds in VCD and FST loaders.</li>
         </ul>
       </description>
     </release>
