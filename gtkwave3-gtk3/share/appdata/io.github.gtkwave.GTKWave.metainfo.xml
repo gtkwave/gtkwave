@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2024 Tony Bybell <bybell@rocketmail.com> -->
+<!-- Copyright 2025 Tony Bybell <bybell@rocketmail.com> -->
 <component type="desktop">
   <id>io.github.gtkwave.GTKWave</id>
   <metadata_license>CC0-1.0</metadata_license>
@@ -34,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.123" date="2025-04-28">
+      <description>
+        <p>
+        Changes in 3.3.123:
+        </p>
+        <ul>
+            <li>Prepare for next version.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.122" date="2025-04-21">
       <description>
         <p>
