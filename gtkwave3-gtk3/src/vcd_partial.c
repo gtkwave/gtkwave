@@ -1340,7 +1340,7 @@ for(;;)
 
                                 if(GLOBALS->pv_vcd_partial_c_2)
                                         {
-                                        if(!strcmp(GLOBALS->pv_vcd_partial_c_2->name,v->name) && !disable_autocoalesce && (!strchr(v->name, '\\')))
+                                        if(!strcmp(GLOBALS->pv_vcd_partial_c_2->name,v->name) && !disable_autocoalesce && (!strchr(v->name, '\\')) && (v->lsi != GLOBALS->pv_vcd_partial_c_2->lsi))
                                                 {
                                                 GLOBALS->pv_vcd_partial_c_2->chain=v;
                                                 v->root=GLOBALS->rootv_vcd_partial_c_2;
@@ -1432,7 +1432,7 @@ for(;;)
 
                                 if(GLOBALS->pv_vcd_partial_c_2)
                                         {
-                                        if(!strcmp(GLOBALS->pv_vcd_partial_c_2->name,v->name))
+                                        if(!strcmp(GLOBALS->pv_vcd_partial_c_2->name,v->name) && (v->lsi != GLOBALS->pv_vcd_partial_c_2->lsi))
                                                 {
                                                 GLOBALS->pv_vcd_partial_c_2->chain=v;
                                                 v->root=GLOBALS->rootv_vcd_partial_c_2;

@@ -1735,7 +1735,7 @@ for(;;)
 
                                 if(GLOBALS->pv_vcd_recoder_c_3)
                                         {
-                                        if(!strcmp(GLOBALS->prev_hier_uncompressed_name,v->name) && !disable_autocoalesce && (!strchr(v->name, '\\')))
+                                        if(!strcmp(GLOBALS->prev_hier_uncompressed_name,v->name) && !disable_autocoalesce && (!strchr(v->name, '\\')) && (v->lsi != GLOBALS->pv_vcd_recoder_c_3->lsi))
                                                 {
                                                 GLOBALS->pv_vcd_recoder_c_3->chain=v;
                                                 v->root=GLOBALS->rootv_vcd_recoder_c_3;
@@ -1832,7 +1832,7 @@ for(;;)
 
                                 if(GLOBALS->pv_vcd_recoder_c_3)
                                         {
-                                        if(!strcmp(GLOBALS->prev_hier_uncompressed_name,v->name))
+                                        if(!strcmp(GLOBALS->prev_hier_uncompressed_name,v->name) && (v->lsi != GLOBALS->pv_vcd_recoder_c_3->lsi))
                                                 {
                                                 GLOBALS->pv_vcd_recoder_c_3->chain=v;
                                                 v->root=GLOBALS->rootv_vcd_recoder_c_3;

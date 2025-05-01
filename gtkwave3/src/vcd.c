@@ -1394,7 +1394,7 @@ for(;;)
 
                                 if(GLOBALS->pv_vcd_c_1)
                                         {
-                                        if(!strcmp(GLOBALS->pv_vcd_c_1->name,v->name) && !disable_autocoalesce && (!strchr(v->name, '\\')))
+                                        if(!strcmp(GLOBALS->pv_vcd_c_1->name,v->name) && !disable_autocoalesce && (!strchr(v->name, '\\')) && (v->lsi != GLOBALS->pv_vcd_c_1->lsi))
                                                 {
                                                 GLOBALS->pv_vcd_c_1->chain=v;
                                                 v->root=GLOBALS->rootv_vcd_c_1;
@@ -1486,7 +1486,7 @@ for(;;)
 
                                 if(GLOBALS->pv_vcd_c_1)
                                         {
-                                        if(!strcmp(GLOBALS->pv_vcd_c_1->name,v->name))
+                                        if(!strcmp(GLOBALS->pv_vcd_c_1->name,v->name) && (v->lsi != GLOBALS->pv_vcd_c_1->lsi))
                                                 {
                                                 GLOBALS->pv_vcd_c_1->chain=v;
                                                 v->root=GLOBALS->rootv_vcd_c_1;
