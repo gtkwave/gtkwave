@@ -1854,3 +1854,4 @@
 3.3.123	01may25	Fix broken autocoalesce of bitblasted vectors that fix for
 		#428 in 3.3.122 introduced.
 		Fix improper autocoalesce of adjacent duplicate	symbols.
+		Preserve dimension on integer array element when expanded.

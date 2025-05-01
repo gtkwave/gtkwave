@@ -42,6 +42,7 @@
 	<ul>
             <li>Fix broken autocoalesce of bitblasted vectors that fix for #428 in 3.3.122 introduced.</li>
             <li>Fix improper autocoalesce of adjacent duplicate	symbols.</li>
+            <li>Preserve dimension on integer array element when expanded.</li>
         </ul>
       </description>
     </release>

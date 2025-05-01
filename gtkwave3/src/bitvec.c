@@ -1903,7 +1903,10 @@ if(!n->extvals)
 		{
 		if(namex[i]=='[') break;
 		}
-	if(i>-1) offset=i;
+        if((i>-1) && strchr(namex+i+1, ':')) /* remove at '[' if this is a ranged signal */
+                {
+                offset=i;
+                }
 
 	if(i>3)
 		{
@@ -2161,7 +2164,10 @@ if(!n->extvals)
 		{
 		if(namex[i]=='[') break;
 		}
-	if(i>-1) offset=i;
+        if((i>-1) && strchr(namex+i+1, ':')) /* remove at '[' if this is a ranged signal */
+                {
+                offset=i;
+                }
 
 	if(i>3)
 		{
