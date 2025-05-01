@@ -1549,7 +1549,7 @@ for(;;)
 
                                 if(!colon_seen)
                                         {
-                                        if(num_seen)
+                                        if(num_seen && (v->size > 1))
                                                 {
                                                 char buf[32];
                                                 char *sfix;

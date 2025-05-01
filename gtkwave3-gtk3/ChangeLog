@@ -1930,4 +1930,5 @@
 		Libghw add from upstream for ghdl_rtik_type_i64.
                 #428: Inconsistent handling of invalid vector bounds in VCD
                 and FST loaders.
-3.3.123	28apr25	Prepare for next version.
+3.3.123 01may25 Fix broken autocoalesce of bitblasted vectors that fix for
+                #428 in 3.3.122 introduced.

@@ -34,13 +34,13 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.123" date="2025-04-28">
+    <release version="3.3.123" date="2025-05-01">
       <description>
         <p>
         Changes in 3.3.123:
         </p>
         <ul>
-            <li>Prepare for next version.</li>
+            <li>Fix broken autocoalesce of bitblasted vectors that fix for #428 in 3.3.122 introduced.</li>
         </ul>
       </description>
     </release>
