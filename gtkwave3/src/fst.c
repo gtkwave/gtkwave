@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Tony Bybell 2009-2018.
+ * Copyright (c) Tony Bybell 2009-2025.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,7 +34,10 @@
 
 #define FST_RDLOAD "FSTLOAD | "
 
-/* pseudo 2D arrays identified as broken in development version testing: probably will never be fixed in LTS, so removing via ifdef */
+/* 
+ * pseudo 2D arrays identified as broken in development version testing: fixed in LTS
+ * but removing via ifdef for now as this needs more testing and isn't likely useful
+ */
 #define FST_LEN_SUBST_IS_BROKEN
 
 /******************************************************************/
@@ -220,13 +223,14 @@ while((h = fstReaderIterateHier(xc)))
 			pntd = s;
 
 			int esc_sm = 0;
+                        int num_col = 0;
 			while(*pnts)
 				{
 				if(*pnts == '\\') esc_sm = 1;
 				if(*pnts != ' ')
 					{
 					if(*pnts == '[' && !esc_sm) { lb_last = pntd; col_last = NULL; rb_last = NULL; }
-					else if(*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL && !esc_sm) { col_last = pntd; }
+					else if(*pnts == ':' && lb_last != NULL && col_last == NULL && rb_last == NULL && !esc_sm) { col_last = pntd; num_col++; }
 					else if(*pnts == ']' && lb_last != NULL && rb_last == NULL && !esc_sm) { rb_last = pntd; }
 					else if(lb_last != NULL && rb_last == NULL && (isdigit((int)(unsigned char)*pnts) || (*pnts == '-')) && !esc_sm) { }
 					else { lb_last = NULL; col_last = NULL; rb_last = NULL; }
@@ -301,16 +305,21 @@ while((h = fstReaderIterateHier(xc)))
 					*lsb = acc * sgnb;
 					}
 
-				unsigned int abslen = (*msb >= *lsb) ? (*msb - *lsb + 1) : (*lsb - *msb + 1);
-				if((h->u.var.length != abslen) && (h->u.var.length))
+#ifndef FST_LEN_SUBST_IS_BROKEN
+				if(num_col < 2) /* 2d array processing if number of colons >= 2 */
+#endif
 					{
-					if (*msb >= *lsb)
+					unsigned int abslen = (*msb >= *lsb) ? (*msb - *lsb + 1) : (*lsb - *msb + 1);
+					if((h->u.var.length != abslen) && (h->u.var.length))
 						{
-						*msb = *lsb + h->u.var.length - 1;
-						}
-						else
-						{
-						*lsb = *msb + h->u.var.length - 1;
+						if (*msb >= *lsb)
+							{
+							*msb = *lsb + h->u.var.length - 1;
+							}
+							else
+							{
+							*lsb = *msb + h->u.var.length - 1;
+							}
 						}
 					}
 				}
@@ -925,14 +934,6 @@ for(i=0;i<GLOBALS->numfacs;i++)
 		{
 		int len=sprintf_2_sdd(buf, f_name[(i)&F_NAME_MODULUS],node_block[i].msi, node_block[i].lsi);
 
-#ifndef FST_LEN_SUBST_IS_BROKEN
-		if(len_subst) /* preserve 2d in name, but make 1d internally */
-			{
-			node_block[i].msi = h->u.var.length-1;
-			node_block[i].lsi = 0;
-			}
-#endif
-
 		longest_nam_candidate = len;
 
 		if(!GLOBALS->do_hier_compress)
@@ -965,6 +966,14 @@ for(i=0;i<GLOBALS->numfacs;i++)
 			len = sprintf_2_sdd(buf, nnam,node_block[i].msi, node_block[i].lsi);
 			fst_append_graft_chain(len, buf, i, npar);
 			}
+
+#ifndef FST_LEN_SUBST_IS_BROKEN
+		if(len_subst) /* preserve 2d in name, but make 1d internally */
+			{
+			node_block[i].msi = h->u.var.length-1;
+			node_block[i].lsi = 0;
+			}
+#endif
 		}
 	else
 		{
