@@ -1935,3 +1935,4 @@
 		Fix improper autocoalesce of adjacent duplicate symbols.
 		Preserve dimension on integer array element when expanded.
 3.3.124	06may25	Version bump to prepare for next development version.
+		Ensure type name in $var for VCD saver is >0 length (GHW).

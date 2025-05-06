@@ -17,6 +17,11 @@
 
 WAVE_NODEVARTYPE_STR
 
+static unsigned int vartype_bounds_fix(unsigned int vt)
+{
+return( ((vt > ND_UNSPECIFIED_DEFAULT) && (vt <= ND_VARTYPE_MAX)) ? vt : ND_VCD_WIRE); /* GHW was printing "" for vartype */
+}
+
 static void w32redirect_fprintf(int is_trans, FILE *sfd, const char *format, ...)
 {
 #if defined __MINGW32__
@@ -582,7 +587,7 @@ for(i=0;i<nodecnt;i++)
 			}
 			else
 			{
-			const char *typ = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? "string" : "real";
+			const char *typ = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? vartype_strings[ND_GEN_STRING] : vartype_strings[ND_VCD_REAL];
 			int tlen = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? 0 : 1;
 			w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s %d %s %s $end\n", typ, tlen, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 			}
@@ -610,7 +615,7 @@ for(i=0;i<nodecnt;i++)
 				}
 				else
 				{
-				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s 1 %s %s $end\n", vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype], vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
+				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s 1 %s %s $end\n", vartype_strings[vartype_bounds_fix(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype)], vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 				}
 			}
 			else
@@ -622,7 +627,7 @@ for(i=0;i<nodecnt;i++)
 				}
 				else
 				{
-				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s %d %s %s $end\n", vartype_strings[GLOBALS->hp_vcd_saver_c_1[i]->item->vartype], len, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
+				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s %d %s %s $end\n", vartype_strings[vartype_bounds_fix(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype)], len, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 				}
 			GLOBALS->hp_vcd_saver_c_1[i]->len = len;
 			if(len > max_len) max_len = len;

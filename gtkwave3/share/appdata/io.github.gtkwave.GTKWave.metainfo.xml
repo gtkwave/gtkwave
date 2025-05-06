@@ -41,6 +41,7 @@
         </p>
 	<ul>
             <li>Version bump to prepare for next development version.</li>
+            <li>Ensure type name in $var for VCD saver is >0 length (GHW).</li>
         </ul>
       </description>
     </release>
