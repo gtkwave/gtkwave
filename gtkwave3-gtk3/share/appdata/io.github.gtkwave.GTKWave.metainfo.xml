@@ -40,8 +40,8 @@
         Changes in 3.3.124:
         </p>
         <ul>
-            <li>Version	bump to prepare for next development version.</li>
             <li>Ensure type name in $var for VCD saver is >0 length (GHW).</li>
+            <li>Preserve bitblasted vector ordering with VCD saver.</li>
         </ul>
       </description>
     </release>

@@ -298,6 +298,17 @@ if(vt->right) recurse_build(vt->right, hp);
 }
 
 
+static int vcdsav_tree_node_compare(const void *s1, const void *s2)
+{
+vcdsav_Tree *v1, *v2;
+
+v1=*((vcdsav_Tree **)s1);
+v2=*((vcdsav_Tree **)s2);
+
+return(v1->val - v2->val); /* emit in node add order seems good enough to maintain bitblasting order instead of something like (-sigcmp(v1->item->nname, v2->item->nname)) working directly on names */
+}
+
+
 /*
  * heapify algorithm...used to grab the next value change
  */
@@ -567,6 +578,7 @@ if(export_typ == WAVE_EXPORT_TRANS)
 /* write out netnames here ... */
 hp_clone = GLOBALS->hp_vcd_saver_c_1 = calloc_2(nodecnt, sizeof(vcdsav_Tree *));
 recurse_build(vt, &hp_clone);
+qsort(GLOBALS->hp_vcd_saver_c_1, nodecnt, sizeof(vcdsav_Tree *), vcdsav_tree_node_compare);
 
 for(i=0;i<nodecnt;i++)
 	{
