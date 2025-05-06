@@ -42,6 +42,7 @@
 	<ul>
             <li>Ensure type name in $var for VCD saver is >0 length (GHW).</li>
             <li>Preserve bitblasted vector ordering with VCD saver.</li>
+            <li>Use full type names in VCD saver instead of abbreviations.</li>
         </ul>
       </description>
     </release>

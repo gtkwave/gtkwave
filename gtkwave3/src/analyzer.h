@@ -255,6 +255,49 @@ static const char *vartype_strings[] = { \
     "missing" \
 };
 
+#define WAVE_NODEVARTYPE_VCD_SAVER_STR \
+static const char *vartype_vcd_saver_strings[] = { \
+    "", \
+    "event", \
+    "integer", \
+    "parameter", \
+    "real", \
+    "real_parameter", \
+    "reg", \
+    "supply0", \
+    "supply1", \
+    "time", \
+    "tri", \
+    "triand", \
+    "trior", \
+    "trireg", \
+    "tri0", \
+    "tri1", \
+    "wand", \
+    "wire", \
+    "wor", \
+    "array", \
+    "realtime", \
+    "port", \
+    "string", \
+    "bit", \
+    "logic", \
+    "int", \
+    "shortint", \
+    "longint", \
+    "byte", \
+    "enum", \
+    "shortreal", \
+    "signal", \
+    "var", \
+    "const", \
+    "file", \
+    "memory", \
+    "net", \
+    "alias", \
+    "missing" \
+};
+
 
 enum nodeVarType {
     ND_UNSPECIFIED_DEFAULT = 0,

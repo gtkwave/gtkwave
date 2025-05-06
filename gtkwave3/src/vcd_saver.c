@@ -15,7 +15,8 @@
 #include "hierpack.h"
 #include <time.h>
 
-WAVE_NODEVARTYPE_STR
+/* can't use WAVE_NODEVARTYPE_STR because it has shorthand versions of various types which will fail to parse as VCD times with the VCD loaders */
+WAVE_NODEVARTYPE_VCD_SAVER_STR
 
 static unsigned int vartype_bounds_fix(unsigned int vt)
 {
@@ -599,7 +600,7 @@ for(i=0;i<nodecnt;i++)
 			}
 			else
 			{
-			const char *typ = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? vartype_strings[ND_GEN_STRING] : vartype_strings[ND_VCD_REAL];
+			const char *typ = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? vartype_vcd_saver_strings[ND_GEN_STRING] : vartype_vcd_saver_strings[ND_VCD_REAL];
 			int tlen = (GLOBALS->hp_vcd_saver_c_1[i]->flags & HIST_STRING) ? 0 : 1;
 			w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s %d %s %s $end\n", typ, tlen, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 			}
@@ -627,7 +628,7 @@ for(i=0;i<nodecnt;i++)
 				}
 				else
 				{
-				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s 1 %s %s $end\n", vartype_strings[vartype_bounds_fix(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype)], vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
+				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s 1 %s %s $end\n", vartype_vcd_saver_strings[vartype_bounds_fix(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype)], vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 				}
 			}
 			else
@@ -639,7 +640,7 @@ for(i=0;i<nodecnt;i++)
 				}
 				else
 				{
-				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s %d %s %s $end\n", vartype_strings[vartype_bounds_fix(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype)], len, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
+				w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$var %s %d %s %s $end\n", vartype_vcd_saver_strings[vartype_bounds_fix(GLOBALS->hp_vcd_saver_c_1[i]->item->vartype)], len, vcdid(GLOBALS->hp_vcd_saver_c_1[i]->val, export_typ), netname);
 				}
 			GLOBALS->hp_vcd_saver_c_1[i]->len = len;
 			if(len > max_len) max_len = len;

@@ -1857,3 +1857,4 @@
 		Preserve dimension on integer array element when expanded.
 3.3.124	06may25	Ensure type name in $var for VCD saver is >0 length (GHW).
 		Preserve bitblasted vector ordering with VCD saver.
+		Use full type names in VCD saver instead of abbreviations.
