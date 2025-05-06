@@ -34,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.124" date="2025-05-06">
+      <description>
+        <p>
+	Changes in 3.3.124:
+        </p>
+	<ul>
+            <li>Version bump to prepare for next development version.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.123" date="2025-05-01">
       <description>
         <p>
