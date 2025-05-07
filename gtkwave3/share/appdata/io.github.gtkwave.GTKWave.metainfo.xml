@@ -34,7 +34,7 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.124" date="2025-05-06">
+    <release version="3.3.124" date="2025-05-07">
       <description>
         <p>
 	Changes in 3.3.124:
@@ -43,6 +43,7 @@
             <li>Ensure type name in $var for VCD saver is >0 length (GHW).</li>
             <li>Preserve bitblasted vector ordering with VCD saver.</li>
             <li>Use full type names in VCD saver instead of abbreviations.</li>
+            <li>Dump all bits for a bitblasted vector in VCD saver in order to ensure stray bit extractions do not cause a failure to reconstruct vectors in proper order in the extracted file.</li>
         </ul>
       </description>
     </release>

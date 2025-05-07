@@ -1934,6 +1934,9 @@
                 #428 in 3.3.122 introduced.
 		Fix improper autocoalesce of adjacent duplicate symbols.
 		Preserve dimension on integer array element when expanded.
-3.3.124	06may25	Ensure type name in $var for VCD saver is >0 length (GHW).
+3.3.124	07may25	Ensure type name in $var for VCD saver is >0 length (GHW).
 		Preserve bitblasted vector ordering with VCD saver.
 		Use full type names in VCD saver instead of abbreviations.
+		Dump all bits for a bitblasted vector in VCD saver in order
+		to ensure stray bit extractions do not cause a failure to
+		reconstruct vectors in proper order in the extracted file.

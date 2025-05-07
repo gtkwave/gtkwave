@@ -432,6 +432,7 @@ while(t)
 			if(!vt || vt->item != n)
 				{
 				unsigned char flags = 0;
+				unsigned char bitblasted = 0;
 
 				if(n->head.next)
 				if(n->head.next->next)
@@ -439,7 +440,43 @@ while(t)
 					flags = n->head.next->next->flags;
 					}
 
-				vt = vcdsav_insert(n, vt, ++nodecnt, flags, &n->head);
+				/* look to see if we need to emit all bits of a bitblasted vector in order for completeness */
+				if(n->msi == n->lsi) /* single bit */
+					{
+					char *lb = strrchr(n->nname, '[');
+					if(lb)
+						{
+						if(!strrchr(n->nname, ':')); /* look for bitblasting */
+							{
+							struct symbol *v = symfind(n->nname, NULL);
+							if(v->vec_root)
+								{
+								v = v->vec_root;
+								while(v)
+									{
+									vt = vcdsav_splay(v->n, vt);
+									if(!vt || vt->item != v->n)
+										{
+										bitblasted = 1;
+										flags = 0;
+										if(v->n->head.next)
+										if(v->n->head.next->next)
+											{
+											flags = v->n->head.next->next->flags;
+											}
+										vt = vcdsav_insert(v->n, vt, ++nodecnt, flags, &v->n->head);
+										}
+									v = v->vec_chain;
+									}
+								}
+							}
+						}
+					}
+
+				if(!bitblasted)
+					{
+					vt = vcdsav_insert(n, vt, ++nodecnt, flags, &n->head);
+					}
 				}
 			}
 		}
@@ -451,6 +488,7 @@ while(t)
 			bptr bt = b->bits;
 			if(bt)
 				{
+				struct symbol *vr = NULL; /* used to keep from having to go O(n**2) in worst case across bt->nnbits when bitblasted */
 				for(i=0;i<bt->nnbits;i++)
 					{
 					if(bt->nodes[i])
@@ -462,6 +500,7 @@ while(t)
 						if(!vt || vt->item != n)
 							{
 							unsigned char flags = 0;
+							unsigned char bitblasted = 0;
 
 							if(n->head.next)
 							if(n->head.next->next)
@@ -469,7 +508,45 @@ while(t)
 								flags = n->head.next->next->flags;
 								}
 
-							vt = vcdsav_insert(n, vt, ++nodecnt, flags, &n->head);
+							/* look to see if we need to emit all bits of a bitblasted vector in order for completeness */
+							if(n->msi == n->lsi) /* single bit */
+								{
+								char *lb = strrchr(n->nname, '[');
+								if(lb)
+									{
+									if(!strrchr(n->nname, ':')); /* look for bitblasting */
+										{
+										struct symbol *v = symfind(n->nname, NULL);
+										if((v->vec_root) && (v->vec_root != vr))
+											{
+											v = vr = v->vec_root;
+											while(v)
+												{
+												vt = vcdsav_splay(v->n, vt);
+												if(!vt || vt->item != v->n)
+													{
+													bitblasted = 1;
+													flags = 0;
+
+													if(v->n->head.next)
+													if(v->n->head.next->next)
+														{
+														flags = v->n->head.next->next->flags;
+														}
+
+													vt = vcdsav_insert(v->n, vt, ++nodecnt, flags, &v->n->head);
+													}
+												v = v->vec_chain;
+												}
+											}
+										}
+									}
+								}
+
+							if(!bitblasted)
+								{
+								vt = vcdsav_insert(n, vt, ++nodecnt, flags, &n->head);
+								}
 							}
 						}
 					}
@@ -579,7 +656,7 @@ if(export_typ == WAVE_EXPORT_TRANS)
 /* write out netnames here ... */
 hp_clone = GLOBALS->hp_vcd_saver_c_1 = calloc_2(nodecnt, sizeof(vcdsav_Tree *));
 recurse_build(vt, &hp_clone);
-qsort(GLOBALS->hp_vcd_saver_c_1, nodecnt, sizeof(vcdsav_Tree *), vcdsav_tree_node_compare);
+qsort(GLOBALS->hp_vcd_saver_c_1, nodecnt, sizeof(vcdsav_Tree *), vcdsav_tree_node_compare); /* reconstruct array in order vcdsav_insert() was called to get bit ordering back */
 
 for(i=0;i<nodecnt;i++)
 	{
