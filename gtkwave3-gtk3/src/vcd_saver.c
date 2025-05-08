@@ -448,25 +448,29 @@ while(t)
 						{
 						if(!strrchr(n->nname, ':')); /* look for bitblasting */
 							{
-							struct symbol *v = symfind(n->nname, NULL);
-							if(v->vec_root)
+							char *rb = strchr(lb+1, ']');
+							if(rb && !(*(rb+1))) /* ensure is at the end so it's not part of a generate index */
 								{
-								v = v->vec_root;
-								while(v)
+								struct symbol *v = symfind(n->nname, NULL);
+								if(v->vec_root)
 									{
-									vt = vcdsav_splay(v->n, vt);
-									if(!vt || vt->item != v->n)
+									v = v->vec_root;
+									while(v)
 										{
-										bitblasted = 1;
-										flags = 0;
-										if(v->n->head.next)
-										if(v->n->head.next->next)
+										vt = vcdsav_splay(v->n, vt);
+										if(!vt || vt->item != v->n)
 											{
-											flags = v->n->head.next->next->flags;
+											bitblasted = 1;
+											flags = 0;
+											if(v->n->head.next)
+											if(v->n->head.next->next)
+												{
+												flags = v->n->head.next->next->flags;
+												}
+											vt = vcdsav_insert(v->n, vt, ++nodecnt, flags, &v->n->head);
 											}
-										vt = vcdsav_insert(v->n, vt, ++nodecnt, flags, &v->n->head);
+										v = v->vec_chain;
 										}
-									v = v->vec_chain;
 									}
 								}
 							}
@@ -516,27 +520,31 @@ while(t)
 									{
 									if(!strrchr(n->nname, ':')); /* look for bitblasting */
 										{
-										struct symbol *v = symfind(n->nname, NULL);
-										if((v->vec_root) && (v->vec_root != vr))
-											{
-											v = vr = v->vec_root;
-											while(v)
+			                                                        char *rb = strchr(lb+1, ']');
+                        			                                if(rb && !(*(rb+1))) /*	ensure is at the end so	it's not part of a generate index */
+                                                			                {
+											struct symbol *v = symfind(n->nname, NULL);
+											if((v->vec_root) && (v->vec_root != vr))
 												{
-												vt = vcdsav_splay(v->n, vt);
-												if(!vt || vt->item != v->n)
+												v = vr = v->vec_root;
+												while(v)
 													{
-													bitblasted = 1;
-													flags = 0;
-
-													if(v->n->head.next)
-													if(v->n->head.next->next)
+													vt = vcdsav_splay(v->n, vt);
+													if(!vt || vt->item != v->n)
 														{
-														flags = v->n->head.next->next->flags;
-														}
+														bitblasted = 1;
+														flags = 0;
 
-													vt = vcdsav_insert(v->n, vt, ++nodecnt, flags, &v->n->head);
+														if(v->n->head.next)
+														if(v->n->head.next->next)
+															{
+															flags = v->n->head.next->next->flags;
+															}
+
+														vt = vcdsav_insert(v->n, vt, ++nodecnt, flags, &v->n->head);
+														}
+													v = v->vec_chain;
 													}
-												v = v->vec_chain;
 												}
 											}
 										}
