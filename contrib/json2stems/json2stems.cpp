@@ -123,48 +123,54 @@ std::pair<int, int> get_line_range(const std::string& loc)
 }
 
 // Main converter function
-void json2stems(std::istream& netlist_in, std::istream& meta_in, std::ostream& out) 
-{
+void json2stems(std::istream& netlist_stream, std::istream& meta_stream, std::ostream& out) {
   json meta_json, netlist_json;
-
-  try 
-  {
-    meta_json = json::parse(meta_in);
-    netlist_json = json::parse(netlist_in);
-  } 
-  catch (const std::exception& e) 
-  {
-    std::cout << "Failed to parse JSON input: " << e.what() << std::endl;
-    return;
-  }
+  meta_stream >> meta_json;
+  netlist_stream >> netlist_json;
 
   auto filemap = parse_filemap(meta_json);
 
-  for (const auto& module : netlist_json["modulesp"]) 
-  {
-    if (!module.contains("type") || module["type"] != "MODULE") continue;
-    if (!module.contains("name") || !module.contains("loc")) continue;
+  std::map<std::string, std::string> pointer_to_module_name;
+  if (netlist_json.contains("modulesp")) {
+    for (const auto& mod : netlist_json["modulesp"]) {
+      if (mod.contains("addr") && mod.contains("name")) {
+        pointer_to_module_name[mod["addr"]] = mod["name"];
+      }
+    }
+  }
 
-    std::string name = module["name"];
-    std::string loc = module["loc"];
+  for (const auto& mod : netlist_json["modulesp"]) {
+    if (!mod.contains("name") || !mod.contains("loc")) continue;
+
+    std::string loc = mod["loc"];
+    std::string mod_name = mod["name"];
     std::string file_id = get_file_id(loc);
     auto [start_line, end_line] = get_line_range(loc);
 
     auto it = filemap.find(file_id);
-    if (it == filemap.end()) continue;
+    if (it != filemap.end()) {
+      out << "++ module " << mod_name
+        << " file " << it->second
+        << " lines " << start_line << " - " << end_line << "\n";
+    }
 
-    out << "++ module " << name << " file " << it->second
-      << " lines " << start_line << " - " << end_line << "\n";
+    if (mod.contains("stmtsp")) {
+      for (const auto& stmt : mod["stmtsp"]) {
+        if (stmt.contains("type") && stmt["type"] == "CELL" && stmt.contains("name")) {
+          std::string inst_name = stmt["name"];
+          std::string target_mod_name = "UNKNOWN";
 
-    if (module.contains("stmtsp")) 
-    {
-      for (const auto& stmt : module["stmtsp"])
-      {
-        if (stmt.contains("type") && stmt["type"] == "CELL" && stmt.contains("name") && stmt.contains("origName")) 
-       {
-          out << "++ comp " << stmt["name"]
-            << " type " << stmt["origName"]
-            << " parent " << name << "\n";
+          if (stmt.contains("modp")) {
+            std::string modp = stmt["modp"];
+            auto it2 = pointer_to_module_name.find(modp);
+            if (it2 != pointer_to_module_name.end()) {
+              target_mod_name = it2->second;
+            }
+          }
+
+          out << "++ comp " << inst_name
+            << " type " << target_mod_name
+            << " parent " << mod_name << "\n";
         }
       }
     }
