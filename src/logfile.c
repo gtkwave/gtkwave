@@ -43,11 +43,11 @@ when our window is realized. We could also force our window to be
 realized with gtk_widget_realize, but it would have to be part of
 a hierarchy first */
 
-void log_text(GtkWidget *text, void *font, const char *str)
+void log_text(GtkTextBuffer *buffer, void *font, const char *str)
 {
     (void)font;
 
-    gtk_text_buffer_insert_with_tags(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+    gtk_text_buffer_insert_with_tags(buffer,
                                      &GLOBALS->iter_logfile_c_2,
                                      str,
                                      -1,
@@ -56,11 +56,11 @@ void log_text(GtkWidget *text, void *font, const char *str)
                                      NULL);
 }
 
-void log_text_bold(GtkWidget *text, void *font, const char *str)
+void log_text_bold(GtkTextBuffer *buffer, void *font, const char *str)
 {
     (void)font;
 
-    gtk_text_buffer_insert_with_tags(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+    gtk_text_buffer_insert_with_tags(buffer,
                                      &GLOBALS->iter_logfile_c_2,
                                      str,
                                      -1,
@@ -169,7 +169,8 @@ static gboolean button_release_event(GtkWidget *text, GdkEventButton *event)
                         sprintf(sel2, "%s%c", sel, (unsigned char)gch);
                     }
 
-                    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+                    GwTimeDimension time_dimension =
+                        gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
                     tm = unformat_time(sel2 ? sel2 : sel, time_dimension);
                     if ((tm >= GLOBALS->tims.first) && (tm <= GLOBALS->tims.last)) {
@@ -284,6 +285,66 @@ static void destroy_callback(GtkWidget *widget, GtkWidget *cached_window)
     ok_callback(widget, widget);
 }
 
+static void load_log(GtkTextBuffer *text_buffer, FILE *handle)
+{
+    struct wave_logfile_lines_t *wlog_head = NULL, *wlog_curr = NULL;
+    int wlog_size = 0;
+
+    {
+        GtkTextIter st_iter, en_iter;
+
+        gtk_text_buffer_get_start_iter(text_buffer, &st_iter);
+        gtk_text_buffer_get_end_iter(text_buffer, &en_iter);
+        gtk_text_buffer_delete(text_buffer, &st_iter, &en_iter);
+
+        gtk_text_buffer_get_start_iter(text_buffer, &GLOBALS->iter_logfile_c_2);
+    }
+
+    log_text_bold(text_buffer, NULL, "Click-select");
+    log_text(text_buffer, NULL, " on numbers to jump to that time value in the wave viewer.\n");
+    log_text(text_buffer, NULL, " \n");
+
+    while (!feof(handle)) {
+        char *pnt = fgetmalloc(handle);
+        if (pnt) {
+            struct wave_logfile_lines_t *w = calloc_2(1, sizeof(struct wave_logfile_lines_t));
+
+            wlog_size += (GLOBALS->fgetmalloc_len + 1);
+            w->text = pnt;
+            if (!wlog_curr) {
+                wlog_head = wlog_curr = w;
+            } else {
+                wlog_curr->next = w;
+                wlog_curr = w;
+            }
+        }
+    }
+
+    if (wlog_curr) {
+        struct wave_logfile_lines_t *w = wlog_head;
+        struct wave_logfile_lines_t *wt;
+        char *pnt = malloc_2(wlog_size + 1);
+        char *pnt2 = pnt;
+
+        while (w) {
+            int len = strlen(w->text);
+            memcpy(pnt2, w->text, len);
+            pnt2 += len;
+            *pnt2 = '\n';
+            pnt2++;
+
+            free_2(w->text);
+            wt = w;
+            w = w->next;
+            free_2(wt);
+        }
+        /* wlog_head = */ wlog_curr = NULL; /* scan-build */
+        *pnt2 = 0;
+        log_text(text_buffer, NULL, pnt);
+        free_2(pnt);
+    }
+}
+
 void logbox(const char *title, int width, const char *default_text)
 {
     GtkWidget *window;
@@ -294,11 +355,7 @@ void logbox(const char *title, int width, const char *default_text)
     GtkWidget *text;
     struct logfile_instance_t *log_c;
 
-    FILE *handle;
-    struct wave_logfile_lines_t *wlog_head = NULL, *wlog_curr = NULL;
-    int wlog_size = 0;
-
-    handle = fopen(default_text, "rb");
+    FILE *handle = fopen(default_text, "rb");
     if (!handle) {
         char *buf = malloc_2(strlen(default_text) + 128);
         sprintf(buf, "Could not open logfile '%s'\n", default_text);
@@ -361,56 +418,12 @@ void logbox(const char *title, int width, const char *default_text)
 
     gtk_widget_show(window);
 
-    log_text_bold(text, NULL, "Click-select");
-    log_text(text, NULL, " on numbers to jump to that time value in the wave viewer.\n");
-    log_text(text, NULL, " \n");
-
-    while (!feof(handle)) {
-        char *pnt = fgetmalloc(handle);
-        if (pnt) {
-            struct wave_logfile_lines_t *w = calloc_2(1, sizeof(struct wave_logfile_lines_t));
-
-            wlog_size += (GLOBALS->fgetmalloc_len + 1);
-            w->text = pnt;
-            if (!wlog_curr) {
-                wlog_head = wlog_curr = w;
-            } else {
-                wlog_curr->next = w;
-                wlog_curr = w;
-            }
-        }
-    }
-
-    if (wlog_curr) {
-        struct wave_logfile_lines_t *w = wlog_head;
-        struct wave_logfile_lines_t *wt;
-        char *pnt = malloc_2(wlog_size + 1);
-        char *pnt2 = pnt;
-
-        while (w) {
-            int len = strlen(w->text);
-            memcpy(pnt2, w->text, len);
-            pnt2 += len;
-            *pnt2 = '\n';
-            pnt2++;
-
-            free_2(w->text);
-            wt = w;
-            w = w->next;
-            free_2(wt);
-        }
-        /* wlog_head = */ wlog_curr = NULL; /* scan-build */
-        *pnt2 = 0;
-        log_text(text, NULL, pnt);
-        free_2(pnt);
-    }
+    load_log(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)), handle);
 
     fclose(handle);
 
-    log_c =
-        calloc(1,
-               sizeof(struct logfile_instance_t) +
-                   strlen(default_text)); /* deliberately not calloc_2, needs to be persistent! */
+    // deliberately not calloc_2, needs to be persistent!
+    log_c = calloc(1, sizeof(struct logfile_instance_t) + strlen(default_text));
     strcpy(log_c->default_text, default_text);
     log_c->window = window;
     log_c->text = text;
@@ -419,81 +432,6 @@ void logbox(const char *title, int width, const char *default_text)
     log_c->mono_tag = GLOBALS->mono_tag_logfile_c_1;
     log_c->size_tag = GLOBALS->size_tag_logfile_c_1;
     log_collection = log_c;
-}
-
-static void logbox_reload_single(GtkWidget *window, GtkWidget *text, char *default_text)
-{
-    (void)window;
-
-    FILE *handle;
-    struct wave_logfile_lines_t *wlog_head = NULL, *wlog_curr = NULL;
-    int wlog_size = 0;
-
-    handle = fopen(default_text, "rb");
-    if (!handle) {
-        char *buf = malloc_2(strlen(default_text) + 128);
-        sprintf(buf, "Could not open logfile '%s'\n", default_text);
-        status_text(buf);
-        free_2(buf);
-        return;
-    }
-
-    {
-        GtkTextIter st_iter, en_iter;
-
-        gtk_text_buffer_get_start_iter(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)), &st_iter);
-        gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)), &en_iter);
-        gtk_text_buffer_delete(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)), &st_iter, &en_iter);
-
-        gtk_text_buffer_get_start_iter(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-                                       &GLOBALS->iter_logfile_c_2);
-    }
-
-    log_text_bold(text, NULL, "Click-select");
-    log_text(text, NULL, " on numbers to jump to that time value in the wave viewer.\n");
-    log_text(text, NULL, " \n");
-
-    while (!feof(handle)) {
-        char *pnt = fgetmalloc(handle);
-        if (pnt) {
-            struct wave_logfile_lines_t *w = calloc_2(1, sizeof(struct wave_logfile_lines_t));
-
-            wlog_size += (GLOBALS->fgetmalloc_len + 1);
-            w->text = pnt;
-            if (!wlog_curr) {
-                wlog_head = wlog_curr = w;
-            } else {
-                wlog_curr->next = w;
-                wlog_curr = w;
-            }
-        }
-    }
-
-    if (wlog_curr) {
-        struct wave_logfile_lines_t *w = wlog_head;
-        struct wave_logfile_lines_t *wt;
-        char *pnt = malloc_2(wlog_size + 1);
-        char *pnt2 = pnt;
-
-        while (w) {
-            int len = strlen(w->text);
-            memcpy(pnt2, w->text, len);
-            pnt2 += len;
-            *pnt2 = '\n';
-            pnt2++;
-
-            free_2(w->text);
-            wt = w;
-            w = w->next;
-            free_2(wt);
-        }
-        /* wlog_head = */ wlog_curr = NULL; /* scan-build */
-        *pnt2 = 0;
-        log_text(text, NULL, pnt);
-        free_2(pnt);
-    }
-
-    fclose(handle);
 }
 
 void logbox_reload(void)
@@ -505,7 +443,19 @@ void logbox_reload(void)
         GLOBALS->mono_tag_logfile_c_1 = l->mono_tag;
         GLOBALS->size_tag_logfile_c_1 = l->size_tag;
 
-        logbox_reload_single(l->window, l->text, l->default_text);
+        FILE *handle = fopen(l->default_text, "rb");
+        if (!handle) {
+            char *buf = malloc_2(strlen(l->default_text) + 128);
+            sprintf(buf, "Could not open logfile '%s'\n", l->default_text);
+            status_text(buf);
+            free_2(buf);
+            return;
+        }
+
+        load_log(gtk_text_view_get_buffer(GTK_TEXT_VIEW(l->text)), handle);
+
+        fclose(handle);
+
         l = l->next;
     }
 }
