@@ -43,7 +43,7 @@ when our window is realized. We could also force our window to be
 realized with gtk_widget_realize, but it would have to be part of
 a hierarchy first */
 
-void log_text(GtkTextBuffer *buffer, void *font, const char *str)
+static void log_text(GtkTextBuffer *buffer, void *font, const char *str)
 {
     (void)font;
 
@@ -56,7 +56,7 @@ void log_text(GtkTextBuffer *buffer, void *font, const char *str)
                                      NULL);
 }
 
-void log_text_bold(GtkTextBuffer *buffer, void *font, const char *str)
+static void log_text_bold(GtkTextBuffer *buffer, void *font, const char *str)
 {
     (void)font;
 
@@ -67,6 +67,24 @@ void log_text_bold(GtkTextBuffer *buffer, void *font, const char *str)
                                      GLOBALS->bold_tag_logfile_c_2,
                                      GLOBALS->mono_tag_logfile_c_1,
                                      GLOBALS->size_tag_logfile_c_1,
+                                     NULL);
+}
+
+static void log_text_number(GtkTextBuffer *buffer, void *font, const char *str)
+{
+    (void)font;
+
+    GtkTextTagTable *tags = gtk_text_buffer_get_tag_table(buffer);
+    GtkTextTag *number_tag = gtk_text_tag_table_lookup(tags, "number");
+
+    gtk_text_buffer_insert_with_tags(buffer,
+                                     &GLOBALS->iter_logfile_c_2,
+                                     str,
+                                     -1,
+                                     GLOBALS->bold_tag_logfile_c_2,
+                                     GLOBALS->mono_tag_logfile_c_1,
+                                     GLOBALS->size_tag_logfile_c_1,
+                                     number_tag,
                                      NULL);
 }
 
@@ -112,90 +130,112 @@ static void center_op(void)
                           "value_changed"); /* force zoom update */
 }
 
+static void handle_number(const char *number)
+{
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
+    GwTime tm = unformat_time(number, time_dimension);
+
+    // g_printerr("Time: '%s' (%" GW_TIME_FORMAT ")\n", number, tm);
+
+    if ((tm >= GLOBALS->tims.first) && (tm <= GLOBALS->tims.last)) {
+        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+        gw_marker_set_position(primary_marker, tm);
+        gw_marker_set_enabled(primary_marker, TRUE);
+
+        GwMarker *ghost_marker = gw_project_get_ghost_marker(GLOBALS->project);
+        gw_marker_set_enabled(ghost_marker, FALSE);
+
+        center_op();
+        redraw_signals_and_waves();
+        update_time_box(); /* centering problem in GTK2 */
+    }
+}
+
+static char *get_tagged_text(GtkTextBuffer *buffer, const GtkTextIter *position, GtkTextTag *tag)
+{
+    GtkTextIter start = *position;
+    if (!gtk_text_iter_starts_tag(&start, tag)) {
+        gtk_text_iter_backward_to_tag_toggle(&start, tag);
+    }
+
+    GtkTextIter end = *position;
+    if (!gtk_text_iter_ends_tag(&end, tag)) {
+        gtk_text_iter_forward_to_tag_toggle(&end, tag);
+    }
+
+    return gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
+}
+
 static gboolean button_release_event(GtkWidget *text, GdkEventButton *event)
 {
-    (void)event;
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text));
+    GtkTextTagTable *tags = gtk_text_buffer_get_tag_table(buffer);
+    GtkTextTag *number_tag = gtk_text_tag_table_lookup(tags, "number");
 
-    gchar *sel;
+    int x = 0;
+    int y = 0;
+    gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(text),
+                                          GTK_TEXT_WINDOW_WIDGET,
+                                          event->x,
+                                          event->y,
+                                          &x,
+                                          &y);
 
-    GtkTextIter start;
-    GtkTextIter end;
+    GtkTextIter position;
+    if (gtk_text_view_get_iter_at_position(GTK_TEXT_VIEW(text), &position, NULL, x, y)) {
+        if (gtk_text_iter_has_tag(&position, number_tag)) {
+            char *str = get_tagged_text(buffer, &position, number_tag);
 
-    if (gtk_text_buffer_get_selection_bounds(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-                                             &start,
-                                             &end)) {
-        if (gtk_text_iter_compare(&start, &end) < 0) {
-            sel = gtk_text_buffer_get_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
-                                           &start,
-                                           &end,
-                                           FALSE);
+            handle_number(str);
 
-            if (sel) {
-                int slen = strlen(sel);
-                char *sel2 = NULL;
-
-                if ((slen) && (sel[0] >= '0') && (sel[0] <= '9')) {
-                    GwTime tm;
-                    gunichar gch = gtk_text_iter_get_char(&end);
-                    int do_si_append = 0;
-
-                    if (gch == ' ') /* in case time is of format "100 ps" with a space */
-                    {
-                        gtk_text_iter_forward_char(&end);
-                        gch = gtk_text_iter_get_char(&end);
-                    }
-
-                    if ((sel[slen - 1] >= '0') &&
-                        (sel[slen - 1] <= '9')) /* need to append units? */
-                    {
-                        int silen = strlen(WAVE_SI_UNITS);
-                        int silp;
-
-                        gch = tolower(gch);
-                        if (gch == 's') {
-                            do_si_append = 1;
-                        } else {
-                            for (silp = 0; silp < silen; silp++) {
-                                if ((unsigned)gch == (unsigned)WAVE_SI_UNITS[silp]) {
-                                    do_si_append = 1;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (do_si_append) {
-                        sel2 = malloc_2(slen + 2);
-                        sprintf(sel2, "%s%c", sel, (unsigned char)gch);
-                    }
-
-                    GwTimeDimension time_dimension =
-                        gw_dump_file_get_time_dimension(GLOBALS->dump_file);
-
-                    tm = unformat_time(sel2 ? sel2 : sel, time_dimension);
-                    if ((tm >= GLOBALS->tims.first) && (tm <= GLOBALS->tims.last)) {
-                        GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
-                        gw_marker_set_position(primary_marker, tm);
-                        gw_marker_set_enabled(primary_marker, TRUE);
-
-                        GwMarker *ghost_marker = gw_project_get_ghost_marker(GLOBALS->project);
-                        gw_marker_set_enabled(ghost_marker, FALSE);
-
-                        center_op();
-                        redraw_signals_and_waves();
-                        update_time_box(); /* centering problem in GTK2 */
-                    }
-                }
-
-                if (sel2) {
-                    free_2(sel2);
-                }
-                g_free(sel);
-            }
+            g_free(str);
         }
     }
 
-    return (FALSE); /* call remaining handlers... */
+    return FALSE; /* call remaining handlers... */
+}
+
+static gboolean motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
+{
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
+    GtkTextTagTable *tags = gtk_text_buffer_get_tag_table(buffer);
+    GtkTextTag *number_tag = gtk_text_tag_table_lookup(tags, "number");
+
+    static GdkCursor *cursor_default;
+    static GdkCursor *cursor_pointer;
+    if (cursor_default == NULL || cursor_pointer == NULL) {
+        GdkDisplay *display = gtk_widget_get_display(widget);
+        cursor_default = gdk_cursor_new_from_name(display, "default");
+        cursor_pointer = gdk_cursor_new_from_name(display, "pointer");
+    }
+
+    int x = 0;
+    int y = 0;
+    gtk_text_view_window_to_buffer_coords(GTK_TEXT_VIEW(widget),
+                                          GTK_TEXT_WINDOW_WIDGET,
+                                          event->x,
+                                          event->y,
+                                          &x,
+                                          &y);
+
+    static gboolean hovering = FALSE;
+
+    GtkTextIter position;
+    if (gtk_text_view_get_iter_at_position(GTK_TEXT_VIEW(widget), &position, NULL, x, y)) {
+        GdkWindow *window = gtk_text_view_get_window(GTK_TEXT_VIEW(widget), GTK_TEXT_WINDOW_TEXT);
+
+        gboolean has_tag = gtk_text_iter_has_tag(&position, number_tag);
+        if (!hovering && has_tag) {
+            gdk_window_set_cursor(window, cursor_pointer);
+        } else if (hovering && !has_tag) {
+            gdk_window_set_cursor(window, cursor_default);
+        }
+
+        hovering = has_tag;
+    }
+
+    return FALSE;
 }
 
 /* Create a scrolled text area that displays a "message" */
@@ -227,9 +267,16 @@ static GtkWidget *create_log_text(GtkWidget **textpnt)
                                    (GLOBALS->use_big_fonts ? 12 : 8) * PANGO_SCALE,
                                    NULL);
 
+    gtk_text_buffer_create_tag(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+                               "number",
+                               "foreground",
+                               "blue",
+                               NULL);
+
     *textpnt = text;
     gtk_widget_set_size_request(GTK_WIDGET(text), 100, 100);
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(text), TRUE);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(text), FALSE);
+    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(text), FALSE);
     gtk_widget_show(text);
 
     scrolled_window = gtk_scrolled_window_new(NULL, NULL);
@@ -244,6 +291,7 @@ static GtkWidget *create_log_text(GtkWidget **textpnt)
     g_signal_connect(text, "realize", G_CALLBACK(log_realize_text), NULL);
 
     g_signal_connect(text, "button_release_event", G_CALLBACK(button_release_event), NULL);
+    g_signal_connect(text, "motion_notify_event", G_CALLBACK(motion_notify_event), NULL);
 
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_CHAR);
     return (scrolled_window);
@@ -287,62 +335,46 @@ static void destroy_callback(GtkWidget *widget, GtkWidget *cached_window)
 
 static void load_log(GtkTextBuffer *text_buffer, FILE *handle)
 {
-    struct wave_logfile_lines_t *wlog_head = NULL, *wlog_curr = NULL;
-    int wlog_size = 0;
+    gtk_text_buffer_set_text(text_buffer, "", 0);
+    gtk_text_buffer_get_start_iter(text_buffer, &GLOBALS->iter_logfile_c_2);
 
-    {
-        GtkTextIter st_iter, en_iter;
-
-        gtk_text_buffer_get_start_iter(text_buffer, &st_iter);
-        gtk_text_buffer_get_end_iter(text_buffer, &en_iter);
-        gtk_text_buffer_delete(text_buffer, &st_iter, &en_iter);
-
-        gtk_text_buffer_get_start_iter(text_buffer, &GLOBALS->iter_logfile_c_2);
-    }
-
-    log_text_bold(text_buffer, NULL, "Click-select");
+    log_text_bold(text_buffer, NULL, "Click");
     log_text(text_buffer, NULL, " on numbers to jump to that time value in the wave viewer.\n");
     log_text(text_buffer, NULL, " \n");
 
+    GRegex *number_regex =
+        g_regex_new("(\\d+(?:\\.\\d+)?(?:\\s*[munpfaz]?s(?=\\W|$))?)", 0, 0, NULL);
+    g_assert(number_regex != NULL);
+
     while (!feof(handle)) {
-        char *pnt = fgetmalloc(handle);
-        if (pnt) {
-            struct wave_logfile_lines_t *w = calloc_2(1, sizeof(struct wave_logfile_lines_t));
+        char *line = fgetmalloc(handle);
+        if (line == NULL) {
+            break;
+        }
 
-            wlog_size += (GLOBALS->fgetmalloc_len + 1);
-            w->text = pnt;
-            if (!wlog_curr) {
-                wlog_head = wlog_curr = w;
-            } else {
-                wlog_curr->next = w;
-                wlog_curr = w;
+        char **parts = g_regex_split(number_regex, line, 0);
+
+        if (parts != NULL) {
+            gboolean is_number = FALSE;
+            for (char **iter = parts; *iter != NULL; iter++) {
+                if (is_number) {
+                    log_text_number(text_buffer, NULL, *iter);
+                } else {
+                    log_text(text_buffer, NULL, *iter);
+                }
+
+                is_number = !is_number;
             }
+
+            g_strfreev(parts);
         }
+
+        log_text(text_buffer, NULL, "\n");
+
+        free(line);
     }
 
-    if (wlog_curr) {
-        struct wave_logfile_lines_t *w = wlog_head;
-        struct wave_logfile_lines_t *wt;
-        char *pnt = malloc_2(wlog_size + 1);
-        char *pnt2 = pnt;
-
-        while (w) {
-            int len = strlen(w->text);
-            memcpy(pnt2, w->text, len);
-            pnt2 += len;
-            *pnt2 = '\n';
-            pnt2++;
-
-            free_2(w->text);
-            wt = w;
-            w = w->next;
-            free_2(wt);
-        }
-        /* wlog_head = */ wlog_curr = NULL; /* scan-build */
-        *pnt2 = 0;
-        log_text(text_buffer, NULL, pnt);
-        free_2(pnt);
-    }
+    g_regex_unref(number_regex);
 }
 
 void logbox(const char *title, int width, const char *default_text)
