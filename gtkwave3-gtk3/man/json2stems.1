@@ -1,0 +1,27 @@
+.TH "JSON2STEMS" "1" "3.3.125" "Leon Wandruschka" "Filetype Conversion"
+.SH "NAME"
+.LP 
+json2stems \- Verilator JSON to rtlbrowse stems conversion.
+.SH "SYNTAX"
+.LP 
+json2stems \fIMETAINFILE\fP \fITREEINFILE\fP \fIOUTFILE\fP
+.SH "DESCRIPTION"
+.LP 
+Converts Verilator JSON AST representation to stems file for use with rtlbrowse.  
+Intended to replace the obsolete xml2stems(1), and in the future, advanced tool features may possibly use additional data provided by the Verilator AST.
+.SH "EXAMPLES"
+.LP 
+The following is a chain of commands to compile Verilog source and then bring up gtkwave and rtlbrowse together for source code annotation.
+This assumes the file des.fst was already generated from a prior simulation.
+.TP 
+verilator -Wno-fatal des.v -json-only --bbox-sys
+.TP 
+json2stems obj_dir/Vdes.tree.meta.json obj_dir/Vdes.tree.json des.stems
+.TP
+gtkwave -t des.stems des.fst
+.SH "AUTHORS"
+.LP 
+Leon Wandruschka <leon.wandruschka@outlook.com>
+.SH "SEE ALSO"
+.LP 
+\fIrtlbrowse\fP(1) \fIxml2stems\fP(1) \fIgtkwave\fP(1)
