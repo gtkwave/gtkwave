@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(gtkwave, 3.3.124, bybell@rocketmail.com)
+AC_INIT(gtkwave, 3.3.125, bybell@rocketmail.com)
 AC_CONFIG_SRCDIR([src/vcd.c])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([config.h])
@@ -908,6 +908,7 @@ AC_CONFIG_FILES([Makefile
 		contrib/Makefile
 		contrib/rtlbrowse/Makefile
 		contrib/xml2stems/Makefile
+		contrib/json2stems/Makefile
 		contrib/bundle_for_osx/Makefile
 		contrib/fst_jni/Makefile
 		contrib/wlf2vcd/Makefile

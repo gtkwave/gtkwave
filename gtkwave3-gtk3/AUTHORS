@@ -11,3 +11,4 @@ Hierarchy marker icons from the Silk icons set by Mark James found at the http:/
 Portions of the TCL implementation, tcl_np.c and tcl_np.h are copyrighted by the Regents of the University of California, Sun Microsystems, Inc., Scriptics Corporation, ActiveState Corporation, and other parties.
 NSAlert is Copyright (C) 2011-2024 Philipp Mayerhofer.
 LZ4 is Copyright (C) 2011-2024 Yann Collet.
+json2stems is Copyright	(C) 2025 Leon Wandruschka.

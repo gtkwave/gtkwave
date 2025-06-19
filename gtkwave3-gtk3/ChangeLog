@@ -1940,3 +1940,6 @@
 		Dump all bits for a bitblasted vector in VCD saver in order
 		to ensure stray bit extractions do not cause a failure to
 		reconstruct vectors in proper order in the extracted file.
+3.3.125 18jun25	Added json2stems to distribution to support newer versions
+		of Verilator.
+		VCD parser fix for colon in VCD variable name (Jasper).

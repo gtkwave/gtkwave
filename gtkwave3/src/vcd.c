@@ -453,7 +453,7 @@ return(T_UNKNOWN_KEY);
 }
 
 
-static int get_vartoken_patched(int match_kw)
+static int get_vartoken_patched(int ignore_colon, int match_kw)
 {
 int ch;
 int len=0;
@@ -475,7 +475,7 @@ if(!GLOBALS->var_prevch_vcd_c_1)
 	}
 
 if(ch=='[') return(V_LB);
-if(ch==':') return(V_COLON);
+if(ch==':' && !ignore_colon) return(V_COLON);
 if(ch==']') return(V_RB);
 
 for(GLOBALS->yytext_vcd_c_1[len++]=ch;;GLOBALS->yytext_vcd_c_1[len++]=ch)
@@ -486,7 +486,7 @@ for(GLOBALS->yytext_vcd_c_1[len++]=ch;;GLOBALS->yytext_vcd_c_1[len++]=ch)
 		}
 	ch=getch_patched();
 	if(ch<0) { free_2(GLOBALS->varsplit_vcd_c_1); GLOBALS->varsplit_vcd_c_1=NULL; break; }
-	if((ch==':')||(ch==']'))
+	if((ch==':' && !ignore_colon)||(ch==']'))
 		{
 		GLOBALS->var_prevch_vcd_c_1=ch;
 		break;
@@ -509,14 +509,14 @@ if(ch<0) { free_2(GLOBALS->varsplit_vcd_c_1); GLOBALS->varsplit_vcd_c_1=NULL; }
 return(V_STRING);
 }
 
-static int get_vartoken(int match_kw)
+static int get_vartoken(int ignore_colon, int match_kw)
 {
 int ch;
 int len=0;
 
 if(GLOBALS->varsplit_vcd_c_1)
 	{
-	int rc=get_vartoken_patched(match_kw);
+	int rc=get_vartoken_patched(ignore_colon, match_kw);
 	if(rc!=V_END) return(rc);
 	GLOBALS->var_prevch_vcd_c_1=0;
 	}
@@ -538,7 +538,7 @@ if(!GLOBALS->var_prevch_vcd_c_1)
 	}
 
 if(ch=='[') return(V_LB);
-if(ch==':') return(V_COLON);
+if(ch==':' && !ignore_colon) return(V_COLON);
 if(ch==']') return(V_RB);
 
 if(ch=='#')     /* for MTI System Verilog '$var reg 64 >w #implicit-var###VarElem:ram_di[0.0] [63:0] $end' style declarations */
@@ -580,7 +580,7 @@ for(GLOBALS->yytext_vcd_c_1[len++]=ch;;GLOBALS->yytext_vcd_c_1[len++]=ch)
 		GLOBALS->varsplit_vcd_c_1=GLOBALS->yytext_vcd_c_1+len;		/* keep looping so we get the *last* one */
 		}
 	else
-	if(((ch==':')||(ch==']'))&&(!GLOBALS->varsplit_vcd_c_1)&&(GLOBALS->yytext_vcd_c_1[0]!='\\'))
+	if(((ch==':' && !ignore_colon)||(ch==']'))&&(!GLOBALS->varsplit_vcd_c_1)&&(GLOBALS->yytext_vcd_c_1[0]!='\\'))
 		{
 		GLOBALS->var_prevch_vcd_c_1=ch;
 		break;
@@ -1275,7 +1275,7 @@ for(;;)
 				free_2(GLOBALS->varsplit_vcd_c_1);
 				GLOBALS->varsplit_vcd_c_1=NULL;
 				}
-			vtok=get_vartoken(1);
+			vtok=get_vartoken(0, 1);
 			if(vtok>V_STRINGTYPE) goto bail;
 
 			v=(struct vcdsymbol *)calloc_2(1,sizeof(struct vcdsymbol));
@@ -1284,7 +1284,7 @@ for(;;)
 
 			if(vtok==V_PORT)
 				{
-				vtok=get_vartoken(1);
+				vtok=get_vartoken(0, 1);
 				if(vtok==V_STRING)
 					{
 					v->size=atoi_64(GLOBALS->yytext_vcd_c_1);
@@ -1293,11 +1293,11 @@ for(;;)
 					else
 					if(vtok==V_LB)
 					{
-					vtok=get_vartoken(1);
+					vtok=get_vartoken(0, 1);
 					if(vtok==V_END) goto err;
 					if(vtok!=V_STRING) goto err;
 					v->msi=atoi_64(GLOBALS->yytext_vcd_c_1);
-					vtok=get_vartoken(0);
+					vtok=get_vartoken(0, 0);
 					if(vtok==V_RB)
 						{
 						v->lsi=v->msi;
@@ -1306,10 +1306,10 @@ for(;;)
 						else
 						{
 						if(vtok!=V_COLON) goto err;
-						vtok=get_vartoken(0);
+						vtok=get_vartoken(0, 0);
 						if(vtok!=V_STRING) goto err;
 						v->lsi=atoi_64(GLOBALS->yytext_vcd_c_1);
-						vtok=get_vartoken(0);
+						vtok=get_vartoken(0, 0);
 						if(vtok!=V_RB) goto err;
 
 						if(v->msi>v->lsi)
@@ -1347,7 +1347,7 @@ for(;;)
                                 if(v->nid < GLOBALS->vcd_minid_vcd_c_1) GLOBALS->vcd_minid_vcd_c_1 = v->nid;
                                 if(v->nid > GLOBALS->vcd_maxid_vcd_c_1) GLOBALS->vcd_maxid_vcd_c_1 = v->nid;
 
-				vtok=get_vartoken(0);
+				vtok=get_vartoken(1, 0);
 				if(vtok!=V_STRING) goto err;
 				if(GLOBALS->slisthier_len)
 					{
@@ -1413,7 +1413,7 @@ for(;;)
 				}
 				else	/* regular vcd var, not an evcd port var */
 				{
-				vtok=get_vartoken(1);
+				vtok=get_vartoken(0, 1);
 				if(vtok==V_END) goto err;
 				v->size=atoi_64(GLOBALS->yytext_vcd_c_1);
 				vtok=get_strtoken();
@@ -1439,7 +1439,7 @@ for(;;)
                                 if(v->nid < GLOBALS->vcd_minid_vcd_c_1) GLOBALS->vcd_minid_vcd_c_1 = v->nid;
                                 if(v->nid > GLOBALS->vcd_maxid_vcd_c_1) GLOBALS->vcd_maxid_vcd_c_1 = v->nid;
 
-				vtok=get_vartoken(0);
+				vtok=get_vartoken(1, 0);
 				if(vtok!=V_STRING) goto err;
 				if(GLOBALS->slisthier_len)
 					{
@@ -1504,15 +1504,15 @@ for(;;)
                                 GLOBALS->pv_vcd_c_1=v;
 
 				num_seen = 0;
-				vtok=get_vartoken(1);
+				vtok=get_vartoken(0, 1);
 				if(vtok==V_END) goto dumpv;
 				if(vtok!=V_LB) goto err;
 				colon_seen = 0;
-				vtok=get_vartoken(0);
+				vtok=get_vartoken(0, 0);
 				if(vtok!=V_STRING) goto err;
 				num_seen = 1;
 				v->msi=atoi_64(GLOBALS->yytext_vcd_c_1);
-				vtok=get_vartoken(0);
+				vtok=get_vartoken(0, 0);
 				if(vtok==V_RB)
 					{
 					v->lsi=v->msi;
@@ -1520,10 +1520,10 @@ for(;;)
 					}
 				if(vtok!=V_COLON) goto err;
 				colon_seen = 1;
-				vtok=get_vartoken(0);
+				vtok=get_vartoken(0, 0);
 				if(vtok!=V_STRING) goto err;
 				v->lsi=atoi_64(GLOBALS->yytext_vcd_c_1);
-				vtok=get_vartoken(0);
+				vtok=get_vartoken(0, 0);
 				if(vtok!=V_RB) goto err;
 				}
 
