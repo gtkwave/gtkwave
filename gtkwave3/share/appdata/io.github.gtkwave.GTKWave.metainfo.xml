@@ -34,7 +34,7 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.125" date="2025-06-17">
+    <release version="3.3.125" date="2025-06-22">
       <description>
         <p>
 	Changes in 3.3.125:
@@ -42,6 +42,7 @@
 	<ul>
             <li>Added json2stems to distribution to support newer versions of Verilator.</li>
             <li>VCD parser fix for colon in VCD variable name (Jasper).</li>
+            <li>Parameter size 0 fix for Vivado: backs out very old fix (for MTI) that converts 0 size signals to reals.</li>
         </ul>
       </description>
     </release>

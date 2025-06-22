@@ -1861,6 +1861,8 @@
                 Dump all bits for a bitblasted vector in VCD saver in order
                 to ensure stray	bit extractions	do not cause a failure to
                 reconstruct vectors in proper order in the extracted file.
-3.3.125 18jun25 Added json2stems to distribution to support newer versions
+3.3.125 22jun25 Added json2stems to distribution to support newer versions
                 of Verilator.
 		VCD parser fix for colon in VCD variable name (Jasper).
+		Parameter size 0 fix for Vivado: backs out very old fix
+		(for MTI) that converts 0 size signals to reals.

@@ -1883,7 +1883,14 @@ for(;;)
 					{
 					if(v->vartype != V_STRINGTYPE)
 						{
-						v->vartype = V_REAL;
+						if(1) /* unless a counterexample from a modern simulator proves otherwise versus the "MTI fix", v->vartype = V_REAL seems to be obsolete */
+							{
+							v->size = 1;
+							}
+						else
+							{
+							v->vartype = V_REAL; 
+							}
 						}
 					}
 					else
