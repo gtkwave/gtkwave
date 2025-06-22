@@ -1133,6 +1133,7 @@ jmp_buf *vcd_jmp_buf; /* from vcd.c */
 int vcd_warning_filesize; /* from vcd.c 502 */
 char autocoalesce; /* from vcd.c 503 */
 char autocoalesce_reversal; /* from vcd.c 504 */
+char mti_realparam_fix;
 int vcd_explicit_zero_subscripts; /* from vcd.c 505 */
 char convert_to_reals; /* from vcd.c 506 */
 char atomic_vectors; /* from vcd.c 507 */

@@ -1945,3 +1945,4 @@
 		VCD parser fix for colon in VCD variable name (Jasper).
 		Parameter size 0 fix for Vivado: backs out very old fix
 		(for MTI) that converts 0 size signals to reals.
+		Update vcd2fst so it handles MTI 0 size conversion.

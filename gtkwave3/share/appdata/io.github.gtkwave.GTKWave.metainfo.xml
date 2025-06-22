@@ -42,7 +42,8 @@
 	<ul>
             <li>Added json2stems to distribution to support newer versions of Verilator.</li>
             <li>VCD parser fix for colon in VCD variable name (Jasper).</li>
-            <li>Parameter size 0 fix for Vivado: backs out very old fix (for MTI) that converts 0 size signals to reals.</li>
+            <li>Parameter size 0 fix for Vivado: conditionally backs out very old fix (for MTI) that converts 0 size signals to reals.</li>
+            <li>Update vcd2fst so it handles MTI 0 size conversion.</li>
         </ul>
       </description>
     </release>

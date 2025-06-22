@@ -1144,6 +1144,7 @@ NULL, /* vcd_jmp_buf */
 -1, /* vcd_warning_filesize 472 */
 1, /* autocoalesce 473 */
 0, /* autocoalesce_reversal */
+0, /* mti_realparam_fix */
 -1, /* vcd_explicit_zero_subscripts 474 */
 0, /* convert_to_reals 475 */
 1, /* atomic_vectors 476 */
@@ -1872,6 +1873,7 @@ void reload_into_new_context_2(void)
  new_globals->autoname_bundles = GLOBALS->autoname_bundles;
  new_globals->autocoalesce = GLOBALS->autocoalesce;
  new_globals->autocoalesce_reversal = GLOBALS->autocoalesce_reversal;
+ new_globals->mti_realparam_fix = GLOBALS->mti_realparam_fix;
  new_globals->constant_marker_update = GLOBALS->constant_marker_update;
  new_globals->convert_to_reals = GLOBALS->convert_to_reals;
  new_globals->disable_mouseover = GLOBALS->disable_mouseover;
@@ -2839,6 +2841,7 @@ switch(type)
 							GLOBALS->lxt_clock_compress_to_z = g_old->lxt_clock_compress_to_z;
 							GLOBALS->autoname_bundles = g_old->autoname_bundles;
 							GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
+							GLOBALS->mti_realparam_fix = g_old->mti_realparam_fix;
 							GLOBALS->autocoalesce = g_old->autocoalesce;
 							GLOBALS->hier_grouping = g_old->hier_grouping;
 							GLOBALS->wave_scrolling = g_old->wave_scrolling;

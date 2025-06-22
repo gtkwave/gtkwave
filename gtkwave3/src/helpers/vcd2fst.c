@@ -54,7 +54,7 @@
 
 static uint32_t var_direction_idx = 0;
 static unsigned char *var_direction = NULL;
-
+static int mti_realparam_fix = 0;
 
 static void *realloc_2(void *ptr, size_t siz) /* cppcheck */
 {
@@ -826,7 +826,14 @@ while(!feof(f))
 			case FST_VT_GEN_STRING: len = 0; break;
 			case FST_VT_VCD_EVENT: len = (len != 0) ? len : 1;  break;
 			default:
-				if(len == 0) { len = 1; }
+				if(len == 0) 
+					{ 
+					len = 1; 
+					if((mti_realparam_fix) && (vartype == FST_VT_VCD_PARAMETER))
+						{
+						vartype = FST_VT_VCD_REAL_PARAMETER;
+						}
+					}
 				break;
 			}
 
@@ -1306,6 +1313,10 @@ while(!feof(f))
 
 		if(is_version)
 			{
+			if(strstr(pnt, "Questa") || strstr(pnt, "ModelSim")) /* realparam fix only is for MTI, conflicts with Vivado */
+				{
+				mti_realparam_fix = 1;
+				}
 			fstWriterSetVersion(ctx, pnt);
 			}
 			else

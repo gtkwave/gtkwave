@@ -683,6 +683,11 @@ for(;;)
                 GLOBALS->autocoalesce = 0;
 		rc = 1;
                 }
+        else if(strstr(GLOBALS->yytext_vcd_c_1, "Questa") || strstr(GLOBALS->yytext_vcd_c_1, "ModelSim")) /* realparam fix only is for MTI, conflicts with Vivado */
+                {
+                GLOBALS->mti_realparam_fix = 1;
+                rc = 1;
+                }
 	}
 if(hdr) { DEBUG(fprintf(stderr,"\n")); }
 return(rc);
@@ -1534,7 +1539,7 @@ for(;;)
                                         {
 					if(v->vartype != V_STRINGTYPE)
 						{
-						if(1) /* unless a counterexample from a modern simulator proves otherwise versus the "MTI fix", v->vartype = V_REAL seems to be obsolete */
+						if(!GLOBALS->mti_realparam_fix)
 							{
 							v->size = 1;
 							}

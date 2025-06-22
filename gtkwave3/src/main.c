@@ -101,6 +101,7 @@ set_GLOBALS((*GLOBALS->contexts)[page_num]);
 
 GLOBALS->lxt_clock_compress_to_z = g_old->lxt_clock_compress_to_z;
 GLOBALS->autoname_bundles = g_old->autoname_bundles;
+GLOBALS->mti_realparam_fix = g_old->mti_realparam_fix;
 GLOBALS->autocoalesce_reversal = g_old->autocoalesce_reversal;
 GLOBALS->autocoalesce = g_old->autocoalesce;
 GLOBALS->hier_grouping = g_old->hier_grouping;
@@ -620,6 +621,7 @@ if(!GLOBALS)
 	GLOBALS->autoname_bundles = old_g->autoname_bundles;
 	GLOBALS->autocoalesce = old_g->autocoalesce;
 	GLOBALS->autocoalesce_reversal = old_g->autocoalesce_reversal;
+        GLOBALS->mti_realparam_fix = old_g->mti_realparam_fix;
 	GLOBALS->constant_marker_update = old_g->constant_marker_update;
 	GLOBALS->convert_to_reals = old_g->convert_to_reals;
 	GLOBALS->disable_mouseover = old_g->disable_mouseover;
