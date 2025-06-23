@@ -80,6 +80,7 @@ static TimeType end_time=-1;
 static TimeType current_time=-1;
 static TimeType time_scale=1;	/* multiplier is 1, 10, 100 */
 static TimeType time_zero=0;
+static int mti_realparam_fix=0;
 
 static char vcd_hier_delimeter[2]={0, 0};   /* fill in after rc reading code */
 
@@ -724,7 +725,17 @@ for(;;)
 	{
 	tok=get_token();
 	if((tok==T_END)||(tok==T_EOF)) break;
-	if(hdr) { DEBUG(fprintf(stderr," %s",yytext)); }
+        if(hdr)
+                {
+                DEBUG(fprintf(stderr," %s",yytext));
+                if(hdr[0] == 'V')
+                        {
+                        if(strstr(yytext, "Questa") || strstr(yytext, "ModelSim")) /* realparam fix only is for MTI, conflicts with Vivado */
+                                {
+                                // mti_realparam_fix = 1;
+                                }
+                        }
+                }
 	}
 if(hdr) { DEBUG(fprintf(stderr,"\n")); }
 }
@@ -1341,7 +1352,20 @@ for(;;)
 				}
 
 			dumpv:
-                        if(v->size == 0) { v->vartype = V_REAL; } /* MTI fix */
+                        if(v->size == 0)
+                                {
+                                if(mti_realparam_fix)
+                                        {
+                                        v->vartype = V_REAL; /* MTI fix */
+                                        }
+                                else
+                                        {
+                                        int vlen = v->msi - v->lsi;
+                                        if(vlen<0) vlen = -vlen;
+                                        vlen++;
+                                        v->size = vlen;
+                                        }
+                                }
 
 			if(v->vartype==V_REAL)
 				{
