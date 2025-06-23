@@ -1007,6 +1007,15 @@ switch(GLOBALS->yytext_vcd_c_1[0])
 			}
 			else
 			{
+                        if(v->vartype == V_PARAMETER) /* github #446: size 0 on parameter with type declared wrong */
+                                {
+                                v->vartype = V_REAL;    /* override any data we parsed in for $var declaration */
+                                v->size=1;
+                                v->msi=v->lsi=0;
+
+                                fprintf(stderr, "GTKWAVE | Warning: symbol '%s' changing datatype from parameter to real.\n", v->name);
+                                }
+
 			add_histent(GLOBALS->current_time_vcd_c_1, v->narray[0],'g',1,(char *)d);
 			}
 

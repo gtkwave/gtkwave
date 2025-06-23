@@ -1304,6 +1304,15 @@ process_binary:
 				unsigned char typ2 = toupper(typ);
 				n->mv.mvlfac_vlist = (GLOBALS->vlist_prepack) ? ((struct vlist_t *)vlist_packer_create()) : vlist_create(sizeof(char));
 
+                                if((v->vartype == V_PARAMETER)&&(typ2=='R')) /* github #446: size 0 on parameter with type declared wrong */
+                                        {
+                                        v->vartype = V_REAL;    /* override any data we parsed in for $var declaration */
+                                        v->size=1;
+                                        v->msi=v->lsi=0;
+
+                                        fprintf(stderr, "GTKWAVE | Warning: symbol '%s' changing datatype from parameter to real.\n", v->name);
+                                        }
+
 				if((v->vartype!=V_REAL) && (v->vartype!=V_STRINGTYPE))
 					{
                                         if((typ2=='R')||(typ2=='S'))
