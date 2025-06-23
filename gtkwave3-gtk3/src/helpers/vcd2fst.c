@@ -461,6 +461,7 @@ if((!(*buf)[0])||(!fgets_rc))
 }
 
 JRB vcd_ids = NULL;
+JRB zerolen_ids = NULL; /* github #446 */
 
 static unsigned int vcdid_hash(char *s, int len)
 {
@@ -590,6 +591,7 @@ if(is_popen && is_extload)
 #endif
 
 vcd_ids = make_jrb();
+zerolen_ids = make_jrb(); /* github #446 */
 fstWriterSetPackType(ctx, pack_type);
 fstWriterSetRepackOnClose(ctx, repack_all);
 fstWriterSetParallelMode(ctx, parallel_mode);
@@ -612,6 +614,7 @@ while(!feof(f))
 		{
 		char *st = strtok(buf+5, " \t");
 		enum fstVarType vartype;
+		int zerolen = 0;
 		int len;
 		char *nam;
 		unsigned int hash;
@@ -833,6 +836,10 @@ while(!feof(f))
 						{
 						vartype = FST_VT_VCD_REAL_PARAMETER;
 						}
+					else
+						{
+						zerolen = (vartype != FST_VT_VCD_REAL) && (vartype != FST_VT_VCD_REAL_PARAMETER) && (vartype != FST_VT_VCD_REALTIME) && (vartype != FST_VT_SV_SHORTREAL);
+						}
 					}
 				break;
 			}
@@ -875,6 +882,18 @@ while(!feof(f))
 				else
 				{
 				fstWriterCreateVar(ctx, vartype, !var_direction ? FST_VD_IMPLICIT : var_direction[var_direction_idx++], node->val2.i, nam, node->val.i);
+				}
+
+			if(zerolen) /* github #446 */
+				{
+				node = jrb_find_int(zerolen_ids, hash);
+				if(!node)
+					{
+					/* fprintf(stderr, "VCD2FST | Name '%s'\n", nam); */
+					Jval val;
+					val.i = vartype;
+					jrb_insert_int(zerolen_ids, hash, val)->val2.i = 0;
+					}
 				}
 
 #if defined(VCD2FST_EXTLOAD_CONV)
@@ -1353,6 +1372,12 @@ if((!hash_kill) && (vcd_ids))
 	hash_kill = 1; /* scan-build */
 	}
 
+if(jrb_empty(zerolen_ids)) /* github #446 */
+	{
+	jrb_free_tree(zerolen_ids);
+	zerolen_ids = NULL;
+	}
+
 for(;;) /* was while(!feof(f)) */
 	{
 	unsigned int hash;
@@ -1565,6 +1590,19 @@ for(;;) /* was while(!feof(f)) */
 			sp = strchr(buf, ' ');
 			if(!sp) break;
 			hash = vcdid_hash(sp+1, nl - (sp+1));
+
+                        if(zerolen_ids) /* github #446 */
+                                {
+                                node = jrb_find_int(zerolen_ids, hash);
+                                if(node)
+                                        {
+					char *hash_str = strndup(sp+1, nl - (sp+1));
+                                        fprintf(stderr, "VCD2FST | Warning: write of real value change to nonreal VCD ID %s suppressed.\n", hash_str); /* github #446, Vivado emitting both boolean and real ambiguously to a zero length parameter */
+					free(hash_str);
+					break;
+                                        }
+                                }
+
 			if(!hash_kill)
 				{
 		                sscanf(buf+1,"%lg",&doub);
@@ -1653,6 +1691,12 @@ if(vcd_ids)
 	{
 	jrb_free_tree(vcd_ids);
 	vcd_ids = NULL;
+	}
+
+if(zerolen_ids) /* github #446 */
+	{
+	jrb_free_tree(zerolen_ids);
+	zerolen_ids = NULL;
 	}
 
 free(bin_fixbuff); bin_fixbuff = NULL;
