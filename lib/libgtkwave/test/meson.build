@@ -39,6 +39,24 @@ foreach test : libgtkwave_tests
     )
 endforeach
 
+# First, define the consumer executable so it gets built
+consumer_exe = executable(
+    'test-gw-shared-memory-consumer',
+    'test-gw-shared-memory-consumer.c',
+    dependencies: [libgtkwave_dep],
+)
+
+# Next, find our test script
+shm_test_script = find_program('test_shm_pipeline.sh', required: true)
+
+# Finally, define the test. Meson will run the script.
+test(
+    'Shared Memory Pipeline',
+    shm_test_script,
+    is_parallel: false, # Important: This test uses a system-wide resource
+    depends: [consumer_exe] # Ensures the consumer is built before the test runs
+)
+
 dump_executable = executable(
     'dump',
     ['dump.c'],
