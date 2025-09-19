@@ -259,6 +259,19 @@ const gchar *gw_vlist_reader_read_string(GwVlistReader *self)
     return self->string_buffer->str;
 }
 
+void gw_vlist_reader_set_position(GwVlistReader *self, guint position)
+{
+    _gw_vlist_reader_update_from_live_source(self);
+    g_return_if_fail(GW_IS_VLIST_READER(self));
+
+    // Clamp the position to be within valid bounds
+    if (position > self->size) {
+        self->position = self->size;
+    } else {
+        self->position = position;
+    }
+}
+
 gboolean gw_vlist_reader_is_done(GwVlistReader *self)
 {
     _gw_vlist_reader_update_from_live_source(self);

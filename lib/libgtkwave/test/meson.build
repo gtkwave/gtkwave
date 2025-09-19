@@ -19,6 +19,8 @@ libgtkwave_tests = [
     'test-gw-tree-builder',
     'test-gw-tree',
     'test-gw-vcd-loader',
+    'test-gw-vcd-partial-loader-equivalence',
+    'test-gw-vcd-partial-loader-stream',
     'test-gw-vlist-live-reader',
     'test-gw-vlist-packer',
     'test-gw-vlist-writer',
@@ -26,9 +28,14 @@ libgtkwave_tests = [
 ]
 
 foreach test : libgtkwave_tests
+    test_sources = [test + '.c', 'test-util.c']
+    if test == 'test-gw-vcd-partial-loader-equivalence'
+        test_sources += 'test-helpers.c'
+    endif
+
     test_executable = executable(
         test,
-        [test + '.c', 'test-util.c'],
+        test_sources,
         dependencies: libgtkwave_dep,
     )
 
@@ -73,6 +80,7 @@ dumpfile_tests = [
     'basic.fst',
     'basic.ghw',
     'basic.vcd',
+    'equivalence.vcd',
     'evcd.fst',
     'evcd.vcd',
     'ghdl_basic.fst',
