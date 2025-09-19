@@ -1,6 +1,7 @@
 #include "gw-vlist-reader.h"
 #include "gw-vlist.h"
 #include "gw-vlist-packer.h"
+#include "gw-vlist-writer.h"
 #include "gw-bit.h"
 #include <zlib.h>
 
@@ -16,6 +17,8 @@ struct _GwVlistReader
     guint size;
 
     GString *string_buffer;
+
+    GwVlistWriter *live_writer_source;
 };
 
 G_DEFINE_TYPE(GwVlistReader, gw_vlist_reader, G_TYPE_OBJECT)
@@ -33,9 +36,17 @@ static void gw_vlist_reader_finalize(GObject *object)
 {
     GwVlistReader *self = GW_VLIST_READER(object);
 
-    g_clear_pointer(&self->vlist, gw_vlist_destroy);
+    // Only destroy the vlist if it's not owned by a live writer
+    if (self->live_writer_source == NULL) {
+        g_clear_pointer(&self->vlist, gw_vlist_destroy);
+    } else {
+        // For live readers, the vlist is owned by the writer
+        // Don't destroy it here, just clear the pointer
+        self->vlist = NULL;
+    }
     g_clear_pointer(&self->depacked, gw_vlist_packer_decompress_destroy);
     g_string_free(self->string_buffer, TRUE);
+    g_clear_object(&self->live_writer_source);
 
     G_OBJECT_CLASS(gw_vlist_reader_parent_class)->finalize(object);
 }
@@ -49,8 +60,13 @@ static void gw_vlist_reader_constructed(GObject *object)
     if (self->prepacked) {
         self->depacked = gw_vlist_packer_decompress(self->vlist, &self->size);
         g_clear_pointer(&self->vlist, gw_vlist_destroy);
-    } else {
+    } else if (self->live_writer_source != NULL) {
+        // For live readers, size will be updated dynamically
+        self->size = 0;
+    } else if (self->vlist != NULL) {
         self->size = gw_vlist_size(self->vlist);
+    } else {
+        self->size = 0;
     }
 }
 
@@ -103,6 +119,7 @@ static void gw_vlist_reader_class_init(GwVlistReaderClass *klass)
 static void gw_vlist_reader_init(GwVlistReader *self)
 {
     self->string_buffer = g_string_new(NULL);
+    self->live_writer_source = NULL;
 }
 
 GwVlistReader *gw_vlist_reader_new(GwVlist *vlist, gboolean prepacked)
@@ -115,8 +132,50 @@ GwVlistReader *gw_vlist_reader_new(GwVlist *vlist, gboolean prepacked)
     // clang-format on
 }
 
+/**
+ * gw_vlist_reader_new_from_writer:
+ * @writer: A #GwVlistWriter in live mode.
+ *
+ * Creates a new reader that can read directly from the buffer of an
+ * un-finalized writer. The writer must have been set to live mode.
+ *
+ * Returns: (transfer full): A new #GwVlistReader.
+ */
+GwVlistReader *gw_vlist_reader_new_from_writer(GwVlistWriter *writer)
+{
+    g_return_val_if_fail(GW_IS_VLIST_WRITER(writer), NULL);
+    // Ensure the writer is properly configured for this operation
+    g_return_val_if_fail(gw_vlist_writer_get_is_live(writer) == TRUE, NULL);
+    g_return_val_if_fail(gw_vlist_writer_get_prepack(writer) == FALSE, NULL);
+
+    GwVlistReader *self = g_object_new(GW_TYPE_VLIST_READER, NULL);
+
+    self->live_writer_source = g_object_ref(writer); // Keep the writer alive
+    self->vlist = gw_vlist_writer_get_vlist(writer); // Borrow the pointer
+    self->prepacked = FALSE;
+    self->position = 0;
+    self->size = self->vlist ? gw_vlist_size(self->vlist) : 0; // Set initial size
+    self->depacked = NULL; // Live readers read directly from vlist
+
+    return self;
+}
+
+static void _gw_vlist_reader_update_from_live_source(GwVlistReader *self)
+{
+    if (self->live_writer_source) {
+        // Sync the size with how much data has been written
+        GwVlist *vlist = gw_vlist_writer_get_vlist(self->live_writer_source);
+        if (vlist != NULL) {
+            self->size = gw_vlist_size(vlist);
+        } else {
+            self->size = 0;
+        }
+    }
+}
+
 gint gw_vlist_reader_next(GwVlistReader *self)
 {
+    _gw_vlist_reader_update_from_live_source(self);
     g_return_val_if_fail(GW_IS_VLIST_READER(self), -1);
 
     if (self->position >= self->size) {
@@ -126,8 +185,25 @@ gint gw_vlist_reader_next(GwVlistReader *self)
     guint8 value = 0;
     if (self->depacked != NULL) {
         value = self->depacked[self->position];
+    } else if (self->live_writer_source != NULL) {
+        GwVlist *vlist = gw_vlist_writer_get_vlist(self->live_writer_source);
+        if (vlist != NULL) {
+            void *location = gw_vlist_locate(vlist, self->position);
+            if (location != NULL) {
+                value = *(guint8 *)location;
+            } else {
+                return -1; // Invalid position or corrupted vlist
+            }
+        } else {
+            return -1; // Writer has no vlist
+        }
     } else {
-        value = *(guint *)gw_vlist_locate(self->vlist, self->position);
+        void *location = gw_vlist_locate(self->vlist, self->position);
+        if (location != NULL) {
+            value = *(guint8 *)location;
+        } else {
+            return -1; // Invalid position or corrupted vlist
+        }
     }
 
     self->position++;
@@ -137,6 +213,7 @@ gint gw_vlist_reader_next(GwVlistReader *self)
 
 guint32 gw_vlist_reader_read_uv32(GwVlistReader *self)
 {
+    _gw_vlist_reader_update_from_live_source(self);
     g_return_val_if_fail(GW_IS_VLIST_READER(self), 0);
 
     guint8 arr[5];
@@ -166,6 +243,7 @@ guint32 gw_vlist_reader_read_uv32(GwVlistReader *self)
 
 const gchar *gw_vlist_reader_read_string(GwVlistReader *self)
 {
+    _gw_vlist_reader_update_from_live_source(self);
     g_return_val_if_fail(GW_IS_VLIST_READER(self), NULL);
 
     g_string_truncate(self->string_buffer, 0);
@@ -183,6 +261,7 @@ const gchar *gw_vlist_reader_read_string(GwVlistReader *self)
 
 gboolean gw_vlist_reader_is_done(GwVlistReader *self)
 {
+    _gw_vlist_reader_update_from_live_source(self);
     g_return_val_if_fail(GW_IS_VLIST_READER(self), TRUE);
 
     return self->position >= self->size;
