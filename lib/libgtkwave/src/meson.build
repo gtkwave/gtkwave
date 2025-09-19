@@ -29,6 +29,7 @@ libgtkwave_public_sources = [
     'gw-var-enums.c',
     'gw-vcd-file.c',
     'gw-vcd-loader.c',
+    'gw-vcd-partial-loader.c',
 ]
 
 libgtkwave_public_headers = [
@@ -68,6 +69,7 @@ libgtkwave_public_headers = [
     'gw-var-enums.h',
     'gw-vcd-file.h',
     'gw-vcd-loader.h',
+    'gw-vcd-partial-loader.h',
     'gw-vector-ent.h',
 ]
 

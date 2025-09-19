@@ -40,5 +40,6 @@
 #include "gw-vlist-writer.h"
 #include "gw-vcd-file.h"
 #include "gw-vcd-loader.h"
+#include "gw-vcd-partial-loader.h"
 #include "gw-fst-file.h"
 #include "gw-fst-loader.h"
