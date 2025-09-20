@@ -41,7 +41,20 @@ gboolean gw_vcd_partial_loader_feed(GwVcdPartialLoader *self, const gchar *data,
  *
  * Returns: (transfer none): The live #GwDumpFile, or %NULL if no data has been processed.
  */
+
+/**
+ * gw_vcd_partial_loader_is_header_parsed:
+ * @self: A #GwVcdPartialLoader.
+ *
+ * Checks if the VCD header has been fully parsed. This is useful for interactive
+ * sessions where the header must be parsed before building the user interface.
+ *
+ * Returns: %TRUE if the header has been parsed, %FALSE otherwise.
+ */
+gboolean gw_vcd_partial_loader_is_header_parsed(GwVcdPartialLoader *self);
+
 GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self);
+
 
 
 

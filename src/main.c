@@ -68,6 +68,7 @@
 #include "gw-time-display.h"
 #include "gw-vcd-file.h"
 #include "gw-fst-file.h"
+#include "vcd_partial_adapter.h"
 
 #include "tcl_helper.h"
 
@@ -671,6 +672,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     int c;
     char is_vcd = 0;
+    char is_interactive = 0;
     char is_smartsave = 0;
     char is_giga = 0;
     char fast_exit = 0;
@@ -916,7 +918,7 @@ do_primary_inits:
 
             c = getopt_long(argc,
                             argv,
-                            "zf:Fon:a:r:dl:s:e:c:t:NvVhxX:MD:IgC:O:1:2:34:5:67",
+                            "zf:Fon:a:r:dl:s:e:c:t:NvVhxX:MD:IgC:O:1:2:34:5:67I",
                             long_options,
                             &option_index);
 
@@ -1108,6 +1110,11 @@ do_primary_inits:
 
                 case '7':
                     GLOBALS->save_on_exit = TRUE;
+                    break;
+
+                case 'I':
+                    is_interactive = 1;
+                    fprintf(stderr, "DEBUG: Interactive mode enabled\n");
                     break;
 
                 case 's':
@@ -1358,6 +1365,91 @@ do_primary_inits:
 
 loader_check_head:
 
+    if (is_interactive) {
+        fprintf(stderr, "DEBUG: Entering interactive mode logic\n");
+        // Read SHM ID from stdin (provided by shmidcat's stdout)
+        char shm_id_buf[256];
+        if (!fgets(shm_id_buf, sizeof(shm_id_buf), stdin)) {
+            fprintf(stderr, "Error: Failed to read SHM ID from stdin for interactive mode.\n");
+            exit(1);
+        }
+        shm_id_buf[strcspn(shm_id_buf, "\r\n")] = 0; // Remove newline
+        
+        char *shm_id = malloc_2(strlen(shm_id_buf) + 1);
+        strcpy(shm_id, shm_id_buf);
+        
+        fprintf(stderr, "DEBUG: Read SHM ID: %s\n", shm_id);
+        fprintf(stdout, "GTKWave | Interactive VCD Mode\n");
+        GLOBALS->loaded_file_type = VCD_PARTIAL_FILE;
+        
+        GLOBALS->dump_file = vcd_partial_adapter_main(shm_id);
+        
+        // For interactive sessions, it's normal for dump_file to be NULL initially
+        // until data starts flowing from the shared memory
+        if (!GLOBALS->dump_file) {
+            // This is expected for interactive sessions - the dump file will be
+            // populated as data arrives from shared memory
+            fprintf(stderr, "INFO: Interactive session started. Waiting for VCD data from shared memory...\n");
+        } else {
+            // In interactive mode, we now have a valid dump file with parsed VCD header
+            // so we can proceed with normal UI building instead of skipping it
+            fprintf(stderr, "DEBUG: Interactive mode - VCD header parsed successfully, proceeding with UI build\n");
+            
+            // Immediately populate the signal store for interactive mode to avoid relying on timer callbacks
+            // that might not execute due to timeout constraints
+            if (GLOBALS->dump_file) {
+                GwTree *tree = gw_dump_file_get_tree(GLOBALS->dump_file);
+                if (tree) {
+                    GwTreeNode *tree_root = gw_tree_get_root(tree);
+                    if (tree_root) {
+                        // In interactive mode, we need to find the actual signal nodes
+                        // The tree root contains hierarchy nodes like "variables" and "aliases"
+                        // We need to traverse to find the nodes that contain actual signals
+                        GwTreeNode *signal_root = NULL;
+                        
+                        for (GwTreeNode *node = tree_root; node != NULL; node = node->next) {
+                            if (node->child && node->child->t_which >= 0) {
+                                // This node has children that are actual signals
+                                signal_root = node->child;
+                                fprintf(stderr, "DEBUG: Found signal root at %p (%s)\n", signal_root, node->name);
+                                break;
+                            }
+                        }
+                        
+                        if (signal_root) {
+                            fprintf(stderr, "DEBUG: Setting signal root to child nodes: %p\n", signal_root);
+                            GLOBALS->sig_root_treesearch_gtk2_c_1 = signal_root;
+                            
+                            // Initialize signal store if not already done
+                            if (!GLOBALS->sig_store_treesearch_gtk2_c_1) {
+                                GLOBALS->sig_store_treesearch_gtk2_c_1 = gtk_list_store_new(5, 
+                                    G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+                            }
+                            
+                            // Populate the signal store immediately
+                            fill_sig_store();
+                            fprintf(stderr, "DEBUG: Signal store populated immediately for interactive mode\n");
+                        } else {
+                            fprintf(stderr, "DEBUG: No signal nodes found in tree hierarchy\n");
+                        }
+                    } else {
+                        fprintf(stderr, "DEBUG: Tree root is NULL, cannot populate signal store\n");
+                    }
+                } else {
+                    fprintf(stderr, "DEBUG: Tree is NULL, cannot populate signal store\n");
+                }
+            } else {
+                fprintf(stderr, "DEBUG: Dump file is NULL, cannot populate signal store\n");
+            }
+        }
+        
+        free_2(shm_id);
+        
+        // In interactive mode, always skip traditional loading since partial loader handles everything
+        fprintf(stderr, "DEBUG: Jumping to skip_traditional_loading (interactive mode)\n");
+        goto skip_traditional_loading;
+    }
+
     if (!is_missing_file) {
         magic_word_filetype = determine_gtkwave_filetype(GLOBALS->loaded_file_name);
     }
@@ -1439,6 +1531,8 @@ loader_check_head:
         }
         GLOBALS->dump_file = vcd_recoder_main(GLOBALS->loaded_file_name);
     }
+
+skip_traditional_loading:
 
     // /* reset/initialize various markers and time values */
     // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
@@ -1966,6 +2060,9 @@ savefile_bail:
         int dummy_x, dummy_y;
         get_window_xypos(&dummy_x, &dummy_y);
     }
+
+    // Import signals for interactive VCD mode is handled by vcd_partial_adapter
+    // after the UI is fully initialized to ensure proper SST table population
 
     init_busy();
 

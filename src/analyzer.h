@@ -216,6 +216,7 @@ int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret);
 int AddNode(GwNode *nd, char *aliasname);
 int AddVector(GwBitVector *vec, char *aliasname);
 int AddBlankTrace(char *commentname);
+void analyzer_import_all_signals(void);
 int InsertBlankTrace(char *comment, TraceFlagsType different_flags);
 void RemoveNode(GwNode *n);
 void RemoveTrace(GwTrace *t, int dofree);

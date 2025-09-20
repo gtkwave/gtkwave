@@ -996,6 +996,8 @@ GwTrace *PrependBuffer(void)
         }
     }
 
+
+
     /* clean out the buffer */
     GLOBALS->traces.buffer = GLOBALS->traces.bufferlast = NULL;
     GLOBALS->traces.buffercount = 0;
@@ -1447,4 +1449,27 @@ void EnsureGroupsMatch(void)
             t = t2;
         }
     }
+}
+
+/**
+ * analyzer_import_all_signals:
+ *
+ * Adds all signals from the current dump file to the wave view.
+ * This is used for interactive VCD sessions where signals are discovered
+ * incrementally and need to be added to the UI.
+ */
+void analyzer_import_all_signals(void)
+{
+    if (!GLOBALS->dump_file) return;
+
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    if (!facs) return;
+
+    for (guint i = 0; i < gw_facs_get_length(facs); i++) {
+        GwSymbol *s = gw_facs_get(facs, i);
+        if (s && s->n) {
+            AddNode(s->n, NULL); // Use existing function to add a signal
+        }
+    }
+    redraw_signals_and_waves();
 }

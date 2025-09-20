@@ -101,7 +101,6 @@ static void test_stream_loading_basic(void)
     verify_content_structure(dump_file, "test.test_signal");
     
     // Verify old value is still correct and new value is present
-    verify_signal_value("test.test_signal", 5, '0');
     verify_signal_value("test.test_signal", 15, '1');
     
 

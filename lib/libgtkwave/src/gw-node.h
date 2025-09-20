@@ -59,6 +59,7 @@ struct _GwNode
     int numhist; /* number of elements in the harray */
 
     GwTime last_time; /* time of last transition for delta calculation */
+    GwTime last_time_raw; /* raw time value (without global offset) for delta calculation */
 
     unsigned varxt : WAVE_VARXT_WIDTH; /* reference inside subvar_pnt[] */
     unsigned vardt : WAVE_VARDT_WIDTH; /* see nodeVarDataType, this is an internal value */

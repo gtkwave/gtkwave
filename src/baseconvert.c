@@ -1079,6 +1079,10 @@ int vtype(GwTrace *t, char *vec)
     if (vec == NULL)
         return (GW_BIT_X);
 
+    /* Check for obviously invalid pointers to prevent segfaults */
+    if ((guintptr)vec < 0x1000)
+        return (GW_BIT_X);
+
     nbits = t->n.nd->msi - t->n.nd->lsi;
     if (nbits < 0)
         nbits = -nbits;
@@ -1166,6 +1170,11 @@ char *convert_ascii_vec_2(GwTrace *t, char *vec)
     static const char xrev[GW_BIT_COUNT] = AN_INVERSE;
 
     flags = t->flags;
+
+    /* Check for obviously invalid pointers to prevent segfaults */
+    if ((vec != NULL) && ((guintptr)vec < 0x1000)) {
+        return strdup_2("X");
+    }
 
     nbits = t->n.nd->msi - t->n.nd->lsi;
     if (nbits < 0)
@@ -1746,6 +1755,11 @@ double convert_real_vec(GwTrace *t, char *vec)
     static const char xrev[GW_BIT_COUNT] = AN_INVERSE;
 
     flags = t->flags;
+
+    /* Check for obviously invalid pointers to prevent segfaults */
+    if ((vec != NULL) && ((guintptr)vec < 0x1000)) {
+        return strtod("NaN", NULL);
+    }
 
     nbits = t->n.nd->msi - t->n.nd->lsi;
     if (nbits < 0)
