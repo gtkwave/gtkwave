@@ -1626,9 +1626,6 @@ ghw_read_cycle_start (struct ghw_handler *h)
   return 0;
 }
 
-
-
-//The slowest function ever
 int
 ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 {
