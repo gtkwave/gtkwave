@@ -2148,6 +2148,12 @@ ghw_close (struct ghw_handler *h)
 
       h->stream = NULL;
     }
+
+  /* Free up the non null signal cache if still in memory */
+  if(h->no_null_sig_cache != NULL) {
+    free(h->no_null_sig_cache);
+    h->no_null_sig_cache = NULL;
+  }
 }
 
 const char *
