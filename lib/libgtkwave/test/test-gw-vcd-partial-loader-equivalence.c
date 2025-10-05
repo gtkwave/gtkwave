@@ -1049,6 +1049,83 @@ static void test_vcd_equivalence_file(gconstpointer user_data)
     g_free(golden_dump_filepath);
 }
 
+static const gchar *custom_vcd_data =
+    "$date today $end\n"
+    "$timescale 1 ns $end\n"
+    "$scope module mysim $end\n"
+    "$var integer 8 ! sine_wave $end\n"
+    "$upscope $end\n"
+    "$enddefinitions $end\n"
+    "#0\n"
+    "$dumpvars\n"
+    "b0 !\n"
+    "$end\n"
+    "#1\n"
+    "b111 !\n"
+    "#2\n"
+    "b1111 !\n"
+    "#3\n"
+    "b10111 !\n";
+
+static void test_vcd_partial_loader_custom_parser(void)
+{
+    GError *error = NULL;
+    g_test_message("Testing custom VCD parser");
+
+    GwVcdPartialLoader *partial_loader = gw_vcd_partial_loader_new();
+    gboolean success = gw_vcd_partial_loader_feed(partial_loader, custom_vcd_data, -1, &error);
+    g_assert_no_error(error);
+    g_assert_true(success);
+
+    GwDumpFile *dump_file = gw_vcd_partial_loader_get_dump_file(partial_loader);
+    g_assert_nonnull(dump_file);
+
+    g_assert_true(gw_dump_file_import_all(dump_file, &error));
+    g_assert_no_error(error);
+
+    GwFacs *facs = gw_dump_file_get_facs(dump_file);
+    if (facs) {
+        guint num_facs = gw_facs_get_length(facs);
+        for (guint fi = 0; fi < num_facs; fi++) {
+            GwSymbol *sym = gw_facs_get(facs, fi);
+            if (!sym) {
+                continue;
+            }
+            GwNode *n = sym->n;
+            if (!n) {
+                continue;
+            }
+
+            for (GwHistEnt *he = n->head.next; he != NULL; he = he->next) {
+                if (he->time < 0) continue;
+
+                if (he->flags & GW_HIST_ENT_FLAG_REAL) {
+                } else if (he->flags & GW_HIST_ENT_FLAG_STRING) {
+                } else if (he->v.h_vector) {
+                    gint bits = ABS(n->msi - n->lsi) + 1;
+                    GString *vec_str = g_string_new("");
+                    for (gint i = 0; i < bits; i++) {
+                        g_string_append_c(vec_str, gw_bit_to_char(he->v.h_vector[i]));
+                    }
+
+                    if (he->time == 1) {
+                        g_assert_cmpstr(vec_str->str, ==, "00000111");
+                    } else if (he->time == 2) {
+                        g_assert_cmpstr(vec_str->str, ==, "00001111");
+                    } else if (he->time == 3) {
+                        g_assert_cmpstr(vec_str->str, ==, "00010111");
+                    }
+
+                    g_string_free(vec_str, TRUE);
+                } else {
+                }
+            }
+        }
+    }
+
+    g_object_unref(partial_loader);
+}
+
 int main(int argc, char *argv[])
 {
 g_test_init(&argc, &argv, NULL);
@@ -1077,7 +1154,7 @@ if (argc > 1) {
     g_test_add_func("/vcd_partial_loader/names_with_delimiters", test_vcd_equivalence_names_with_delimiters);
     g_test_add_func("/vcd_partial_loader/hashkill", test_vcd_equivalence_hashkill);
     g_test_add_func("/vcd_partial_loader/autocoalesce", test_vcd_equivalence_autocoalesce);
-
+    g_test_add_func("/vcd_partial_loader/custom_parser", test_vcd_partial_loader_custom_parser);
 }
 
 return g_test_run();

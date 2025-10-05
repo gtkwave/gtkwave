@@ -221,6 +221,8 @@ int InsertBlankTrace(char *comment, TraceFlagsType different_flags);
 void RemoveNode(GwNode *n);
 void RemoveTrace(GwTrace *t, int dofree);
 void FreeTrace(GwTrace *t);
+GwTrace *AcquireTrace(GwTrace *t);
+void ReleaseTrace(GwTrace *t);
 GwTrace *CutBuffer(void);
 void FreeCutBuffer(void);
 GwTrace *PasteBuffer(void);

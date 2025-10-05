@@ -5,6 +5,7 @@
 #include "wavewindow.h"
 #include "analyzer.h"
 #include "treesearch.h"
+#include "timeentry.h"
 #include <unistd.h>
 #include <string.h>
 #include "savefile.h"
@@ -198,22 +199,140 @@ static gboolean kick_timeout_callback(gpointer user_data)
 
     // If we processed data, update the UI
     if (data_processed) {
+      //  printf("WE HAVE PROCESSED!\n");
         // Update the global dump file reference
         GLOBALS->dump_file = gw_vcd_partial_loader_get_dump_file(the_loader);
 
-        if (GLOBALS->dump_file) {
+#if 0
+        /* List all signals from the dump file for debugging */
+       if (GLOBALS->dump_file) {
+            GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+            if (facs) {
+                guint num_facs = gw_facs_get_length(facs);
+                printf("DUMP FILE SIGNALS: count=%u\n", num_facs);
+                for (guint fi = 0; fi < num_facs; fi++) {
+                    GwSymbol *sym = gw_facs_get(facs, fi);
+                    if (!sym) {
+                        printf("  %u: <null symbol>\n", fi);
+                        continue;
+                    }
+                    GwNode *n = sym->n;
+                    if (!n) {
+                        printf("  %u: <symbol without node>\n", fi);
+                        continue;
+                    }
+                    const char *name = n->nname ? n->nname : "<unnamed>";
+                    printf("  %u: %s (node=%p, numhist=%d)\n", fi, name, (void*)n, n->numhist);
+
+                    /* If this is the signal we're interested in, print its first two history values (positive-time entries) */
+                    if (strcmp(name, "mysim.sine_wave") == 0) {
+                        int printed = 0;
+                        for (GwHistEnt *he = &n->head; he && printed < 2; he = he->next) {
+                            if (he->time < 0) /* skip placeholder entries */ continue;
+
+                            if (he->flags & GW_HIST_ENT_FLAG_REAL) {
+                                printf("    hist %d: time=%" GW_TIME_FORMAT " real=%f\n", printed + 1, he->time, he->v.h_double);
+                            } else if (he->flags & GW_HIST_ENT_FLAG_STRING) {
+                                printf("    hist %d: time=%" GW_TIME_FORMAT " string=%s\n", printed + 1, he->time, he->v.h_vector ? he->v.h_vector : "<null>");
+                            } else if (he->v.h_vector) {
+                                /* vector value stored as a C string of bits/characters */
+                                printf("    hist %d: time=%" GW_TIME_FORMAT " vector=%s\n", printed + 1, he->time, he->v.h_vector);
+                            } else {
+                                printf("    hist %d: time=%" GW_TIME_FORMAT " val=%u\n", printed + 1, he->time, (unsigned)he->v.h_val);
+                            }
+                            printed++;
+                        }
+                        if (printed == 0) {
+                            printf("    mysim.sine_wave: no positive-time history entries available\n");
+                        } else if (printed == 1) {
+                            printf("    mysim.sine_wave: only 1 positive-time history entry found\n");
+                        }
+                    }
+                }
+            } else {
+                printf("DUMP FILE: no facs available\n");
+            }
+       }
+#endif
+            // *** Re-expansion logic for updated vector nodes ***
+            // Iterate through all traces currently displayed in the wave window
+            for (GwTrace *t = GLOBALS->traces.first; t; t = t->t_next) {
+                // Check if the trace is for a node (not a blank/comment) and the node has been expanded
+                if (!t->vector && t->n.nd && t->n.nd->expand_info) {
+                    GwNode *parent_node = t->n.nd;
+                    
+                    // Check if harray is NULL, which means the node has new data and needs re-expansion
+                    if (parent_node->harray == NULL) {
+                        g_debug("Re-expanding trace '%s' due to new data.", parent_node->nname);
+                        
+                        // Store pointer to old expansion info
+                        GwExpandInfo *old_expand_info = parent_node->expand_info;
+                        
+                        // Temporarily clear parent's expand_info pointer to prevent
+                        // gw_node_expand() from trying to free it (which would free
+                        // the child nodes that are still referenced by traces)
+                        parent_node->expand_info = NULL;
+                        
+                        // Re-run expansion - this creates new children
+                        GwExpandInfo *new_expand_info = gw_node_expand(parent_node);
+                        
+                        if (new_expand_info) {
+                            // Find the child traces in the UI and update them to point to the new nodes
+                            // Child traces are the traces immediately following the parent trace
+                            GwTrace *child_trace = t->t_next;
+                            int child_count = 0;
+                            
+                            // Walk through child traces (they follow the parent until we hit a non-child)
+                            while (child_trace && child_count < new_expand_info->width) {
+                                // Check if this trace is actually a child of our parent
+                                // Children should have the parent's name as a prefix
+                                if (!child_trace->vector && child_trace->n.nd && 
+                                    child_trace->n.nd->expansion && 
+                                    child_trace->n.nd->expansion->parent == parent_node) {
+                                    
+                                    // Update the child trace to point to the new child node
+                                    child_trace->n.nd = new_expand_info->narray[child_count];
+                                    
+                                    // Mark the trace for redraw
+                                    child_trace->interactive_vector_needs_regeneration = 1;
+                                    
+                                    child_count++;
+                                } else {
+                                    // Hit a non-child trace, stop looking
+                                    break;
+                                }
+                                
+                                child_trace = child_trace->t_next;
+                            }
+                            
+                            // Release the old expand_info using reference counting
+                            // The VCD partial loader may still have a reference to it via acquire/release,
+                            // so it won't be freed until all references are released
+                            if (old_expand_info) {
+                                gw_expand_info_release(old_expand_info);
+                            }
+                        } else {
+                            // Re-expansion failed, restore the old expand_info pointer
+                            parent_node->expand_info = old_expand_info;
+                        }
+                    }
+                }
+            }
+            
             // Update the time range
             GwTimeRange *range = gw_dump_file_get_time_range(GLOBALS->dump_file);
             if (range) {
                 GLOBALS->tims.last = gw_time_range_get_end(range);
             }
 
+            // Update the time entry fields (From/To) to reflect new time range
+            update_endcap_times_for_partial_vcd();
+
             // Redraw the UI
             fix_wavehadj();
             update_time_box();
             redraw_signals_and_waves();
         }
-    }
 
     return G_SOURCE_CONTINUE;
 }

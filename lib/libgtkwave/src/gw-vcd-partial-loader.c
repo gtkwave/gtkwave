@@ -401,7 +401,7 @@ static void create_sorted_table(GwVcdPartialLoader *self)
         vcd_distance = self->vcd_maxid - self->vcd_minid + 1;
 
 
-        if ((vcd_distance <= VCD_INDEXSIZ) || !self->vcd_hash_kill) {
+        if (vcd_distance <= VCD_INDEXSIZ) {
             self->symbols_indexed = g_new0(struct vcdsymbol *, vcd_distance);
 
             v = self->vcdsymroot;
@@ -2750,6 +2750,10 @@ static void _vcd_partial_handle_var(GwVcdPartialLoader *self, const gchar *token
     v->narray[0] = g_new0(GwNode, 1);
     v->narray[0]->nname = g_strdup(v->name); // The node also needs the full name
 
+    // Initialize the embedded head entry (decorator) with time=-2
+    v->narray[0]->head.time = -2;
+    v->narray[0]->head.v.h_val = GW_BIT_X;
+
     // Create and link both t=-2 and t=-1 entries as separate GwHistEnt structures
     GwHistEnt *h_minus_2 = g_new0(GwHistEnt, 1);
     h_minus_2->time = -2;
@@ -2830,6 +2834,12 @@ static void _vcd_partial_handle_var(GwVcdPartialLoader *self, const gchar *token
     // Create vlist writer for this signal and store it in the hash table
     GwVlistWriter *writer = gw_vlist_writer_new(self->vlist_compression_level, self->vlist_prepack);
     gw_vlist_writer_set_live_mode(writer, TRUE);
+
+    // Debug: log what type header we're writing
+    g_test_message("Creating vlist writer for signal '%s': size=%d, vartype=%d, writing header type=%c",
+                  v->name, v->size, v->vartype,
+                  (v->size == 1 && v->vartype != V_REAL && v->vartype != V_STRINGTYPE) ? '0' :
+                  ((v->vartype == V_REAL) ? 'R' : (v->vartype == V_STRINGTYPE) ? 'S' : 'B'));
 
     // Write the vlist header
     if (v->size == 1 && v->vartype != V_REAL && v->vartype != V_STRINGTYPE) {
@@ -3403,8 +3413,9 @@ GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self)
             GwVlist *vlist = gw_vlist_writer_get_vlist(writer);
 
             // If new data has been written, process it
-            if (vlist && vlist->size > last_pos) {
-                g_test_message("IMPORT: Processing %s, last_pos=%zu, vlist_size=%u", symbol_id, last_pos, vlist->size);
+            guint vlist_total_size = gw_vlist_size(vlist);
+            if (vlist && vlist_total_size > last_pos) {
+                g_test_message("IMPORT: Processing %s, last_pos=%zu, vlist_size=%u", symbol_id, last_pos, vlist_total_size);
 
                 GwVlistReader *reader = gw_vlist_reader_new_from_writer(writer);
                 gw_vlist_reader_set_position(reader, last_pos);
@@ -3418,6 +3429,8 @@ GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self)
                 // Process header if this is the first read
                 if (last_pos == 0 && vlist->size >= 1) {
                     vlist_type = gw_vlist_reader_read_uv32(reader);
+                    g_test_message("JIT IMPORT: First read for %s, vlist_type from vlist=%c (0x%02x)",
+                                  symbol_id, (char)vlist_type, vlist_type);
                     if (vlist_type == '0') {
                         gw_vlist_reader_read_uv32(reader); // Skip vartype
                     } else {
@@ -3432,9 +3445,12 @@ GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self)
                     // For subsequent reads, we need to know the vlist type
                     // It's stored in the upper 32 bits of the import position
                     vlist_type = (combined_value >> 32) & 0xFFFFFFFF;
+                    g_test_message("JIT IMPORT: Subsequent read for %s, vlist_type=%c (0x%02x)",
+                                  symbol_id, (char)vlist_type, vlist_type);
                 }
 
                 // Process value changes
+                gboolean harray_needs_invalidation = FALSE;
                 if (vlist_type == '0') {
                     // Scalar value processing
                     static const GwBit EXTRA_VALUES[] = { GW_BIT_X, GW_BIT_Z, GW_BIT_H, GW_BIT_U, GW_BIT_W, GW_BIT_L, GW_BIT_DASH, GW_BIT_X };
@@ -3463,6 +3479,7 @@ GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self)
                         node->curr->next = hent;
                         node->curr = hent;
                         node->numhist++; // Increment numhist for each new transition
+                        harray_needs_invalidation = TRUE;
                     }
                 } else if (vlist_type == 'B' || vlist_type == 'R' || vlist_type == 'S') {
                     // Vector, Real, and String value processing - all use string format
@@ -3486,15 +3503,25 @@ GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self)
                             hent->v.h_vector = (char *)g_strdup(value_str);
                         } else {
                             // Vector value (type 'B')
+                            g_test_message("JIT IMPORT: Allocating h_vector for %s, size=%d, value_str='%s'",
+                                          symbol_id, props ? props->size : -1, value_str);
                             hent->v.h_vector = g_malloc(props->size);
-                            for (gint i = 0; i < props->size; i++) {
-                                if (i < (gint)strlen(value_str)) {
-                                    hent->v.h_vector[i] = gw_bit_from_char(value_str[i]);
-                                } else {
-                                    // Extend with zeros if the string is shorter than expected size
-                                    hent->v.h_vector[i] = GW_BIT_0;
-                                }
+                            gint val_len = strlen(value_str);
+                            gint copy_len = MIN(val_len, props->size);
+                            gint offset = (val_len > props->size) ? (val_len - props->size) : 0;
+                            gint pad_len = props->size - copy_len;
+
+                            // Pad with '0' on the left (MSB)
+                            for (gint i = 0; i < pad_len; i++) {
+                                hent->v.h_vector[i] = GW_BIT_0;
                             }
+
+                            // Copy the actual value
+                            for (gint i = 0; i < copy_len; i++) {
+                                hent->v.h_vector[pad_len + i] = gw_bit_from_char(value_str[i + offset]);
+                            }
+                            g_test_message("JIT IMPORT: Allocated h_vector=%p for %s",
+                                          hent->v.h_vector, symbol_id);
                         }
 
                         // value_str is managed by the reader, do not free
@@ -3504,6 +3531,7 @@ GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self)
                         node->curr->next = hent;
                         node->curr = hent;
                         node->numhist++; // Increment numhist for each new transition
+                        harray_needs_invalidation = TRUE;
                     }
                 } else if (vlist_type == 'R' || vlist_type == 'S') {
                     // Real/String value processing - use gw_vlist_reader_read_string()
@@ -3529,9 +3557,56 @@ GwDumpFile *gw_vcd_partial_loader_get_dump_file(GwVcdPartialLoader *self)
                         node->curr->next = hent;
                         node->curr = hent;
                         node->numhist++; // Increment numhist for each new transition
+                        harray_needs_invalidation = TRUE;
                     }
                 } else {
                     g_test_message("JIT IMPORT: Unsupported vlist type '%c' for symbol %s", vlist_type, symbol_id);
+                }
+
+                // Invalidate harray once after adding all new entries for this signal
+                // This ensures bsearch_node will rebuild it with the correct size on next access
+                if (harray_needs_invalidation && node->harray) {
+                    node->harray = NULL;
+
+                    // If this node is an expanded vector, invalidate its children too.
+                    // Use reference counting to ensure safe access to expand_info
+                    if (node->expand_info) {
+                        GwExpandInfo *einfo = node->expand_info;
+                        
+                        // Acquire a reference to prevent freeing while we're using it
+                        gw_expand_info_acquire(einfo);
+                        
+                        // Only proceed if all these conditions are met:
+                        // 1. einfo pointer is non-NULL
+                        // 2. narray pointer is non-NULL
+                        // 3. width is reasonable (1-1024)
+                        // 4. All child pointers in narray are non-NULL
+                        gboolean all_children_valid = TRUE;
+                        if (einfo && einfo->narray && einfo->width > 0 && einfo->width <= 1024) {
+                            // Check that all child pointers are non-NULL before proceeding
+                            for (int i = 0; i < einfo->width; i++) {
+                                if (!einfo->narray[i]) {
+                                    all_children_valid = FALSE;
+                                    break;
+                                }
+                            }
+                            
+                            if (all_children_valid) {
+                                g_debug("Propagating harray invalidation from '%s' to %d children.", node->nname, einfo->width);
+                                for (int i = 0; i < einfo->width; i++) {
+                                    einfo->narray[i]->harray = NULL;
+                                }
+                            } else {
+                                g_debug("Expand info for '%s' has NULL child pointers, skipping propagation", node->nname);
+                            }
+                        } else {
+                            g_debug("Expand info for '%s' appears invalid (einfo=%p, narray=%p, width=%d), skipping propagation", 
+                                   node->nname, einfo, einfo ? einfo->narray : NULL, einfo ? einfo->width : -1);
+                        }
+                        
+                        // Release the reference
+                        gw_expand_info_release(einfo);
+                    }
                 }
 
                 // Store both the import position and vlist type for future reads

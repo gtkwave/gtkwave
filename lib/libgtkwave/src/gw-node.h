@@ -18,9 +18,13 @@ typedef struct
     GwNode **narray;
     int msb, lsb;
     int width;
+    int refcount;  // Reference count for proper lifecycle management
 } GwExpandInfo;
 
 void gw_expand_info_free(GwExpandInfo *self);
+void gw_expand_info_free_deep(GwExpandInfo *self);
+GwExpandInfo *gw_expand_info_acquire(GwExpandInfo *self);
+void gw_expand_info_release(GwExpandInfo *self);
 
 struct _GwExpandReferences
 {
@@ -57,6 +61,8 @@ struct _GwNode
     int msi, lsi; /* for 64-bit, more efficient than having as an external struct ExtNode*/
 
     int numhist; /* number of elements in the harray */
+
+    GwExpandInfo *expand_info; /* Link to expansion children */
 
     GwTime last_time; /* time of last transition for delta calculation */
     GwTime last_time_raw; /* raw time value (without global offset) for delta calculation */

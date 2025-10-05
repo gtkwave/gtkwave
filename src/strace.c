@@ -99,7 +99,6 @@ static int count_active_straces(void)
 static void free_straces(void)
 {
     struct strace *s, *skill;
-    struct strace_defer_free *sd, *sd2;
 
     s = GLOBALS->strace_ctx->straces;
 
@@ -107,28 +106,20 @@ static void free_straces(void)
         if (s->string) {
             free_2(s->string);
         }
+        
+        /* Release the trace reference when freeing strace */
+        if (s->trace) {
+            ReleaseTrace(s->trace);
+        }
+        
         skill = s;
         s = s->next;
         free_2(skill);
     }
 
     GLOBALS->strace_ctx->straces = NULL;
-
-    /* only free up traces if there is only one pattern search active. */
-    /* we could splice across multiple strace_ctx but it's not worth the effort here */
-    if (count_active_straces() <= 1) {
-        sd = GLOBALS->strace_ctx->strace_defer_free_head;
-
-        while (sd) {
-            FreeTrace(sd->defer);
-            sd2 = sd->next;
-            free_2(sd);
-            sd = sd2;
-        }
-
-        /* moved inside if() so it frees eventually and doesn't stay around until context cleanup */
-        GLOBALS->strace_ctx->strace_defer_free_head = NULL;
-    }
+    
+    /* The deferred free mechanism is no longer needed with reference counting */
 }
 
 /*
@@ -438,7 +429,7 @@ void tracesearchbox(const char *title, GCallback func, gpointer data)
         s = (struct strace *)calloc_2(1, sizeof(struct strace));
         s->next = GLOBALS->strace_ctx->straces;
         GLOBALS->strace_ctx->straces = s;
-        s->trace = t;
+        s->trace = AcquireTrace(t); /* Acquire reference when storing in strace */
 
         small_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
         gtk_widget_show(small_hbox);
@@ -1456,7 +1447,11 @@ void delete_strace_context(void)
         if (stemp->string)
             free_2(stemp->string);
 
-        FreeTrace(stemp->trace);
+        /* Release the trace reference when freeing shadow strace */
+        if (stemp->trace) {
+            ReleaseTrace(stemp->trace);
+        }
+        
         free_2(stemp);
         stemp = GLOBALS->strace_ctx->shadow_straces;
     }
