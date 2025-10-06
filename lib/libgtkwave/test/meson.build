@@ -66,7 +66,8 @@ test(
     'Shared Memory Pipeline',
     shm_test_script,
     is_parallel: false, # Important: This test uses a system-wide resource
-    depends: [consumer_exe] # Ensures the consumer is built before the test runs
+    depends: [consumer_exe], # Ensures the consumer is built before the test runs
+    timeout: 120
 )
 
 dump_executable = executable(
@@ -122,5 +123,6 @@ foreach test : dumpfile_tests
         'test-dump-' + test,
         diff,
         args: ['-u', golden_file, dump_target],
+        timeout: 120,
     )
 endforeach

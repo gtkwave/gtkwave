@@ -242,7 +242,17 @@ int main(int argc, char **argv)
                &ds); /* mark for destroy, linux allows queuing up destruction now */
 #endif
 
+        /*
+         * On POSIX we print the shmid as hex (used by gw_shared_memory_open which
+         * parses a hex string). On Windows the mapping name uses the decimal PID
+         * when created, so print decimal there to match the mapping name. This
+         * prevents the consumer from looking for the wrong mapping name and timing out.
+         */
+#ifdef __MINGW32__
+        printf("%d\n", shmid);
+#else
         printf("%08X\n", shmid);
+#endif
         fflush(stdout);
 
         consume_ptr = buf;

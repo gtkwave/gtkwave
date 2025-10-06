@@ -25,6 +25,10 @@
 #include <string.h>
 #include <unistd.h>
 #include "gw-shared-memory.h"
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 #define RING_BUFFER_SIZE (1024 * 1024)
 #define CONSUMER_TIMEOUT_MS 2000 // 2 seconds
@@ -50,6 +54,10 @@ int main(void)
     guint8 *shm_data = NULL;
     gssize consume_offset = 0;
     int timeout_counter = 0;
+#ifdef _WIN32
+    /* Ensure stdout is in binary mode on Windows so tests compare byte-for-byte */
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
 
     if (!fgets(shm_id_str, sizeof(shm_id_str), stdin)) {
         fprintf(stderr, "Consumer Error: Failed to read SHM ID from stdin.\n");

@@ -313,12 +313,8 @@ def stream_to_gtkwave_interactive():
             except Exception:
                 pass
 
-        # 2. Create ONE VCDWriter instance.
-        try:
-            from vcd import VCDWriter
-        except Exception:
-            print("\n--- ERROR: 'vcd' Python package not found. Install with `pip install vcd` or similar. ---")
-            return 1
+
+        from vcd import VCDWriter
 
         # writer writes to shmidcat_proc.stdin.
         writer = VCDWriter(shmidcat_proc.stdin, timescale='1 ns', date='today')

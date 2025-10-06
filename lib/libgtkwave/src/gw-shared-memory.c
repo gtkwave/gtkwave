@@ -178,8 +178,17 @@ gw_shared_memory_open(const gchar *id, GError **error)
     /* Windows shared memory */
     gchar mapName[65];
     g_snprintf(mapName, sizeof(mapName), "shmidcat%s", id);
-
-    shm->hMapFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, mapName);
+ 
+    /* Try repeatedly for a short window to handle timing races where the
+     * producer may have created the mapping only moments before we attempt
+     * to open it (observed on Windows under MSYS/MinGW environments). */
+    int attempts = 0;
+    const int max_attempts = 200; /* ~2s at 10ms intervals */
+    while ((shm->hMapFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, mapName)) == NULL && attempts < max_attempts) {
+        /* Sleep 10ms between attempts */
+        Sleep(10);
+        attempts++;
+    }
     if (shm->hMapFile == NULL) {
         g_set_error(error,
                     G_FILE_ERROR,

@@ -10,7 +10,11 @@ set -e
 # Meson provides these environment variables
 MESON_BUILD_ROOT="${MESON_BUILD_ROOT:-$(pwd)}"
 MESON_SOURCE_ROOT="${MESON_SOURCE_ROOT:-$(pwd)/..}"
-
+ 
+# Ensure test binaries can find the built dlls on Windows by adding the
+# build tree library paths to PATH when running under MSYS/MinGW.
+export PATH="${MESON_BUILD_ROOT}/lib/libgtkwave/src:${MESON_BUILD_ROOT}/subprojects/libfst/src:${MESON_BUILD_ROOT}/src/helpers:${PATH}"
+ 
 PRODUCER="$MESON_BUILD_ROOT/src/helpers/shmidcat"
 CONSUMER="$MESON_BUILD_ROOT/lib/libgtkwave/test/test-gw-shared-memory-consumer"
 INPUT_FILE="$MESON_SOURCE_ROOT/lib/libgtkwave/test/files/basic.vcd"
