@@ -578,8 +578,8 @@ if	(         (event->keyval == GDK_KEY_equal) &&
                       rc = TRUE;
         }
 else
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-if (event->keyval == GDK_KEY_F10)
+#ifdef XXX_WAVE_ALLOW_GTK3_HEADER_BAR
+if ((event->keyval == GDK_KEY_F10) && (GLOBALS->header_bar))
 	{
 	do_popup_main_menu(NULL, NULL);
 	}

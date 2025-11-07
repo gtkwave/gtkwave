@@ -27,10 +27,10 @@
 #include "symbol.h"
 #include "main.h"
 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+// #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 void do_popup_main_menu (GtkWidget *my_widget, GdkEventButton *event);
 void service_fullscreen(GtkWidget *text, gpointer data);
-#endif
+// #endif
 
 void do_popup_menu (GtkWidget *my_widget, GdkEventButton *event);
 void do_sst_popup_menu (GtkWidget *my_widget, GdkEventButton *event);
@@ -252,7 +252,7 @@ WV_MENU_MLKLT,
 WV_MENU_MLKRT,
 WV_MENU_MLKOFF,
 WV_MENU_FULLSCR,
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+#ifdef XXX_WAVE_ALLOW_GTK3_HEADER_BAR
 WV_MENU_TOOLBAR,
 #endif
 WV_MENU_SEP8C,

@@ -1,4 +1,4 @@
-.TH "GTKWAVE" "1" "3.3.101" "Anthony Bybell" "Simulation Wave Viewer"
+.TH "GTKWAVE" "1" "3.3.126" "Anthony Bybell" "Simulation Wave Viewer"
 .SH "NAME"
 .LP 
 gtkwave \- Visualization tool for VCD, LXT, LXT2, VZT, FST, and GHW files
@@ -77,6 +77,9 @@ option, however this also can be used to reparent into an alternate window manag
 Do not render menubar. This is mainly used for making a restricted applet that cannot initiate file I/O
 on its own, however it also can be used as a workaround in earlier versions of GTK+ that do not handle
 GTKSocket/GTKPlug focus interactions properly.
+.TP
+\fB\-H\fR,\fB\-\-noheader\fR
+Do not use headerbars which provide hamburger style menus rendered in the toolbar, but revert back to non-headerbar operation.  This is for GTK 3 only.
 .TP
 \fB\-S\fR,\fB\-\-script\fR <\fIfilename\fP>
 Specify Tcl command script file for execution.

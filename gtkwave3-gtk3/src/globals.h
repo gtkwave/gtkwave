@@ -655,12 +655,12 @@ int lock_menu_c_1; /* from menu.c 268 */
 int lock_menu_c_2; /* from menu.c 269 */
 char *buf_menu_c_1; /* from menu.c 270 */
 GtkWidget *signal_popup_menu; /* from menu.c */
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+// #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 GtkWidget *header_bar;
 GtkWidget *main_popup_menu; /* from menu.c */
 GtkWidget *main_popup_menu_button; /* from menu.c */
 GtkWidget *top_table;
-#endif
+// #endif
 GtkWidget *sst_signal_popup_menu; /* from menu.c */
 
 

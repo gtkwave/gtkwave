@@ -22,7 +22,7 @@ static char *maxtime_label_text_hpos="Max";
 static char *marker_label_text_hpos ="Marker";
 
 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+// #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 static void update_labels_to_header_bar(void)
 {
 if(GLOBALS->header_bar)
@@ -36,15 +36,17 @@ if(GLOBALS->header_bar)
 	        gtk_label_get_text(GTK_LABEL(GLOBALS->curtimewid_currenttime_c_1))
 	        );
 
+#ifdef XXX_WAVE_ALLOW_GTK3_HEADER_BAR
 	gtk_header_bar_set_subtitle(GTK_HEADER_BAR(GLOBALS->header_bar), buf);
+#endif
 	}
 }
-#else
-static void update_labels_to_header_bar(void)
-{
-/* nothing */
-}
-#endif
+// #else
+// static void update_labels_to_header_bar(void)
+// {
+// /* nothing */
+// }
+// #endif
 
 
 void fractional_timescale_fix(char *s)
@@ -721,9 +723,9 @@ if(!GLOBALS->use_toolbutton_interface)
 	mainbox=XXX_gtk_hbox_new(FALSE, 0);
 	}
 
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
-if(GLOBALS->socket_xid)
-#endif
+// #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+if(RC_WAVE_ALLOW_GTK3_HEADER_BAR && GLOBALS->socket_xid)
+// #endif
 	{
 	gtk_widget_show(mainbox);
 	}

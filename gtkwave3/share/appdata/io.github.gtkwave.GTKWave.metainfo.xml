@@ -34,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.126" date="2025-11-06">
+      <description>
+        <p>
+	Changes in 3.3.126:
+        </p>
+	<ul>
+            <li>Fix for rendering multiline string constants in dumps.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.125" date="2025-06-22">
       <description>
         <p>

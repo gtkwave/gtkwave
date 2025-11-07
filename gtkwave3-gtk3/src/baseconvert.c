@@ -1125,12 +1125,18 @@ return(rv);
 
 char *convert_ascii_string(char *s)
 {
-char *rv;
+char *rv, *d;
 
 if(s)
 	{
-	rv=(char *)malloc_2(strlen(s)+1);
-	strcpy(rv, s);
+	d=rv=(char *)malloc_2(strlen(s)+1);
+	while(*s)
+		{
+		*d = iscntrl(*s) ? '.' : *s;
+		s++;
+		d++;
+		}
+	*d=0;
 	}
 	else
 	{

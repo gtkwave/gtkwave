@@ -626,12 +626,12 @@ NULL, /* filesel_tim_writesave */
 0, /* lock_menu_c_2 252 */
 NULL, /* buf_menu_c_1 253 128 */
 NULL, /* signal_popup_menu */
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+// #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 NULL, /* header_bar */
 NULL, /* main_popup_menu */
 NULL, /* main_popup_menu_button */
 NULL, /* top_table */
-#endif
+// #endif
 NULL, /* sst_signal_popup_menu */
 
 /*
@@ -1956,12 +1956,12 @@ void reload_into_new_context_2(void)
  strcpy2_into_new_context(new_globals, &new_globals->filesel_writesave, &GLOBALS->filesel_writesave);
  new_globals->save_success_menu_c_1 = GLOBALS->save_success_menu_c_1;
  new_globals->signal_popup_menu = GLOBALS->signal_popup_menu;
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+// #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
  new_globals->main_popup_menu = GLOBALS->main_popup_menu;
  new_globals->main_popup_menu_button = GLOBALS->main_popup_menu_button;
  new_globals->header_bar = GLOBALS->header_bar;
  new_globals->top_table = GLOBALS->top_table;
-#endif
+// #endif
  new_globals->sst_signal_popup_menu = GLOBALS->sst_signal_popup_menu;
 
  strcpy2_into_new_context(new_globals, &new_globals->filesel_vcd_writesave, &GLOBALS->filesel_vcd_writesave);
@@ -2333,7 +2333,7 @@ void reload_into_new_context_2(void)
 		else
 		{
 		/* recovery sequence */
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+#ifdef XXX_WAVE_ALLOW_GTK3_HEADER_BAR
         	if(GLOBALS->header_bar)
                 	{
 			char recbuf[128];
@@ -2343,9 +2343,9 @@ void reload_into_new_context_2(void)
 			}
 #endif
 		set_window_busy(NULL);
-#ifdef WAVE_ALLOW_GTK3_HEADER_BAR
+// #ifdef WAVE_ALLOW_GTK3_HEADER_BAR
 		if(!GLOBALS->header_bar)
-#endif
+// #endif
 			{
 			printf("GTKWAVE | Reload failure, reattempt in %d second%s...\n", reload_fail_delay, (reload_fail_delay==1) ? "" : "s");
 			fflush(stdout);
