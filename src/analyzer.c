@@ -234,7 +234,7 @@ static void AddTrace(GwTrace *t)
         t->flags = (t->flags & TR_NUMMASK) | GLOBALS->default_flags;
 
     if (GW_IS_FST_FILE(GLOBALS->dump_file)) {
-        if (!t->vector) {
+        if (!t->vector && t->n.nd != NULL) {
             guint index = gw_dump_file_get_enum_filter_for_node(GLOBALS->dump_file, t->n.nd);
             if (index > 0) {
                 GwEnumFilterList *filters = gw_dump_file_get_enum_filters(GLOBALS->dump_file);
