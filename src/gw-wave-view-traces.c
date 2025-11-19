@@ -654,7 +654,7 @@ static void draw_hptr_trace_vector_analog(GwWaveView *self,
     int skipcnt = 0;
 
     GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
-    GwTime max_time = gw_time_range_get_start(time_range);
+    GwTime max_time = gw_time_range_get_end(time_range);
 
     liney = ((which + 2 + num_extension) * GLOBALS->fontheight) - 2;
     _y1 = ((which + 1) * GLOBALS->fontheight) + 2;
@@ -1457,7 +1457,7 @@ static void draw_vptr_trace_analog(GwWaveView *self,
     int skipcnt = 0;
 
     GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
-    GwTime max_time = gw_time_range_get_start(time_range);
+    GwTime max_time = gw_time_range_get_end(time_range);
 
     h = v;
     liney = ((which + 2 + num_extension) * GLOBALS->fontheight) - 2;
