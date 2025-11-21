@@ -1948,3 +1948,4 @@
 		Update vcd2fst so it handles MTI 0 size conversion.
 3.3.126 06nov25	Added -H --noheader command line option for GTK3.
 		Fix for rendering multiline string constants in dumps.
+		Added headerbar rc variable to disable GTK3 headerbars.

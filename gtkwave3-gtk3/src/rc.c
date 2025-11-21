@@ -324,6 +324,13 @@ if(GLOBALS->force_toolbars)
 return(0);
 }
 
+int f_headerbar(char *str)
+{
+DEBUG(printf("f_headerbar(\"%s\")\n",str));
+RC_WAVE_ALLOW_GTK3_HEADER_BAR=atoi_64(str)?RC_WAVE_ALLOW_GTK3_HEADER_BAR:0; /* allows command line to take precedence */
+return(0);
+}
+
 int f_hide_sst(char *str)
 {
 DEBUG(printf("f_hide_sst(\"%s\")\n",str));
@@ -951,6 +958,7 @@ static struct rc_entry rcitems[]=
 { "fontname_signals", f_fontname_signals },
 { "fontname_waves", f_fontname_waves },
 { "force_toolbars", f_force_toolbars },
+{ "headerbar", f_headerbar },
 { "hide_sst", f_hide_sst },
 { "hier_delimeter", f_hier_delimeter },
 { "hier_grouping", f_hier_grouping },
