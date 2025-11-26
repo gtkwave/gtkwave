@@ -2,7 +2,7 @@ project(
     'gtkwave',
     'c',
     'cpp',
-    version: '3.4.0',
+    version: '4.0.0-prealpha',
     default_options: [
         'buildtype=debugoptimized',
         'warning_level=2',
@@ -22,6 +22,8 @@ add_project_arguments('-D_GNU_SOURCE', language: 'c')
 link_args = []
 
 datadir_gtkwave = get_option('datadir') / 'gtkwave3'
+
+version_h = vcs_tag(input: 'src/version.h.in', output: 'version.h')
 
 # Required dependency versions
 

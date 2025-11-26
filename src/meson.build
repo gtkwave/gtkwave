@@ -94,6 +94,7 @@ executable(
     gtkwave_sources,
     gtkwave_resources,
     vcd_keywords_c,
+    version_h,
     dependencies: gtkwave_dependencies,
     include_directories: gtkwave_include_directories,
     c_args: warning_args,
