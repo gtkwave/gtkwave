@@ -1605,6 +1605,27 @@ if(output_name)
 
 fprintf(stderr, "\n%s\n\n",WAVE_VERSION_INFO);
 
+if(!mainwindow_already_built) {
+  gboolean has_xpm_loader = FALSE;
+
+  GSList *formats = gdk_pixbuf_get_formats();
+  GSList *iter;
+  for (iter = formats; iter != NULL; iter = iter->next) {
+      GdkPixbufFormat *format = iter->data;
+      char *name = gdk_pixbuf_format_get_name(format);
+
+      if (strcmp(name, "xpm") == 0) {
+          has_xpm_loader = TRUE;
+      }
+
+      g_free(name);
+  }
+  g_slist_free(formats);
+
+  if (!has_xpm_loader) {
+      fprintf(stderr, "GTKWAVE | GdkPixbuf loader for XPM images is not installed.\n");
+  }
+}
 
 if(!old_g) /* copy all variables earlier when old_g is set */
 	{

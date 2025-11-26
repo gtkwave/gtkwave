@@ -34,7 +34,7 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.126" date="2025-11-06">
+    <release version="3.3.126" date="2025-11-25">
       <description>
         <p>
 	Changes in 3.3.126:
@@ -42,6 +42,7 @@
 	<ul>
             <li>Added -H --noheader command line option for GTK3.</li>
             <li>Fix for	rendering multiline string constants in dumps.</li>
+            <li>Add warning message for missing XPM loader.</li>
         </ul>
       </description>
     </release>
