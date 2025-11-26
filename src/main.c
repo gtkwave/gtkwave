@@ -851,6 +851,25 @@ int main_2(int opt_vcd, int argc, char *argv[])
         }
     }
 
+    gboolean has_xpm_loader = FALSE;
+
+    GSList *formats = gdk_pixbuf_get_formats();
+    for (GSList *iter = formats; iter != NULL; iter = iter->next) {
+        GdkPixbufFormat *format = iter->data;
+        char *name = gdk_pixbuf_format_get_name(format);
+
+        if (strcmp(name, "xpm") == 0) {
+            has_xpm_loader = TRUE;
+        }
+
+        g_free(name);
+    }
+    g_slist_free(formats);
+
+    if (!has_xpm_loader) {
+        fprintf(stderr, "GTKWAVE | GdkPixbuf loader for XPM images is not installed.\n");
+    }
+
 #if defined(__APPLE__)
 #ifndef MAC_INTEGRATION
 do_primary_inits:
