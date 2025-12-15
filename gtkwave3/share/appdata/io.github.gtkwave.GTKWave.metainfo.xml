@@ -34,13 +34,14 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.126" date="2025-11-06">
+    <release version="3.3.126" date="2025-12-15">
       <description>
         <p>
 	Changes in 3.3.126:
         </p>
 	<ul>
             <li>Fix for rendering multiline string constants in dumps.</li>
+            <li>Updated	libghw to current version.</li>
         </ul>
       </description>
     </release>
