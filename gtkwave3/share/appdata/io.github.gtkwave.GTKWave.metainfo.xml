@@ -34,7 +34,7 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.126" date="2025-12-15">
+    <release version="3.3.126" date="2025-12-18">
       <description>
         <p>
 	Changes in 3.3.126:
@@ -42,6 +42,7 @@
 	<ul>
             <li>Fix for rendering multiline string constants in dumps.</li>
             <li>Updated	libghw to current version.</li>
+            <li>Changed behavior of X search in pattern search so it is matched by a single X bit.</li>
         </ul>
       </description>
     </release>

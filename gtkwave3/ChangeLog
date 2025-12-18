@@ -1867,5 +1867,7 @@
 		Parameter size 0 fix for Vivado: backs out very old fix
 		(for MTI) that converts 0 size signals to reals.
 		Update vcd2fst so it handles MTI 0 size conversion.
-3.3.126 15dec25	Fix for rendering multiline string constants in dumps.
+3.3.126 18dec25	Fix for rendering multiline string constants in dumps.
 		Updated libghw to current version.
+                Changed behavior of X search in pattern search so it is
+                matched by a single X bit.

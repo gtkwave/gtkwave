@@ -838,7 +838,7 @@ while(s)
 
 			case ST_X:
 				totaltraces++;
-				if((str[0]=='x')||(str[0]=='X')) s->search_result=1;
+				if((str[0]=='x')||(str[0]=='X')||(str[0]=='w')||(str[0]=='W')) s->search_result=1;
 				break;
 
 			case ST_ANY:
@@ -966,12 +966,12 @@ while(s)
 				totaltraces++;
 				if((chval2=chval))
 				{
-				s->search_result=1;
+				s->search_result=0;
 				while((ch=*(chval2++)))
 					{
-					if((ch!='x')&&(ch!='w')&&(ch!='X')&&(ch!='W'))
+					if((ch=='x')||(ch=='X')||(ch=='w')||(ch=='W'))
 						{
-						s->search_result=0;
+						s->search_result=1;
 						break;
 						}
 					}
@@ -1206,7 +1206,7 @@ while(s)
 
 			case ST_X:
 				totaltraces++;
-				if((str[0]=='x')||(str[0]=='X')) s->search_result=1;
+				if((str[0]=='x')||(str[0]=='X')||(str[0]=='w')||(str[0]=='W')) s->search_result=1;
 				break;
 
 			case ST_ANY:
@@ -1334,12 +1334,12 @@ while(s)
 				totaltraces++;
 				if((chval2=chval))
 				{
-				s->search_result=1;
+				s->search_result=0;
 				while((ch=*(chval2++)))
 					{
-					if((ch!='x')&&(ch!='w')&&(ch!='X')&&(ch!='W'))
+					if((ch=='x')||(ch=='X')||(ch=='w')||(ch=='W'))
 						{
-						s->search_result=0;
+						s->search_result=1;
 						break;
 						}
 					}
