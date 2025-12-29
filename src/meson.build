@@ -89,7 +89,7 @@ gtkwave_include_directories = [
     'cocoa',
 ]
 
-executable(
+gtkwave_exe = executable(
     'gtkwave',
     gtkwave_sources,
     gtkwave_resources,
@@ -127,3 +127,12 @@ executable(
     install: true,
     install_rpath: install_rpath,
 )
+
+if host_machine.system() != 'windows'
+    backend_xid_test = find_program('tests/backend-xid-nonx11.sh')
+    test(
+        'backend-xid-nonx11',
+        backend_xid_test,
+        depends: gtkwave_exe,
+    )
+endif

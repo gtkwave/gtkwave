@@ -26,6 +26,9 @@
 #if GTK_CHECK_VERSION(3, 0, 0)
 #include <gtk/gtkx.h>
 #endif
+#if defined(GDK_WINDOWING_X11)
+#include <gdk/gdkx.h>
+#endif
 #endif
 
 #include "wave_locale.h"
@@ -1231,6 +1234,24 @@ do_primary_inits:
             }
         }
     }
+
+#ifdef WAVE_USE_XID
+    if (GLOBALS->socket_xid) {
+        gboolean is_x11_display = FALSE;
+#ifdef GDK_WINDOWING_X11
+        {
+            GdkDisplay *display = gdk_display_get_default();
+            if (display && GDK_IS_X11_DISPLAY(display)) {
+                is_x11_display = TRUE;
+            }
+        }
+#endif
+        if (!is_x11_display) {
+            fprintf(stderr, "GTKWAVE | Ignoring -X; GtkPlug only works on X11.\n");
+            GLOBALS->socket_xid = 0;
+        }
+    }
+#endif
 
     /* attempt to load a dump+save file if only a savefile is specified at the command line */
     if ((GLOBALS->loaded_file_name) && (!wname) &&
