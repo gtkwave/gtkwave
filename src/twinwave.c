@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 #ifdef GDK_WINDOWING_X11
     {
         GdkDisplay *display = gdk_display_get_default();
-        if (display && GDK_IS_X11_DISPLAY(display)) {
+        if (GDK_IS_X11_DISPLAY(display)) {
             is_x11_display = 1;
         }
     }
