@@ -25,9 +25,6 @@
 #if !defined(MAC_INTEGRATION) && defined(GDK_WINDOWING_WAYLAND)
 #include <gdk/gdkwayland.h>
 #endif
-#if !defined(MAC_INTEGRATION) && defined(GDK_WINDOWING_BROADWAY)
-#include <gdk/gdkbroadway.h>
-#endif
 #endif
 #endif
 
@@ -157,11 +154,6 @@ int main(int argc, char **argv)
 #ifdef GDK_WINDOWING_WAYLAND
     if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
         twinwayland = 1;
-        use_embedded = 0;
-    }
-#endif
-#ifdef GDK_WINDOWING_BROADWAY
-    if (GDK_IS_BROADWAY_DISPLAY(gdk_display_get_default())) {
         use_embedded = 0;
     }
 #endif
