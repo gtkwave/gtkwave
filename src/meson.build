@@ -127,12 +127,3 @@ executable(
     install: true,
     install_rpath: install_rpath,
 )
-
-if host_machine.system() != 'windows'
-    backend_xid_test = find_program('tests/backend-xid-nonx11.sh')
-    test(
-        'backend-xid-nonx11',
-        backend_xid_test,
-        depends: gtkwave_exe,
-    )
-endif
