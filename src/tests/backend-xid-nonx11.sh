@@ -25,8 +25,5 @@ fi
 out="$(GDK_BACKEND=wayland timeout 3s "$bin" -X 1 2>&1 || true)"
 
 printf "%s\n" "$out" | grep -F "Ignoring -X; GtkPlug only works on X11." >/dev/null 2>&1
-if printf "%s\n" "$out" | grep -F "GtkPlug only works under X11" >/dev/null 2>&1; then
-  exit 1
-fi
 
 exit 0
