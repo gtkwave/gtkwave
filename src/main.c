@@ -23,10 +23,7 @@
 #ifdef __MINGW32__
 #include <windows.h>
 #else
-#if GTK_CHECK_VERSION(3, 0, 0)
-#include <gtk/gtkx.h>
-#endif
-#if defined(GDK_WINDOWING_X11)
+#ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
 #endif
@@ -73,6 +70,10 @@
 #include "gw-fst-file.h"
 
 #include "tcl_helper.h"
+
+#ifdef HAVE_WCP
+#include "wcp_gtkwave.h"
+#endif
 
 #ifdef MAC_INTEGRATION
 #include <gtkosxapplication.h>
@@ -276,6 +277,14 @@ static void print_help(char *nam)
 #define RPC_GETOPT3
 #endif
 
+#ifdef HAVE_WCP
+#define WCP_GETOPT \
+    "  --wcp-port=PORT            start WCP server on PORT (default: 8765)\n" \
+    "  --wcp-initiate=HOST:PORT   connect to WCP client at HOST:PORT\n"
+#else
+#define WCP_GETOPT
+#endif
+
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
         "  -n, --nocli=DIRPATH        use file selection dialog for dumpfile or savefile\n"
@@ -297,6 +306,7 @@ static void print_help(char *nam)
         "  -7, --saveonexit           prompt user to write save file at exit\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
+        WCP_GETOPT
         "  -V, --version              display version banner then exit\n"
         "  -h, --help                 display this help then exit\n"
         "  -x, --exit                 exit after loading trace (for loader benchmarks)\n\n"
@@ -680,6 +690,11 @@ int main_2(int opt_vcd, int argc, char *argv[])
     char opt_errors_encountered = 0;
     char is_missing_file = 0;
 
+#ifdef HAVE_WCP
+    int wcp_port = 0;
+    char *wcp_initiate_address = NULL;
+#endif
+
     char *wname = NULL;
     char *override_rc = NULL;
     FILE *wave = NULL;
@@ -934,6 +949,10 @@ do_primary_inits:
                                                    {"sstexclude", 1, 0, '5'},
                                                    {"dark", 0, 0, '6'},
                                                    {"saveonexit", 0, 0, '7'},
+#ifdef HAVE_WCP
+                                                   {"wcp-port", 1, 0, 0},
+                                                   {"wcp-initiate", 1, 0, 0},
+#endif
                                                    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
@@ -978,6 +997,16 @@ do_primary_inits:
                             "and n is a hexadecimal shared memory ID for use with shmat()\n");
                     exit(255);
                 } break;
+
+#ifdef HAVE_WCP
+                case 0:
+                    if (!strcmp(long_options[option_index].name, "wcp-port")) {
+                        wcp_port = atoi(optarg);
+                    } else if (!strcmp(long_options[option_index].name, "wcp-initiate")) {
+                        wcp_initiate_address = optarg;
+                    }
+                    break;
+#endif
 
                 case 'A':
                     is_smartsave = 1;
@@ -1241,7 +1270,7 @@ do_primary_inits:
 #ifdef GDK_WINDOWING_X11
         {
             GdkDisplay *display = gdk_display_get_default();
-            if (display && GDK_IS_X11_DISPLAY(display)) {
+            if (GDK_IS_X11_DISPLAY(display)) {
                 is_x11_display = TRUE;
             }
         }
