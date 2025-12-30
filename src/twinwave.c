@@ -45,7 +45,6 @@ static int use_embedded = 1;
 static int use_embedded = 0;
 #endif
 static int twinwayland = 0;
-static int twinbroadway = 0;
 static int is_x11_display = 0;
 
 static int plug_removed(GtkWidget *widget, gpointer data)
@@ -163,7 +162,6 @@ int main(int argc, char **argv)
 #endif
 #ifdef GDK_WINDOWING_BROADWAY
     if (GDK_IS_BROADWAY_DISPLAY(gdk_display_get_default())) {
-        twinbroadway = 1;
         use_embedded = 0;
     }
 #endif
