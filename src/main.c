@@ -24,6 +24,7 @@
 #include <windows.h>
 #else
 #ifdef GDK_WINDOWING_X11
+#include <gtk/gtkx.h>
 #include <gdk/gdkx.h>
 #endif
 #endif
