@@ -89,7 +89,7 @@ gtkwave_include_directories = [
     'cocoa',
 ]
 
-executable(
+gtkwave_exe = executable(
     'gtkwave',
     gtkwave_sources,
     gtkwave_resources,

@@ -19,6 +19,9 @@
 #include <gtk/gtkx.h>
 #endif
 #if GTK_CHECK_VERSION(3, 22, 26)
+#if !defined(MAC_INTEGRATION) && defined(GDK_WINDOWING_X11)
+#include <gdk/gdkx.h>
+#endif
 #if !defined(MAC_INTEGRATION) && defined(GDK_WINDOWING_WAYLAND)
 #include <gdk/gdkwayland.h>
 #endif
@@ -39,6 +42,7 @@ static int use_embedded = 1;
 static int use_embedded = 0;
 #endif
 static int twinwayland = 0;
+static int is_x11_display = 0;
 
 static int plug_removed(GtkWidget *widget, gpointer data)
 {
@@ -139,14 +143,27 @@ int main(int argc, char **argv)
     g_signal_connect(mainwindow, "destroy", G_CALLBACK(quit_callback), "WM destroy");
 
 #ifndef __MINGW32__
+#ifdef GDK_WINDOWING_X11
+    {
+        GdkDisplay *display = gdk_display_get_default();
+        if (GDK_IS_X11_DISPLAY(display)) {
+            is_x11_display = 1;
+        }
+    }
+#endif
 #ifdef GDK_WINDOWING_WAYLAND
     if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
         twinwayland = 1;
         use_embedded = 0;
     }
 #endif
+#ifdef GDK_WINDOWING_X11
+    if (!is_x11_display) {
+        use_embedded = 0;
+    }
+#endif
 #if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
-    {
+    if (is_x11_display) {
         xsocket[0] = gtk_socket_new();
         xsocket[1] = gtk_socket_new();
         gtk_widget_show(xsocket[0]);
@@ -155,7 +172,7 @@ int main(int argc, char **argv)
 #endif
 
 #if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
-    if (!twinwayland)
+    if (is_x11_display)
         g_signal_connect(xsocket[0], "plug-removed", G_CALLBACK(plug_removed), NULL);
 #endif
 
@@ -178,7 +195,7 @@ int main(int argc, char **argv)
     gtk_box_pack_start(GTK_BOX(main_vbox), vpan, TRUE, TRUE, 1);
 
 #if defined(__GTK_SOCKET_H__) && defined(GDK_WINDOWING_X11)
-    if (!twinwayland) {
+    if (is_x11_display) {
         gtk_paned_pack1(GTK_PANED(vpan), xsocket[0], TRUE, FALSE);
         g_signal_connect(xsocket[1], "plug-removed", G_CALLBACK(plug_removed), NULL);
         gtk_paned_pack2(GTK_PANED(vpan), xsocket[1], TRUE, FALSE);
