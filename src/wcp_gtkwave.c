@@ -817,12 +817,18 @@ static gchar* handle_zoom_to_fit(WcpServer *server, WcpCommand *cmd)
     return wcp_create_ack();
 }
 
+static gboolean wcp_stop_server_idle(gpointer data)
+{
+    wcp_server_stop((WcpServer *)data);
+    return G_SOURCE_REMOVE;
+}
+
 static gchar* handle_shutdown(WcpServer *server, WcpCommand *cmd)
 {
     (void)cmd;
 
-    /* Stop the WCP server (but don't quit GTKWave) */
-    wcp_server_stop(server);
+    /* Stop after the ack has been sent. */
+    g_idle_add(wcp_stop_server_idle, server);
     
     return wcp_create_ack();
 }
