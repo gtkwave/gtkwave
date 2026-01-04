@@ -136,10 +136,6 @@ static GwTrace *wcp_lookup_trace(guint64 id)
     if (!t) {
         return NULL;
     }
-    if (!wcp_trace_is_live(t)) {
-        wcp_remove_trace_id(t);
-        return NULL;
-    }
     return t;
 }
 
