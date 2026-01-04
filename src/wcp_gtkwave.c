@@ -30,13 +30,6 @@ static GHashTable *wcp_trace_to_id = NULL;
 static GHashTable *wcp_id_to_trace = NULL;
 static guint64 wcp_next_trace_id = 1;
 
-static guint64 *wcp_id_new(guint64 id)
-{
-    guint64 *value = g_new(guint64, 1);
-    *value = id;
-    return value;
-}
-
 static void wcp_trace_map_init(void)
 {
     if (wcp_trace_to_id) {
@@ -98,8 +91,12 @@ static guint64 wcp_get_trace_id(GwTrace *t)
     }
 
     guint64 id = wcp_next_trace_id++;
-    g_hash_table_insert(wcp_trace_to_id, t, wcp_id_new(id));
-    g_hash_table_insert(wcp_id_to_trace, wcp_id_new(id), t);
+    guint64 *trace_id = g_new(guint64, 1);
+    *trace_id = id;
+    g_hash_table_insert(wcp_trace_to_id, t, trace_id);
+    guint64 *id_key = g_new(guint64, 1);
+    *id_key = id;
+    g_hash_table_insert(wcp_id_to_trace, id_key, t);
     return id;
 }
 
@@ -129,39 +126,12 @@ static GwTrace *wcp_lookup_trace(guint64 id)
     return t;
 }
 
-static gboolean wcp_has_dump_file(void)
-{
-    return GLOBALS->dump_file != NULL && GLOBALS->loaded_file_type != MISSING_FILE;
-}
-
-static gchar *wcp_require_dump_file(void)
-{
-    if (wcp_has_dump_file()) {
-        return NULL;
-    }
-    return wcp_create_error("no_waveform", "No waveform loaded", NULL);
-}
-
 static void wcp_item_info_free(gpointer data)
 {
     WcpItemInfo *info = data;
-    if (!info) {
-        return;
-    }
     g_free(info->name);
     g_free(info->type);
     g_free(info);
-}
-
-static gint wcp_find_marker_index(GwNamedMarkers *markers, GwMarker *marker)
-{
-    guint count = gw_named_markers_get_number_of_markers(markers);
-    for (guint i = 0; i < count; i++) {
-        if (gw_named_markers_get(markers, i) == marker) {
-            return (gint)i;
-        }
-    }
-    return -1;
 }
 
 static gint wcp_parse_color(const gchar *color)
@@ -438,9 +408,8 @@ static gchar* handle_add_variables(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
     
-    gchar *err = wcp_require_dump_file();
-    if (err) {
-        return err;
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -471,9 +440,8 @@ static gchar* handle_add_scope(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
     
-    gchar *err = wcp_require_dump_file();
-    if (err) {
-        return err;
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -508,9 +476,8 @@ static gchar* handle_add_markers(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    gchar *err = wcp_require_dump_file();
-    if (err) {
-        return err;
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -535,7 +502,14 @@ static gchar* handle_add_markers(WcpServer *server, WcpCommand *cmd)
                 gw_marker_set_alias(marker, m->name);
             }
 
-            gint idx = wcp_find_marker_index(markers, marker);
+            gint idx = -1;
+            guint count = gw_named_markers_get_number_of_markers(markers);
+            for (guint j = 0; j < count; j++) {
+                if (gw_named_markers_get(markers, j) == marker) {
+                    idx = (gint)j;
+                    break;
+                }
+            }
             if (idx >= 0) {
                 WcpDisplayedItemRef ref;
                 ref.id = (WCP_ITEM_MARKER_FLAG | (guint64)idx);
@@ -562,9 +536,8 @@ static gchar* handle_add_items(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    gchar *err = wcp_require_dump_file();
-    if (err) {
-        return err;
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -606,9 +579,8 @@ static gchar* handle_set_viewport_to(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    gchar *err = wcp_require_dump_file();
-    if (err) {
-        return err;
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GwTime target = (GwTime)cmd->data.viewport_to.timestamp;
@@ -642,9 +614,8 @@ static gchar* handle_set_viewport_range(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    gchar *err = wcp_require_dump_file();
-    if (err) {
-        return err;
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GwTime start = (GwTime)cmd->data.viewport_range.start;
@@ -775,9 +746,8 @@ static gchar* handle_reload(WcpServer *server, WcpCommand *cmd)
     (void)server;
     (void)cmd;
     
-    gchar *err = wcp_require_dump_file();
-    if (err || !GLOBALS->loaded_file_name) {
-        return err ? err : wcp_create_error("no_waveform", "No waveform loaded", NULL);
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE || !GLOBALS->loaded_file_name) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     reload_into_new_context();
@@ -790,9 +760,8 @@ static gchar* handle_zoom_to_fit(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    gchar *err = wcp_require_dump_file();
-    if (err) {
-        return err;
+    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
+        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
     }
 
     if (cmd->data.zoom.viewport_idx != 0) {
