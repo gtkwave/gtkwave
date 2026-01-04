@@ -58,16 +58,6 @@ static void wcp_trace_map_free(void)
     }
 }
 
-static gboolean wcp_trace_is_live(GwTrace *t)
-{
-    for (GwTrace *cur = GLOBALS->traces.first; cur; cur = cur->t_next) {
-        if (cur == t) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 static void wcp_trace_map_prune(void)
 {
     if (!wcp_trace_to_id) {
