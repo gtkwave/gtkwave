@@ -23,13 +23,16 @@
 #ifdef __MINGW32__
 #include <windows.h>
 #else
-#ifdef GDK_WINDOWING_X11
+#if GTK_CHECK_VERSION(3, 0, 0)
 #include <gtk/gtkx.h>
-#include <gdk/gdkx.h>
 #endif
 #endif
 
 #include "wave_locale.h"
+
+#ifdef HAVE_WCP
+#include "wcp_gtkwave.h"
+#endif
 
 #if !defined __MINGW32__
 #include <signal.h>
@@ -274,6 +277,14 @@ static void print_help(char *nam)
 #define RPC_GETOPT3
 #endif
 
+#ifdef HAVE_WCP
+#define WCP_GETOPT \
+    "  --wcp-port=PORT            start WCP server on PORT (0 uses 8765)\n" \
+    "  --wcp-initiate=HOST:PORT   connect to WCP client at HOST:PORT\n"
+#else
+#define WCP_GETOPT
+#endif
+
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
         "  -n, --nocli=DIRPATH        use file selection dialog for dumpfile or savefile\n"
@@ -295,6 +306,7 @@ static void print_help(char *nam)
         "  -7, --saveonexit           prompt user to write save file at exit\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
+        WCP_GETOPT
         "  -V, --version              display version banner then exit\n"
         "  -h, --help                 display this help then exit\n"
         "  -x, --exit                 exit after loading trace (for loader benchmarks)\n\n"
@@ -681,6 +693,10 @@ int main_2(int opt_vcd, int argc, char *argv[])
     char *wname = NULL;
     char *override_rc = NULL;
     FILE *wave = NULL;
+#ifdef HAVE_WCP
+    int wcp_port = -1;
+    const char *wcp_initiate_address = NULL;
+#endif
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
@@ -932,6 +948,10 @@ do_primary_inits:
                                                    {"sstexclude", 1, 0, '5'},
                                                    {"dark", 0, 0, '6'},
                                                    {"saveonexit", 0, 0, '7'},
+#ifdef HAVE_WCP
+                                                   {"wcp-port", 1, 0, 0},
+                                                   {"wcp-initiate", 1, 0, 0},
+#endif
                                                    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
@@ -976,6 +996,16 @@ do_primary_inits:
                             "and n is a hexadecimal shared memory ID for use with shmat()\n");
                     exit(255);
                 } break;
+
+#ifdef HAVE_WCP
+                case 0:
+                    if (!strcmp(long_options[option_index].name, "wcp-port")) {
+                        wcp_port = atoi(optarg);
+                    } else if (!strcmp(long_options[option_index].name, "wcp-initiate")) {
+                        wcp_initiate_address = optarg;
+                    }
+                    break;
+#endif
 
                 case 'A':
                     is_smartsave = 1;
@@ -1233,20 +1263,41 @@ do_primary_inits:
         }
     }
 
-#ifdef WAVE_USE_XID
-    if (GLOBALS->socket_xid) {
-        gboolean is_x11_display = FALSE;
-#ifdef GDK_WINDOWING_X11
-        {
-            GdkDisplay *display = gdk_display_get_default();
-            if (GDK_IS_X11_DISPLAY(display)) {
-                is_x11_display = TRUE;
-            }
+#ifdef HAVE_WCP
+    if (wcp_initiate_address) {
+        char *address_copy = strdup_2(wcp_initiate_address);
+        char *sep = strrchr(address_copy, ':');
+        if (!sep || sep == address_copy || !*(sep + 1)) {
+            fprintf(stderr,
+                    "GTKWAVE | Invalid --wcp-initiate (expected HOST:PORT)\n");
+            free_2(address_copy);
+            exit(255);
         }
-#endif
-        if (!is_x11_display) {
-            fprintf(stderr, "GTKWAVE | Ignoring -X; GtkPlug only works on X11.\n");
-            GLOBALS->socket_xid = 0;
+        *sep = '\0';
+        char *host = address_copy;
+        char *port_str = sep + 1;
+        char *endptr = NULL;
+        long port_val = strtol(port_str, &endptr, 10);
+        if (!endptr || *endptr != '\0' || port_val <= 0 || port_val > 65535) {
+            fprintf(stderr,
+                    "GTKWAVE | Invalid --wcp-initiate port: %s\n",
+                    port_str);
+            free_2(address_copy);
+            exit(255);
+        }
+        if (!wcp_gtkwave_initiate(host, (guint16)port_val)) {
+            fprintf(stderr, "GTKWAVE | WCP initiate failed\n");
+            free_2(address_copy);
+            exit(255);
+        }
+        free_2(address_copy);
+    } else if (wcp_port >= 0) {
+        if (wcp_port == 0) {
+            wcp_port = WCP_DEFAULT_PORT;
+        }
+        if (!wcp_gtkwave_init((guint16)wcp_port)) {
+            fprintf(stderr, "GTKWAVE | WCP server failed to start\n");
+            exit(255);
         }
     }
 #endif
@@ -1494,6 +1545,12 @@ loader_check_head:
         gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
         gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
         gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
+
+#ifdef HAVE_WCP
+        if (GLOBALS->loaded_file_name) {
+            wcp_gtkwave_notify_waveforms_loaded(GLOBALS->loaded_file_name);
+        }
+#endif
 
         if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
             fprintf(stderr,
@@ -2198,6 +2255,10 @@ savefile_bail:
     } else {
         gtk_main();
     }
+
+#ifdef HAVE_WCP
+    wcp_gtkwave_shutdown();
+#endif
 
 #ifdef MAC_INTEGRATION
     exit(0); /* gtk_target_list_find crashes in OSX/Quartz is return instead of exit */

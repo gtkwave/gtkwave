@@ -8,6 +8,8 @@ gtkwave_resources = gnome.compile_resources(
     c_name: 'gtkwave',
 )
 
+wcp_enabled = get_option('wcp')
+
 gtkwave_sources = [
     'analyzer.c',
     'baseconvert.c',
@@ -70,6 +72,12 @@ gtkwave_sources = [
     'cocoa/cocoa_misc.c',
 ]
 
+if wcp_enabled
+    gtkwave_sources += files(
+        'wcp_gtkwave.c',
+    )
+endif
+
 gtkwave_dependencies = [
     glib_dep,
     gtk_dep,
@@ -84,12 +92,20 @@ gtkwave_dependencies = [
     libgtkwave_dep,
 ]
 
+if wcp_enabled
+    gtkwave_dependencies += libwcp_dep
+endif
+
 gtkwave_include_directories = [
     config_inc,
     'cocoa',
 ]
 
-gtkwave_exe = executable(
+if wcp_enabled
+    gtkwave_include_directories += include_directories('../lib/libwcp')
+endif
+
+executable(
     'gtkwave',
     gtkwave_sources,
     gtkwave_resources,
