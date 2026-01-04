@@ -74,3 +74,10 @@ option(
     value: 'false',
     description: 'Build MacOS application bundle',
 )
+
+option(
+    'wcp',
+    type: 'boolean',
+    value: false,
+    description: 'Enable WCP (Waveform Control Protocol) support',
+)
