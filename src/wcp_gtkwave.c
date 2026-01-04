@@ -143,21 +143,6 @@ static GwTrace *wcp_lookup_trace(guint64 id)
     return t;
 }
 
-static gboolean wcp_is_marker_id(guint64 id)
-{
-    return (id & WCP_ITEM_MARKER_FLAG) != 0;
-}
-
-static guint64 wcp_marker_index_from_id(guint64 id)
-{
-    return id & ~WCP_ITEM_MARKER_FLAG;
-}
-
-static guint64 wcp_marker_id_from_index(guint64 idx)
-{
-    return WCP_ITEM_MARKER_FLAG | idx;
-}
-
 static gboolean wcp_has_dump_file(void)
 {
     return GLOBALS->dump_file != NULL && GLOBALS->loaded_file_type != MISSING_FILE;
@@ -363,7 +348,7 @@ static gchar* handle_get_item_list(WcpServer *server, WcpCommand *cmd)
             GwMarker *marker = gw_named_markers_get(markers, i);
             if (marker && gw_marker_is_enabled(marker)) {
                 WcpDisplayedItemRef ref;
-                ref.id = wcp_marker_id_from_index(i);
+                ref.id = (WCP_ITEM_MARKER_FLAG | (guint64)i);
                 g_array_append_val(ids, ref);
             }
         }
@@ -385,9 +370,9 @@ static gchar* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
             WcpDisplayedItemRef *ref = &g_array_index(cmd->data.item_refs.ids,
                                                        WcpDisplayedItemRef, i);
 
-            if (wcp_is_marker_id(ref->id)) {
+            if ((ref->id & WCP_ITEM_MARKER_FLAG) != 0) {
                 GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
-                guint64 idx64 = wcp_marker_index_from_id(ref->id);
+                guint64 idx64 = (ref->id & ~WCP_ITEM_MARKER_FLAG);
                 if (idx64 > G_MAXUINT) {
                     g_ptr_array_free(results, TRUE);
                     return wcp_create_error("invalid_item", "Unknown marker id", NULL);
@@ -428,7 +413,7 @@ static gchar* handle_set_item_color(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    if (wcp_is_marker_id(cmd->data.set_color.id.id)) {
+    if ((cmd->data.set_color.id.id & WCP_ITEM_MARKER_FLAG) != 0) {
         return wcp_create_error("invalid_item",
                                 "set_item_color only applies to signals",
                                 NULL);
@@ -556,7 +541,7 @@ static gchar* handle_add_markers(WcpServer *server, WcpCommand *cmd)
             gint idx = wcp_find_marker_index(markers, marker);
             if (idx >= 0) {
                 WcpDisplayedItemRef ref;
-                ref.id = wcp_marker_id_from_index((guint64)idx);
+                ref.id = (WCP_ITEM_MARKER_FLAG | (guint64)idx);
                 g_array_append_val(added_ids, ref);
             }
 
@@ -683,9 +668,9 @@ static gchar* handle_remove_items(WcpServer *server, WcpCommand *cmd)
         for (guint i = 0; i < cmd->data.item_refs.ids->len; i++) {
             WcpDisplayedItemRef *ref = &g_array_index(cmd->data.item_refs.ids,
                                                        WcpDisplayedItemRef, i);
-            if (wcp_is_marker_id(ref->id)) {
+            if ((ref->id & WCP_ITEM_MARKER_FLAG) != 0) {
                 GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
-                guint64 idx64 = wcp_marker_index_from_id(ref->id);
+                guint64 idx64 = (ref->id & ~WCP_ITEM_MARKER_FLAG);
                 if (idx64 > G_MAXUINT) {
                     continue;
                 }
@@ -717,9 +702,9 @@ static gchar* handle_focus_item(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
     
-    if (wcp_is_marker_id(cmd->data.focus.id.id)) {
+    if ((cmd->data.focus.id.id & WCP_ITEM_MARKER_FLAG) != 0) {
         GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
-        guint64 idx64 = wcp_marker_index_from_id(cmd->data.focus.id.id);
+        guint64 idx64 = (cmd->data.focus.id.id & ~WCP_ITEM_MARKER_FLAG);
         if (idx64 > G_MAXUINT) {
             return wcp_create_error("invalid_item", "Unknown marker id", NULL);
         }
