@@ -724,7 +724,7 @@ static gchar* handle_focus_item(WcpServer *server, WcpCommand *cmd)
         }
         GwMarker *marker =
             gw_named_markers_get(markers, (guint)idx64);
-        if (marker) {
+        if (marker && gw_marker_is_enabled(marker)) {
             GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
             gw_marker_set_position(primary_marker, gw_marker_get_position(marker));
             gw_marker_set_enabled(primary_marker, TRUE);
