@@ -14,10 +14,8 @@
 #include "currenttime.h"
 #include "globals.h"
 #include "lx2.h"
-#include "menu.h"
 #include "signal_list.h"
 #include "symbol.h"
-#include "timeentry.h"
 #include "wavewindow.h"
 #include "zoombuttons.h"
 
@@ -49,32 +47,6 @@ static void wcp_trace_map_free(void)
         g_hash_table_destroy(wcp_id_to_trace);
         wcp_id_to_trace = NULL;
     }
-}
-
-static void wcp_trace_map_prune(void)
-{
-    if (!wcp_trace_to_id) {
-        return;
-    }
-
-    GHashTable *live = g_hash_table_new(g_direct_hash, g_direct_equal);
-    for (GwTrace *t = GLOBALS->traces.first; t; t = t->t_next) {
-        g_hash_table_add(live, t);
-    }
-
-    GHashTableIter iter;
-    gpointer key;
-    gpointer value;
-    g_hash_table_iter_init(&iter, wcp_trace_to_id);
-    while (g_hash_table_iter_next(&iter, &key, &value)) {
-        if (!g_hash_table_contains(live, key)) {
-            guint64 id = *(guint64 *)value;
-            g_hash_table_remove(wcp_id_to_trace, &id);
-            g_hash_table_iter_remove(&iter);
-        }
-    }
-
-    g_hash_table_destroy(live);
 }
 
 static guint64 wcp_get_trace_id(GwTrace *t)
@@ -298,7 +270,6 @@ static gchar* handle_get_item_list(WcpServer *server, WcpCommand *cmd)
     
     GArray *ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
     
-    wcp_trace_map_prune();
     for (GwTrace *t = GLOBALS->traces.first; t; t = t->t_next) {
         WcpDisplayedItemRef ref;
         ref.id = wcp_get_trace_id(t);
@@ -869,27 +840,6 @@ gboolean wcp_gtkwave_init(guint16 port)
     GError *error = NULL;
     if (!wcp_server_start(g_wcp_server, &error)) {
         g_warning("WCP: Failed to start server: %s", error->message);
-        g_error_free(error);
-        wcp_server_free(g_wcp_server);
-        g_wcp_server = NULL;
-        return FALSE;
-    }
-    
-    return TRUE;
-}
-
-gboolean wcp_gtkwave_initiate(const gchar *host, guint16 port)
-{
-    if (g_wcp_server) {
-        g_warning("WCP: Already initialized");
-        return FALSE;
-    }
-    
-    g_wcp_server = wcp_server_new(0, wcp_command_handler, NULL);
-    
-    GError *error = NULL;
-    if (!wcp_server_initiate(g_wcp_server, host, port, &error)) {
-        g_warning("WCP: Failed to connect: %s", error->message);
         g_error_free(error);
         wcp_server_free(g_wcp_server);
         g_wcp_server = NULL;

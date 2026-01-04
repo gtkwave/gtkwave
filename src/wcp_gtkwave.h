@@ -26,15 +26,6 @@
 gboolean wcp_gtkwave_init(guint16 port);
 
 /**
- * Initialize WCP in "initiate" mode - connect to existing client
- * 
- * @param host Host to connect to
- * @param port Port to connect to
- * @return TRUE on success
- */
-gboolean wcp_gtkwave_initiate(const gchar *host, guint16 port);
-
-/**
  * Shutdown WCP support
  * Call this before GTKWave exits
  */
