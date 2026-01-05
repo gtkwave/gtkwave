@@ -1281,7 +1281,7 @@ do_primary_inits:
         if (wcp_port == 0) {
             wcp_port = WCP_DEFAULT_PORT;
         }
-        if (!wcp_gtkwave_init((guint16)wcp_port)) {
+        if (!wcp_gtkwave_init((uint16_t)wcp_port)) {
             fprintf(stderr, "GTKWAVE | WCP server failed to start\n");
             exit(255);
         }
