@@ -13,7 +13,6 @@
 
 #include <glib.h>
 #include <json-glib/json-glib.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 /* WCP Protocol Version */
@@ -73,7 +72,7 @@ typedef struct {
 typedef struct {
     int64_t time;
     char *name;       /* Optional */
-    bool move_focus;
+    gboolean move_focus;
 } WcpMarkerInfo;
 
 /* Parsed WCP command */
@@ -101,13 +100,13 @@ typedef struct {
         /* add_scope */
         struct {
             char *scope;
-            bool recursive;
+            gboolean recursive;
         } add_scope;
         
         /* add_items */
         struct {
             GPtrArray *items;  /* Array of char* */
-            bool recursive;
+            gboolean recursive;
         } add_items;
         
         /* add_markers */

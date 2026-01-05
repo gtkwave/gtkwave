@@ -70,7 +70,7 @@ static WcpCommandType parse_command_type(const char *cmd_str)
     return WCP_CMD_UNKNOWN;
 }
 
-static bool json_object_require_array(JsonObject *obj,
+static gboolean json_object_require_array(JsonObject *obj,
                                           const char *name,
                                           JsonArray **out,
                                           GError **error)
@@ -92,7 +92,7 @@ static bool json_object_require_array(JsonObject *obj,
     return TRUE;
 }
 
-static bool json_object_require_string(JsonObject *obj,
+static gboolean json_object_require_string(JsonObject *obj,
                                            const char *name,
                                            char **out,
                                            GError **error)
@@ -115,9 +115,9 @@ static bool json_object_require_string(JsonObject *obj,
     return TRUE;
 }
 
-static bool json_object_require_boolean(JsonObject *obj,
+static gboolean json_object_require_boolean(JsonObject *obj,
                                             const char *name,
-                                            bool *out,
+                                            gboolean *out,
                                             GError **error)
 {
     if (!json_object_has_member(obj, name)) {
@@ -138,7 +138,7 @@ static bool json_object_require_boolean(JsonObject *obj,
     return TRUE;
 }
 
-static bool json_object_require_int64(JsonObject *obj,
+static gboolean json_object_require_int64(JsonObject *obj,
                                           const char *name,
                                           int64_t *out,
                                           GError **error)
@@ -171,7 +171,7 @@ static bool json_object_require_int64(JsonObject *obj,
     return FALSE;
 }
 
-static bool json_object_require_uint(JsonObject *obj,
+static gboolean json_object_require_uint(JsonObject *obj,
                                          const char *name,
                                          uint32_t *out,
                                          GError **error)
@@ -339,7 +339,7 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
     }
     
     WcpCommand *cmd = g_new0(WcpCommand, 1);
-    bool cmd_valid = FALSE;
+    gboolean cmd_valid = FALSE;
     cmd->type = cmd_type;
     
     /* Parse command-specific fields */

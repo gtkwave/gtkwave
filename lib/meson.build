@@ -4,6 +4,6 @@ subdir('liblxt')
 subdir('libvzt')
 subdir('libgtkwave')
 
-if get_option('wcp')
+if wcp_enabled
     subdir('libwcp')
 endif

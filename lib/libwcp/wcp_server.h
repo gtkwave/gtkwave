@@ -10,7 +10,6 @@
 
 #include <glib.h>
 #include <gio/gio.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include "wcp_protocol.h"
 
@@ -29,8 +28,8 @@ struct _WcpServer {
     GDataInputStream *data_input;
     
     uint16_t port;
-    bool running;
-    bool client_connected;
+    gboolean running;
+    gboolean client_connected;
     
     WcpCommandHandler handler;
     gpointer handler_data;
@@ -58,7 +57,7 @@ WcpServer* wcp_server_new(uint16_t port,
  * @param error Location for error, or NULL
  * @return TRUE on success
  */
-bool wcp_server_start(WcpServer *server, GError **error);
+gboolean wcp_server_start(WcpServer *server, GError **error);
 
 /**
  * Stop the WCP server
@@ -82,7 +81,7 @@ void wcp_server_free(WcpServer *server);
  * @param message JSON message string (will be freed)
  * @return TRUE on success
  */
-bool wcp_server_send(WcpServer *server, char *message);
+gboolean wcp_server_send(WcpServer *server, char *message);
 
 /**
  * Send a waveforms_loaded event to the connected client
@@ -103,7 +102,7 @@ void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source);
  * @param error Location for error, or NULL
  * @return TRUE on success
  */
-bool wcp_server_initiate(WcpServer *server,
+gboolean wcp_server_initiate(WcpServer *server,
                              const char *host,
                              uint16_t port,
                              GError **error);

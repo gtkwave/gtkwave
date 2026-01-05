@@ -68,8 +68,17 @@ gnu_regex_dep = cc.find_library(
 thread_dep = dependency('threads', required: false)
 
 if wcp_enabled
-    gio_dep = dependency('gio-2.0', version: glib_req)
-    json_glib_dep = dependency('json-glib-1.0')
+    gio_dep = dependency('gio-2.0', version: glib_req, required: false)
+    json_glib_dep = dependency('json-glib-1.0', required: false)
+    if not gio_dep.found() or not json_glib_dep.found()
+        wcp_enabled = false
+        message('WCP disabled: missing gio-2.0 or json-glib-1.0')
+    else
+        add_project_arguments(
+            '-DHAVE_WCP',
+            language: 'c',
+        )
+    endif
 endif
 
 bzip2_dep = dependency('bzip2', version: bzip2_req, required: false)
