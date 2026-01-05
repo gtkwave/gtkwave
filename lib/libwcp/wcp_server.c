@@ -42,14 +42,10 @@ static void handle_line(WcpServer *server, const char *line)
     }
     
     /* Dispatch to handler */
-    if (server->handler) {
-        char *response = server->handler(server, cmd, server->handler_data);
-        if (response) {
-            wcp_server_send(server, response);
-        }
-    } else {
-        /* No handler - just ack */
-        wcp_server_send(server, wcp_response_ack());
+    g_return_if_fail(server->handler != NULL);
+    char *response = server->handler(server, cmd, server->handler_data);
+    if (response) {
+        wcp_server_send(server, response);
     }
     
     wcp_command_free(cmd);
@@ -148,6 +144,8 @@ WcpServer* wcp_server_new(uint16_t port,
                           WcpCommandHandler handler,
                           gpointer user_data)
 {
+    g_return_val_if_fail(handler != NULL, NULL);
+
     WcpServer *server = g_new0(WcpServer, 1);
     
     server->port = port ? port : WCP_DEFAULT_PORT;
