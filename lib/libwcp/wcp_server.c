@@ -226,6 +226,8 @@ void wcp_server_free(WcpServer *server)
 
 bool wcp_server_send(WcpServer *server, char *message)
 {
+    g_return_val_if_fail(server != NULL, FALSE);
+    g_return_val_if_fail(message != NULL, FALSE);    
     if (!server->client_connected || !server->output_stream) {
         g_free(message);
         return FALSE;
