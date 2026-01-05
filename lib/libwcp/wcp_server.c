@@ -193,6 +193,7 @@ bool wcp_server_start(WcpServer *server, GError **error)
 
 void wcp_server_stop(WcpServer *server)
 {
+    g_return_if_fail(server != NULL);
     if (!server->running) return;
     
     server->running = FALSE;
