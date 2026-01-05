@@ -1,3 +1,4 @@
+#define G_LOG_DOMAIN "wcp-server"
 /*
  * WCP Server Implementation for GTKWave
  * 
