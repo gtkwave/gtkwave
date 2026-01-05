@@ -31,3 +31,11 @@ libwcp_dep = declare_dependency(
         json_glib_dep,
     ],
 )
+
+libwcp_smoke = executable(
+    'wcp_smoke',
+    'tests/wcp_smoke.c',
+    dependencies: [libwcp_dep],
+)
+
+test('wcp_smoke', libwcp_smoke)
