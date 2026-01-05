@@ -8,9 +8,6 @@ libwcp_headers = [
     'wcp_server.h',
 ]
 
-json_glib_dep = dependency('json-glib-1.0')
-gio_dep = dependency('gio-2.0')
-
 libwcp = static_library(
     'wcp',
     sources: libwcp_sources,

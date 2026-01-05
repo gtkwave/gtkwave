@@ -65,6 +65,11 @@ gnu_regex_dep = cc.find_library(
 )
 thread_dep = dependency('threads', required: false)
 
+if wcp_enabled
+    gio_dep = dependency('gio-2.0', version: glib_req)
+    json_glib_dep = dependency('json-glib-1.0')
+endif
+
 bzip2_dep = dependency('bzip2', version: bzip2_req, required: false)
 if not bzip2_dep.found()
     # pkg-config files for bzip2 aren't always installed,
