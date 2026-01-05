@@ -622,28 +622,7 @@ char* wcp_create_error(const char *error_type,
 
 char* wcp_create_item_list_response(GArray *ids)
 {
-    JsonBuilder *builder = json_builder_new();
-    
-    json_builder_begin_object(builder);
-    json_builder_set_member_name(builder, "type");
-    json_builder_add_string_value(builder, "response");
-    
-    json_builder_set_member_name(builder, "command");
-    json_builder_add_string_value(builder, "get_item_list");
-    
-    json_builder_set_member_name(builder, "ids");
-    json_builder_begin_array(builder);
-    if (ids) {
-        for (size_t i = 0; i < (size_t)ids->len; i++) {
-            WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
-            json_builder_add_int_value(builder, (int64_t)ref->id);
-        }
-    }
-    json_builder_end_array(builder);
-    
-    json_builder_end_object(builder);
-    
-    return wcp_json_builder_to_string(builder);
+    return wcp_create_add_items_response_for("get_item_list", ids);
 }
 
 char* wcp_create_item_info_response(GPtrArray *items)
