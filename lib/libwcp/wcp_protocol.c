@@ -46,7 +46,7 @@ static char* wcp_json_builder_to_string(JsonBuilder *builder)
 
 static WcpCommandType parse_command_type(const char *cmd_str)
 {
-    if (!cmd_str) return WCP_CMD_UNKNOWN;
+    g_return_val_if_fail(cmd_str != NULL, WCP_CMD_UNKNOWN);
     
     if (g_str_equal(cmd_str, "get_item_list"))      return WCP_CMD_GET_ITEM_LIST;
     if (g_str_equal(cmd_str, "get_item_info"))      return WCP_CMD_GET_ITEM_INFO;
