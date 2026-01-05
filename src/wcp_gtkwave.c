@@ -145,7 +145,7 @@ static int wcp_parse_color(const char *color)
     return -1;
 }
 
-static bool wcp_add_symbol(GwSymbol *sym, GHashTable *added_vec_roots, GArray *added_ids)
+static gboolean wcp_add_symbol(GwSymbol *sym, GHashTable *added_vec_roots, GArray *added_ids)
 {
     GwTrace *added_trace = NULL;
 
@@ -235,7 +235,7 @@ static GwTreeNode *wcp_find_scope_node(const char *scope)
 }
 
 static void wcp_collect_scope_symbols(GwTreeNode *node,
-                                      bool recursive,
+                                      gboolean recursive,
                                       GPtrArray *symbols)
 {
     if (!node) {
@@ -745,7 +745,7 @@ static char* handle_zoom_to_fit(WcpServer *server, WcpCommand *cmd)
     return wcp_response_ack();
 }
 
-static bool wcp_stop_server_idle(gpointer data)
+static gboolean wcp_stop_server_idle(gpointer data)
 {
     wcp_server_stop((WcpServer *)data);
     return G_SOURCE_REMOVE;
@@ -829,7 +829,7 @@ static char* wcp_command_handler(WcpServer *server, WcpCommand *cmd, gpointer us
  * Public API
  * ============================================================================ */
 
-bool wcp_gtkwave_init(uint16_t port)
+gboolean wcp_gtkwave_init(uint16_t port)
 {
     if (g_wcp_server) {
         g_warning("WCP: Already initialized");

@@ -10,7 +10,6 @@
 #ifndef WCP_GTKWAVE_H
 #define WCP_GTKWAVE_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include "wcp_server.h"
@@ -26,7 +25,7 @@
  * @param port Port to listen on (0 for default 8765)
  * @return TRUE on success
  */
-bool wcp_gtkwave_init(uint16_t port);
+gboolean wcp_gtkwave_init(uint16_t port);
 
 /**
  * Shutdown WCP support
