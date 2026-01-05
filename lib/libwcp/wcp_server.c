@@ -258,6 +258,8 @@ bool wcp_server_send(WcpServer *server, char *message)
 
 void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source)
 {
+    g_return_if_fail(server != NULL);
+    g_return_if_fail(source != NULL);    
     if (!server->client_connected) return;
     
     char *event = wcp_event_waveforms_loaded(source);
