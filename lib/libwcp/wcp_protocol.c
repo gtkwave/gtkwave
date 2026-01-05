@@ -562,7 +562,7 @@ void wcp_command_free(WcpCommand *cmd)
     g_free(cmd);
 }
 
-char* wcp_create_greeting(void)
+char* wcp_response_greeting(void)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -585,12 +585,12 @@ char* wcp_create_greeting(void)
     return wcp_json_builder_to_string(builder);
 }
 
-char* wcp_create_ack(void)
+char* wcp_response_ack(void)
 {
     return g_strdup("{\"type\":\"response\",\"command\":\"ack\"}");
 }
 
-char* wcp_create_error(const char *error_type, 
+char* wcp_response_error(const char *error_type, 
                         const char *message,
                         GPtrArray *arguments)
 {
@@ -620,12 +620,7 @@ char* wcp_create_error(const char *error_type,
     return wcp_json_builder_to_string(builder);
 }
 
-char* wcp_create_item_list_response(GArray *ids)
-{
-    return wcp_create_add_items_response_for("get_item_list", ids);
-}
-
-char* wcp_create_item_info_response(GPtrArray *items)
+char* wcp_response_item_info(GPtrArray *items)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -662,7 +657,7 @@ char* wcp_create_item_info_response(GPtrArray *items)
     return wcp_json_builder_to_string(builder);
 }
 
-char* wcp_create_add_items_response_for(const char *command, GArray *ids)
+char* wcp_response_id_list(const char *command, GArray *ids)
 {
     JsonBuilder *builder = json_builder_new();
     
