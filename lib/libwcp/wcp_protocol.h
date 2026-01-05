@@ -13,6 +13,8 @@
 
 #include <glib.h>
 #include <json-glib/json-glib.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 /* WCP Protocol Version */
 #define WCP_VERSION "1"
@@ -57,21 +59,21 @@ typedef enum {
 
 /* Reference to a displayed item (signal, marker, etc.) */
 typedef struct {
-    guint64 id;
+    uint64_t id;
 } WcpDisplayedItemRef;
 
 /* Information about an item */
 typedef struct {
-    gchar *name;
-    gchar *type;  /* "signal", "marker" */
+    char *name;
+    char *type;  /* "signal", "marker" */
     WcpDisplayedItemRef id;
 } WcpItemInfo;
 
 /* Marker information */
 typedef struct {
-    gint64 time;
-    gchar *name;       /* Optional */
-    gboolean move_focus;
+    int64_t time;
+    char *name;       /* Optional */
+    bool move_focus;
 } WcpMarkerInfo;
 
 /* Parsed WCP command */
@@ -88,24 +90,24 @@ typedef struct {
         /* set_item_color */
         struct {
             WcpDisplayedItemRef id;
-            gchar *color;
+            char *color;
         } set_color;
         
         /* add_variables */
         struct {
-            GPtrArray *variables;  /* Array of gchar* */
+            GPtrArray *variables;  /* Array of char* */
         } add_vars;
         
         /* add_scope */
         struct {
-            gchar *scope;
-            gboolean recursive;
+            char *scope;
+            bool recursive;
         } add_scope;
         
         /* add_items */
         struct {
-            GPtrArray *items;  /* Array of gchar* */
-            gboolean recursive;
+            GPtrArray *items;  /* Array of char* */
+            bool recursive;
         } add_items;
         
         /* add_markers */
@@ -115,13 +117,13 @@ typedef struct {
         
         /* set_viewport_to */
         struct {
-            gint64 timestamp;
+            int64_t timestamp;
         } viewport_to;
         
         /* set_viewport_range */
         struct {
-            gint64 start;
-            gint64 end;
+            int64_t start;
+            int64_t end;
         } viewport_range;
         
         /* focus_item */
@@ -131,12 +133,12 @@ typedef struct {
         
         /* load */
         struct {
-            gchar *source;
+            char *source;
         } load;
         
         /* zoom_to_fit */
         struct {
-            guint viewport_idx;
+            uint32_t viewport_idx;
         } zoom;
     } data;
 } WcpCommand;
@@ -146,22 +148,22 @@ typedef struct {
  * ============================================================================ */
 
 /* Parse a JSON message into a WcpCommand structure */
-WcpCommand* wcp_parse_command(const gchar *json_str, GError **error);
+WcpCommand* wcp_parse_command(const char *json_str, GError **error);
 
 /* Free a WcpCommand structure */
 void wcp_command_free(WcpCommand *cmd);
 
 /* Create JSON response messages */
-gchar* wcp_create_greeting(void);
-gchar* wcp_create_ack(void);
-gchar* wcp_create_error(const gchar *error_type, 
-                        const gchar *message,
+char* wcp_create_greeting(void);
+char* wcp_create_ack(void);
+char* wcp_create_error(const char *error_type, 
+                        const char *message,
                         GPtrArray *arguments);
-gchar* wcp_create_item_list_response(GArray *ids);
-gchar* wcp_create_item_info_response(GPtrArray *items);
-gchar* wcp_create_add_items_response_for(const gchar *command, GArray *ids);
+char* wcp_create_item_list_response(GArray *ids);
+char* wcp_create_item_info_response(GPtrArray *items);
+char* wcp_create_add_items_response_for(const char *command, GArray *ids);
 
 /* Create JSON event messages */
-gchar* wcp_create_waveforms_loaded_event(const gchar *source);
+char* wcp_create_waveforms_loaded_event(const char *source);
 
 #endif /* WCP_PROTOCOL_H */

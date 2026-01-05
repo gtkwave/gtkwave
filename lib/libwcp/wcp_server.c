@@ -12,7 +12,7 @@
 #define WCP_DEFAULT_PORT 8765
 #endif
 
-static void handle_line(WcpServer *server, const gchar *line)
+static void handle_line(WcpServer *server, const char *line)
 {
     GError *error = NULL;
     
@@ -25,7 +25,7 @@ static void handle_line(WcpServer *server, const gchar *line)
     WcpCommand *cmd = wcp_parse_command(line, &error);
     if (!cmd) {
         g_warning("WCP: Failed to parse command: %s", error->message);
-        gchar *err_response = wcp_create_error("parse_error", error->message, NULL);
+        char *err_response = wcp_create_error("parse_error", error->message, NULL);
         wcp_server_send(server, err_response);
         g_error_free(error);
         return;
@@ -34,7 +34,7 @@ static void handle_line(WcpServer *server, const gchar *line)
     /* Handle greeting specially */
     if (cmd->type == WCP_CMD_UNKNOWN) {
         /* This was a client greeting, send our greeting back */
-        gchar *greeting = wcp_create_greeting();
+        char *greeting = wcp_create_greeting();
         wcp_server_send(server, greeting);
         wcp_command_free(cmd);
         return;
@@ -42,7 +42,7 @@ static void handle_line(WcpServer *server, const gchar *line)
     
     /* Dispatch to handler */
     if (server->handler) {
-        gchar *response = server->handler(server, cmd, server->handler_data);
+        char *response = server->handler(server, cmd, server->handler_data);
         if (response) {
             wcp_server_send(server, response);
         }
@@ -59,7 +59,7 @@ static void read_line_async_callback(GObject *source, GAsyncResult *result, gpoi
     WcpServer *server = (WcpServer *)user_data;
     GError *error = NULL;
     
-    gchar *line = g_data_input_stream_read_line_finish(server->data_input, result, NULL, &error);
+    char *line = g_data_input_stream_read_line_finish(server->data_input, result, NULL, &error);
     
     if (error) {
         if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
@@ -109,7 +109,7 @@ static void start_reading(WcpServer *server)
                                         server);
 }
 
-static gboolean on_incoming_connection(GSocketService *service,
+static bool on_incoming_connection(GSocketService *service,
                                        GSocketConnection *connection,
                                        GObject *source_object,
                                        gpointer user_data)
@@ -134,7 +134,7 @@ static gboolean on_incoming_connection(GSocketService *service,
     server->client_connected = TRUE;
     
     /* Send greeting */
-    gchar *greeting = wcp_create_greeting();
+    char *greeting = wcp_create_greeting();
     wcp_server_send(server, greeting);
     
     /* Start reading from client */
@@ -143,7 +143,7 @@ static gboolean on_incoming_connection(GSocketService *service,
     return TRUE;
 }
 
-WcpServer* wcp_server_new(guint16 port, 
+WcpServer* wcp_server_new(uint16_t port, 
                           WcpCommandHandler handler,
                           gpointer user_data)
 {
@@ -157,7 +157,7 @@ WcpServer* wcp_server_new(guint16 port,
     return server;
 }
 
-gboolean wcp_server_start(WcpServer *server, GError **error)
+bool wcp_server_start(WcpServer *server, GError **error)
 {
     if (server->running) {
         g_set_error(error, G_IO_ERROR, G_IO_ERROR_ALREADY_MOUNTED,
@@ -227,7 +227,7 @@ void wcp_server_free(WcpServer *server)
     g_free(server);
 }
 
-gboolean wcp_server_send(WcpServer *server, gchar *message)
+bool wcp_server_send(WcpServer *server, char *message)
 {
     if (!server->client_connected || !server->output_stream) {
         g_free(message);
@@ -235,13 +235,13 @@ gboolean wcp_server_send(WcpServer *server, gchar *message)
     }
     
     /* Append newline */
-    gchar *msg_with_newline = g_strdup_printf("%s\n", message);
+    char *msg_with_newline = g_strdup_printf("%s\n", message);
     g_free(message);
     
     GError *error = NULL;
     gsize bytes_written;
     
-    gboolean success = g_output_stream_write_all(server->output_stream,
+    bool success = g_output_stream_write_all(server->output_stream,
                                                   msg_with_newline,
                                                   strlen(msg_with_newline),
                                                   &bytes_written,
@@ -257,17 +257,17 @@ gboolean wcp_server_send(WcpServer *server, gchar *message)
     return success;
 }
 
-void wcp_server_emit_waveforms_loaded(WcpServer *server, const gchar *source)
+void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source)
 {
     if (!server->client_connected) return;
     
-    gchar *event = wcp_create_waveforms_loaded_event(source);
+    char *event = wcp_create_waveforms_loaded_event(source);
     wcp_server_send(server, event);
 }
 
-gboolean wcp_server_initiate(WcpServer *server,
-                             const gchar *host,
-                             guint16 port,
+bool wcp_server_initiate(WcpServer *server,
+                             const char *host,
+                             uint16_t port,
                              GError **error)
 {
     if (server->running) {
@@ -298,7 +298,7 @@ gboolean wcp_server_initiate(WcpServer *server,
     server->running = TRUE;
     
     /* Send greeting */
-    gchar *greeting = wcp_create_greeting();
+    char *greeting = wcp_create_greeting();
     wcp_server_send(server, greeting);
     
     /* Start reading */

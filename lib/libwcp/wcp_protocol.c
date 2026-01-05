@@ -5,10 +5,12 @@
  */
 
 #include "wcp_protocol.h"
+#include <limits.h>
+#include <stddef.h>
 #include <string.h>
 
 /* Supported commands for greeting */
-static const gchar *supported_commands[] = {
+static const char *supported_commands[] = {
     "get_item_list",
     "get_item_info",
     "set_item_color",
@@ -28,12 +30,12 @@ static const gchar *supported_commands[] = {
     NULL
 };
 
-static gchar* wcp_json_builder_to_string(JsonBuilder *builder)
+static char* wcp_json_builder_to_string(JsonBuilder *builder)
 {
     JsonNode *root = json_builder_get_root(builder);
     JsonGenerator *gen = json_generator_new();
     json_generator_set_root(gen, root);
-    gchar *json_str = json_generator_to_data(gen, NULL);
+    char *json_str = json_generator_to_data(gen, NULL);
 
     json_node_free(root);
     g_object_unref(gen);
@@ -42,7 +44,7 @@ static gchar* wcp_json_builder_to_string(JsonBuilder *builder)
     return json_str;
 }
 
-static WcpCommandType parse_command_type(const gchar *cmd_str)
+static WcpCommandType parse_command_type(const char *cmd_str)
 {
     if (!cmd_str) return WCP_CMD_UNKNOWN;
     
@@ -66,8 +68,8 @@ static WcpCommandType parse_command_type(const gchar *cmd_str)
     return WCP_CMD_UNKNOWN;
 }
 
-static gboolean json_object_require_array(JsonObject *obj,
-                                          const gchar *name,
+static bool json_object_require_array(JsonObject *obj,
+                                          const char *name,
                                           JsonArray **out,
                                           GError **error)
 {
@@ -88,9 +90,9 @@ static gboolean json_object_require_array(JsonObject *obj,
     return TRUE;
 }
 
-static gboolean json_object_require_string(JsonObject *obj,
-                                           const gchar *name,
-                                           gchar **out,
+static bool json_object_require_string(JsonObject *obj,
+                                           const char *name,
+                                           char **out,
                                            GError **error)
 {
     if (!json_object_has_member(obj, name)) {
@@ -111,9 +113,9 @@ static gboolean json_object_require_string(JsonObject *obj,
     return TRUE;
 }
 
-static gboolean json_object_require_boolean(JsonObject *obj,
-                                            const gchar *name,
-                                            gboolean *out,
+static bool json_object_require_boolean(JsonObject *obj,
+                                            const char *name,
+                                            bool *out,
                                             GError **error)
 {
     if (!json_object_has_member(obj, name)) {
@@ -134,9 +136,9 @@ static gboolean json_object_require_boolean(JsonObject *obj,
     return TRUE;
 }
 
-static gboolean json_object_require_int64(JsonObject *obj,
-                                          const gchar *name,
-                                          gint64 *out,
+static bool json_object_require_int64(JsonObject *obj,
+                                          const char *name,
+                                          int64_t *out,
                                           GError **error)
 {
     if (!json_object_has_member(obj, name)) {
@@ -158,7 +160,7 @@ static gboolean json_object_require_int64(JsonObject *obj,
         return TRUE;
     }
     if (type == G_TYPE_DOUBLE) {
-        *out = (gint64)json_node_get_double(node);
+        *out = (int64_t)json_node_get_double(node);
         return TRUE;
     }
 
@@ -167,30 +169,30 @@ static gboolean json_object_require_int64(JsonObject *obj,
     return FALSE;
 }
 
-static gboolean json_object_require_uint(JsonObject *obj,
-                                         const gchar *name,
-                                         guint *out,
+static bool json_object_require_uint(JsonObject *obj,
+                                         const char *name,
+                                         uint32_t *out,
                                          GError **error)
 {
-    gint64 value = 0;
+    int64_t value = 0;
     if (!json_object_require_int64(obj, name, &value, error)) {
         return FALSE;
     }
-    if (value < 0 || value > G_MAXUINT) {
+    if (value < 0 || value > UINT_MAX) {
         g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                     "Field '%s' must be a non-negative integer", name);
         return FALSE;
     }
-    *out = (guint)value;
+    *out = (uint32_t)value;
     return TRUE;
 }
 
 static GArray* parse_id_array(JsonArray *arr, GError **error)
 {
     GArray *ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
-    guint len = json_array_get_length(arr);
+    size_t len = (size_t)json_array_get_length(arr);
     
-    for (guint i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         JsonNode *node = json_array_get_element(arr, i);
         if (!JSON_NODE_HOLDS_VALUE(node)) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
@@ -200,11 +202,11 @@ static GArray* parse_id_array(JsonArray *arr, GError **error)
         }
 
         GType type = json_node_get_value_type(node);
-        gint64 value = 0;
+        int64_t value = 0;
         if (type == G_TYPE_INT64) {
             value = json_node_get_int(node);
         } else if (type == G_TYPE_DOUBLE) {
-            value = (gint64)json_node_get_double(node);
+            value = (int64_t)json_node_get_double(node);
         } else {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                         "ids[%u] must be a number", i);
@@ -220,19 +222,19 @@ static GArray* parse_id_array(JsonArray *arr, GError **error)
         }
 
         WcpDisplayedItemRef ref;
-        ref.id = (guint64)value;
+        ref.id = (uint64_t)value;
         g_array_append_val(ids, ref);
     }
     
     return ids;
 }
 
-static GPtrArray* parse_string_array(JsonArray *arr, GError **error, const gchar *label)
+static GPtrArray* parse_string_array(JsonArray *arr, GError **error, const char *label)
 {
     GPtrArray *strings = g_ptr_array_new_with_free_func(g_free);
-    guint len = json_array_get_length(arr);
+    size_t len = (size_t)json_array_get_length(arr);
     
-    for (guint i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         JsonNode *node = json_array_get_element(arr, i);
         if (!JSON_NODE_HOLDS_VALUE(node) ||
             json_node_get_value_type(node) != G_TYPE_STRING) {
@@ -250,9 +252,9 @@ static GPtrArray* parse_string_array(JsonArray *arr, GError **error, const gchar
 static GArray* parse_marker_array(JsonArray *arr, GError **error)
 {
     GArray *markers = g_array_new(FALSE, TRUE, sizeof(WcpMarkerInfo));
-    guint len = json_array_get_length(arr);
+    size_t len = (size_t)json_array_get_length(arr);
     
-    for (guint i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         JsonNode *node = json_array_get_element(arr, i);
         if (!JSON_NODE_HOLDS_OBJECT(node)) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
@@ -287,7 +289,7 @@ static GArray* parse_marker_array(JsonArray *arr, GError **error)
     return markers;
 }
 
-WcpCommand* wcp_parse_command(const gchar *json_str, GError **error)
+WcpCommand* wcp_parse_command(const char *json_str, GError **error)
 {
     JsonParser *parser = json_parser_new();
     WcpCommand *cmd = NULL;
@@ -308,7 +310,7 @@ WcpCommand* wcp_parse_command(const gchar *json_str, GError **error)
     JsonObject *obj = json_node_get_object(root);
     
     /* Check message type */
-    const gchar *msg_type = json_object_get_string_member(obj, "type");
+    const char *msg_type = json_object_get_string_member(obj, "type");
     if (!msg_type || !g_str_equal(msg_type, "command")) {
         /* Could be a greeting - handle separately */
         if (msg_type && g_str_equal(msg_type, "greeting")) {
@@ -325,7 +327,7 @@ WcpCommand* wcp_parse_command(const gchar *json_str, GError **error)
     }
     
     /* Get command name */
-    const gchar *cmd_name = json_object_get_string_member(obj, "command");
+    const char *cmd_name = json_object_get_string_member(obj, "command");
     WcpCommandType cmd_type = parse_command_type(cmd_name);
     
     if (cmd_type == WCP_CMD_UNKNOWN) {
@@ -359,7 +361,7 @@ WcpCommand* wcp_parse_command(const gchar *json_str, GError **error)
         }
         case WCP_CMD_SET_ITEM_COLOR:
         {
-            gint64 id_value = 0;
+            int64_t id_value = 0;
             if (!json_object_require_int64(obj, "id", &id_value, error)) {
                 g_object_unref(parser);
                 wcp_command_free(cmd);
@@ -372,7 +374,7 @@ WcpCommand* wcp_parse_command(const gchar *json_str, GError **error)
                 wcp_command_free(cmd);
                 return NULL;
             }
-            cmd->data.set_color.id.id = (guint64)id_value;
+            cmd->data.set_color.id.id = (uint64_t)id_value;
             if (!json_object_require_string(obj, "color", &cmd->data.set_color.color, error)) {
                 g_object_unref(parser);
                 wcp_command_free(cmd);
@@ -481,7 +483,7 @@ WcpCommand* wcp_parse_command(const gchar *json_str, GError **error)
 
         case WCP_CMD_FOCUS_ITEM:
         {
-            gint64 id_value = 0;
+            int64_t id_value = 0;
             if (!json_object_require_int64(obj, "id", &id_value, error)) {
                 g_object_unref(parser);
                 wcp_command_free(cmd);
@@ -494,7 +496,7 @@ WcpCommand* wcp_parse_command(const gchar *json_str, GError **error)
                 wcp_command_free(cmd);
                 return NULL;
             }
-            cmd->data.focus.id.id = (guint64)id_value;
+            cmd->data.focus.id.id = (uint64_t)id_value;
             break;
         }
         case WCP_CMD_LOAD:
@@ -564,7 +566,7 @@ void wcp_command_free(WcpCommand *cmd)
             
         case WCP_CMD_ADD_MARKERS:
             if (cmd->data.add_markers.markers) {
-                for (guint i = 0; i < cmd->data.add_markers.markers->len; i++) {
+                for (size_t i = 0; i < (size_t)cmd->data.add_markers.markers->len; i++) {
                     WcpMarkerInfo *m = &g_array_index(cmd->data.add_markers.markers, 
                                                        WcpMarkerInfo, i);
                     g_free(m->name);
@@ -584,7 +586,7 @@ void wcp_command_free(WcpCommand *cmd)
     g_free(cmd);
 }
 
-gchar* wcp_create_greeting(void)
+char* wcp_create_greeting(void)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -597,7 +599,7 @@ gchar* wcp_create_greeting(void)
     
     json_builder_set_member_name(builder, "commands");
     json_builder_begin_array(builder);
-    for (const gchar **cmd = supported_commands; *cmd != NULL; cmd++) {
+    for (const char **cmd = supported_commands; *cmd != NULL; cmd++) {
         json_builder_add_string_value(builder, *cmd);
     }
     json_builder_end_array(builder);
@@ -607,13 +609,13 @@ gchar* wcp_create_greeting(void)
     return wcp_json_builder_to_string(builder);
 }
 
-gchar* wcp_create_ack(void)
+char* wcp_create_ack(void)
 {
     return g_strdup("{\"type\":\"response\",\"command\":\"ack\"}");
 }
 
-gchar* wcp_create_error(const gchar *error_type, 
-                        const gchar *message,
+char* wcp_create_error(const char *error_type, 
+                        const char *message,
                         GPtrArray *arguments)
 {
     JsonBuilder *builder = json_builder_new();
@@ -631,7 +633,7 @@ gchar* wcp_create_error(const gchar *error_type,
     json_builder_set_member_name(builder, "arguments");
     json_builder_begin_array(builder);
     if (arguments) {
-        for (guint i = 0; i < arguments->len; i++) {
+        for (size_t i = 0; i < (size_t)arguments->len; i++) {
             json_builder_add_string_value(builder, g_ptr_array_index(arguments, i));
         }
     }
@@ -642,7 +644,7 @@ gchar* wcp_create_error(const gchar *error_type,
     return wcp_json_builder_to_string(builder);
 }
 
-gchar* wcp_create_item_list_response(GArray *ids)
+char* wcp_create_item_list_response(GArray *ids)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -656,9 +658,9 @@ gchar* wcp_create_item_list_response(GArray *ids)
     json_builder_set_member_name(builder, "ids");
     json_builder_begin_array(builder);
     if (ids) {
-        for (guint i = 0; i < ids->len; i++) {
+        for (size_t i = 0; i < (size_t)ids->len; i++) {
             WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
-            json_builder_add_int_value(builder, (gint64)ref->id);
+            json_builder_add_int_value(builder, (int64_t)ref->id);
         }
     }
     json_builder_end_array(builder);
@@ -668,7 +670,7 @@ gchar* wcp_create_item_list_response(GArray *ids)
     return wcp_json_builder_to_string(builder);
 }
 
-gchar* wcp_create_item_info_response(GPtrArray *items)
+char* wcp_create_item_info_response(GPtrArray *items)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -682,7 +684,7 @@ gchar* wcp_create_item_info_response(GPtrArray *items)
     json_builder_set_member_name(builder, "results");
     json_builder_begin_array(builder);
     if (items) {
-        for (guint i = 0; i < items->len; i++) {
+        for (size_t i = 0; i < (size_t)items->len; i++) {
             WcpItemInfo *info = g_ptr_array_index(items, i);
             json_builder_begin_object(builder);
             
@@ -693,7 +695,7 @@ gchar* wcp_create_item_info_response(GPtrArray *items)
             json_builder_add_string_value(builder, info->type);
             
             json_builder_set_member_name(builder, "id");
-            json_builder_add_int_value(builder, (gint64)info->id.id);
+            json_builder_add_int_value(builder, (int64_t)info->id.id);
             
             json_builder_end_object(builder);
         }
@@ -705,7 +707,7 @@ gchar* wcp_create_item_info_response(GPtrArray *items)
     return wcp_json_builder_to_string(builder);
 }
 
-gchar* wcp_create_add_items_response_for(const gchar *command, GArray *ids)
+char* wcp_create_add_items_response_for(const char *command, GArray *ids)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -719,9 +721,9 @@ gchar* wcp_create_add_items_response_for(const gchar *command, GArray *ids)
     json_builder_set_member_name(builder, "ids");
     json_builder_begin_array(builder);
     if (ids) {
-        for (guint i = 0; i < ids->len; i++) {
+        for (size_t i = 0; i < (size_t)ids->len; i++) {
             WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
-            json_builder_add_int_value(builder, (gint64)ref->id);
+            json_builder_add_int_value(builder, (int64_t)ref->id);
         }
     }
     json_builder_end_array(builder);
@@ -731,7 +733,7 @@ gchar* wcp_create_add_items_response_for(const gchar *command, GArray *ids)
     return wcp_json_builder_to_string(builder);
 }
 
-gchar* wcp_create_waveforms_loaded_event(const gchar *source)
+char* wcp_create_waveforms_loaded_event(const char *source)
 {
     JsonBuilder *builder = json_builder_new();
     

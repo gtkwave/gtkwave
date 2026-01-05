@@ -10,13 +10,15 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include "wcp_protocol.h"
 
 /* Forward declaration */
 typedef struct _WcpServer WcpServer;
 
 /* Callback for command execution - implemented by GTKWave integration */
-typedef gchar* (*WcpCommandHandler)(WcpServer *server, WcpCommand *cmd, gpointer user_data);
+typedef char* (*WcpCommandHandler)(WcpServer *server, WcpCommand *cmd, gpointer user_data);
 
 /* Server state */
 struct _WcpServer {
@@ -26,9 +28,9 @@ struct _WcpServer {
     GInputStream *input_stream;
     GDataInputStream *data_input;
     
-    guint16 port;
-    gboolean running;
-    gboolean client_connected;
+    uint16_t port;
+    bool running;
+    bool client_connected;
     
     WcpCommandHandler handler;
     gpointer handler_data;
@@ -46,7 +48,7 @@ struct _WcpServer {
  * @param user_data User data passed to handler
  * @return New WCP server instance, or NULL on error
  */
-WcpServer* wcp_server_new(guint16 port, 
+WcpServer* wcp_server_new(uint16_t port, 
                           WcpCommandHandler handler,
                           gpointer user_data);
 
@@ -56,7 +58,7 @@ WcpServer* wcp_server_new(guint16 port,
  * @param error Location for error, or NULL
  * @return TRUE on success
  */
-gboolean wcp_server_start(WcpServer *server, GError **error);
+bool wcp_server_start(WcpServer *server, GError **error);
 
 /**
  * Stop the WCP server
@@ -80,14 +82,14 @@ void wcp_server_free(WcpServer *server);
  * @param message JSON message string (will be freed)
  * @return TRUE on success
  */
-gboolean wcp_server_send(WcpServer *server, gchar *message);
+bool wcp_server_send(WcpServer *server, char *message);
 
 /**
  * Send a waveforms_loaded event to the connected client
  * @param server The server instance
  * @param source Source filename
  */
-void wcp_server_emit_waveforms_loaded(WcpServer *server, const gchar *source);
+void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source);
 
 /* ============================================================================
  * Initiating Connection (for --wcp-initiate mode)
@@ -101,9 +103,9 @@ void wcp_server_emit_waveforms_loaded(WcpServer *server, const gchar *source);
  * @param error Location for error, or NULL
  * @return TRUE on success
  */
-gboolean wcp_server_initiate(WcpServer *server,
-                             const gchar *host,
-                             guint16 port,
+bool wcp_server_initiate(WcpServer *server,
+                             const char *host,
+                             uint16_t port,
                              GError **error);
 
 #endif /* WCP_SERVER_H */
