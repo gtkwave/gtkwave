@@ -48,6 +48,7 @@ static WcpCommandType parse_command_type(const char *cmd_str)
 {
     g_return_val_if_fail(cmd_str != NULL, WCP_CMD_UNKNOWN);
     
+    /* clang-format off */
     if (g_str_equal(cmd_str, "get_item_list"))      return WCP_CMD_GET_ITEM_LIST;
     if (g_str_equal(cmd_str, "get_item_info"))      return WCP_CMD_GET_ITEM_INFO;
     if (g_str_equal(cmd_str, "set_item_color"))     return WCP_CMD_SET_ITEM_COLOR;
@@ -64,6 +65,7 @@ static WcpCommandType parse_command_type(const char *cmd_str)
     if (g_str_equal(cmd_str, "load"))               return WCP_CMD_LOAD;
     if (g_str_equal(cmd_str, "reload"))             return WCP_CMD_RELOAD;
     if (g_str_equal(cmd_str, "shutdown"))           return WCP_CMD_SHUTDOWN;
+    /* clang-format on */
     
     return WCP_CMD_UNKNOWN;
 }
