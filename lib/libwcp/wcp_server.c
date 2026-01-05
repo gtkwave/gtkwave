@@ -146,9 +146,12 @@ WcpServer* wcp_server_new(uint16_t port,
 {
     g_return_val_if_fail(handler != NULL, NULL);
 
+    g_return_val_if_fail(port != 0, NULL);
+    g_return_val_if_fail(handler != NULL, NULL);
+    
     WcpServer *server = g_new0(WcpServer, 1);
     
-    server->port = port ? port : WCP_DEFAULT_PORT;
+    server->port = port;
     server->handler = handler;
     server->handler_data = user_data;
     server->running = FALSE;
