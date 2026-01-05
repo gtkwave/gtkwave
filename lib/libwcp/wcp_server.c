@@ -25,7 +25,7 @@ static void handle_line(WcpServer *server, const char *line)
     WcpCommand *cmd = wcp_parse_command(line, &error);
     if (!cmd) {
         g_warning("WCP: Failed to parse command: %s", error->message);
-        char *err_response = wcp_create_error("parse_error", error->message, NULL);
+        char *err_response = wcp_response_error("parse_error", error->message, NULL);
         wcp_server_send(server, err_response);
         g_error_free(error);
         return;
@@ -34,7 +34,7 @@ static void handle_line(WcpServer *server, const char *line)
     /* Handle greeting specially */
     if (cmd->type == WCP_CMD_UNKNOWN) {
         /* This was a client greeting, send our greeting back */
-        char *greeting = wcp_create_greeting();
+        char *greeting = wcp_response_greeting();
         wcp_server_send(server, greeting);
         wcp_command_free(cmd);
         return;
@@ -48,7 +48,7 @@ static void handle_line(WcpServer *server, const char *line)
         }
     } else {
         /* No handler - just ack */
-        wcp_server_send(server, wcp_create_ack());
+        wcp_server_send(server, wcp_response_ack());
     }
     
     wcp_command_free(cmd);
@@ -134,7 +134,7 @@ static bool on_incoming_connection(GSocketService *service,
     server->client_connected = TRUE;
     
     /* Send greeting */
-    char *greeting = wcp_create_greeting();
+    char *greeting = wcp_response_greeting();
     wcp_server_send(server, greeting);
     
     /* Start reading from client */
@@ -298,7 +298,7 @@ bool wcp_server_initiate(WcpServer *server,
     server->running = TRUE;
     
     /* Send greeting */
-    char *greeting = wcp_create_greeting();
+    char *greeting = wcp_response_greeting();
     wcp_server_send(server, greeting);
     
     /* Start reading */

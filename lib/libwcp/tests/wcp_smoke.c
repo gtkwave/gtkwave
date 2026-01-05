@@ -35,7 +35,7 @@ static void test_parse_invalid_json(void)
 
 static void test_greeting(void)
 {
-    char *greeting = wcp_create_greeting();
+    char *greeting = wcp_response_greeting();
     g_assert_nonnull(greeting);
     g_assert_nonnull(g_strstr_len(greeting, -1, "\"type\":\"greeting\""));
     g_assert_nonnull(g_strstr_len(greeting, -1, "\"get_item_list\""));

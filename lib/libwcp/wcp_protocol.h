@@ -154,14 +154,13 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error);
 void wcp_command_free(WcpCommand *cmd);
 
 /* Create JSON response messages */
-char* wcp_create_greeting(void);
-char* wcp_create_ack(void);
-char* wcp_create_error(const char *error_type, 
-                        const char *message,
-                        GPtrArray *arguments);
-char* wcp_create_item_list_response(GArray *ids);
-char* wcp_create_item_info_response(GPtrArray *items);
-char* wcp_create_add_items_response_for(const char *command, GArray *ids);
+char* wcp_response_greeting(void);
+char* wcp_response_ack(void);
+char* wcp_response_error(const char *error_type,
+                         const char *message,
+                         GPtrArray *arguments);
+char* wcp_response_item_info(GPtrArray *items);
+char* wcp_response_id_list(const char *command, GArray *ids);
 
 /* Create JSON event messages */
 char* wcp_create_waveforms_loaded_event(const char *source);
