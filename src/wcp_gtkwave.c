@@ -290,7 +290,7 @@ static char* handle_get_item_list(WcpServer *server, WcpCommand *cmd)
         }
     }
     
-    char *response = wcp_create_item_list_response(ids);
+    char *response = wcp_response_id_list("get_item_list", ids);
     g_array_free(ids, TRUE);
     return response;
 }
@@ -311,13 +311,13 @@ static char* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
                 uint64_t idx64 = (ref->id & ~WCP_ITEM_MARKER_FLAG);
                 if (idx64 > UINT_MAX) {
                     g_ptr_array_free(results, TRUE);
-                    return wcp_create_error("invalid_item", "Unknown marker id", NULL);
+                    return wcp_response_error("invalid_item", "Unknown marker id", NULL);
                 }
                 unsigned int idx = (unsigned int)idx64;
                 GwMarker *marker = gw_named_markers_get(markers, idx);
                 if (!marker || !gw_marker_is_enabled(marker)) {
                     g_ptr_array_free(results, TRUE);
-                    return wcp_create_error("invalid_item", "Unknown marker id", NULL);
+                    return wcp_response_error("invalid_item", "Unknown marker id", NULL);
                 }
                 WcpItemInfo *info = g_new0(WcpItemInfo, 1);
                 info->id = *ref;
@@ -330,7 +330,7 @@ static char* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
             GwTrace *t = wcp_lookup_trace(ref->id);
             if (!t) {
                 g_ptr_array_free(results, TRUE);
-                return wcp_create_error("invalid_item", "Unknown item id", NULL);
+                return wcp_response_error("invalid_item", "Unknown item id", NULL);
             }
             WcpItemInfo *info = g_new0(WcpItemInfo, 1);
             info->id = *ref;
@@ -340,7 +340,7 @@ static char* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
         }
     }
     
-    char *response = wcp_create_item_info_response(results);
+    char *response = wcp_response_item_info(results);
     g_ptr_array_free(results, TRUE);
     return response;
 }
@@ -350,21 +350,21 @@ static char* handle_set_item_color(WcpServer *server, WcpCommand *cmd)
     (void)server;
 
     if ((cmd->data.set_color.id.id & WCP_ITEM_MARKER_FLAG) != 0) {
-        return wcp_create_error("invalid_item",
+        return wcp_response_error("invalid_item",
                                 "set_item_color only applies to signals",
                                 NULL);
     }
 
     GwTrace *t = wcp_lookup_trace(cmd->data.set_color.id.id);
     if (!t) {
-        return wcp_create_error("invalid_item",
+        return wcp_response_error("invalid_item",
                                 "Unknown item id",
                                 NULL);
     }
 
     int color = wcp_parse_color(cmd->data.set_color.color);
     if (color < 0) {
-        return wcp_create_error("invalid_color",
+        return wcp_response_error("invalid_color",
                                 "Unsupported color value",
                                 NULL);
     }
@@ -373,7 +373,7 @@ static char* handle_set_item_color(WcpServer *server, WcpCommand *cmd)
     GLOBALS->signalwindow_width_dirty = 1;
     redraw_signals_and_waves();
 
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_add_variables(WcpServer *server, WcpCommand *cmd)
@@ -381,7 +381,7 @@ static char* handle_add_variables(WcpServer *server, WcpCommand *cmd)
     (void)server;
     
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -403,7 +403,7 @@ static char* handle_add_variables(WcpServer *server, WcpCommand *cmd)
     MaxSignalLength();
     redraw_signals_and_waves();
     
-    char *response = wcp_create_add_items_response_for("add_variables", added_ids);
+    char *response = wcp_response_id_list("add_variables", added_ids);
     g_array_free(added_ids, TRUE);
     return response;
 }
@@ -413,7 +413,7 @@ static char* handle_add_scope(WcpServer *server, WcpCommand *cmd)
     (void)server;
     
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -421,7 +421,7 @@ static char* handle_add_scope(WcpServer *server, WcpCommand *cmd)
     GwTreeNode *scope = wcp_find_scope_node(cmd->data.add_scope.scope);
     if (!scope) {
         g_array_free(added_ids, TRUE);
-        return wcp_create_error("invalid_scope", "Scope not found", NULL);
+        return wcp_response_error("invalid_scope", "Scope not found", NULL);
     }
 
     GPtrArray *symbols = g_ptr_array_new();
@@ -439,7 +439,7 @@ static char* handle_add_scope(WcpServer *server, WcpCommand *cmd)
     MaxSignalLength();
     redraw_signals_and_waves();
     
-    char *response = wcp_create_add_items_response_for("add_scope", added_ids);
+    char *response = wcp_response_id_list("add_scope", added_ids);
     g_array_free(added_ids, TRUE);
     return response;
 }
@@ -449,7 +449,7 @@ static char* handle_add_markers(WcpServer *server, WcpCommand *cmd)
     (void)server;
 
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -463,7 +463,7 @@ static char* handle_add_markers(WcpServer *server, WcpCommand *cmd)
             GwMarker *marker = gw_named_markers_find_first_disabled(markers);
             if (!marker) {
                 g_array_free(added_ids, TRUE);
-                return wcp_create_error("no_available_marker",
+                return wcp_response_error("no_available_marker",
                                         "No available named marker slots",
                                         NULL);
             }
@@ -499,7 +499,7 @@ static char* handle_add_markers(WcpServer *server, WcpCommand *cmd)
     
     redraw_signals_and_waves();
 
-    char *response = wcp_create_add_items_response_for("add_markers", added_ids);
+    char *response = wcp_response_id_list("add_markers", added_ids);
     g_array_free(added_ids, TRUE);
     return response;
 }
@@ -509,7 +509,7 @@ static char* handle_add_items(WcpServer *server, WcpCommand *cmd)
     (void)server;
 
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GArray *added_ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -542,7 +542,7 @@ static char* handle_add_items(WcpServer *server, WcpCommand *cmd)
     MaxSignalLength();
     redraw_signals_and_waves();
 
-    char *response = wcp_create_add_items_response_for("add_items", added_ids);
+    char *response = wcp_response_id_list("add_items", added_ids);
     g_array_free(added_ids, TRUE);
     return response;
 }
@@ -552,7 +552,7 @@ static char* handle_set_viewport_to(WcpServer *server, WcpCommand *cmd)
     (void)server;
 
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GwTime target = (GwTime)cmd->data.viewport_to.timestamp;
@@ -579,7 +579,7 @@ static char* handle_set_viewport_to(WcpServer *server, WcpCommand *cmd)
     GLOBALS->tims.timecache = start;
     time_update();
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_set_viewport_range(WcpServer *server, WcpCommand *cmd)
@@ -587,7 +587,7 @@ static char* handle_set_viewport_range(WcpServer *server, WcpCommand *cmd)
     (void)server;
 
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     GwTime start = (GwTime)cmd->data.viewport_range.start;
@@ -600,7 +600,7 @@ static char* handle_set_viewport_range(WcpServer *server, WcpCommand *cmd)
 
     service_dragzoom(start, end);
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_remove_items(WcpServer *server, WcpCommand *cmd)
@@ -638,7 +638,7 @@ static char* handle_remove_items(WcpServer *server, WcpCommand *cmd)
     MaxSignalLength();
     redraw_signals_and_waves();
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
@@ -649,7 +649,7 @@ static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
         GwNamedMarkers *markers = gw_project_get_named_markers(GLOBALS->project);
         uint64_t idx64 = (cmd->data.focus.id.id & ~WCP_ITEM_MARKER_FLAG);
         if (idx64 > UINT_MAX) {
-            return wcp_create_error("invalid_item", "Unknown marker id", NULL);
+            return wcp_response_error("invalid_item", "Unknown marker id", NULL);
         }
         GwMarker *marker =
             gw_named_markers_get(markers, (unsigned int)idx64);
@@ -659,14 +659,14 @@ static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
             gw_marker_set_enabled(primary_marker, TRUE);
             update_time_box();
             redraw_signals_and_waves();
-            return wcp_create_ack();
+            return wcp_response_ack();
         }
-        return wcp_create_error("invalid_item", "Unknown marker id", NULL);
+        return wcp_response_error("invalid_item", "Unknown marker id", NULL);
     }
 
     GwTrace *t = wcp_lookup_trace(cmd->data.focus.id.id);
     if (!t) {
-        return wcp_create_error("invalid_item", "Unknown item id", NULL);
+        return wcp_response_error("invalid_item", "Unknown item id", NULL);
     }
 
     ClearTraces();
@@ -674,7 +674,7 @@ static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
     gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), t);
     redraw_signals_and_waves();
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_clear(WcpServer *server, WcpCommand *cmd)
@@ -693,7 +693,7 @@ static char* handle_clear(WcpServer *server, WcpCommand *cmd)
     MaxSignalLength();
     redraw_signals_and_waves();
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_load(WcpServer *server, WcpCommand *cmd)
@@ -703,14 +703,14 @@ static char* handle_load(WcpServer *server, WcpCommand *cmd)
     const char *filename = cmd->data.load.source;
     
     if (!filename || !*filename) {
-        return wcp_create_error("invalid_argument", "Missing source", NULL);
+        return wcp_response_error("invalid_argument", "Missing source", NULL);
     }
 
     if (!deal_with_rpc_open(filename, NULL)) {
-        return wcp_create_error("load_failed", "Failed to queue file load", NULL);
+        return wcp_response_error("load_failed", "Failed to queue file load", NULL);
     }
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_reload(WcpServer *server, WcpCommand *cmd)
@@ -719,13 +719,13 @@ static char* handle_reload(WcpServer *server, WcpCommand *cmd)
     (void)cmd;
     
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE || !GLOBALS->loaded_file_name) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     reload_into_new_context();
     wcp_gtkwave_notify_waveforms_loaded(GLOBALS->loaded_file_name);
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static char* handle_zoom_to_fit(WcpServer *server, WcpCommand *cmd)
@@ -733,16 +733,16 @@ static char* handle_zoom_to_fit(WcpServer *server, WcpCommand *cmd)
     (void)server;
 
     if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_create_error("no_waveform", "No waveform loaded", NULL);
+        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
     }
 
     if (cmd->data.zoom.viewport_idx != 0) {
-        return wcp_create_error("invalid_argument", "Unsupported viewport index", NULL);
+        return wcp_response_error("invalid_argument", "Unsupported viewport index", NULL);
     }
 
     service_zoom_fit(NULL, NULL);
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 static bool wcp_stop_server_idle(gpointer data)
@@ -758,7 +758,7 @@ static char* handle_shutdown(WcpServer *server, WcpCommand *cmd)
     /* Stop after the ack has been sent. */
     g_idle_add(wcp_stop_server_idle, server);
     
-    return wcp_create_ack();
+    return wcp_response_ack();
 }
 
 /* ============================================================================
@@ -819,7 +819,7 @@ static char* wcp_command_handler(WcpServer *server, WcpCommand *cmd, gpointer us
             return handle_shutdown(server, cmd);
             
         default:
-            return wcp_create_error("unknown_command", 
+            return wcp_response_error("unknown_command", 
                                     "Unknown command type",
                                     NULL);
     }
