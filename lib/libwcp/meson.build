@@ -3,11 +3,6 @@ libwcp_sources = [
     'wcp_server.c',
 ]
 
-libwcp_headers = [
-    'wcp_protocol.h',
-    'wcp_server.h',
-]
-
 libwcp = static_library(
     'wcp',
     sources: libwcp_sources,
