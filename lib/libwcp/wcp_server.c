@@ -193,16 +193,8 @@ void wcp_server_stop(WcpServer *server)
     server->running = FALSE;
     
     /* Close client connection if any */
-    if (server->client_connection) {
-        g_io_stream_close(G_IO_STREAM(server->client_connection), NULL, NULL);
-        g_object_unref(server->client_connection);
-        server->client_connection = NULL;
-    }
-    
-    if (server->data_input) {
-        g_object_unref(server->data_input);
-        server->data_input = NULL;
-    }
+    g_clear_object(&server->client_connection);
+    g_clear_object(&server->data_input);
     
     server->client_connected = FALSE;
     server->input_stream = NULL;
