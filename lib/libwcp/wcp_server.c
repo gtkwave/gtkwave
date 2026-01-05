@@ -161,6 +161,8 @@ WcpServer* wcp_server_new(uint16_t port,
 
 bool wcp_server_start(WcpServer *server, GError **error)
 {
+    g_return_val_if_fail(server != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);    
     if (server->running) {
         g_set_error(error, G_IO_ERROR, G_IO_ERROR_ALREADY_MOUNTED,
                     "WCP server already running");
