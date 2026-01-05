@@ -683,7 +683,7 @@ char* wcp_response_id_list(const char *command, GArray *ids)
     return wcp_json_builder_to_string(builder);
 }
 
-char* wcp_create_waveforms_loaded_event(const char *source)
+char* wcp_event_waveforms_loaded(const char *source)
 {
     JsonBuilder *builder = json_builder_new();
     

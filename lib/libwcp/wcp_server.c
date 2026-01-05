@@ -261,7 +261,7 @@ void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source)
 {
     if (!server->client_connected) return;
     
-    char *event = wcp_create_waveforms_loaded_event(source);
+    char *event = wcp_event_waveforms_loaded(source);
     wcp_server_send(server, event);
 }
 
