@@ -339,6 +339,7 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
     }
     
     WcpCommand *cmd = g_new0(WcpCommand, 1);
+    bool cmd_valid = FALSE;
     cmd->type = cmd_type;
     
     /* Parse command-specific fields */
@@ -348,63 +349,50 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
         {
             JsonArray *arr = NULL;
             if (!json_object_require_array(obj, "ids", &arr, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             cmd->data.item_refs.ids = parse_id_array(arr, error);
             if (!cmd->data.item_refs.ids) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
         }
         case WCP_CMD_SET_ITEM_COLOR:
         {
             int64_t id_value = 0;
             if (!json_object_require_int64(obj, "id", &id_value, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             if (id_value < 0) {
                 g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                             "Field 'id' must be non-negative");
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             cmd->data.set_color.id.id = (uint64_t)id_value;
             if (!json_object_require_string(obj, "color", &cmd->data.set_color.color, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
         }
         case WCP_CMD_ADD_VARIABLES:
         {
             JsonArray *arr = NULL;
             if (!json_object_require_array(obj, "variables", &arr, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             cmd->data.add_vars.variables = parse_string_array(arr, error, "variables");
             if (!cmd->data.add_vars.variables) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
         }
         case WCP_CMD_ADD_SCOPE:
         {
             if (!json_object_require_string(obj, "scope", &cmd->data.add_scope.scope, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             if (json_object_has_member(obj, "recursive")) {
                 JsonNode *node = json_object_get_member(obj, "recursive");
@@ -412,27 +400,22 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
                     json_node_get_value_type(node) != G_TYPE_BOOLEAN) {
                     g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                                 "Field 'recursive' must be a boolean");
-                    g_object_unref(parser);
-                    wcp_command_free(cmd);
-                    return NULL;
+                    break;
                 }
                 cmd->data.add_scope.recursive = json_node_get_boolean(node);
             }
+            cmd_valid = TRUE;
             break;
         }
         case WCP_CMD_ADD_ITEMS:
         {
             JsonArray *arr = NULL;
             if (!json_object_require_array(obj, "items", &arr, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             cmd->data.add_items.items = parse_string_array(arr, error, "items");
             if (!cmd->data.add_items.items) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             if (json_object_has_member(obj, "recursive")) {
                 JsonNode *node = json_object_get_member(obj, "recursive");
@@ -440,96 +423,88 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
                     json_node_get_value_type(node) != G_TYPE_BOOLEAN) {
                     g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                                 "Field 'recursive' must be a boolean");
-                    g_object_unref(parser);
-                    wcp_command_free(cmd);
-                    return NULL;
+                    break;
                 }
                 cmd->data.add_items.recursive = json_node_get_boolean(node);
             }
+            cmd_valid = TRUE;
             break;
         }
         case WCP_CMD_ADD_MARKERS:
         {
             JsonArray *arr = NULL;
             if (!json_object_require_array(obj, "markers", &arr, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             cmd->data.add_markers.markers = parse_marker_array(arr, error);
             if (!cmd->data.add_markers.markers) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
         }
         case WCP_CMD_SET_VIEWPORT_TO:
             if (!json_object_require_int64(obj, "timestamp",
                                            &cmd->data.viewport_to.timestamp, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
 
         case WCP_CMD_SET_VIEWPORT_RANGE:
             if (!json_object_require_int64(obj, "start", &cmd->data.viewport_range.start, error) ||
                 !json_object_require_int64(obj, "end", &cmd->data.viewport_range.end, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
 
         case WCP_CMD_FOCUS_ITEM:
         {
             int64_t id_value = 0;
             if (!json_object_require_int64(obj, "id", &id_value, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             if (id_value < 0) {
                 g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                             "Field 'id' must be non-negative");
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             cmd->data.focus.id.id = (uint64_t)id_value;
+            cmd_valid = TRUE;
             break;
         }
         case WCP_CMD_LOAD:
             if (!json_object_require_string(obj, "source", &cmd->data.load.source, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
 
         case WCP_CMD_ZOOM_TO_FIT:
             if (!json_object_has_member(obj, "viewport_idx")) {
                 g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                             "Missing required field: viewport_idx");
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
             if (!json_object_require_uint(obj, "viewport_idx",
                                           &cmd->data.zoom.viewport_idx, error)) {
-                g_object_unref(parser);
-                wcp_command_free(cmd);
-                return NULL;
+                break;
             }
+            cmd_valid = TRUE;
             break;
             
         default:
             /* Commands with no additional data */
+            cmd_valid = TRUE;
             break;
     }
     
     g_object_unref(parser);
+    if (!cmd_valid) {
+        wcp_command_free(cmd);
+        return NULL;
+    }
     return cmd;
 }
 
