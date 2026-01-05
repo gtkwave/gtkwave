@@ -294,7 +294,6 @@ static GArray* parse_marker_array(JsonArray *arr, GError **error)
 WcpCommand* wcp_parse_command(const char *json_str, GError **error)
 {
     JsonParser *parser = json_parser_new();
-    WcpCommand *cmd = NULL;
     
     if (!json_parser_load_from_data(parser, json_str, -1, error)) {
         g_object_unref(parser);
@@ -317,7 +316,7 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
         /* Could be a greeting - handle separately */
         if (msg_type && g_str_equal(msg_type, "greeting")) {
             /* Client greeting - we just acknowledge it */
-            cmd = g_new0(WcpCommand, 1);
+            WcpCommand *cmd = g_new0(WcpCommand, 1);
             cmd->type = WCP_CMD_UNKNOWN;  /* Special case for greeting */
             g_object_unref(parser);
             return cmd;
@@ -339,7 +338,7 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
         return NULL;
     }
     
-    cmd = g_new0(WcpCommand, 1);
+    WcpCommand *cmd = g_new0(WcpCommand, 1);
     cmd->type = cmd_type;
     
     /* Parse command-specific fields */
