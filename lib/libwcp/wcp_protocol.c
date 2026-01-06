@@ -211,14 +211,14 @@ static GArray* parse_id_array(JsonArray *arr, GError **error)
             value = (int64_t)json_node_get_double(node);
         } else {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%u] must be a number", i);
+                        "ids[%zu] must be a number", i);
             g_array_free(ids, TRUE);
             return NULL;
         }
 
         if (value < 0) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%u] must be non-negative", i);
+                        "ids[%zu] must be non-negative", i);
             g_array_free(ids, TRUE);
             return NULL;
         }
@@ -241,7 +241,7 @@ static GPtrArray* parse_string_array(JsonArray *arr, GError **error, const char 
         if (!JSON_NODE_HOLDS_VALUE(node) ||
             json_node_get_value_type(node) != G_TYPE_STRING) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "%s[%u] must be a string", label ? label : "items", i);
+                        "%s[%zu] must be a string", label ? label : "items", i);
             g_ptr_array_free(strings, TRUE);
             return NULL;
         }
@@ -260,7 +260,7 @@ static GArray* parse_marker_array(JsonArray *arr, GError **error)
         JsonNode *node = json_array_get_element(arr, i);
         if (!JSON_NODE_HOLDS_OBJECT(node)) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "markers[%u] must be an object", i);
+                        "markers[%zu] must be an object", i);
             g_array_free(markers, TRUE);
             return NULL;
         }
