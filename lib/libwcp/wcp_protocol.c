@@ -311,6 +311,12 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
     JsonObject *obj = json_node_get_object(root);
     
     /* Check message type */
+    if (!json_object_has_member(obj, "type")) {
+        g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                    "Missing required field: type");
+        g_object_unref(parser);
+        return NULL;
+    }
     const char *msg_type = json_object_get_string_member(obj, "type");
     if (!msg_type || !g_str_equal(msg_type, "command")) {
         /* Could be a greeting - handle separately */
