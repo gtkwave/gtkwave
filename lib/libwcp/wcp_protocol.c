@@ -198,7 +198,7 @@ static GArray* parse_id_array(JsonArray *arr, GError **error)
         JsonNode *node = json_array_get_element(arr, i);
         if (!JSON_NODE_HOLDS_VALUE(node)) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%u] must be a number", i);
+                        "ids[%zu] must be a number", i);
             g_array_free(ids, TRUE);
             return NULL;
         }
