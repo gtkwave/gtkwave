@@ -344,6 +344,9 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
     
     /* Parse command-specific fields */
     switch (cmd_type) {
+        case WCP_CMD_GET_ITEM_INFO:
+        case WCP_CMD_REMOVE_ITEMS:
+        {
             JsonArray *arr = NULL;
             if (!json_object_require_array(obj, "ids", &arr, error)) {
                 break;
