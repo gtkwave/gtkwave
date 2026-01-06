@@ -334,13 +334,13 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
     }
     
     /* Get command name */
-    const char *cmd_name = json_object_get_string_member(obj, "command");
-    if (!cmd_name) {
+    if (!json_object_has_member(obj, "command")) {
         g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                     "Missing required field: command");
         g_object_unref(parser);
         return NULL;
     }
+    const char *cmd_name = json_object_get_string_member(obj, "command");
     WcpCommandType cmd_type = parse_command_type(cmd_name);
     
     if (cmd_type == WCP_CMD_UNKNOWN) {
