@@ -29,6 +29,7 @@ version_h = vcs_tag(input: 'src/version.h.in', output: 'version.h')
 
 glib_req = '>=2.72.0'
 glib_req_macro = 'GLIB_VERSION_2_72'
+json_glib_req = '>=1.8.0'
 gtk_req = '>=3.24.0'
 gtk_mac_integration_req = '>=3.0.0'
 gtk4_req = '>=4.6'
@@ -39,6 +40,7 @@ bzip2_req = '>=1.0.0'
 
 glib_dep = dependency('glib-2.0', version: glib_req)
 gobject_dep = dependency('gobject-2.0', version: glib_req)
+gio_dep = dependency('gio-2.0', version: glib_req)
 gtk_dep = dependency('gtk+-3.0', version: gtk_req)
 gtk4_dep = dependency('gtk4', version: gtk4_req)
 gtk_unix_print_dep = dependency(
@@ -51,6 +53,7 @@ gtk_mac_integration_dep = dependency(
     version: gtk_mac_integration_req,
     required: host_machine.system() == 'darwin',
 )
+json_glib_dep = dependency('json-glib-1.0', version: json_glib_req)
 zlib_dep = dependency('zlib', version: zlib_req)
 m_dep = cc.find_library('m', required: false)
 judy_dep = cc.find_library(
