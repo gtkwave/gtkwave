@@ -56,9 +56,9 @@ typedef enum {
  * Data Structures
  * ============================================================================ */
 
-/* Reference to a displayed item (signal, marker, etc.) */
+/* Reference to a displayed item (signal, marker, etc.), e.g. "T42" or "M2". */
 typedef struct {
-    uint64_t id;
+    char *id;
 } WcpDisplayedItemRef;
 
 /* Information about an item */

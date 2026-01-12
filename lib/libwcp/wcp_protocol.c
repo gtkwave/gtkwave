@@ -189,6 +189,19 @@ static gboolean json_object_require_uint(JsonObject *obj,
     return TRUE;
 }
 
+static void free_id_array(GArray *ids)
+{
+    if (!ids) {
+        return;
+    }
+
+    for (size_t i = 0; i < (size_t)ids->len; i++) {
+        WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
+        g_free(ref->id);
+    }
+    g_array_free(ids, TRUE);
+}
+
 static GArray* parse_id_array(JsonArray *arr, GError **error)
 {
     GArray *ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
@@ -196,35 +209,16 @@ static GArray* parse_id_array(JsonArray *arr, GError **error)
     
     for (size_t i = 0; i < len; i++) {
         JsonNode *node = json_array_get_element(arr, i);
-        if (!JSON_NODE_HOLDS_VALUE(node)) {
+        if (!JSON_NODE_HOLDS_VALUE(node) ||
+            json_node_get_value_type(node) != G_TYPE_STRING) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%zu] must be a number", i);
-            g_array_free(ids, TRUE);
-            return NULL;
-        }
-
-        GType type = json_node_get_value_type(node);
-        int64_t value = 0;
-        if (type == G_TYPE_INT64) {
-            value = json_node_get_int(node);
-        } else if (type == G_TYPE_DOUBLE) {
-            value = (int64_t)json_node_get_double(node);
-        } else {
-            g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%zu] must be a number", i);
-            g_array_free(ids, TRUE);
-            return NULL;
-        }
-
-        if (value < 0) {
-            g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%zu] must be non-negative", i);
-            g_array_free(ids, TRUE);
+                        "ids[%zu] must be a string", i);
+            free_id_array(ids);
             return NULL;
         }
 
         WcpDisplayedItemRef ref;
-        ref.id = (uint64_t)value;
+        ref.id = g_strdup(json_node_get_string(node));
         g_array_append_val(ids, ref);
     }
     
@@ -372,16 +366,9 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
         }
         case WCP_CMD_SET_ITEM_COLOR:
         {
-            int64_t id_value = 0;
-            if (!json_object_require_int64(obj, "id", &id_value, error)) {
+            if (!json_object_require_string(obj, "id", &cmd->data.set_color.id.id, error)) {
                 break;
             }
-            if (id_value < 0) {
-                g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                            "Field 'id' must be non-negative");
-                break;
-            }
-            cmd->data.set_color.id.id = (uint64_t)id_value;
             if (!json_object_require_string(obj, "color", &cmd->data.set_color.color, error)) {
                 break;
             }
@@ -473,16 +460,9 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
 
         case WCP_CMD_FOCUS_ITEM:
         {
-            int64_t id_value = 0;
-            if (!json_object_require_int64(obj, "id", &id_value, error)) {
+            if (!json_object_require_string(obj, "id", &cmd->data.focus.id.id, error)) {
                 break;
             }
-            if (id_value < 0) {
-                g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                            "Field 'id' must be non-negative");
-                break;
-            }
-            cmd->data.focus.id.id = (uint64_t)id_value;
             cmd_valid = TRUE;
             break;
         }
@@ -528,11 +508,12 @@ void wcp_command_free(WcpCommand *cmd)
         case WCP_CMD_GET_ITEM_INFO:
         case WCP_CMD_REMOVE_ITEMS:
             if (cmd->data.item_refs.ids) {
-                g_array_free(cmd->data.item_refs.ids, TRUE);
+                free_id_array(cmd->data.item_refs.ids);
             }
             break;
             
         case WCP_CMD_SET_ITEM_COLOR:
+            g_free(cmd->data.set_color.id.id);
             g_free(cmd->data.set_color.color);
             break;
             
@@ -565,6 +546,10 @@ void wcp_command_free(WcpCommand *cmd)
             
         case WCP_CMD_LOAD:
             g_free(cmd->data.load.source);
+            break;
+
+        case WCP_CMD_FOCUS_ITEM:
+            g_free(cmd->data.focus.id.id);
             break;
             
         default:
@@ -657,7 +642,7 @@ char* wcp_response_item_info(GPtrArray *items)
             json_builder_add_string_value(builder, info->type);
             
             json_builder_set_member_name(builder, "id");
-            json_builder_add_int_value(builder, (int64_t)info->id.id);
+            json_builder_add_string_value(builder, info->id.id);
             
             json_builder_end_object(builder);
         }
@@ -685,7 +670,7 @@ char* wcp_response_id_list(const char *command, GArray *ids)
     if (ids) {
         for (size_t i = 0; i < (size_t)ids->len; i++) {
             WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
-            json_builder_add_int_value(builder, (int64_t)ref->id);
+            json_builder_add_string_value(builder, ref->id);
         }
     }
     json_builder_end_array(builder);
