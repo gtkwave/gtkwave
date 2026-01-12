@@ -278,7 +278,8 @@ static void print_help(char *nam)
 
 #define WCP_GETOPT \
     "  --wcp                     enable WCP server\n" \
-    "  --wcp-port=PORT            set WCP port (defaults to 8765)\n"
+    "  --wcp-port=PORT            set WCP port (defaults to 8765)\n" \
+    "  --wcp-remote               allow remote WCP connections\n"
 
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
@@ -690,6 +691,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
     FILE *wave = NULL;
     int wcp_port = -1;
     int wcp_enable = 0;
+    int wcp_allow_remote = 0;
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
@@ -943,6 +945,7 @@ do_primary_inits:
                                                    {"saveonexit", 0, 0, '7'},
                                                    {"wcp", 0, 0, 0},
                                                    {"wcp-port", 1, 0, 0},
+                                                   {"wcp-remote", 0, 0, 0},
                                                    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
@@ -993,6 +996,9 @@ do_primary_inits:
                         wcp_enable = 1;
                     } else if (!strcmp(long_options[option_index].name, "wcp-port")) {
                         wcp_port = atoi(optarg);
+                        wcp_enable = 1;
+                    } else if (!strcmp(long_options[option_index].name, "wcp-remote")) {
+                        wcp_allow_remote = 1;
                         wcp_enable = 1;
                     }
                     break;
@@ -1275,7 +1281,7 @@ do_primary_inits:
         if (wcp_port < 0 || wcp_port == 0) {
             wcp_port = WCP_DEFAULT_PORT;
         }
-        if (!wcp_gtkwave_init((uint16_t)wcp_port)) {
+        if (!wcp_gtkwave_init((uint16_t)wcp_port, wcp_allow_remote)) {
             fprintf(stderr, "GTKWAVE | WCP server failed to start\n");
             exit(255);
         }

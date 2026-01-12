@@ -30,6 +30,7 @@ struct _WcpServer {
     uint16_t port;
     gboolean running;
     gboolean client_connected;
+    gboolean allow_remote;
     
     WcpCommandHandler handler;
     gpointer handler_data;
@@ -50,6 +51,13 @@ struct _WcpServer {
 WcpServer* wcp_server_new(uint16_t port, 
                           WcpCommandHandler handler,
                           gpointer user_data);
+
+/**
+ * Allow remote connections (default is localhost-only)
+ * @param server The server instance
+ * @param allow_remote TRUE to listen on all interfaces
+ */
+void wcp_server_set_allow_remote(WcpServer *server, gboolean allow_remote);
 
 /**
  * Start the WCP server (begins listening)

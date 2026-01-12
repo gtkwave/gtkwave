@@ -808,7 +808,7 @@ static char* wcp_command_handler(WcpServer *server, WcpCommand *cmd, gpointer us
  * Public API
  * ============================================================================ */
 
-gboolean wcp_gtkwave_init(uint16_t port)
+gboolean wcp_gtkwave_init(uint16_t port, gboolean allow_remote)
 {
     if (g_wcp_server) {
         g_warning("WCP: Already initialized");
@@ -820,6 +820,7 @@ gboolean wcp_gtkwave_init(uint16_t port)
     }
     
     g_wcp_server = wcp_server_new(port, wcp_command_handler, NULL);
+    wcp_server_set_allow_remote(g_wcp_server, allow_remote);
     
     GError *error = NULL;
     if (!wcp_server_start(g_wcp_server, &error)) {

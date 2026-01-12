@@ -23,9 +23,10 @@
  * Call this from main() after GTKWave is initialized
  * 
  * @param port Port to listen on (must be non-zero)
+ * @param allow_remote TRUE to listen on all interfaces
  * @return TRUE on success
  */
-gboolean wcp_gtkwave_init(uint16_t port);
+gboolean wcp_gtkwave_init(uint16_t port, gboolean allow_remote);
 
 /**
  * Shutdown WCP support

@@ -156,7 +156,14 @@ WcpServer* wcp_server_new(uint16_t port,
     server->handler_data = user_data;
     server->running = FALSE;
     server->client_connected = FALSE;
+    server->allow_remote = FALSE;
     return server;
+}
+
+void wcp_server_set_allow_remote(WcpServer *server, gboolean allow_remote)
+{
+    g_return_if_fail(server != NULL);
+    server->allow_remote = allow_remote ? TRUE : FALSE;
 }
 
 gboolean wcp_server_start(WcpServer *server, GError **error)
@@ -171,13 +178,32 @@ gboolean wcp_server_start(WcpServer *server, GError **error)
     
     server->service = g_socket_service_new();
     
-    if (!g_socket_listener_add_inet_port(G_SOCKET_LISTENER(server->service),
-                                         server->port,
-                                         NULL,
-                                         error)) {
-        g_object_unref(server->service);
-        server->service = NULL;
-        return FALSE;
+    if (server->allow_remote) {
+        if (!g_socket_listener_add_inet_port(G_SOCKET_LISTENER(server->service),
+                                             server->port,
+                                             NULL,
+                                             error)) {
+            g_object_unref(server->service);
+            server->service = NULL;
+            return FALSE;
+        }
+    } else {
+        GInetAddress *addr = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
+        GSocketAddress *sockaddr = g_inet_socket_address_new(addr, server->port);
+        gboolean ok = g_socket_listener_add_address(G_SOCKET_LISTENER(server->service),
+                                                    sockaddr,
+                                                    G_SOCKET_TYPE_STREAM,
+                                                    G_SOCKET_PROTOCOL_TCP,
+                                                    NULL,
+                                                    NULL,
+                                                    error);
+        g_object_unref(sockaddr);
+        g_object_unref(addr);
+        if (!ok) {
+            g_object_unref(server->service);
+            server->service = NULL;
+            return FALSE;
+        }
     }
     
     g_signal_connect(server->service, "incoming",
