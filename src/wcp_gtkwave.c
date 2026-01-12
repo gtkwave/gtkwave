@@ -277,7 +277,7 @@ static char* handle_get_item_list(WcpServer *server, WcpCommand *cmd)
         unsigned int count = gw_named_markers_get_number_of_markers(markers);
         for (unsigned int i = 0; i < count; i++) {
             GwMarker *marker = gw_named_markers_get(markers, i);
-            if (marker && gw_marker_is_enabled(marker)) {
+            if (gw_marker_is_enabled(marker)) {
                 WcpDisplayedItemRef ref;
                 ref.id = (WCP_ITEM_MARKER_FLAG | (uint64_t)i);
                 g_array_append_val(ids, ref);
