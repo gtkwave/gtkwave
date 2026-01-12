@@ -22,7 +22,7 @@
  * Initialize WCP support for GTKWave
  * Call this from main() after GTKWave is initialized
  * 
- * @param port Port to listen on (0 for default 8765)
+ * @param port Port to listen on (must be non-zero)
  * @return TRUE on success
  */
 gboolean wcp_gtkwave_init(uint16_t port);
@@ -44,3 +44,4 @@ void wcp_gtkwave_shutdown(void);
 void wcp_gtkwave_notify_waveforms_loaded(const char *filename);
 
 #endif /* WCP_GTKWAVE_H */
+
