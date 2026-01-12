@@ -278,7 +278,8 @@ static void print_help(char *nam)
 
 #ifdef HAVE_WCP
 #define WCP_GETOPT \
-    "  --wcp-port=PORT            start WCP server on PORT (0 uses 8765)\n"
+    "  --wcp                     enable WCP server\n" \
+    "  --wcp-port=PORT            set WCP port (defaults to 8765)\n"
 #else
 #define WCP_GETOPT
 #endif
@@ -693,6 +694,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
     FILE *wave = NULL;
 #ifdef HAVE_WCP
     int wcp_port = -1;
+    int wcp_enable = 0;
 #endif
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
@@ -946,6 +948,7 @@ do_primary_inits:
                                                    {"dark", 0, 0, '6'},
                                                    {"saveonexit", 0, 0, '7'},
 #ifdef HAVE_WCP
+                                                   {"wcp", 0, 0, 0},
                                                    {"wcp-port", 1, 0, 0},
 #endif
                                                    {0, 0, 0, 0}};
@@ -995,8 +998,11 @@ do_primary_inits:
 
 #ifdef HAVE_WCP
                 case 0:
-                    if (!strcmp(long_options[option_index].name, "wcp-port")) {
+                    if (!strcmp(long_options[option_index].name, "wcp")) {
+                        wcp_enable = 1;
+                    } else if (!strcmp(long_options[option_index].name, "wcp-port")) {
                         wcp_port = atoi(optarg);
+                        wcp_enable = 1;
                     }
                     break;
 #endif
@@ -1276,8 +1282,8 @@ do_primary_inits:
 #endif
 
 #ifdef HAVE_WCP
-    if (wcp_port >= 0) {
-        if (wcp_port == 0) {
+    if (wcp_enable) {
+        if (wcp_port < 0 || wcp_port == 0) {
             wcp_port = WCP_DEFAULT_PORT;
         }
         if (!wcp_gtkwave_init((uint16_t)wcp_port)) {
