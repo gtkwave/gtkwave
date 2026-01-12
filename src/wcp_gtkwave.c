@@ -52,9 +52,8 @@ static void wcp_trace_map_free(WcpTraceMap *self)
     g_free(self);
 }
 
-static uint64_t wcp_get_trace_id(GwTrace *t)
+static uint64_t wcp_trace_map_get_trace_id(WcpTraceMap *self, GwTrace *t)
 {
-    wcp_trace_map_init();
 
     uint64_t *existing = g_hash_table_lookup(wcp_trace_to_id, t);
     if (existing) {
