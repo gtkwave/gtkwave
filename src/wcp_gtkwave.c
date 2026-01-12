@@ -24,25 +24,74 @@
 WcpServer *g_wcp_server = NULL;
 
 typedef struct {
-    GHashTable *trace_to_id;
-    GHashTable *id_to_trace;
-    GHashTable *marker_to_id;
-    GHashTable *id_to_marker;
-    uint64_t next_trace_id;
-    uint64_t next_marker_id;
+    char id_prefix;
+    GHashTable *item_to_id;
+    GHashTable *id_to_item;
+    uint64_t next_id;
+} WcpItemMap;
+
+typedef struct {
+    WcpItemMap traces;
+    WcpItemMap markers;
 } WcpTraceMap;
 
 static WcpTraceMap *wcp_trace_map = NULL;
 
+static void wcp_item_map_init(WcpItemMap *map, char id_prefix)
+{
+    map->id_prefix = id_prefix;
+    map->item_to_id = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+    map->id_to_item = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    map->next_id = 1;
+}
+
+static void wcp_item_map_free(WcpItemMap *map)
+{
+    if (!map) {
+        return;
+    }
+    g_hash_table_destroy(map->item_to_id);
+    g_hash_table_destroy(map->id_to_item);
+}
+
+static const char *wcp_item_map_get_id(WcpItemMap *map, gpointer item)
+{
+    char *existing = g_hash_table_lookup(map->item_to_id, item);
+    if (existing) {
+        return existing;
+    }
+    char *item_id =
+        g_strdup_printf("%c%" G_GUINT64_FORMAT, map->id_prefix, map->next_id++);
+    g_hash_table_insert(map->item_to_id, item, item_id);
+    g_hash_table_insert(map->id_to_item, g_strdup(item_id), item);
+    return item_id;
+}
+
+static void wcp_item_map_remove_id(WcpItemMap *map, gpointer item)
+{
+    if (!map || !map->item_to_id) {
+        return;
+    }
+    char *id = g_hash_table_lookup(map->item_to_id, item);
+    if (id) {
+        g_hash_table_remove(map->id_to_item, id);
+        g_hash_table_remove(map->item_to_id, item);
+    }
+}
+
+static gpointer wcp_item_map_lookup_item(WcpItemMap *map, const char *id)
+{
+    if (!map || !map->id_to_item) {
+        return NULL;
+    }
+    return g_hash_table_lookup(map->id_to_item, id);
+}
+
 static WcpTraceMap *wcp_trace_map_init(void)
 {
     WcpTraceMap *self = g_new0(WcpTraceMap, 1);
-    self->trace_to_id = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-    self->id_to_trace = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    self->marker_to_id = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-    self->id_to_marker = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    self->next_trace_id = 1;
-    self->next_marker_id = 1;
+    wcp_item_map_init(&self->traces, 'T');
+    wcp_item_map_init(&self->markers, 'M');
     return self;
 }
 
@@ -51,79 +100,9 @@ static void wcp_trace_map_free(WcpTraceMap *self)
     if (self == NULL) {
         return;
     }
-
-    g_hash_table_destroy(self->trace_to_id);
-    g_hash_table_destroy(self->id_to_trace);
-    g_hash_table_destroy(self->marker_to_id);
-    g_hash_table_destroy(self->id_to_marker);
+    wcp_item_map_free(&self->traces);
+    wcp_item_map_free(&self->markers);
     g_free(self);
-}
-
-static const char *wcp_trace_map_get_trace_id(WcpTraceMap *self, GwTrace *t)
-{
-    char *existing = g_hash_table_lookup(self->trace_to_id, t);
-    if (existing) {
-        return existing;
-    }
-    char *trace_id = g_strdup_printf("T%" G_GUINT64_FORMAT, self->next_trace_id++);
-    g_hash_table_insert(self->trace_to_id, t, trace_id);
-    g_hash_table_insert(self->id_to_trace, g_strdup(trace_id), t);
-    return trace_id;
-}
-
-static void wcp_trace_map_remove_trace_id(WcpTraceMap *self, GwTrace *t)
-{
-    if (!self || !self->trace_to_id) {
-        return;
-    }
-    char *id = g_hash_table_lookup(self->trace_to_id, t);
-    if (id) {
-        g_hash_table_remove(self->id_to_trace, id);
-        g_hash_table_remove(self->trace_to_id, t);
-    }
-}
-
-static GwTrace *wcp_trace_map_lookup_trace(WcpTraceMap *self, const char *id)
-{
-    if (!self || !self->id_to_trace) {
-        return NULL;
-    }
-    GwTrace *t = g_hash_table_lookup(self->id_to_trace, id);
-    return t;
-}
-
-static const char *wcp_trace_map_get_marker_id(WcpTraceMap *self, GwMarker *marker)
-{
-    char *existing = g_hash_table_lookup(self->marker_to_id, marker);
-    if (existing) {
-        return existing;
-    }
-
-    char *marker_id = g_strdup_printf("M%" G_GUINT64_FORMAT, self->next_marker_id++);
-    g_hash_table_insert(self->marker_to_id, marker, marker_id);
-    g_hash_table_insert(self->id_to_marker, g_strdup(marker_id), marker);
-    return marker_id;
-}
-
-static void wcp_trace_map_remove_marker_id(WcpTraceMap *self, GwMarker *marker)
-{
-    if (!self || !self->marker_to_id) {
-        return;
-    }
-    char *id = g_hash_table_lookup(self->marker_to_id, marker);
-    if (id) {
-        g_hash_table_remove(self->id_to_marker, id);
-        g_hash_table_remove(self->marker_to_id, marker);
-    }
-}
-
-static GwMarker *wcp_trace_map_lookup_marker(WcpTraceMap *self, const char *id)
-{
-    if (!self || !self->id_to_marker) {
-        return NULL;
-    }
-    GwMarker *marker = g_hash_table_lookup(self->id_to_marker, id);
-    return marker;
 }
 
 static WcpTraceMap *wcp_trace_map_ensure(void)
@@ -137,7 +116,7 @@ static WcpTraceMap *wcp_trace_map_ensure(void)
 static const char *wcp_get_trace_id(GwTrace *t)
 {
     WcpTraceMap *map = wcp_trace_map_ensure();
-    return wcp_trace_map_get_trace_id(map, t);
+    return wcp_item_map_get_id(&map->traces, t);
 }
 
 static GwTrace *wcp_lookup_trace(const char *id)
@@ -145,20 +124,20 @@ static GwTrace *wcp_lookup_trace(const char *id)
     if (!wcp_trace_map) {
         return NULL;
     }
-    return wcp_trace_map_lookup_trace(wcp_trace_map, id);
+    return wcp_item_map_lookup_item(&wcp_trace_map->traces, id);
 }
 
 static void wcp_remove_trace_id(GwTrace *t)
 {
     if (wcp_trace_map) {
-        wcp_trace_map_remove_trace_id(wcp_trace_map, t);
+        wcp_item_map_remove_id(&wcp_trace_map->traces, t);
     }
 }
 
 static const char *wcp_get_marker_id(GwMarker *marker)
 {
     WcpTraceMap *map = wcp_trace_map_ensure();
-    return wcp_trace_map_get_marker_id(map, marker);
+    return wcp_item_map_get_id(&map->markers, marker);
 }
 
 static GwMarker *wcp_lookup_marker(const char *id)
@@ -166,13 +145,13 @@ static GwMarker *wcp_lookup_marker(const char *id)
     if (!wcp_trace_map) {
         return NULL;
     }
-    return wcp_trace_map_lookup_marker(wcp_trace_map, id);
+    return wcp_item_map_lookup_item(&wcp_trace_map->markers, id);
 }
 
 static void wcp_remove_marker_id(GwMarker *marker)
 {
     if (wcp_trace_map) {
-        wcp_trace_map_remove_marker_id(wcp_trace_map, marker);
+        wcp_item_map_remove_id(&wcp_trace_map->markers, marker);
     }
 }
 
