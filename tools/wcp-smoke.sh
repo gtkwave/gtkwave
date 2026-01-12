@@ -20,11 +20,6 @@ if ! command -v nc >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! command -v timeout >/dev/null 2>&1; then
-    echo "error: timeout is required" >&2
-    exit 1
-fi
-
 tmpdir="$(mktemp -d)"
 cleanup() {
     if [ -n "${GTKWAVE_PID:-}" ]; then
