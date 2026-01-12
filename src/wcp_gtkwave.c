@@ -87,7 +87,7 @@ static void wcp_trace_map_remove_trace_id(WcpTraceMap *self, GwTrace *t)
     }
 }
 
-static GwTrace *wcp_lookup_trace(uint64_t id)
+static GwTrace *wcp_trace_map_lookup_trace(WcpTraceMap *self, uint64_t id)
 {
     if (!wcp_id_to_trace) {
         return NULL;
