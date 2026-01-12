@@ -89,7 +89,6 @@ gtkwave_dependencies = [
 gtkwave_include_directories = [
     config_inc,
     'cocoa',
-    include_directories('../lib/libwcp'),
 ]
 
 executable(
