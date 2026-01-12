@@ -41,16 +41,15 @@ static WcpTraceMap *wcp_trace_map_init(void)
     self->next_id = 1;
 }
 
-static void wcp_trace_map_free(void)
+static void wcp_trace_map_free(WcpTraceMap *self)
 {
-    if (wcp_trace_to_id) {
-        g_hash_table_destroy(wcp_trace_to_id);
-        wcp_trace_to_id = NULL;
+    if (self == NULL) {
+        return;
     }
-    if (wcp_id_to_trace) {
-        g_hash_table_destroy(wcp_id_to_trace);
-        wcp_id_to_trace = NULL;
-    }
+
+    g_hash_table_destroy(self->trace_to_id);
+    g_hash_table_destroy(self->id_to_trace);
+    g_free(self);
 }
 
 static uint64_t wcp_get_trace_id(GwTrace *t)
