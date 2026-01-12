@@ -74,7 +74,7 @@ static uint64_t wcp_trace_map_get_trace_id(WcpTraceMap *self, GwTrace *t)
     return id;
 }
 
-static void wcp_remove_trace_id(GwTrace *t)
+static void wcp_trace_map_remove_trace_id(WcpTraceMap *self, GwTrace *t)
 {
     if (!wcp_trace_to_id) {
         return;
