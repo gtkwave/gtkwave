@@ -276,13 +276,9 @@ static void print_help(char *nam)
 #define RPC_GETOPT3
 #endif
 
-#ifdef HAVE_WCP
 #define WCP_GETOPT \
     "  --wcp                     enable WCP server\n" \
     "  --wcp-port=PORT            set WCP port (defaults to 8765)\n"
-#else
-#define WCP_GETOPT
-#endif
 
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
@@ -692,10 +688,8 @@ int main_2(int opt_vcd, int argc, char *argv[])
     char *wname = NULL;
     char *override_rc = NULL;
     FILE *wave = NULL;
-#ifdef HAVE_WCP
     int wcp_port = -1;
     int wcp_enable = 0;
-#endif
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
@@ -947,10 +941,8 @@ do_primary_inits:
                                                    {"sstexclude", 1, 0, '5'},
                                                    {"dark", 0, 0, '6'},
                                                    {"saveonexit", 0, 0, '7'},
-#ifdef HAVE_WCP
                                                    {"wcp", 0, 0, 0},
                                                    {"wcp-port", 1, 0, 0},
-#endif
                                                    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
@@ -996,7 +988,6 @@ do_primary_inits:
                     exit(255);
                 } break;
 
-#ifdef HAVE_WCP
                 case 0:
                     if (!strcmp(long_options[option_index].name, "wcp")) {
                         wcp_enable = 1;
@@ -1005,7 +996,6 @@ do_primary_inits:
                         wcp_enable = 1;
                     }
                     break;
-#endif
 
                 case 'A':
                     is_smartsave = 1;
@@ -1281,7 +1271,6 @@ do_primary_inits:
     }
 #endif
 
-#ifdef HAVE_WCP
     if (wcp_enable) {
         if (wcp_port < 0 || wcp_port == 0) {
             wcp_port = WCP_DEFAULT_PORT;
@@ -1291,7 +1280,6 @@ do_primary_inits:
             exit(255);
         }
     }
-#endif
 
     /* attempt to load a dump+save file if only a savefile is specified at the command line */
     if ((GLOBALS->loaded_file_name) && (!wname) &&
@@ -1537,11 +1525,9 @@ loader_check_head:
         gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
         gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
 
-#ifdef HAVE_WCP
         if (GLOBALS->loaded_file_name) {
             wcp_gtkwave_notify_waveforms_loaded(GLOBALS->loaded_file_name);
         }
-#endif
 
         if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
             fprintf(stderr,
@@ -2247,9 +2233,7 @@ savefile_bail:
         gtk_main();
     }
 
-#ifdef HAVE_WCP
     wcp_gtkwave_shutdown();
-#endif
 
 #ifdef MAC_INTEGRATION
     exit(0); /* gtk_target_list_find crashes in OSX/Quartz is return instead of exit */
