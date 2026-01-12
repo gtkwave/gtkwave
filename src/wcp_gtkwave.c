@@ -195,9 +195,6 @@ static GwTreeNode *wcp_find_scope_node(const char *scope)
     }
 
     GwTree *tree = gw_dump_file_get_tree(GLOBALS->dump_file);
-    if (!tree) {
-        return NULL;
-    }
 
     GwTreeNode *root = gw_tree_get_root(tree);
     if (!root) {
