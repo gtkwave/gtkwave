@@ -31,9 +31,7 @@
 
 #include "wave_locale.h"
 
-#ifdef HAVE_WCP
 #include "wcp_gtkwave.h"
-#endif
 
 #if !defined __MINGW32__
 #include <signal.h>
