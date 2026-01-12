@@ -999,6 +999,7 @@ do_primary_inits:
                 case 0:
                     if (!strcmp(long_options[option_index].name, "wcp-port")) {
                         wcp_port = atoi(optarg);
+                    }
                     break;
 #endif
 
