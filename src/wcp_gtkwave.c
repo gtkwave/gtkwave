@@ -33,13 +33,12 @@ typedef struct {
 
 static WcpTraceMap *wcp_trace_map = NULL;
 
-static void wcp_trace_map_init(void)
+static WcpTraceMap *wcp_trace_map_init(void)
 {
-    if (wcp_trace_to_id) {
-        return;
-    }
-    wcp_trace_to_id = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-    wcp_id_to_trace = g_hash_table_new_full(g_int64_hash, g_int64_equal, g_free, NULL);
+    WcpTraceMap *self = g_new0(WcpTraceMap, 1);
+    self->trace_to_id = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+    self->id_to_trace = g_hash_table_new_full(g_int64_hash, g_int64_equal, g_free, NULL);
+    self->next_id = 1;
 }
 
 static void wcp_trace_map_free(void)
