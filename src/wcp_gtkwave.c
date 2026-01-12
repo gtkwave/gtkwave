@@ -618,13 +618,12 @@ static char* handle_remove_items(WcpServer *server, WcpCommand *cmd)
                     gw_marker_set_enabled(marker, FALSE);
                     gw_marker_set_alias(marker, NULL);
                 }
-                continue;
-            }
-
-            GwTrace *t = wcp_lookup_trace(ref->id);
-            if (t) {
-                wcp_remove_trace_id(t);
-                RemoveTrace(t, 1);
+            } else {
+                GwTrace *t = wcp_lookup_trace(ref->id);
+                if (t) {
+                    wcp_remove_trace_id(t);
+                    RemoveTrace(t, 1);
+                }
             }
         }
     }
