@@ -83,7 +83,7 @@ typedef struct {
     union {
         /* get_item_info, remove_items */
         struct {
-            GArray *ids;  /* Array of WcpDisplayedItemRef */
+            GPtrArray *ids;  /* Array of char* */
         } item_refs;
         
         /* set_item_color */
@@ -159,7 +159,7 @@ char* wcp_response_error(const char *error_type,
                          const char *message,
                          GPtrArray *arguments);
 char* wcp_response_item_info(GPtrArray *items);
-char* wcp_response_id_list(const char *command, GArray *ids);
+char* wcp_response_id_list(const char *command, GPtrArray *ids);
 
 /* Create JSON event messages */
 char* wcp_event_waveforms_loaded(const char *source);

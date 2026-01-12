@@ -189,22 +189,9 @@ static gboolean json_object_require_uint(JsonObject *obj,
     return TRUE;
 }
 
-static void free_id_array(GArray *ids)
+static GPtrArray* parse_id_array(JsonArray *arr, GError **error)
 {
-    if (!ids) {
-        return;
-    }
-
-    for (size_t i = 0; i < (size_t)ids->len; i++) {
-        WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
-        g_free(ref->id);
-    }
-    g_array_free(ids, TRUE);
-}
-
-static GArray* parse_id_array(JsonArray *arr, GError **error)
-{
-    GArray *ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
+    GPtrArray *ids = g_ptr_array_new_with_free_func(g_free);
     size_t len = (size_t)json_array_get_length(arr);
     
     for (size_t i = 0; i < len; i++) {
@@ -213,13 +200,11 @@ static GArray* parse_id_array(JsonArray *arr, GError **error)
             json_node_get_value_type(node) != G_TYPE_STRING) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
                         "ids[%zu] must be a string", i);
-            free_id_array(ids);
+            g_ptr_array_free(ids, TRUE);
             return NULL;
         }
 
-        WcpDisplayedItemRef ref;
-        ref.id = g_strdup(json_node_get_string(node));
-        g_array_append_val(ids, ref);
+        g_ptr_array_add(ids, g_strdup(json_node_get_string(node)));
     }
     
     return ids;
@@ -508,7 +493,7 @@ void wcp_command_free(WcpCommand *cmd)
         case WCP_CMD_GET_ITEM_INFO:
         case WCP_CMD_REMOVE_ITEMS:
             if (cmd->data.item_refs.ids) {
-                free_id_array(cmd->data.item_refs.ids);
+                g_ptr_array_free(cmd->data.item_refs.ids, TRUE);
             }
             break;
             
@@ -654,7 +639,7 @@ char* wcp_response_item_info(GPtrArray *items)
     return wcp_json_builder_to_string(builder);
 }
 
-char* wcp_response_id_list(const char *command, GArray *ids)
+char* wcp_response_id_list(const char *command, GPtrArray *ids)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -669,8 +654,7 @@ char* wcp_response_id_list(const char *command, GArray *ids)
     json_builder_begin_array(builder);
     if (ids) {
         for (size_t i = 0; i < (size_t)ids->len; i++) {
-            WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
-            json_builder_add_string_value(builder, ref->id);
+            json_builder_add_string_value(builder, g_ptr_array_index(ids, i));
         }
     }
     json_builder_end_array(builder);
