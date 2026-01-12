@@ -25,9 +25,13 @@ WcpServer *g_wcp_server = NULL;
 
 #define WCP_ITEM_MARKER_FLAG (1ull << 62)
 
-static GHashTable *wcp_trace_to_id = NULL;
-static GHashTable *wcp_id_to_trace = NULL;
-static uint64_t wcp_next_trace_id = 1;
+typedef struct {
+    GHashTable *trace_to_id;
+    GHashTable *id_to_trace;
+    uint64_t next_id;
+} WcpTraceMap;
+
+static WcpTraceMap *wcp_trace_map = NULL;
 
 static void wcp_trace_map_init(void)
 {
