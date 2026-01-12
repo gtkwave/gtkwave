@@ -266,48 +266,4 @@ void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source)
     wcp_server_send(server, event);
 }
 
-gboolean wcp_server_initiate(WcpServer *server,
-                             const char *host,
-                             uint16_t port,
-                             GError **error)
-{
-    g_return_val_if_fail(server != NULL, FALSE);
-    g_return_val_if_fail(host != NULL, FALSE);
-    g_return_val_if_fail(port != 0, FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    if (server->running) {
-        g_set_error(error, G_IO_ERROR, G_IO_ERROR_ALREADY_MOUNTED,
-                    "WCP server already running");
-        return FALSE;
-    }
-    
-    GSocketClient *client = g_socket_client_new();
-    
-    GSocketConnection *connection = g_socket_client_connect_to_host(client,
-                                                                     host,
-                                                                     port,
-                                                                     NULL,
-                                                                     error);
-    g_object_unref(client);
-    
-    if (!connection) {
-        return FALSE;
-    }
-    
-    g_message("WCP: Connected to %s:%d", host, port);
-    
-    server->client_connection = connection;
-    server->input_stream = g_io_stream_get_input_stream(G_IO_STREAM(connection));
-    server->output_stream = g_io_stream_get_output_stream(G_IO_STREAM(connection));
-    server->client_connected = TRUE;
-    server->running = TRUE;
-    
-    /* Send greeting */
-    char *greeting = wcp_response_greeting();
-    wcp_server_send(server, greeting);
-    
-    /* Start reading */
-    start_reading(server);
-    
-    return TRUE;
-}
+

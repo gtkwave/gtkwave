@@ -90,21 +90,5 @@ gboolean wcp_server_send(WcpServer *server, char *message);
  */
 void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source);
 
-/* ============================================================================
- * Initiating Connection (for --wcp-initiate mode)
- * ============================================================================ */
-
-/**
- * Connect to a WCP client (instead of listening)
- * @param server The server instance
- * @param host Host to connect to
- * @param port Port to connect to
- * @param error Location for error, or NULL
- * @return TRUE on success
- */
-gboolean wcp_server_initiate(WcpServer *server,
-                             const char *host,
-                             uint16_t port,
-                             GError **error);
-
 #endif /* WCP_SERVER_H */
+
