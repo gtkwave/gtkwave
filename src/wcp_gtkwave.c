@@ -94,9 +94,6 @@ static GwTrace *wcp_trace_map_lookup_trace(WcpTraceMap *self, uint64_t id)
     }
     int64_t key = (int64_t)id;
     GwTrace *t = g_hash_table_lookup(wcp_id_to_trace, &key);
-    if (!t) {
-        return NULL;
-    }
     return t;
 }
 
