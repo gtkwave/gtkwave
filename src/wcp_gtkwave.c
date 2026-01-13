@@ -189,7 +189,7 @@ static gboolean wcp_add_symbol(GwSymbol *sym, GHashTable *added_vec_roots, GPtrA
 
     if (added_trace && added_ids) {
         g_ptr_array_add(added_ids,
-                        g_strdup(wcp_item_map_get_id(&wcp_trace_map->traces, added_trace)));
+                        g_strdup(wcp_item_map_get_id(&g_wcp->traces, added_trace)));
         return TRUE;
     }
 
