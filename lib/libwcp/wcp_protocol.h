@@ -56,16 +56,11 @@ typedef enum {
  * Data Structures
  * ============================================================================ */
 
-/* Reference to a displayed item (signal, marker, etc.) */
-typedef struct {
-    uint64_t id;
-} WcpDisplayedItemRef;
-
 /* Information about an item */
 typedef struct {
     char *name;
     char *type;  /* "signal", "marker" */
-    WcpDisplayedItemRef id;
+    char *id;
 } WcpItemInfo;
 
 /* Marker information */
@@ -83,12 +78,12 @@ typedef struct {
     union {
         /* get_item_info, remove_items */
         struct {
-            GArray *ids;  /* Array of WcpDisplayedItemRef */
+            GPtrArray *ids;  /* Array of char* */
         } item_refs;
         
         /* set_item_color */
         struct {
-            WcpDisplayedItemRef id;
+            char *id;
             char *color;
         } set_color;
         
@@ -127,7 +122,7 @@ typedef struct {
         
         /* focus_item */
         struct {
-            WcpDisplayedItemRef id;
+            char *id;
         } focus;
         
         /* load */
@@ -159,7 +154,7 @@ char* wcp_response_error(const char *error_type,
                          const char *message,
                          GPtrArray *arguments);
 char* wcp_response_item_info(GPtrArray *items);
-char* wcp_response_id_list(const char *command, GArray *ids);
+char* wcp_response_id_list(const char *command, GPtrArray *ids);
 
 /* Create JSON event messages */
 char* wcp_event_waveforms_loaded(const char *source);
