@@ -122,8 +122,8 @@ static int wcp_parse_color(const char *color)
 
     if (g_ascii_isdigit(color[0])) {
         char *end = NULL;
-        uint64_t val = g_ascii_strtoll(color, &end, 10);
-        if (end && *end == '\0' && val >= 0 && val <= WAVE_NUM_RAINBOW) {
+        uint64_t val = g_ascii_strtoull(color, &end, 10);
+        if (end && *end == '\0' && val <= WAVE_NUM_RAINBOW) {
             return (int)val;
         }
     }
