@@ -20,8 +20,7 @@
 #include "wavewindow.h"
 #include "zoombuttons.h"
 
-/* Global WCP server instance */
-WcpServer *g_wcp_server = NULL;
+/* Global WCP state */
 
 typedef struct {
     char id_prefix;
@@ -31,13 +30,14 @@ typedef struct {
 } WcpItemMap;
 
 typedef struct {
+    WcpServer *server;
     WcpItemMap traces;
     WcpItemMap markers;
-} WcpTraceMap;
+} GwWcpServer;
 
-static WcpTraceMap *wcp_trace_map = NULL;
-static WcpTraceMap wcp_trace_map_fallback;
-static gboolean wcp_trace_map_fallback_inited = FALSE;
+static GwWcpServer *g_wcp = NULL;
+static GwWcpServer wcp_fallback;
+static gboolean wcp_fallback_inited = FALSE;
 
 static void wcp_item_map_init(WcpItemMap *map, char id_prefix)
 {
@@ -89,31 +89,33 @@ static gpointer wcp_item_map_lookup_item(WcpItemMap *map, const char *id)
     return g_hash_table_lookup(map->id_to_item, id);
 }
 
-static WcpTraceMap *wcp_trace_map_init(void)
+static GwWcpServer *wcp_state_init(void)
 {
-    WcpTraceMap *self = g_new0(WcpTraceMap, 1);
+    GwWcpServer *self = g_new0(GwWcpServer, 1);
     if (!self) {
-        if (!wcp_trace_map_fallback_inited) {
-            wcp_item_map_init(&wcp_trace_map_fallback.traces, 'T');
-            wcp_item_map_init(&wcp_trace_map_fallback.markers, 'M');
-            wcp_trace_map_fallback_inited = TRUE;
+        if (!wcp_fallback_inited) {
+            wcp_item_map_init(&wcp_fallback.traces, 'T');
+            wcp_item_map_init(&wcp_fallback.markers, 'M');
+            wcp_fallback_inited = TRUE;
         }
-        return &wcp_trace_map_fallback;
+        return &wcp_fallback;
     }
     wcp_item_map_init(&self->traces, 'T');
     wcp_item_map_init(&self->markers, 'M');
     return self;
 }
 
-static void wcp_trace_map_free(WcpTraceMap *self)
+static void wcp_state_free(GwWcpServer *self)
 {
     if (self == NULL) {
         return;
     }
     wcp_item_map_free(&self->traces);
     wcp_item_map_free(&self->markers);
-    if (self != &wcp_trace_map_fallback) {
+    if (self != &wcp_fallback) {
         g_free(self);
+    } else {
+        wcp_fallback_inited = FALSE;
     }
 }
 
@@ -287,7 +289,7 @@ static char* handle_get_item_list(WcpServer *server, WcpCommand *cmd)
     GPtrArray *ids = g_ptr_array_new_with_free_func(g_free);
     
     for (GwTrace *t = GLOBALS->traces.first; t; t = t->t_next) {
-        g_ptr_array_add(ids, g_strdup(wcp_item_map_get_id(&wcp_trace_map->traces, t)));
+        g_ptr_array_add(ids, g_strdup(wcp_item_map_get_id(&g_wcp->traces, t)));
     }
 
     if (GLOBALS->project) {
@@ -297,7 +299,7 @@ static char* handle_get_item_list(WcpServer *server, WcpCommand *cmd)
             GwMarker *marker = gw_named_markers_get(markers, i);
             if (gw_marker_is_enabled(marker)) {
                 g_ptr_array_add(ids,
-                                g_strdup(wcp_item_map_get_id(&wcp_trace_map->markers, marker)));
+                                g_strdup(wcp_item_map_get_id(&g_wcp->markers, marker)));
             }
         }
     }
@@ -317,7 +319,7 @@ static char* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
         for (unsigned int i = 0; i < cmd->data.item_refs.ids->len; i++) {
             const char *id = g_ptr_array_index(cmd->data.item_refs.ids, i);
 
-            GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, id);
+            GwTrace *t = wcp_item_map_lookup_item(&g_wcp->traces, id);
             if (t) {
                 WcpItemInfo *info = g_new0(WcpItemInfo, 1);
                 info->id = g_strdup(id);
@@ -327,7 +329,7 @@ static char* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
                 continue;
             }
 
-            GwMarker *marker = wcp_item_map_lookup_item(&wcp_trace_map->markers, id);
+            GwMarker *marker = wcp_item_map_lookup_item(&g_wcp->markers, id);
             if (marker && gw_marker_is_enabled(marker)) {
                 WcpItemInfo *info = g_new0(WcpItemInfo, 1);
                 info->id = g_strdup(id);
@@ -351,9 +353,9 @@ static char* handle_set_item_color(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, cmd->data.set_color.id);
+    GwTrace *t = wcp_item_map_lookup_item(&g_wcp->traces, cmd->data.set_color.id);
     if (!t &&
-        wcp_item_map_lookup_item(&wcp_trace_map->markers, cmd->data.set_color.id)) {
+        wcp_item_map_lookup_item(&g_wcp->markers, cmd->data.set_color.id)) {
         return wcp_response_error("invalid_item",
                                 "set_item_color only applies to signals",
                                 NULL);
@@ -478,7 +480,7 @@ static char* handle_add_markers(WcpServer *server, WcpCommand *cmd)
             }
 
             g_ptr_array_add(added_ids,
-                            g_strdup(wcp_item_map_get_id(&wcp_trace_map->markers, marker)));
+                            g_strdup(wcp_item_map_get_id(&g_wcp->markers, marker)));
 
             if (m->move_focus) {
                 GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
@@ -602,17 +604,17 @@ static char* handle_remove_items(WcpServer *server, WcpCommand *cmd)
     if (cmd->data.item_refs.ids) {
         for (unsigned int i = 0; i < cmd->data.item_refs.ids->len; i++) {
             const char *id = g_ptr_array_index(cmd->data.item_refs.ids, i);
-            GwMarker *marker = wcp_item_map_lookup_item(&wcp_trace_map->markers, id);
+            GwMarker *marker = wcp_item_map_lookup_item(&g_wcp->markers, id);
             if (marker) {
                 gw_marker_set_enabled(marker, FALSE);
                 gw_marker_set_alias(marker, NULL);
-                wcp_item_map_remove_id(&wcp_trace_map->markers, marker);
+                wcp_item_map_remove_id(&g_wcp->markers, marker);
                 continue;
             }
 
-            GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, id);
+            GwTrace *t = wcp_item_map_lookup_item(&g_wcp->traces, id);
             if (t) {
-                wcp_item_map_remove_id(&wcp_trace_map->traces, t);
+                wcp_item_map_remove_id(&g_wcp->traces, t);
                 RemoveTrace(t, 1);
             }
         }
@@ -630,7 +632,7 @@ static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
     (void)server;
     
     GwMarker *marker =
-        wcp_item_map_lookup_item(&wcp_trace_map->markers, cmd->data.focus.id);
+        wcp_item_map_lookup_item(&g_wcp->markers, cmd->data.focus.id);
     if (marker) {
         if (marker && gw_marker_is_enabled(marker)) {
             GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
@@ -643,7 +645,7 @@ static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
         return wcp_response_error("invalid_item", "Unknown marker id", NULL);
     }
 
-    GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, cmd->data.focus.id);
+    GwTrace *t = wcp_item_map_lookup_item(&g_wcp->traces, cmd->data.focus.id);
     if (!t) {
         return wcp_response_error("invalid_item", "Unknown item id", NULL);
     }
@@ -663,7 +665,7 @@ static char* handle_clear(WcpServer *server, WcpCommand *cmd)
     
     while (GLOBALS->traces.first) {
         GwTrace *t = GLOBALS->traces.first;
-        wcp_item_map_remove_id(&wcp_trace_map->traces, t);
+        wcp_item_map_remove_id(&g_wcp->traces, t);
         RemoveTrace(t, 1);
     }
 
@@ -810,23 +812,23 @@ static char* wcp_command_handler(WcpServer *server, WcpCommand *cmd, gpointer us
 
 gboolean wcp_gtkwave_init(uint16_t port, gboolean allow_remote)
 {
-    if (g_wcp_server) {
+    if (g_wcp && g_wcp->server) {
         g_warning("WCP: Already initialized");
         return FALSE;
     }
 
-    if (!wcp_trace_map) {
-        wcp_trace_map = wcp_trace_map_init();
+    if (!g_wcp) {
+        g_wcp = wcp_state_init();
     }
     
-    g_wcp_server = wcp_server_new(port, allow_remote, wcp_command_handler, NULL);
+    g_wcp->server = wcp_server_new(port, allow_remote, wcp_command_handler, NULL);
     
     GError *error = NULL;
-    if (!wcp_server_start(g_wcp_server, &error)) {
+    if (!wcp_server_start(g_wcp->server, &error)) {
         g_warning("WCP: Failed to start server: %s", error->message);
         g_error_free(error);
-        wcp_server_free(g_wcp_server);
-        g_wcp_server = NULL;
+        wcp_server_free(g_wcp->server);
+        g_wcp->server = NULL;
         return FALSE;
     }
     
@@ -835,17 +837,17 @@ gboolean wcp_gtkwave_init(uint16_t port, gboolean allow_remote)
 
 void wcp_gtkwave_shutdown(void)
 {
-    if (g_wcp_server) {
-        wcp_server_free(g_wcp_server);
-        g_wcp_server = NULL;
+    if (g_wcp && g_wcp->server) {
+        wcp_server_free(g_wcp->server);
+        g_wcp->server = NULL;
     }
-    wcp_trace_map_free(wcp_trace_map);
-    wcp_trace_map = NULL;
+    wcp_state_free(g_wcp);
+    g_wcp = NULL;
 }
 
 void wcp_gtkwave_notify_waveforms_loaded(const char *filename)
 {
-    if (g_wcp_server) {
-        wcp_server_emit_waveforms_loaded(g_wcp_server, filename);
+    if (g_wcp && g_wcp->server) {
+        wcp_server_emit_waveforms_loaded(g_wcp->server, filename);
     }
 }
