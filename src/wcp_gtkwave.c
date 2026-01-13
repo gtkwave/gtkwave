@@ -36,8 +36,6 @@ typedef struct {
 } GwWcpServer;
 
 static GwWcpServer *g_wcp = NULL;
-static GwWcpServer wcp_fallback;
-static gboolean wcp_fallback_inited = FALSE;
 
 static void wcp_item_map_init(WcpItemMap *map, char id_prefix)
 {
@@ -92,14 +90,6 @@ static gpointer wcp_item_map_lookup_item(WcpItemMap *map, const char *id)
 static GwWcpServer *wcp_state_new(void)
 {
     GwWcpServer *self = g_new0(GwWcpServer, 1);
-    if (!self) {
-        if (!wcp_fallback_inited) {
-            wcp_item_map_init(&wcp_fallback.traces, 'T');
-            wcp_item_map_init(&wcp_fallback.markers, 'M');
-            wcp_fallback_inited = TRUE;
-        }
-        return &wcp_fallback;
-    }
     wcp_item_map_init(&self->traces, 'T');
     wcp_item_map_init(&self->markers, 'M');
     return self;
@@ -112,11 +102,7 @@ static void wcp_state_free(GwWcpServer *self)
     }
     wcp_item_map_free(&self->traces);
     wcp_item_map_free(&self->markers);
-    if (self != &wcp_fallback) {
-        g_free(self);
-    } else {
-        wcp_fallback_inited = FALSE;
-    }
+    g_free(self);
 }
 
 static void wcp_item_info_free(gpointer data)
