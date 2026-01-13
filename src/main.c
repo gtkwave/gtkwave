@@ -276,11 +276,6 @@ static void print_help(char *nam)
 #define RPC_GETOPT3
 #endif
 
-#define WCP_GETOPT \
-    "  --wcp                     enable WCP server\n" \
-    "  --wcp-port=PORT            set WCP port (defaults to 8765)\n" \
-    "  --wcp-remote               allow remote WCP connections\n"
-
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
         "  -n, --nocli=DIRPATH        use file selection dialog for dumpfile or savefile\n"
@@ -302,7 +297,9 @@ static void print_help(char *nam)
         "  -7, --saveonexit           prompt user to write save file at exit\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
-        WCP_GETOPT
+        "  --wcp                      enable WCP server\n"
+        "  --wcp-port=PORT            set WCP port (defaults to 8765)\n"
+        "  --wcp-remote               allow remote WCP connections\n"
         "  -V, --version              display version banner then exit\n"
         "  -h, --help                 display this help then exit\n"
         "  -x, --exit                 exit after loading trace (for loader benchmarks)\n\n"
