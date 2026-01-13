@@ -89,7 +89,7 @@ static gpointer wcp_item_map_lookup_item(WcpItemMap *map, const char *id)
     return g_hash_table_lookup(map->id_to_item, id);
 }
 
-static GwWcpServer *wcp_state_init(void)
+static GwWcpServer *wcp_state_new(void)
 {
     GwWcpServer *self = g_new0(GwWcpServer, 1);
     if (!self) {
@@ -818,7 +818,7 @@ gboolean wcp_gtkwave_init(uint16_t port, gboolean allow_remote)
     }
 
     if (!g_wcp) {
-        g_wcp = wcp_state_init();
+        g_wcp = wcp_state_new();
     }
     
     g_wcp->server = wcp_server_new(port, allow_remote, wcp_command_handler, NULL);
