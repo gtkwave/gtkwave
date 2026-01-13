@@ -1273,7 +1273,7 @@ do_primary_inits:
 #endif
 
     if (wcp_enable) {
-        if (wcp_port < 0 || wcp_port == 0) {
+        if (wcp_port < 0 || wcp_port > UINT16_MAX) {
             wcp_port = WCP_DEFAULT_PORT;
         }
         if (!wcp_gtkwave_init((uint16_t)wcp_port, wcp_allow_remote)) {
