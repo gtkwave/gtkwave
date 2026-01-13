@@ -819,8 +819,7 @@ gboolean wcp_gtkwave_init(uint16_t port, gboolean allow_remote)
         wcp_trace_map = wcp_trace_map_init();
     }
     
-    g_wcp_server = wcp_server_new(port, wcp_command_handler, NULL);
-    wcp_server_set_allow_remote(g_wcp_server, allow_remote);
+    g_wcp_server = wcp_server_new(port, allow_remote, wcp_command_handler, NULL);
     
     GError *error = NULL;
     if (!wcp_server_start(g_wcp_server, &error)) {

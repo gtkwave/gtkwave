@@ -140,7 +140,8 @@ static gboolean on_incoming_connection(GSocketService *service,
     return TRUE;
 }
 
-WcpServer* wcp_server_new(uint16_t port, 
+WcpServer* wcp_server_new(uint16_t port,
+                          gboolean allow_remote,
                           WcpCommandHandler handler,
                           gpointer user_data)
 {
@@ -156,14 +157,8 @@ WcpServer* wcp_server_new(uint16_t port,
     server->handler_data = user_data;
     server->running = FALSE;
     server->client_connected = FALSE;
-    server->allow_remote = FALSE;
-    return server;
-}
-
-void wcp_server_set_allow_remote(WcpServer *server, gboolean allow_remote)
-{
-    g_return_if_fail(server != NULL);
     server->allow_remote = allow_remote ? TRUE : FALSE;
+    return server;
 }
 
 gboolean wcp_server_start(WcpServer *server, GError **error)
