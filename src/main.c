@@ -993,10 +993,8 @@ do_primary_inits:
                         wcp_enable = 1;
                     } else if (!strcmp(long_options[option_index].name, "wcp-port")) {
                         wcp_port = atoi(optarg);
-                        wcp_enable = 1;
                     } else if (!strcmp(long_options[option_index].name, "wcp-remote")) {
                         wcp_allow_remote = 1;
-                        wcp_enable = 1;
                     }
                     break;
 
