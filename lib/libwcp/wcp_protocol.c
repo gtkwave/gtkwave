@@ -351,7 +351,7 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
         }
         case WCP_CMD_SET_ITEM_COLOR:
         {
-            if (!json_object_require_string(obj, "id", &cmd->data.set_color.id.id, error)) {
+            if (!json_object_require_string(obj, "id", &cmd->data.set_color.id, error)) {
                 break;
             }
             if (!json_object_require_string(obj, "color", &cmd->data.set_color.color, error)) {
@@ -445,7 +445,7 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
 
         case WCP_CMD_FOCUS_ITEM:
         {
-            if (!json_object_require_string(obj, "id", &cmd->data.focus.id.id, error)) {
+            if (!json_object_require_string(obj, "id", &cmd->data.focus.id, error)) {
                 break;
             }
             cmd_valid = TRUE;
@@ -498,7 +498,7 @@ void wcp_command_free(WcpCommand *cmd)
             break;
             
         case WCP_CMD_SET_ITEM_COLOR:
-            g_free(cmd->data.set_color.id.id);
+            g_free(cmd->data.set_color.id);
             g_free(cmd->data.set_color.color);
             break;
             
@@ -534,7 +534,7 @@ void wcp_command_free(WcpCommand *cmd)
             break;
 
         case WCP_CMD_FOCUS_ITEM:
-            g_free(cmd->data.focus.id.id);
+            g_free(cmd->data.focus.id);
             break;
             
         default:
@@ -627,7 +627,7 @@ char* wcp_response_item_info(GPtrArray *items)
             json_builder_add_string_value(builder, info->type);
             
             json_builder_set_member_name(builder, "id");
-            json_builder_add_string_value(builder, info->id.id);
+            json_builder_add_string_value(builder, info->id);
             
             json_builder_end_object(builder);
         }

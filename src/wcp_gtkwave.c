@@ -120,7 +120,7 @@ static void wcp_trace_map_free(WcpTraceMap *self)
 static void wcp_item_info_free(gpointer data)
 {
     WcpItemInfo *info = data;
-    g_free(info->id.id);
+    g_free(info->id);
     g_free(info->name);
     g_free(info->type);
     g_free(info);
@@ -320,7 +320,7 @@ static char* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
             GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, id);
             if (t) {
                 WcpItemInfo *info = g_new0(WcpItemInfo, 1);
-                info->id.id = g_strdup(id);
+                info->id = g_strdup(id);
                 info->name = g_strdup(t->name ? t->name : "");
                 info->type = g_strdup("signal");
                 g_ptr_array_add(results, info);
@@ -330,7 +330,7 @@ static char* handle_get_item_info(WcpServer *server, WcpCommand *cmd)
             GwMarker *marker = wcp_item_map_lookup_item(&wcp_trace_map->markers, id);
             if (marker && gw_marker_is_enabled(marker)) {
                 WcpItemInfo *info = g_new0(WcpItemInfo, 1);
-                info->id.id = g_strdup(id);
+                info->id = g_strdup(id);
                 info->name = g_strdup(gw_marker_get_display_name(marker));
                 info->type = g_strdup("marker");
                 g_ptr_array_add(results, info);
@@ -351,9 +351,9 @@ static char* handle_set_item_color(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
 
-    GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, cmd->data.set_color.id.id);
+    GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, cmd->data.set_color.id);
     if (!t &&
-        wcp_item_map_lookup_item(&wcp_trace_map->markers, cmd->data.set_color.id.id)) {
+        wcp_item_map_lookup_item(&wcp_trace_map->markers, cmd->data.set_color.id)) {
         return wcp_response_error("invalid_item",
                                 "set_item_color only applies to signals",
                                 NULL);
@@ -630,7 +630,7 @@ static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
     (void)server;
     
     GwMarker *marker =
-        wcp_item_map_lookup_item(&wcp_trace_map->markers, cmd->data.focus.id.id);
+        wcp_item_map_lookup_item(&wcp_trace_map->markers, cmd->data.focus.id);
     if (marker) {
         if (marker && gw_marker_is_enabled(marker)) {
             GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
@@ -643,7 +643,7 @@ static char* handle_focus_item(WcpServer *server, WcpCommand *cmd)
         return wcp_response_error("invalid_item", "Unknown marker id", NULL);
     }
 
-    GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, cmd->data.focus.id.id);
+    GwTrace *t = wcp_item_map_lookup_item(&wcp_trace_map->traces, cmd->data.focus.id);
     if (!t) {
         return wcp_response_error("invalid_item", "Unknown item id", NULL);
     }

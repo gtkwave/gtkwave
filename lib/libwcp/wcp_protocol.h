@@ -56,16 +56,11 @@ typedef enum {
  * Data Structures
  * ============================================================================ */
 
-/* Reference to a displayed item (signal, marker, etc.), e.g. "T42" or "M2". */
-typedef struct {
-    char *id;
-} WcpDisplayedItemRef;
-
 /* Information about an item */
 typedef struct {
     char *name;
     char *type;  /* "signal", "marker" */
-    WcpDisplayedItemRef id;
+    char *id;
 } WcpItemInfo;
 
 /* Marker information */
@@ -88,7 +83,7 @@ typedef struct {
         
         /* set_item_color */
         struct {
-            WcpDisplayedItemRef id;
+            char *id;
             char *color;
         } set_color;
         
@@ -127,7 +122,7 @@ typedef struct {
         
         /* focus_item */
         struct {
-            WcpDisplayedItemRef id;
+            char *id;
         } focus;
         
         /* load */
