@@ -43,7 +43,7 @@ struct _WcpServer {
 
 /**
  * Create a new WCP server
- * @param port Port to listen on (0 for auto-assign)
+ * @param port Port to listen on (must be non-zero)
  * @param handler Callback function to handle commands
  * @param user_data User data passed to handler
  * @return New WCP server instance, or NULL on error
