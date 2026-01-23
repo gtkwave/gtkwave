@@ -71,6 +71,7 @@
 #include "gw-fst-file.h"
 
 #include "tcl_helper.h"
+#include <SDL2/SDL.h>
 
 #ifdef MAC_INTEGRATION
 #include <gtkosxapplication.h>
@@ -480,6 +481,104 @@ static void toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
 }
 
+int16_t hist_ent_to_i16(GwHistEnt *h)
+{
+    const char *bits = h->v.h_vector;
+
+    uint16_t value = 0;
+    for (int bit = 0; bit < 16; bit++) {
+        value = value << 1;
+        if (bits[bit] == GW_BIT_1 || bits[bit] == GW_BIT_H) {
+            value |= 0x1;
+        }
+    }
+
+    return (int16_t)value;
+}
+
+static void play_audio(void)
+{
+    GwTrace *t;
+    for (t = GLOBALS->traces.first; t != NULL; t = t->t_next) {
+        if (IsSelected(t)) {
+            break;
+        }
+    }
+    if (t == NULL) {
+        return;
+    }
+
+    g_assert_cmpint(gw_dump_file_get_time_dimension(GLOBALS->dump_file),
+                    ==,
+                    GW_TIME_DIMENSION_PICO);
+
+    g_return_if_fail(!t->vector);
+    GwNode *n = t->n.nd;
+
+    g_return_if_fail(n->msi == 15 && n->lsi == 0);
+
+    GwTime start = GLOBALS->tims.start;
+    GwTime end = GLOBALS->tims.end;
+
+    GwMarker *baseline = gw_project_get_baseline_marker(GLOBALS->project);
+    GwMarker *primary = gw_project_get_primary_marker(GLOBALS->project);
+    if (gw_marker_is_enabled(baseline) && gw_marker_is_enabled(primary)) {
+        GwTime b = gw_marker_get_position(baseline);
+        GwTime p = gw_marker_get_position(primary);
+        start = MIN(b, p);
+        end = MAX(b, p);
+    }
+
+    GwTime delta_t = 1000000000000 / 44800;
+    size_t samples = (end - start) / delta_t;
+
+    g_printerr("Playing audio:\n");
+    g_printerr(" Trace:   %s\n", t->name);
+    g_printerr(" Start:   %" GW_TIME_FORMAT "\n", start);
+    g_printerr(" End:     %" GW_TIME_FORMAT "\n", end);
+    g_printerr(" Delta T: %" GW_TIME_FORMAT "\n", delta_t);
+    g_printerr(" Samples: %zu\n", samples);
+
+    int16_t *data = g_new(int16_t, samples);
+
+    GwHistEnt *iter = &n->head;
+    size_t i = 0;
+    for (GwTime time = start; i < samples && time < end; time += delta_t, i++) {
+        while (iter->next->time <= time) {
+            iter = iter->next;
+        }
+
+        g_assert_cmpint(iter->time, <=, time);
+        g_assert_cmpint(iter->next->time, >, time);
+
+        data[i] = hist_ent_to_i16(iter);
+    }
+
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        g_printerr("SDL_Init failed: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_AudioSpec spec = {
+        .freq = 44800,
+        .format = AUDIO_S16,
+        .channels = 1,
+    };
+
+    SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
+    if (audio_device == 0) {
+        g_printerr("SDL_OpenAudioDevice failed: %s\n", SDL_GetError());
+        return;
+    }
+
+    if (SDL_QueueAudio(audio_device, data, samples * 2) < 0) {
+        g_printerr("SDL_QueueAudio failed: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_PauseAudioDevice(audio_device, 0);
+}
+
 static GtkWidget *build_toolbar(void)
 {
     GtkWidget *toolbar = gtk_toolbar_new();
@@ -535,6 +634,8 @@ static GtkWidget *build_toolbar(void)
 
         last_separator = toolbar_append_separator(toolbar);
     }
+
+    toolbar_append_button(toolbar, "media-playback-start", "Play audio", play_audio, NULL);
 
     gtk_tool_item_set_expand(last_separator, TRUE);
     gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(last_separator), FALSE);

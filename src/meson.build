@@ -82,6 +82,7 @@ gtkwave_dependencies = [
     judy_dep,
     gnu_regex_dep,
     libgtkwave_dep,
+    sdl_dep,
 ]
 
 gtkwave_include_directories = [
