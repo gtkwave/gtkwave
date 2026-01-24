@@ -32,7 +32,6 @@ typedef enum {
     /* Modification commands */
     WCP_CMD_SET_ITEM_COLOR,     /* Change item color */
     WCP_CMD_ADD_VARIABLES,      /* Add signals to view */
-    WCP_CMD_ADD_SCOPE,          /* Add all signals in scope */
     WCP_CMD_ADD_ITEMS,          /* Add variables or scopes */
     WCP_CMD_ADD_MARKERS,        /* Add time markers */
     WCP_CMD_REMOVE_ITEMS,       /* Remove items from view */
@@ -47,9 +46,6 @@ typedef enum {
     /* File commands */
     WCP_CMD_LOAD,               /* Load a waveform file */
     WCP_CMD_RELOAD,             /* Reload waveform from disk */
-    
-    /* Control commands */
-    WCP_CMD_SHUTDOWN,           /* Stop WCP server */
 } WcpCommandType;
 
 /* ============================================================================
@@ -91,12 +87,6 @@ typedef struct {
         struct {
             GPtrArray *variables;  /* Array of char* */
         } add_vars;
-        
-        /* add_scope */
-        struct {
-            char *scope;
-            gboolean recursive;
-        } add_scope;
         
         /* add_items */
         struct {

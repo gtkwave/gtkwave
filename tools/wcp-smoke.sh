@@ -105,6 +105,4 @@ if ! grep -q '"event":"waveforms_loaded"' "$tmpdir/out4"; then
     exit 1
 fi
 
-printf '%s\n' '{"type":"command","command":"shutdown"}' | nc -N localhost "$PORT" >"$tmpdir/out5"
-
 echo "WCP smoke test: OK"

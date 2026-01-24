@@ -399,42 +399,6 @@ static char* handle_add_variables(WcpServer *server, WcpCommand *cmd)
     return response;
 }
 
-static char* handle_add_scope(WcpServer *server, WcpCommand *cmd)
-{
-    (void)server;
-    
-    if (!GLOBALS->dump_file || GLOBALS->loaded_file_type == MISSING_FILE) {
-        return wcp_response_error("no_waveform", "No waveform loaded", NULL);
-    }
-
-    GPtrArray *added_ids = g_ptr_array_new_with_free_func(g_free);
-    
-    GwTreeNode *scope = wcp_find_scope_node(cmd->data.add_scope.scope);
-    if (!scope) {
-        g_ptr_array_free(added_ids, TRUE);
-        return wcp_response_error("invalid_scope", "Scope not found", NULL);
-    }
-
-    GPtrArray *symbols = g_ptr_array_new();
-    wcp_collect_scope_symbols(scope->child, cmd->data.add_scope.recursive, symbols);
-
-    GHashTable *added_vec_roots = g_hash_table_new(g_direct_hash, g_direct_equal);
-    for (unsigned int i = 0; i < symbols->len; i++) {
-        GwSymbol *sym = g_ptr_array_index(symbols, i);
-        wcp_add_symbol(sym, added_vec_roots, added_ids);
-    }
-    g_hash_table_destroy(added_vec_roots);
-    g_ptr_array_free(symbols, TRUE);
-    
-    GLOBALS->signalwindow_width_dirty = 1;
-    MaxSignalLength();
-    redraw_signals_and_waves();
-    
-    char *response = wcp_response_id_list("add_scope", added_ids);
-    g_ptr_array_free(added_ids, TRUE);
-    return response;
-}
-
 static char* handle_add_markers(WcpServer *server, WcpCommand *cmd)
 {
     (void)server;
@@ -712,22 +676,6 @@ static char* handle_zoom_to_fit(WcpServer *server, WcpCommand *cmd)
     return wcp_response_ack();
 }
 
-static gboolean wcp_stop_server_idle(gpointer data)
-{
-    wcp_server_stop((WcpServer *)data);
-    return G_SOURCE_REMOVE;
-}
-
-static char* handle_shutdown(WcpServer *server, WcpCommand *cmd)
-{
-    (void)cmd;
-
-    /* Stop after the ack has been sent. */
-    g_idle_add(wcp_stop_server_idle, server);
-    
-    return wcp_response_ack();
-}
-
 /* ============================================================================
  * Main Command Dispatcher
  * ============================================================================ */
@@ -748,9 +696,6 @@ static char* wcp_command_handler(WcpServer *server, WcpCommand *cmd, gpointer us
             
         case WCP_CMD_ADD_VARIABLES:
             return handle_add_variables(server, cmd);
-            
-        case WCP_CMD_ADD_SCOPE:
-            return handle_add_scope(server, cmd);
             
         case WCP_CMD_ADD_ITEMS:
             return handle_add_items(server, cmd);
@@ -781,9 +726,6 @@ static char* wcp_command_handler(WcpServer *server, WcpCommand *cmd, gpointer us
             
         case WCP_CMD_RELOAD:
             return handle_reload(server, cmd);
-            
-        case WCP_CMD_SHUTDOWN:
-            return handle_shutdown(server, cmd);
             
         default:
             return wcp_response_error("unknown_command", 

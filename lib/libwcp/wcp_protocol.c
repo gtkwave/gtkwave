@@ -15,7 +15,6 @@ static const char *supported_commands[] = {
     "get_item_info",
     "set_item_color",
     "add_variables",
-    "add_scope",
     "add_items",
     "add_markers",
     "remove_items",
@@ -26,7 +25,6 @@ static const char *supported_commands[] = {
     "zoom_to_fit",
     "load",
     "reload",
-    "shutdown",
     NULL
 };
 
@@ -53,7 +51,6 @@ static WcpCommandType parse_command_type(const char *cmd_str)
     if (g_str_equal(cmd_str, "get_item_info"))      return WCP_CMD_GET_ITEM_INFO;
     if (g_str_equal(cmd_str, "set_item_color"))     return WCP_CMD_SET_ITEM_COLOR;
     if (g_str_equal(cmd_str, "add_variables"))      return WCP_CMD_ADD_VARIABLES;
-    if (g_str_equal(cmd_str, "add_scope"))          return WCP_CMD_ADD_SCOPE;
     if (g_str_equal(cmd_str, "add_items"))          return WCP_CMD_ADD_ITEMS;
     if (g_str_equal(cmd_str, "add_markers"))        return WCP_CMD_ADD_MARKERS;
     if (g_str_equal(cmd_str, "remove_items"))       return WCP_CMD_REMOVE_ITEMS;
@@ -64,7 +61,6 @@ static WcpCommandType parse_command_type(const char *cmd_str)
     if (g_str_equal(cmd_str, "zoom_to_fit"))        return WCP_CMD_ZOOM_TO_FIT;
     if (g_str_equal(cmd_str, "load"))               return WCP_CMD_LOAD;
     if (g_str_equal(cmd_str, "reload"))             return WCP_CMD_RELOAD;
-    if (g_str_equal(cmd_str, "shutdown"))           return WCP_CMD_SHUTDOWN;
     /* clang-format on */
     
     return WCP_CMD_UNKNOWN;
@@ -373,24 +369,6 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
             cmd_valid = TRUE;
             break;
         }
-        case WCP_CMD_ADD_SCOPE:
-        {
-            if (!json_object_require_string(obj, "scope", &cmd->data.add_scope.scope, error)) {
-                break;
-            }
-            if (json_object_has_member(obj, "recursive")) {
-                JsonNode *node = json_object_get_member(obj, "recursive");
-                if (!JSON_NODE_HOLDS_VALUE(node) ||
-                    json_node_get_value_type(node) != G_TYPE_BOOLEAN) {
-                    g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                                "Field 'recursive' must be a boolean");
-                    break;
-                }
-                cmd->data.add_scope.recursive = json_node_get_boolean(node);
-            }
-            cmd_valid = TRUE;
-            break;
-        }
         case WCP_CMD_ADD_ITEMS:
         {
             JsonArray *arr = NULL;
@@ -506,10 +484,6 @@ void wcp_command_free(WcpCommand *cmd)
             if (cmd->data.add_vars.variables) {
                 g_ptr_array_free(cmd->data.add_vars.variables, TRUE);
             }
-            break;
-            
-        case WCP_CMD_ADD_SCOPE:
-            g_free(cmd->data.add_scope.scope);
             break;
             
         case WCP_CMD_ADD_ITEMS:
