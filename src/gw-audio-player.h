@@ -18,6 +18,6 @@ typedef enum
 G_DECLARE_FINAL_TYPE(GwAudioPlayer, gw_audio_player, GW, AUDIO_PLAYER, GObject)
 
 GwAudioPlayer *gw_audio_player_new(GError **error);
-gboolean gw_audio_player_play(GwAudioPlayer *self, GwTrace *trace, GwTimeRange *range, GError **error);
+gboolean gw_audio_player_play(GwAudioPlayer *self, GwTrace **traces, GwTimeRange *range, GError **error);
 
 G_END_DECLS

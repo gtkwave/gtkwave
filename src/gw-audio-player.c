@@ -1,5 +1,7 @@
 #include "gw-audio-player.h"
+#include "analyzer.h"
 #include <SDL2/SDL.h>
+#include <SDL_mixer.h>
 
 // clang-format off
 G_DEFINE_QUARK(gw-audio-error-quark, gw_audio_error)
@@ -28,6 +30,13 @@ static void gw_audio_player_init(GwAudioPlayer *self)
     self->time_per_sample = 1000000000000 / self->sample_rate;
 }
 
+void channel_finished(int channel)
+{
+    Mix_Chunk *chunk = Mix_GetChunk(channel);
+    g_free(chunk->abuf);
+    Mix_FreeChunk(chunk);
+}
+
 GwAudioPlayer *gw_audio_player_new(GError **error)
 {
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -43,23 +52,17 @@ GwAudioPlayer *gw_audio_player_new(GError **error)
         return NULL;
     }
 
-    SDL_AudioSpec spec = {
-        .freq = self->sample_rate,
-        .format = AUDIO_S16,
-        .channels = 1,
-    };
+    Mix_Init(0);
 
-    self->audio_device = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
-    if (self->audio_device == 0) {
+    if (Mix_OpenAudioDevice(self->sample_rate, AUDIO_S16, 1, 2048, NULL, 0) < 0) {
         g_set_error(error,
                     GW_AUDIO_ERROR,
                     GW_AUDIO_ERROR_INIT,
                     "Failed to open audio device: %s",
-                    SDL_GetError());
-
-        g_object_unref(self);
-        return NULL;
+                    Mix_GetError());
     }
+
+    Mix_ChannelFinished(channel_finished);
 
     return self;
 }
@@ -79,10 +82,9 @@ int16_t hist_ent_to_i16(GwHistEnt *h)
     return (int16_t)value;
 }
 
-int16_t *gw_audio_player_samples_from_trace(GwAudioPlayer *self,
-                                            GwTrace *trace,
-                                            GwTimeRange *range,
-                                            size_t *sample_count_out)
+Mix_Chunk *gw_audio_player_samples_from_trace(GwAudioPlayer *self,
+                                              GwTrace *trace,
+                                              GwTimeRange *range)
 {
     GwTime start = gw_time_range_get_start(range);
     GwTime end = gw_time_range_get_end(range);
@@ -105,48 +107,68 @@ int16_t *gw_audio_player_samples_from_trace(GwAudioPlayer *self,
         samples[i] = hist_ent_to_i16(iter);
     }
 
-    *sample_count_out = sample_count;
-
-    return samples;
+    return Mix_QuickLoad_RAW((Uint8 *)samples, sample_count * 2);
 }
 
 gboolean gw_audio_player_play(GwAudioPlayer *self,
-                              GwTrace *trace,
+                              GwTrace **traces,
                               GwTimeRange *range,
                               GError **error)
 {
     g_return_val_if_fail(GW_IS_AUDIO_PLAYER(self), FALSE);
-    g_return_val_if_fail(trace != NULL, FALSE);
+    g_return_val_if_fail(traces != NULL, FALSE);
     g_return_val_if_fail(GW_IS_TIME_RANGE(range), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-    if (trace->vector) {
-        g_set_error(error, GW_AUDIO_ERROR, GW_AUDIO_ERROR_PLAY, "Cannot play vector trace");
+    Mix_HaltChannel(-1);
+
+    gboolean failed = FALSE;
+    GPtrArray *chunks = g_ptr_array_new();
+    for (GwTrace **iter = traces; *iter != NULL; iter++) {
+        GwTrace *trace = *iter;
+
+        if (trace->vector) {
+            g_set_error(error, GW_AUDIO_ERROR, GW_AUDIO_ERROR_PLAY, "Cannot play vector trace");
+            failed = TRUE;
+            break;
+        }
+
+        GwNode *n = trace->n.nd;
+        if (ABS(n->msi - n->lsi) + 1 != 16) {
+            g_set_error(error, GW_AUDIO_ERROR, GW_AUDIO_ERROR_PLAY, "Trace must be 16 bit wide");
+            failed = TRUE;
+            break;
+        }
+
+        Mix_Chunk *chunk = gw_audio_player_samples_from_trace(self, trace, range);
+        g_ptr_array_add(chunks, chunk);
+    }
+
+    if (failed) {
+        for (size_t i = 0; i < chunks->len; i++) {
+            Mix_Chunk *chunk = g_ptr_array_index(chunks, i);
+            if (chunk != NULL) {
+                g_free(chunk->abuf);
+                Mix_FreeChunk(chunk);
+            }
+        }
+        g_ptr_array_free(chunks, TRUE);
         return FALSE;
     }
 
-    GwNode *n = trace->n.nd;
-    if (ABS(n->msi - n->lsi) + 1 != 16) {
-        g_set_error(error, GW_AUDIO_ERROR, GW_AUDIO_ERROR_PLAY, "Trace must be 16 bit wide");
-        return FALSE;
+    for (size_t i = 0; i < chunks->len; i++) {
+        Mix_Chunk *chunk = g_ptr_array_index(chunks, i);
+
+        if (Mix_PlayChannel(-1, chunk, 0) < 0) {
+            g_set_error(error,
+                        GW_AUDIO_ERROR,
+                        GW_AUDIO_ERROR_PLAY,
+                        "Failed to play audio: %s",
+                        SDL_GetError());
+            return FALSE;
+        }
     }
 
-    size_t sample_count = 0;
-    int16_t *samples = gw_audio_player_samples_from_trace(self, trace, range, &sample_count);
-
-    size_t bytes = sample_count * 2;
-    if (SDL_QueueAudio(self->audio_device, samples, bytes) < 0) {
-        g_set_error(error,
-                    GW_AUDIO_ERROR,
-                    GW_AUDIO_ERROR_PLAY,
-                    "Failed to queue audio samples: %s",
-                    SDL_GetError());
-        return FALSE;
-    }
-
-    g_free(samples);
-
-    SDL_PauseAudioDevice(self->audio_device, 0);
-
+    g_ptr_array_free(chunks, TRUE);
     return TRUE;
 }

@@ -480,7 +480,8 @@ static void toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
 }
 
-GwTimeRange *get_playback_range(void) {
+GwTimeRange *get_playback_range(void)
+{
     GwMarker *baseline = gw_project_get_baseline_marker(GLOBALS->project);
     GwMarker *primary = gw_project_get_primary_marker(GLOBALS->project);
     if (gw_marker_is_enabled(baseline) && gw_marker_is_enabled(primary)) {
@@ -489,7 +490,7 @@ GwTimeRange *get_playback_range(void) {
 
         return gw_time_range_new(MIN(b, p), MAX(b, p));
     } else {
-        return gw_time_range_new(GLOBALS->tims.start, GLOBALS->tims.end);
+        return gw_time_range_new(GLOBALS->tims.first, GLOBALS->tims.last);
     }
 }
 
@@ -504,27 +505,33 @@ static void play_audio(void)
         }
     }
 
-    GwTrace *t;
-    for (t = GLOBALS->traces.first; t != NULL; t = t->t_next) {
-        if (IsSelected(t)) {
-            break;
+    GPtrArray *traces = g_ptr_array_new();
+    for (GwTrace *t = GLOBALS->traces.first; t != NULL; t = t->t_next) {
+        if (IsSelected(t) && HasWave(t)) {
+            g_ptr_array_add(traces, t);
         }
     }
-    if (t == NULL) {
-        return;
+
+    if (traces->len > 0) {
+        g_ptr_array_add(traces, NULL);
+
+        g_assert_cmpint(gw_dump_file_get_time_dimension(GLOBALS->dump_file),
+                        ==,
+                        GW_TIME_DIMENSION_PICO);
+
+        GwTimeRange *range = get_playback_range();
+
+        if (!gw_audio_player_play(GLOBALS->audio_player,
+                                  (GwTrace **)traces->pdata,
+                                  range,
+                                  &error)) {
+            g_printerr("%s\n", error->message);
+        }
+
+        g_object_unref(range);
     }
 
-    g_assert_cmpint(gw_dump_file_get_time_dimension(GLOBALS->dump_file),
-                    ==,
-                    GW_TIME_DIMENSION_PICO);
-
-    GwTimeRange *range = get_playback_range();
-
-    if (!gw_audio_player_play(GLOBALS->audio_player, t, range, &error)) {
-        g_printerr("%s\n", error->message);
-    }
-
-    g_object_unref(range);
+    g_ptr_array_free(traces, TRUE);
 }
 
 static GtkWidget *build_toolbar(void)
