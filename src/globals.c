@@ -53,6 +53,7 @@ struct Global *GLOBALS = NULL;
 static const struct Global globals_base_values = {
     NULL, // project
     NULL, // dump_file
+    NULL, // audio_player
     {
         .vlist_compression_level = 4,
         .vcd_warning_filesize = 256,

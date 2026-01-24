@@ -27,6 +27,7 @@ gtkwave_sources = [
     'gconf.c',
     'globals.c',
     'gtk23compat.c',
+    'gw-audio-player.c',
     'gw-mouseover.c',
     'gw-named-marker-dialog.c',
     'gw-time-display.c',
@@ -82,6 +83,8 @@ gtkwave_dependencies = [
     judy_dep,
     gnu_regex_dep,
     libgtkwave_dep,
+    sdl_dep,
+    sdl_mixer_dep,
 ]
 
 gtkwave_include_directories = [

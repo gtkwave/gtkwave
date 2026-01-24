@@ -35,6 +35,8 @@ gtk_mac_integration_req = '>=3.0.0'
 gtk4_req = '>=4.6'
 zlib_req = '>=1.2.0'
 bzip2_req = '>=1.0.0'
+sdl_req = '>=2.30.0'
+sdl_mixer_req = '>=2.8.0'
 
 # Dependencies
 
@@ -74,6 +76,9 @@ if not bzip2_dep.found()
     # try to manually find the library as a fallback
     bzip2_dep = cc.find_library('bz2', has_headers: 'bzlib.h')
 endif
+
+sdl_dep = dependency('sdl2', version: sdl_req)
+sdl_mixer_dep = dependency('SDL2_mixer', version: sdl_mixer_req)
 
 libfst_dep = dependency('libfst')
 
