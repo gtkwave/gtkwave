@@ -56,6 +56,7 @@
 #include "vcd.h"
 #include "vcd_saver.h"
 #include "version.h"
+#include "gw-audio-player.h"
 
 #ifdef _WAVE_HAVE_JUDY
 #include <Judy.h>
@@ -84,6 +85,7 @@ struct Global
 {
     GwProject *project;
     GwDumpFile *dump_file;
+    GwAudioPlayer *audio_player;
 
     Settings settings;
 
