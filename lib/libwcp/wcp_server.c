@@ -140,7 +140,8 @@ static gboolean on_incoming_connection(GSocketService *service,
     return TRUE;
 }
 
-WcpServer* wcp_server_new(uint16_t port, 
+WcpServer* wcp_server_new(uint16_t port,
+                          gboolean allow_remote,
                           WcpCommandHandler handler,
                           gpointer user_data)
 {
@@ -156,6 +157,7 @@ WcpServer* wcp_server_new(uint16_t port,
     server->handler_data = user_data;
     server->running = FALSE;
     server->client_connected = FALSE;
+    server->allow_remote = allow_remote ? TRUE : FALSE;
     return server;
 }
 
@@ -171,13 +173,32 @@ gboolean wcp_server_start(WcpServer *server, GError **error)
     
     server->service = g_socket_service_new();
     
-    if (!g_socket_listener_add_inet_port(G_SOCKET_LISTENER(server->service),
-                                         server->port,
-                                         NULL,
-                                         error)) {
-        g_object_unref(server->service);
-        server->service = NULL;
-        return FALSE;
+    if (server->allow_remote) {
+        if (!g_socket_listener_add_inet_port(G_SOCKET_LISTENER(server->service),
+                                             server->port,
+                                             NULL,
+                                             error)) {
+            g_object_unref(server->service);
+            server->service = NULL;
+            return FALSE;
+        }
+    } else {
+        GInetAddress *addr = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
+        GSocketAddress *sockaddr = g_inet_socket_address_new(addr, server->port);
+        gboolean ok = g_socket_listener_add_address(G_SOCKET_LISTENER(server->service),
+                                                    sockaddr,
+                                                    G_SOCKET_TYPE_STREAM,
+                                                    G_SOCKET_PROTOCOL_TCP,
+                                                    NULL,
+                                                    NULL,
+                                                    error);
+        g_object_unref(sockaddr);
+        g_object_unref(addr);
+        if (!ok) {
+            g_object_unref(server->service);
+            server->service = NULL;
+            return FALSE;
+        }
     }
     
     g_signal_connect(server->service, "incoming",
@@ -266,48 +287,4 @@ void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source)
     wcp_server_send(server, event);
 }
 
-gboolean wcp_server_initiate(WcpServer *server,
-                             const char *host,
-                             uint16_t port,
-                             GError **error)
-{
-    g_return_val_if_fail(server != NULL, FALSE);
-    g_return_val_if_fail(host != NULL, FALSE);
-    g_return_val_if_fail(port != 0, FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    if (server->running) {
-        g_set_error(error, G_IO_ERROR, G_IO_ERROR_ALREADY_MOUNTED,
-                    "WCP server already running");
-        return FALSE;
-    }
-    
-    GSocketClient *client = g_socket_client_new();
-    
-    GSocketConnection *connection = g_socket_client_connect_to_host(client,
-                                                                     host,
-                                                                     port,
-                                                                     NULL,
-                                                                     error);
-    g_object_unref(client);
-    
-    if (!connection) {
-        return FALSE;
-    }
-    
-    g_message("WCP: Connected to %s:%d", host, port);
-    
-    server->client_connection = connection;
-    server->input_stream = g_io_stream_get_input_stream(G_IO_STREAM(connection));
-    server->output_stream = g_io_stream_get_output_stream(G_IO_STREAM(connection));
-    server->client_connected = TRUE;
-    server->running = TRUE;
-    
-    /* Send greeting */
-    char *greeting = wcp_response_greeting();
-    wcp_server_send(server, greeting);
-    
-    /* Start reading */
-    start_reading(server);
-    
-    return TRUE;
-}
+
