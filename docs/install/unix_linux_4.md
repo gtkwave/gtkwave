@@ -13,6 +13,7 @@ Debian, Ubuntu:
 sudo apt install build-essential meson gperf libbz2-dev
 sudo apt install flex desktop-file-utils libgtk-3-dev git
 sudo apt install libgirepository1.0-dev
+sudo apt install libjson-glib-dev
 sudo apt install libjudy-dev # optional
 ```
 
@@ -20,7 +21,7 @@ Fedora:
 
 ```bash
 sudo dnf install meson gperf flex glib2-devel gcc gcc-c++ gtk3-devel \
-            gobject-introspection-devel desktop-file-utils tcl
+            gobject-introspection-devel desktop-file-utils tcl json-glib-devel
 ```
 
 ## Compiling and Installing
