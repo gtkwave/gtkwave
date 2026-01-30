@@ -15,7 +15,6 @@ static const char *supported_commands[] = {
     "get_item_info",
     "set_item_color",
     "add_variables",
-    "add_scope",
     "add_items",
     "add_markers",
     "remove_items",
@@ -26,7 +25,6 @@ static const char *supported_commands[] = {
     "zoom_to_fit",
     "load",
     "reload",
-    "shutdown",
     NULL
 };
 
@@ -53,7 +51,6 @@ static WcpCommandType parse_command_type(const char *cmd_str)
     if (g_str_equal(cmd_str, "get_item_info"))      return WCP_CMD_GET_ITEM_INFO;
     if (g_str_equal(cmd_str, "set_item_color"))     return WCP_CMD_SET_ITEM_COLOR;
     if (g_str_equal(cmd_str, "add_variables"))      return WCP_CMD_ADD_VARIABLES;
-    if (g_str_equal(cmd_str, "add_scope"))          return WCP_CMD_ADD_SCOPE;
     if (g_str_equal(cmd_str, "add_items"))          return WCP_CMD_ADD_ITEMS;
     if (g_str_equal(cmd_str, "add_markers"))        return WCP_CMD_ADD_MARKERS;
     if (g_str_equal(cmd_str, "remove_items"))       return WCP_CMD_REMOVE_ITEMS;
@@ -64,7 +61,6 @@ static WcpCommandType parse_command_type(const char *cmd_str)
     if (g_str_equal(cmd_str, "zoom_to_fit"))        return WCP_CMD_ZOOM_TO_FIT;
     if (g_str_equal(cmd_str, "load"))               return WCP_CMD_LOAD;
     if (g_str_equal(cmd_str, "reload"))             return WCP_CMD_RELOAD;
-    if (g_str_equal(cmd_str, "shutdown"))           return WCP_CMD_SHUTDOWN;
     /* clang-format on */
     
     return WCP_CMD_UNKNOWN;
@@ -189,43 +185,22 @@ static gboolean json_object_require_uint(JsonObject *obj,
     return TRUE;
 }
 
-static GArray* parse_id_array(JsonArray *arr, GError **error)
+static GPtrArray* parse_id_array(JsonArray *arr, GError **error)
 {
-    GArray *ids = g_array_new(FALSE, FALSE, sizeof(WcpDisplayedItemRef));
+    GPtrArray *ids = g_ptr_array_new_with_free_func(g_free);
     size_t len = (size_t)json_array_get_length(arr);
     
     for (size_t i = 0; i < len; i++) {
         JsonNode *node = json_array_get_element(arr, i);
-        if (!JSON_NODE_HOLDS_VALUE(node)) {
+        if (!JSON_NODE_HOLDS_VALUE(node) ||
+            json_node_get_value_type(node) != G_TYPE_STRING) {
             g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%zu] must be a number", i);
-            g_array_free(ids, TRUE);
+                        "ids[%zu] must be a string", i);
+            g_ptr_array_free(ids, TRUE);
             return NULL;
         }
 
-        GType type = json_node_get_value_type(node);
-        int64_t value = 0;
-        if (type == G_TYPE_INT64) {
-            value = json_node_get_int(node);
-        } else if (type == G_TYPE_DOUBLE) {
-            value = (int64_t)json_node_get_double(node);
-        } else {
-            g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%zu] must be a number", i);
-            g_array_free(ids, TRUE);
-            return NULL;
-        }
-
-        if (value < 0) {
-            g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                        "ids[%zu] must be non-negative", i);
-            g_array_free(ids, TRUE);
-            return NULL;
-        }
-
-        WcpDisplayedItemRef ref;
-        ref.id = (uint64_t)value;
-        g_array_append_val(ids, ref);
+        g_ptr_array_add(ids, g_strdup(json_node_get_string(node)));
     }
     
     return ids;
@@ -372,16 +347,9 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
         }
         case WCP_CMD_SET_ITEM_COLOR:
         {
-            int64_t id_value = 0;
-            if (!json_object_require_int64(obj, "id", &id_value, error)) {
+            if (!json_object_require_string(obj, "id", &cmd->data.set_color.id, error)) {
                 break;
             }
-            if (id_value < 0) {
-                g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                            "Field 'id' must be non-negative");
-                break;
-            }
-            cmd->data.set_color.id.id = (uint64_t)id_value;
             if (!json_object_require_string(obj, "color", &cmd->data.set_color.color, error)) {
                 break;
             }
@@ -397,24 +365,6 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
             cmd->data.add_vars.variables = parse_string_array(arr, error, "variables");
             if (!cmd->data.add_vars.variables) {
                 break;
-            }
-            cmd_valid = TRUE;
-            break;
-        }
-        case WCP_CMD_ADD_SCOPE:
-        {
-            if (!json_object_require_string(obj, "scope", &cmd->data.add_scope.scope, error)) {
-                break;
-            }
-            if (json_object_has_member(obj, "recursive")) {
-                JsonNode *node = json_object_get_member(obj, "recursive");
-                if (!JSON_NODE_HOLDS_VALUE(node) ||
-                    json_node_get_value_type(node) != G_TYPE_BOOLEAN) {
-                    g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                                "Field 'recursive' must be a boolean");
-                    break;
-                }
-                cmd->data.add_scope.recursive = json_node_get_boolean(node);
             }
             cmd_valid = TRUE;
             break;
@@ -473,16 +423,9 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
 
         case WCP_CMD_FOCUS_ITEM:
         {
-            int64_t id_value = 0;
-            if (!json_object_require_int64(obj, "id", &id_value, error)) {
+            if (!json_object_require_string(obj, "id", &cmd->data.focus.id, error)) {
                 break;
             }
-            if (id_value < 0) {
-                g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-                            "Field 'id' must be non-negative");
-                break;
-            }
-            cmd->data.focus.id.id = (uint64_t)id_value;
             cmd_valid = TRUE;
             break;
         }
@@ -528,11 +471,12 @@ void wcp_command_free(WcpCommand *cmd)
         case WCP_CMD_GET_ITEM_INFO:
         case WCP_CMD_REMOVE_ITEMS:
             if (cmd->data.item_refs.ids) {
-                g_array_free(cmd->data.item_refs.ids, TRUE);
+                g_ptr_array_free(cmd->data.item_refs.ids, TRUE);
             }
             break;
             
         case WCP_CMD_SET_ITEM_COLOR:
+            g_free(cmd->data.set_color.id);
             g_free(cmd->data.set_color.color);
             break;
             
@@ -540,10 +484,6 @@ void wcp_command_free(WcpCommand *cmd)
             if (cmd->data.add_vars.variables) {
                 g_ptr_array_free(cmd->data.add_vars.variables, TRUE);
             }
-            break;
-            
-        case WCP_CMD_ADD_SCOPE:
-            g_free(cmd->data.add_scope.scope);
             break;
             
         case WCP_CMD_ADD_ITEMS:
@@ -565,6 +505,10 @@ void wcp_command_free(WcpCommand *cmd)
             
         case WCP_CMD_LOAD:
             g_free(cmd->data.load.source);
+            break;
+
+        case WCP_CMD_FOCUS_ITEM:
+            g_free(cmd->data.focus.id);
             break;
             
         default:
@@ -657,7 +601,7 @@ char* wcp_response_item_info(GPtrArray *items)
             json_builder_add_string_value(builder, info->type);
             
             json_builder_set_member_name(builder, "id");
-            json_builder_add_int_value(builder, (int64_t)info->id.id);
+            json_builder_add_string_value(builder, info->id);
             
             json_builder_end_object(builder);
         }
@@ -669,7 +613,7 @@ char* wcp_response_item_info(GPtrArray *items)
     return wcp_json_builder_to_string(builder);
 }
 
-char* wcp_response_id_list(const char *command, GArray *ids)
+char* wcp_response_id_list(const char *command, GPtrArray *ids)
 {
     JsonBuilder *builder = json_builder_new();
     
@@ -684,8 +628,7 @@ char* wcp_response_id_list(const char *command, GArray *ids)
     json_builder_begin_array(builder);
     if (ids) {
         for (size_t i = 0; i < (size_t)ids->len; i++) {
-            WcpDisplayedItemRef *ref = &g_array_index(ids, WcpDisplayedItemRef, i);
-            json_builder_add_int_value(builder, (int64_t)ref->id);
+            json_builder_add_string_value(builder, g_ptr_array_index(ids, i));
         }
     }
     json_builder_end_array(builder);
