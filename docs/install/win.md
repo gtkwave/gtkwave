@@ -20,7 +20,7 @@ install the build dependencies for GTKWave:
 
 ```bat
 .\setup-x86_64.exe -q -P gcc-g++,gperf,libbz2-devel
-.\setup-x86_64.exe -q -P liblzma-devel,zlib-devel,libgtk3-devel,libjson-glib1.0-devel
+.\setup-x86_64.exe -q -P liblzma-devel,zlib-devel,libgtk3-devel
 .\setup-x86_64.exe -q -P make,git,xinit,tcl-tk-devel
 ```
 
@@ -61,7 +61,6 @@ pacman -Syuu  # Please run this twice as recommended.
 # Or mingw-w64-ucrt-x86_64 for UCRT64
 pacman -S mingw-w64-x86_64-gcc base-devel mingw-w64-x86_64-tk
 pacman -S mingw-w64-x86_64-gtk3 mingw-w64-x86_64-gperf git
-pacman -S mingw-w64-x86_64-json-glib
 ```
 
 ### Compiling and Installing
@@ -69,4 +68,5 @@ pacman -S mingw-w64-x86_64-json-glib
 For compilation and installation instructions, please refer
 to the section on [Compiling and Installing for Unix and
 Linux](./unix_linux.md#compiling-and-installing).
+
 
