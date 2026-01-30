@@ -542,6 +542,11 @@ static void play_selected_traces(void)
     for (GwTrace *t = GLOBALS->traces.first; t != NULL; t = t->t_next) {
         if (IsSelected(t) && HasWave(t)) {
             g_ptr_array_add(traces, t);
+
+            // Skip expanded traces
+            if (IsGroupBegin(t)) {
+                t = t->t_match;
+            }
         }
     }
 
