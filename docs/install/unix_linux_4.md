@@ -27,8 +27,19 @@ sudo apt install \
 Fedora:
 
 ```bash
-sudo dnf install meson gperf flex glib2-devel gcc gcc-c++ gtk3-devel \
-            gobject-introspection-devel desktop-file-utils tcl json-glib-devel
+sudo dnf install \
+    gcc \
+    gcc-c++ \
+    tcl \
+    meson \
+    gperf \
+    flex \
+    desktop-file-utils \
+    glib2-devel \
+    gtk3-devel \
+    gtk4-devel \
+    gobject-introspection-devel \
+    json-glib-devel
 ```
 
 ## Compiling and Installing
