@@ -65,6 +65,7 @@ gtkwave_sources = [
     'ttranslate.c',
     'vcd_saver.c',
     'vcd.c',
+    'wcp_gtkwave.c',
     'wavewindow.c',
     'zoombuttons.c',
     'cocoa/cocoa_misc.c',
@@ -82,6 +83,7 @@ gtkwave_dependencies = [
     judy_dep,
     gnu_regex_dep,
     libgtkwave_dep,
+    libwcp_dep,
 ]
 
 gtkwave_include_directories = [
@@ -89,7 +91,7 @@ gtkwave_include_directories = [
     'cocoa',
 ]
 
-gtkwave_exe = executable(
+executable(
     'gtkwave',
     gtkwave_sources,
     gtkwave_resources,

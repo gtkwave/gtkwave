@@ -31,6 +31,8 @@
 
 #include "wave_locale.h"
 
+#include "wcp_gtkwave.h"
+
 #if !defined __MINGW32__
 #include <signal.h>
 #include <sys/types.h>
@@ -295,6 +297,9 @@ static void print_help(char *nam)
         "  -7, --saveonexit           prompt user to write save file at exit\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
+        "  --wcp                      enable WCP server\n"
+        "  --wcp-port=PORT            set WCP port (defaults to 8765)\n"
+        "  --wcp-remote               allow remote WCP connections\n"
         "  -V, --version              display version banner then exit\n"
         "  -h, --help                 display this help then exit\n"
         "  -x, --exit                 exit after loading trace (for loader benchmarks)\n\n"
@@ -681,6 +686,9 @@ int main_2(int opt_vcd, int argc, char *argv[])
     char *wname = NULL;
     char *override_rc = NULL;
     FILE *wave = NULL;
+    int wcp_port = -1;
+    int wcp_enable = 0;
+    int wcp_allow_remote = 0;
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
@@ -932,6 +940,9 @@ do_primary_inits:
                                                    {"sstexclude", 1, 0, '5'},
                                                    {"dark", 0, 0, '6'},
                                                    {"saveonexit", 0, 0, '7'},
+                                                   {"wcp", 0, 0, 0},
+                                                   {"wcp-port", 1, 0, 0},
+                                                   {"wcp-remote", 0, 0, 0},
                                                    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
@@ -976,6 +987,16 @@ do_primary_inits:
                             "and n is a hexadecimal shared memory ID for use with shmat()\n");
                     exit(255);
                 } break;
+
+                case 0:
+                    if (!strcmp(long_options[option_index].name, "wcp")) {
+                        wcp_enable = 1;
+                    } else if (!strcmp(long_options[option_index].name, "wcp-port")) {
+                        wcp_port = atoi(optarg);
+                    } else if (!strcmp(long_options[option_index].name, "wcp-remote")) {
+                        wcp_allow_remote = 1;
+                    }
+                    break;
 
                 case 'A':
                     is_smartsave = 1;
@@ -1251,6 +1272,16 @@ do_primary_inits:
     }
 #endif
 
+    if (wcp_enable) {
+        if (wcp_port < 0 || wcp_port > UINT16_MAX) {
+            wcp_port = WCP_DEFAULT_PORT;
+        }
+        if (!wcp_gtkwave_init((uint16_t)wcp_port, wcp_allow_remote)) {
+            fprintf(stderr, "GTKWAVE | WCP server failed to start\n");
+            exit(255);
+        }
+    }
+
     /* attempt to load a dump+save file if only a savefile is specified at the command line */
     if ((GLOBALS->loaded_file_name) && (!wname) &&
         (suffix_check(GLOBALS->loaded_file_name, ".gtkw") ||
@@ -1494,6 +1525,10 @@ loader_check_head:
         gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
         gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
         gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
+
+        if (GLOBALS->loaded_file_name) {
+            wcp_gtkwave_notify_waveforms_loaded(GLOBALS->loaded_file_name);
+        }
 
         if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
             fprintf(stderr,
@@ -2198,6 +2233,8 @@ savefile_bail:
     } else {
         gtk_main();
     }
+
+    wcp_gtkwave_shutdown();
 
 #ifdef MAC_INTEGRATION
     exit(0); /* gtk_target_list_find crashes in OSX/Quartz is return instead of exit */

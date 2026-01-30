@@ -30,6 +30,7 @@ struct _WcpServer {
     uint16_t port;
     gboolean running;
     gboolean client_connected;
+    gboolean allow_remote;
     
     WcpCommandHandler handler;
     gpointer handler_data;
@@ -42,12 +43,13 @@ struct _WcpServer {
 
 /**
  * Create a new WCP server
- * @param port Port to listen on (0 for auto-assign)
+ * @param port Port to listen on (must be non-zero)
  * @param handler Callback function to handle commands
  * @param user_data User data passed to handler
  * @return New WCP server instance, or NULL on error
  */
-WcpServer* wcp_server_new(uint16_t port, 
+WcpServer* wcp_server_new(uint16_t port,
+                          gboolean allow_remote,
                           WcpCommandHandler handler,
                           gpointer user_data);
 
@@ -90,21 +92,5 @@ gboolean wcp_server_send(WcpServer *server, char *message);
  */
 void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source);
 
-/* ============================================================================
- * Initiating Connection (for --wcp-initiate mode)
- * ============================================================================ */
-
-/**
- * Connect to a WCP client (instead of listening)
- * @param server The server instance
- * @param host Host to connect to
- * @param port Port to connect to
- * @param error Location for error, or NULL
- * @return TRUE on success
- */
-gboolean wcp_server_initiate(WcpServer *server,
-                             const char *host,
-                             uint16_t port,
-                             GError **error);
-
 #endif /* WCP_SERVER_H */
+
