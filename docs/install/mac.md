@@ -43,7 +43,7 @@ for all notable changes.
     using Homebrew:
 
     ```shell
-    brew install desktop-file-utils shared-mime-info gobject-introspection gtk-mac-integration meson ninja pkg-config gtk+3 gtk4
+    brew install desktop-file-utils shared-mime-info gobject-introspection gtk-mac-integration meson ninja pkg-config gtk+3 gtk4 json-glib
     ```
 
 ### Compiling and Installing
@@ -88,3 +88,4 @@ You can find the application in your Applications folder:
 ## Troubleshooting
 
 If you encounter any errors during the installation process, please refer to the [GitHub issue](https://github.com/gtkwave/gtkwave/issues) for additional help and troubleshooting tips.
+
