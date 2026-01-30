@@ -27,7 +27,6 @@ gtkwave_sources = [
     'gconf.c',
     'globals.c',
     'gtk23compat.c',
-    'gw-audio-player.c',
     'gw-mouseover.c',
     'gw-named-marker-dialog.c',
     'gw-time-display.c',
@@ -71,6 +70,14 @@ gtkwave_sources = [
     'cocoa/cocoa_misc.c',
 ]
 
+if gstreamer_found
+    gtkwave_sources += [
+        'gw-audio-player.c',
+        'gw-audio-src.c',
+        'gw-audio-track.c',
+    ]
+endif
+
 gtkwave_dependencies = [
     glib_dep,
     gtk_dep,
@@ -83,8 +90,9 @@ gtkwave_dependencies = [
     judy_dep,
     gnu_regex_dep,
     libgtkwave_dep,
-    sdl_dep,
-    sdl_mixer_dep,
+    gstreamer_dep,
+    gstreamer_audio_dep,
+    gstreamer_app_dep,
 ]
 
 gtkwave_include_directories = [

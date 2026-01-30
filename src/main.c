@@ -72,6 +72,10 @@
 
 #include "tcl_helper.h"
 
+#ifdef HAVE_GSTREAMER
+#include <gst/gst.h>
+#endif
+
 #ifdef MAC_INTEGRATION
 #include <gtkosxapplication.h>
 #endif
@@ -451,8 +455,8 @@ static GtkWidget *toolbar_append_button(GtkWidget *toolbar,
                                         GCallback callback,
                                         gpointer user_data)
 {
-    GtkWidget *icon_widget = gtk_image_new_from_icon_name(stock_id, GTK_ICON_SIZE_BUTTON);
-    GtkToolItem *button = gtk_tool_button_new(icon_widget, NULL);
+    GtkToolItem *button = gtk_tool_button_new(NULL, NULL);
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(button), stock_id);
     gtk_tool_item_set_tooltip_text(button, tooltip_text);
 
     g_signal_connect(button, "clicked", G_CALLBACK(callback), user_data);
@@ -480,7 +484,8 @@ static void toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
 }
 
-GwTimeRange *get_playback_range(void)
+#ifdef HAVE_GSTREAMER
+static GwTimeRange *get_playback_range(void)
 {
     GwMarker *baseline = gw_project_get_baseline_marker(GLOBALS->project);
     GwMarker *primary = gw_project_get_primary_marker(GLOBALS->project);
@@ -489,22 +494,50 @@ GwTimeRange *get_playback_range(void)
         GwTime p = gw_marker_get_position(primary);
 
         return gw_time_range_new(MIN(b, p), MAX(b, p));
+    } else if (gw_marker_is_enabled(primary)) {
+        GwTime p = gw_marker_get_position(primary);
+
+        return gw_time_range_new(p, GLOBALS->tims.last);
     } else {
         return gw_time_range_new(GLOBALS->tims.first, GLOBALS->tims.last);
     }
 }
 
-static void play_audio(void)
+static void handle_audio_state_changed(GwAudioPlayer *audio_player,
+                                       GParamSpec *pspec,
+                                       void *user_data)
 {
-    GError *error = NULL;
-    if (GLOBALS->audio_player == NULL) {
-        GLOBALS->audio_player = gw_audio_player_new(&error);
-        if (GLOBALS->audio_player == NULL) {
-            g_printerr("%s\n", error->message);
-            return;
-        }
-    }
+    switch (gw_audio_player_get_state(GLOBALS->audio_player)) {
+        case GW_AUDIO_PLAYER_STATE_IDLE:
+            gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(GLOBALS->audio_toolbar_button),
+                                          "media-playback-start");
+            gw_marker_set_enabled(GLOBALS->audio_marker, FALSE);
+            break;
 
+        case GW_AUDIO_PLAYER_STATE_PLAYING:
+            gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(GLOBALS->audio_toolbar_button),
+                                          "media-playback-stop");
+            gw_marker_set_enabled(GLOBALS->audio_marker, TRUE);
+            break;
+
+        default:
+            g_return_if_reached();
+    }
+}
+
+static void handle_audio_position_changed(GwAudioPlayer *audio_player,
+                                          GParamSpec *pspec,
+                                          void *user_data)
+{
+    GwTime position = gw_audio_player_get_position(audio_player);
+
+    gw_marker_set_enabled(GLOBALS->audio_marker, position != 0);
+    gw_marker_set_position(GLOBALS->audio_marker, position);
+    gtk_widget_queue_draw(GLOBALS->wavearea);
+}
+
+static void play_selected_traces(void)
+{
     GPtrArray *traces = g_ptr_array_new();
     for (GwTrace *t = GLOBALS->traces.first; t != NULL; t = t->t_next) {
         if (IsSelected(t) && HasWave(t)) {
@@ -515,17 +548,15 @@ static void play_audio(void)
     if (traces->len > 0) {
         g_ptr_array_add(traces, NULL);
 
-        g_assert_cmpint(gw_dump_file_get_time_dimension(GLOBALS->dump_file),
-                        ==,
-                        GW_TIME_DIMENSION_PICO);
-
         GwTimeRange *range = get_playback_range();
 
+        GError *error = NULL;
         if (!gw_audio_player_play(GLOBALS->audio_player,
                                   (GwTrace **)traces->pdata,
+                                  GLOBALS->dump_file,
                                   range,
                                   &error)) {
-            g_printerr("%s\n", error->message);
+            g_printerr("Audio playback error: %s\n", error->message);
         }
 
         g_object_unref(range);
@@ -533,6 +564,39 @@ static void play_audio(void)
 
     g_ptr_array_free(traces, TRUE);
 }
+
+static void handle_audio_button_pressed(void)
+{
+    if (GLOBALS->audio_marker == NULL) {
+        GLOBALS->audio_marker = gw_marker_new("audio");
+    }
+
+    if (GLOBALS->audio_player == NULL) {
+        GLOBALS->audio_player = gw_audio_player_new();
+        g_signal_connect(GLOBALS->audio_player,
+                         "notify::state",
+                         G_CALLBACK(handle_audio_state_changed),
+                         NULL);
+        g_signal_connect(GLOBALS->audio_player,
+                         "notify::position",
+                         G_CALLBACK(handle_audio_position_changed),
+                         NULL);
+    }
+
+    switch (gw_audio_player_get_state(GLOBALS->audio_player)) {
+        case GW_AUDIO_PLAYER_STATE_IDLE:
+            play_selected_traces();
+            break;
+
+        case GW_AUDIO_PLAYER_STATE_PLAYING:
+            gw_audio_player_stop(GLOBALS->audio_player);
+            break;
+
+        default:
+            g_return_if_reached();
+    }
+}
+#endif
 
 static GtkWidget *build_toolbar(void)
 {
@@ -590,7 +654,14 @@ static GtkWidget *build_toolbar(void)
         last_separator = toolbar_append_separator(toolbar);
     }
 
-    toolbar_append_button(toolbar, "media-playback-start", "Play audio", play_audio, NULL);
+#ifdef HAVE_GSTREAMER
+    GLOBALS->audio_toolbar_button = toolbar_append_button(toolbar,
+                                                          "media-playback-start",
+                                                          "Play audio",
+                                                          handle_audio_button_pressed,
+                                                          NULL);
+    last_separator = toolbar_append_separator(toolbar);
+#endif
 
     gtk_tool_item_set_expand(last_separator, TRUE);
     gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(last_separator), FALSE);
@@ -907,6 +978,10 @@ int main_2(int opt_vcd, int argc, char *argv[])
             print_help(argv[0]);
         }
     }
+
+#ifdef HAVE_GSTREAMER
+    gst_init(NULL, NULL);
+#endif
 
     gboolean has_xpm_loader = FALSE;
 

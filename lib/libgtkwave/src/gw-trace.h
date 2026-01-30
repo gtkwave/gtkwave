@@ -47,4 +47,5 @@ struct _GwTrace
     unsigned is_sort_group : 1; /* only used for sorting purposes */
     unsigned t_filter_converted : 1; /* used to mark that data conversion already occurred if
                                         t_filter != 0*/
+    void *audio_track;
 };

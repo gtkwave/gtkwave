@@ -162,6 +162,27 @@ static void draw_marker(GwWaveView *self, cairo_t *cr, GwWaveformColors *colors)
         }
     }
 
+#ifdef HAVE_GSTREAMER
+    GwMarker *audio_marker = GLOBALS->audio_marker;
+    if (audio_marker != NULL && gw_marker_is_enabled(audio_marker)) {
+        GwTime audio_pos = gw_marker_get_position(audio_marker);
+        if (audio_pos >= GLOBALS->tims.start && audio_pos <= GLOBALS->tims.last &&
+            audio_pos <= GLOBALS->tims.end) {
+            pixstep = ((gdouble)GLOBALS->nsperframe) / ((gdouble)GLOBALS->pixelsperframe);
+            xl = ((gdouble)(audio_pos - GLOBALS->tims.start)) / pixstep; /* snap to integer */
+            if ((xl >= 0) && (xl < GLOBALS->wavewidth)) {
+                XXX_gdk_draw_line(cr,
+                                  colors->stroke_w, // TODO: use separate color
+                                  xl,
+                                  GLOBALS->fontheight - 1,
+                                  xl,
+                                  GLOBALS->waveheight - 1);
+                m1x_wavewindow_c_1 = xl;
+            }
+        }
+    }
+#endif
+
     if (m1x_wavewindow_c_1 > m2x_wavewindow_c_1) /* ensure m1x <= m2x for partitioned refresh */
     {
         gint t;
@@ -610,10 +631,10 @@ static gboolean gw_wave_view_draw(GtkWidget *widget, cairo_t *cr)
 
     if (GLOBALS->project == NULL || GLOBALS->dump_file == NULL) {
         cairo_set_source_rgba(cr,
-                            colors->background.r,
-                            colors->background.g,
-                            colors->background.b,
-                            colors->background.a);
+                              colors->background.r,
+                              colors->background.g,
+                              colors->background.b,
+                              colors->background.a);
         cairo_paint(cr);
 
         return FALSE;

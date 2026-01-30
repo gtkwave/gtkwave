@@ -24,6 +24,30 @@ GwTimeDimension gw_time_dimension_from_exponent(GwTime exponent)
     }
 }
 
+GwTime gw_time_dimension_to_exponent(GwTimeDimension self)
+{
+    switch (self) {
+        case GW_TIME_DIMENSION_BASE:
+            return 0;
+        case GW_TIME_DIMENSION_MILLI:
+            return -3;
+        case GW_TIME_DIMENSION_MICRO:
+            return -6;
+        case GW_TIME_DIMENSION_NANO:
+            return -9;
+        case GW_TIME_DIMENSION_PICO:
+            return -12;
+        case GW_TIME_DIMENSION_FEMTO:
+            return -15;
+        case GW_TIME_DIMENSION_ATTO:
+            return -18;
+        case GW_TIME_DIMENSION_ZEPTO:
+            return -21;
+        default:
+            g_return_val_if_reached(0);
+    }
+}
+
 GwTimeScaleAndDimension *gw_time_scale_and_dimension_from_exponent(gint exponent)
 {
     g_return_val_if_fail(exponent >= -21 && exponent <= 2, NULL);
@@ -50,4 +74,24 @@ GwTimeScaleAndDimension *gw_time_scale_and_dimension_from_exponent(gint exponent
     }
 
     return self;
+}
+
+GwTime gw_time_rescale(GwTime value,
+                       GwTimeDimension source_dimension,
+                       GwTimeDimension target_dimension)
+{
+    GwTime source_exponent = gw_time_dimension_to_exponent(source_dimension);
+    GwTime target_exponent = gw_time_dimension_to_exponent(target_dimension);
+
+    while (target_exponent < source_exponent) {
+        value *= 1000;
+        source_exponent -= 3;
+    }
+
+    while (target_exponent > source_exponent) {
+        value /= 1000;
+        source_exponent += 3;
+    }
+
+    return value;
 }

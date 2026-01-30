@@ -75,3 +75,9 @@ option(
     description: 'Build MacOS application bundle',
 )
 
+option(
+    'audio',
+    type: 'feature',
+    value: 'auto',
+    description: 'Enable audio playback support',
+)

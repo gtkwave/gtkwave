@@ -35,8 +35,7 @@ gtk_mac_integration_req = '>=3.0.0'
 gtk4_req = '>=4.6'
 zlib_req = '>=1.2.0'
 bzip2_req = '>=1.0.0'
-sdl_req = '>=2.30.0'
-sdl_mixer_req = '>=2.8.0'
+gstreamer_req = '>=1.24.0'
 
 # Dependencies
 
@@ -77,8 +76,10 @@ if not bzip2_dep.found()
     bzip2_dep = cc.find_library('bz2', has_headers: 'bzlib.h')
 endif
 
-sdl_dep = dependency('sdl2', version: sdl_req)
-sdl_mixer_dep = dependency('SDL2_mixer', version: sdl_mixer_req)
+gstreamer_dep = dependency('gstreamer-1.0', version: gstreamer_req, required: get_option('audio'))
+gstreamer_audio_dep = dependency('gstreamer-audio-1.0', version: gstreamer_req, required: get_option('audio'))
+gstreamer_app_dep = dependency('gstreamer-app-1.0', version: gstreamer_req, required: get_option('audio'))
+gstreamer_found = gstreamer_dep.found() and gstreamer_audio_dep.found() and gstreamer_app_dep.found()
 
 libfst_dep = dependency('libfst')
 
@@ -142,6 +143,7 @@ config.set('WAVE_GTK_UNIX_PRINT', gtk_unix_print_dep.found())
 config.set('WAVE_USE_STRUCT_PACKING', get_option('struct_packing'))
 config.set('WAVE_MANYMARKERS_MODE', get_option('manymarkers'))
 config.set('WAVE_DISABLE_FAST_TREE', not get_option('fasttree'))
+config.set('HAVE_GSTREAMER', gstreamer_found)
 
 # Check functions
 

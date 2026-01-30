@@ -43,6 +43,7 @@ typedef enum
 } GwTimeDimension;
 
 GwTimeDimension gw_time_dimension_from_exponent(GwTime exponent);
+GwTime gw_time_dimension_to_exponent(GwTimeDimension self);
 
 typedef struct
 {
@@ -51,3 +52,7 @@ typedef struct
 } GwTimeScaleAndDimension;
 
 GwTimeScaleAndDimension *gw_time_scale_and_dimension_from_exponent(gint exponent);
+
+GwTime gw_time_rescale(GwTime value,
+                       GwTimeDimension source_dimension,
+                       GwTimeDimension target_dimension);
