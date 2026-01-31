@@ -34,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.127" date="2026-01-31">
+      <description>
+        <p>
+	Changes in 3.3.127:
+        </p>
+	<ul>
+            <li>Fix for fixed point shift that does not disable it on the specify value change menu option.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.126" date="2025-12-18">
       <description>
         <p>

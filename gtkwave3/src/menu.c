@@ -6969,7 +6969,7 @@ if(GLOBALS->helpbox_is_active)
 
 entrybox("Fixed Point Shift Specify",300,"",NULL,128,GTK_SIGNAL_FUNC(menu_dataformat_fpshift_specify_cleanup));
 
-dataformat( ~(TR_FPDECSHIFT), 0 );
+dataformat( ~(TR_FPDECSHIFT), TR_FPDECSHIFT );
 }
 
 void
