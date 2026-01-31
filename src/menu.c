@@ -4343,8 +4343,6 @@ void menu_dataformat_fpshift_specify(gpointer null_data, guint callback_action, 
              NULL,
              128,
              G_CALLBACK(menu_dataformat_fpshift_specify_cleanup));
-
-    dataformat(~(TR_FPDECSHIFT), 0);
 }
 
 void menu_dataformat_invert_on(gpointer null_data, guint callback_action, GtkWidget *widget)
