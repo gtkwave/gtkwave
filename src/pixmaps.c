@@ -3007,6 +3007,8 @@ GwHierarchyIcons *gw_hierarchy_icons_new(void)
 {
     GwHierarchyIcons *self = g_new0(GwHierarchyIcons, 1);
 
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+
     /* Verilog */
     self->module = gdk_pixbuf_new_from_xpm_data(chart_organisation);
     self->task = gdk_pixbuf_new_from_xpm_data(cog);
@@ -3038,6 +3040,8 @@ GwHierarchyIcons *gw_hierarchy_icons_new(void)
     /* FSDB VHDL (on top of GHW's existing) */
     self->record = gdk_pixbuf_new_from_xpm_data(cd_img);
     self->generate = gdk_pixbuf_new_from_xpm_data(arrow_redo);
+
+    G_GNUC_END_IGNORE_DEPRECATIONS
 
     return self;
 }
