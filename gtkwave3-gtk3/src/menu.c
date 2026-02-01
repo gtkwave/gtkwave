@@ -6685,7 +6685,8 @@ if(GLOBALS->helpbox_is_active)
 
 entrybox("Fixed Point Shift Specify",300,"",NULL,128,G_CALLBACK(menu_dataformat_fpshift_specify_cleanup));
 
-dataformat( ~(TR_FPDECSHIFT), TR_FPDECSHIFT );
+/* not necessary as menu_dataformat_fpshift_specify_cleanup() has dataformat-like code in it that also handles the error case which this doesn't */
+/* dataformat( ~(TR_FPDECSHIFT), TR_FPDECSHIFT ); */
 }
 
 void
