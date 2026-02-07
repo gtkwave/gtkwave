@@ -148,14 +148,10 @@ if(GLOBALS->filesel_ok)
 			}
 			else
 			{
-			char *sysname = malloc_2(7 + 1 + len + 3 + 1 + len + 1);
+			char *sysname = malloc_2(6 + 1 + len + 3 + 1 + len + 1);
 			int rc;
 
-#ifdef MAC_INTEGRATION
-			sprintf(sysname, "pstopdf"	/* 7 */
-#else
 			sprintf(sysname, "ps2pdf"	/* 6 */
-#endif
 					 " "		/* 1 */
 					 "%s"		/* len + 3 */
 					 " "		/* 1 */

@@ -1953,5 +1953,6 @@
 		Updated	libghw to current version.
 		Changed behavior of X search in pattern search so it is
 		matched by a single X bit.
-3.3.127 31jan26	Fix for fixed point shift that does not disable it on 
+3.3.127 06feb26	Fix for fixed point shift that does not disable it on 
 		the specify value change menu option.
+		Changed ps2pdf to pstopdf on Mac as ps removed by Sonoma.

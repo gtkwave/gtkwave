@@ -41,6 +41,7 @@
         </p>
 	<ul>
             <li>Fix for fixed point shift that does not disable it on the specify value change menu option.</li>
+            <li>Changed ps2pdf to pstopdf on Mac as ps removed by Sonoma.</li>
         </ul>
       </description>
     </release>
