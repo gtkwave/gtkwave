@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gw-types.h"
-#include "gw-enums.h"
+#include    "gw-enums.h"
 #include "gw-bit.h"
 #include "gw-time.h"
 #include "gw-time-range.h"
@@ -36,8 +36,10 @@
 #include "gw-ghw-file.h"
 #include "gw-vlist.h"
 #include "gw-vlist-packer.h"
+#include "gw-vlist-reader.h"
 #include "gw-vlist-writer.h"
 #include "gw-vcd-file.h"
 #include "gw-vcd-loader.h"
+#include "gw-vcd-partial-loader.h"
 #include "gw-fst-file.h"
 #include "gw-fst-loader.h"

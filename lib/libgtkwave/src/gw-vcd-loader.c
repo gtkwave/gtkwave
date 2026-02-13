@@ -2592,15 +2592,23 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
 
     // clang-format off
     GwVcdFile *dump_file = g_object_new(GW_TYPE_VCD_FILE,
-                                        "tree", tree,
-                                        "facs", facs,
-                                        "blackout-regions", self->blackout_regions,
-                                        "time-scale", self->time_scale,
-                                        "time-dimension", self->time_dimension,
-                                        "time-range", time_range,
-                                        "global-time-offset", self->global_time_offset,
-                                        "has-escaped-names", self->has_escaped_names,
-                                        NULL);
+                                            "tree", tree,
+                                            "facs", facs,
+                                            "blackout-regions", self->blackout_regions,
+                                            "time-scale", self->time_scale,
+                                            "time-dimension", self->time_dimension,
+                                            "time-range", time_range,
+                                            "global-time-offset", self->global_time_offset,
+                                            "has-escaped-names", self->has_escaped_names,
+                                            /* VCD specific properties are FALSE or NULL */
+                                            "stems", NULL,
+                                            "component-names", NULL,
+                                            "enum-filters", NULL,
+                                            "has-nonimplicit-directions", FALSE,
+                                            "has-supplemental-datatypes", FALSE,
+                                            "has-supplemental-vartypes", FALSE,
+                                            "uses-vhdl-component-format", FALSE,
+                                            NULL);
     // clang-format on
 
     g_object_unref(self->blackout_regions);

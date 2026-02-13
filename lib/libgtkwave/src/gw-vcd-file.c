@@ -381,14 +381,18 @@ static void gw_vcd_file_import_trace(GwVcdFile *self, GwNode *np)
     guint32 len = 1;
     guint32 vlist_type;
 
-    if (np->mv.mvlfac_vlist == NULL) {
+    if (np->mv.mvlfac_vlist == NULL && np->mv.mvlfac_vlist_reader == NULL) {
         return;
     }
 
     gw_vlist_uncompress(&np->mv.mvlfac_vlist);
 
-    GwVlistReader *reader =
-        gw_vlist_reader_new(g_steal_pointer(&np->mv.mvlfac_vlist), self->is_prepacked);
+    GwVlistReader *reader = NULL;
+    if (np->mv.mvlfac_vlist != NULL) {
+        reader = gw_vlist_reader_new(g_steal_pointer(&np->mv.mvlfac_vlist), self->is_prepacked);
+    } else if (np->mv.mvlfac_vlist_reader != NULL) {
+        reader = g_object_ref(np->mv.mvlfac_vlist_reader);
+    }
 
     if (gw_vlist_reader_is_done(reader)) {
         len = 1;

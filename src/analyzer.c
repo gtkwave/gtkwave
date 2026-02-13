@@ -26,6 +26,7 @@
 #include "ttranslate.h"
 #include "analyzer.h"
 #include <gtkwave.h>
+#include "gw-node.h"
 
 void UpdateTraceSelection(GwTrace *t);
 int traverse_vector_nodes(GwTrace *t);
@@ -362,6 +363,7 @@ int AddBlankTrace(char *commentname)
         fprintf(stderr, "Out of memory, can't add blank trace to analyzer\n");
         return (0);
     }
+    t->refcount = 1; /* Initialize reference count */
     AddTrace(t);
     /* Keep only flags that make sense for a blank trace. */
     flags_filtered = TR_BLANK | (GLOBALS->default_flags & (TR_CLOSED | TR_GRP_BEGIN | TR_GRP_END |
@@ -394,6 +396,7 @@ int InsertBlankTrace(char *comment, TraceFlagsType different_flags)
         return (0);
     }
 
+    t->refcount = 1; /* Initialize reference count */
     GLOBALS->traces.dirty = 1;
 
     if (!different_flags) {
@@ -452,6 +455,8 @@ int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret)
         fprintf(stderr, "Out of memory, can't add to analyzer\n");
         return (0);
     }
+
+    t->refcount = 1; /* Initialize reference count */
 
     if (!nd->harray) /* make quick array lookup for aet display */
     {
@@ -557,6 +562,8 @@ int AddVector(GwBitVector *vec, char *aliasname)
         return (0);
     }
 
+    t->refcount = 1; /* Initialize reference count */
+
     if (aliasname) {
         t->name_full = strdup_2(aliasname);
         t->name = t->name_full;
@@ -575,20 +582,43 @@ int AddVector(GwBitVector *vec, char *aliasname)
 }
 
 /*
+ * Acquire a reference to a trace (increment refcount)
+ */
+GwTrace *AcquireTrace(GwTrace *t)
+{
+    if (t) {
+        t->refcount++;
+    }
+    return t;
+}
+
+/*
+ * Release a reference to a trace (decrement refcount and free if zero)
+ */
+void ReleaseTrace(GwTrace *t)
+{
+    if (!t) {
+        return;
+    }
+
+    t->refcount--;
+    
+    if (t->refcount <= 0) {
+        /* Actually free the trace now */
+        FreeTrace(t);
+    }
+}
+
+/*
  * Free up a trace's mallocs...
+ * This is now an internal function called only by ReleaseTrace when refcount reaches 0
  */
 void FreeTrace(GwTrace *t)
 {
     GLOBALS->traces.dirty = 1;
 
-    if (GLOBALS->strace_ctx->straces) {
-        struct strace_defer_free *sd = calloc_2(1, sizeof(struct strace_defer_free));
-        sd->next = GLOBALS->strace_ctx->strace_defer_free_head;
-        sd->defer = t;
-
-        GLOBALS->strace_ctx->strace_defer_free_head = sd;
-        return;
-    }
+    /* Reference counting replaces the old deferred free mechanism - no need to check refcount here
+     * as ReleaseTrace already ensures refcount is 0 before calling this function */
 
     if (t->vector) {
         GwBitVector *bv;
@@ -639,8 +669,15 @@ void FreeTrace(GwTrace *t)
         if (t->n.vec)
             free_2(t->n.vec);
     } else {
-        if (t->n.nd && t->n.nd->expansion) {
-            DeleteNode(t->n.nd);
+        if (t->n.nd) {
+            if (t->n.nd->expansion) {
+                DeleteNode(t->n.nd);
+            } else if (t->n.nd->expand_info) {
+                // Use reference counting to safely release expand_info
+                // The VCD loader may still have references to it via acquire/release
+                gw_expand_info_release(t->n.nd->expand_info);
+                t->n.nd->expand_info = NULL;
+            }
         }
     }
 
@@ -690,7 +727,7 @@ void RemoveTrace(GwTrace *t, int dofree)
     }
 
     if (dofree) {
-        FreeTrace(t);
+        ReleaseTrace(t); /* Use ReleaseTrace instead of FreeTrace */
     }
 }
 
@@ -706,7 +743,7 @@ void FreeCutBuffer(void)
 
     while (t) {
         t2 = t->t_next;
-        FreeTrace(t);
+        ReleaseTrace(t); /* Use ReleaseTrace instead of FreeTrace */
         t = t2;
     }
 
@@ -996,6 +1033,8 @@ GwTrace *PrependBuffer(void)
         }
     }
 
+
+
     /* clean out the buffer */
     GLOBALS->traces.buffer = GLOBALS->traces.bufferlast = NULL;
     GLOBALS->traces.buffercount = 0;
@@ -1175,6 +1214,7 @@ int TracesReorder(int mode)
 
                     if (!cnt) {
                         tsort_reduced[num_reduced] = calloc_2(1, sizeof(GwTrace));
+                        tsort_reduced[num_reduced]->refcount = 1; /* Initialize reference count */
                         tsort_reduced[num_reduced]->name = tsort[i]->name;
                         tsort_reduced[num_reduced]->is_sort_group = 1;
                         tsort_reduced[num_reduced]->t_grp = tsort[i];
@@ -1447,4 +1487,27 @@ void EnsureGroupsMatch(void)
             t = t2;
         }
     }
+}
+
+/**
+ * analyzer_import_all_signals:
+ *
+ * Adds all signals from the current dump file to the wave view.
+ * This is used for interactive VCD sessions where signals are discovered
+ * incrementally and need to be added to the UI.
+ */
+void analyzer_import_all_signals(void)
+{
+    if (!GLOBALS->dump_file) return;
+
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    if (!facs) return;
+
+    for (guint i = 0; i < gw_facs_get_length(facs); i++) {
+        GwSymbol *s = gw_facs_get(facs, i);
+        if (s && s->n) {
+            AddNode(s->n, NULL); // Use existing function to add a signal
+        }
+    }
+    redraw_signals_and_waves();
 }

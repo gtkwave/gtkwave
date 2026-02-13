@@ -1,0 +1,63 @@
+$date
+	Thu Jan  1 00:00:00 1970
+$end
+$version
+	Equivalence Test VCD
+$end
+$timescale
+	1ns
+$end
+$scope module test $end
+$var wire 1 ! single_bit $end
+$var wire 4 " four_bit_vector $end
+$var real 64 $ real_signal $end
+$var string 0 % string_signal $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b0000 "
+0!
+r0.0 $
+sHello %
+$end
+#10
+1!
+b0001 "
+r1.5 $
+sWorld %
+#20
+x!
+b0010 "
+r2.25 $
+sTest %
+#30
+z!
+b0011 "
+r3.75 $
+sString %
+#40
+0!
+b0100 "
+r5.0 $
+sValue %
+#50
+1!
+b0101 "
+r7.5 $
+sSignal %
+#60
+x!
+b0110 "
+r10.0 $
+sTransition %
+#70
+z!
+b0111 "
+r12.5 $
+sEnd %
+#80
+0!
+b1000 "
+r15.0 $
+sFinal %

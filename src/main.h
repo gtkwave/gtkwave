@@ -60,7 +60,8 @@ enum FileType
     EXTLOAD_FILE,
 #endif
     FST_FILE,
-    DUMPLESS_FILE
+    DUMPLESS_FILE,
+    VCD_PARTIAL_FILE
 };
 
 #endif
