@@ -8,4 +8,29 @@
     <gresource prefix="/io/github/gtkwave/GTKWave">
         <file>gtkwave.css</file>
     </gresource>
+    <gresource prefix="/io/github/gtkwave/GTKWave/icons/16x16/actions">
+        <file alias="gtkwave-hierarchy-module.png">../share/icons/old_icons/gtkwave-old-chart_organisation.png</file>
+        <file alias="gtkwave-hierarchy-task.png">../share/icons/old_icons/gtkwave-old-cog.png</file>
+        <file alias="gtkwave-hierarchy-function.png">../share/icons/old_icons/gtkwave-old-chart_line.png</file>
+        <file alias="gtkwave-hierarchy-begin.png">../share/icons/old_icons/gtkwave-old-flag_green.png</file>
+        <file alias="gtkwave-hierarchy-fork.png">../share/icons/old_icons/gtkwave-old-arrow_divide.png</file>
+        <file alias="gtkwave-hierarchy-interface.png">../share/icons/old_icons/gtkwave-old-arrow_inout.png</file>
+        <file alias="gtkwave-hierarchy-svpackage.png">../share/icons/old_icons/gtkwave-old-package.png</file>
+        <file alias="gtkwave-hierarchy-program.png">../share/icons/old_icons/gtkwave-old-application.png</file>
+        <file alias="gtkwave-hierarchy-class.png">../share/icons/old_icons/gtkwave-old-plugin.png</file>
+        <file alias="gtkwave-hierarchy-design.png">../share/icons/old_icons/gtkwave-old-database.png</file>
+        <file alias="gtkwave-hierarchy-block.png">../share/icons/old_icons/gtkwave-old-brick.png</file>
+        <file alias="gtkwave-hierarchy-generateif.png">../share/icons/old_icons/gtkwave-old-arrow_switch.png</file>
+        <file alias="gtkwave-hierarchy-generatefor.png">../share/icons/old_icons/gtkwave-old-arrow_rotate_clockwise.png</file>
+        <file alias="gtkwave-hierarchy-instance.png">../share/icons/old_icons/gtkwave-old-component.png</file>
+        <file alias="gtkwave-hierarchy-package.png">../share/icons/old_icons/gtkwave-old-box.png</file>
+        <file alias="gtkwave-hierarchy-signal.png">../share/icons/old_icons/gtkwave-old-signal.png</file>
+        <file alias="gtkwave-hierarchy-portin.png">../share/icons/old_icons/gtkwave-old-door_in.png</file>
+        <file alias="gtkwave-hierarchy-portout.png">../share/icons/old_icons/gtkwave-old-door_out.png</file>
+        <file alias="gtkwave-hierarchy-portinout.png">../share/icons/old_icons/gtkwave-old-door_open.png</file>
+        <file alias="gtkwave-hierarchy-record.png">../share/icons/old_icons/gtkwave-old-cd.png</file>
+        <file alias="gtkwave-hierarchy-generate.png">../share/icons/old_icons/gtkwave-old-arrow_redo.png</file>
+        <file alias="gtkwave-hierarchy-linkage.png">../share/icons/old_icons/gtkwave-old-link.png</file>
+        <file alias="gtkwave-hierarchy-buffer.png">../share/icons/old_icons/gtkwave-old-extension.png</file>
+    </gresource>
 </gresources>

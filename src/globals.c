@@ -691,7 +691,6 @@ struct Global *initialize_globals(void)
 
     g->strace_ctx = &g->strace_windows[0]; /* arbitrarily point to first one */
 
-    g->hierarchy_icons = gw_hierarchy_icons_new();
     g->project = gw_project_new();
     g->color_theme = gw_color_theme_new();
 
