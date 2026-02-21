@@ -1,4 +1,4 @@
-# A workflow to build and test gktwave for a few platforms.
+# A workflow to build and test GTKWave on all major supported platforms.
 
 name: CI
 
