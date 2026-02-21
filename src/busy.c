@@ -30,7 +30,8 @@ gboolean in_main_iteration(void)
 
 gboolean ignore_context_swap(void)
 {
-    return (GLOBALS->splash_is_loading != 0);
+    // return (GLOBALS->splash_is_loading != 0);
+    return FALSE;
 }
 
 static void GuiDoEvent(GdkEvent *event, gpointer data)

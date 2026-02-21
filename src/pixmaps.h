@@ -14,11 +14,6 @@
 
 #include <gtk/gtk.h>
 
-#define WAVE_SPLASH_X (512)
-#define WAVE_SPLASH_Y (384)
-
-void make_splash_pixmaps(GtkWidget *window);
-
 typedef struct
 {
     GdkPixbuf *module;

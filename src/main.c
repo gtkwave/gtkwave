@@ -695,7 +695,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
     GtkWidget *panedwindow;
     struct Global *old_g = NULL;
 
-    int splash_disable_rc_override = 0;
     int mainwindow_already_built = 0;
 
     struct rc_override *rc_override_head = NULL, *rc_override_curr = NULL;
@@ -722,7 +721,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->contexts = old_g->contexts;
 
         GLOBALS->mainwindow = old_g->mainwindow;
-        splash_disable_rc_override = 1;
 
         /* busy.c */
         GLOBALS->busycursor_busy_c_1 = old_g->busycursor_busy_c_1;
@@ -793,7 +791,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->ps_maxveclen = old_g->ps_maxveclen;
         GLOBALS->vector_padding = old_g->vector_padding;
         GLOBALS->zoombase = old_g->zoombase;
-        GLOBALS->splash_disable = old_g->splash_disable;
         GLOBALS->use_pango_fonts = old_g->use_pango_fonts;
         GLOBALS->hier_ignore_escapes = old_g->hier_ignore_escapes;
 
@@ -1016,7 +1013,6 @@ do_primary_inits:
 #ifdef WAVE_USE_XID
                 case 'X':
                     sscanf(optarg, "%lx", &GLOBALS->socket_xid);
-                    splash_disable_rc_override = 1;
                     break;
 #endif
 
@@ -1080,7 +1076,6 @@ do_primary_inits:
 
                 case 'x':
                     fast_exit = 1;
-                    splash_disable_rc_override = 1;
                     break;
 
                 case 'd':
@@ -1330,8 +1325,6 @@ do_primary_inits:
     {
         read_rc_file(override_rc);
     }
-
-    GLOBALS->splash_disable |= splash_disable_rc_override;
 
     if (!GLOBALS->loaded_file_name) {
         /* if rc can gates off gui, default is not to disable */
