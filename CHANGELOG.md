@@ -41,6 +41,7 @@ of these features.
 ### Removed
 
 - Removed support for GTK 2.
+- Removed splash screen.
 - Removed "Signal Search Hierarchy" dialog.
 - Removed setting to disable the "Alternate Wheel Mode".
 - Removed legacy VCD loader.
@@ -60,6 +61,7 @@ of these features.
     - `hpane_pack`
     - `lxt_clock_compress_to_z`
     - `max_fsdb_trees`
+    - `splash_disable`
     - `use_scrollbar_only`
     - `use_scrollwheel_as_y`
     - `use_standard_clicking`
@@ -69,8 +71,6 @@ of these features.
     - `vlist_spill`
     - `zoom_dynamic`
     - `zoom_dynamic_end`
-- Removed TCL commands:
-    - `getLongestName`
 
 ### Fixed
 

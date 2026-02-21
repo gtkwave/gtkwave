@@ -2464,8 +2464,6 @@ int menu_new_viewer_tab_cleanup_2(char *fname, int optimize_vcd)
 
     GLOBALS->vcd_jmp_buf = calloc(1, sizeof(jmp_buf));
 
-    splash_button_press_event(NULL,
-                              NULL); /* kill any possible splash screens (e.g., if automated) */
     set_window_busy(NULL);
     gtkwave_main_iteration();
 
@@ -2594,11 +2592,6 @@ void menu_reload_waveform(gpointer null_data, guint callback_action, GtkWidget *
 
     if (in_main_iteration())
         return;
-
-    if (GLOBALS->gt_splash_c_1 || GLOBALS->splash_is_loading) {
-        return; /* don't attempt reload if splash screen is still active...that's pointless anyway
-                 */
-    }
 
     /* XXX if there's no file (for some reason), this function shouldn't occur
        we should probably gray it out. */

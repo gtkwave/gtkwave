@@ -97,7 +97,6 @@ int f_page_divisor(const char *str);
 int f_ps_maxveclen(const char *str);
 int f_show_base_symbols(const char *str);
 int f_show_grid(const char *str);
-int f_splash_disable(const char *str);
 int f_sst_expanded(const char *str);
 int f_use_big_fonts(const char *str);
 int f_use_frequency_display(const char *str);

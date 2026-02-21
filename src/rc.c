@@ -498,13 +498,6 @@ int f_show_grid(const char *str)
     return (0);
 }
 
-int f_splash_disable(const char *str)
-{
-    DEBUG(printf("f_splash_disable(\"%s\")\n", str));
-    GLOBALS->splash_disable = atoi_64(str) ? 1 : 0;
-    return (0);
-}
-
 int f_strace_repeat_count(const char *str)
 {
     DEBUG(printf("f_strace_repeat_count(\"%s\")\n", str));
@@ -844,7 +837,6 @@ static struct rc_entry rcitems[] = {{"accel", f_accel},
                                     {"scale_to_time_dimension", f_scale_to_time_dimension},
                                     {"show_base_symbols", f_show_base_symbols},
                                     {"show_grid", f_show_grid},
-                                    {"splash_disable", f_splash_disable},
                                     {"sst_dbl_action_type", f_sst_dbl_action_type},
                                     {"sst_dynamic_filter", f_sst_dynamic_filter},
                                     {"sst_expanded", f_sst_expanded},
@@ -872,7 +864,6 @@ static struct rc_entry rcitems[] = {{"accel", f_accel},
 static void vanilla_rc(void)
 {
     f_enable_fast_exit("on");
-    f_splash_disable("off");
     f_zoom_pow10_snap("on");
     f_hier_max_level("1");
     f_cursor_snap("8");
