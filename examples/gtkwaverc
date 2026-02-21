@@ -37,7 +37,6 @@ strace_repeat_count 1
 enable_fast_exit yes
 disable_empty_gui off
 analog_redraw_skip_count 20
-splash_disable off
 sst_dynamic_filter on
 use_pango_fonts on
 scale_to_time_dimension *

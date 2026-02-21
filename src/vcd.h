@@ -36,7 +36,6 @@
 
 #define vcd_exit(x) \
     if (GLOBALS->vcd_jmp_buf) { \
-        splash_finalize(); \
         longjmp(*(GLOBALS->vcd_jmp_buf), x); \
     } else { \
         exit(x); \

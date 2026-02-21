@@ -447,21 +447,6 @@ struct Global
     void (*cleanup)(GtkWidget *, void *); /* from simplereq.c 414 */
 
     /*
-     * splash.c
-     */
-    char splash_is_loading;
-    char splash_fix_win_title;
-    char splash_disable; /* from splash.c 415 */
-    GtkWidget *splash_splash_c_1; /* from splash.c 419 */
-    GtkWidget *darea_splash_c_1; /* from splash.c 420 */
-    GTimer *gt_splash_c_1; /* from splash.c 421 */
-    int timeout_tag; /* from splash.c 422 */
-    int load_complete_splash_c_1; /* from splash.c 423 */
-    int cnt_splash_c_1; /* from splash.c 424 */
-    int prev_bar_x_splash_c_1; /* from splash.c 425 */
-    GdkPixbuf *wave_splash_pixbuf;
-
-    /*
      * strace.c
      */
     struct strace_ctx_t *strace_ctx; /* moved to strace.h */

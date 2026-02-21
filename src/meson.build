@@ -53,7 +53,6 @@ gtkwave_sources = [
     'signal_list.c',
     'signalwindow.c',
     'simplereq.c',
-    'splash.c',
     'status.c',
     'strace.c',
     'symbol.c',

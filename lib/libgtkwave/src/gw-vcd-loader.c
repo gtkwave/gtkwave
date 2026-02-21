@@ -2497,8 +2497,6 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
                 }
             }
         } else {
-            // TODO: Fix splash update
-            // GLOBALS->splash_disable = 1;
             self->vcd_handle = stdin;
         }
         self->is_compressed = 0;

@@ -66,19 +66,6 @@ static gboolean mouseover_timer(gpointer dummy)
     if (in_main_iteration())
         return (TRUE);
 
-    if (GLOBALS->splash_is_loading) {
-        return (TRUE);
-    }
-
-    if (GLOBALS->splash_fix_win_title) {
-        GLOBALS->splash_fix_win_title = 0;
-        wave_gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow),
-                                  GLOBALS->winname,
-                                  GLOBALS->dumpfile_is_modified ? WAVE_SET_TITLE_MODIFIED
-                                                                : WAVE_SET_TITLE_NONE,
-                                  0);
-    }
-
     if (process_finder_names_queued()) {
         if (GLOBALS->pFileChoose) {
             if (!GLOBALS->window_simplereq_c_9) {

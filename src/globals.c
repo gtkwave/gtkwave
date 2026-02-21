@@ -410,21 +410,6 @@ static const struct Global globals_base_values = {
     NULL, /* cleanup 386 */
 
     /*
-     * splash.c
-     */
-    0, /* splash_is_loading */
-    0, /* splash_fix_win_title */
-    1, /* splash_disable 387 */
-    NULL, /* splash_splash_c_1 391 */
-    NULL, /* darea_splash_c_1 392 */
-    NULL, /* gt_splash_c_1 393 */
-    0, /* timeout_tag 394 */
-    0, /* load_complete_splash_c_1 395 */
-    2, /* cnt_splash_c_1 396 */
-    0, /* prev_bar_x_splash_c_1 397 */
-    NULL, /* wave_splash_pixbuf */
-
-    /*
      * strace.c
      */
     NULL, /* strace_ctx (defined in strace.h for multiple strace sessions) */
@@ -691,7 +676,6 @@ struct Global *initialize_globals(void)
 
     g->strace_ctx = &g->strace_windows[0]; /* arbitrarily point to first one */
 
-    g->hierarchy_icons = gw_hierarchy_icons_new();
     g->project = gw_project_new();
     g->color_theme = gw_color_theme_new();
 
@@ -845,7 +829,6 @@ void reload_into_new_context_2(void)
     char cached_ignore_savefile_pane_pos = GLOBALS->ignore_savefile_pane_pos;
     char cached_ignore_savefile_pos = GLOBALS->ignore_savefile_pos;
     char cached_ignore_savefile_size = GLOBALS->ignore_savefile_size;
-    char cached_splash_disable = GLOBALS->splash_disable;
 
     if ((GLOBALS->loaded_file_type == MISSING_FILE) || (GLOBALS->is_optimized_stdin_vcd)) {
         fprintf(stderr, "GTKWAVE | Nothing to reload!\n");
@@ -853,9 +836,6 @@ void reload_into_new_context_2(void)
     }
 
     logbox_reload();
-
-    /* kill any pending splash screens (e.g., from Tcl "wish") */
-    splash_button_press_event(NULL, NULL);
 
     /* fix problem where ungrab doesn't occur if button pressed + simultaneous reload accelerator
      * key occurs */
@@ -958,7 +938,6 @@ void reload_into_new_context_2(void)
 #ifdef WAVE_ALLOW_GTK3_GESTURE_EVENT
     new_globals->wavearea_gesture_swipe = GLOBALS->wavearea_gesture_swipe;
 #endif
-    new_globals->wave_splash_pixbuf = GLOBALS->wave_splash_pixbuf;
 
     new_globals->black_and_white = GLOBALS->black_and_white;
 
@@ -1069,7 +1048,6 @@ void reload_into_new_context_2(void)
 
     new_globals->hier_ignore_escapes = GLOBALS->hier_ignore_escapes;
 
-    new_globals->splash_disable = 1; /* to disable splash for reload */
     new_globals->strace_repeat_count =
         GLOBALS->strace_repeat_count; /* for edgebuttons and also strace */
 
@@ -1574,7 +1552,6 @@ void reload_into_new_context_2(void)
     GLOBALS->ignore_savefile_pane_pos = cached_ignore_savefile_pane_pos;
     GLOBALS->ignore_savefile_pos = cached_ignore_savefile_pos;
     GLOBALS->ignore_savefile_size = cached_ignore_savefile_size;
-    GLOBALS->splash_disable = cached_splash_disable;
 
     printf("GTKWAVE | ...waveform reloaded\n");
 

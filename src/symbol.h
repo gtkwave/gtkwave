@@ -48,12 +48,6 @@ GwBits *makevec_chain(char *vec, GwSymbol *sym, int len);
 int add_vector_chain(GwSymbol *s, int len);
 char *makename_chain(GwSymbol *sym);
 
-/* splash screen activation (version >= GTK2 only) */
-void splash_create(void);
-void splash_sync(off_t current, off_t total);
-void splash_finalize(void);
-gint splash_button_press_event(GtkWidget *widget, GdkEventExpose *event);
-
 /* accessor functions for sym->selected moved (potentially) to sparse array */
 char get_s_selected(GwSymbol *s);
 char set_s_selected(GwSymbol *s, char value);
