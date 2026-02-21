@@ -54,8 +54,8 @@ jobs:
       - name: Install dependencies
         run: |
           brew install \
-            meson \
             ninja \
+            meson \
             gtk+3 \
             gtk4 \
             gtk-mac-integration \
