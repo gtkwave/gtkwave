@@ -29,7 +29,7 @@ version_h = vcs_tag(input: 'src/version.h.in', output: 'version.h')
 
 glib_req = '>=2.72.0'
 glib_req_macro = 'GLIB_VERSION_2_72'
-json_glib_req = '>=1.8.0'
+json_glib_req = '>=1.6.6'
 gtk_req = '>=3.24.0'
 gtk_mac_integration_req = '>=3.0.0'
 gtk4_req = '>=4.6'
