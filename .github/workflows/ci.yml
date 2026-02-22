@@ -1,14 +1,26 @@
+# A workflow to build and test GTKWave on all major supported platforms.
+
 name: CI
 
+# TODO: Upload the build artifact of Linux x86-64
+# TODO: Add a build job for win x86-64
+# TODO: Create a pre-release with the build artifacts of all the platforms.
+
 on:
+  # Run on push.
   push:
-    branches: [ "master" ]
+    branches: ["master"]
+
+  # Run on a pull request.
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
+
+  # Allow to run manually
+  workflow_dispatch:
 
 jobs:
-  build-linux:
-    name: Build (Linux)
+  build-linux-x86-64:
+    name: Build (linux-x86-64)
     runs-on: ubuntu-latest
 
     steps:
@@ -27,27 +39,65 @@ jobs:
       - name: Run tests
         run: meson test -C build -v
 
-  build-macos:
-    name: Build (macOS)
+  build-macos-arm64:
+    name: Build (macos-arm64)
     runs-on: macos-14
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
       - name: Install dependencies
-        run: brew install meson ninja gtk+3 gtk4 gtk-mac-integration gobject-introspection shared-mime-info desktop-file-utils json-glib
+        run: |
+          brew install \
+            meson \
+            gtk+3 \
+            gtk4 \
+            gtk-mac-integration \
+            gobject-introspection \
+            shared-mime-info \
+            desktop-file-utils \
+            json-glib \
+            librsvg
+
       - name: Setup xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: 15.3.0
-      - name: Setup meson build
+
+      - name: Setup meson build script
         run: meson setup build
+
       - name: Compile GTKWave
         run: meson compile -C build
+
       - name: Run tests
         run: meson test -C build -v
+
       - name: Build and install GTKWave.app
-        run: sh ./macos/build.sh
+        run: |
+          sh ./macos/build.sh
+
+          # Export the .app dir location.
+          echo "APP_DIR=${HOME}/Applications/GTKWave.app" >> "$GITHUB_ENV"
+
+      - name: Archive Applications/GTKWave.app
+        run: |
+          # Create the archive under ./build
+          # Use ditto instead of zip to make sure resources forks are preserved in the zip archive.
+          ditto -c -k --sequesterRsrc --keepParent "${APP_DIR}" build/GTKWave.app.zip
+          ls -lh build/GTKWave.app.zip
+
+      # NOTE: If downloading, remember to run 'xattr -c macos-gtkwave-app.zip'
+      # to remove the quarantine flag.
+      - name: Upload the archived GTKWave.app archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtkwave-macos-arm64-app.zip
+          path: build/GTKWave.app.zip
+          if-no-files-found: error
+          retention-days: 14
