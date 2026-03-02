@@ -9,6 +9,43 @@ void gw_expand_info_free(GwExpandInfo *self) {
     g_free(self);
 }
 
+void gw_expand_info_free_deep(GwExpandInfo *self) {
+    g_return_if_fail(self != NULL);
+
+    if (self->narray) {
+        for (int i = 0; i < self->width; i++) {
+            if (self->narray[i]) {
+                // Free child node and its internally allocated members
+                g_free(self->narray[i]->harray);
+                g_free(self->narray[i]->nname);
+                g_free(self->narray[i]);
+            }
+        }
+    }
+    gw_expand_info_free(self);
+}
+
+GwExpandInfo *gw_expand_info_acquire(GwExpandInfo *self) {
+    if (self) {
+        self->refcount++;
+    }
+    return self;
+}
+
+void gw_expand_info_release(GwExpandInfo *self) {
+    if (!self) {
+        return;
+    }
+    
+    self->refcount--;
+    
+    if (self->refcount <= 0) {
+        // Only free the expand_info structure, not the child nodes
+        // The child nodes are owned by traces or the dump file
+        gw_expand_info_free(self);
+    }
+}
+
 GwExpandInfo *gw_node_expand(GwNode *self)
 {
     g_return_val_if_fail(self != NULL, NULL);
@@ -16,6 +53,12 @@ GwExpandInfo *gw_node_expand(GwNode *self)
     if (!self->extvals) {
         // DEBUG(fprintf(stderr, "Nothing to expand\n"));
         return NULL;
+    }
+
+    // Handle re-expansion: release existing expansion info and children using reference counting
+    if (self->expand_info) {
+        gw_expand_info_release(self->expand_info);
+        self->expand_info = NULL;
     }
 
     gint msb = self->msi;
@@ -31,6 +74,7 @@ GwExpandInfo *gw_node_expand(GwNode *self)
     rc->msb = msb;
     rc->lsb = lsb;
     rc->width = width;
+    rc->refcount = 1;  // Initialize reference count to 1
 
     char *namex = self->nname;
 
@@ -122,6 +166,32 @@ GwExpandInfo *gw_node_expand(GwNode *self)
             return NULL;
         }
         h = h->next;
+    }
+
+    // Check if this node has valid vector history entries
+    // If the node is marked as having extended values (extvals=1) with width > 1,
+    // but the history entries use scalar storage (h_val) instead of vector storage (h_vector),
+    // we cannot expand it. This can happen with:
+    // 1. Nodes that were created from streaming data with scalar integer encoding
+    // 2. Already-expanded child nodes being re-expanded
+    // We detect this by checking if non-special-time history entries have valid h_vector pointers.
+    if (width > 1 && self->numhist > 0) {
+        for (i = 0; i < self->numhist; i++) {
+            h = self->harray[i];
+            // Skip special time markers (t=-2, t=-1, and t>=max which use h_val)
+            if (h->time >= 0 && h->time < GW_TIME_MAX - 1) {
+                // For vector nodes, h_vector should be a valid pointer, not a small integer
+                // If h_vector appears to be a small integer value (likely h_val being misinterpreted),
+                // then this node's history uses scalar storage and cannot be expanded as a vector
+                if (h->v.h_vector == NULL || (guintptr)(h->v.h_vector) < 256) {
+                    g_error(
+                        "Cannot expand vector '%s': found scalar history data instead of vector data. This can happen with corrupted or improperly streamed VCD files.",
+                        self->nname);
+                    return NULL; /* Should not be reached */
+                }
+                // Found at least one valid vector entry, check the rest of the entries too
+            }
+        }
     }
 
     // DEBUG(fprintf(stderr,
@@ -236,6 +306,11 @@ GwExpandInfo *gw_node_expand(GwNode *self)
             narray[i]->harray[j] = htemp;
             htemp = htemp->next;
         }
+    }
+
+    // Store the link from parent to children
+    if (rc) {
+        self->expand_info = rc;
     }
 
     return rc;
