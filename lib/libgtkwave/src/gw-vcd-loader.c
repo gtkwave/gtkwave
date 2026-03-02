@@ -787,6 +787,7 @@ static int get_vartoken(GwVcdLoader *self, int match_kw)
 {
     int ch;
     int len = 0;
+    static int in_bracket = 0;
 
     if (self->varsplit) {
         int rc = get_vartoken_patched(self, match_kw);
@@ -809,12 +810,16 @@ static int get_vartoken(GwVcdLoader *self, int match_kw)
         self->var_prevch = 0;
     }
 
-    if (ch == '[')
+    if (ch == '[') {
+        in_bracket = 1;
         return (V_LB);
-    if (ch == ':')
-        return (V_COLON);
-    if (ch == ']')
+    }
+//    if (ch == ':')
+//        return (V_COLON);
+    if (ch == ']') {
+        in_bracket = 0;
         return (V_RB);
+    }
 
     if (ch == '#') /* for MTI System Verilog '$var reg 64 >w #implicit-var###VarElem:ram_di[0.0]
                       [63:0] $end' style declarations */
@@ -843,9 +848,18 @@ static int get_vartoken(GwVcdLoader *self, int match_kw)
             break;
         if ((ch == '[') && (self->yytext[0] != '\\')) {
             self->varsplit = self->yytext + len; /* keep looping so we get the *last* one */
-        } else if (((ch == ':') || (ch == ']')) && (!self->varsplit) && (self->yytext[0] != '\\')) {
-            self->var_prevch = ch;
-            break;
+        } else {
+            if(int_bracket) {
+                if (((ch == ':') || (ch == ']')) && (!self->varsplit) && (self->yytext[0] != '\\')) {
+                    self->var_prevch = ch;
+                    break;
+                }
+            } else {
+                if ((ch == ']') && (!self->varsplit) && (self->yytext[0] != '\\')) {
+                    self->var_prevch = ch;
+                    break;
+                }
+            }
         }
     }
 
