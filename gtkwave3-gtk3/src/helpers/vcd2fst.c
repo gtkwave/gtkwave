@@ -21,6 +21,7 @@
  */
 
 #include <config.h>
+#include <string.h>
 
 #if HAVE_GETOPT_H
 #include <getopt.h>
