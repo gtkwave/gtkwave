@@ -708,6 +708,7 @@ GdkPixbuf *hiericon_task_pixbuf; /* from pixmaps.c */
 GdkPixbuf *hiericon_function_pixbuf; /* from pixmaps.c */
 GdkPixbuf *hiericon_begin_pixbuf; /* from pixmaps.c */
 GdkPixbuf *hiericon_fork_pixbuf; /* from pixmaps.c */
+GdkPixbuf *hiericon_unpacked_pixbuf; /* from pixmaps.c */
 GdkPixbuf *hiericon_interface_pixbuf;
 GdkPixbuf *hiericon_svpackage_pixbuf;
 GdkPixbuf *hiericon_program_pixbuf;

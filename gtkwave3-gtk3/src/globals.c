@@ -679,6 +679,7 @@ NULL, /* hiericon_task_pixbuf */
 NULL, /* hiericon_function_pixbuf */
 NULL, /* hiericon_begin_pixbuf */
 NULL, /* hiericon_fork_pixbuf */
+NULL, /* hiericon_unpacked_pixbuf */
 NULL, /* hiericon_interface_pixbuf */
 NULL, /* hiericon_svpackage_pixbuf */
 NULL, /* hiericon_program_pixbuf */
@@ -2989,6 +2990,7 @@ void clone_icon_pointers_across_contexts(struct Global *a, struct Global *b)
  a->hiericon_function_pixbuf = b->hiericon_function_pixbuf;
  a->hiericon_begin_pixbuf = b->hiericon_begin_pixbuf;
  a->hiericon_fork_pixbuf = b->hiericon_fork_pixbuf;
+ a->hiericon_unpacked_pixbuf = b->hiericon_unpacked_pixbuf;
  a->hiericon_interface_pixbuf = b->hiericon_interface_pixbuf;
  a->hiericon_svpackage_pixbuf = b->hiericon_svpackage_pixbuf;
  a->hiericon_program_pixbuf = b->hiericon_program_pixbuf;

@@ -1175,7 +1175,10 @@ for(;;)
                                         case 'b':       ttype = TREE_VCD_ST_BEGIN; break;
 					case 'g':	ttype = TREE_VCD_ST_GENERATE; break;
 					case 's':	ttype = TREE_VCD_ST_STRUCT; break;
-					case 'u':	ttype = TREE_VCD_ST_UNION; break;
+					case 'u':	{
+							char *vht = GLOBALS->yytext_vcd_c_1;
+							ttype = (!strncmp(vht, "uni", 3)) ? TREE_VCD_ST_UNION : TREE_VCD_ST_UNPACKED; break;
+							}
 					case 'c':	ttype = TREE_VCD_ST_CLASS; break;
 					case 'i':	ttype = TREE_VCD_ST_INTERFACE; break;
 					case 'p':	ttype = (GLOBALS->yytext_vcd_c_1[1] == 'r') ? TREE_VCD_ST_PROGRAM : TREE_VCD_ST_PACKAGE; break;

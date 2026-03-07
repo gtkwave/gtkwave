@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014 Tony Bybell.
+ * Copyright (c) 2009-2026 Tony Bybell.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -967,6 +967,11 @@ while(!feof(f))
 				if(!strcmp(st, "union"))
 					{
 					scopetype = FST_ST_VCD_UNION;
+					}
+                                else
+				if(!strcmp(st, "unpacked"))
+					{
+					scopetype = FST_ST_UNPACKED_DIM;
 					}
 				break;
 

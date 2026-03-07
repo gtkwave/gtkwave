@@ -516,6 +516,8 @@ switch(mode)
 			case TREE_VHDL_ST_RECORD:	pxm = GLOBALS->hiericon_record_pixmap; msk = GLOBALS->hiericon_record_mask; break;
 			case TREE_VHDL_ST_GENERATE:	pxm = GLOBALS->hiericon_generate_pixmap; msk = GLOBALS->hiericon_generate_mask; break;
 
+   			case TREE_VCD_ST_UNPACKED:	pxm = GLOBALS->hiericon_unpacked_pixmap; msk = GLOBALS->hiericon_unpacked_mask; break;
+
 			default:			pxm = msk = NULL; break;
 			}
 

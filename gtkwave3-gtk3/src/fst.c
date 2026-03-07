@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Tony Bybell 2009-2025.
+ * Copyright (c) Tony Bybell 2009-2026.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -193,6 +193,8 @@ while((h = fstReaderIterateHier(xc)))
 				case FST_ST_VHDL_IF_GENERATE:	ttype = TREE_VHDL_ST_GENIF;        break;
 				case FST_ST_VHDL_GENERATE:	ttype = TREE_VHDL_ST_GENERATE;     break;
 				case FST_ST_VHDL_PACKAGE:	ttype = TREE_VHDL_ST_PACKAGE;      break;
+
+                                case FST_ST_UNPACKED_DIM:       ttype = TREE_VCD_ST_UNPACKED;      break;
 
 				default:			ttype = TREE_UNKNOWN; break;
 				}

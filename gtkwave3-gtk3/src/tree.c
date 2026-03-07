@@ -860,6 +860,8 @@ text[0]=tmp;
 			case TREE_VHDL_ST_RECORD:	pxb = GLOBALS->hiericon_record_pixbuf; break;
 			case TREE_VHDL_ST_GENERATE:	pxb = GLOBALS->hiericon_generate_pixbuf; break;
 
+                        case TREE_VCD_ST_UNPACKED:      pxb = GLOBALS->hiericon_unpacked_pixbuf; break; /* new VCD add for artificial hierarchy */
+
 			default:			pxb = NULL; break;
 			}
 

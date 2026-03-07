@@ -91,7 +91,10 @@ enum tree_kind
    TREE_VHDL_ST_PROCEDURE,
    TREE_VHDL_ST_RECORD,
    TREE_VHDL_ST_PROCESS,
-   TREE_VHDL_ST_GENERATE
+   TREE_VHDL_ST_GENERATE,
+
+   /* artificial hierarchy wrapper (for arrays) */
+   TREE_VCD_ST_UNPACKED,
  };
 
 #define WAVE_T_WHICH_UNDEFINED_COMPNAME (-1)
