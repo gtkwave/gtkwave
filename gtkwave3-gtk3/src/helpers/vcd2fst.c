@@ -961,17 +961,17 @@ while(!feof(f))
 					{
 					scopetype = FST_ST_VCD_STRUCT;
 					}
+                                else
+				if(!strcmp(st, "sv_array"))
+					{
+					scopetype = FST_ST_SV_ARRAY;
+					}
 				break;
 
 			case 'u':
 				if(!strcmp(st, "union"))
 					{
 					scopetype = FST_ST_VCD_UNION;
-					}
-                                else
-				if(!strcmp(st, "unpacked"))
-					{
-					scopetype = FST_ST_UNPACKED_DIM;
 					}
 				break;
 

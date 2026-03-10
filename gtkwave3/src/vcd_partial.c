@@ -1113,11 +1113,23 @@ for(;;)
                                         case 'f':       ttype = (GLOBALS->yytext_vcd_partial_c_2[1] == 'u') ? TREE_VCD_ST_FUNCTION : TREE_VCD_ST_FORK; break;
                                         case 'b':       ttype = TREE_VCD_ST_BEGIN; break;
 					case 'g':       ttype = TREE_VCD_ST_GENERATE; break;
-					case 's':       ttype = TREE_VCD_ST_STRUCT; break;
-					case 'u':       {
+                                        case 's':	{
 							char *vht = GLOBALS->yytext_vcd_partial_c_2;
-							ttype = (!strncmp(vht, "uni", 3)) ? TREE_VCD_ST_UNION : TREE_VCD_ST_UNPACKED; break;
-							}
+                                                        if(!strncmp(vht, "sv_", 3))
+                                                                {
+                                                                switch(vht[3])
+                                                                        {
+                                                                        case 'a':       ttype = TREE_SV_ST_ARRAY; break; 
+                                                                        default:        ttype = TREE_UNKNOWN; break;
+									}
+                                                                }
+                                                                else
+                                                                {
+                                                                ttype = TREE_VCD_ST_STRUCT; break;
+                                                                }
+                                                        }
+							break;
+                                        case 'u':	ttype =	TREE_VCD_ST_UNION; break;
 					case 'c':       ttype = TREE_VCD_ST_CLASS; break;
 					case 'i':       ttype = TREE_VCD_ST_INTERFACE; break;
 					case 'p':       ttype = (GLOBALS->yytext_vcd_partial_c_2[1] == 'r') ? TREE_VCD_ST_PROGRAM : TREE_VCD_ST_PACKAGE; break;

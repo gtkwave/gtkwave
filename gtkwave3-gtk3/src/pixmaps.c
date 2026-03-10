@@ -4824,7 +4824,7 @@ GLOBALS->hiericon_task_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)cog);
 GLOBALS->hiericon_function_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)chart_line);
 GLOBALS->hiericon_begin_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)flag_green);
 GLOBALS->hiericon_fork_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_divide);
-GLOBALS->hiericon_unpacked_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)table_multiple);
+GLOBALS->hiericon_sv_array_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)table_multiple);
 
 /* SV */
 GLOBALS->hiericon_interface_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_inout);

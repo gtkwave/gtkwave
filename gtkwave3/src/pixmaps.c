@@ -4905,7 +4905,7 @@ GLOBALS->hiericon_begin_pixmap=gdk_pixmap_create_from_xpm_d(window->window, &GLO
 	&style->bg[GTK_STATE_NORMAL], (gchar **)flag_green);
 GLOBALS->hiericon_fork_pixmap=gdk_pixmap_create_from_xpm_d(window->window, &GLOBALS->hiericon_fork_mask,
 	&style->bg[GTK_STATE_NORMAL], (gchar **)arrow_divide);
-GLOBALS->hiericon_unpacked_pixmap=gdk_pixmap_create_from_xpm_d(window->window, &GLOBALS->hiericon_unpacked_mask,
+GLOBALS->hiericon_sv_array_pixmap=gdk_pixmap_create_from_xpm_d(window->window, &GLOBALS->hiericon_sv_array_mask,
 	&style->bg[GTK_STATE_NORMAL], (gchar **)table_multiple);
 
 /* SV */

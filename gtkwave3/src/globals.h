@@ -709,8 +709,8 @@ GdkDrawable *hiericon_begin_pixmap; /* from pixmaps.c */
 GdkDrawable *hiericon_begin_mask; /* from pixmaps.c */
 GdkDrawable *hiericon_fork_pixmap; /* from pixmaps.c */
 GdkDrawable *hiericon_fork_mask; /* from pixmaps.c */
-GdkDrawable *hiericon_unpacked_pixmap; /* from pixmaps.c */
-GdkDrawable *hiericon_unpacked_mask; /* from pixmaps.c */
+GdkDrawable *hiericon_sv_array_pixmap; /* from pixmaps.c */
+GdkDrawable *hiericon_sv_array_mask; /* from pixmaps.c */
 GdkDrawable *hiericon_interface_pixmap;
 GdkDrawable *hiericon_interface_mask;
 GdkDrawable *hiericon_svpackage_pixmap;

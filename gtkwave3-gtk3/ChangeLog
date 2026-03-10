@@ -1957,5 +1957,5 @@
 		the specify value change menu option.
 		Changed ps2pdf to pstopdf on Mac as ps removed by Sonoma.
 		Warnings fix in	vcd2fst	for missing string.h include.
-		Added FST_ST_UNPACKED_DIM (FST) and "unpacked" (VCD) for 
-		unpacked arrays (gtkwave/libfst#17).
+		Added FST_ST_SV_ARRAY (FST) and "sv_array" (VCD) for 
+		arrays (gtkwave/libfst#17).

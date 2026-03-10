@@ -43,7 +43,7 @@
             <li>Fix for fixed point shift that does not disable it on the specify value change menu option.</li>
             <li>Changed ps2pdf to pstopdf on Mac as ps removed by Sonoma.</li>
             <li>Warnings fix in vcd2fst for missing string.h include.</li>
-            <li>Added FST_ST_UNPACKED_DIM (FST) and "unpacked" (VCD) for unpacked arrays (gtkwave/libfst#17).</li>
+            <li>Added FST_ST_SV_ARRAY (FST) and "sv_array" (VCD) for arrays (gtkwave/libfst#17).</li>
         </ul>
       </description>
     </release>
