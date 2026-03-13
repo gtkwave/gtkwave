@@ -9,14 +9,14 @@ GTKWave is a fully featured GTK+ based wave viewer for Unix and Win32 which read
 Debian, Ubuntu:
 
 ```sh
-apt install build-essential meson gperf flex desktop-file-utils libgtk-3-dev \
+apt install build-essential meson gperf flex desktop-file-utils libgtk-3-dev libgtk-4-dev \
             libbz2-dev libjudy-dev libgirepository1.0-dev
 ```
 
 Fedora:
 
 ```sh
-dnf install meson gperf flex glib2-devel gcc gcc-c++ gtk3-devel \
+dnf install meson gperf flex glib2-devel gcc gcc-c++ gtk3-devel gtk4-devel \
             gobject-introspection-devel desktop-file-utils tcl
 ```
 
