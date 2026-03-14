@@ -2,15 +2,12 @@
 
 name: CI
 
-# Immediate TODOs:
-# TODO: Do we like the current structure of the linux-x86-64 bundle?
-# TODO: Remove the x86-64 bundle requirement of manual libjudydebian1 installation.
-# TODO: Consider checking in the linux x86-64 launcher instead of recreating it.concurrency: 
-# TODO: Can we change the build scripts to output to 'bin' dirs instead of 'src' dirs?
-
-# For latter:
 # TODO: Add a build job for win x86-64.
 # TODO: Add a build job for macOS x86-64.
+# TODO: Do we need linux x86 launchers for additional binaries?
+# TODO: Should we delete the 'include' directory of the linux x86-64 bundle.
+# TODO: Consider to checkin the linux launcher.
+# TODO: Address the deprecation warnings "Node.js 20 actions are deprecated"
 # TODO: Create a pre-release with the build artifacts of all the platforms.
 # TODO: Consider scanning the exported artifacts with clamav
 # TODO: After stabilization, remove the debugging only steps.
@@ -31,13 +28,9 @@ jobs:
   build-linux-x86-64:
     name: Build (linux-x86-64)
     # NOTE: Using ubuntu-latest here links to a newer glibc that is
-    # not backward compatible with Ubuntu LTS 24.04. If additional backward
-    # compatibility will be needed, consider to demote to ubuntu-20.04.
+    # not backward compatible with Ubuntu LTS 22.x. This supports also
+    # the newer Ubuntu LTS 24.x.
     runs-on: ubuntu-22.04
-
-    env:
-      # The name of the top wrapper dir within the bundle archive artifact.
-      BUNDLE: "gtkwave-x86-64"
 
     steps:
       - name: Checkout
@@ -61,100 +54,57 @@ jobs:
 
       - name: Setup meson build
         run: |
-          meson setup build
+          meson setup -Djudy=disabled -Dprefix=/tmp/gtkwave build
 
       - name: Compile GTKWave
         run: |
           meson compile -C build
 
-      # - name: Show the build directory tree
-      #   run: |
-      #     tree -d build
-
-      # - name: Show the build directory full tree
-      #   run: |
-      #     tree build
-
-      # - name: Archive the build folder (for debugging)
-      #   run: |
-      #     tar -czvf gtkwave-linux-x86-64-build-dump.tar.gz build
-
-      # - name: Upload the build archive as an artifact (for debugging)
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: linux-build-folder1
-      #     path: gtkwave-linux-x86-64-build-dump.tar.gz
-      #     if-no-files-found: error
-      #     retention-days: 14
-
-      - name: Create the file bundle
+      - name: Show the build directory tree
         run: |
-          set -x
+          tree -d build
 
-          # Copy a directory tree preserving attributes and symlinks.
-          # We assume that the symlinks are within the directory tree.
-          cp_dir="rsync -aHAX --no-inc-recursive"
-          cp_file="cp --preserve=all"
-
-          mkdir build/$BUNDLE
-
-          # Copy selected directories.
-          $cp_dir build/lib/ build/$BUNDLE/lib/
-          $cp_dir build/subprojects/ build/$BUNDLE/subprojects/
-
-          # Copy a subset of build/src to the bundle
-          # NOTE: Renaming the 'src' dirs to 'bin' break the lib references.
-          mkdir build/$BUNDLE/src
-          $cp_file build/src/gtkwave build/$BUNDLE/src/gtkwave
-          $cp_file build/src/twinwave build/$BUNDLE/src/twinwave
-          $cp_dir build/src/helpers/ build/$BUNDLE/src/helpers/
-
-          # Fine-tune the bundle
-          rm -rf build/$BUNDLE/lib/libgtkwave/test
-          rm -rf build/$BUNDLE/subprojects/libfst/tests
-
-      # NOTE: We tried to use this 'find' commands but it fails.
-      # find $bundle_dir -type d -name '*.p' -exec rm -rf {} \;
-      - name: Delete bundle's *.p sub-directories.
-        shell: python
+      - name: Create executable bundle
         run: |
-          import shutil
-          from pathlib import Path
-          root = Path("build/${{ env.BUNDLE }}")
-          for path in sorted(root.rglob('*')):
-              if path.name.endswith(".p"):
-                  print(f'Deleting: {path}')
-                  shutil.rmtree(path)
+          meson install -C build
 
-      - name: Add to the bundle a launcher file
+      - name: Create launcher script
         run: |
-          cat > build/$BUNDLE/gtkwave << 'EOF'
+          cat > /tmp/gtkwave/gtkwave << 'EOF'
           #!/usr/bin/env bash
-          SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-          exec "$SCRIPT_DIR/src/gtkwave" "$@"
-          EOF
-          chmod +x build/$BUNDLE/gtkwave
-          cat -n build/$BUNDLE/gtkwave
 
-      - name: Show the bundle tree
+          # Get the directory where this script lives
+          SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+          # Set the library path (pointing to the bundled libs)
+          export LD_LIBRARY_PATH="$SCRIPT_DIR/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+          # Run the actual binary, passing along any arguments
+          exec "$SCRIPT_DIR/bin/gtkwave" "$@"
+          EOF
+
+          chmod +x /tmp/gtkwave/gtkwave
+          cat -n /tmp/gtkwave/gtkwave
+
+      - name: Show the bundle directory tree
         run: |
-          tree build/$BUNDLE
+          tree /tmp/gtkwave
 
       - name: Tar the bundle directory
         run: |
-          pushd build
-          tar -czvf gtkwave-linux-x86-64-bundle.tar.gz $BUNDLE
+          pushd /tmp
+          tar -czvf gtkwave-linux-x86-64-bundle.tar.gz gtkwave
           popd
 
       - name: Upload bundle archive as an artifact
         uses: actions/upload-artifact@v4
         with:
           name: gtkwave-linux-x86-64-bundle
-          path: build/gtkwave-linux-x86-64-bundle.tar.gz
+          path: /tmp/gtkwave-linux-x86-64-bundle.tar.gz
           if-no-files-found: error
           retention-days: 14
 
-      - name: Run tests
+      - name: Run the tests
         run: |
           meson test -C build -v
 
