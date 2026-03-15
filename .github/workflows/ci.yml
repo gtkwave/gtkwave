@@ -75,8 +75,11 @@ jobs:
           # Get the directory where this script lives
           SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-          # Set the library path (pointing to the bundled libs)
+          # Add the local lib/x86_64-linux-gnu dir at the front of LD_LIBRARY_PATH
           export LD_LIBRARY_PATH="$SCRIPT_DIR/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+          # Add the local share/ dir at the front of XDG_DATA_DIRS
+          export XDG_DATA_DIRS="$SCRIPT_DIR/share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"
 
           # Run the actual binary, passing along any arguments
           exec "$SCRIPT_DIR/bin/gtkwave" "$@"
