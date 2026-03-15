@@ -2,15 +2,14 @@
 
 name: CI
 
+# TODO: Address the deprecation warnings "Node.js 20 actions are deprecated"
 # TODO: Add a build job for win x86-64.
 # TODO: Add a build job for macOS x86-64.
-# TODO: Do we need linux x86 launchers for additional binaries?
-# TODO: Should we delete the 'include' directory of the linux x86-64 bundle.
+# TODO: Add oss-cad-suite style environment script to setup LD_LIBRARY_PATH
+#       for the other binaries in the linux package.
 # TODO: Consider to checkin the linux launcher.
-# TODO: Address the deprecation warnings "Node.js 20 actions are deprecated"
 # TODO: Create a pre-release with the build artifacts of all the platforms.
 # TODO: Consider scanning the exported artifacts with clamav
-# TODO: After stabilization, remove the debugging only steps.
 
 on:
   # Run on push.
