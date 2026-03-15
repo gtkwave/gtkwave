@@ -21,7 +21,7 @@ libgio-2.0.0.dylib=glib
 libgobject-2.0.0.dylib=glib
 libgtkmacintegration-gtk3.4.dylib=gtk-mac-integration
 libgtk-4.1.dylib=gtk4
-libjson-glib-1.6.6.dylib=json-glib
+libjson-glib-1.0.0.dylib=json-glib
 libintl.8.dylib=gettext
 libpcre2-8.0.dylib=pcre2
 libgmodule-2.0.0.dylib=glib
@@ -43,7 +43,7 @@ libgio-2.0.0.dylib
 libgobject-2.0.0.dylib
 libgtkmacintegration-gtk3.4.dylib
 libgtk-4.1.dylib
-libjson-glib-1.6.6.dylib
+libjson-glib-1.0.0.dylib
 libintl.8.dylib
 libpcre2-8.0.dylib
 libgmodule-2.0.0.dylib
