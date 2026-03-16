@@ -2,7 +2,6 @@
 
 name: CI
 
-# TODO: Address the deprecation warnings "Node.js 20 actions are deprecated"
 # TODO: Add a build job for win x86-64.
 # TODO: Add a build job for macOS x86-64.
 # TODO: Add oss-cad-suite style environment script to setup LD_LIBRARY_PATH
@@ -10,6 +9,7 @@ name: CI
 # TODO: Consider to checkin the linux launcher.
 # TODO: Create a pre-release with the build artifacts of all the platforms.
 # TODO: Consider scanning the exported artifacts with clamav
+# TODO: Update maxim-lobanov/setup-xcode@v1 to a node 24 version.
 
 on:
   # Run on push.
@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -99,7 +99,7 @@ jobs:
           popd
 
       - name: Upload bundle archive as an artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: gtkwave-linux-x86-64-bundle
           path: /tmp/gtkwave-linux-x86-64-bundle.tar.gz
@@ -116,9 +116,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -136,6 +136,8 @@ jobs:
               librsvg
 
       - name: Setup xcode
+        # Waiting for this Node 24 version.
+        # https://github.com/maxim-lobanov/setup-xcode/pull/98/changes
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: 15.3.0
@@ -166,7 +168,7 @@ jobs:
       # NOTE: If downloading, remember to run 'xattr -c macos-gtkwave-app.zip'
       # to remove the quarantine flag.
       - name: Upload the archived GTKWave.app archive artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           # NOTE: Github adds a zip layer and appends '.zip' to the name.
           name: gtkwave-macos-arm64-app
