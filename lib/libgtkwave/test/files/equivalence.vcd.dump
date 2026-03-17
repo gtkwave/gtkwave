@@ -1,0 +1,110 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_NANO
+range: 0 - 80
+global time offset: 0
+
+Tree
+----
+test (kind=GW_TREE_KIND_VCD_ST_MODULE, t_which=-1)
+    string_signal (kind=GW_TREE_KIND_UNKNOWN, t_which=3)
+    single_bit (kind=GW_TREE_KIND_UNKNOWN, t_which=2)
+    real_signal (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+    four_bit_vector[3:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+test.four_bit_vector[3:0]
+    node: test.four_bit_vector[3:0]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 3, 0
+        numhist: 9
+        transitions:
+            ? @ -2
+            ? @ -1
+            0000 @ 0
+            0001 @ 10
+            0010 @ 20
+            0011 @ 30
+            0100 @ 40
+            0101 @ 50
+            0110 @ 60
+            0111 @ 70
+            1000 @ 80
+            xxxx @ 9223372036854775806
+            zzzz @ 9223372036854775807
+test.real_signal
+    node: test.real_signal
+        vartype: GW_VAR_TYPE_VCD_REAL
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 0, 0
+        numhist: 9
+        transitions:
+            x @ -2
+            nan @ -1
+            0.000000 @ 0
+            1.500000 @ 10
+            2.250000 @ 20
+            3.750000 @ 30
+            5.000000 @ 40
+            7.500000 @ 50
+            10.000000 @ 60
+            12.500000 @ 70
+            15.000000 @ 80
+            1.000000 @ 9223372036854775806
+            0.000000 @ 9223372036854775807
+test.single_bit
+    node: test.single_bit
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 9
+        transitions:
+            x @ -2
+            x @ -1
+            0 @ 0
+            1 @ 10
+            x @ 20
+            z @ 30
+            0 @ 40
+            1 @ 50
+            x @ 60
+            z @ 70
+            0 @ 80
+            x @ 9223372036854775806
+            z @ 9223372036854775807
+test.string_signal
+    node: test.string_signal
+        vartype: GW_VAR_TYPE_GEN_STRING
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 0, 0
+        numhist: 9
+        transitions:
+            x @ -2
+            ? @ -1
+            "Hello" @ 0
+            "World" @ 10
+            "Test" @ 20
+            "String" @ 30
+            "Value" @ 40
+            "Signal" @ 50
+            "Transition" @ 60
+            "End" @ 70
+            "Final" @ 80
+            "UNDEF" @ 9223372036854775806
+            "" @ 9223372036854775807
+
