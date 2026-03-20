@@ -796,7 +796,7 @@ const struct wave_rgb_color *color = (const struct wave_rgb_color *)v2;
 return((int)strcasecmp(key, color->name));
 }
 
-int get_rgb_from_name(char *str)
+int get_rgb_from_name(const char *str)
 {
 struct wave_rgb_color *match;
 

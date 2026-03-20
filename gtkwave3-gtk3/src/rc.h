@@ -26,7 +26,7 @@ char *str;
 
 void read_rc_file(char *override_rc);
 int insert_rc_variable(char *str);
-int get_rgb_from_name(char *str);
+int get_rgb_from_name(const char *str);
 
 int  f_accel (char *str);
 int  f_alt_hier_delimeter (char *str);

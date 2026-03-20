@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Tony Bybell 1999-2012.
+ * Copyright (c) Tony Bybell 1999-2026.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -10,6 +10,7 @@
 #include "globals.h"
 #include <config.h>
 #include "pixmaps.h"
+#include <assert.h>
 
 /* XPM */
 static char * icon_redo[] = {
@@ -4802,54 +4803,54 @@ make_pixmaps(GtkWidget *window)
 {
 GdkPixbuf *gp;
 
-GLOBALS->redo_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_redo);
-GLOBALS->larrow_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_larrow);
-GLOBALS->rarrow_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_rarrow);
-GLOBALS->prev_page_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)prev_page_xpm);
-GLOBALS->next_page_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)next_page_xpm);
+GLOBALS->redo_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_redo);
+GLOBALS->larrow_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_larrow);
+GLOBALS->rarrow_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_rarrow);
+GLOBALS->prev_page_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)prev_page_xpm);
+GLOBALS->next_page_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)next_page_xpm);
 
-GLOBALS->zoomout_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomout);
-GLOBALS->zoomin_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomin);
-GLOBALS->zoomfit_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomfit);
-GLOBALS->zoomundo_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomundo);
-GLOBALS->zoom_larrow_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)zoom_larrow);
-GLOBALS->zoom_rarrow_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)zoom_rarrow);
+GLOBALS->zoomout_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomout);
+GLOBALS->zoomin_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomin);
+GLOBALS->zoomfit_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomfit);
+GLOBALS->zoomundo_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_zoomundo);
+GLOBALS->zoom_larrow_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)zoom_larrow);
+GLOBALS->zoom_rarrow_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)zoom_rarrow);
 
-GLOBALS->wave_info_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)wave_info);
-GLOBALS->wave_alert_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)wave_alert);
+GLOBALS->wave_info_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)wave_info);
+GLOBALS->wave_alert_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)wave_alert);
 
 /* Verilog */
-GLOBALS->hiericon_module_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)chart_organisation);
-GLOBALS->hiericon_task_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)cog);
-GLOBALS->hiericon_function_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)chart_line);
-GLOBALS->hiericon_begin_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)flag_green);
-GLOBALS->hiericon_fork_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_divide);
-GLOBALS->hiericon_sv_array_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)table_multiple);
+GLOBALS->hiericon_module_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)chart_organisation);
+GLOBALS->hiericon_task_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)cog);
+GLOBALS->hiericon_function_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)chart_line);
+GLOBALS->hiericon_begin_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)flag_green);
+GLOBALS->hiericon_fork_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_divide);
+GLOBALS->hiericon_sv_array_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)table_multiple);
 
 /* SV */
-GLOBALS->hiericon_interface_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_inout);
-GLOBALS->hiericon_svpackage_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)package);
-GLOBALS->hiericon_program_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)application);
-GLOBALS->hiericon_class_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)plugin);
+GLOBALS->hiericon_interface_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_inout);
+GLOBALS->hiericon_svpackage_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)package);
+GLOBALS->hiericon_program_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)application);
+GLOBALS->hiericon_class_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)plugin);
 
 /* VHDL */
-GLOBALS->hiericon_design_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)database);
-GLOBALS->hiericon_block_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)brick);
-GLOBALS->hiericon_generateif_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_switch);
-GLOBALS->hiericon_generatefor_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_rotate_clockwise);
-GLOBALS->hiericon_instance_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_component);
-GLOBALS->hiericon_package_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)box);
+GLOBALS->hiericon_design_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)database);
+GLOBALS->hiericon_block_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)brick);
+GLOBALS->hiericon_generateif_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_switch);
+GLOBALS->hiericon_generatefor_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_rotate_clockwise);
+GLOBALS->hiericon_instance_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_component);
+GLOBALS->hiericon_package_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)box);
 
-GLOBALS->hiericon_signal_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)signal_gtkwave);
-GLOBALS->hiericon_portin_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)door_in);
-GLOBALS->hiericon_portout_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)door_out);
-GLOBALS->hiericon_portinout_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)door_open);
-GLOBALS->hiericon_buffer_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_extension);
-GLOBALS->hiericon_linkage_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)icon_link);
+GLOBALS->hiericon_signal_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)signal_gtkwave);
+GLOBALS->hiericon_portin_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)door_in);
+GLOBALS->hiericon_portout_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)door_out);
+GLOBALS->hiericon_portinout_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)door_open);
+GLOBALS->hiericon_buffer_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_extension);
+GLOBALS->hiericon_linkage_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)icon_link);
 
 /* FSDB VHDL (on top of GHW's existing) */
-GLOBALS->hiericon_record_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)cd_img);
-GLOBALS->hiericon_generate_pixbuf=gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_redo);
+GLOBALS->hiericon_record_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)cd_img);
+GLOBALS->hiericon_generate_pixbuf=XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)arrow_redo);
 
 /* set icon for window manager */
 gp = GLOBALS->wave_info_pixbuf;
@@ -4857,4 +4858,96 @@ gtk_window_set_icon(GTK_WINDOW(window), gp);
 #ifdef MAC_INTEGRATION
 return(gp);
 #endif
+}
+
+
+/* replacement function as XPM has been removed in some distributions containing gdkpixbuf */
+GdkPixbuf *XXX_gdk_pixbuf_new_from_xpm_data(const gchar **src)
+{
+int row = 0;
+int width=0, height=0, ncols=0, ncolbytes=0;
+unsigned int argb = 0;
+int rc, i, x, y;
+guchar r[65536];
+guchar g[65536];
+guchar b[65536];
+guchar a[65536];
+
+memset(r, sizeof(r), 0);
+memset(g, sizeof(g), 0);
+memset(b, sizeof(b), 0);
+memset(a, sizeof(a), 0);
+
+rc = sscanf(src[row++], "%d %d %d %d", &width, &height, &ncols, &ncolbytes);
+assert(rc == 4);
+assert(ncolbytes<=2);
+
+for(i=0;i<ncols;i++)
+	{
+	int cval = (ncolbytes==1) ? ((int)src[row][0]) : ((int)src[row][0])+256*((int)src[row][1]);
+	
+	assert(src[row][ncolbytes+1] == 'c');
+
+	if(src[row][ncolbytes+3] == '#')
+		{
+		const gchar *hex = src[row]+ncolbytes+4;
+		int slen = strlen(hex);
+		if(slen==6) /* 24-bit color specification */
+			{
+			argb = get_rgb_from_name(src[row]+ncolbytes+4);
+			}
+		else
+		if(slen==12) /* chop down 48-bit color specification */
+			{
+			gchar hex6[7] = {hex[0],hex[1], 
+					 hex[4],hex[5],
+					 hex[8],hex[9], 
+					 0};	
+			argb = get_rgb_from_name(hex6);
+			}
+		}
+	else
+	if((src[row][ncolbytes+3] == 'N') && (!strcmp(src[row]+ncolbytes+4, "one")))
+		{
+		argb = 0xFF000000;
+		}
+	else
+		{
+		argb = get_rgb_from_name(src[row]+ncolbytes+3);
+		}
+
+	b[cval] = argb & 255; argb >>= 8;
+	g[cval] = argb & 255; argb >>= 8;
+	r[cval] = argb & 255; argb >>= 8;
+	a[cval] = ~(argb & 255);
+
+	row++;
+	}
+
+GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, TRUE, 8, width, height);
+guchar *pixels = gdk_pixbuf_get_pixels (pixbuf);
+int rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+assert(gdk_pixbuf_get_n_channels(pixbuf) == 4);
+
+for(y=0;y<height;y++)
+	{
+	const char *cv = src[row++];
+	for(x=0;x<width;x++)
+		{
+		int cval = ((int)*(cv++));
+
+		if(ncolbytes==2)
+			{
+			cval += (((int)*(cv++)) << 8);
+			}
+
+		guchar *p = pixels + y * rowstride + x * 4;
+		p[0] = r[cval];
+		p[1] = g[cval];
+		p[2] = b[cval];
+		p[3] = a[cval];
+		}
+	}
+
+return(pixbuf);
 }

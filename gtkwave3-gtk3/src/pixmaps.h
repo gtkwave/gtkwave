@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Tony Bybell 1999-2011.
+ * Copyright (c) Tony Bybell 1999-2026.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,7 +26,7 @@ make_pixmaps(GtkWidget *window);
 #define WAVE_SPLASH_Y (384)
 
 void make_splash_pixmaps(GtkWidget *window);
-
+GdkPixbuf *XXX_gdk_pixbuf_new_from_xpm_data(const gchar **src);
 
 #endif
 

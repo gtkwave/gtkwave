@@ -667,7 +667,7 @@ void make_splash_pixmaps(GtkWidget *window)
 {
 (void) window;
 
-GLOBALS->wave_splash_pixbuf = gdk_pixbuf_new_from_xpm_data((const gchar **)wave_splash_xpm);
+GLOBALS->wave_splash_pixbuf = XXX_gdk_pixbuf_new_from_xpm_data((const gchar **)wave_splash_xpm);
 }
 
 
