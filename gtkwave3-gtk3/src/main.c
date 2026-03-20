@@ -1605,6 +1605,7 @@ if(output_name)
 
 fprintf(stderr, "\n%s\n\n",WAVE_VERSION_INFO);
 
+#if 0
 if(!mainwindow_already_built) {
   gboolean has_xpm_loader = FALSE;
 
@@ -1626,6 +1627,7 @@ if(!mainwindow_already_built) {
       fprintf(stderr, "GTKWAVE | GdkPixbuf loader for XPM images is not installed.\n");
   }
 }
+#endif
 
 if(!old_g) /* copy all variables earlier when old_g is set */
 	{
