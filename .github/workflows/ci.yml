@@ -9,7 +9,6 @@ name: CI
 # TODO: Consider to checkin the linux launcher.
 # TODO: Create a pre-release with the build artifacts of all the platforms.
 # TODO: Consider scanning the exported artifacts with clamav
-# TODO: Update maxim-lobanov/setup-xcode@v1 to a node 24 version.
 
 on:
   # Run on push.
@@ -134,13 +133,6 @@ jobs:
               desktop-file-utils \
               json-glib \
               librsvg
-
-      - name: Setup xcode
-        # Waiting for this Node 24 version.
-        # https://github.com/maxim-lobanov/setup-xcode/pull/98/changes
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: 15.3.0
 
       - name: Setup meson build script
         run: meson setup build
