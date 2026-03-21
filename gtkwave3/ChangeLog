@@ -1871,9 +1871,12 @@
 		Updated libghw to current version.
                 Changed behavior of X search in pattern search so it is
                 matched by a single X bit.
-3.3.127 06mar26	Fix for fixed point shift that does not disable it on
+3.3.127 20mar26	Fix for fixed point shift that does not disable it on
 		the specify value change menu option.
 		Changed ps2pdf to pstopdf on Mac as ps removed by Sonoma.
 		Warnings fix in vcd2fst for missing string.h include.
 		Added FST_ST_SV_ARRAY (FST) and "sv_array" (VCD) for 
 		arrays (gtkwave/libfst#17).
+		Update FSDB to handle FST_ST_SV_ARRAY (VCS emits this),
+		FSDB_ST_SV_INTERFACEPORT_REF, and FSDB_VT_STRING as a
+		placeholder.

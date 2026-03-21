@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Tony Bybell 2009-2017.
+ * Copyright (c) Tony Bybell 2009-2026.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -1222,6 +1222,7 @@ static char zbuf[65537]; /* OK as this does not need to be re-entrant */
 				case FST_ST_VHDL_FOR_GENERATE: ttype = TREE_VHDL_ST_GENFOR; break;
 				case FST_ST_VHDL_PROCEDURE: ttype = TREE_VHDL_ST_PROCEDURE; break;
 				case FST_ST_VHDL_PROCESS: ttype = TREE_VHDL_ST_PROCESS; break;
+				case FST_ST_SV_ARRAY: ttype = TREE_SV_ST_ARRAY; break;
 				default: ttype = TREE_UNKNOWN; break;
 				}
 

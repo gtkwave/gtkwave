@@ -1960,3 +1960,6 @@
 		Added FST_ST_SV_ARRAY (FST) and "sv_array" (VCD) for 
 		arrays (gtkwave/libfst#17).
 		Wrote replacement for gdk_pixbuf_new_from_xpm_data.
+		Update FSDB to handle FST_ST_SV_ARRAY (VCS emits this),
+		FSDB_ST_SV_INTERFACEPORT_REF, and FSDB_VT_STRING as a
+		placeholder.
