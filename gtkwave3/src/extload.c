@@ -360,6 +360,14 @@ for(;;)
 				GLOBALS->extload_idcodes[i] = d2;
 				if(GLOBALS->extload_inv_idcodes[d2] == 0) GLOBALS->extload_inv_idcodes[d2] = i+1; /* root alias */
 
+				if(!strcmp("vcd_string", typ))
+					{
+					GLOBALS->mvlfacs_vzt_c_3[i].flags = VZT_RD_SYM_F_DOUBLE;
+					GLOBALS->extload_node_block[i].msi=0;
+					GLOBALS->extload_node_block[i].lsi=0;
+					GLOBALS->mvlfacs_vzt_c_3[i].len=2;
+					}
+				else
 				if(!strcmp("vcd_real", typ))
 					{
 					GLOBALS->mvlfacs_vzt_c_3[i].flags = VZT_RD_SYM_F_DOUBLE;
@@ -1049,6 +1057,14 @@ static char zbuf[65537]; /* OK as this does not need to be re-entrant */
 				GLOBALS->extload_idcodes[i] = d2;
 				if(GLOBALS->extload_inv_idcodes[d2] == 0) GLOBALS->extload_inv_idcodes[d2] = i+1; /* root alias */
 
+				if(fh->u.var.typ == FST_VT_GEN_STRING)
+					{
+					GLOBALS->mvlfacs_vzt_c_3[i].flags = VZT_RD_SYM_F_STRING;
+					GLOBALS->extload_node_block[i].msi=0;
+					GLOBALS->extload_node_block[i].lsi=0;
+					GLOBALS->mvlfacs_vzt_c_3[i].len=2;
+					}
+				else
 				if(fh->u.var.typ == FST_VT_VCD_REAL)
 					{
 					GLOBALS->mvlfacs_vzt_c_3[i].flags = VZT_RD_SYM_F_DOUBLE;

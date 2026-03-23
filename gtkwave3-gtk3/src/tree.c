@@ -1075,6 +1075,8 @@ if(GLOBALS->sst_exclude_filename)
 							else if(!strcmp(p, "VHDL_ST_RECORD")) { exclhier |= exclone << TREE_VHDL_ST_RECORD; }
 							else if(!strcmp(p, "VHDL_ST_PROCESS")) { exclhier |= exclone << TREE_VHDL_ST_PROCESS; }
 							else if(!strcmp(p, "VHDL_ST_GENERATE")) { exclhier |= exclone << TREE_VHDL_ST_GENERATE; }
+
+							else if(!strcmp(p, "SV_ST_ARRAY")) { exclhier |= exclone << TREE_SV_ST_ARRAY; }
 							break;
 
 						case SST_EXCL_COMP:

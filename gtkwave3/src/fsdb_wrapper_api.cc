@@ -256,7 +256,7 @@ byte_T *vc_ptr = (byte_T *)val_ptr;
 static byte_T buffer[FSDB_MAX_BIT_SIZE+1];
 uint_T i;
 fsdbVarType   var_type; 
-    
+
 switch (vc_trvs_hdl->ffrGetBytesPerBit()) 
 	{
 	case FSDB_BYTES_PER_BIT_1B:
@@ -337,6 +337,11 @@ switch (vc_trvs_hdl->ffrGetBytesPerBit())
 			case FSDB_VT_VCD_MEMORY_DEPTH:
 			case FSDB_VT_VHDL_MEMORY_DEPTH:
 				buffer[0] = 0;
+				break;
+
+			case FSDB_VT_STRING:
+				vc_trvs_hdl->ffrGetVC(&vc_ptr);
+				strcpy((char *)buffer, (char *)vc_ptr);
 				break;
 	               
 			default:    
@@ -714,6 +719,11 @@ switch (var->type)
 	case FSDB_VT_STREAM: /* these hold transactions: not yet supported */
 		type = (str_T) "stream";
 		typelen = 6;
+		break;
+
+    	case FSDB_VT_STRING:
+		type = (str_T) "vcd_string"; 
+		typelen = 10;
 		break;
 
     	default:
@@ -1196,10 +1206,6 @@ static bool_T __MyTreeCB2(fsdbTreeCBType cb_type,
 void (*cb)(void *) = (void (*)(void *))client_data;
 struct fstHier fh;
 
-
-
-char bf[16];
-
 switch (cb_type) 
 	{
     	case FSDB_TREE_CBT_BEGIN_TREE:
@@ -1230,7 +1236,6 @@ switch (cb_type)
 		__DumpStruct2((fsdbTreeCBDataStructBegin*)tree_cb_data, cb);
 		break;
 
-	/* not yet supported */
     	case FSDB_TREE_CBT_ARRAY_BEGIN:
 		__DumpArray2((fsdbTreeCBDataArrayBegin*)tree_cb_data, cb);
 		break;

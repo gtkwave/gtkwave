@@ -34,7 +34,7 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.127" date="2026-03-20">
+    <release version="3.3.127" date="2026-03-23">
       <description>
         <p>
 	Changes in 3.3.127:
@@ -45,7 +45,8 @@
             <li>Warnings fix in vcd2fst for missing string.h include.</li>
             <li>Added FST_ST_SV_ARRAY (FST) and "sv_array" (VCD) for arrays (gtkwave/libfst#17).</li>
             <li>Wrote replacement for gdk_pixbuf_new_from_xpm_data.</li>
-            <li>Update FSDB to handle FST_ST_SV_ARRAY (VCS emits this), FSDB_ST_SV_INTERFACEPORT_REF, and FSDB_VT_STRING as a placeholder.</li>
+            <li>Update FSDB to handle FST_ST_SV_ARRAY (VCS emits this), FSDB_ST_SV_INTERFACEPORT_REF, and FSDB_VT_STRING.</li>
+            <li>Added "SV_ST_ARRAY" to exclude file parsing on init.</li>
         </ul>
       </description>
     </release>
