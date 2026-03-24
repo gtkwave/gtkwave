@@ -2630,10 +2630,7 @@ static void menu_toggle_auto_reload(gpointer null_data, guint callback_action, G
         g_signal_connect(reload_monitor, "changed", G_CALLBACK(file_changed_cb), NULL);
         g_object_unref(file);
     } else {
-        if (reload_monitor) {
-            g_object_unref(reload_monitor);
-            reload_monitor = NULL;
-        }
+        g_clear_object(&reload_monitor);
     }
 }
 
