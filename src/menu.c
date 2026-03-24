@@ -2584,19 +2584,19 @@ void menu_new_viewer_tab(gpointer null_data, guint callback_action, GtkWidget *w
 
 /**/
 
-static int cant_reload_waveform(void)
+static gboolean is_waveform_reloadable(void)
 {
     if (in_main_iteration())
-        return 1;
+        return FALSE;
 
     /* XXX if there's no file (for some reason), this function shouldn't occur
        we should probably gray it out. */
     if (GLOBALS->loaded_file_type == DUMPLESS_FILE) {
         printf("GTKWAVE | DUMPLESS_FILE type cannot be reloaded\n");
-        return 1;
+        return FALSE;
     }
 
-    return 0;
+    return TRUE;
 }
 
 static void file_changed_cb(GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
@@ -2606,7 +2606,7 @@ static void file_changed_cb(GFileMonitor *monitor, GFile *file, GFile *other_fil
     (void)other_file;
     (void)user_data;
 
-    if (cant_reload_waveform())
+    if (!is_waveform_reloadable())
         return;
 
     if (event_type == G_FILE_MONITOR_EVENT_CHANGED ||
@@ -2640,7 +2640,7 @@ void menu_reload_waveform(gpointer null_data, guint callback_action, GtkWidget *
     (void)callback_action;
     (void)widget;
 
-    if (cant_reload_waveform())
+    if (!is_waveform_reloadable())
         return;
 
     reload_into_new_context();
