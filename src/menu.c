@@ -2627,8 +2627,13 @@ static void menu_toggle_auto_reload(gpointer null_data, guint callback_action, G
     if (auto_reload_enabled) {
         GFile *file = g_file_new_for_path(GLOBALS->loaded_file_name);
         reload_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, NULL);
-        g_signal_connect(reload_monitor, "changed", G_CALLBACK(file_changed_cb), NULL);
-        g_object_unref(file);
+        if (reload_monitor == NULL) {
+            g_warning("Failed to monitor: %s", GLOBALS->loaded_file_name);
+            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_AFRW]), FALSE);
+        } else {
+            g_signal_connect(reload_monitor, "changed", G_CALLBACK(file_changed_cb), NULL);
+        }
+        g_clear_object(&file);
     } else {
         g_clear_object(&reload_monitor);
     }
