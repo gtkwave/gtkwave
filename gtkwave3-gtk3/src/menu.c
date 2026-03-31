@@ -4540,7 +4540,7 @@ if(GLOBALS->entrybox_text)
 
 	strcpy(GLOBALS->regexp_string_menu_c_1, GLOBALS->entrybox_text);
 	wave_regex_compile(GLOBALS->regexp_string_menu_c_1, WAVE_REGEX_SEARCH);
-	free_2(GLOBALS->entrybox_text);
+	free_2(GLOBALS->entrybox_text); GLOBALS->entrybox_text = NULL;
 	t=GLOBALS->traces.first;
 	while(t)
 		{
