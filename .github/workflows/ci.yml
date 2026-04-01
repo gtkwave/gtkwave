@@ -2,7 +2,7 @@
 
 name: CI
 
-# TODO: Add a build job for win x86-64.
+# TODO: Export the build artifact for window x86-64.
 # TODO: Add a build job for macOS x86-64.
 # TODO: Add oss-cad-suite style environment script to setup LD_LIBRARY_PATH
 #       for the other binaries in the linux package.
@@ -23,6 +23,55 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-windows-x86-64:
+    name: Build (windows-x86-64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          install: >-
+            git
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-gtk3
+            mingw-w64-ucrt-x86_64-gtk4
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-glib2
+            mingw-w64-ucrt-x86_64-gobject-introspection
+            mingw-w64-ucrt-x86_64-gperf
+            mingw-w64-ucrt-x86_64-meson
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-desktop-file-utils
+            mingw-w64-ucrt-x86_64-diffutils
+            flex
+            bison
+            tree
+
+      - name: Setup meson build
+        shell: msys2 {0}
+        run: |
+          meson setup -Djudy=disabled -Dprefix=/tmp/gtkwave build
+
+      - name: Compile GTKWave
+        shell: msys2 {0}
+        run: |
+          meson compile -C build
+
+      - name: Show the build directory tree
+        shell: msys2 {0}
+        run: |
+          tree -d build
+
+      - name: Run the tests
+        shell: msys2 {0}
+        run: |
+          meson test -C build -v
+
   build-linux-x86-64:
     name: Build (linux-x86-64)
     # NOTE: Using ubuntu-latest here links to a newer glibc that is
