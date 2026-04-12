@@ -1123,7 +1123,37 @@ static gboolean view_selection_func(GtkTreeSelection *selection,
 
 static gint button_press_event_std(GtkWidget *widget, GdkEventButton *event)
 {
-    (void)widget;
+    GtkTreePath *path = NULL;
+
+    if ((event->button == 3) && (event->type == GDK_BUTTON_PRESS)) {
+        GtkTreeView *view = GTK_TREE_VIEW(widget);
+        GtkTreeSelection *selection = gtk_tree_view_get_selection(view);
+
+        if (gtk_tree_view_get_path_at_pos(view,
+                                          (gint)event->x,
+                                          (gint)event->y,
+                                          &path,
+                                          NULL,
+                                          NULL,
+                                          NULL)) {
+            if (gtk_tree_selection_path_is_selected(selection, path)) {
+                gtk_tree_path_free(path);
+                do_sst_popup_menu(widget, event);
+                return TRUE;
+            }
+
+            gtk_tree_selection_unselect_all(selection);
+            gtk_tree_selection_select_path(selection, path);
+            gtk_tree_path_free(path);
+            do_sst_popup_menu(widget, event);
+            return TRUE;
+        }
+
+        if (gtk_tree_selection_count_selected_rows(selection) > 0) {
+            do_sst_popup_menu(widget, event);
+            return TRUE;
+        }
+    }
 
     if (event->type == GDK_2BUTTON_PRESS) {
         if (GLOBALS->selected_hierarchy_name && GLOBALS->selected_sig_name) {
