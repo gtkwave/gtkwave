@@ -1787,9 +1787,90 @@ top:
     }
 }
 
+struct recurse_selected_counter
+{
+    gint facilities;
+};
+
+static void recurse_count_selected(GtkTreeModel *model,
+                                   GtkTreePath *path,
+                                   GtkTreeIter *iter,
+                                   gpointer data)
+{
+    (void)path;
+
+    struct recurse_selected_counter *counter = data;
+    GwTreeNode *sel = NULL;
+
+    gtk_tree_model_get(model, iter, TREE_COLUMN, &sel, -1);
+    if (sel == NULL) {
+        return;
+    }
+
+    gint low = fetchlow(sel)->t_which;
+    gint high = fetchhigh(sel)->t_which;
+
+    if ((low < 0) || (high < low)) {
+        return;
+    }
+
+    counter->facilities += high - low + 1;
+}
+
+static enum sst_cb_action recurse_action_to_sst_action(guint callback_action)
+{
+    if (callback_action == WV_RECURSE_INSERT) {
+        return SST_ACTION_INSERT;
+    }
+
+    if (callback_action == WV_RECURSE_REPLACE) {
+        return SST_ACTION_REPLACE;
+    }
+
+    return SST_ACTION_APPEND;
+}
+
 void recurse_import(GtkWidget *widget, guint callback_action)
 {
+    gint fz = 0;
+
     if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1 == NULL) {
+        return;
+    }
+
+    if ((GLOBALS->sig_selection_treesearch_gtk2_c_1 != NULL) &&
+        (gtk_tree_selection_count_selected_rows(GLOBALS->sig_selection_treesearch_gtk2_c_1) > 0)) {
+        struct recurse_selected_counter counter = {0};
+        gtk_tree_selection_selected_foreach(GLOBALS->sig_selection_treesearch_gtk2_c_1,
+                                            recurse_count_selected,
+                                            &counter);
+        fz = counter.facilities;
+        if (fz <= 0) {
+            return;
+        }
+
+        if (fz > WV_RECURSE_IMPORT_WARN) {
+            GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(GLOBALS->mainwindow),
+                                                       GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                       GTK_MESSAGE_WARNING,
+                                                       GTK_BUTTONS_YES_NO,
+                                                       "Really import %d facilit%s?",
+                                                       fz,
+                                                       (fz == 1) ? "y" : "ies");
+
+            gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+
+            if (response != GTK_RESPONSE_YES) {
+                return;
+            }
+        }
+
+        widget = GLOBALS->mainwindow; /* otherwise using widget passed from the menu item
+                                         crashes on OSX */
+        set_window_busy(widget);
+        action_callback(recurse_action_to_sst_action(callback_action));
+        set_window_idle(widget);
         return;
     }
 
@@ -1802,7 +1883,7 @@ void recurse_import(GtkWidget *widget, guint callback_action)
     if (low < 0 || high < 0) {
         return;
     }
-    int fz = high - low + 1;
+    fz = high - low + 1;
 
     if (fz > WV_RECURSE_IMPORT_WARN) {
         char recwarn[128];
