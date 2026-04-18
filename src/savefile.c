@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #endif
 
-#ifdef __linux__
+#if defined( __linux__ ) || defined(__gnu_hurd__)
 #ifndef _XOPEN_SOURCE
 char *strptime(const char *s, const char *format, struct tm *tm);
 #endif
