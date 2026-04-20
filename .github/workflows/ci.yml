@@ -2,8 +2,8 @@
 
 name: CI
 
-# TODO: Export the build artifact for window x86-64.
 # TODO: Add a build job for macOS x86-64.
+# TODO: Add a build job for linux arm64.
 # TODO: Add oss-cad-suite style environment script to setup LD_LIBRARY_PATH
 #       for the other binaries in the linux package.
 # TODO: Consider to checkin the linux launcher.
@@ -27,6 +27,10 @@ jobs:
     name: Build (windows-x86-64)
     runs-on: windows-latest
 
+    env:
+      # This is set later.
+      BUNDLE_WIN_PATH: ""
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -36,7 +40,6 @@ jobs:
         with:
           msystem: UCRT64
           install: >-
-            git
             mingw-w64-ucrt-x86_64-toolchain
             mingw-w64-ucrt-x86_64-gtk3
             mingw-w64-ucrt-x86_64-gtk4
@@ -48,6 +51,8 @@ jobs:
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-desktop-file-utils
             mingw-w64-ucrt-x86_64-diffutils
+            zip
+            git
             flex
             bison
             tree
@@ -66,6 +71,85 @@ jobs:
         shell: msys2 {0}
         run: |
           tree -d build
+
+      - name: Create executable bundle
+        shell: msys2 {0}
+        run: |
+          meson install -C build
+
+      - name: Show the bundle directory tree
+        shell: msys2 {0}
+        run: |
+          tree /tmp/gtkwave
+
+      - name: Add UCRT64 DLLs
+        shell: msys2 {0}
+        run: |
+          set -x
+
+          # Typically "/ucrt64"
+          echo "MINGW_PREFIX: [$MINGW_PREFIX]"
+
+          BIN_DIR="/tmp/gtkwave/bin"
+          LIB_DIR="/tmp/gtkwave/lib"
+
+          # Collect raw dependency information from the *.exe files.
+          for exe in "$BIN_DIR"/*.exe; do
+            ldd "$exe" >> /tmp/dll_list1.txt
+          done
+
+          # Select matching dependencies
+          grep "$MINGW_PREFIX/bin/" /tmp/dll_list1.txt | awk '{print $3}' > /tmp/dll_list2.txt
+
+          # Remove duplicate dependencies
+          sort -u /tmp/dll_list2.txt > /tmp/dll_list3.txt
+
+          # Copy the dlls
+          while read -r dll; do
+            cp -v "$dll" "$LIB_DIR/"
+          done < /tmp/dll_list3.txt
+
+      - name: Create launcher script
+        shell: msys2 {0}
+        run: |
+          cat > /tmp/gtkwave/gtkwave.cmd << 'EOF'
+          @echo off
+          setlocal
+          set "BASE_DIR=%~dp0"
+          set "PATH=%BASE_DIR%lib;%PATH%"
+          echo Starting GTKWave...
+          "%BASE_DIR%bin\gtkwave.exe" %*
+          endlocal
+          EOF
+
+          cat -n /tmp/gtkwave/gtkwave.cmd
+
+      - name: Show the bundle directory tree
+        shell: msys2 {0}
+        run: |
+          tree /tmp/gtkwave
+
+      - name: Create Windows bundle ZIP
+        shell: msys2 {0}
+        run: |
+          pushd /tmp
+          zip -r -v gtkwave-windows-x86-64-bundle.zip gtkwave/
+          popd
+
+      - name: Convert the bundle path to windows
+        shell: msys2 {0}
+        run: |
+          BUNDLE_WIN_PATH=$(cygpath -w "/tmp/gtkwave-windows-x86-64-bundle.zip")
+          echo "BUNDLE_WIN_PATH=$BUNDLE_WIN_PATH"
+          echo "BUNDLE_WIN_PATH=$BUNDLE_WIN_PATH" >> $GITHUB_ENV
+
+      - name: Upload bundle archive as an artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: gtkwave-windows-x86-64-bundle
+          path: ${{ env.BUNDLE_WIN_PATH }}
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Run the tests
         shell: msys2 {0}
