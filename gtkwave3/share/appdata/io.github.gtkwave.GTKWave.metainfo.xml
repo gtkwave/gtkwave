@@ -34,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.128" date="2026-04-20">
+      <description>
+        <p>
+	Changes in 3.3.128:
+        </p>
+	<ul>
+            <li>Hurd compile fix.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.127" date="2026-03-31">
       <description>
         <p>

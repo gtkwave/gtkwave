@@ -1965,3 +1965,4 @@
 		Added "SV_ST_ARRAY" to exclude file parsing on init.
                 Fix use after free of GLOBALS->entrybox_text in
                 regexp_highlight_generic().
+3.3.128	20apr26	Hurd compile fix.
