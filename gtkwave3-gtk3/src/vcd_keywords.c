@@ -58,9 +58,7 @@ inline
 #endif
 #endif
 static unsigned int
-keyword_hash (str, len)
-     register const char *str;
-     register unsigned int len;
+keyword_hash (register const char *str, register unsigned int len)
 {
   static const unsigned char asso_values[] =
     {
@@ -101,9 +99,7 @@ __attribute__ ((__gnu_inline__))
 #endif
 #endif
 const struct vcd_keyword *
-check_identifier (str, len)
-     register const char *str;
-     register unsigned int len;
+check_identifier (register const char *str, register unsigned int len)
 {
   static const struct vcd_keyword wordlist[] =
     {
