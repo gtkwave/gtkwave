@@ -3,6 +3,7 @@
 #include "gw-types.h"
 #include "gw-hist-ent.h"
 #include "gw-vlist-writer.h"
+#include "gw-vlist-reader.h"
 
 /* struct Node bitfield widths */
 #define WAVE_VARXT_WIDTH (16)
@@ -17,9 +18,13 @@ typedef struct
     GwNode **narray;
     int msb, lsb;
     int width;
+    int refcount;  // Reference count for proper lifecycle management
 } GwExpandInfo;
 
 void gw_expand_info_free(GwExpandInfo *self);
+void gw_expand_info_free_deep(GwExpandInfo *self);
+GwExpandInfo *gw_expand_info_acquire(GwExpandInfo *self);
+void gw_expand_info_release(GwExpandInfo *self);
 
 struct _GwExpandReferences
 {
@@ -49,12 +54,18 @@ struct _GwNode
         GwFac *mvlfac; /* for use with mvlsim aets */
         GwVlist *mvlfac_vlist;
         GwVlistWriter *mvlfac_vlist_writer;
+        GwVlistReader *mvlfac_vlist_reader; /* for live access to vlist data */
     } mv; /* anon union is a gcc extension so use mv instead.  using this union avoids crazy casting
              warnings */
 
     int msi, lsi; /* for 64-bit, more efficient than having as an external struct ExtNode*/
 
     int numhist; /* number of elements in the harray */
+
+    GwExpandInfo *expand_info; /* Link to expansion children */
+
+    GwTime last_time; /* time of last transition for delta calculation */
+    GwTime last_time_raw; /* raw time value (without global offset) for delta calculation */
 
     unsigned varxt : WAVE_VARXT_WIDTH; /* reference inside subvar_pnt[] */
     unsigned vardt : WAVE_VARDT_WIDTH; /* see nodeVarDataType, this is an internal value */

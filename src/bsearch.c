@@ -100,6 +100,29 @@ GwHistEnt *bsearch_node(GwNode *n, GwTime key)
     GLOBALS->max_compare_pos_bsearch_c_1 = NULL;
     GLOBALS->max_compare_index = NULL;
 
+    // Rebuild harray if it's NULL (e.g., after streaming VCD data added new history entries)
+    if (n->harray == NULL) {
+        GwHistEnt *histpnt = &(n->head);
+        int histcount = 0;
+
+        while (histpnt) {
+            histcount++;
+            histpnt = histpnt->next;
+        }
+
+        n->numhist = histcount;
+
+        GwHistEnt **harray = g_new(GwHistEnt *, histcount);
+        n->harray = harray;
+
+        histpnt = &(n->head);
+        for (int i = 0; i < histcount; i++) {
+            *harray = histpnt;
+            harray++;
+            histpnt = histpnt->next;
+        }
+    }
+
     if (bsearch(&key, n->harray, n->numhist, sizeof(GwHistEnt *), compar_histent)) {
         /* nothing, all side effects are in bsearch */
     }

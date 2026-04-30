@@ -11,6 +11,10 @@ libgtkwave_tests = [
     'test-gw-marker',
     'test-gw-named-markers',
     'test-gw-node',
+    'test-gw-node-expand-crash',
+    'test-gw-node-expand-harray-invalidation',
+    'test-gw-node-re-expansion',
+    'test_mixed_history_crash',
     'test-gw-project',
     'test-gw-stems',
     'test-gw-string-table',
@@ -19,15 +23,23 @@ libgtkwave_tests = [
     'test-gw-tree-builder',
     'test-gw-tree',
     'test-gw-vcd-loader',
+    'test-gw-vcd-partial-loader-equivalence',
+    'test-gw-vcd-partial-loader-stream',
+    'test-gw-vlist-live-reader',
     'test-gw-vlist-packer',
     'test-gw-vlist-writer',
     'test-gw-vlist',
 ]
 
 foreach test : libgtkwave_tests
+    test_sources = [test + '.c', 'test-util.c']
+    if test == 'test-gw-vcd-partial-loader-equivalence'
+        test_sources += 'test-helpers.c'
+    endif
+
     test_executable = executable(
         test,
-        [test + '.c', 'test-util.c'],
+        test_sources,
         dependencies: libgtkwave_dep,
     )
 
@@ -38,6 +50,25 @@ foreach test : libgtkwave_tests
         protocol: 'tap',
     )
 endforeach
+
+# First, define the consumer executable so it gets built
+consumer_exe = executable(
+    'test-gw-shared-memory-consumer',
+    'test-gw-shared-memory-consumer.c',
+    dependencies: [libgtkwave_dep],
+)
+
+# Next, find our test script
+shm_test_script = find_program('test_shm_pipeline.sh', required: true)
+
+# Finally, define the test. Meson will run the script.
+test(
+    'Shared Memory Pipeline',
+    shm_test_script,
+    is_parallel: false, # Important: This test uses a system-wide resource
+    depends: [consumer_exe], # Ensures the consumer is built before the test runs
+    timeout: 120
+)
 
 dump_executable = executable(
     'dump',
@@ -54,6 +85,7 @@ dumpfile_tests = [
     'basic.fst',
     'basic.ghw',
     'basic.vcd',
+    'equivalence.vcd',
     'evcd.fst',
     'evcd.vcd',
     'ghdl_basic.fst',
@@ -91,5 +123,6 @@ foreach test : dumpfile_tests
         'test-dump-' + test,
         diff,
         args: ['-u', golden_file, dump_target],
+        timeout: 120,
     )
 endforeach

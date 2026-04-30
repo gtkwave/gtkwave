@@ -18,6 +18,7 @@ void dnd_setup(GtkWidget *src, gboolean search); /* dnd from gtk2 tree to signal
 void treeview_select_all_callback(void); /* gtk2 */
 void treeview_unselect_all_callback(void); /* gtk2 */
 int treebox_is_active(void);
+void fill_sig_store(void);
 
 void DND_helper_quartz(char *data);
 

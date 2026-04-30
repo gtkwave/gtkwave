@@ -13,6 +13,8 @@ struct _GwVlistWriter
 
     GwVlist *vlist;
     GwVlistPacker *packer;
+
+    gboolean is_live;
 };
 
 G_DEFINE_TYPE(GwVlistWriter, gw_vlist_writer, G_TYPE_OBJECT)
@@ -30,6 +32,15 @@ static void gw_vlist_writer_dispose(GObject *object)
 {
     GwVlistWriter *self = GW_VLIST_WRITER(object);
 
+
+
+    g_clear_pointer(&self->packer, gw_vlist_packer_finalize_and_free);
+    
+    // Only destroy vlist if it hasn't been transferred (e.g., via finish())
+    if (self->vlist != NULL) {
+        g_clear_pointer(&self->vlist, gw_vlist_destroy);
+    }
+
     G_OBJECT_CLASS(gw_vlist_writer_parent_class)->dispose(object);
 }
 
@@ -37,7 +48,7 @@ static void gw_vlist_writer_finalize(GObject *object)
 {
     GwVlistWriter *self = GW_VLIST_WRITER(object);
 
-    // TODO: free vlist and packer
+    // vlist and packer are already freed in dispose()
 
     G_OBJECT_CLASS(gw_vlist_writer_parent_class)->finalize(object);
 }
@@ -107,6 +118,7 @@ static void gw_vlist_writer_class_init(GwVlistWriterClass *klass)
 
 static void gw_vlist_writer_init(GwVlistWriter *self)
 {
+    self->is_live = FALSE;
 }
 
 GwVlistWriter *gw_vlist_writer_new(gint compression_level, gboolean prepack)
@@ -260,12 +272,53 @@ GwVlist *gw_vlist_writer_finish(GwVlistWriter *self)
 
     if (self->packer != NULL) {
         vlist = gw_vlist_packer_finalize_and_free(g_steal_pointer(&self->packer));
+        self->packer = NULL; // Explicitly clear after stealing
     } else {
         vlist = g_steal_pointer(&self->vlist);
+        self->vlist = NULL; // Explicitly clear after stealing
     }
 
     g_assert_nonnull(vlist);
     gw_vlist_freeze(&vlist, self->compression_level);
 
     return vlist;
+}
+
+/**
+ * gw_vlist_writer_set_live_mode:
+ * @self: A #GwVlistWriter.
+ * @is_live: Whether live mode should be enabled.
+ *
+ * Sets the writer to live mode. In live mode, prepacking is disallowed and
+ * compression is deferred until finish() is called. This allows a reader
+ * to read from the writer's buffer as it is being populated.
+ */
+void gw_vlist_writer_set_live_mode(GwVlistWriter *self, gboolean is_live)
+{
+    g_return_if_fail(GW_IS_VLIST_WRITER(self));
+
+    // Enforce the rule: live mode cannot be used with prepacking.
+    if (is_live) {
+        g_return_if_fail(self->prepack == FALSE);
+    }
+
+    self->is_live = !!is_live; // Coerce to a pure boolean
+}
+
+GwVlist *gw_vlist_writer_get_vlist(GwVlistWriter *self)
+{
+    g_return_val_if_fail(GW_IS_VLIST_WRITER(self), NULL);
+    return self->vlist;
+}
+
+gboolean gw_vlist_writer_get_is_live(GwVlistWriter *self)
+{
+    g_return_val_if_fail(GW_IS_VLIST_WRITER(self), FALSE);
+    return self->is_live;
+}
+
+gboolean gw_vlist_writer_get_prepack(GwVlistWriter *self)
+{
+    g_return_val_if_fail(GW_IS_VLIST_WRITER(self), FALSE);
+    return self->prepack;
 }

@@ -16,4 +16,10 @@ void gw_vlist_writer_append_mvl9_string(GwVlistWriter *self, const char *str);
 
 GwVlist *gw_vlist_writer_finish(GwVlistWriter *self);
 
+void gw_vlist_writer_set_live_mode(GwVlistWriter *self, gboolean is_live);
+
+GwVlist *gw_vlist_writer_get_vlist(GwVlistWriter *self);
+gboolean gw_vlist_writer_get_is_live(GwVlistWriter *self);
+gboolean gw_vlist_writer_get_prepack(GwVlistWriter *self);
+
 G_END_DECLS
