@@ -2584,21 +2584,69 @@ void menu_new_viewer_tab(gpointer null_data, guint callback_action, GtkWidget *w
 
 /**/
 
+static gboolean is_waveform_reloadable(void)
+{
+    if (in_main_iteration())
+        return FALSE;
+
+    /* XXX if there's no file (for some reason), this function shouldn't occur
+       we should probably gray it out. */
+    if (GLOBALS->loaded_file_type == DUMPLESS_FILE) {
+        printf("GTKWAVE | DUMPLESS_FILE type cannot be reloaded\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void file_changed_cb(GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event_type, gpointer user_data)
+{
+    (void)monitor;
+    (void)file;
+    (void)other_file;
+    (void)user_data;
+
+    if (!is_waveform_reloadable())
+        return;
+
+    if (event_type == G_FILE_MONITOR_EVENT_CHANGED ||
+        event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT) {
+        reload_into_new_context();
+    }
+}
+
+static void menu_toggle_auto_reload(gpointer null_data, guint callback_action, GtkWidget *widget)
+{
+    (void)null_data;
+    (void)callback_action;
+    (void)widget;
+
+    static GFileMonitor *reload_monitor;
+    gboolean auto_reload_enabled = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_AFRW]));
+
+    if (auto_reload_enabled) {
+        GFile *file = g_file_new_for_path(GLOBALS->loaded_file_name);
+        reload_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, NULL);
+        if (reload_monitor == NULL) {
+            g_warning("Failed to monitor: %s", GLOBALS->loaded_file_name);
+            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_AFRW]), FALSE);
+        } else {
+            g_signal_connect(reload_monitor, "changed", G_CALLBACK(file_changed_cb), NULL);
+        }
+        g_clear_object(&file);
+    } else {
+        g_clear_object(&reload_monitor);
+    }
+}
+
 void menu_reload_waveform(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
     (void)null_data;
     (void)callback_action;
     (void)widget;
 
-    if (in_main_iteration())
+    if (!is_waveform_reloadable())
         return;
-
-    /* XXX if there's no file (for some reason), this function shouldn't occur
-       we should probably gray it out. */
-    if (GLOBALS->loaded_file_type == DUMPLESS_FILE) {
-        printf("GTKWAVE | DUMPLESS_FILE type cannot be reloaded\n");
-        return;
-    }
 
     reload_into_new_context();
 }
@@ -4878,6 +4926,11 @@ static gtkwave_mlist_t menu_items[] = {
                 menu_reload_waveform,
                 WV_MENU_FRW,
                 "<Item>"),
+    WAVE_GTKIFE("/File/Auto Reload Waveform",
+                NULL,
+                menu_toggle_auto_reload,
+                WV_MENU_AFRW,
+                "<ToggleItem>"),
     WAVE_GTKIFE("/File/Export/Write VCD File As",
                 NULL,
                 menu_write_vcd_file,
