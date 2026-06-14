@@ -252,6 +252,7 @@ static const struct Global globals_base_values = {
     0, /* disable_menus 225 */
     NULL, /* ftext_main_main_c_1 226 */
     0, /* dbl_mant_dig_override */
+    0, /* enable_autoreload */
 
     /*
      * menu.c

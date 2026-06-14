@@ -5642,6 +5642,8 @@ void set_menu_toggles(void)
                                    GLOBALS->autocoalesce_reversal);
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_KEEPXZ]),
                                    GLOBALS->keep_xz_colors);
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_wlist[WV_MENU_AFRW]),
+                                   GLOBALS->enable_autoreload);
 
     set_scale_to_time_dimension_toggles();
     GLOBALS->quiet_checkmenu = 0;
