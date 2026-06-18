@@ -34,13 +34,14 @@
   <content_rating type="oars-1.0" />
 
   <releases>
-    <release version="3.3.128" date="2026-04-20">
+    <release version="3.3.128" date="2026-06-18">
       <description>
         <p>
 	Changes in 3.3.128:
         </p>
 	<ul>
             <li>Hurd compile fix.</li>
+            <li>Update lz4 to 1.10.0.</li>
         </ul>
       </description>
     </release>
