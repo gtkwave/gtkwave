@@ -34,6 +34,17 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="3.3.129" date="2026-07-23">
+      <description>
+        <p>
+	Changes in 3.3.129:
+        </p>
+	<ul>
+            <li>Fix for GH #515: Range fill doesn't work on alias waveforms.</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="3.3.128" date="2026-06-18">
       <description>
         <p>
