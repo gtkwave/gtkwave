@@ -1293,42 +1293,61 @@ if(vec)
                 }
         }
 
-if((flags&(TR_ZEROFILL|TR_ONEFILL))&&(nbits>1)&&(t->n.nd->msi)&&(t->n.nd->lsi))
+if(flags&(TR_ZEROFILL|TR_ONEFILL))
 	{
 	char whichfill = (flags&TR_ZEROFILL) ? AN_0 : AN_1;
-
-	if(t->n.nd->msi > t->n.nd->lsi)
+	int msi = 0, lsi = 0, ok = 0;
+	if((t->name)&&(nbits > 1))
 		{
-		if(t->n.nd->lsi > 0)
+		char *lbrack = strrchr(t->name, '[');
+		if(lbrack)
 			{
-			pnt=wave_alloca(t->n.nd->msi + 1);
-
-			memcpy(pnt, bits, nbits);
-
-        		for(i=nbits;i<t->n.nd->msi+1;i++)
-                		{
-                		pnt[i]=whichfill;
-                		}
-
-			bits = pnt;
-			nbits = t->n.nd->msi + 1;
+			int rc = sscanf(lbrack+1, "%d:%d", &msi, &lsi);
+			if(rc == 2)
+				{
+				if(((msi - lsi + 1) == nbits) || ((lsi - msi + 1) == nbits))
+					{
+					ok = 1;	/* to ensure sanity... */
+					}
+				}
 			}
 		}
-		else
+
+	if(ok)
 		{
-		if(t->n.nd->msi > 0)
+		if(msi > lsi)
 			{
-			pnt=wave_alloca(t->n.nd->lsi + 1);
+			if(lsi > 0)
+				{
+				pnt=wave_alloca(msi + 1);
 
-        		for(i=0;i<t->n.nd->msi;i++)
-                		{
-                		pnt[i]=whichfill;
-                		}
+				memcpy(pnt, bits, nbits);
 
-			memcpy(pnt+i, bits, nbits);
+	        		for(i=nbits;i<msi+1;i++)
+	                		{
+	                		pnt[i]=whichfill;
+	                		}
 
-			bits = pnt;
-			nbits = t->n.nd->lsi + 1;
+				bits = (unsigned char *)pnt;
+				nbits = msi + 1;
+				}
+			}
+			else
+			{
+			if(msi > 0)
+				{
+				pnt=wave_alloca(lsi + 1);
+
+	        		for(i=0;i<msi;i++)
+	                		{
+	                		pnt[i]=whichfill;
+	                		}
+
+				memcpy(pnt+i, bits, nbits);
+
+				bits = (unsigned char *)pnt;
+				nbits = lsi + 1;
+				}
 			}
 		}
 	}
