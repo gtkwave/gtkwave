@@ -5,7 +5,7 @@ Under construction.
 :::
 
 The only "official" documentation of the FST format (for now)
-is [this](https://github.com/gtkwave/gtkwave/blob/master/lib/libfst/block_format.txt)
-text file and the [libfst source code](https://github.com/gtkwave/gtkwave/blob/master/lib/libfst).
+is [this](https://github.com/gtkwave/libfst/blob/main/doc/block_format.txt)
+text file and the [libfst source code](https://github.com/gtkwave/libfst).
 
-An unofficial documentation is available on [here](https://blog.timhutt.co.uk/fst_spec/)
+An unofficial specification is available [here](https://blog.timhutt.co.uk/fst_spec/).
