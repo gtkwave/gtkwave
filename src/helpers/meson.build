@@ -4,6 +4,7 @@ helpers = [
     'fstminer',
     'lxt2miner',
     'lxt2vcd',
+    'shmidcat',
     'vcd2fst',
     'vcd2lxt',
     'vcd2lxt2',

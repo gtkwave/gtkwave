@@ -38,6 +38,8 @@ struct _GwTrace
     unsigned int t_color; /* trace color index */
     unsigned char t_fpdecshift; /* for fixed point decimal */
 
+    int refcount; /* reference count for proper memory management */
+
     unsigned is_cursor : 1; /* set to mark a cursor trace */
     unsigned is_alias : 1; /* set when it's an alias (safe to free t->name then) */
     unsigned vector : 1; /* 1 if bit vector, 0 if node */
