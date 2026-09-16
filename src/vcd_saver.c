@@ -10,8 +10,6 @@
 #include <config.h>
 #include "globals.h"
 #include "vcd_saver.h"
-#include "ghw.h"
-#include "hierpack.h"
 #include <time.h>
 
 static void w32redirect_fprintf(int is_trans, FILE *sfd, const char *format, ...)
@@ -49,13 +47,13 @@ static void w32redirect_fprintf(int is_trans, FILE *sfd, const char *format, ...
 static unsigned char analyzer_demang(int strict, unsigned char ch)
 {
     if (!strict) {
-        if (ch < AN_COUNT) {
-            return (AN_STR[ch]);
+        if (ch < GW_BIT_COUNT) {
+            return gw_bit_to_char(ch);
         } else {
             return (ch);
         }
     } else {
-        if (ch < AN_COUNT) {
+        if (ch < GW_BIT_COUNT) {
             return (AN_STR4ST[ch]);
         } else {
             return (ch);
@@ -453,6 +451,10 @@ int save_nodes_to_export_generic(FILE *trans_file,
     if (!nodecnt)
         return (VCDSAV_EMPTY);
 
+    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+    GwTime time_scale = gw_dump_file_get_time_scale(GLOBALS->dump_file);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+
     /* header */
     if (export_typ != WAVE_EXPORT_TRANS) {
         time(&walltime);
@@ -468,14 +470,14 @@ int save_nodes_to_export_generic(FILE *trans_file,
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$timescale\n\t%d%c%s\n$end\n",
-                            (int)GLOBALS->time_scale,
-                            GLOBALS->time_dimension,
-                            (GLOBALS->time_dimension == 's') ? "" : "s");
-        if (GLOBALS->global_time_offset) {
+                            (int)time_scale,
+                            time_dimension,
+                            (time_dimension == 's') ? "" : "s");
+        if (global_time_offset != 0) {
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
                                 "$timezero\n\t%" GW_TIME_FORMAT "\n$end\n",
-                                GLOBALS->global_time_offset);
+                                global_time_offset);
         }
     } else {
         w32redirect_fprintf(is_trans,
@@ -489,23 +491,26 @@ int save_nodes_to_export_generic(FILE *trans_file,
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$timescale %d%c%s $end\n",
-                            (int)GLOBALS->time_scale,
-                            GLOBALS->time_dimension,
-                            (GLOBALS->time_dimension == 's') ? "" : "s");
-        if (GLOBALS->global_time_offset) {
+                            (int)time_scale,
+                            time_dimension,
+                            (time_dimension == 's') ? "" : "s");
+        if (global_time_offset != 0) {
             w32redirect_fprintf(is_trans,
                                 GLOBALS->f_vcd_saver_c_1,
                                 "$timezero %" GW_TIME_FORMAT " $end\n",
-                                GLOBALS->global_time_offset);
+                                global_time_offset);
         }
+
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$comment min_time %" GW_TIME_FORMAT " $end\n",
-                            GLOBALS->min_time / GLOBALS->time_scale);
+                            gw_time_range_get_start(time_range) / time_scale);
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "$comment max_time %" GW_TIME_FORMAT " $end\n",
-                            GLOBALS->max_time / GLOBALS->time_scale);
+                            gw_time_range_get_end(time_range) / time_scale);
     }
 
     if (export_typ == WAVE_EXPORT_TRANS) {
@@ -526,9 +531,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
     recurse_build(vt, &hp_clone);
 
     for (i = 0; i < nodecnt; i++) {
-        int was_packed = HIER_DEPACK_STATIC;
-        char *hname =
-            hier_decompress_flagged(GLOBALS->hp_vcd_saver_c_1[i]->item->nname, &was_packed);
+        char *hname = GLOBALS->hp_vcd_saver_c_1[i]->item->nname;
         char *netname = output_hier(is_trans, hname);
 
         if (export_typ == WAVE_EXPORT_TRANS) {
@@ -600,19 +603,21 @@ int save_nodes_to_export_generic(FILE *trans_file,
         heapify(i, nodecnt);
     }
 
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+
     for (;;) {
         heapify(0, nodecnt);
 
         if (!GLOBALS->hp_vcd_saver_c_1[0]->hist)
             break;
-        if (GLOBALS->hp_vcd_saver_c_1[0]->hist->time > GLOBALS->max_time)
+        if (GLOBALS->hp_vcd_saver_c_1[0]->hist->time > gw_time_range_get_end(time_range))
             break;
 
         if ((GLOBALS->hp_vcd_saver_c_1[0]->hist->time != prevtime) &&
             (GLOBALS->hp_vcd_saver_c_1[0]->hist->time >= GW_TIME_CONSTANT(0))) {
             GwTime tnorm = GLOBALS->hp_vcd_saver_c_1[0]->hist->time;
-            if (GLOBALS->time_scale != 1) {
-                tnorm /= GLOBALS->time_scale;
+            if (time_scale != 1) {
+                tnorm /= time_scale;
             }
 
             if (dumpvars_state == 1) {
@@ -704,7 +709,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
         GLOBALS->hp_vcd_saver_c_1[0]->hist = GLOBALS->hp_vcd_saver_c_1[0]->hist->next;
     }
 
-    if (prevtime < GLOBALS->max_time) {
+    if (prevtime < gw_time_range_get_end(time_range)) {
         if (dumpvars_state == 1) {
             w32redirect_fprintf(is_trans, GLOBALS->f_vcd_saver_c_1, "$end\n");
             dumpvars_state = 2;
@@ -712,7 +717,7 @@ int save_nodes_to_export_generic(FILE *trans_file,
         w32redirect_fprintf(is_trans,
                             GLOBALS->f_vcd_saver_c_1,
                             "#%" GW_TIME_FORMAT "\n",
-                            GLOBALS->max_time / GLOBALS->time_scale);
+                            gw_time_range_get_end(time_range) / time_scale);
     }
 
     for (i = 0; i < nodecnt; i++) {
@@ -936,7 +941,7 @@ static void write_hptr_trace(GwTrace *t, int *whichptr, GwTime tmin, GwTime tmax
     GwHistEnt **ha = n->harray;
     int numhist = n->numhist;
     int i;
-    unsigned char h_val = AN_X;
+    unsigned char h_val = GW_BIT_X;
     gboolean first;
     gboolean invert = ((t->flags & TR_INVERT) != 0);
     int edges = 0;
@@ -1368,6 +1373,7 @@ int do_timfile_save(const char *fname)
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
     GwMarker *baseline_marker = gw_project_get_baseline_marker(GLOBALS->project);
+    GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
 
     if (gw_marker_is_enabled(primary_marker) && gw_marker_is_enabled(baseline_marker)) {
         GwTime primary_pos = gw_marker_get_position(primary_marker);
@@ -1376,8 +1382,8 @@ int do_timfile_save(const char *fname)
         tmin = MIN(primary_pos, baseline_pos);
         tmax = MAX(primary_pos, baseline_pos);
     } else {
-        tmin = GLOBALS->min_time;
-        tmax = GLOBALS->max_time;
+        tmin = gw_time_range_get_start(time_range);
+        tmax = gw_time_range_get_end(time_range);
     }
 
     GLOBALS->f_vcd_saver_c_1 = fopen(fname, "wb");
@@ -1385,7 +1391,8 @@ int do_timfile_save(const char *fname)
         return (VCDSAV_FILE_ERROR);
     }
 
-    pnt = strchr(time_prefix, (int)GLOBALS->time_dimension);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    pnt = strchr(time_prefix, (int)time_dimension);
     if (pnt) {
         offset = pnt - time_prefix;
     } else

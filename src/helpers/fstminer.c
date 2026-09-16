@@ -117,6 +117,32 @@ static char *get_facname(void *lt, fstHandle pnt_facidx)
     }
 }
 
+static const char *strnstr_2(const char *haystack,
+                             const char *needle,
+                             size_t haystack_len) /* exists in BSDs, but not in linux */
+{
+    if (needle && haystack) /* overkill for this usage, but to avoid tripping static checkers */
+    {
+        size_t needle_len = strlen(needle);
+
+        if (!needle_len) /* trivial case is match against null string */
+        {
+            return (haystack);
+        }
+
+        while (haystack_len >= needle_len) /* otherwise, impossible to match */
+        {
+            if (!memcmp(haystack, needle, needle_len)) {
+                return (haystack);
+            }
+            haystack++;
+            haystack_len--;
+        }
+    }
+
+    return (NULL);
+}
+
 static void vcd_callback2(void *lt,
                           uint64_t pnt_time,
                           fstHandle pnt_facidx,
@@ -125,13 +151,22 @@ static void vcd_callback2(void *lt,
 {
     if (plen >= matchlen) {
         if (!killed_list[pnt_facidx]) {
-            if ((!match) ||
-                (pnt_value /* scan-build */ && (strstr((const char *)pnt_value, match)))) {
+            if ((!match) || (pnt_value /* scan-build */ &&
+                             (strnstr_2((const char *)pnt_value,
+                                        match,
+                                        plen)))) /* #423: changed strstr to strnstr_2 */
+            {
                 char *fn;
                 fn = get_facname(lt, pnt_facidx);
 
                 if (!names_only) {
-                    printf("#%" PRIu64 " %s %s\n", pnt_time, fn, pnt_value);
+                    char *s = malloc(
+                        plen + 1); /* #423: fstminer doesn't handle string transitions correctly */
+                    memcpy(s, pnt_value, plen);
+                    s[plen] = 0; /* strings are not null terminated */
+
+                    printf("#%" PRIu64 " %s %s\n", pnt_time, fn, s);
+                    free(s);
                 } else {
                     printf("%s\n", fn);
                 }

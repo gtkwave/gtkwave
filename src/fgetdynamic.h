@@ -12,8 +12,6 @@
 #ifndef FGET_DYNAMIC_H
 #define FGET_DYNAMIC_H
 
-#include "vlist.h"
-
 /* using alloca avoids having to preserve across contexts */
 struct wave_script_args
 {

@@ -19,6 +19,8 @@
     </p>
   </description>
 
+  <launchable type="desktop-id">io.github.gtkwave.GTKWave.desktop</launchable>
+
   <url type="homepage">http://gtkwave.sourceforge.net/</url>
   <url type="bugtracker">https://github.com/gtkwave/gtkwave/issues</url>
   <url type="help">https://github.com/gtkwave/gtkwave</url>

@@ -18,7 +18,7 @@ that libae2rw is available but this is only of interest to people who use IBM ED
 
 
 \fB\-n\fR,\fB\-\-nocli\fR <\fIdirectory name\fP>
-Use file requester for dumpfile name.
+Use file selection dialog for dumpfile or savefile
 .TP
 \fB\-f\fR,\fB\-\-dump\fR <\fIfilename\fP>
 Specify dumpfile name.
@@ -37,9 +37,6 @@ file viewing.  Can be used in conjunction with \fB\-v\fR,\fB\-\-vcd\fR.
 .TP
 \fB\-a\fR,\fB\-\-save\fR <\fIfilename\fP>
 Specify savefile name.  Useful suffixes for desktop integration are .gtkw and .sav (deprecated).
-.TP
-\fB\-A\fR,\fB\-\-autosavename\fR
-Assume savefile is suffix modified dumpfile name (i.e., remove and replace with ".gtkw").
 .TP
 \fB\-r\fR,\fB\-\-rcfile\fR <\fIfilename\fP>
 Specify override \fI.gtkwaverc\fP filename.
@@ -78,21 +75,6 @@ Do not render menubar. This is mainly used for making a restricted applet that c
 on its own, however it also can be used as a workaround in earlier versions of GTK+ that do not handle
 GTKSocket/GTKPlug focus interactions properly.
 .TP
-\fB\-S\fR,\fB\-\-script\fR <\fIfilename\fP>
-Specify Tcl command script file for execution.
-.TP
-\fB\-T\fR,\fB\-\-tcl_init\fR <\fIfilename\fP>
-Specify Tcl command script to be loaded on startup.  Implies \-\-wish command flag.
-.TP 
-\fB\-W\fR,\fB\-\-wish\fR
-Enable Tcl command line on stdio.  All script commands can be typed in on stdin.
-.TP
-\fB\-R\fR,\fB\-\-repscript\fR <\fIfilename\fP>
-Specify Tcl command script for periodic execution.
-.TP
-\fB\-P\fR,\fB\-\-repperiod\fR <\fIvalue\fP>
-Specifies delay in milliseconds between successive executions of the repscript.  Default is 500.
-.TP
 \fB\-X\fR,\fB\-\-xid\fR <\fIXID\fP>
 Specify XID (in hexadecimal) of window for a GtkPlug to connect to.  GTKWave does not directly render to a window but instead renders into a 
 GtkPlug expecting a GtkSocket at the other end.  Note that there are issues with accelerators working properly so menus are
@@ -126,10 +108,6 @@ At exit, a requester is brought up to prompt user to write a save file.  Canceli
 \fB\-g\fR,\fB\-\-giga\fR
 Specifies that the viewer should use gigabyte mempacking when recoding (possibly slower).  This is equivalent to setting
 the vlist_spill and vlist_prepack flags in the rc file.
-.TP
-\fB\-C\fR,\fB\-\-comphier\fR
-Specifies that the viewer should use compressed hierarchy names when loading the dumpfile (available for VCD recoder, LXT, LXT2, and VZT).
-This will use less memory at the expense of compression/decompression delay.
 .TP
 \fB\-v\fR,\fB\-\-vcd\fR
 Use stdin as a VCD dumpfile.

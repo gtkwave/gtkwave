@@ -18,32 +18,12 @@
 
 #include "vcd.h"
 
-#define F_NAME_MODULUS (3)
-
 enum LXT2_Loader_Type_Encodings
 {
     LXT2_IS_INACTIVE,
     LXT2_IS_VLIST,
     LXT2_IS_FST,
-    LXT2_IS_FSDB
 };
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(push)
-#pragma pack(1)
-#endif
-
-struct lx2_entry
-{
-    GwHistEnt *histent_head;
-    GwHistEnt *histent_curr;
-    int numtrans;
-    GwNode *np;
-};
-
-#ifdef WAVE_USE_STRUCT_PACKING
-#pragma pack(pop)
-#endif
 
 void import_lx2_trace(GwNode *np);
 void lx2_set_fac_process_mask(GwNode *np);

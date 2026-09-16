@@ -18,6 +18,7 @@
 #if defined __MINGW32__
 #include <windows.h>
 #include <io.h>
+#undef interface
 #endif
 
 #define XXX_GDK_DRAWABLE(x) x
@@ -35,7 +36,6 @@
 #include "fonts.h"
 #include "fstapi.h"
 #include "gconf.h"
-#include "ghw.h"
 #include "gtk23compat.h"
 #include "main.h"
 #include "memory.h"
@@ -55,10 +55,7 @@
 #include "tree.h"
 #include "vcd.h"
 #include "vcd_saver.h"
-#include "vlist.h"
 #include "version.h"
-#include "extload.h"
-#include "fst.h"
 
 #ifdef _WAVE_HAVE_JUDY
 #include <Judy.h>
@@ -72,10 +69,23 @@
 #endif
 #endif
 
+typedef struct
+{
+    gboolean vlist_prepack;
+    gint vlist_compression_level;
+
+    gboolean preserve_glitches;
+    gboolean preserve_glitches_real;
+
+    gsize vcd_warning_filesize;
+} Settings;
+
 struct Global
 {
     GwProject *project;
-    GwStems *stems;
+    GwDumpFile *dump_file;
+
+    Settings settings;
 
     /*
      * analyzer.c
@@ -128,20 +138,13 @@ struct Global
     /*
      * currenttime.c
      */
-    GwTime global_time_offset;
-    char is_vcd; /* from currenttime.c 56 */
-    char partial_vcd; /* from currenttime.c 57 */
     char use_maxtime_display; /* from currenttime.c 58 */
     char use_frequency_delta; /* from currenttime.c 59 */
     GwTime cached_currenttimeval_currenttime_c_1; /* from currenttime.c 62 */
-    GwTime max_time; /* from currenttime.c 64 */
-    GwTime min_time; /* from currenttime.c 65 */
     char display_grid; /* from currenttime.c 66 */
     char fullscreen;
     char show_toolbar;
     GtkWidget *time_box;
-    GwTime time_scale; /* from currenttime.c 67 */
-    char time_dimension; /* from currenttime.c 68 */
     char scale_to_time_dimension; /* from currenttime.c */
     GwTime time_trunc_val_currenttime_c_1; /* from currenttime.c 77 */
     char use_full_precision; /* from currenttime.c 78 */
@@ -159,35 +162,6 @@ struct Global
      */
     char *entrybox_text; /* from entry.c 83 */
 
-    /* extload.c */
-    unsigned int extload_ffr_import_count; /* from extload.c */
-    void *extload_ffr_ctx; /* from extload.c */
-    FILE *extload; /* from extload.c */
-    unsigned int *extload_idcodes; /* from extload.c */
-    int *extload_inv_idcodes; /* from extload.c */
-#if !defined __MINGW32__
-    time_t extload_lastmod; /* from extload.c */
-    char extload_already_errored; /* from extload.c */
-#endif
-    char **extload_namecache;
-    int *extload_namecache_max;
-    int *extload_namecache_lens;
-    int *extload_namecache_patched;
-    struct symbol *extload_sym_block;
-    GwNode *extload_node_block;
-    void *extload_xc;
-    struct symbol *extload_prevsymroot;
-    struct symbol *extload_prevsym;
-    GwTree **extload_npar;
-    int extload_i;
-    int extload_hlen;
-    unsigned char extload_vt_prev;
-    unsigned char extload_vd_prev;
-    int f_name_build_buf_len;
-    char *f_name_build_buf;
-    unsigned int extload_max_tree;
-    unsigned int extload_curr_tree;
-
     /*
      * fetchbuttons.c
      */
@@ -201,14 +175,10 @@ struct Global
     /*
      * file.c
      */
-    GtkWidget *pFileChoose;
-    char *pFileChooseFilterName;
-    GPatternSpec *pPatternSpec;
+    GtkFileChooserNative *pFileChoose;
     GtkWidget *fs_file_c_1; /* from file.c 87 */
     char **fileselbox_text; /* from file.c 88 */
     char filesel_ok; /* from file.c 89 */
-    void (*cleanup_file_c_2)(void); /* from file.c 90 */
-    void (*bad_cleanup_file_c_1)(void); /* from file.c 91 */
 
     /*
      * fonts.c
@@ -221,46 +191,12 @@ struct Global
     char use_pango_fonts;
 
     /*
-     * fst.c
-     */
-    FstFile *fst_file;
-    char nonimplicit_direction_encountered;
-    char supplemental_datatypes_encountered;
-    char supplemental_vartypes_encountered;
-    char is_vhdl_component_format;
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t *xl_enum_filter;
-#else
-    struct xl_tree_node **xl_enum_filter;
-#endif
-    int num_xl_enum_filter;
-    JRB enum_nptrs_jrb;
-
-    /*
-     * ghw.c
-     */
-    char is_ghw; /* from ghw.c 102 */
-
-    /*
      * globals.c
      */
     struct Global **
         *dead_context; /* for deallocating tabbed contexts later (when no race conditions exist) */
     struct Global **gtk_context_bridge_ptr; /* from globals.c, migrates to reloaded contexts to link
                                                buttons to ctx */
-
-    /*
-     * hierpack.c
-     */
-    unsigned char *hp_buf;
-    size_t *hp_offs;
-    size_t hp_prev;
-    size_t hp_buf_siz;
-    unsigned char *fmem_buf;
-    size_t fmem_buf_siz;
-    size_t fmem_buf_offs;
-    size_t fmem_uncompressed_siz;
-    char disable_auto_comphier;
 
     /*
      * logfile.c
@@ -284,13 +220,6 @@ struct Global
     gboolean dumpfile_is_modified;
     GtkWidget *missing_file_toolbar;
     char *argvlist;
-#ifdef HAVE_LIBTCL
-    Tcl_Interp *interp;
-#endif
-    char *repscript_name;
-    unsigned int repscript_period;
-    char *tcl_init_cmd;
-    char tcl_running;
     char block_xy_update;
     char *winname;
     unsigned int num_notebook_pages;
@@ -518,28 +447,6 @@ struct Global
     void (*cleanup)(GtkWidget *, void *); /* from simplereq.c 414 */
 
     /*
-     * splash.c
-     */
-    char splash_is_loading;
-    char splash_fix_win_title;
-    char splash_disable; /* from splash.c 415 */
-    GtkWidget *splash_splash_c_1; /* from splash.c 419 */
-    GtkWidget *darea_splash_c_1; /* from splash.c 420 */
-    GTimer *gt_splash_c_1; /* from splash.c 421 */
-    int timeout_tag; /* from splash.c 422 */
-    int load_complete_splash_c_1; /* from splash.c 423 */
-    int cnt_splash_c_1; /* from splash.c 424 */
-    int prev_bar_x_splash_c_1; /* from splash.c 425 */
-    GdkPixbuf *wave_splash_pixbuf;
-
-    /*
-     * status.c
-     */
-    GtkWidget *text_status_c_2; /* from status.c 426 */
-    GtkTextIter iter_status_c_3; /* from status.c 428 */
-    GtkTextTag *bold_tag_status_c_3; /* from status.c 429 */
-
-    /*
      * strace.c
      */
     struct strace_ctx_t *strace_ctx; /* moved to strace.h */
@@ -547,32 +454,10 @@ struct Global
     int strace_current_window;
     int strace_repeat_count;
 
-/*
- * symbol.c
- */
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t sym_judy; /* from symbol.c */
-    Pvoid_t s_selected; /* from symbol.c */
-#endif
-    struct symbol **sym_hash; /* from symbol.c 453 */
-    struct symbol **facs; /* from symbol.c 454 */
-    char facs_are_sorted; /* from symbol.c 455 */
-    char facs_have_symbols_state_machine; /* from symbol.c */
-    int numfacs; /* from symbol.c 456 */
-    int regions; /* from symbol.c 457 */
-    int longestname; /* from symbol.c 458 */
-    int hashcache; /* from symbol.c 461 */
-
     /*
      * tcl_commands.c
      */
     char *previous_braced_tcl_string;
-
-    /*
-     * tcl_helper.c
-     */
-    char in_tcl_callback;
-    char tcl_menu_toggle_item;
 
     /*
      * timeentry.c
@@ -597,39 +482,14 @@ struct Global
 /*
  * tree.c
  */
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t sym_tree;
-    Pvoid_t sym_tree_addresses;
-#endif
-    GwTree *treeroot; /* from tree.c 473 */
-    GwTree *mod_tree_parent; /* from tree.c */
-    char *module_tree_c_1; /* from tree.c 474 */
-    int module_len_tree_c_1; /* from tree.c 475 */
-    GwTree *terminals_tchain_tree_c_1; /* from tree.c 476 */
     char hier_delimeter; /* from tree.c 477 */
     char hier_was_explicitly_set; /* from tree.c 478 */
-    char alt_hier_delimeter; /* from tree.c 479 */
-    struct symbol **facs2_tree_c_1; /* from tree.c 481 */
-    int facs2_pos_tree_c_1; /* from tree.c 482 */
     unsigned char *talloc_pool_base;
     size_t talloc_idx;
     char *sst_exclude_filename;
     uint64_t exclhiermask;
     JRB exclcompname;
     JRB exclinstname;
-
-/*
- * tree_component.c
- */
-#ifdef _WAVE_HAVE_JUDY
-    Pvoid_t comp_name_judy;
-#else
-    JRB comp_name_jrb;
-#endif
-    char **comp_name_idx;
-    int comp_name_serial;
-    size_t comp_name_total_stringmem;
-    int comp_name_longest;
 
     /*
      * treesearch_gtk2.c
@@ -648,8 +508,8 @@ struct Global
     GtkWidget *entry_a_treesearch_gtk2_c_2; /* from treesearch_gtk2.c 485 */
     char *entrybox_text_local_treesearch_gtk2_c_3; /* from treesearch_gtk2.c 486 */
     void (*cleanup_e_treesearch_gtk2_c_3)(void); /* from treesearch_gtk2.c 487 */
-    GwTree *sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 488 */
-    GwTree *sst_sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c */
+    GwTreeNode *sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 488 */
+    GwTreeNode *sst_sig_root_treesearch_gtk2_c_1; /* from treesearch_gtk2.c */
     char *filter_str_treesearch_gtk2_c_1; /* from treesearch_gtk2.c 489 */
     int filter_typ_treesearch_gtk2_c_1;
     int filter_typ_polarity_treesearch_gtk2_c_1;
@@ -663,8 +523,6 @@ struct Global
     Traces tcache_treesearch_gtk2_c_2; /* from treesearch_gtk2.c 500 */
     GtkWidget *dnd_sigview; /* from treesearch_gtk2.c */
     GtkPaned *sst_vpaned; /* from treesearch_gtk2.c */
-    int fetchlow;
-    int fetchhigh;
     GtkTreeStore *treestore_main;
     GtkWidget *treeview_main;
     enum sst_cb_action sst_dbl_action_type;
@@ -687,30 +545,10 @@ struct Global
     /*
      * vcd.c
      */
-    unsigned char do_hier_compress; /* from vcd.c */
-    char *prev_hier_uncompressed_name; /* from vcd.c */
     jmp_buf *vcd_jmp_buf; /* from vcd.c */
-    int vcd_warning_filesize; /* from vcd.c 502 */
     char autocoalesce; /* from vcd.c 503 */
     char autocoalesce_reversal; /* from vcd.c 504 */
     char convert_to_reals; /* from vcd.c 506 */
-    char make_vcd_save_file; /* from vcd.c 508 */
-    char vcd_preserve_glitches; /* from vcd.c 509 */
-    char vcd_preserve_glitches_real;
-    FILE *vcd_save_handle; /* from vcd.c 510 */
-    char vcd_hier_delimeter[2]; /* from vcd.c 522 */
-    int escaped_names_found_vcd_c_1; /* from vcd.c 528 */
-    struct slist *slistroot; /* from vcd.c 529 */
-    struct slist *slistcurr; /* from vcd.c 530 */
-    char *slisthier; /* from vcd.c 531 */
-    int slisthier_len; /* from vcd.c 532 */
-    GwHistEnt *he_curr_vcd_c_1; /* from vcd.c 543 */
-    GwHistEnt *he_fini_vcd_c_1; /* from vcd.c 544 */
-
-    /*
-     * vcd_recoder.c
-     */
-    VcdFile *vcd_file;
 
     /*
      * vcd_saver.c
@@ -719,13 +557,6 @@ struct Global
     char buf_vcd_saver_c_3[16]; /* from vcd_saver.c 631 */
     struct vcdsav_tree_node **hp_vcd_saver_c_1; /* from vcd_saver.c 632 */
     struct namehier *nhold_vcd_saver_c_1; /* from vcd_saver.c 633 */
-
-    /*
-     * vlist.c
-     */
-    char vlist_prepack;
-    off_t vlist_bytes_written;
-    int vlist_compression_depth; /* from vlist.c 634 */
 
     /*
      * wavewindow.c
@@ -749,11 +580,8 @@ struct Global
     unsigned int in_button_press_wavewindow_c_1; /* from wavewindow.c 656 */
     char left_justify_sigs; /* from wavewindow.c 657 */
     char zoom_pow10_snap; /* from wavewindow.c 658 */
-    char zoom_dyn; /* from menu.c */
-    char zoom_dyne; /* from menu.c */
     int cursor_snap; /* from wavewindow.c 659 */
     float old_wvalue; /* from wavewindow.c 660 */
-    GwBlackoutRegions *blackout_regions; /* from wavewindow.c 661 */
     GwTime zoom; /* from wavewindow.c 662 */
     GwTime scale; /* from wavewindow.c 663 */
     GwTime nsperframe; /* from wavewindow.c 664 */

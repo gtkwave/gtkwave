@@ -33,7 +33,6 @@ void get_main_menu(GtkWidget *, GtkWidget **menubar);
 void menu_set_sensitive(void);
 int file_quit_cmd_callback(GtkWidget *widget, gpointer data);
 int set_wave_menu_accelerator(const char *str);
-int execute_script(char *name, int dealloc_name);
 
 void kill_main_menu_accelerators(void); /* for conflicts with twinwave */
 
@@ -96,10 +95,6 @@ enum WV_MenuItems
     WV_MENU_SEP2LF,
     WV_MENU_FRSTMF,
     WV_MENU_SEP2STMF,
-#if defined(HAVE_LIBTCL)
-    WV_MENU_TCLSCR,
-    WV_MENU_TCLSEP,
-#endif
     WV_MENU_FQY,
     WV_MENU_ESTMH,
     WV_MENU_ETH,
@@ -293,8 +288,6 @@ enum WV_MenuItems
     WV_MENU_VRJS,
     WV_MENU_SEP16,
     WV_MENU_VZPS,
-    WV_MENU_VZDYN,
-    WV_MENU_VZDYNE,
     WV_MENU_VFTP,
     WV_MENU_SEP17,
     WV_MENU_RULER,

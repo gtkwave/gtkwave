@@ -1,0 +1,32 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_NANO
+range: 0 - 3
+global time offset: 0
+
+Tree
+----
+vec[3:0] (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+vec[3:0]
+    node: vec[3:0]
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 1
+        msi, lsi: 3, 0
+        numhist: 4
+        transitions:
+            ? @ -2
+            ? @ -1
+            0001 @ 0
+            0100 @ 1
+            zz00 @ 2
+            xxx0 @ 3
+            xxxx @ 9223372036854775806
+            zzzz @ 9223372036854775807
+

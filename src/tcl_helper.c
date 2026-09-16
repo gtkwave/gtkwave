@@ -25,10 +25,8 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "menu.h"
 #include "tcl_helper.h"
-#include "tcl_np.h"
 #include "signal_list.h"
 
 #if !defined __MINGW32__
@@ -802,7 +800,7 @@ static char *make_net_name_from_tcl_list(char *s, char **unescaped_str)
  * ----------------------------------------------------------------------------
  */
 
-void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
+void process_tcl_list_2(GwSymbol *s, int which_msb, int which_lsb)
 {
     GwTrace *t;
     GwNode *nexp;
@@ -840,10 +838,12 @@ void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
     if (which_msb <= which_lsb) {
         for (i = which_msb; i <= which_lsb; i++) {
             nexp = ExtractNodeSingleBit(s->n, i);
+            //TODO: the else branch changed from "AddNodeUnroll" to "AddNode".
+            //However, is this if still necessary?
             if (nexp) {
                 AddNode(nexp, NULL);
             } else {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             }
         }
     } else {
@@ -852,7 +852,7 @@ void process_tcl_list_2(struct symbol *s, int which_msb, int which_lsb)
             if (nexp) {
                 AddNode(nexp, NULL);
             } else {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             }
         }
     }
@@ -930,6 +930,9 @@ int process_tcl_list(const char *sl, gboolean prepend)
     match_type_list = calloc_2(c, sizeof(int *));
     most_recent_lbrack_list = calloc_2(c, sizeof(char *));
     most_recent_colon_list = calloc_2(c, sizeof(char *));
+
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    guint numfacs = gw_facs_get_length(facs);
 
     GLOBALS->default_flags = TR_RJUSTIFY;
     GLOBALS->default_fpshift = 0;
@@ -1038,11 +1041,12 @@ int process_tcl_list(const char *sl, gboolean prepend)
         }
 
         unesc_len = strlen(unescaped_str);
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            int was_packed = HIER_DEPACK_ALLOC;
+        for (i = 0; i < numfacs; i++) {
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[curr_srch_idx]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, curr_srch_idx);
+
+            hfacname = fac->name;
 
             if (!strncmp(unescaped_str, hfacname, unesc_len)) {
                 int hfacname_len = strlen(hfacname);
@@ -1051,9 +1055,6 @@ int process_tcl_list(const char *sl, gboolean prepend)
                     found++;
                     match_idx_list[ii] = curr_srch_idx;
                     match_type_list[ii] = 1; /* match was on normal search */
-                    if (was_packed) {
-                        free_2(hfacname);
-                    }
                     if (s_new != unescaped_str) {
                         free_2(unescaped_str);
                     }
@@ -1062,12 +1063,8 @@ int process_tcl_list(const char *sl, gboolean prepend)
             }
 
             curr_srch_idx++;
-            if (curr_srch_idx == GLOBALS->numfacs)
+            if (curr_srch_idx == numfacs)
                 curr_srch_idx = 0; /* optimization for rtlbrowse as names should be in order */
-
-            if (was_packed) {
-                free_2(hfacname);
-            }
         }
 
         if (s_new != unescaped_str) {
@@ -1081,24 +1078,18 @@ int process_tcl_list(const char *sl, gboolean prepend)
         strcat(entry_suffixed, this_regex);
 
         wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
-        for (i = 0; i < GLOBALS->numfacs; i++) {
-            int was_packed = HIER_DEPACK_ALLOC;
+        for (i = 0; i < numfacs; i++) {
             char *hfacname = NULL;
 
-            hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+            GwSymbol *fac = gw_facs_get(facs, i);
+
+            hfacname = fac->name;
 
             if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                 found++;
                 match_idx_list[ii] = i;
                 match_type_list[ii] = 1; /* match was on normal search */
-                if (was_packed) {
-                    free_2(hfacname);
-                }
                 goto import;
-            }
-
-            if (was_packed) {
-                free_2(hfacname);
             }
         }
 
@@ -1112,30 +1103,24 @@ int process_tcl_list(const char *sl, gboolean prepend)
             strcat(entry_suffixed, this_regex);
 
             wave_regex_compile(entry_suffixed, WAVE_REGEX_DND);
-            for (i = 0; i < GLOBALS->numfacs; i++) {
-                int was_packed = HIER_DEPACK_ALLOC;
+            for (i = 0; i < numfacs; i++) {
                 char *hfacname = NULL;
 
-                hfacname = hier_decompress_flagged(GLOBALS->facs[i]->name, &was_packed);
+                GwSymbol *fac = gw_facs_get(facs, i);
+
+                hfacname = fac->name;
 
                 if (wave_regex_match(hfacname, WAVE_REGEX_DND)) {
                     found++;
                     match_idx_list[ii] = i;
                     match_type_list[ii] = 2 + lbrack_adj; /* match was on lbrack removal */
-                    if (was_packed) {
-                        free_2(hfacname);
-                    }
                     goto import;
-                }
-
-                if (was_packed) {
-                    free_2(hfacname);
                 }
             }
         }
 
-        import : if (match_type_list[ii]) { struct symbol *s = GLOBALS->facs[match_idx_list[ii]];
-        struct symbol *schain = s->vec_root;
+        import : if (match_type_list[ii]) { GwSymbol *s = gw_facs_get(facs, match_idx_list[ii]);
+        GwSymbol *schain = s->vec_root;
 
         if (GLOBALS->is_lx2) {
             if (schain) {
@@ -1163,7 +1148,7 @@ GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
 for (ii = 0; ii < c; ii++) {
     if (match_type_list[ii]) {
-        struct symbol *s = GLOBALS->facs[match_idx_list[ii]];
+        GwSymbol *s = gw_facs_get(facs, match_idx_list[ii]);
 
         if ((match_type_list[ii] >= 2) && (s->n->extvals)) {
             GwNode *nexp;
@@ -1211,7 +1196,7 @@ for (ii = 0; ii < c; ii++) {
                 if (nexp) {
                     AddNode(nexp, NULL);
                 } else {
-                    AddNodeUnroll(s->n, NULL);
+                    AddNode(s->n, NULL);
                 }
             } else {
                 process_tcl_list_2(
@@ -1220,10 +1205,10 @@ for (ii = 0; ii < c; ii++) {
                     which_lsb); /* is complicated, so split out to its own function */
             }
         } else {
-            struct symbol *schain = s->vec_root;
+            GwSymbol *schain = s->vec_root;
 
             if (!schain) {
-                AddNodeUnroll(s->n, NULL);
+                AddNode(s->n, NULL);
             } else {
                 int len = 0;
                 while (schain) {
@@ -1299,10 +1284,11 @@ static char *make_gtkwave_pid(void)
     sprintf(pidstr, "{gtkwave PID %d} ", getpid());
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
+    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
 
     if (gw_marker_is_enabled(primary_marker)) {
         char mrkbuf[128];
-        reformat_time(mrkbuf, gw_marker_get_position(primary_marker), GLOBALS->time_dimension);
+        reformat_time(mrkbuf, gw_marker_get_position(primary_marker), time_dimension);
         sprintf(pidstr + strlen(pidstr), "{marker %s} ", mrkbuf);
     }
 
@@ -1334,18 +1320,12 @@ char *make_single_tcl_list_name(char *s, char *opt_value, int promote_to_bus, in
 
     if (s) {
         int len;
-        int was_packed = HIER_DEPACK_ALLOC;
         char *s2;
 
-        s = hier_decompress_flagged(s, &was_packed);
         len = strlen(s);
         s2 = g_alloca(len + 1);
 
         strcpy(s2, s);
-        if (was_packed) {
-            free_2(s);
-            s = NULL;
-        }
 
         pnt = s2;
 
@@ -1479,7 +1459,7 @@ static char *give_value_string(GwTrace *t)
                 if (h_ptr) {
                     if (!t->n.nd->extvals) {
                         rc = (char *)calloc_2(2, 2 * sizeof(char));
-                        rc[0] = AN_STR[h_ptr->v.h_val];
+                        rc[0] = gw_bit_to_char(h_ptr->v.h_val);
                     } else {
                         if (h_ptr->flags & GW_HIST_ENT_FLAG_REAL) {
                             if (!(h_ptr->flags & GW_HIST_ENT_FLAG_STRING)) {
@@ -1526,7 +1506,7 @@ char *add_dnd_from_searchbox(void)
 
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -1549,7 +1529,7 @@ char *add_dnd_from_searchbox(void)
     gtk_tree_model_get_iter_first(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
     for (i = 0; i < GLOBALS->num_rows_search_c_2; i++) {
         int len;
-        struct symbol *s, *t;
+        GwSymbol *s, *t;
 
         gtk_tree_model_get(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter, PTR_COLUMN, &s, -1);
         gtk_tree_model_iter_next(GTK_TREE_MODEL(GLOBALS->sig_store_search), &iter);
@@ -1606,7 +1586,7 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
     unsigned int mult_len = 0;
     const char *netoff = "{gtkwave NET OFF} ";
     char *trace_val = NULL;
-    static const char xfwd[AN_COUNT] = AN_NORMAL;
+    static const char xfwd[GW_BIT_COUNT] = AN_NORMAL;
     char trace_val_vec_single[2] = {0, 0};
 
     GwMarker *primary_marker = gw_project_get_primary_marker(GLOBALS->project);
@@ -1749,11 +1729,11 @@ char *add_traces_from_signal_window(gboolean is_from_tcl_command)
                                 int bitnum = bits[i];
 
                                 if (bitnum < 0)
-                                    bitnum = AN_DASH;
-                                else if (bitnum >= AN_COUNT)
-                                    bitnum = AN_DASH;
+                                    bitnum = GW_BIT_DASH;
+                                else if (bitnum >= GW_BIT_COUNT)
+                                    bitnum = GW_BIT_DASH;
 
-                                trace_val_vec_single[0] = AN_STR[(int)xfwd[bitnum]];
+                                trace_val_vec_single[0] = gw_bit_to_char((int)xfwd[bitnum]);
                                 one_entry =
                                     make_single_tcl_list_name(str, trace_val_vec_single, 0, 0);
                                 WAVE_OE_ME
@@ -1876,7 +1856,7 @@ static void sig_selection_foreach_dnd(GtkTreeModel *model,
 {
     (void)path;
 
-    GwTree *sel;
+    GwTreeNode *sel;
     int i;
     int low, high;
     struct iter_dnd_strings *it;
@@ -1903,12 +1883,13 @@ static void sig_selection_foreach_dnd(GtkTreeModel *model,
     low = fetchlow(sel)->t_which;
     high = fetchhigh(sel)->t_which;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     /* If signals are vectors, iterate through them if so.  */
     for (i = low; i <= high; i++) {
-        struct symbol *s;
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if ((s->vec_root) && (GLOBALS->autocoalesce)) {
-            struct symbol *t = s->vec_root;
+            GwSymbol *t = s->vec_root;
             while (t) {
                 one_entry = make_single_tcl_list_name(t->n->nname, NULL, 1, 0);
                 WAVE_OE_ME
@@ -2495,530 +2476,3 @@ int process_url_list(char *s)
 
     return (is_url);
 }
-
-/* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
-/* XXX functions for embedding TCL interpreter XXX */
-/* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
-
-#if defined(HAVE_LIBTCL)
-
-/* declare variables that will be shared with the repscript */
-#undef WAVE_TCLCB_M
-#define WAVE_TCLCB_M(a, b, c) a
-static const char *tclcb_var_names[] = {WAVE_TCLCB_MACRO_EXPANSION};
-
-#undef WAVE_TCLCB_M
-#define WAVE_TCLCB_M(a, b, c) b
-static const int tclcb_var_flags[] = {WAVE_TCLCB_MACRO_EXPANSION};
-
-#undef WAVE_TCLCB_M
-#define WAVE_TCLCB_M(a, b, c) c
-static const char *tclcb_var_inits[] = {WAVE_TCLCB_MACRO_EXPANSION};
-
-static void declare_tclcb_variables(Tcl_Interp *interp)
-{
-    (void)interp;
-
-    int i = 0;
-    while (tclcb_var_flags[i] != -1) {
-        gtkwavetcl_setvar(tclcb_var_names[i], tclcb_var_inits[i], tclcb_var_flags[i]);
-        i++;
-    }
-}
-
-static gboolean setvar_timer(gpointer arg)
-{
-    static gboolean run_once = FALSE;
-
-    if (run_once == FALSE) /* avoid any race conditions with the toolkit for uninitialized data */
-    {
-        run_once = TRUE;
-        return (TRUE);
-    } else {
-        static gboolean in_timer = FALSE;
-
-        if (!GLOBALS->busy_busy_c_1 && !in_timer) {
-            Tcl_Interp *interp = (Tcl_Interp *)arg;
-            const char *tv = NULL;
-
-            in_timer = TRUE;
-            tv = Tcl_GetVar(interp, WAVE_TCLCB_TIMER_PERIOD, WAVE_TCLCB_TIMER_PERIOD_FLAGS);
-            if (tv) {
-                gtkwavetcl_setvar_nonblocking(WAVE_TCLCB_TIMER_PERIOD,
-                                              tv,
-                                              WAVE_TCLCB_TIMER_PERIOD_FLAGS);
-                tv = Tcl_GetVar(interp, WAVE_TCLCB_TIMER_PERIOD, WAVE_TCLCB_TIMER_PERIOD_FLAGS);
-            }
-            in_timer = FALSE;
-
-            if (tv) {
-                g_timeout_add(atoi(tv), setvar_timer, arg);
-            }
-            return (FALSE);
-        } else {
-            return (TRUE);
-        }
-    }
-}
-
-static void init_setvar_timer(Tcl_Interp *interp)
-{
-    g_timeout_add(atoi(WAVE_TCLCB_TIMER_PERIOD_INIT), setvar_timer, (gpointer)interp);
-}
-
-static int menu_func(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
-{
-    gtkwave_mlist_t *ife = (gtkwave_mlist_t *)clientData;
-    int i;
-    struct wave_script_args *old_wave_script_args = GLOBALS->wave_script_args; /* stackable args */
-    char fexit = GLOBALS->enable_fast_exit;
-    int old_toggle_item = 0;
-
-    if (GLOBALS->in_tcl_callback) /* don't allow callbacks to call menu functions (yet) */
-    {
-        char reportString[1024];
-        char menuItem[512];
-        Tcl_Obj *aobj;
-
-        const char *src = ife->path;
-        char *dst = menuItem;
-
-        while (*src) {
-            *dst = (*src != ' ') ? *src : '_';
-            src++;
-            dst++;
-        }
-        *dst = 0;
-
-        sprintf(reportString, "gtkwave::%s prohibited in callback", menuItem);
-        gtkwavetcl_setvar_nonblocking(WAVE_TCLCB_ERROR, reportString, WAVE_TCLCB_ERROR_FLAGS);
-
-        aobj = Tcl_NewStringObj(reportString, -1);
-        Tcl_SetObjResult(interp, aobj);
-        return (TCL_ERROR);
-    }
-
-    GLOBALS->wave_script_args = NULL;
-    GLOBALS->enable_fast_exit = 1;
-
-    if (objc > 1) {
-        struct wave_script_args *wc = NULL;
-
-        for (i = 1; i < objc; i++) {
-            char *s = Tcl_GetString(objv[i]);
-            int slen = strlen(s);
-            struct wave_script_args *w = g_alloca(sizeof(struct wave_script_args) + slen + 1);
-            /*  alloca used in case we context switch and get our allocator ripped out from under us
-             * -- the call stack won't go away */
-            if (slen) {
-                strcpy(w->payload, s); /* scan-build complains but it thinks payload[1] is the
-                                          actual memory allocated */
-            }
-            w->curr = NULL; /* yes, curr is only ever used for the 1st struct, but there is no sense
-                               creating head/follower structs for this */
-            w->next = NULL;
-
-            if (!GLOBALS->wave_script_args) {
-                GLOBALS->wave_script_args = w;
-                w->curr = w;
-            } else {
-                if (wc) /* scan-build: suppress warning, this will never happen */
-                {
-                    wc->next =
-                        w; /* we later really traverse through curr->next from the head pointer */
-                }
-            }
-
-            wc = w;
-        }
-
-        if (!GLOBALS->wave_script_args) /* create a dummy list in order to keep requesters from
-                                           popping up in file.c, etc. */
-        {
-            GLOBALS->wave_script_args = g_alloca(sizeof(struct wave_script_args) + 1);
-            GLOBALS->wave_script_args->curr = NULL;
-            GLOBALS->wave_script_args->next = NULL;
-            GLOBALS->wave_script_args->payload[0] = 0;
-        }
-
-        old_toggle_item = GLOBALS->tcl_menu_toggle_item;
-        GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
-        ife->callback(NULL, 0, NULL);
-        GLOBALS->tcl_menu_toggle_item = old_toggle_item;
-        gtkwave_main_iteration();
-
-        GLOBALS->wave_script_args = NULL;
-    } else {
-        GLOBALS->tcl_menu_toggle_item = (ife->item_type && !strcmp(ife->item_type, "<ToggleItem>"));
-        ife->callback(NULL, 0, NULL);
-        GLOBALS->tcl_menu_toggle_item = old_toggle_item;
-        gtkwave_main_iteration();
-    }
-
-    GLOBALS->enable_fast_exit = fexit;
-    GLOBALS->wave_script_args = old_wave_script_args;
-    return (TCL_OK); /* signal error with rc=TCL_ERROR, Tcl_Obj *aobj =
-                        Tcl_NewStringObj(reportString, -1); Tcl_SetObjResult(interp, aobj); */
-}
-
-/* XXXXXXXXXXXXXXXXXXXXXXXXX */
-/* XXX  RPC Tcl Variant  XXX */
-/* XXXXXXXXXXXXXXXXXXXXXXXXX */
-
-char *rpc_script_execute(const char *nam)
-{
-    char *tpnt = NULL;
-    char *s;
-
-    if ((nam) && (strlen(nam)) && (!GLOBALS->tcl_running)) {
-        int tclrc;
-        int nlen = strlen(nam);
-        char *tcl_cmd = g_alloca(8 + nlen + 1 + 1);
-        strcpy(tcl_cmd, "source {");
-        strcpy(tcl_cmd + 8, nam);
-        strcpy(tcl_cmd + 8 + nlen, "}");
-
-        GLOBALS->tcl_running = 1;
-        tclrc = Tcl_Eval(GLOBALS->interp, tcl_cmd);
-        GLOBALS->tcl_running = 0;
-
-        if (tclrc != TCL_OK) {
-            tpnt = strdup_2(Tcl_GetStringResult(GLOBALS->interp));
-        } else {
-            tpnt = strdup_2("TCL_OK");
-        }
-    }
-
-    if (!tpnt)
-        tpnt = strdup_2("TCL_ERROR : no filename specified");
-
-    s = malloc_2(strlen("--script ") + strlen(tpnt) + 1 + 1);
-    sprintf(s, "%s%s\n", "--script ", tpnt);
-    free_2(tpnt);
-
-    return (s);
-}
-
-/* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
-/* XXX  Bluespec Tcl Variant  XXX */
-/* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
-
-void gtkUpdate(ClientData ignore)
-{
-    (void)ignore;
-
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
-    }
-    Tcl_CreateTimerHandler(50,
-                           gtkUpdate,
-                           (ClientData)NULL); /* ajb: was 0 period ...caused 100% CPU spike */
-}
-
-int gtkwaveInterpreterInit(Tcl_Interp *interp)
-{
-    int i;
-    char commandName[128];
-    gtkwave_mlist_t *ife;
-    int num_menu_items;
-
-#ifdef WAVE_TCL_STUBIFY
-/* not needed...this does a double init if enabled:  set_globals_interp(); */
-#else
-    if (Tcl_Init(interp) == TCL_ERROR)
-        return TCL_ERROR;
-    if (Tk_Init(interp) == TCL_ERROR)
-        return TCL_ERROR;
-    Tcl_SetVar(interp, "tcl_rcFileName", "~/.wishrc", TCL_GLOBAL_ONLY);
-#endif
-
-    strcpy(commandName, "gtkwave::");
-
-    Tcl_Namespace *namespace = Tcl_CreateNamespace(interp, "gtkwave", NULL, NULL);
-
-    ife = retrieve_menu_items_array(&num_menu_items);
-    for (i = 0; i < num_menu_items; i++) {
-        if (ife[i].callback) {
-            char *pnt = commandName + 9;
-            strcpy(pnt, ife[i].path);
-            while (*pnt) {
-                if (*pnt == ' ')
-                    *pnt = '_';
-                pnt++;
-            }
-
-            Tcl_CreateObjCommand(interp,
-                                 commandName,
-                                 (Tcl_ObjCmdProc *)menu_func,
-                                 (ClientData)(ife + i),
-                                 (Tcl_CmdDeleteProc *)NULL);
-        }
-    }
-
-    for (i = 0; gtkwave_commands[i].func != NULL; i++) {
-        strcpy(commandName + 9, gtkwave_commands[i].cmdstr);
-
-        Tcl_CreateObjCommand(interp,
-                             commandName,
-                             (Tcl_ObjCmdProc *)gtkwave_commands[i].func,
-                             (ClientData)NULL,
-                             (Tcl_CmdDeleteProc *)NULL);
-
-        Tcl_Export(interp, namespace, gtkwave_commands[i].cmdstr, 0);
-    }
-
-    declare_tclcb_variables(interp);
-
-    /* hide the "wish" window */
-    Tcl_Eval(interp, "wm withdraw .");
-
-    Tcl_Eval(interp, "puts \"Interpreter id is [file tail $::argv0]\"");
-
-    if (GLOBALS->tcl_init_cmd) {
-        Tcl_Eval(interp, GLOBALS->tcl_init_cmd);
-    }
-
-    Tcl_CreateTimerHandler(50, gtkUpdate, (ClientData)NULL);
-    init_setvar_timer(interp);
-
-    return TCL_OK;
-}
-
-/* XXXXXXXXXXXXXXXXXXXXXXXXXXXX */
-/* XXX  Simpod Tcl Variant  XXX */
-/* XXXXXXXXXXXXXXXXXXXXXXXXXXXX */
-
-static gboolean repscript_timer(gpointer dummy)
-{
-    (void)dummy;
-
-    static gboolean run_once = FALSE;
-
-    if (run_once == FALSE) /* avoid any race conditions with the toolkit for uninitialized data */
-    {
-        run_once = TRUE;
-        return (TRUE);
-    }
-
-    if ((GLOBALS->repscript_name) && (!GLOBALS->tcl_running)) {
-        int tclrc;
-        int nlen = strlen(GLOBALS->repscript_name);
-        char *tcl_cmd = g_alloca(8 + nlen + 1 + 1);
-        strcpy(tcl_cmd, "source {");
-        strcpy(tcl_cmd + 8, GLOBALS->repscript_name);
-        strcpy(tcl_cmd + 8 + nlen, "}");
-
-        GLOBALS->tcl_running = 1;
-        tclrc = Tcl_Eval(GLOBALS->interp, tcl_cmd);
-        GLOBALS->tcl_running = 0;
-#if WAVE_TCL_CHECK_VERSION(8, 5, 0)
-        if (tclrc != TCL_OK) {
-            Tcl_Obj *options;
-            Tcl_Obj *key;
-            Tcl_Obj *stackTrace;
-
-            fprintf(stderr, "GTKWAVE | %s\n", Tcl_GetStringResult(GLOBALS->interp));
-            options = Tcl_GetReturnOptions(GLOBALS->interp, tclrc);
-            key = Tcl_NewStringObj("-errorinfo", -1);
-            Tcl_IncrRefCount(key);
-            Tcl_DictObjGet(NULL, options, key, &stackTrace);
-            Tcl_DecrRefCount(key);
-            fprintf(stderr, "TCL Stack Trace\n%s\n", Tcl_GetStringFromObj(stackTrace, NULL));
-            /* Do something with stackTrace */
-        }
-#else
-        if (tclrc != TCL_OK) {
-            fprintf(stderr, "GTKWAVE | %s\n", Tcl_GetStringResult(GLOBALS->interp));
-        }
-#endif
-
-        return (TRUE);
-    } else {
-        return (FALSE);
-    }
-}
-
-void set_globals_interp(char *me, int install_tk)
-{
-#ifdef WAVE_TCL_STUBIFY
-    if (NpCreateMainInterp(me, install_tk)) {
-        GLOBALS->interp = NpGetMainInterp();
-    } else {
-        fprintf(stderr, "GTKWAVE | Error, failed to find Tcl/Tk runtime libraries.\n");
-        fprintf(stderr, "GTKWAVE | Set the environment variable TCL_PLUGIN_DLL to point to\n");
-        fprintf(stderr, "GTKWAVE | the Tcl shared object file.\n");
-        exit(255);
-    }
-#else
-    (void)me;
-    (void)install_tk;
-    GLOBALS->interp = Tcl_CreateInterp();
-#endif
-}
-
-void make_tcl_interpreter(char *argv[])
-{
-    int i;
-    char commandName[32768];
-    gtkwave_mlist_t *ife;
-    int num_menu_items;
-#if !((defined(__MACH__) && defined(__APPLE__)))
-    int n = 0;
-#endif
-
-#ifndef WAVE_TCL_STUBIFY
-    Tcl_FindExecutable(argv[0]);
-#endif
-#if (defined(__MACH__) && defined(__APPLE__))
-    {
-        uint32_t size = sizeof(commandName);
-        if (_NSGetExecutablePath(commandName, &size) == 0) {
-            set_globals_interp(commandName, 0);
-        } else {
-            char *p = calloc_2(1, size + 1);
-            size++;
-            if (_NSGetExecutablePath(p, &size) == 0) {
-                set_globals_interp(p, 0);
-            } else {
-                fprintf(stderr, "GTKWAVE | Problem with _NSGetExecutablePath, exiting.\n");
-                exit(255);
-            }
-            free_2(p);
-        }
-    }
-#else
-#ifdef WIN32
-    if (!GetModuleFileName(NULL, commandName, 256))
-        n = -1;
-#else
-    n = readlink("/proc/self/exe", commandName, 256);
-#endif
-    if (n == -1) {
-        fprintf(stderr, "GTKWAVE | Tcl_Init error: Failed to get my fullpath\n");
-        exit(EXIT_FAILURE);
-    } else {
-        commandName[n] = '\0';
-    }
-    set_globals_interp(commandName, 0);
-#endif
-
-#ifndef WAVE_TCL_STUBIFY
-    if (TCL_OK != Tcl_Init(GLOBALS->interp)) {
-        fprintf(stderr, "GTKWAVE | Tcl_Init error: %s\n", Tcl_GetStringResult(GLOBALS->interp));
-        exit(EXIT_FAILURE);
-    }
-#endif
-
-    strcpy(commandName, "gtkwave::");
-
-    Tcl_Namespace *namespace = Tcl_CreateNamespace(GLOBALS->interp, "gtkwave", NULL, NULL);
-
-    ife = retrieve_menu_items_array(&num_menu_items);
-    for (i = 0; i < num_menu_items; i++) {
-        if (ife[i].callback) {
-            char *pnt = commandName + 9;
-            strcpy(pnt, ife[i].path);
-            while (*pnt) {
-                if (*pnt == ' ')
-                    *pnt = '_';
-                pnt++;
-            }
-
-            Tcl_CreateObjCommand(GLOBALS->interp,
-                                 commandName,
-                                 (Tcl_ObjCmdProc *)menu_func,
-                                 (ClientData)(ife + i),
-                                 (Tcl_CmdDeleteProc *)NULL);
-        }
-    }
-
-    for (i = 0; gtkwave_commands[i].func != NULL; i++) {
-        strcpy(commandName + 9, gtkwave_commands[i].cmdstr);
-
-        Tcl_CreateObjCommand(GLOBALS->interp,
-                             commandName,
-                             (Tcl_ObjCmdProc *)gtkwave_commands[i].func,
-                             (ClientData)NULL,
-                             (Tcl_CmdDeleteProc *)NULL);
-
-        Tcl_Export(GLOBALS->interp, namespace, gtkwave_commands[i].cmdstr, 0);
-    }
-
-    declare_tclcb_variables(GLOBALS->interp);
-
-    if (GLOBALS->repscript_name) {
-        FILE *f = fopen(GLOBALS->repscript_name, "rb");
-        if (f) {
-            fclose(f);
-            g_timeout_add(GLOBALS->repscript_period, repscript_timer, NULL);
-        } else {
-            fprintf(stderr,
-                    "GTKWAVE | Could not open repscript '%s', exiting.\n",
-                    GLOBALS->repscript_name);
-            perror("Why");
-            exit(255);
-        }
-    }
-
-    init_setvar_timer(GLOBALS->interp);
-}
-
-/* blocking version which keeps recursive setvars from happening */
-const char *gtkwavetcl_setvar(const char *name1, const char *val, int flags)
-{
-    const char *rc = NULL;
-    if (GLOBALS->interp && !GLOBALS->in_tcl_callback) {
-        GLOBALS->in_tcl_callback = 1;
-        rc = Tcl_SetVar(GLOBALS->interp, name1, val, flags);
-        GLOBALS->in_tcl_callback = 0;
-    }
-
-    return (rc);
-}
-
-/* version which would be used, for example by timer interrupts */
-const char *gtkwavetcl_setvar_nonblocking(const char *name1, const char *val, int flags)
-{
-    const char *rc = NULL;
-    if (GLOBALS->interp) {
-        rc = Tcl_SetVar(GLOBALS->interp, name1, val, flags);
-    }
-
-    return (rc);
-}
-
-#else
-
-void make_tcl_interpreter(char *argv[])
-{
-    (void)argv;
-
-    /* nothing */
-}
-
-const char *gtkwavetcl_setvar(const char *name1, const char *val, int flags)
-{
-    (void)name1;
-    (void)val;
-    (void)flags;
-
-    return (NULL);
-}
-
-const char *gtkwavetcl_setvar_nonblocking(const char *name1, const char *val, int flags)
-{
-    (void)name1;
-    (void)val;
-    (void)flags;
-
-    return (NULL);
-}
-
-char *rpc_script_execute(const char *nam)
-{
-    (void)nam;
-
-    return (strdup_2("--script TCL_ERROR : Tcl support not compiled into gtkwave\n"));
-}
-
-#endif

@@ -12,21 +12,22 @@ definehash_c = custom_target(
     ],
 )
 
-vlex_c = flex_gen.process('vlex.l', extra_args: ['--noyywrap', '--noyyinput'])
+vlex_c = flex_gen.process('vlex.l')
 
 rtlbrowse_sources = [
     'fgetdynamic.c',
     'fgetdynamic.h',
     'jrb.c',
     'logfile.c',
+    'main.c',
     'splay.c',
     'stem_recurse.c',
-    'tcl_helper.c',
     'tree_widget.c',
+    'gwr-model.c',
 ]
 
 rtlbrowse_dependencies = [
-    gtk_dep,
+    gtk4_dep,
     libfst_dep,
     libvzt_dep,
     liblxt_dep,

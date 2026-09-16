@@ -11,34 +11,6 @@
 #define WAVE_TCLHELPER_H
 
 #include <config.h>
-#include "tcl_callbacks.h"
-
-#ifdef HAVE_LIBTCL
-
-#include <tcl.h>
-#include <tk.h>
-#include "debug.h"
-
-#define WAVE_TCL_CHECK_VERSION(major, minor, micro) \
-    (TCL_MAJOR_VERSION > (major) || \
-     (TCL_MAJOR_VERSION == (major) && TCL_MINOR_VERSION > (minor)) || \
-     (TCL_MAJOR_VERSION == (major) && TCL_MINOR_VERSION == (minor) && \
-      TCL_RELEASE_SERIAL >= (micro)))
-
-typedef int (*tcl_cmd_func)(ClientData clientData,
-                            Tcl_Interp *interp,
-                            int objc,
-                            Tcl_Obj *CONST objv[]);
-
-typedef struct
-{
-    const char *cmdstr;
-    tcl_cmd_func func;
-} tcl_cmdstruct;
-
-extern tcl_cmdstruct gtkwave_commands[];
-
-#endif
 
 #define WAVE_OE_ME \
     if (one_entry) { \
@@ -103,15 +75,6 @@ char *zMergeTclList(int argc, const char **argv);
 char **zSplitTclList(const char *list, int *argcPtr);
 char *make_single_tcl_list_name(char *s, char *opt_value, int promote_to_bus, int preserve_range);
 
-void make_tcl_interpreter(char *argv[]);
-const char *gtkwavetcl_setvar(const char *name1, const char *val, int flags);
-const char *gtkwavetcl_setvar_nonblocking(const char *name1, const char *val, int flags);
-
 char *rpc_script_execute(const char *nam);
-
-#ifdef HAVE_LIBTCL
-int gtkwaveInterpreterInit(Tcl_Interp *interp);
-void set_globals_interp(char *me, int install_tk);
-#endif
 
 #endif

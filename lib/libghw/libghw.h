@@ -1,18 +1,18 @@
 /* GHDL Wavefile reader library.
   Copyright (C) 2005-2017 Tristan Gingold
 
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 2 of the License, or
-  (at your option) any later version.
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
-  This program is distributed in the hope that it will be useful,
+  This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <gnu.org/licenses>.
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; If not, see <gnu.org/licenses>.
 */
 
 #ifndef _LIBGHW_H_
@@ -176,7 +176,7 @@ struct ghw_type_enum
   const char *name;
 
   enum ghw_wkt_type wkt;
-  unsigned int nbr;
+  uint32_t nbr;
   const char **lits;
 };
 
@@ -367,25 +367,31 @@ struct ghw_handler
 
   /* String table.  */
   /* Number of strings.  */
-  unsigned nbr_str;
+  uint32_t nbr_str;
   /* Size of the strings (without nul).  */
-  unsigned str_size;
+  uint32_t str_size;
   /* String table.  */
   char **str_table;
   /* Array containing strings.  */
   char *str_content;
 
   /* Type table.  */
-  unsigned nbr_types;
+  uint32_t nbr_types;
   union ghw_type **types;
 
   /* Non-composite (or basic) signals.  */
-  unsigned nbr_sigs;
+  uint32_t nbr_sigs;
   char *skip_sigs;
   int flag_full_names;
   struct ghw_sig *sigs;
   /* 1: sigs does not contain any signals with type = NULL and index > 0 */
   int sigs_no_null;
+
+  /*
+    A cached array of uint32_t containing all non null signals indices. Length is equal to nbr_sigs. Empty array cells have values 0xFFFFFFFF
+    It is used in ghw_read_cycle_cont to speed up loading for large files
+   */
+  uint32_t* no_null_sig_cache;
 
   /* Hierarchy.  */
   struct ghw_hie *hie;

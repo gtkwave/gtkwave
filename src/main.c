@@ -23,12 +23,15 @@
 #ifdef __MINGW32__
 #include <windows.h>
 #else
-#if GTK_CHECK_VERSION(3, 0, 0)
+#ifdef GDK_WINDOWING_X11
 #include <gtk/gtkx.h>
+#include <gdk/gdkx.h>
 #endif
 #endif
 
 #include "wave_locale.h"
+
+#include "wcp_gtkwave.h"
 
 #if !defined __MINGW32__
 #include <signal.h>
@@ -52,8 +55,6 @@
 #endif
 
 #include "symbol.h"
-#include "ghw.h"
-#include "fst.h"
 #include "main.h"
 #include "menu.h"
 #include "vcd.h"
@@ -66,13 +67,12 @@
 #include "ptranslate.h"
 #include "ttranslate.h"
 #include "signal_list.h"
+#include "dump_file_main.h"
 #include "gw-time-display.h"
+#include "gw-vcd-file.h"
+#include "gw-fst-file.h"
 
 #include "tcl_helper.h"
-#if defined(HAVE_LIBTCL)
-#include <tcl.h>
-#include <tk.h>
-#endif
 
 #ifdef MAC_INTEGRATION
 #include <gtkosxapplication.h>
@@ -114,8 +114,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->clipboard_mouseover = g_old->clipboard_mouseover;
     GLOBALS->keep_xz_colors = g_old->keep_xz_colors;
     GLOBALS->zoom_pow10_snap = g_old->zoom_pow10_snap;
-    GLOBALS->zoom_dyn = g_old->zoom_dyn;
-    GLOBALS->zoom_dyne = g_old->zoom_dyne;
     GLOBALS->hier_ignore_escapes = g_old->hier_ignore_escapes;
     GLOBALS->sst_dbl_action_type = g_old->sst_dbl_action_type;
     GLOBALS->use_gestures = g_old->use_gestures;
@@ -123,13 +121,16 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->save_on_exit = g_old->save_on_exit;
     GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
-    reformat_time(timestr,
-                  GLOBALS->tims.first + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    GwTime global_time_offset = 0;
+    GwTimeDimension time_dimension = GW_TIME_DIMENSION_BASE;
+    if (GLOBALS->dump_file != NULL) {
+        global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
+        time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
+    }
+
+    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr,
-                  GLOBALS->tims.last + GLOBALS->global_time_offset,
-                  GLOBALS->time_dimension);
+    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, time_dimension);
     gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
     update_time_box();
@@ -196,23 +197,8 @@ static void close_all_fst_files(void) /* so mingw does delete of reader tempfile
 {
     unsigned int i;
     for (i = 0; i < GLOBALS->num_notebook_pages; i++) {
-        if ((*GLOBALS->contexts)[i]->fst_fst_c_1) {
-            fstReaderClose((*GLOBALS->contexts)[i]->fst_fst_c_1);
-            (*GLOBALS->contexts)[i]->fst_fst_c_1 = NULL;
-        }
-    }
-}
-#endif
-
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-static void close_all_fsdb_files(
-    void) /* otherwise fsdb can leave around stray files if .gz/.bz2 was in use */
-{
-    unsigned int i;
-    for (i = 0; i < GLOBALS->num_notebook_pages; i++) {
-        if ((*GLOBALS->contexts)[i]->extload_ffr_ctx) {
-            fsdbReaderClose((*GLOBALS->contexts)[i]->extload_ffr_ctx);
-            (*GLOBALS->contexts)[i]->extload_ffr_ctx = NULL;
+        if ((*GLOBALS->contexts)[i]->dump_file) {
+            g_clear_object(&((*GLOBALS->contexts)[i])->dump_file);
         }
     }
 }
@@ -248,17 +234,6 @@ void wave_gtk_window_set_title(GtkWindow *window, const gchar *title, int typ, i
 
 static void print_help(char *nam)
 {
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-    int slen = strlen(EXTLOAD_SUFFIX);
-    char *ucase_ext = g_alloca(slen + 1);
-    int i;
-
-    for (i = 0; i < slen; i++) {
-        ucase_ext[i] = toupper(EXTLOAD_SUFFIX[i]);
-    }
-    ucase_ext[i] = 0;
-#endif
-
 #if !defined __MINGW32__ && !defined __FreeBSD__ && !defined __CYGWIN__
 #define WAVE_GETOPT_CPUS \
     "  -c, --cpu=NUMCPUS          specify number of CPUs for parallelizable ops\n"
@@ -267,11 +242,7 @@ static void print_help(char *nam)
 #endif
 
 #if !defined __MINGW32__
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-#define VCD_GETOPT "  -o, --optimize             optimize VCD/%s to FST\n"
-#else
 #define VCD_GETOPT "  -o, --optimize             optimize VCD to FST\n"
-#endif
 #else
 #define VCD_GETOPT
 #endif
@@ -283,23 +254,6 @@ static void print_help(char *nam)
 #define XID_GETOPT "  -X, --xid=XID              specify XID of window for GtkPlug to connect to\n"
 #else
 #define XID_GETOPT
-#endif
-
-#if defined(WIN32) && defined(USE_TCL_STUBS)
-#define WISH_GETOPT
-#else
-#define WISH_GETOPT \
-    "  -T, --tcl_init=FILE        specify Tcl command script file to be loaded on startup\n" \
-    "  -W, --wish                 enable Tcl command line on stdio\n"
-#endif
-
-#if defined(HAVE_LIBTCL)
-#define REPSCRIPT_GETOPT \
-    WISH_GETOPT \
-    "  -R, --repscript=FILE       specify timer-driven Tcl command script file\n" \
-    "  -P, --repperiod=VALUE      specify repscript period in msec (default: 500)\n"
-#else
-#define REPSCRIPT_GETOPT
 #endif
 
 #if !defined __MINGW32__
@@ -324,27 +278,28 @@ static void print_help(char *nam)
 
     printf(
         "Usage: %s [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]\n\n"
-        "  -n, --nocli=DIRPATH        use file requester for dumpfile name\n"
+        "  -n, --nocli=DIRPATH        use file selection dialog for dumpfile or savefile\n"
         "  -f, --dump=FILE            specify dumpfile name\n" VCD_GETOPT
         "  -a, --save=FILE            specify savefile name\n"
-        "  -A, --autosavename         assume savefile is suffix modified dumpfile name\n"
         "  -r, --rcfile=FILE          specify override .rcfile name\n"
         "  -d, --defaultskip          if missing .rcfile, do not use useful defaults\n" DUAL_GETOPT
         "  -l, --logfile=FILE         specify simulation logfile name for time values\n"
-        "  -s, --start=TIME           specify start time for LXT2/VZT block skip\n"
-        "  -e, --end=TIME             specify end time for LXT2/VZT block skip\n" STEMS_GETOPT
-            WAVE_GETOPT_CPUS
+        "  -s, --start=TIME           specify start time for FST skip\n"
+        "  -e, --end=TIME             specify end time for for FST "
+        "skip\n" STEMS_GETOPT WAVE_GETOPT_CPUS
         "  -N, --nowm                 disable window manager for most windows\n"
         "  -M, --nomenus              do not render menubar (for making applets)\n"
         "  -S, --script=FILE          specify Tcl command script file for "
-        "execution\n" REPSCRIPT_GETOPT XID_GETOPT RPC_GETOPT CHDIR_GETOPT RPC_GETOPT3
+        "execution\n" XID_GETOPT RPC_GETOPT CHDIR_GETOPT RPC_GETOPT3
         "  -4, --rcvar                specify single rc variable values individually\n"
         "  -5, --sstexclude           specify sst exclusion filter filename\n"
         "  -6, --dark                 set gtk-application-prefer-dark-theme = TRUE\n"
         "  -7, --saveonexit           prompt user to write save file at exit\n"
-        "  -C, --comphier             use compressed hierarchy names (slower)\n"
         "  -g, --giga                 use gigabyte mempacking when recoding (slower)\n"
         "  -v, --vcd                  use stdin as a VCD dumpfile\n" OUTPUT_GETOPT
+        "  --wcp                      enable WCP server\n"
+        "  --wcp-port=PORT            set WCP port (defaults to 8765)\n"
+        "  --wcp-remote               allow remote WCP connections\n"
         "  -V, --version              display version banner then exit\n"
         "  -h, --help                 display this help then exit\n"
         "  -x, --exit                 exit after loading trace (for loader benchmarks)\n\n"
@@ -356,14 +311,7 @@ static void print_help(char *nam)
         "SAVEFILE and RCFILE are always optional.\n\n"
 
         "Report bugs to <" PACKAGE_BUGREPORT ">.\n",
-        nam
-#if !defined __MINGW32__
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-        ,
-        ucase_ext
-#endif
-#endif
-    );
+        nam);
 
 #ifdef __MINGW32__
     fflush(stdout); /* fix for possible problem with mingw/msys shells */
@@ -400,13 +348,12 @@ static char *wave_get_filename(char *dfile)
         }
 #endif
     }
-    fileselbox_old("GTKWave: Select a dumpfile...",
-                   &GLOBALS->ftext_main_main_c_1,
-                   G_CALLBACK(wave_get_filename_cleanup),
-                   G_CALLBACK(wave_get_filename_cleanup),
-                   NULL,
-                   0);
-    gtk_main();
+    fileselbox("GTKWave: Select a dumpfile...",
+               &GLOBALS->ftext_main_main_c_1,
+               G_CALLBACK(wave_get_filename_cleanup),
+               G_CALLBACK(wave_get_filename_cleanup),
+               NULL,
+               0);
 
     return (GLOBALS->ftext_main_main_c_1);
 }
@@ -659,6 +606,61 @@ static void add_plugins_to_menu(GtkWidget *widget)
 }
 #endif
 
+static void on_dbus_method_call(GDBusConnection *connection,
+                                const gchar *sender,
+                                const gchar *object_path,
+                                const gchar *interface_name,
+                                const gchar *method_name,
+                                GVariant *parameters,
+                                GDBusMethodInvocation *invocation,
+                                gpointer user_data
+
+)
+{
+    if (g_strcmp0(method_name, "Reload") == 0) {
+        g_dbus_method_invocation_return_value(invocation, NULL);
+
+        if (in_main_iteration()) {
+            return;
+        }
+        reload_into_new_context();
+    }
+}
+
+static const GDBusInterfaceVTable DBUS_VTABLE = {
+    .method_call = on_dbus_method_call,
+};
+
+static void on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
+{
+    GDBusNodeInfo *node_info =
+        g_dbus_node_info_new_for_xml("<node><interface name='io.github.gtkwave.GTKWave'><method "
+                                     "name='Reload' /></interface></node>",
+                                     NULL);
+
+    g_dbus_connection_register_object(connection,
+                                      "/io/github/gtkwave/GTKWave",
+                                      node_info->interfaces[0],
+                                      &DBUS_VTABLE,
+                                      NULL,
+                                      NULL,
+                                      NULL);
+
+    g_dbus_node_info_unref(node_info);
+}
+
+static void dbus_init(void)
+{
+    g_bus_own_name(G_BUS_TYPE_SESSION,
+                   "io.github.gtkwave.GTKWave",
+                   G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT | G_BUS_NAME_OWNER_FLAGS_REPLACE,
+                   on_bus_acquired,
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL);
+}
+
 int main(int argc, char *argv[])
 {
     return (main_2(0, argc, argv));
@@ -668,7 +670,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 {
     static const char *winprefix = "GTKWave - ";
     static const char *winstd = "GTKWave (stdio) ";
-    static const char *vcd_autosave_name = "vcd_autosave.sav";
     char *output_name = NULL;
     char *chdir_cache = NULL;
 
@@ -676,7 +677,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     int c;
     char is_vcd = 0;
-    char is_wish = 0;
     char is_smartsave = 0;
     char is_giga = 0;
     char fast_exit = 0;
@@ -685,17 +685,16 @@ int main_2(int opt_vcd, int argc, char *argv[])
 
     char *wname = NULL;
     char *override_rc = NULL;
-    char *scriptfile = NULL;
     FILE *wave = NULL;
-    FILE *vcd_save_handle_cached = NULL;
+    int wcp_port = -1;
+    int wcp_enable = 0;
+    int wcp_allow_remote = 0;
 
     GtkWidget *main_vbox = NULL, *top_table = NULL, *whole_table = NULL;
     GtkWidget *menubar;
     GtkWidget *panedwindow;
-    int tcl_interpreter_needs_making = 0;
     struct Global *old_g = NULL;
 
-    int splash_disable_rc_override = 0;
     int mainwindow_already_built = 0;
 
     struct rc_override *rc_override_head = NULL, *rc_override_curr = NULL;
@@ -707,7 +706,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
     if (!GLOBALS) {
         set_GLOBALS(initialize_globals());
         mainwindow_already_built = 0;
-        tcl_interpreter_needs_making = 1;
 
         GLOBALS->logfiles = calloc(1, sizeof(void *)); /* calloc is deliberate! */
     } else {
@@ -723,7 +721,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->contexts = old_g->contexts;
 
         GLOBALS->mainwindow = old_g->mainwindow;
-        splash_disable_rc_override = 1;
 
         /* busy.c */
         GLOBALS->busycursor_busy_c_1 = old_g->busycursor_busy_c_1;
@@ -732,15 +729,7 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->logfiles = old_g->logfiles;
 
         /* menu.c */
-#if defined(HAVE_LIBTCL)
-        GLOBALS->interp = old_g->interp;
-#endif
         GLOBALS->vcd_jmp_buf = old_g->vcd_jmp_buf;
-
-        /* status.c */
-        GLOBALS->text_status_c_2 = old_g->text_status_c_2;
-        GLOBALS->iter_status_c_3 = old_g->iter_status_c_3;
-        GLOBALS->bold_tag_status_c_3 = old_g->bold_tag_status_c_3;
 
         /* timeentry.c */
         GLOBALS->from_entry = old_g->from_entry;
@@ -772,7 +761,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->enable_horiz_grid = old_g->enable_horiz_grid;
         GLOBALS->fill_waveform = old_g->fill_waveform;
         GLOBALS->lz_removal = old_g->lz_removal;
-        GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->enable_vert_grid = old_g->enable_vert_grid;
         GLOBALS->sst_expanded = old_g->sst_expanded;
         GLOBALS->hier_max_level = old_g->hier_max_level;
@@ -792,33 +780,24 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->use_maxtime_display = old_g->use_maxtime_display;
         GLOBALS->use_nonprop_fonts = old_g->use_nonprop_fonts;
         GLOBALS->use_roundcaps = old_g->use_roundcaps;
-        GLOBALS->vcd_preserve_glitches = old_g->vcd_preserve_glitches;
-        GLOBALS->vcd_preserve_glitches_real = old_g->vcd_preserve_glitches_real;
-        GLOBALS->vcd_warning_filesize = old_g->vcd_warning_filesize;
         GLOBALS->vector_padding = old_g->vector_padding;
-        GLOBALS->vlist_compression_depth = old_g->vlist_compression_depth;
         GLOBALS->wave_scrolling = old_g->wave_scrolling;
         GLOBALS->do_zoom_center = old_g->do_zoom_center;
         GLOBALS->zoom_pow10_snap = old_g->zoom_pow10_snap;
-        GLOBALS->zoom_dyn = old_g->zoom_dyn;
-        GLOBALS->zoom_dyne = old_g->zoom_dyne;
-        GLOBALS->alt_hier_delimeter = old_g->alt_hier_delimeter;
         GLOBALS->cursor_snap = old_g->cursor_snap;
         GLOBALS->hier_delimeter = old_g->hier_delimeter;
         GLOBALS->hier_was_explicitly_set = old_g->hier_was_explicitly_set;
         GLOBALS->page_divisor = old_g->page_divisor;
         GLOBALS->ps_maxveclen = old_g->ps_maxveclen;
         GLOBALS->vector_padding = old_g->vector_padding;
-        GLOBALS->vlist_compression_depth = old_g->vlist_compression_depth;
         GLOBALS->zoombase = old_g->zoombase;
-        GLOBALS->splash_disable = old_g->splash_disable;
         GLOBALS->use_pango_fonts = old_g->use_pango_fonts;
         GLOBALS->hier_ignore_escapes = old_g->hier_ignore_escapes;
 
         GLOBALS->ruler_origin = old_g->ruler_origin;
         GLOBALS->ruler_step = old_g->ruler_step;
 
-        GLOBALS->vlist_prepack = old_g->vlist_prepack;
+        GLOBALS->settings = old_g->settings;
         GLOBALS->do_dynamic_treefilter = old_g->do_dynamic_treefilter;
         GLOBALS->dragzoom_threshold = old_g->dragzoom_threshold;
 
@@ -827,12 +806,8 @@ int main_2(int opt_vcd, int argc, char *argv[])
         GLOBALS->analog_redraw_skip_count = old_g->analog_redraw_skip_count;
         GLOBALS->context_tabposition = old_g->context_tabposition;
         GLOBALS->disable_empty_gui = old_g->disable_empty_gui;
-        GLOBALS->make_vcd_save_file = old_g->make_vcd_save_file;
         GLOBALS->strace_repeat_count = old_g->strace_repeat_count;
 
-        GLOBALS->extload_max_tree = old_g->extload_max_tree;
-        GLOBALS->do_hier_compress = old_g->do_hier_compress;
-        GLOBALS->disable_auto_comphier = old_g->disable_auto_comphier;
         GLOBALS->sst_dbl_action_type = old_g->sst_dbl_action_type;
         GLOBALS->use_gestures = old_g->use_gestures;
         GLOBALS->use_dark = old_g->use_dark;
@@ -882,6 +857,10 @@ int main_2(int opt_vcd, int argc, char *argv[])
         }
     }
 
+    if (GLOBALS->hierarchy_icons == NULL) {
+        GLOBALS->hierarchy_icons = gw_hierarchy_icons_new();
+    }
+
 #if defined(__APPLE__)
 #ifndef MAC_INTEGRATION
 do_primary_inits:
@@ -889,7 +868,7 @@ do_primary_inits:
 #endif
 
     if (!mainwindow_already_built) {
-        wave_gconf_init(argc, argv);
+        dbus_init();
     }
 
     if (!gtkwave_argv0_cached)
@@ -905,9 +884,6 @@ do_primary_inits:
 #if defined __MINGW32__
         atexit(close_all_fst_files);
 #endif
-#ifdef WAVE_FSDB_READER_IS_PRESENT
-        atexit(close_all_fsdb_files);
-#endif
     }
 
     if (mainwindow_already_built) {
@@ -920,7 +896,6 @@ do_primary_inits:
                                                    {"optimize", 0, 0, 'o'},
                                                    {"nocli", 1, 0, 'n'},
                                                    {"save", 1, 0, 'a'},
-                                                   {"autosavename", 0, 0, 'A'},
                                                    {"rcfile", 1, 0, 'r'},
                                                    {"defaultskip", 0, 0, 'd'},
                                                    {"logfile", 1, 0, 'l'},
@@ -929,7 +904,6 @@ do_primary_inits:
                                                    {"cpus", 1, 0, 'c'},
                                                    {"stems", 1, 0, 't'},
                                                    {"nowm", 0, 0, 'N'},
-                                                   {"script", 1, 0, 'S'},
                                                    {"vcd", 0, 0, 'v'},
                                                    {"version", 0, 0, 'V'},
                                                    {"help", 0, 0, 'h'},
@@ -938,11 +912,7 @@ do_primary_inits:
                                                    {"nomenus", 0, 0, 'M'},
                                                    {"dualid", 1, 0, 'D'},
                                                    {"giga", 0, 0, 'g'},
-                                                   {"comphier", 0, 0, 'C'},
-                                                   {"tcl_init", 1, 0, 'T'},
                                                    {"wish", 0, 0, 'W'},
-                                                   {"repscript", 1, 0, 'R'},
-                                                   {"repperiod", 1, 0, 'P'},
                                                    {"output", 1, 0, 'O'},
                                                    {"slider-zoom", 0, 0, 'z'},
                                                    {"rpcid", 1, 0, '1'},
@@ -952,11 +922,14 @@ do_primary_inits:
                                                    {"sstexclude", 1, 0, '5'},
                                                    {"dark", 0, 0, '6'},
                                                    {"saveonexit", 0, 0, '7'},
+                                                   {"wcp", 0, 0, 0},
+                                                   {"wcp-port", 1, 0, 0},
+                                                   {"wcp-remote", 0, 0, 0},
                                                    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
                             argv,
-                            "zf:Fon:a:Ar:dl:s:e:c:t:NS:vVhxX:MD:IgCR:P:O:WT:1:2:34:5:67",
+                            "zf:Fon:a:r:dl:s:e:c:t:NvVhxX:MD:IgC:O:1:2:34:5:67",
                             long_options,
                             &option_index);
 
@@ -971,19 +944,6 @@ do_primary_inits:
                                              "warranty; not even for MERCHANTABILITY or FITNESS "
                                              "FOR A PARTICULAR PURPOSE.\n");
                     exit(0);
-
-                case 'W':
-#if defined(HAVE_LIBTCL)
-#if defined(WIN32) && defined(USE_TCL_STUBS)
-#else
-                    is_wish = 1;
-#endif
-#else
-                    fprintf(stderr,
-                            "GTKWAVE | Tcl support not compiled into this executable, exiting.\n");
-                    exit(255);
-#endif
-                    break;
 
                 case 'D': {
                     char *s = optarg;
@@ -1009,6 +969,16 @@ do_primary_inits:
                             "and n is a hexadecimal shared memory ID for use with shmat()\n");
                     exit(255);
                 } break;
+
+                case 0:
+                    if (!strcmp(long_options[option_index].name, "wcp")) {
+                        wcp_enable = 1;
+                    } else if (!strcmp(long_options[option_index].name, "wcp-port")) {
+                        wcp_port = atoi(optarg);
+                    } else if (!strcmp(long_options[option_index].name, "wcp-remote")) {
+                        wcp_allow_remote = 1;
+                    }
+                    break;
 
                 case 'A':
                     is_smartsave = 1;
@@ -1043,7 +1013,6 @@ do_primary_inits:
 #ifdef WAVE_USE_XID
                 case 'X':
                     sscanf(optarg, "%lx", &GLOBALS->socket_xid);
-                    splash_disable_rc_override = 1;
                     break;
 #endif
 
@@ -1107,7 +1076,6 @@ do_primary_inits:
 
                 case 'x':
                     fast_exit = 1;
-                    splash_disable_rc_override = 1;
                     break;
 
                 case 'd':
@@ -1202,14 +1170,6 @@ do_primary_inits:
                     GLOBALS->disable_window_manager = 1;
                     break;
 
-                case 'S':
-                    if (scriptfile)
-                        free_2(scriptfile);
-                    scriptfile = malloc_2(strlen(optarg) + 1);
-                    strcpy(scriptfile, optarg);
-                    splash_disable_rc_override = 1;
-                    break;
-
                 case 'l': {
                     struct logfile_chain *l = calloc_2(1, sizeof(struct logfile_chain));
                     struct logfile_chain *ltraverse;
@@ -1228,54 +1188,6 @@ do_primary_inits:
 
                 case 'g':
                     is_giga = 1;
-                    break;
-
-                case 'C':
-                    GLOBALS->do_hier_compress = 1;
-                    break;
-
-                case 'R':
-                    if (GLOBALS->repscript_name)
-                        free_2(GLOBALS->repscript_name);
-                    GLOBALS->repscript_name = malloc_2(strlen(optarg) + 1);
-                    strcpy(GLOBALS->repscript_name, optarg);
-                    break;
-
-                case 'P': {
-                    int pd = atoi(optarg);
-                    if (pd > 0) {
-                        GLOBALS->repscript_period = pd;
-                    }
-                } break;
-
-                case 'T':
-#if defined(WIN32) && defined(USE_TCL_STUBS)
-                    fprintf(stderr,
-                            "GTKWAVE | Warning: '%c' option does not exist in this executable\n",
-                            c);
-#else
-                {
-                    char *pos;
-                    is_wish = 1;
-                    if (GLOBALS->tcl_init_cmd) {
-                        int length = strlen(GLOBALS->tcl_init_cmd) + 9 + strlen(optarg);
-                        char *buffer = malloc_2(strlen(GLOBALS->tcl_init_cmd) + 1);
-                        strcpy(buffer, GLOBALS->tcl_init_cmd);
-                        free_2(GLOBALS->tcl_init_cmd);
-                        GLOBALS->tcl_init_cmd = malloc_2(length + 1);
-                        strcpy(GLOBALS->tcl_init_cmd, buffer);
-                        pos = GLOBALS->tcl_init_cmd + strlen(GLOBALS->tcl_init_cmd);
-                        free_2(buffer);
-                    } else {
-                        int length = 9 + strlen(optarg);
-                        GLOBALS->tcl_init_cmd = malloc_2(length + 1);
-                        pos = GLOBALS->tcl_init_cmd;
-                    }
-                    strcpy(pos, "; source ");
-                    pos = GLOBALS->tcl_init_cmd + strlen(GLOBALS->tcl_init_cmd);
-                    strcpy(pos, optarg);
-                }
-#endif
                     break;
 
                 case 'O':
@@ -1322,30 +1234,33 @@ do_primary_inits:
         }
     }
 
-    if (is_wish && is_vcd) {
-        fprintf(stderr,
-                "GTKWAVE | Cannot use --vcd and --wish options together as both use stdin,\n"
-                "GTKWAVE | exiting!\n");
-        exit(255);
+#ifdef WAVE_USE_XID
+    if (GLOBALS->socket_xid) {
+        gboolean is_x11_display = FALSE;
+#ifdef GDK_WINDOWING_X11
+        {
+            GdkDisplay *display = gdk_display_get_default();
+            if (GDK_IS_X11_DISPLAY(display)) {
+                is_x11_display = TRUE;
+            }
+        }
+#endif
+        if (!is_x11_display) {
+            fprintf(stderr, "GTKWAVE | Ignoring -X; GtkPlug only works on X11.\n");
+            GLOBALS->socket_xid = 0;
+        }
     }
+#endif
 
-#if defined(EXTLOAD_SUFFIX) && defined(EXTCONV_PATH)
-#if !defined(FSDB_IS_PRESENT) || !defined(FSDB_NSYS_IS_PRESENT)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX)) {
-        opt_vcd = 1;
+    if (wcp_enable) {
+        if (wcp_port < 0 || wcp_port > UINT16_MAX) {
+            wcp_port = WCP_DEFAULT_PORT;
+        }
+        if (!wcp_gtkwave_init((uint16_t)wcp_port, wcp_allow_remote)) {
+            fprintf(stderr, "GTKWAVE | WCP server failed to start\n");
+            exit(255);
+        }
     }
-#endif
-#endif
-#if defined(EXT2LOAD_SUFFIX) && defined(EXT2CONV_PATH)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXT2LOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
-#if defined(EXT3LOAD_SUFFIX) && defined(EXT3CONV_PATH)
-    if (GLOBALS->loaded_file_name && suffix_check(GLOBALS->loaded_file_name, "." EXT3LOAD_SUFFIX)) {
-        opt_vcd = 1;
-    }
-#endif
 
     /* attempt to load a dump+save file if only a savefile is specified at the command line */
     if ((GLOBALS->loaded_file_name) && (!wname) &&
@@ -1411,8 +1326,6 @@ do_primary_inits:
         read_rc_file(override_rc);
     }
 
-    GLOBALS->splash_disable |= splash_disable_rc_override;
-
     if (!GLOBALS->loaded_file_name) {
         /* if rc can gates off gui, default is not to disable */
         if (GLOBALS->disable_empty_gui) {
@@ -1421,7 +1334,7 @@ do_primary_inits:
     }
 
     if (is_giga) {
-        GLOBALS->vlist_prepack = 1;
+        GLOBALS->settings.vlist_prepack = 1;
     }
 
     if (output_name) {
@@ -1472,28 +1385,10 @@ do_primary_inits:
         }
     }
 
-    if (!is_wish) {
-        if (tcl_interpreter_needs_making) {
-            GLOBALS->argvlist = zMergeTclList(argc, (const char **)argv);
-            make_tcl_interpreter(argv);
-        }
-    }
-
-    if ((!wname) && (GLOBALS->make_vcd_save_file)) {
-        vcd_save_handle_cached = GLOBALS->vcd_save_handle = fopen(vcd_autosave_name, "wb");
-        errno = 0; /* just in case */
-        is_smartsave = (GLOBALS->vcd_save_handle !=
-                        NULL); /* use smartsave if for some reason can't open auto savefile */
-    }
-
     if (!GLOBALS->loaded_file_name) {
         GLOBALS->loaded_file_name = strdup_2("[no file loaded]");
         is_missing_file = 1;
-        GLOBALS->min_time = GW_TIME_CONSTANT(0);
-        GLOBALS->max_time = GW_TIME_CONSTANT(0);
-        if (!is_wish) {
-            fprintf(stderr, "GTKWAVE | Use the -h, --help command line flags to display help.\n");
-        }
+        fprintf(stderr, "GTKWAVE | Use the -h, --help command line flags to display help.\n");
     }
 
     /* load either the vcd or aet file depending on suffix then mode setting */
@@ -1516,32 +1411,9 @@ loader_check_head:
 
     if (is_missing_file) {
         GLOBALS->loaded_file_type = MISSING_FILE;
-    } else
-#if defined(EXTLOAD_SUFFIX)
-        if ((suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX) && !opt_vcd) ||
-            (suffix_check(GLOBALS->loaded_file_name, ".vf") && !opt_vcd) || /* virtual file */
-            (suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX ".gz") &&
-             !opt_vcd) || /* loader automatically does gzip -cd */
-            (suffix_check(GLOBALS->loaded_file_name, "." EXTLOAD_SUFFIX ".bz2") &&
-             !opt_vcd) /* loader automatically does bzip2 -cd */
-        ) {
-        GwTime extload_max;
-
-        GLOBALS->loaded_file_type = EXTLOAD_FILE;
-        extload_max =
-            extload_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if ((!GLOBALS->extload) || (GLOBALS->extload_already_errored) || (!extload_max)) {
-            fprintf(stderr,
-                    "GTKWAVE | Could not initialize '%s'%s.\n",
-                    GLOBALS->loaded_file_name,
-                    GLOBALS->vcd_jmp_buf ? "" : ", exiting");
-            vcd_exit(255);
-        }
-    } else
-#endif
-        if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
-            suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
-            suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
+    } else if (suffix_check(GLOBALS->loaded_file_name, ".lxt") ||
+               suffix_check(GLOBALS->loaded_file_name, ".lx2") ||
+               suffix_check(GLOBALS->loaded_file_name, ".lxt2")) {
         fprintf(
             stderr,
             "GTKWAVE | LXT and LXT2 files are no longer supported by this version of GTKWave.\n");
@@ -1552,8 +1424,9 @@ loader_check_head:
         GLOBALS->aet_name = malloc_2(strlen(GLOBALS->loaded_file_name) + 1);
         strcpy(GLOBALS->aet_name, GLOBALS->loaded_file_name);
         GLOBALS->loaded_file_type = FST_FILE;
-        fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
-        if (GLOBALS->fst_file == NULL) {
+        GLOBALS->dump_file =
+            fst_main(GLOBALS->loaded_file_name, GLOBALS->skip_start, GLOBALS->skip_end);
+        if (GLOBALS->dump_file == NULL) {
             fprintf(stderr,
                     "GTKWAVE | Could not initialize '%s'%s.\n",
                     GLOBALS->loaded_file_name,
@@ -1573,7 +1446,8 @@ loader_check_head:
                suffix_check(GLOBALS->loaded_file_name, ".ghw.gz") ||
                suffix_check(GLOBALS->loaded_file_name, ".ghw.bz2")) {
         GLOBALS->loaded_file_type = GHW_FILE;
-        if (!ghw_main(GLOBALS->loaded_file_name)) {
+        GLOBALS->dump_file = ghw_main(GLOBALS->loaded_file_name);
+        if (GLOBALS->dump_file == NULL) {
             /* error message printed in ghw_main() */
             vcd_exit(255);
         }
@@ -1610,46 +1484,50 @@ loader_check_head:
         } else {
             GLOBALS->loaded_file_type = DUMPLESS_FILE;
         }
-        vcd_recoder_main(GLOBALS->loaded_file_name);
+        GLOBALS->dump_file = vcd_recoder_main(GLOBALS->loaded_file_name);
     }
-
-    /* deallocate the symbol hash table */
-    sym_hash_destroy(GLOBALS);
 
     // /* reset/initialize various markers and time values */
     // for (i = 0; i < WAVE_NUM_NAMED_MARKERS; i++)
     //     GLOBALS->named_markers[i] = -1; /* reset all named markers */
 
-    GLOBALS->tims.last = GLOBALS->max_time;
-    GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
-    GLOBALS->tims.first = GLOBALS->tims.start = GLOBALS->tims.laststart = GLOBALS->min_time;
-    GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
-    gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
-    gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
-    gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
+    if (GLOBALS->dump_file != NULL) {
+        GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
+        GLOBALS->tims.first = gw_time_range_get_start(time_range);
+        GLOBALS->tims.last = gw_time_range_get_end(time_range);
 
-    if (GLOBALS->max_time >> DBL_MANT_DIG) {
-        fprintf(stderr,
-                "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n",
-                DBL_MANT_DIG);
-        if (!GLOBALS->dbl_mant_dig_override) {
+        GLOBALS->tims.start = GLOBALS->tims.first;
+        GLOBALS->tims.laststart = GLOBALS->tims.first;
+        GLOBALS->tims.end = GLOBALS->tims.last; /* until the configure_event of wavearea */
+        GLOBALS->tims.zoom = GLOBALS->tims.prevzoom = 0; /* 1 pixel/ns default */
+        gw_marker_set_enabled(gw_project_get_primary_marker(GLOBALS->project), FALSE);
+        gw_marker_set_enabled(gw_project_get_baseline_marker(GLOBALS->project), FALSE);
+        gw_marker_set_enabled(gw_project_get_ghost_marker(GLOBALS->project), FALSE);
+
+        if (GLOBALS->loaded_file_name) {
+            wcp_gtkwave_notify_waveforms_loaded(GLOBALS->loaded_file_name);
+        }
+
+        if (gw_time_range_get_end(time_range) >> DBL_MANT_DIG) {
             fprintf(stderr,
+                    "GTKWAVE | Warning: max_time bits > DBL_MANT_DIG (%d), GUI may malfunction!\n",
+                    DBL_MANT_DIG);
+            if (!GLOBALS->dbl_mant_dig_override) {
+                fprintf(
+                    stderr,
                     "GTKWAVE | Exiting, use dbl_mant_dig_override rc var set to 1 to disable.\n");
-            exit(255);
+                exit(255);
+            }
         }
     }
 
-    if ((wname) || (vcd_save_handle_cached) || (is_smartsave)) {
+    if ((wname) || (is_smartsave)) {
         int wave_is_compressed;
         char *str = NULL;
 
         GLOBALS->is_gtkw_save_file = (!wname) || suffix_check(wname, ".gtkw");
 
-        if (vcd_save_handle_cached) {
-            wname = malloc_2(strlen(vcd_autosave_name) + 1);
-            strcpy(wname, vcd_autosave_name);
-            GLOBALS->do_initial_zoom_fit = 1;
-        } else if ((!wname) /* && (is_smartsave) */) {
+        if ((!wname) /* && (is_smartsave) */) {
             char *pnt = g_alloca(strlen(GLOBALS->loaded_file_name) + 1);
             char *pnt2;
             strcpy(pnt, GLOBALS->loaded_file_name);
@@ -1712,20 +1590,7 @@ loader_check_head:
                     free_2(iline);
                 }
 
-                switch (GLOBALS->is_lx2) {
-                    case LXT2_IS_VLIST:
-                        vcd_import_masked(GLOBALS->vcd_file);
-                        break;
-                    case LXT2_IS_FST:
-                        fst_import_masked(GLOBALS->fst_file);
-                        break;
-                    case LXT2_IS_FSDB:
-                        fsdb_import_masked();
-                        break;
-                    default:
-                        g_warn_if_reached();
-                        break;
-                }
+                lx2_import_masked();
 
                 if (wave_is_compressed) {
                     pclose(wave);
@@ -2155,16 +2020,6 @@ savefile_bail:
 
     init_busy();
 
-    if (scriptfile
-#if defined(HAVE_LIBTCL)
-        && GLOBALS->interp
-#endif
-    ) {
-        execute_script(scriptfile, 1); /* deallocate the name in the script because context might
-                                          swap out from under us! */
-        scriptfile = NULL;
-    }
-
 #if defined(WAVE_HAVE_GCONF) || defined(WAVE_HAVE_GSETTINGS)
     if (GLOBALS->loaded_file_type != MISSING_FILE) {
         if (!chdir_cache) {
@@ -2210,7 +2065,7 @@ savefile_bail:
 #else
         GLOBALS->dual_ctx = shmat(GLOBALS->dual_attach_id_main_c_1, NULL, 0);
 #endif
-        if (GLOBALS->dual_ctx) {
+        if (GLOBALS->dual_ctx != (void *)-1) {
             if (memcmp(GLOBALS->dual_ctx[GLOBALS->dual_id].matchword, DUAL_MATCHWORD, 4)) {
                 fprintf(stderr, "Not a valid shared memory ID for dual head operation, exiting.\n");
                 exit(255);
@@ -2354,23 +2209,10 @@ savefile_bail:
             exit(255);
         }
     } else {
-#if defined(HAVE_LIBTCL)
-        if (is_wish) {
-            char *argv_mod[1];
-
-            set_globals_interp(argv[0], 1);
-            addPidToExecutableName(1, argv, argv_mod);
-            Tk_MainEx(1, argv_mod, gtkwaveInterpreterInit, GLOBALS->interp);
-
-            /* note: for(kk=0;kk<argc;kk++) { free_2(argv_mod[kk]); } can't really be done here,
-             * doesn't matter anyway as context free will get it */
-        } else {
-            gtk_main();
-        }
-#else
         gtk_main();
-#endif
     }
+
+    wcp_gtkwave_shutdown();
 
 #ifdef MAC_INTEGRATION
     exit(0); /* gtk_target_list_find crashes in OSX/Quartz is return instead of exit */
@@ -2565,7 +2407,7 @@ void activate_stems_reader(char *stems_name)
             if (GLOBALS->anno_ctx) {
                 char mylist[257];
 
-                sprintf(mylist, "rtlbrowse.exe %08x", shmid);
+                sprintf(mylist, "rtlbrowse.exe --ipc %x", shmid);
 
                 memset(GLOBALS->anno_ctx, 0, sizeof(struct gtkwave_annotate_ipc_t));
 
@@ -2576,16 +2418,7 @@ void activate_stems_reader(char *stems_name)
 
                 update_time_box();
 
-                rc = CreateProcess("rtlbrowse.exe",
-                                   mylist,
-                                   NULL,
-                                   NULL,
-                                   FALSE,
-                                   0,
-                                   NULL,
-                                   NULL,
-                                   &si,
-                                   &pi);
+                rc = CreateProcess(NULL, mylist, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 
                 if (!rc) {
                     UnmapViewOfFile(GLOBALS->anno_ctx);
@@ -2605,9 +2438,11 @@ void activate_stems_reader(char *stems_name)
         if (shmid >= 0) {
             struct shmid_ds ds;
 
-            GLOBALS->anno_ctx = shmat(shmid, NULL, 0);
-            if (GLOBALS->anno_ctx) {
+            struct gtkwave_annotate_ipc_t *anno_ctx = shmat(shmid, NULL, 0);
+            if (anno_ctx != (void *)-1) {
                 pid_t pid;
+
+                GLOBALS->anno_ctx = anno_ctx;
 
                 memset(GLOBALS->anno_ctx, 0, sizeof(struct gtkwave_annotate_ipc_t));
 
@@ -2648,7 +2483,7 @@ void activate_stems_reader(char *stems_name)
 #ifdef MAC_INTEGRATION
                         const gchar *p = gtkosx_application_get_executable_path();
 #endif
-                        sprintf(buf, "%08x", shmid);
+                        sprintf(buf, "%x", shmid);
 
 #ifdef MAC_INTEGRATION
                         if (p && strstr(p, "Contents/")) {
@@ -2665,7 +2500,7 @@ void activate_stems_reader(char *stems_name)
                             }
                         }
 #endif
-                        execlp("rtlbrowse", "rtlbrowse", buf, NULL);
+                        execlp("rtlbrowse", "rtlbrowse", "--ipc", buf, NULL);
                         fprintf(stderr,
                                 "GTKWAVE | Could not find rtlbrowse executable, exiting!\n");
                         exit(255); /* control never gets here if successful */

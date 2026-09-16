@@ -246,7 +246,7 @@ GwMarker *gw_named_markers_find_first_disabled(GwNamedMarkers *self)
 /**
  * gw_named_markers_foreach:
  * @self: A #GwNamedMarkers.
- * @func: The function to call for each marker.
+ * @func: (scope call): The function to call for each marker.
  * @user_data: The user data passed to the function.
  *
  * Calls a function for each marker.

@@ -1,0 +1,33 @@
+libwcp_sources = [
+    'wcp_protocol.c',
+    'wcp_server.c',
+]
+
+libwcp = static_library(
+    'wcp',
+    sources: libwcp_sources,
+    dependencies: [
+        glib_dep,
+        gio_dep,
+        json_glib_dep,
+    ],
+    install: false,
+)
+
+libwcp_dep = declare_dependency(
+    link_with: libwcp,
+    include_directories: '.',
+    dependencies: [
+        glib_dep,
+        gio_dep,
+        json_glib_dep,
+    ],
+)
+
+libwcp_smoke = executable(
+    'wcp_smoke',
+    'tests/wcp_smoke.c',
+    dependencies: [libwcp_dep],
+)
+
+test('wcp_smoke', libwcp_smoke)

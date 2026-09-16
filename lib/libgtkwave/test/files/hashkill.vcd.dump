@@ -1,0 +1,43 @@
+Time
+----
+scale: 1
+dimension: GW_TIME_DIMENSION_NANO
+range: 0 - 0
+global time offset: 0
+
+Tree
+----
+b (kind=GW_TREE_KIND_UNKNOWN, t_which=1)
+a (kind=GW_TREE_KIND_UNKNOWN, t_which=0)
+
+Facs
+----
+a
+    node: a
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            x @ -2
+            x @ -1
+            x @ 0
+            z @ 9223372036854775807
+b
+    node: b
+        vartype: GW_VAR_TYPE_VCD_WIRE
+        vardt: GW_VAR_DATA_TYPE_NONE
+        vardir: GW_VAR_DIR_IMPLICIT
+        varxt: 0
+        extvals: 0
+        msi, lsi: 0, 0
+        numhist: 0
+        transitions:
+            x @ -2
+            x @ -1
+            x @ 0
+            z @ 9223372036854775807
+

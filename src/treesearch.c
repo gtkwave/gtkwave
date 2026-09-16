@@ -20,10 +20,9 @@
 #include "lx2.h"
 #include "busy.h"
 #include "debug.h"
-#include "hierpack.h"
 #include "tcl_helper.h"
-#include "tcl_support_commands.h"
 #include "signal_list.h"
+#include "gw-fst-file.h"
 
 /* Treesearch is a pop-up window used to select signals.
    It is composed of two main areas:
@@ -49,6 +48,11 @@ enum
     N_COLUMNS
 };
 
+#define SST_NODE_FOUND 0
+#define SST_NODE_CURRENT 2
+#define SST_NODE_NOT_EXIST 1
+#define SST_TREE_NOT_EXIST -1
+
 /* list of autocoalesced (synthesized) filter names that need to be freed at some point) */
 
 void free_afl(void)
@@ -67,7 +71,7 @@ void free_afl(void)
 /* point to pure signame (remove hierarchy) for fill_sig_store() */
 static char *prune_hierarchy(char *nam)
 {
-    char cmpchar = GLOBALS->alt_hier_delimeter ? GLOBALS->alt_hier_delimeter : '.';
+    char cmpchar = '.';
     char *t = nam;
     char *lastmatch = NULL;
 
@@ -122,8 +126,8 @@ char *varxt_fix(char *s)
 /* Fill the store model using current SIG_ROOT and FILTER_STR.  */
 void fill_sig_store(void)
 {
-    GwTree *t;
-    GwTree *t_prev = NULL;
+    GwTreeNode *t;
+    GwTreeNode *t_prev = NULL;
     GtkTreeIter iter;
 
     if (GLOBALS->selected_sig_name) {
@@ -133,6 +137,11 @@ void fill_sig_store(void)
 
     free_afl();
     gtk_list_store_clear(GLOBALS->sig_store_treesearch_gtk2_c_1);
+
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+    gboolean has_supplemental_datatypes =
+        gw_dump_file_has_supplemental_datatypes(GLOBALS->dump_file);
+    gboolean has_supplemental_vartypes = gw_dump_file_has_supplemental_vartypes(GLOBALS->dump_file);
 
     for (t = GLOBALS->sig_root_treesearch_gtk2_c_1; t != NULL; t = t->next) {
         int i = t->t_which;
@@ -158,36 +167,39 @@ void fill_sig_store(void)
         }
         t_prev = t;
 
-        varxt = GLOBALS->facs[i]->n->varxt;
-        varxt_pnt = varxt ? varxt_fix(fst_file_get_subvar(GLOBALS->fst_file, varxt)) : NULL;
+        GwSymbol *fac = gw_facs_get(facs, i);
 
-        vartype = GLOBALS->facs[i]->n->vartype;
+        varxt = fac->n->varxt;
+        varxt_pnt = varxt
+                        ? varxt_fix(gw_fst_file_get_subvar(GW_FST_FILE(GLOBALS->dump_file), varxt))
+                        : NULL;
+
+        vartype = fac->n->vartype;
         if ((vartype < 0) || (vartype > GW_VAR_TYPE_MAX)) {
             vartype = 0;
         }
 
-        vardir = GLOBALS->facs[i]
-                     ->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
+        vardir = fac->n->vardir; /* two bit already chops down to 0..3, but this doesn't hurt */
         if ((vardir < 0) || (vardir > GW_VAR_DIR_MAX)) {
             vardir = 0;
         }
 
-        vardt = GLOBALS->facs[i]->n->vardt;
+        vardt = fac->n->vardt;
         if ((vardt < 0) || (vardt > GW_VAR_DATA_TYPE_MAX)) {
             vardt = 0;
         }
 
-        if (!GLOBALS->facs[i]->vec_root) {
+        if (!fac->vec_root) {
             is_tname = 1;
             s = t->name;
             s = fix_escaped_names(s, 0);
         } else {
             if (GLOBALS->autocoalesce) {
                 char *p;
-                if (GLOBALS->facs[i]->vec_root != GLOBALS->facs[i])
+                if (fac->vec_root != fac)
                     continue;
 
-                tmp2 = makename_chain(GLOBALS->facs[i]);
+                tmp2 = makename_chain(fac);
                 p = prune_hierarchy(tmp2);
                 s = (char *)malloc_2(strlen(p) + 4);
                 strcpy(s, "[] ");
@@ -195,7 +207,7 @@ void fill_sig_store(void)
                 s = fix_escaped_names(s, 1);
                 free_2(tmp2);
             } else {
-                char *p = prune_hierarchy(GLOBALS->facs[i]->name);
+                char *p = prune_hierarchy(fac->name);
                 s = (char *)malloc_2(strlen(p) + 4);
                 strcpy(s, "[] ");
                 strcpy(s + 3, p);
@@ -221,8 +233,7 @@ void fill_sig_store(void)
                                    TREE_COLUMN,
                                    t,
                                    TYPE_COLUMN,
-                                   (((GLOBALS->supplemental_datatypes_encountered) &&
-                                     (!GLOBALS->supplemental_vartypes_encountered))
+                                   ((has_supplemental_datatypes && !has_supplemental_vartypes)
                                         ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
                                         : gw_var_type_to_string(vartype)),
                                    DIR_COLUMN,
@@ -248,8 +259,7 @@ void fill_sig_store(void)
                                    TREE_COLUMN,
                                    t,
                                    TYPE_COLUMN,
-                                   (((GLOBALS->supplemental_datatypes_encountered) &&
-                                     (!GLOBALS->supplemental_vartypes_encountered))
+                                   ((has_supplemental_datatypes && !has_supplemental_vartypes)
                                         ? (varxt ? varxt_pnt : gw_var_data_type_to_string(vardt))
                                         : gw_var_type_to_string(vartype)),
                                    DIR_COLUMN,
@@ -275,7 +285,7 @@ static void XXX_create_sst_nodes_if_necessary(GtkTreeModel *model,
 {
 #ifndef WAVE_DISABLE_FAST_TREE
 
-    GwTree *t;
+    GwTreeNode *t;
 
     gtk_tree_model_get(model, iter, XXX_TREE_COLUMN, &t, -1);
 
@@ -312,7 +322,7 @@ static void XXX_create_sst_nodes_if_necessary(GtkTreeModel *model,
 #endif
 }
 
-int force_open_tree_node(char *name, int keep_path_nodes_open, GwTree **t_pnt)
+int force_open_tree_node(char *name, int keep_path_nodes_open, GwTreeNode **t_pnt)
 {
     GtkTreeModel *model = GTK_TREE_MODEL(GLOBALS->treestore_main);
     GtkTreeIter iter;
@@ -328,7 +338,7 @@ int force_open_tree_node(char *name, int keep_path_nodes_open, GwTree **t_pnt)
 
             strcpy(namecache, name);
             for (;;) {
-                GwTree *t;
+                GwTreeNode *t;
                 gtk_tree_model_get(model, &iter, XXX_TREE_COLUMN, &t, -1);
                 if (t_pnt) {
                     *t_pnt = t;
@@ -447,7 +457,7 @@ void select_tree_node(char *name)
 
             strcpy(namecache, name);
             for (;;) {
-                GwTree *t;
+                GwTreeNode *t;
                 gtk_tree_model_get(model, &iter, XXX_TREE_COLUMN, &t, -1);
                 while (*zap) {
                     if (*zap != GLOBALS->hier_delimeter) {
@@ -506,8 +516,8 @@ void select_tree_node(char *name)
 static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
 {
     GtkTreeIter iter;
-    GwTree *t;
-    GwTree **gctr;
+    GwTreeNode *t;
+    GwTreeNode **gctr;
     int depth, i;
     int len = 1;
     char *tstring;
@@ -526,7 +536,7 @@ static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
 
     path2 = gtk_tree_path_copy(path);
 
-    gctr = g_alloca(depth * sizeof(GwTree *));
+    gctr = g_alloca(depth * sizeof(GwTreeNode *));
     for (i = depth - 1; i >= 0; i--) {
         gtk_tree_model_get_iter(model, &iter, path2);
         gtk_tree_model_get(model, &iter, XXX_TREE_COLUMN, &gctr[i], -1);
@@ -557,24 +567,18 @@ static void XXX_select_row_callback(GtkTreeModel *model, GtkTreePath *path)
     GLOBALS->sst_sig_root_treesearch_gtk2_c_1 = t;
     GLOBALS->sig_root_treesearch_gtk2_c_1 = t->child;
     fill_sig_store();
-    gtkwavetcl_setvar(WAVE_TCLCB_TREE_SELECT,
-                      GLOBALS->selected_hierarchy_name,
-                      WAVE_TCLCB_TREE_SELECT_FLAGS);
 }
 
 static void XXX_unselect_row_callback(GtkTreeModel *model, GtkTreePath *path)
 {
     GtkTreeIter iter;
-    GwTree *t;
+    GwTreeNode *t;
 
     if (!gtk_tree_model_get_iter(model, &iter, path)) {
         return; /* path describes a non-existing row - should not happen */
     }
 
     if (GLOBALS->selected_hierarchy_name) {
-        gtkwavetcl_setvar(WAVE_TCLCB_TREE_UNSELECT,
-                          GLOBALS->selected_hierarchy_name,
-                          WAVE_TCLCB_TREE_UNSELECT_FLAGS);
         free_2(GLOBALS->selected_hierarchy_name);
         GLOBALS->selected_hierarchy_name = NULL;
     }
@@ -584,9 +588,11 @@ static void XXX_unselect_row_callback(GtkTreeModel *model, GtkTreePath *path)
         /* unused */
     }
 
+    GwTreeNode *tree_root = gw_tree_get_root(gw_dump_file_get_tree(GLOBALS->dump_file));
+
     DEBUG(printf("TU: %08x %s\n", t, t->name));
     GLOBALS->sst_sig_root_treesearch_gtk2_c_1 = NULL;
-    GLOBALS->sig_root_treesearch_gtk2_c_1 = GLOBALS->treeroot;
+    GLOBALS->sig_root_treesearch_gtk2_c_1 = tree_root;
     fill_sig_store();
 }
 
@@ -685,14 +691,13 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
                                                       GtkTreeIter *iter,
                                                       GtkTreePath *path)
 {
-    GwTree *t;
-    GwTree **gctr;
+    GwTreeNode *t;
+    GwTreeNode **gctr;
     int depth, i;
     int len = 1;
     char *tstring;
     char hier_suffix[2];
     GtkTreePath *path2;
-    int found;
 
     if (!gtk_tree_model_get_iter(model, iter, path)) {
         return; /* path describes a non-existing row - should not happen */
@@ -706,7 +711,7 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
 
     path2 = gtk_tree_path_copy(path);
 
-    gctr = g_alloca(depth * sizeof(GwTree *));
+    gctr = g_alloca(depth * sizeof(GwTreeNode *));
     for (i = depth - 1; i >= 0; i--) {
         gtk_tree_model_get_iter(model, iter, path2);
         gtk_tree_model_get(model, iter, XXX_TREE_COLUMN, &gctr[i], -1);
@@ -727,28 +732,14 @@ static void XXX_generic_tree_expand_collapse_callback(int is_expand,
         strcat(tstring, hier_suffix);
     }
 
-    if (GLOBALS->open_tree_nodes) /* cut down on chatter to Tcl clients */
-    {
+    if (GLOBALS->open_tree_nodes) {
         GLOBALS->open_tree_nodes = xl_splay(tstring, GLOBALS->open_tree_nodes);
-        if (!strcmp(GLOBALS->open_tree_nodes->item, tstring)) {
-            found = 1;
-        } else {
-            found = 0;
-        }
-    } else {
-        found = 0;
     }
 
     if (is_expand) {
         GLOBALS->open_tree_nodes = xl_insert(tstring, GLOBALS->open_tree_nodes, NULL);
-        if (!found) {
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_EXPAND, tstring, WAVE_TCLCB_TREE_EXPAND_FLAGS);
-        }
     } else {
         GLOBALS->open_tree_nodes = xl_delete(tstring, GLOBALS->open_tree_nodes);
-        if (found) {
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_COLLAPSE, tstring, WAVE_TCLCB_TREE_COLLAPSE_FLAGS);
-        }
     }
 }
 
@@ -852,7 +843,7 @@ static void sig_selection_foreach(GtkTreeModel *model,
     (void)path;
     (void)data;
 
-    GwTree *sel;
+    GwTreeNode *sel;
     /* const enum sst_cb_action action = (enum sst_cb_action)data; */
     int i;
     int low, high;
@@ -866,12 +857,13 @@ static void sig_selection_foreach(GtkTreeModel *model,
     low = fetchlow(sel)->t_which;
     high = fetchhigh(sel)->t_which;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     /* Add signals and vectors.  */
     for (i = low; i <= high; i++) {
         int len;
-        struct symbol *s, *t;
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
             if (get_s_selected(t)) {
                 set_s_selected(t, 0);
@@ -884,7 +876,7 @@ static void sig_selection_foreach(GtkTreeModel *model,
                     add_vector_chain(s->vec_root, len);
             }
         } else {
-            AddNodeUnroll(s->n, NULL);
+            AddNode(s->n, NULL);
         }
     }
 }
@@ -982,7 +974,7 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
     (void)path;
     (void)data;
 
-    GwTree *sel;
+    GwTreeNode *sel;
     /* const enum sst_cb_action action = (enum sst_cb_action)data; */
     int i;
     int low, high;
@@ -996,10 +988,11 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
     low = fetchlow(sel)->t_which;
     high = fetchhigh(sel)->t_which;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     /* If signals are vectors, coalesces vectors if so.  */
     for (i = low; i <= high; i++) {
-        struct symbol *s;
-        s = GLOBALS->facs[i];
+        GwSymbol *s = gw_facs_get(facs, i);
         if (s->vec_root) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
         }
@@ -1008,9 +1001,8 @@ static void sig_selection_foreach_preload_lx2(GtkTreeModel *model,
     /* LX2 */
     if (GLOBALS->is_lx2) {
         for (i = low; i <= high; i++) {
-            struct symbol *s, *t;
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
+            GwSymbol *s = gw_facs_get(facs, i);
+            GwSymbol *t = s->vec_root;
             if ((t) && (GLOBALS->autocoalesce)) {
                 if (get_s_selected(t)) {
                     while (t) {
@@ -1120,11 +1112,6 @@ static gboolean view_selection_func(GtkTreeSelection *selection,
 
         if (!path_currently_selected) {
             GLOBALS->selected_sig_name = strdup_2(name);
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_SIG_SELECT, name, WAVE_TCLCB_TREE_SIG_SELECT_FLAGS);
-        } else {
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_SIG_UNSELECT,
-                              name,
-                              WAVE_TCLCB_TREE_SIG_UNSELECT_FLAGS);
         }
 
         g_free(name);
@@ -1145,9 +1132,6 @@ static gint button_press_event_std(GtkWidget *widget, GdkEventButton *event)
             strcpy(sstr, GLOBALS->selected_hierarchy_name);
             strcat(sstr, GLOBALS->selected_sig_name);
 
-            gtkwavetcl_setvar(WAVE_TCLCB_TREE_SIG_DOUBLE_CLICK,
-                              sstr,
-                              WAVE_TCLCB_TREE_SIG_DOUBLE_CLICK_FLAGS);
             action_callback(GLOBALS->sst_dbl_action_type);
         }
     }
@@ -1210,8 +1194,9 @@ GtkWidget *treeboxframe(const char *title)
 
     gtk_paned_pack1(GTK_PANED(vpan), GLOBALS->gtk2_tree_frame, TRUE, FALSE);
 
-    decorated_module_cleanup();
-    XXX_maketree(NULL, GLOBALS->treeroot);
+    GwTreeNode *tree_root = gw_tree_get_root(gw_dump_file_get_tree(GLOBALS->dump_file));
+
+    XXX_maketree(NULL, tree_root);
     gtk_tree_selection_set_select_function(
         gtk_tree_view_get_selection(GTK_TREE_VIEW(GLOBALS->treeview_main)),
         XXX_view_selection_func,
@@ -1250,7 +1235,7 @@ GtkWidget *treeboxframe(const char *title)
                                                                 G_TYPE_STRING,
                                                                 G_TYPE_STRING);
     GLOBALS->sst_sig_root_treesearch_gtk2_c_1 = NULL;
-    GLOBALS->sig_root_treesearch_gtk2_c_1 = GLOBALS->treeroot;
+    GLOBALS->sig_root_treesearch_gtk2_c_1 = tree_root;
     fill_sig_store();
 
     sig_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(GLOBALS->sig_store_treesearch_gtk2_c_1));
@@ -1262,6 +1247,13 @@ GtkWidget *treeboxframe(const char *title)
         GtkCellRenderer *renderer;
         GtkTreeViewColumn *column;
 
+        gboolean has_nonimplicit_directions =
+            gw_dump_file_has_nonimplicit_directions(GLOBALS->dump_file);
+        gboolean has_supplemental_datatypes =
+            gw_dump_file_has_supplemental_datatypes(GLOBALS->dump_file);
+        gboolean has_supplemental_vartypes =
+            gw_dump_file_has_supplemental_vartypes(GLOBALS->dump_file);
+
         renderer = gtk_cell_renderer_text_new();
 
         switch (GLOBALS->loaded_file_type) {
@@ -1270,7 +1262,7 @@ GtkWidget *treeboxframe(const char *title)
 #endif
             case FST_FILE:
                 /* fallthrough for Dir is deliberate for extload and FST */
-                if (GLOBALS->nonimplicit_direction_encountered) {
+                if (has_nonimplicit_directions) {
                     column = gtk_tree_view_column_new_with_attributes("Dir",
                                                                       renderer,
                                                                       "text",
@@ -1282,17 +1274,13 @@ GtkWidget *treeboxframe(const char *title)
             case VCD_RECODER_FILE:
             case DUMPLESS_FILE:
                 column = gtk_tree_view_column_new_with_attributes(
-                    ((GLOBALS->supplemental_datatypes_encountered) &&
-                     (GLOBALS->supplemental_vartypes_encountered))
-                        ? "VType"
-                        : "Type",
+                    (has_supplemental_datatypes && has_supplemental_vartypes) ? "VType" : "Type",
                     renderer,
                     "text",
                     TYPE_COLUMN,
                     NULL);
                 gtk_tree_view_append_column(GTK_TREE_VIEW(sig_view), column);
-                if ((GLOBALS->supplemental_datatypes_encountered) &&
-                    (GLOBALS->supplemental_vartypes_encountered)) {
+                if (has_supplemental_datatypes && has_supplemental_vartypes) {
                     column = gtk_tree_view_column_new_with_attributes("DType",
                                                                       renderer,
                                                                       "text",
@@ -1565,66 +1553,64 @@ void dnd_setup(GtkWidget *src, gboolean search)
 
 /***************************************************************************/
 
-static void recurse_append_callback(GtkWidget *widget, gpointer data)
+static void select_vec_roots(GwFacs *facs, gint low, gint high)
 {
-    int i;
-
-    if (!GLOBALS->sst_sig_root_treesearch_gtk2_c_1 || !data)
-        return;
-
-    set_window_busy(widget);
-
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        struct symbol *s;
-        if (i < 0)
+    for (gint i = low; i <= high; i++) {
+        if (i < 0) {
             break; /* GHW */
-        s = GLOBALS->facs[i];
-        if (s->vec_root) {
+        }
+
+        GwSymbol *s = gw_facs_get(facs, i);
+        if (s->vec_root != NULL) {
             set_s_selected(s->vec_root, GLOBALS->autocoalesce);
         }
     }
+}
 
-    /* LX2 */
-    if (GLOBALS->is_lx2) {
-        int pre_import = 0;
+static void import_lx2(GwFacs *facs, gint low, gint high)
+{
+    int pre_import = 0;
 
-        for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            struct symbol *s, *t;
-            if (i < 0)
-                break; /* GHW */
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
-            if ((t) && (GLOBALS->autocoalesce)) {
-                if (get_s_selected(t)) {
-                    while (t) {
-                        if (t->n->mv.mvlfac) {
-                            lx2_set_fac_process_mask(t->n);
-                            pre_import++;
-                        }
-                        t = t->vec_chain;
+    for (int i = low; i <= high; i++) {
+        if (i < 0) {
+            break; /* GHW */
+        }
+
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
+        if ((t) && (GLOBALS->autocoalesce)) {
+            if (get_s_selected(t)) {
+                while (t) {
+                    if (t->n->mv.mvlfac) {
+                        lx2_set_fac_process_mask(t->n);
+                        pre_import++;
                     }
-                }
-            } else {
-                if (s->n->mv.mvlfac) {
-                    lx2_set_fac_process_mask(s->n);
-                    pre_import++;
+                    t = t->vec_chain;
                 }
             }
-        }
-
-        if (pre_import) {
-            lx2_import_masked();
+        } else {
+            if (s->n->mv.mvlfac) {
+                lx2_set_fac_process_mask(s->n);
+                pre_import++;
+            }
         }
     }
-    /* LX2 */
 
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
+    if (pre_import) {
+        lx2_import_masked();
+    }
+}
+
+static void add_nodes(GwFacs *facs, gint low, gint high)
+{
+    for (gint i = low; i <= high; i++) {
         int len;
-        struct symbol *s, *t;
-        if (i < 0)
+        if (i < 0) {
             break; /* GHW */
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
+        }
+
+        GwSymbol *s = gw_facs_get(facs, i);
+        GwSymbol *t = s->vec_root;
         if ((t) && (GLOBALS->autocoalesce)) {
             if (get_s_selected(t)) {
                 set_s_selected(t, 0);
@@ -1637,98 +1623,41 @@ static void recurse_append_callback(GtkWidget *widget, gpointer data)
                     add_vector_chain(s->vec_root, len);
             }
         } else {
-            AddNodeUnroll(s->n, NULL);
+            AddNode(s->n, NULL);
         }
     }
+}
 
-    set_window_idle(widget);
+static void recurse_append_callback(GwFacs *facs, gint low, gint high)
+{
+    select_vec_roots(facs, low, high);
+
+    if (GLOBALS->is_lx2) {
+        import_lx2(facs, low, high);
+    }
+
+    add_nodes(facs, low, high);
 
     gw_signal_list_scroll_to_trace(GW_SIGNAL_LIST(GLOBALS->signalarea), GLOBALS->traces.last);
     redraw_signals_and_waves();
 }
 
-static void recurse_insert_callback(GtkWidget *widget, gpointer data)
+static void recurse_insert_callback(GwFacs *facs, gint low, gint high)
 {
     Traces tcache;
-    int i;
-
-    if (!GLOBALS->sst_sig_root_treesearch_gtk2_c_1 || !data)
-        return;
-
     memcpy(&tcache, &GLOBALS->traces, sizeof(Traces));
     GLOBALS->traces.total = 0;
     GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
-    set_window_busy(widget);
-
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        struct symbol *s;
-        if (i < 0)
-            break; /* GHW */
-        s = GLOBALS->facs[i];
-        if (s->vec_root) {
-            set_s_selected(s->vec_root, GLOBALS->autocoalesce);
-        }
-    }
+    select_vec_roots(facs, low, high);
 
     /* LX2 */
     if (GLOBALS->is_lx2) {
-        int pre_import = 0;
-
-        for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            struct symbol *s, *t;
-            if (i < 0)
-                break; /* GHW */
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
-            if ((t) && (GLOBALS->autocoalesce)) {
-                if (get_s_selected(t)) {
-                    while (t) {
-                        if (t->n->mv.mvlfac) {
-                            lx2_set_fac_process_mask(t->n);
-                            pre_import++;
-                        }
-                        t = t->vec_chain;
-                    }
-                }
-            } else {
-                if (s->n->mv.mvlfac) {
-                    lx2_set_fac_process_mask(s->n);
-                    pre_import++;
-                }
-            }
-        }
-
-        if (pre_import) {
-            lx2_import_masked();
-        }
+        import_lx2(facs, low, high);
     }
     /* LX2 */
 
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        int len;
-        struct symbol *s, *t;
-        if (i < 0)
-            break; /* GHW */
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
-        if ((t) && (GLOBALS->autocoalesce)) {
-            if (get_s_selected(t)) {
-                set_s_selected(t, 0);
-                len = 0;
-                while (t) {
-                    len++;
-                    t = t->vec_chain;
-                }
-                if (len)
-                    add_vector_chain(s->vec_root, len);
-            }
-        } else {
-            AddNodeUnroll(s->n, NULL);
-        }
-    }
-
-    set_window_idle(widget);
+    add_nodes(facs, low, high);
 
     GLOBALS->traces.buffercount = GLOBALS->traces.total;
     GLOBALS->traces.buffer = GLOBALS->traces.first;
@@ -1746,90 +1675,24 @@ static void recurse_insert_callback(GtkWidget *widget, gpointer data)
     redraw_signals_and_waves();
 }
 
-static void recurse_replace_callback(GtkWidget *widget, gpointer data)
+static void recurse_replace_callback(GwFacs *facs, gint low, gint high)
 {
     Traces tcache;
     int i;
     GwTrace *tfirst = NULL;
     GwTrace *tlast = NULL;
 
-    if (!GLOBALS->sst_sig_root_treesearch_gtk2_c_1 || !data)
-        return;
-
     memcpy(&tcache, &GLOBALS->traces, sizeof(Traces));
     GLOBALS->traces.total = 0;
     GLOBALS->traces.first = GLOBALS->traces.last = NULL;
 
-    set_window_busy(widget);
+    select_vec_roots(facs, low, high);
 
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        struct symbol *s;
-        if (i < 0)
-            break; /* GHW */
-        s = GLOBALS->facs[i];
-        if (s->vec_root) {
-            set_s_selected(s->vec_root, GLOBALS->autocoalesce);
-        }
-    }
-
-    /* LX2 */
     if (GLOBALS->is_lx2) {
-        int pre_import = 0;
-
-        for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-            struct symbol *s, *t;
-            if (i < 0)
-                break; /* GHW */
-            s = GLOBALS->facs[i];
-            t = s->vec_root;
-            if ((t) && (GLOBALS->autocoalesce)) {
-                if (get_s_selected(t)) {
-                    while (t) {
-                        if (t->n->mv.mvlfac) {
-                            lx2_set_fac_process_mask(t->n);
-                            pre_import++;
-                        }
-                        t = t->vec_chain;
-                    }
-                }
-            } else {
-                if (s->n->mv.mvlfac) {
-                    lx2_set_fac_process_mask(s->n);
-                    pre_import++;
-                }
-            }
-        }
-
-        if (pre_import) {
-            lx2_import_masked();
-        }
-    }
-    /* LX2 */
-
-    for (i = GLOBALS->fetchlow; i <= GLOBALS->fetchhigh; i++) {
-        int len;
-        struct symbol *s, *t;
-        if (i < 0)
-            break; /* GHW */
-        s = GLOBALS->facs[i];
-        t = s->vec_root;
-        if ((t) && (GLOBALS->autocoalesce)) {
-            if (get_s_selected(t)) {
-                set_s_selected(t, 0);
-                len = 0;
-                while (t) {
-                    len++;
-                    t = t->vec_chain;
-                }
-                if (len)
-                    add_vector_chain(s->vec_root, len);
-            }
-        } else {
-            AddNodeUnroll(s->n, NULL);
-        }
+        import_lx2(facs, low, high);
     }
 
-    set_window_idle(widget);
+    add_nodes(facs, low, high);
 
     tfirst = GLOBALS->traces.first;
     tlast = GLOBALS->traces.last; /* cache for highlighting */
@@ -1900,45 +1763,82 @@ static void recurse_replace_callback(GtkWidget *widget, gpointer data)
     redraw_signals_and_waves();
 }
 
-void recurse_import(GtkWidget *widget, guint callback_action)
+static void recurse_fetch_high_low(GwTreeNode *t, gint *low, gint *high)
 {
-    if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1) {
-        int fz;
-
-        GLOBALS->fetchlow = GLOBALS->fetchhigh = -1;
-        if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child)
-            recurse_fetch_high_low(GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child);
-        fz = GLOBALS->fetchhigh - GLOBALS->fetchlow + 1;
-        void (*func)(GtkWidget *, gpointer);
-
-        switch (callback_action) {
-            case WV_RECURSE_INSERT:
-                func = recurse_insert_callback;
-                break;
-            case WV_RECURSE_REPLACE:
-                func = recurse_replace_callback;
-                break;
-
-            case WV_RECURSE_APPEND:
-            default:
-                func = recurse_append_callback;
-                break;
+top:
+    if (t->t_which >= 0) {
+        if (t->t_which > *high) {
+            *high = t->t_which;
         }
-
-        if ((GLOBALS->fetchlow >= 0) && (GLOBALS->fetchhigh >= 0)) {
-            widget = GLOBALS->mainwindow; /* otherwise using widget passed from the menu item
-                                             crashes on OSX */
-
-            if (fz > WV_RECURSE_IMPORT_WARN) {
-                char recwarn[128];
-                sprintf(recwarn, "Really import %d facilit%s?", fz, (fz == 1) ? "y" : "ies");
-
-                simplereqbox("Recurse Warning", 300, recwarn, "Yes", "No", G_CALLBACK(func), 1);
-            } else {
-                func(widget, (gpointer)1);
-            }
+        if (*low < 0) {
+            *low = t->t_which;
+        } else if (t->t_which < *low) {
+            *low = t->t_which;
         }
     }
+
+    if (t->child) {
+        recurse_fetch_high_low(t->child, low, high);
+    }
+
+    if (t->next) {
+        t = t->next;
+        goto top;
+    }
+}
+
+void recurse_import(GtkWidget *widget, guint callback_action)
+{
+    if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1 == NULL) {
+        return;
+    }
+
+    gint low = -1;
+    gint high = -1;
+    if (GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child) {
+        recurse_fetch_high_low(GLOBALS->sst_sig_root_treesearch_gtk2_c_1->child, &low, &high);
+    }
+
+    if (low < 0 || high < 0) {
+        return;
+    }
+    int fz = high - low + 1;
+
+    if (fz > WV_RECURSE_IMPORT_WARN) {
+        char recwarn[128];
+        sprintf(recwarn, "Really import %d facilit%s?", fz, (fz == 1) ? "y" : "ies");
+
+        GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(GLOBALS->mainwindow),
+                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                   GTK_MESSAGE_WARNING,
+                                                   GTK_BUTTONS_YES_NO,
+                                                   "Really import %d facilit%s?",
+                                                   fz,
+                                                   (fz == 1) ? "y" : "ies");
+
+        gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+
+        if (response != GTK_RESPONSE_YES) {
+            return;
+        }
+    }
+
+    widget = GLOBALS->mainwindow; /* otherwise using widget passed from the menu item
+                                     crashes on OSX */
+    set_window_busy(widget);
+
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
+    if (callback_action == WV_RECURSE_INSERT) {
+        recurse_insert_callback(facs, low, high);
+    } else if (callback_action == WV_RECURSE_REPLACE) {
+        recurse_replace_callback(facs, low, high);
+    } else { // WV_RECURSE_APPEND
+        recurse_append_callback(facs, low, high);
+    }
+
+    set_window_idle(widget);
 }
 
 /***************************************************************************/

@@ -1,0 +1,4 @@
+$var wire 1 aaaaaaaaaa a $end
+$var wire 1 zzzzzzzzzz b $end
+$enddefinitions $end
+#0

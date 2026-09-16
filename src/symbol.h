@@ -21,7 +21,6 @@
 #include "tree.h"
 #include "debug.h"
 
-#define SYMPRIME 500009
 #define WAVE_DECOMPRESSOR "gzip -cd " /* zcat alone doesn't cut it for AIX */
 
 #include <unistd.h>
@@ -29,47 +28,15 @@
 #include <inttypes.h>
 #endif
 
-struct symbol
-{
-#ifndef _WAVE_HAVE_JUDY
-    struct symbol *sym_next; /* for hash chain, judy uses sym_judy in globals */
-#endif
-
-    struct symbol *vec_root, *vec_chain;
-    char *name;
-    GwNode *n;
-
-#ifndef _WAVE_HAVE_JUDY
-    char s_selected; /* for the clist object */
-#endif
-};
-
 struct string_chain_t
 {
     struct string_chain_t *next;
     char *str;
 };
 
-/* hash create/destroy */
-void sym_hash_initialize(void *g);
-void sym_hash_destroy(void *g);
-
-struct symbol *symfind(char *, unsigned int *);
-struct symbol *symadd(char *, int);
-struct symbol *symadd_name_exists(char *name, int hv);
-int hash(char *s);
-
-/* typically use zero for hashval as it doesn't matter if facs are sorted as symfind will bsearch...
- */
-#define symadd_name_exists_sym_exists(s, nam, hv) \
-    (s)->name = (nam); /* (s)->sym_next=GLOBALS->sym_hash[(hv)]; GLOBALS->sym_hash[(hv)]=(s); \
-                          (obsolete) */
-
 void facsplit(char *, int *, int *);
 int sigcmp(char *, char *);
-void quicksort(struct symbol **, int, int);
-
-void wave_heapsort(struct symbol **a, int num);
+void quicksort(GwSymbol **, int, int);
 
 GwBits *makevec(char *, char *);
 GwBits *makevec_annotated(char *, char *);
@@ -77,22 +44,13 @@ int maketraces(char *, char *, int);
 
 /* additions to bitvec.c because of search.c/menu.c ==> formerly in analyzer.h */
 GwBitVector *bits2vector(GwBits *b);
-GwBits *makevec_selected(char *vec, int numrows, char direction);
-GwBits *makevec_range(char *vec, int lo, int hi, char direction);
-int add_vector_range(char *alias, int lo, int hi, char direction);
-GwBits *makevec_chain(char *vec, struct symbol *sym, int len);
-int add_vector_chain(struct symbol *s, int len);
-char *makename_chain(struct symbol *sym);
-
-/* splash screen activation (version >= GTK2 only) */
-void splash_create(void);
-void splash_sync(off_t current, off_t total);
-void splash_finalize(void);
-gint splash_button_press_event(GtkWidget *widget, GdkEventExpose *event);
+GwBits *makevec_chain(char *vec, GwSymbol *sym, int len);
+int add_vector_chain(GwSymbol *s, int len);
+char *makename_chain(GwSymbol *sym);
 
 /* accessor functions for sym->selected moved (potentially) to sparse array */
-char get_s_selected(struct symbol *s);
-char set_s_selected(struct symbol *s, char value);
+char get_s_selected(GwSymbol *s);
+char set_s_selected(GwSymbol *s, char value);
 void destroy_s_selected(void);
 
 #endif

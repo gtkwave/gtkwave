@@ -1,7 +1,7 @@
 /*
                 An implementation of top-down splaying
                     D. Sleator <sleator@cs.cmu.edu>
-    	                     March 1992
+                             March 1992
 
   "Splay trees", or "self-adjusting search trees" are a simple and
   efficient data structure for storing an ordered set.  The data
@@ -46,100 +46,107 @@ note: modified for void pointer passing 120302ajb
 
 #include "splay.h"
 
-ds_Tree * ds_splay (char *i, ds_Tree * t) {
-/* Simple top down splay, not requiring i to be in the tree t.  */
-/* What it does is described above.                             */
+ds_Tree *ds_splay(char *i, ds_Tree *t)
+{
+    /* Simple top down splay, not requiring i to be in the tree t.  */
+    /* What it does is described above.                             */
     ds_Tree N, *l, *r, *y;
-    if (t == NULL) return t;
+    if (t == NULL)
+        return t;
     N.left = N.right = NULL;
     l = r = &N;
 
     for (;;) {
-	if (strcmp(i, t->item) <0) {
-	    if (t->left == NULL) break;
-	    if (strcmp(i, t->left->item) < 0) {
-		y = t->left;                           /* rotate right */
-		t->left = y->right;
-		y->right = t;
-		t = y;
-		if (t->left == NULL) break;
-	    }
-	    r->left = t;                               /* link right */
-	    r = t;
-	    t = t->left;
-	} else if (strcmp(i, t->item) > 0) {
-	    if (t->right == NULL) break;
-	    if (strcmp(i, t->right->item) > 0) {
-		y = t->right;                          /* rotate left */
-		t->right = y->left;
-		y->left = t;
-		t = y;
-		if (t->right == NULL) break;
-	    }
-	    l->right = t;                              /* link left */
-	    l = t;
-	    t = t->right;
-	} else {
-	    break;
-	}
+        if (strcmp(i, t->item) < 0) {
+            if (t->left == NULL)
+                break;
+            if (strcmp(i, t->left->item) < 0) {
+                y = t->left; /* rotate right */
+                t->left = y->right;
+                y->right = t;
+                t = y;
+                if (t->left == NULL)
+                    break;
+            }
+            r->left = t; /* link right */
+            r = t;
+            t = t->left;
+        } else if (strcmp(i, t->item) > 0) {
+            if (t->right == NULL)
+                break;
+            if (strcmp(i, t->right->item) > 0) {
+                y = t->right; /* rotate left */
+                t->right = y->left;
+                y->left = t;
+                t = y;
+                if (t->right == NULL)
+                    break;
+            }
+            l->right = t; /* link left */
+            l = t;
+            t = t->right;
+        } else {
+            break;
+        }
     }
-    l->right = t->left;                                /* assemble */
+    l->right = t->left; /* assemble */
     r->left = t->right;
     t->left = N.right;
     t->right = N.left;
     return t;
 }
 
+ds_Tree *ds_insert(char *i, ds_Tree *t)
+{
+    /* Insert i into the tree t, unless it's already there.    */
+    /* Return a pointer to the resulting tree.                 */
+    ds_Tree *n;
 
-ds_Tree * ds_insert(char *i, ds_Tree * t) {
-/* Insert i into the tree t, unless it's already there.    */
-/* Return a pointer to the resulting tree.                 */
-    ds_Tree * n;
-
-    n = (ds_Tree *) calloc (1, sizeof (ds_Tree));
+    n = (ds_Tree *)calloc(1, sizeof(ds_Tree));
     if (n == NULL) {
-	fprintf(stderr, "ds_insert: ran out of memory, exiting.\n");
-	exit(255);
+        fprintf(stderr, "ds_insert: ran out of memory, exiting.\n");
+        exit(255);
     }
     n->item = i;
     if (t == NULL) {
-	n->left = n->right = NULL;
-	return n;
+        n->left = n->right = NULL;
+        return n;
     }
-    t = ds_splay(i,t);
+    t = ds_splay(i, t);
     if (strcmp(i, t->item) < 0) {
-	n->left = t->left;
-	n->right = t;
-	t->left = NULL;
-	return n;
+        n->left = t->left;
+        n->right = t;
+        t->left = NULL;
+        return n;
     } else if (strcmp(i, t->item) > 0) {
-	n->right = t->right;
-	n->left = t;
-	t->right = NULL;
-	return n;
+        n->right = t->right;
+        n->left = t;
+        t->right = NULL;
+        return n;
     } else { /* We get here if it's already in the tree */
-             /* Don't add it again                      */
-	free(n);
-	return t;
+        /* Don't add it again                      */
+        free(n);
+        return t;
     }
 }
 
-ds_Tree * ds_delete(char *i, ds_Tree * t) {
-/* Deletes i from the tree if it's there.               */
-/* Return a pointer to the resulting tree.              */
-    ds_Tree * x;
-    if (t==NULL) return NULL;
-    t = ds_splay(i,t);
-    if (strcmp(i, t->item) == 0) {               /* found it */
-	if (t->left == NULL) {
-	    x = t->right;
-	} else {
-	    x = ds_splay(i, t->left);
-	    x->right = t->right;
-	}
-	free(t);
-	return x;
+ds_Tree *ds_delete(char *i, ds_Tree *t)
+{
+    /* Deletes i from the tree if it's there.               */
+    /* Return a pointer to the resulting tree.              */
+    ds_Tree *x;
+    if (t == NULL)
+        return NULL;
+    t = ds_splay(i, t);
+    if (strcmp(i, t->item) == 0) { /* found it */
+        if (t->left == NULL) {
+            x = t->right;
+        } else {
+            x = ds_splay(i, t->left);
+            x->right = t->right;
+        }
+        free(t);
+        return x;
     }
-    return t;                         /* It wasn't there */
+    return t; /* It wasn't there */
 }
-

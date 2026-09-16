@@ -1,0 +1,16 @@
+$var wire 4 v vec $end
+$enddefinitions $end
+
+$comment 0 or 1 -> left extend with 0 $end
+#0
+b01 v
+#1
+b100 v
+
+$comment z -> left extend with z $end
+#2
+bz00 v
+
+$comment x -> left extend with x $end
+#3
+bx0 v

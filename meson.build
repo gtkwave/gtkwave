@@ -2,7 +2,7 @@ project(
     'gtkwave',
     'c',
     'cpp',
-    version: '3.4.0',
+    version: '4.0.0-prealpha',
     default_options: [
         'buildtype=debugoptimized',
         'warning_level=2',
@@ -23,22 +23,26 @@ link_args = []
 
 datadir_gtkwave = get_option('datadir') / 'gtkwave3'
 
+version_h = vcs_tag(input: 'src/version.h.in', output: 'version.h')
+
 # Required dependency versions
 
-glib_req = '>=2.64.0'
-glib_req_macro = 'GLIB_VERSION_2_64'
+glib_req = '>=2.72.0'
+glib_req_macro = 'GLIB_VERSION_2_72'
+json_glib_req = '>=1.6.6'
 gtk_req = '>=3.24.0'
 gtk_mac_integration_req = '>=3.0.0'
+gtk4_req = '>=4.6'
 zlib_req = '>=1.2.0'
 bzip2_req = '>=1.0.0'
-tcl_req = '>=8.6.0'
-tk_req = '>=8.6.0'
 
 # Dependencies
 
 glib_dep = dependency('glib-2.0', version: glib_req)
 gobject_dep = dependency('gobject-2.0', version: glib_req)
+gio_dep = dependency('gio-2.0', version: glib_req)
 gtk_dep = dependency('gtk+-3.0', version: gtk_req)
+gtk4_dep = dependency('gtk4', version: gtk4_req)
 gtk_unix_print_dep = dependency(
     'gtk+-unix-print-3.0',
     version: gtk_req,
@@ -49,9 +53,8 @@ gtk_mac_integration_dep = dependency(
     version: gtk_mac_integration_req,
     required: host_machine.system() == 'darwin',
 )
+json_glib_dep = dependency('json-glib-1.0', version: json_glib_req)
 zlib_dep = dependency('zlib', version: zlib_req)
-tcl_dep = dependency('tcl', version: tcl_req, required: get_option('tcl'))
-tk_dep = dependency('tk', version: tk_req, required: get_option('tcl'))
 m_dep = cc.find_library('m', required: false)
 judy_dep = cc.find_library(
     'Judy',
@@ -71,6 +74,8 @@ if not bzip2_dep.found()
     # try to manually find the library as a fallback
     bzip2_dep = cc.find_library('bz2', has_headers: 'bzlib.h')
 endif
+
+libfst_dep = dependency('libfst')
 
 # Experimental libpeas based plugin support
 
@@ -108,9 +113,10 @@ gperf = find_program('gperf')
 flex = find_program('flex')
 flex_gen = generator(
     flex,
-    output: '@BASENAME@.c',
+    output: ['@BASENAME@.yy.c', '@BASENAME@.yy.h'],
     arguments: [
-        '--outfile=@OUTPUT@',
+        '--outfile=@OUTPUT0@',
+        '--header-file=@OUTPUT1@',
         '@INPUT@',
     ],
 )
@@ -127,7 +133,6 @@ config.set('HAVE_FCNTL', cc.has_header('fcntl.h'))
 config.set10('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 config.set('HAVE_LIBPTHREAD', thread_dep.found())
 config.set('_WAVE_HAVE_JUDY', judy_dep.found())
-config.set('HAVE_LIBTCL', tcl_dep.found() and tk_dep.found())
 config.set('WAVE_GTK_UNIX_PRINT', gtk_unix_print_dep.found())
 config.set('WAVE_USE_STRUCT_PACKING', get_option('struct_packing'))
 config.set('WAVE_MANYMARKERS_MODE', get_option('manymarkers'))
@@ -137,6 +142,9 @@ config.set('WAVE_DISABLE_FAST_TREE', not get_option('fasttree'))
 
 functions = [
     'fseeko',
+    'realpath',
+    'setenv',
+    'unsetenv'
 ]
 
 foreach function : functions
@@ -194,6 +202,7 @@ test_warning_args = [
     '-Wuninitialized',
     '-Wunused',
 ]
+
 foreach arg: test_warning_args
     if cc.has_multi_arguments(arg)
         warning_args += arg
@@ -229,3 +238,35 @@ gnome.post_install(
     update_desktop_database: true,
     gtk_update_icon_cache: true,
 )
+
+if host_machine.system() == 'darwin' and get_option('build_macos_app') == true
+    macos_app_path = get_option('prefix')
+    macos_app_contents = macos_app_path / 'Contents'
+
+    macos_app_exe = macos_app_contents / 'MacOS'
+    macos_app_resources = macos_app_contents / 'Resources'
+
+    install_data(
+        'macos/launcher.sh',
+        rename: 'gtkwave',
+        install_dir: macos_app_exe,
+        install_mode: 'rwxr-xr-x'
+    )
+
+    install_data(
+        'macos/Info.plist',
+        install_dir: macos_app_contents
+    )
+
+    install_data(
+        'macos/AppIcon.icns',
+        install_dir: macos_app_resources
+    )
+
+    install_data(
+        'macos/gtkwave.entitlements',
+        install_dir: macos_app_contents
+    )
+
+    meson.add_install_script('macos/install_deps.sh')
+endif

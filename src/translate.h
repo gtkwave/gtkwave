@@ -30,7 +30,6 @@ struct xl_tree_node
 };
 
 #define FILE_FILTER_MAX (128)
-#define WAVE_TCL_INSTALLED_FILTER "\"TCL_Installed_Filter\""
 
 xl_Tree *xl_splay(char *i, xl_Tree *t);
 xl_Tree *xl_insert(char *i, xl_Tree *t, char *trans);

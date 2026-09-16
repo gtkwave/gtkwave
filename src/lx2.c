@@ -19,30 +19,20 @@
 #include <stdlib.h>
 #include "symbol.h"
 #include "vcd.h"
-#include "debug.h"
 #include "busy.h"
-#include "hierpack.h"
-#include "fst.h"
+
+// TODO: remove
+static GPtrArray *import_nodes;
 
 /*
  * actually import an lx2 trace but don't do it if it's already been imported
  */
 void import_lx2_trace(GwNode *np)
 {
-    switch (GLOBALS->is_lx2) {
-        case LXT2_IS_VLIST:
-            import_vcd_trace(GLOBALS->vcd_file, np);
-            return;
-        case LXT2_IS_FST:
-            import_fst_trace(GLOBALS->fst_file, np);
-            return;
-        case LXT2_IS_FSDB:
-            import_extload_trace(np);
-            return;
-        default:
-            g_return_if_reached();
-            break;
-    }
+    GwNode *nodes[2] = {np, NULL};
+
+    // TODO: report errors
+    g_assert_true(gw_dump_file_import_traces(GLOBALS->dump_file, nodes, NULL));
 }
 
 /*
@@ -50,36 +40,24 @@ void import_lx2_trace(GwNode *np)
  */
 void lx2_set_fac_process_mask(GwNode *np)
 {
-    switch (GLOBALS->is_lx2) {
-        case LXT2_IS_VLIST:
-            vcd_set_fac_process_mask(GLOBALS->vcd_file, np);
-            return;
-        case LXT2_IS_FST:
-            fst_set_fac_process_mask(GLOBALS->fst_file, np);
-            return;
-        case LXT2_IS_FSDB:
-            fsdb_set_fac_process_mask(np);
-            return;
-        default:
-            g_return_if_reached();
-            break;
+    if (import_nodes == NULL) {
+        import_nodes = g_ptr_array_new();
     }
+
+    g_ptr_array_add(import_nodes, np);
 }
 
 void lx2_import_masked(void)
 {
-    switch (GLOBALS->is_lx2) {
-        case LXT2_IS_VLIST:
-            vcd_import_masked(GLOBALS->vcd_file);
-            return;
-        case LXT2_IS_FST:
-            fst_import_masked(GLOBALS->fst_file);
-            return;
-        case LXT2_IS_FSDB:
-            fsdb_import_masked();
-            return;
-        default:
-            g_return_if_reached();
-            break;
+    if (import_nodes == NULL) {
+        return;
     }
+
+    g_ptr_array_add(import_nodes, NULL);
+
+    // TODO: report errors
+    g_assert_true(
+        gw_dump_file_import_traces(GLOBALS->dump_file, (GwNode **)import_nodes->pdata, NULL));
+
+    g_ptr_array_set_size(import_nodes, 0);
 }

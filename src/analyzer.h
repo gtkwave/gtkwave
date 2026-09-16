@@ -14,12 +14,7 @@
 
 #include <gtk/gtk.h>
 #include <stdlib.h>
-#include "vlist.h"
 #include "debug.h"
-
-#ifdef AET2_IS_PRESENT
-#define WAVE_ARRAY_SUPPORT
-#endif
 
 typedef struct _SearchProgressData
 {
@@ -30,8 +25,6 @@ typedef struct _SearchProgressData
 } SearchProgressData;
 
 #define BITATTRIBUTES_MAX 32768
-
-typedef struct ExpandInfo *eptr;
 
 typedef unsigned long Ulong;
 typedef unsigned int Uint;
@@ -46,45 +39,19 @@ enum TraceReorderMode
 
 /* vvv   Bit representation   vvv */
 
-enum AnalyzerBits
-{
-    AN_0,
-    AN_X,
-    AN_Z,
-    AN_1,
-    AN_H,
-    AN_U,
-    AN_W,
-    AN_L,
-    AN_DASH,
-    AN_RSV9,
-    AN_RSVA,
-    AN_RSVB,
-    AN_RSVC,
-    AN_RSVD,
-    AN_RSVE,
-    AN_RSVF,
-    AN_COUNT
-};
 #define AN_NORMAL \
     { \
-        AN_0, AN_X, AN_Z, AN_1, AN_H, AN_U, AN_W, AN_L, AN_DASH, AN_DASH, AN_DASH, AN_DASH, \
-            AN_DASH, AN_DASH, AN_DASH, AN_DASH \
+        GW_BIT_0, GW_BIT_X, GW_BIT_Z, GW_BIT_1, GW_BIT_H, GW_BIT_U, GW_BIT_W, GW_BIT_L, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, \
+            GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH \
     }
 #define AN_INVERSE \
     { \
-        AN_1, AN_X, AN_Z, AN_0, AN_L, AN_U, AN_W, AN_H, AN_DASH, AN_DASH, AN_DASH, AN_DASH, \
-            AN_DASH, AN_DASH, AN_DASH, AN_DASH \
+        GW_BIT_1, GW_BIT_X, GW_BIT_Z, GW_BIT_0, GW_BIT_L, GW_BIT_U, GW_BIT_W, GW_BIT_H, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, \
+            GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH, GW_BIT_DASH \
     }
-
-#define AN_MSK \
-    (AN_COUNT - 1) /* max index into AN_STR, AN_COUNT *must* be a power of two unless logic AND \
-                      with AN_MSK is changed */
 
 /* positional ascii 0123456789ABCDEF, question marks should not happen unless something slips
  * through the cracks as AN_RSVA to AN_RSVF are reserved */
-#define AN_STR "0xz1huwl-???????"
-#define AN_STR_INV "1xz0luwh-???????"
 
 #define AN_USTR "0XZ1HUWL-???????"
 #define AN_USTR_INV "1XZ0LUWH-???????"
@@ -97,28 +64,10 @@ enum AnalyzerBits
 #define AN_HEX_STR "0123456789ABCDEFxzwu-XZWU"
 #define AN_OCT_STR "01234567xzwu-"
 
-/* now the recoded "extra" values... */
-#define RCV_X (1 | (0 << 1))
-#define RCV_Z (1 | (1 << 1))
-#define RCV_H (1 | (2 << 1))
-#define RCV_U (1 | (3 << 1))
-#define RCV_W (1 | (4 << 1))
-#define RCV_L (1 | (5 << 1))
-#define RCV_D (1 | (6 << 1))
-
-#define RCV_STR "xzhuwl-?"
-/*               01234567 */
 
 /* ^^^   Bit representation   ^^^ */
 
 #define MAX_HISTENT_TIME ((GwTime)(~((GW_UTIME_CONSTANT(-1)) << (sizeof(GwTime) * 8 - 1))))
-
-typedef struct ExpandInfo /* only used when expanding atomic vex.. */
-{
-    GwNode **narray;
-    int msb, lsb;
-    int width;
-} ExpandInfo;
 
 typedef uint64_t TraceFlagsType;
 #define TRACEFLAGSSCNFMT SCNx64
@@ -265,7 +214,6 @@ int UpdateTracesVisible(void);
 void DisplayTraces(int val);
 int AddNodeTraceReturn(GwNode *nd, char *aliasname, GwTrace **tret);
 int AddNode(GwNode *nd, char *aliasname);
-int AddNodeUnroll(GwNode *nd, char *aliasname);
 int AddVector(GwBitVector *vec, char *aliasname);
 int AddBlankTrace(char *commentname);
 int InsertBlankTrace(char *comment, TraceFlagsType different_flags);
@@ -281,7 +229,6 @@ int DeleteBuffer(void);
 
 void import_trace(GwNode *np);
 
-eptr ExpandNode(GwNode *n);
 void DeleteNode(GwNode *n);
 GwNode *ExtractNodeSingleBit(GwNode *n, int bit);
 
@@ -305,7 +252,7 @@ void EnsureGroupsMatch(void);
 #define IsCollapsed(t) (t->flags & TR_COLLAPSED)
 
 unsigned IsShadowed(GwTrace *t);
-char *GetFullName(GwTrace *t, int *was_packed);
+char *GetFullName(GwTrace *t);
 
 void OpenTrace(GwTrace *t);
 void CloseTrace(GwTrace *t);

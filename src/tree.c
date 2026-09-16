@@ -15,7 +15,6 @@
 #include <config.h>
 #include "globals.h"
 #include "tree.h"
-#include "tree_component.h"
 #include "vcd.h"
 
 enum TreeBuildTypes
@@ -25,314 +24,11 @@ enum TreeBuildTypes
     MAKETREE_NODE
 };
 
-#ifdef WAVE_USE_STRUCT_PACKING
-GwTree *talloc_2(size_t siz)
-{
-    if (GLOBALS->talloc_pool_base) {
-        if ((siz + GLOBALS->talloc_idx) <= WAVE_TALLOC_POOL_SIZE) {
-            unsigned char *m = GLOBALS->talloc_pool_base + GLOBALS->talloc_idx;
-            GLOBALS->talloc_idx += siz;
-            return ((GwTree *)m);
-        } else if (siz >= WAVE_TALLOC_ALTREQ_SIZE) {
-            return (calloc_2(1, siz));
-        }
-    }
-
-    GLOBALS->talloc_pool_base = calloc_2(1, WAVE_TALLOC_POOL_SIZE);
-    GLOBALS->talloc_idx = 0;
-    return (talloc_2(siz));
-}
-#endif
-
-/*
- * init pointers needed for n-way tree
- */
-void init_tree(void)
-{
-    GLOBALS->module_tree_c_1 = (char *)malloc_2(GLOBALS->longestname + 1);
-}
-
-/*
- * extract the next part of the name in the flattened
- * hierarchy name.  return ptr to next name if it exists
- * else NULL
- */
-static const char *get_module_name(const char *s)
-{
-    char ch;
-    char *pnt;
-
-    pnt = GLOBALS->module_tree_c_1;
-
-    for (;;) {
-        ch = *(s++);
-
-        if (((ch == GLOBALS->hier_delimeter) || (ch == '|')) &&
-            (*s)) /* added && null check to allow possible . at end of name */
-        {
-            *(pnt) = 0;
-            GLOBALS->module_len_tree_c_1 = pnt - GLOBALS->module_tree_c_1;
-            return (s);
-        }
-
-        if (!(*(pnt++) = ch)) {
-            GLOBALS->module_len_tree_c_1 = pnt - GLOBALS->module_tree_c_1;
-            return (NULL); /* nothing left to extract */
-        }
-    }
-}
-
-/*
- * generate unique hierarchy pointer faster that sprintf("%p")
- * use 7-bit string to generate less characters
- */
-#ifdef _WAVE_HAVE_JUDY
-static int gen_hier_string(char *dest, void *pnt)
-{
-    uintptr_t p = (uintptr_t)(pnt);
-    char *dest_copy = dest;
-
-    while (p) {
-        *(dest++) = (p & 0x7f) | 0x80;
-        p >>= 7;
-    }
-    *(dest++) = '.';
-
-    return (dest - dest_copy);
-}
-#endif
-
-/*
- * decorated module cleanup (if judy active)
- */
-int decorated_module_cleanup(void)
-{
-#ifdef _WAVE_HAVE_JUDY
-    if (GLOBALS->sym_tree) {
-        JudySLFreeArray(&GLOBALS->sym_tree, PJE0);
-    }
-
-    if (GLOBALS->sym_tree_addresses) {
-        int rcValue;
-        Word_t Index = 0;
-
-        for (rcValue = Judy1First(GLOBALS->sym_tree_addresses, &Index, PJE0); rcValue != 0;
-             rcValue = Judy1Next(GLOBALS->sym_tree_addresses, &Index, PJE0)) {
-            ((GwTree *)Index)->children_in_gui = 0;
-        }
-
-        Judy1FreeArray(&GLOBALS->sym_tree_addresses, PJE0);
-    }
-
-#endif
-    return (1);
-}
-
-/*
- * decorated module add
- */
-void allocate_and_decorate_module_tree_node(unsigned char ttype,
-                                            const char *scopename,
-                                            const char *compname,
-                                            uint32_t scopename_len,
-                                            uint32_t compname_len,
-                                            uint32_t t_stem,
-                                            uint32_t t_istem)
-{
-    GwTree *t;
-    int mtyp = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-#ifdef _WAVE_HAVE_JUDY
-    char str[2048];
-#endif
-
-    if (compname && compname[0] && strcmp(scopename, compname)) {
-        int ix = add_to_comp_name_table(compname, compname_len);
-        if (ix) {
-            ix--;
-            mtyp = WAVE_T_WHICH_COMPNAME_START - ix;
-        }
-    }
-
-    if (GLOBALS->treeroot) {
-        if (GLOBALS->mod_tree_parent) {
-#ifdef _WAVE_HAVE_JUDY
-            if (GLOBALS->mod_tree_parent->children_in_gui) {
-                PPvoid_t PPValue;
-                /* find with judy */
-                int len = gen_hier_string(str, GLOBALS->mod_tree_parent);
-                strcpy(str + len, scopename);
-                PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                if (*PPValue) {
-                    GLOBALS->mod_tree_parent = *PPValue;
-                    return;
-                }
-
-                t = talloc_2(sizeof(GwTree) + scopename_len + 1);
-                *PPValue = t;
-                goto t_allocated;
-            } else {
-                int dep = 0;
-#endif
-                t = GLOBALS->mod_tree_parent->child;
-                while (t) {
-                    if (!strcmp(t->name, scopename)) {
-                        GLOBALS->mod_tree_parent = t;
-                        return;
-                    }
-                    t = t->next;
-#ifdef _WAVE_HAVE_JUDY
-                    dep++;
-#endif
-                }
-
-#ifdef _WAVE_HAVE_JUDY
-                if (dep >= FST_TREE_SEARCH_NEXT_LIMIT) {
-                    PPvoid_t PPValue;
-                    int len = gen_hier_string(str, GLOBALS->mod_tree_parent);
-                    GLOBALS->mod_tree_parent->children_in_gui = 1; /* "borrowed" for tree build */
-                    t = GLOBALS->mod_tree_parent->child;
-
-                    Judy1Set((Pvoid_t)&GLOBALS->sym_tree_addresses,
-                             (Word_t)GLOBALS->mod_tree_parent,
-                             PJE0);
-                    /* assemble judy based on scopename + GLOBALS->mod_tree_parent pnt */
-                    while (t) {
-                        strcpy(str + len, t->name);
-                        PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                        *PPValue = t;
-
-                        t = t->next;
-                    }
-
-                    strcpy(str + len, scopename);
-                    PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                    t = talloc_2(sizeof(GwTree) + scopename_len + 1);
-                    *PPValue = t;
-                    goto t_allocated;
-                }
-            }
-#endif
-
-            t = talloc_2(sizeof(GwTree) + scopename_len + 1);
-#ifdef _WAVE_HAVE_JUDY
-        t_allocated:
-#endif
-            strcpy(t->name, scopename);
-            t->kind = ttype;
-            t->t_which = mtyp;
-            t->t_stem = t_stem;
-            t->t_istem = t_istem;
-
-            if (GLOBALS->mod_tree_parent->child) {
-                t->next = GLOBALS->mod_tree_parent->child;
-            }
-            GLOBALS->mod_tree_parent->child = t;
-            GLOBALS->mod_tree_parent = t;
-        } else {
-            t = GLOBALS->treeroot;
-            while (t) {
-                if (!strcmp(t->name, scopename)) {
-                    GLOBALS->mod_tree_parent = t;
-                    return;
-                }
-                t = t->next;
-            }
-
-            t = talloc_2(sizeof(GwTree) + scopename_len + 1);
-            strcpy(t->name, scopename);
-            t->kind = ttype;
-            t->t_which = mtyp;
-            t->t_stem = t_stem;
-            t->t_istem = t_istem;
-
-            t->next = GLOBALS->treeroot;
-            GLOBALS->mod_tree_parent = GLOBALS->treeroot = t;
-        }
-    } else {
-        t = talloc_2(sizeof(GwTree) + scopename_len + 1);
-        strcpy(t->name, scopename);
-        t->kind = ttype;
-        t->t_which = mtyp;
-        t->t_stem = t_stem;
-        t->t_istem = t_istem;
-
-        GLOBALS->mod_tree_parent = GLOBALS->treeroot = t;
-    }
-}
-
-/*
- * adds back netnames
- */
-int treegraft(GwTree **t)
-{
-    GwTree *tx = GLOBALS->terminals_tchain_tree_c_1;
-    GwTree *t2;
-    GwTree *par;
-
-    while (tx) {
-        t2 = tx->next;
-
-        par = tx->child;
-        tx->child = NULL;
-
-        if (par) {
-            if (par->child) {
-                tx->next = par->child;
-                par->child = tx;
-            } else {
-                par->child = tx;
-                tx->next = NULL;
-            }
-        } else {
-            if (*t) {
-                tx->next = (*t)->next;
-                (*t)->next = tx;
-            } else {
-                *t = tx;
-                tx->next = NULL;
-            }
-        }
-
-        tx = t2;
-    }
-
-    return (1);
-}
-
-/*
- * unswizzle extended names in tree
- */
-void treenamefix_str(char *s)
-{
-    while (*s) {
-        if (*s == VCDNAM_ESCAPE)
-            *s = GLOBALS->hier_delimeter;
-        s++;
-    }
-}
-
-void treenamefix(GwTree *t)
-{
-    GwTree *tnext;
-    if (t->child)
-        treenamefix(t->child);
-
-    tnext = t->next;
-
-    while (tnext) {
-        if (tnext->child)
-            treenamefix(tnext->child);
-        treenamefix_str(tnext->name);
-        tnext = tnext->next;
-    }
-
-    treenamefix_str(t->name);
-}
 
 /*
  * for debugging purposes only
  */
-void treedebug(GwTree *t, char *s)
+void treedebug(GwTreeNode *t, char *s)
 {
     while (t) {
         char *s2;
@@ -391,299 +87,6 @@ char *leastsig_hiername(char *nam)
  * moving numfacs longer strings around
  */
 
-static int tree_qsort_cmp(const void *v1, const void *v2)
-{
-    GwTree *t1 = *(GwTree **)v1;
-    GwTree *t2 = *(GwTree **)v2;
-
-    return (sigcmp(t2->name, t1->name)); /* because list must be in rvs */
-}
-
-static void treesort_2(GwTree *t, GwTree *p, GwTree ***tm, int *tm_siz)
-{
-    GwTree *it;
-    GwTree **srt;
-    int cnt;
-    int i;
-
-    if (t->next) {
-        it = t;
-        cnt = 0;
-        do {
-            cnt++;
-            it = it->next;
-        } while (it);
-
-        if (cnt > *tm_siz) {
-            *tm_siz = cnt;
-            if (*tm) {
-                free_2(*tm);
-            }
-            *tm = malloc_2((cnt + 1) * sizeof(GwTree *));
-        }
-        srt = *tm;
-
-        for (i = 0; i < cnt; i++) {
-            srt[i] = t;
-            t = t->next;
-        }
-        srt[i] = NULL;
-
-        qsort((void *)srt, cnt, sizeof(GwTree *), tree_qsort_cmp);
-
-        if (p) {
-            p->child = srt[0];
-        } else {
-            GLOBALS->treeroot = srt[0];
-        }
-
-        for (i = 0; i < cnt; i++) {
-            srt[i]->next = srt[i + 1];
-        }
-
-        it = srt[0];
-        for (i = 0; i < cnt; i++) {
-            if (it->child) {
-                treesort_2(it->child, it, tm, tm_siz);
-            }
-            it = it->next;
-        }
-    } else if (t->child) {
-        treesort_2(t->child, t, tm, tm_siz);
-    }
-}
-
-void treesort(GwTree *t, GwTree *p)
-{
-    GwTree **tm = NULL;
-    int tm_siz = 0;
-
-    treesort_2(t, p, &tm, &tm_siz);
-    if (tm) {
-        free_2(tm);
-    }
-}
-
-void order_facs_from_treesort_2(GwTree *t)
-{
-    while (t) {
-        if (t->child) {
-            order_facs_from_treesort_2(t->child);
-        }
-
-        if (t->t_which >=
-            0) /* for when valid netnames like A.B.C, A.B.C.D exist (not legal excluding texsim) */
-        /* otherwise this would be an 'else' */
-        {
-            GLOBALS->facs2_tree_c_1[GLOBALS->facs2_pos_tree_c_1] = GLOBALS->facs[t->t_which];
-            t->t_which = GLOBALS->facs2_pos_tree_c_1--;
-        }
-
-        t = t->next;
-    }
-}
-
-void order_facs_from_treesort(GwTree *t, void *v)
-{
-    struct symbol ***f =
-        (struct symbol ***)v; /* eliminate compiler warning in tree.h as symbol.h refs tree.h */
-
-    GLOBALS->facs2_tree_c_1 =
-        (struct symbol **)malloc_2(GLOBALS->numfacs * sizeof(struct symbol *));
-    GLOBALS->facs2_pos_tree_c_1 = GLOBALS->numfacs - 1;
-    order_facs_from_treesort_2(t);
-
-    if (GLOBALS->facs2_pos_tree_c_1 >= 0) {
-        fprintf(stderr,
-                "Internal Error: GLOBALS->facs2_pos_tree_c_1 = %d\n",
-                GLOBALS->facs2_pos_tree_c_1);
-        fprintf(stderr,
-                "[This is usually the result of multiply defined facilities such as a hierarchy "
-                "name also being used as a signal at the same level of scope.]\n");
-        exit(255);
-    }
-
-    free_2(*f);
-    *f = GLOBALS->facs2_tree_c_1;
-    GLOBALS->facs2_tree_c_1 = NULL;
-}
-
-void build_tree_from_name(const char *s, int which)
-{
-    GwTree *t, *nt;
-    GwTree *tchain = NULL, *tchain_iter;
-    GwTree *prevt;
-#ifdef _WAVE_HAVE_JUDY
-    PPvoid_t PPValue = NULL;
-    char str[2048];
-#endif
-
-    if (s == NULL || !s[0])
-        return;
-
-    t = GLOBALS->treeroot;
-
-    if (t) {
-        prevt = NULL;
-        while (s) {
-        rs:
-            s = get_module_name(s);
-
-            if (s && t &&
-                !strcmp(t->name,
-                        GLOBALS->module_tree_c_1)) /* ajb 300616 added "s &&" to cover case where we
-                                                      can have hierarchy + final name are same, see
-                                                      A.B.C.D notes elsewhere in this file */
-            {
-                prevt = t;
-                t = t->child;
-                continue;
-            }
-
-#ifdef _WAVE_HAVE_JUDY
-        rescan:
-            if (prevt && prevt->children_in_gui) {
-                /* find with judy */
-                int len = gen_hier_string(str, prevt);
-                strcpy(str + len, GLOBALS->module_tree_c_1);
-                PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                if (*PPValue) {
-                    t = *PPValue;
-                    prevt = t;
-                    t = t->child;
-                    continue;
-                }
-
-                goto construct;
-            }
-#endif
-
-            tchain = tchain_iter = t;
-            if (s && t) {
-#ifdef _WAVE_HAVE_JUDY
-                int dep = 0;
-#endif
-                nt = t->next;
-                while (nt) {
-                    if (nt && !strcmp(nt->name, GLOBALS->module_tree_c_1)) {
-                        /* move to front to speed up next compare if in same hier during build */
-                        if (prevt) {
-                            tchain_iter->next = nt->next;
-                            nt->next = tchain;
-                            prevt->child = nt;
-                        }
-
-                        prevt = nt;
-                        t = nt->child;
-                        goto rs;
-                    }
-
-                    tchain_iter = nt;
-                    nt = nt->next;
-#ifdef _WAVE_HAVE_JUDY
-                    dep++;
-#endif
-                }
-
-#ifdef _WAVE_HAVE_JUDY
-                if (prevt && (dep >= FST_TREE_SEARCH_NEXT_LIMIT)) {
-                    int len = gen_hier_string(str, prevt);
-                    prevt->children_in_gui = 1; /* "borrowed" for tree build */
-                    t = prevt->child;
-
-                    Judy1Set((Pvoid_t)&GLOBALS->sym_tree_addresses, (Word_t)prevt, PJE0);
-                    /* assemble judy based on scopename + prevt pnt */
-                    while (t) {
-                        strcpy(str + len, t->name);
-                        PPValue = JudySLIns(&GLOBALS->sym_tree, (uint8_t *)str, PJE0);
-                        *PPValue = t;
-
-                        t = t->next;
-                    }
-
-                    goto rescan; /* this level of hier is built, now do insert */
-                }
-#endif
-            }
-
-#ifdef _WAVE_HAVE_JUDY
-        construct:
-#endif
-            nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
-            memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
-
-            if (s) {
-                nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-
-#ifdef _WAVE_HAVE_JUDY
-                if (prevt && prevt->children_in_gui) {
-                    *PPValue = nt;
-                }
-#endif
-
-                if (prevt) /* make first in chain */
-                {
-                    nt->next = prevt->child;
-                    prevt->child = nt;
-                } else /* make second in chain as it's toplevel */
-                {
-                    nt->next = tchain->next;
-                    tchain->next = nt;
-                }
-            } else {
-                nt->child = prevt; /* parent */
-                nt->t_which = which;
-                nt->next = GLOBALS->terminals_tchain_tree_c_1;
-                GLOBALS->terminals_tchain_tree_c_1 = nt;
-                return;
-            }
-
-            /* blindly clone fac from next part of hier on down */
-            t = nt;
-            while (s) {
-                s = get_module_name(s);
-
-                nt =
-                    (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
-                memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
-
-                if (s) {
-                    nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-                    t->child = nt;
-                    t = nt;
-                } else {
-                    nt->child = t; /* parent */
-                    nt->t_which = which;
-                    nt->next = GLOBALS->terminals_tchain_tree_c_1;
-                    GLOBALS->terminals_tchain_tree_c_1 = nt;
-                }
-            }
-        }
-    } else {
-        /* blindly create first fac in the tree (only ever called once) */
-        while (s) {
-            s = get_module_name(s);
-
-            nt = (GwTree *)talloc_2(sizeof(GwTree) + GLOBALS->module_len_tree_c_1 + 1);
-            memcpy(nt->name, GLOBALS->module_tree_c_1, GLOBALS->module_len_tree_c_1);
-
-            if (!s)
-                nt->t_which = which;
-            else
-                nt->t_which = WAVE_T_WHICH_UNDEFINED_COMPNAME;
-
-            if ((GLOBALS->treeroot) && (t)) /* scan-build : && t should be unnecessary to avoid null
-                                               pointer deref, but add defensively */
-            {
-                t->child = nt;
-                t = nt;
-            } else {
-                GLOBALS->treeroot = t = nt;
-            }
-        }
-    }
-}
-
 /* ######################## */
 /* ## compatibility code ## */
 /* ######################## */
@@ -696,20 +99,23 @@ void build_tree_from_name(const char *s, int which)
 /*
  * GTK2: build the tree.
  */
-static void XXX_maketree_nodes(GwTree *t2, GtkTreeIter *iter)
+static void XXX_maketree_nodes(GwTreeNode *t2, GtkTreeIter *iter)
 {
     char *tmp, *tmp2, *tmp3;
     gchar *text[1];
     GdkPixbuf *pxb;
 
+    GwFacs *facs = gw_dump_file_get_facs(GLOBALS->dump_file);
+
     if (t2->t_which >= 0) {
-        if (GLOBALS->facs[t2->t_which]->vec_root) {
+        GwSymbol *fac = gw_facs_get(facs, t2->t_which);
+        if (fac->vec_root) {
             if (GLOBALS->autocoalesce) {
-                if (GLOBALS->facs[t2->t_which]->vec_root != GLOBALS->facs[t2->t_which]) {
+                if (fac->vec_root != fac) {
                     return; /* was return(NULL) */
                 }
 
-                tmp2 = makename_chain(GLOBALS->facs[t2->t_which]);
+                tmp2 = makename_chain(fac);
                 tmp3 = leastsig_hiername(tmp2);
                 tmp = g_alloca(strlen(tmp3) + 4);
                 strcpy(tmp, "[] ");
@@ -728,14 +134,16 @@ static void XXX_maketree_nodes(GwTree *t2, GtkTreeIter *iter)
             tmp = t2->name;
         } else {
             int thidx = -t2->t_which + WAVE_T_WHICH_COMPNAME_START;
-            if ((thidx >= 0) && (thidx < GLOBALS->comp_name_serial)) {
-                char *sc = GLOBALS->comp_name_idx[thidx];
-                int tlen = strlen(t2->name) + 2 + 1 + strlen(sc) + 1 + 1;
+
+            GwStringTable *component_names = gw_dump_file_get_component_names(GLOBALS->dump_file);
+            const gchar *component = gw_string_table_get(component_names, thidx);
+            if (component != NULL) {
+                int tlen = strlen(t2->name) + 2 + 1 + strlen(component) + 1 + 1;
                 tmp = g_alloca(tlen);
-                if (!GLOBALS->is_vhdl_component_format) {
-                    sprintf(tmp, "%s  (%s)", t2->name, sc);
+                if (!gw_dump_file_get_uses_vhdl_component_format(GLOBALS->dump_file)) {
+                    sprintf(tmp, "%s  (%s)", t2->name, component);
                 } else {
-                    sprintf(tmp, "%s  : %s", t2->name, sc);
+                    sprintf(tmp, "%s  : %s", t2->name, component);
                 }
             } else {
                 tmp = t2->name; /* should never get a value out of range here! */
@@ -758,9 +166,9 @@ static void XXX_maketree_nodes(GwTree *t2, GtkTreeIter *iter)
                        -1);
 }
 
-void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth)
+void XXX_maketree2(GtkTreeIter *subtree, GwTreeNode *t, int depth)
 {
-    GwTree *t2;
+    GwTreeNode *t2;
 
 #ifndef WAVE_DISABLE_FAST_TREE
     if (depth > 1)
@@ -793,11 +201,15 @@ void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth)
 
             if (GLOBALS->exclcompname) {
                 int thidx = -t2->t_which + WAVE_T_WHICH_COMPNAME_START;
-                char *sc = ((thidx >= 0) && (thidx < GLOBALS->comp_name_serial))
-                               ? GLOBALS->comp_name_idx[thidx]
-                               : t2->name;
 
-                JRB str = jrb_find_str(GLOBALS->exclcompname, sc);
+                GwStringTable *component_names =
+                    gw_dump_file_get_component_names(GLOBALS->dump_file);
+                const gchar *component = gw_string_table_get(component_names, thidx);
+                if (component == NULL) {
+                    component = t2->name;
+                }
+
+                JRB str = jrb_find_str(GLOBALS->exclcompname, component);
                 if (str)
                     blacklist = 1;
             }
@@ -815,7 +227,7 @@ void XXX_maketree2(GtkTreeIter *subtree, GwTree *t, int depth)
     }
 }
 
-void XXX_maketree(GtkTreeIter *subtree, GwTree *t)
+void XXX_maketree(GtkTreeIter *subtree, GwTreeNode *t)
 {
     GtkCellRenderer *renderer_t;
     GtkCellRenderer *renderer_p;
@@ -1033,7 +445,7 @@ void sst_exclusion_loader(void)
 }
 
 /* Get the highest signal from T.  */
-GwTree *fetchhigh(GwTree *t)
+GwTreeNode *fetchhigh(GwTreeNode *t)
 {
     while (t->child)
         t = t->child;
@@ -1041,7 +453,7 @@ GwTree *fetchhigh(GwTree *t)
 }
 
 /* Get the lowest signal from T.  */
-GwTree *fetchlow(GwTree *t)
+GwTreeNode *fetchlow(GwTreeNode *t)
 {
     if (t->child) {
         t = t->child;
@@ -1058,25 +470,3 @@ GwTree *fetchlow(GwTree *t)
     return (t);
 }
 
-void recurse_fetch_high_low(GwTree *t)
-{
-top:
-    if (t->t_which >= 0) {
-        if (t->t_which > GLOBALS->fetchhigh)
-            GLOBALS->fetchhigh = t->t_which;
-        if (GLOBALS->fetchlow < 0) {
-            GLOBALS->fetchlow = t->t_which;
-        } else if (t->t_which < GLOBALS->fetchlow) {
-            GLOBALS->fetchlow = t->t_which;
-        }
-    }
-
-    if (t->child) {
-        recurse_fetch_high_low(t->child);
-    }
-
-    if (t->next) {
-        t = t->next;
-        goto top;
-    }
-}

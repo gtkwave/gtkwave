@@ -529,11 +529,6 @@ static void set_current_translate_generic(const char *name, int typ)
                 return;
             }
         }
-
-        if (!strcmp(WAVE_TCL_INSTALLED_FILTER, name)) {
-            GLOBALS->current_translate_file = 0;
-            return;
-        }
     }
 
     if (GLOBALS->num_file_filters < FILE_FILTER_MAX) {
@@ -551,10 +546,6 @@ static void set_current_translate_generic(const char *name, int typ)
         } else {
             if (GLOBALS->filesel_filter[GLOBALS->num_file_filters])
                 free_2(GLOBALS->filesel_filter[GLOBALS->num_file_filters]);
-
-            if (!typ) {
-                name = WAVE_TCL_INSTALLED_FILTER;
-            }
 
             GLOBALS->filesel_filter[GLOBALS->num_file_filters] = malloc_2(strlen(name) + 1);
             strcpy(GLOBALS->filesel_filter[GLOBALS->num_file_filters], name);

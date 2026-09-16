@@ -35,14 +35,18 @@ extern "C" {
 
 #ifndef _MSC_VER
 #include <unistd.h>
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
 #else
 typedef long off_t;
 #include <windows.h>
 #include <io.h>
 #endif
+
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#else
+#include <stdint.h>
+#endif
+
 #ifndef HAVE_FSEEKO
 #define fseeko fseek
 #define ftello ftell
@@ -79,35 +83,22 @@ typedef int pthread_mutexattr_t;
 
 #define VZT_RD_MAX_BLOCK_MEM_USAGE (64*1024*1024)	/* 64MB */
 
-#ifndef _MSC_VER
 typedef uint8_t 		vztint8_t;
 typedef uint16_t 		vztint16_t;
 typedef uint32_t		vztint32_t;
 typedef uint64_t	 	vztint64_t;
 typedef int64_t			vztsint64_t;
 typedef int32_t			vztsint32_t;
-#ifndef __MINGW32__
+
+#ifdef HAVE_INTTYPES_H
 #define VZT_RD_LLD "%"PRId64
 #define VZT_RD_LD "%"PRId32
 #else
-#define VZT_RD_LLD "%I64d"
+#define VZT_RD_LLD "%lld"
 #define VZT_RD_LD "%d"
 #endif
 #define VZT_RD_LLDESC(x) x##LL
 #define VZT_RD_ULLDESC(x) x##ULL
-#else
-typedef unsigned __int8		vztint8_t;
-typedef unsigned __int16	vztint16_t;
-typedef unsigned __int32	vztint32_t;
-typedef unsigned __int64	vztint64_t;
-typedef          __int64	vztsint64_t;
-typedef          __int32	vztsint32_t;
-#define VZT_RD_LLD "%I64d"
-#define VZT_RD_LD "%d"
-#define VZT_RD_LLDESC(x) x##i64
-#define VZT_RD_ULLDESC(x) x##i64
-#endif
-
 
 #define VZT_RD_IS_GZ              (0)
 #define VZT_RD_IS_BZ2             (1)

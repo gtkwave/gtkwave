@@ -2,6 +2,7 @@
 
 #include "gw-types.h"
 #include "gw-hist-ent.h"
+#include "gw-vlist-writer.h"
 
 /* struct Node bitfield widths */
 #define WAVE_VARXT_WIDTH (16)
@@ -9,6 +10,16 @@
 #define WAVE_VARDT_WIDTH (6)
 #define WAVE_VARDIR_WIDTH (3)
 #define WAVE_VARTYPE_WIDTH (6)
+
+// used when expanding atomic vectors
+typedef struct
+{
+    GwNode **narray;
+    int msb, lsb;
+    int width;
+} GwExpandInfo;
+
+void gw_expand_info_free(GwExpandInfo *self);
 
 struct _GwExpandReferences
 {
@@ -36,19 +47,14 @@ struct _GwNode
     union
     {
         GwFac *mvlfac; /* for use with mvlsim aets */
-        struct vlist_packer_t *mvlfac_packer_vlist;
-        struct vlist_t *mvlfac_vlist;
-        char *value; /* for use when unrolling ae2 values */
+        GwVlist *mvlfac_vlist;
+        GwVlistWriter *mvlfac_vlist_writer;
     } mv; /* anon union is a gcc extension so use mv instead.  using this union avoids crazy casting
              warnings */
 
     int msi, lsi; /* for 64-bit, more efficient than having as an external struct ExtNode*/
 
     int numhist; /* number of elements in the harray */
-
-#ifdef WAVE_ARRAY_SUPPORT
-    unsigned int array_height, this_row;
-#endif
 
     unsigned varxt : WAVE_VARXT_WIDTH; /* reference inside subvar_pnt[] */
     unsigned vardt : WAVE_VARDT_WIDTH; /* see nodeVarDataType, this is an internal value */
@@ -62,3 +68,5 @@ struct _GwNode
 #ifdef WAVE_USE_STRUCT_PACKING
 #pragma pack(pop)
 #endif
+
+GwExpandInfo *gw_node_expand(GwNode *self);

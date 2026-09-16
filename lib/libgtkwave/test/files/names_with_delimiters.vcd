@@ -1,0 +1,5 @@
+$scope module module.with.dot $end
+$var wire 1 a wire.with.dot $end
+$enddefinitions $end
+#0
+0a
