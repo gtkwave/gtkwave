@@ -3688,7 +3688,7 @@ static void colorformat(int color)
                         color_prev++;
                     }
 
-                    if (color_prev > WAVE_COLOR_VIOLET)
+                    if (color_prev > WAVE_NUM_RAINBOW)
                         color_prev = WAVE_COLOR_RED;
                     t->t_color = color_prev;
                 }
@@ -3703,77 +3703,43 @@ static void colorformat(int color)
     }
 }
 
-void menu_colorformat_0(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_NORMAL);
+#define MENU_COLORFORMAT(color_id) \
+void menu_colorformat_##color_id(gpointer null_data, guint callback_action, GtkWidget *widget) \
+{ \
+    (void)null_data; \
+    (void)callback_action; \
+    (void)widget; \
+\
+    colorformat(color_id); \
 }
-
-void menu_colorformat_1(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_RED);
-}
-
-void menu_colorformat_2(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_ORANGE);
-}
-
-void menu_colorformat_3(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_YELLOW);
-}
-
-void menu_colorformat_4(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_GREEN);
-}
-
-void menu_colorformat_5(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_BLUE);
-}
-
-void menu_colorformat_6(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_INDIGO);
-}
-
-void menu_colorformat_7(gpointer null_data, guint callback_action, GtkWidget *widget)
-{
-    (void)null_data;
-    (void)callback_action;
-    (void)widget;
-
-    colorformat(WAVE_COLOR_VIOLET);
-}
+MENU_COLORFORMAT(0)
+MENU_COLORFORMAT(1)
+MENU_COLORFORMAT(2)
+MENU_COLORFORMAT(3)
+MENU_COLORFORMAT(4)
+MENU_COLORFORMAT(5)
+MENU_COLORFORMAT(6)
+MENU_COLORFORMAT(7)
+MENU_COLORFORMAT(8)
+MENU_COLORFORMAT(9)
+MENU_COLORFORMAT(10)
+MENU_COLORFORMAT(11)
+MENU_COLORFORMAT(12)
+MENU_COLORFORMAT(13)
+MENU_COLORFORMAT(14)
+MENU_COLORFORMAT(15)
+MENU_COLORFORMAT(16)
+MENU_COLORFORMAT(17)
+MENU_COLORFORMAT(18)
+MENU_COLORFORMAT(19)
+MENU_COLORFORMAT(20)
+MENU_COLORFORMAT(21)
+MENU_COLORFORMAT(22)
+MENU_COLORFORMAT(23)
+MENU_COLORFORMAT(24)
+MENU_COLORFORMAT(25)
+MENU_COLORFORMAT(26)
+MENU_COLORFORMAT(27)
 
 void menu_colorformat_cyc(gpointer null_data, guint callback_action, GtkWidget *widget)
 {
@@ -5141,15 +5107,35 @@ static gtkwave_mlist_t menu_items[] = {
                 menu_dataformat_fpshift_specify,
                 WV_MENU_FPSHIFTVAL,
                 "<Item>"),
-
-    WAVE_GTKIFE("/Edit/Color Format/Normal", NULL, menu_colorformat_0, WV_MENU_CLRFMT0, "<Item>"),
-    WAVE_GTKIFE("/Edit/Color Format/Red", NULL, menu_colorformat_1, WV_MENU_CLRFMT1, "<Item>"),
-    WAVE_GTKIFE("/Edit/Color Format/Orange", NULL, menu_colorformat_2, WV_MENU_CLRFMT2, "<Item>"),
-    WAVE_GTKIFE("/Edit/Color Format/Yellow", NULL, menu_colorformat_3, WV_MENU_CLRFMT3, "<Item>"),
-    WAVE_GTKIFE("/Edit/Color Format/Green", NULL, menu_colorformat_4, WV_MENU_CLRFMT4, "<Item>"),
-    WAVE_GTKIFE("/Edit/Color Format/Blue", NULL, menu_colorformat_5, WV_MENU_CLRFMT5, "<Item>"),
-    WAVE_GTKIFE("/Edit/Color Format/Indigo", NULL, menu_colorformat_6, WV_MENU_CLRFMT6, "<Item>"),
-    WAVE_GTKIFE("/Edit/Color Format/Violet", NULL, menu_colorformat_7, WV_MENU_CLRFMT7, "<Item>"),
+    #define MENUENTRY_EDIT(color_name, color_id) WAVE_GTKIFE(("/Edit/Color Format/" #color_name), NULL, menu_colorformat_##color_id, WV_MENU_CLRFMT##color_id, "<Item>")
+    MENUENTRY_EDIT(Normal, 0),
+    MENUENTRY_EDIT(White, 8),
+    MENUENTRY_EDIT(Silver, 9),
+    MENUENTRY_EDIT(Gray, 10),
+    MENUENTRY_EDIT(Light Gray, 11),
+    MENUENTRY_EDIT(Light Cyan, 12),
+    MENUENTRY_EDIT(Aqua, 13),
+    MENUENTRY_EDIT(Teal, 14),
+    MENUENTRY_EDIT(Indigo, 6),
+    MENUENTRY_EDIT(Blue, 5),
+    MENUENTRY_EDIT(Dark Blue, 15),
+    MENUENTRY_EDIT(Lime, 4),
+    MENUENTRY_EDIT(Spring Green, 16),
+    MENUENTRY_EDIT(Green, 17),
+    MENUENTRY_EDIT(Olive, 18),
+    MENUENTRY_EDIT(Khaki, 19),
+    MENUENTRY_EDIT(Yellow, 3),
+    MENUENTRY_EDIT(Gold, 20),
+    MENUENTRY_EDIT(Orange, 2),
+    MENUENTRY_EDIT(Chocolate, 21),
+    MENUENTRY_EDIT(Brown, 22),
+    MENUENTRY_EDIT(Pink, 23),
+    MENUENTRY_EDIT(Magenta, 24),
+    MENUENTRY_EDIT(Violet, 7),
+    MENUENTRY_EDIT(Light Purple, 25),
+    MENUENTRY_EDIT(Purple, 26),
+    MENUENTRY_EDIT(Red, 1),
+    MENUENTRY_EDIT(Maroon, 27),
     WAVE_GTKIFE("/Edit/Color Format/Cycle", NULL, menu_colorformat_cyc, WV_MENU_CLRFMTC, "<Item>"),
     WAVE_GTKIFE("/Edit/Color Format/<separator>", NULL, NULL, WV_MENU_SEP5A, "<Separator>"),
     WAVE_GTKIFE("/Edit/Color Format/Keep xz Colors",
@@ -5928,14 +5914,35 @@ static gtkwave_mlist_t popmenu_items[] = {
                 WV_MENU_FPSHIFTVAL,
                 "<Item>"),
 
-    WAVE_GTKIFE("/Color Format/Normal", NULL, menu_colorformat_0, WV_MENU_CLRFMT0, "<Item>"),
-    WAVE_GTKIFE("/Color Format/Red", NULL, menu_colorformat_1, WV_MENU_CLRFMT1, "<Item>"),
-    WAVE_GTKIFE("/Color Format/Orange", NULL, menu_colorformat_2, WV_MENU_CLRFMT2, "<Item>"),
-    WAVE_GTKIFE("/Color Format/Yellow", NULL, menu_colorformat_3, WV_MENU_CLRFMT3, "<Item>"),
-    WAVE_GTKIFE("/Color Format/Green", NULL, menu_colorformat_4, WV_MENU_CLRFMT4, "<Item>"),
-    WAVE_GTKIFE("/Color Format/Blue", NULL, menu_colorformat_5, WV_MENU_CLRFMT5, "<Item>"),
-    WAVE_GTKIFE("/Color Format/Indigo", NULL, menu_colorformat_6, WV_MENU_CLRFMT6, "<Item>"),
-    WAVE_GTKIFE("/Color Format/Violet", NULL, menu_colorformat_7, WV_MENU_CLRFMT7, "<Item>"),
+    #define MENUENTRY_WAVE(color_name, color_id) WAVE_GTKIFE(("/Color Format/" #color_name), NULL, menu_colorformat_##color_id, WV_MENU_CLRFMT##color_id, "<Item>")
+    MENUENTRY_WAVE(Normal, 0),
+    MENUENTRY_WAVE(White, 8),
+    MENUENTRY_WAVE(Silver, 9),
+    MENUENTRY_WAVE(Gray, 10),
+    MENUENTRY_WAVE(Light Gray, 11),
+    MENUENTRY_WAVE(Light Cyan, 12),
+    MENUENTRY_WAVE(Aqua, 13),
+    MENUENTRY_WAVE(Teal, 14),
+    MENUENTRY_WAVE(Indigo, 6),
+    MENUENTRY_WAVE(Blue, 5),
+    MENUENTRY_WAVE(Dark Blue, 15),
+    MENUENTRY_WAVE(Lime, 4),
+    MENUENTRY_WAVE(Spring Green, 16),
+    MENUENTRY_WAVE(Green, 17),
+    MENUENTRY_WAVE(Olive, 18),
+    MENUENTRY_WAVE(Khaki, 19),
+    MENUENTRY_WAVE(Yellow, 3),
+    MENUENTRY_WAVE(Gold, 20),
+    MENUENTRY_WAVE(Orange, 2),
+    MENUENTRY_WAVE(Chocolate, 21),
+    MENUENTRY_WAVE(Brown, 22),
+    MENUENTRY_WAVE(Pink, 23),
+    MENUENTRY_WAVE(Magenta, 24),
+    MENUENTRY_WAVE(Violet, 7),
+    MENUENTRY_WAVE(Light Purple, 25),
+    MENUENTRY_WAVE(Purple, 26),
+    MENUENTRY_WAVE(Red, 1),
+    MENUENTRY_WAVE(Maroon, 27),
     WAVE_GTKIFE("/Color Format/Cycle", NULL, menu_colorformat_cyc, WV_MENU_CLRFMTC, "<Item>"),
     WAVE_GTKIFE("/<separator>", NULL, NULL, WV_MENU_SEP1, "<Separator>"),
     WAVE_GTKIFE("/Insert Analog Height Extension",
