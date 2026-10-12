@@ -21,7 +21,7 @@
 void gtk_open_external_file(const char *fpath)
 {
     NSString *nspath = [NSString stringWithUTF8String:fpath];
-    [[NSWorkspace sharedWorkspace] openFile:nspath];
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL fileURLWithPath:nspath]];
 }
 
 /*************************/
@@ -58,9 +58,9 @@ static int gtk_simplereqbox_req_bridge_2(const char *title,
     }
 
     if (is_alert) {
-        [alert setAlertStyle:NSCriticalAlertStyle];
+        [alert setAlertStyle:NSAlertStyleCritical];
     } else {
-        [alert setAlertStyle:NSInformationalAlertStyle];
+        [alert setAlertStyle:NSAlertStyleInformational];
     }
 
     NSTextField *input = nil;
