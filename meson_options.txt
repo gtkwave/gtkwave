@@ -62,6 +62,13 @@ option(
 )
 
 option(
+    'contrib',
+    type: 'boolean',
+    value: false,
+    description: 'Build contrib tools',
+)
+
+option(
     'set_rpath',
     type: 'feature',
     value: 'auto',
@@ -74,4 +81,3 @@ option(
     value: false,
     description: 'Build MacOS application bundle',
 )
-
