@@ -63,6 +63,13 @@ struct _GwNode
     unsigned vartype : WAVE_VARTYPE_WIDTH; /* see nodeVarType, this is an internal value */
 
     unsigned extvals : 1; /* was formerly a pointer to ExtNode "ext", now simply a flag */
+
+    /* Extended VCD ($dumpports) drive strength (IEEE 1364 18.4.3).  Only
+     * meaningful when evcd_strength_valid is set; the codes 0-7 name
+     * highz/small/medium/weak/large/pull/strong/supply (see gw-evcd.h). */
+    unsigned evcd_strength_valid : 1;
+    unsigned evcd_strength0 : 3;
+    unsigned evcd_strength1 : 3;
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING

@@ -62,6 +62,38 @@ GTKWave supports various file formats:
   found during *configure*, pointed to by the environment variable
   `FSDBREADER_LIBS`. Headers are pointed to by `FSDBREADER_HDRS``.
 
+## Extended VCD (EVCD)
+
+GTKWave also reads the *Extended VCD* format (IEEE 1364-2005 Clause 18.3-18.4),
+produced by the Verilog `$dumpports` system task. Compared to ordinary VCD, an
+EVCD file declares ports with `$var port ...` and records each value change as
+
+```
+p<state-chars> <0_strength> <1_strength> <identifier>
+```
+
+where the state characters carry both a logic value *and* its pin direction and
+driver context (for example `D`/`U` = an input driven low/high, `L`/`H` = an
+output driven low/high, and characters such as `0`, `?`, `F`, `A` describe ports
+whose direction is unknown or in conflict).
+
+GTKWave supports EVCD with these caveats:
+
+- **Port direction is recovered.** Each port's direction (input, output, or
+  inout) is inferred from the class of state characters it exhibits over the run
+  (and from the `in`/`out`/`inout` keyword form when a file uses it). Files that
+  carry direction are reported by
+  {c:func}`gw_dump_file_has_nonimplicit_directions`, and signals show their
+  direction in the UI.
+- **The waveform is drawn four-state.** GTKWave's renderer is four-state
+  (`0`/`1`/`x`/`z`), so each EVCD state character is collapsed to its nearest
+  four-state value for display (`D`,`d`,`L`,`l`,`0` -> `0`; `U`,`u`,`H`,`h`,`1`
+  -> `1`; `Z`,`T`,`F`,`f` -> `z`; everything else -> `x`). Native rendering of
+  the full nine-state strength/conflict alphabet is not provided.
+- **Drive strengths** (the two `0-7` strength components, naming
+  highz/small/medium/weak/large/pull/strong/supply) are parsed rather than
+  discarded.
+
 Converter helper applications are packaged with the viewer in order to
 convert VCD files into LXT, LXT2, VZT, or FST files. Conversion from
 LXT2, VZT, and FST back into VCD is possible. Wholesale conversion from
