@@ -1967,6 +1967,8 @@
                 regexp_highlight_generic().
 3.3.128	18jun26	Hurd compile fix.
 		Update lz4 to 1.10.0.
-3.3.129 02sep26 Fix for GH #515: Range fill doesn't work on alias waveforms.
+3.3.129 11oct26 Fix for GH #515: Range fill doesn't work on alias waveforms.
 		Added analogous security fixes for TALOS-2023-1789 in
 		fstReaderGetValueFromHandleAtTime().
+		Fix for GH #521: s->value alg comparison value no longer
+		valid for lxt2_write.c duplicate values.
