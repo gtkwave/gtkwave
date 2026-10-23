@@ -397,6 +397,8 @@ draw_module_type(vpiHandle item, int typ)
 	    rvalue.value.integer = 0;
 	    rvalue.format = vpiIntVal;
 	    vpi_get_value(rrange, &rvalue);
+		vpi_free_object(lrange);
+		vpi_free_object(rrange);
 
 	    siz = vpi_get(vpiSize, net);
 
