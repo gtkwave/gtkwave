@@ -288,3 +288,13 @@ void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source)
 }
 
 
+void wcp_server_emit_cursor_set(WcpServer *server, int64_t new_pos)
+{
+    g_return_if_fail(server != NULL);  
+    if (!server->client_connected) return;
+    
+    char *event = wcp_event_cursor_set(new_pos);
+    wcp_server_send(server, event);
+}
+
+
