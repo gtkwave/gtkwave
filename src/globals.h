@@ -289,6 +289,7 @@ struct Global
     int disable_menus; /* from main.c 242 */
     char *ftext_main_main_c_1; /* from main.c 243 */
     char dbl_mant_dig_override; /* from main.c */
+    char enable_autoreload; /* from main.c 984 */
 
     /*
      * menu.c

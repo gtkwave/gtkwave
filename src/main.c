@@ -300,6 +300,7 @@ static void print_help(char *nam)
         "  --wcp                      enable WCP server\n"
         "  --wcp-port=PORT            set WCP port (defaults to 8765)\n"
         "  --wcp-remote               allow remote WCP connections\n"
+        "  --auto-reload              auto reload waveform\n"
         "  -V, --version              display version banner then exit\n"
         "  -h, --help                 display this help then exit\n"
         "  -x, --exit                 exit after loading trace (for loader benchmarks)\n\n"
@@ -925,6 +926,7 @@ do_primary_inits:
                                                    {"wcp", 0, 0, 0},
                                                    {"wcp-port", 1, 0, 0},
                                                    {"wcp-remote", 0, 0, 0},
+                                                   {"auto-reload", 0, 0, 0},
                                                    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
@@ -977,6 +979,8 @@ do_primary_inits:
                         wcp_port = atoi(optarg);
                     } else if (!strcmp(long_options[option_index].name, "wcp-remote")) {
                         wcp_allow_remote = 1;
+                    } else if (!strcmp(long_options[option_index].name, "auto-reload")) {
+                        GLOBALS->enable_autoreload = 1;
                     }
                     break;
 

@@ -80,6 +80,7 @@ enum WV_MenuItems
     WV_MENU_FONV,
     WV_MENU_FONVT,
     WV_MENU_FRW,
+    WV_MENU_AFRW,
     WV_MENU_WRVCD,
     WV_MENU_WRTIM,
     WV_MENU_WCLOSE,
