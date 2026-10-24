@@ -1,3 +1,5 @@
+gtk4_dep = dependency('gtk4', version: '>=4.6')
+
 definehash_c = custom_target(
     'definehash.c',
     input: 'vpp_keyword.gperf',
