@@ -992,6 +992,9 @@ static void parse_valuechange(void)
 
 static void evcd_strcpy(char *dst, char *src)
 {
+    /* Canonical EVCD->four-state mapping lives in
+     * lib/libgtkwave/src/gw-evcd.c (gw_evcd_char_to_vcd); keep this table in
+     * sync with it. */
     static const char *evcd = "DUNZduLHXTlh01?FAaBbCcf";
     static const char *vcd = "01xz0101xz0101xzxxxxxxz";
 
