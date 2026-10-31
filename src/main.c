@@ -869,6 +869,9 @@ do_primary_inits:
 
     if (!mainwindow_already_built) {
         dbus_init();
+
+        /* Use the GTKWave icon for all windows (e.g. title bar and taskbar on Windows). */
+        gtk_window_set_default_icon_name("io.github.gtkwave.GTKWave");
     }
 
     if (!gtkwave_argv0_cached)
