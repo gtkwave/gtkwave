@@ -460,12 +460,6 @@ struct Global
     char *previous_braced_tcl_string;
 
     /*
-     * timeentry.c
-     */
-    GtkWidget *from_entry; /* from timeentry.c 462 */
-    GtkWidget *to_entry; /* from timeentry.c 463 */
-
-    /*
      * translate.c
      */
     int current_translate_file; /* from translate.c 464 */

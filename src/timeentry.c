@@ -14,24 +14,6 @@
 #include "symbol.h"
 #include "debug.h"
 
-void update_endcap_times_for_partial_vcd(void)
-{
-    char str[40];
-
-    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
-    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
-
-    if (GLOBALS->from_entry) {
-        reformat_time(str, GLOBALS->tims.first + global_time_offset, time_dimension);
-        gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), str);
-    }
-
-    if (GLOBALS->to_entry) {
-        reformat_time(str, GLOBALS->tims.last + global_time_offset, time_dimension);
-        gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), str);
-    }
-}
-
 void time_update(void)
 {
     DEBUG(printf("Timeentry Configure Event\n"));
@@ -109,14 +91,26 @@ void to_entry_callback(GtkWidget *widget, GtkWidget *entry)
     }
 }
 
-/* Create an entry box */
-GtkWidget *create_entry_box(void)
+typedef struct
 {
-    GtkWidget *label, *label2;
-    GtkWidget *box, *box2;
-    GtkWidget *mainbox;
+    GtkWidget *dialog;
+    GtkWidget *from_entry;
+    GtkWidget *to_entry;
+} TimeDialog;
 
-    char fromstr[32], tostr[32];
+static TimeDialog build_time_dialog(void)
+{
+    GtkWidget *dialog =
+        gtk_dialog_new_with_buttons("Time Settings",
+                                    GTK_WINDOW(GLOBALS->mainwindow),
+                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    "Cancel",
+                                    GTK_RESPONSE_CANCEL,
+                                    "Ok",
+                                    GTK_RESPONSE_OK,
+                                    NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_container_set_border_width(GTK_CONTAINER(dialog), 12);
 
     GwTime global_time_offset = 0;
     GwTimeDimension time_dimension = GW_TIME_DIMENSION_BASE;
@@ -128,60 +122,69 @@ GtkWidget *create_entry_box(void)
         time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
     }
 
-    label = gtk_label_new("From:");
-    GLOBALS->from_entry = X_gtk_entry_new_with_max_length(40);
 
+    GtkWidget *header = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(header), "<b>Time Range</b>");
+    gtk_label_set_xalign(GTK_LABEL(header), 0.0);
+    gtk_widget_set_margin_bottom(header, 6);
+
+    GtkWidget *from_label = gtk_label_new("From:");
+    gtk_label_set_xalign(GTK_LABEL(from_label), 0.0);
+    GtkWidget *from_entry = X_gtk_entry_new_with_max_length(40);
+    gtk_widget_set_hexpand(from_entry, TRUE);
+    gtk_entry_set_activates_default(GTK_ENTRY(from_entry), TRUE);
+
+    GtkWidget *to_label = gtk_label_new("To:");
+    gtk_label_set_xalign(GTK_LABEL(to_label), 0.0);
+    GtkWidget *to_entry = X_gtk_entry_new_with_max_length(40);
+    gtk_widget_set_hexpand(to_entry, TRUE);
+    gtk_entry_set_activates_default(GTK_ENTRY(to_entry), TRUE);
+
+    GtkWidget *grid = gtk_grid_new();
+    gtk_widget_set_margin_bottom(grid, 12);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 6);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
+
+    gtk_grid_attach(GTK_GRID(grid), header, 0, 0, 2, 1);
+    gtk_grid_attach(GTK_GRID(grid), from_label, 0, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), from_entry, 1, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), to_label, 0, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), to_entry, 1, 2, 1, 1);
+
+    gtk_widget_show_all(grid);
+
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    gtk_container_add(GTK_CONTAINER(content_area), grid);
+
+    char fromstr[32];
+    char tostr[32];
     if (time_range != NULL) {
-        reformat_time(fromstr,
-                      gw_time_range_get_start(time_range) + global_time_offset,
-                      time_dimension);
+        reformat_time(fromstr, GLOBALS->tims.first + global_time_offset, time_dimension);
+        reformat_time(tostr, GLOBALS->tims.last + global_time_offset, time_dimension);
     } else {
         strcpy(fromstr, "-");
-    }
-
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), fromstr);
-    g_signal_connect(GLOBALS->from_entry,
-                     "activate",
-                     G_CALLBACK(from_entry_callback),
-                     GLOBALS->from_entry);
-    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_pack_start(GTK_BOX(box), label, TRUE, TRUE, 0);
-    gtk_widget_show(label);
-    gtk_box_pack_start(GTK_BOX(box), GLOBALS->from_entry, TRUE, TRUE, 0);
-    gtk_widget_set_size_request(GTK_WIDGET(GLOBALS->from_entry), 90, 22);
-    gtk_tooltips_set_tip_2(GLOBALS->from_entry, "Scroll Lower Bound (use MX for named marker X)");
-    gtk_widget_show(GLOBALS->from_entry);
-
-    label2 = gtk_label_new("To:");
-    GLOBALS->to_entry = X_gtk_entry_new_with_max_length(40);
-
-    if (time_range != NULL) {
-        reformat_time(tostr,
-                      gw_time_range_get_end(time_range) + global_time_offset,
-                      time_dimension);
-    } else {
         strcpy(tostr, "-");
     }
+    gtk_entry_set_text(GTK_ENTRY(from_entry), fromstr);
+    gtk_entry_set_text(GTK_ENTRY(to_entry), tostr);
 
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), tostr);
-    g_signal_connect(GLOBALS->to_entry,
-                     "activate",
-                     G_CALLBACK(to_entry_callback),
-                     GLOBALS->to_entry);
-    box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_pack_start(GTK_BOX(box2), label2, TRUE, TRUE, 0);
-    gtk_widget_show(label2);
-    gtk_box_pack_start(GTK_BOX(box2), GLOBALS->to_entry, TRUE, TRUE, 0);
-    gtk_widget_set_size_request(GTK_WIDGET(GLOBALS->to_entry), 90, 22);
-    gtk_tooltips_set_tip_2(GLOBALS->to_entry, "Scroll Upper Bound (use MX for named marker X)");
-    gtk_widget_show(GLOBALS->to_entry);
+    TimeDialog result = {
+        .dialog = dialog,
+        .from_entry = from_entry,
+        .to_entry = to_entry,
+    };
 
-    mainbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    return result;
+}
 
-    gtk_box_pack_start(GTK_BOX(mainbox), box, TRUE, FALSE, 1);
-    gtk_widget_show(box);
-    gtk_box_pack_start(GTK_BOX(mainbox), box2, TRUE, FALSE, 1);
-    gtk_widget_show(box2);
+void show_time_dialog(void)
+{
+    TimeDialog dialog = build_time_dialog();
 
-    return (mainbox);
+    if (gtk_dialog_run(GTK_DIALOG(dialog.dialog)) == GTK_RESPONSE_OK) {
+        from_entry_callback(NULL, dialog.from_entry);
+        to_entry_callback(NULL, dialog.to_entry);
+    }
+
+    gtk_widget_destroy(dialog.dialog);
 }

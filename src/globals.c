@@ -466,12 +466,6 @@ static const struct Global globals_base_values = {
     NULL, /* previous_braced_tcl_string */
 
     /*
-     * timeentry.c
-     */
-    NULL, /* from_entry 433 */
-    NULL, /* to_entry */
-
-    /*
      * translate.c
      */
     0, /* current_translate_file 434 */
@@ -817,7 +811,6 @@ void reload_into_new_context_2(void)
     gdouble treeview_hadj_value = 0.0;
     int fix_from_time = 0, fix_to_time = 0;
     GwTime from_time = GW_TIME_CONSTANT(0), to_time = GW_TIME_CONSTANT(0);
-    char timestr[32];
     int load_was_success = 0;
     int reload_fail_delay = 1;
     char *save_tmpfilename = NULL;
@@ -951,8 +944,6 @@ void reload_into_new_context_2(void)
     new_globals->expanderwindow = GLOBALS->expanderwindow;
     new_globals->wave_hslider = GLOBALS->wave_hslider;
     new_globals->hscroll_wavewindow_c_2 = GLOBALS->hscroll_wavewindow_c_2;
-    new_globals->from_entry = GLOBALS->from_entry;
-    new_globals->to_entry = GLOBALS->to_entry;
 
     new_globals->fontheight = GLOBALS->fontheight;
     new_globals->wavecrosspiece = GLOBALS->wavecrosspiece;
@@ -1161,10 +1152,6 @@ void reload_into_new_context_2(void)
         jrb_free_tree(GLOBALS->exclinstname); /* strings get freed by automatic _2 mechanism */
         GLOBALS->exclinstname = NULL;
     }
-
-    /* timeentry.c */
-    new_globals->from_entry = GLOBALS->from_entry;
-    new_globals->to_entry = GLOBALS->to_entry;
 
     GwTimeRange *time_range = gw_dump_file_get_time_range(GLOBALS->dump_file);
 
@@ -1435,14 +1422,6 @@ void reload_into_new_context_2(void)
     if (GLOBALS->tims.laststart > GLOBALS->tims.last) {
         GLOBALS->tims.laststart = GLOBALS->tims.last;
     }
-
-    GwTime global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
-    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
-
-    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, time_dimension);
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, time_dimension);
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
 
     /* Change SST - if it exists */
     /* XXX need to destroy/free the old tree widgets. */

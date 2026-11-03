@@ -1151,13 +1151,6 @@ void menu_quit_close_callback(GtkWidget *widget, gpointer dummy_data)
     }
     set_GLOBALS(saved_g);
 
-    GwTimeDimension time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
-
-    /* need to do this if 2 pages -> 1 */
-    reformat_time(sstr, GLOBALS->tims.first, time_dimension);
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), sstr);
-    reformat_time(sstr, GLOBALS->tims.last, time_dimension);
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), sstr);
     update_time_box();
 
     gtk_window_set_title(GTK_WINDOW(GLOBALS->mainwindow), GLOBALS->winname);
