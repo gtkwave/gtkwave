@@ -1,6 +1,7 @@
 #include <config.h>
 #include "debug.h"
 #include "gw-time-display.h"
+#include "gw-time-label.h"
 
 #define EM_DASH "\xe2\x80\x94"
 static const char *TIME_PREFIX = WAVE_SI_UNITS;
@@ -303,6 +304,8 @@ static void gw_time_display_class_init(GwTimeDisplayClass *klass)
     gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, marker_value);
     gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, cursor_label);
     gtk_widget_class_bind_template_child(widget_class, GwTimeDisplay, cursor_value);
+
+    g_type_ensure(GW_TYPE_TIME_LABEL);
 }
 
 static void gw_time_display_init(GwTimeDisplay *self)

@@ -477,12 +477,14 @@ static GtkToolItem *toolbar_append_separator(GtkWidget *toolbar)
     return separator;
 }
 
-static void toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
+static GtkToolItem *toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
 {
     GtkToolItem *item = gtk_tool_item_new();
     gtk_container_add(GTK_CONTAINER(item), widget);
 
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+
+    return item;
 }
 
 static GtkWidget *build_toolbar(void)
@@ -529,24 +531,23 @@ static GtkWidget *build_toolbar(void)
 
     toolbar_append_widget(toolbar, create_entry_box());
 
-    GtkToolItem *last_separator = toolbar_append_separator(toolbar);
 
     if ((GLOBALS->loaded_file_type != DUMPLESS_FILE) && (!GLOBALS->disable_menus)) {
+        toolbar_append_separator(toolbar);
+
         toolbar_append_button(toolbar,
                               "view-refresh",
                               "Reload",
                               G_CALLBACK(menu_reload_waveform_marshal),
                               NULL);
-
-        last_separator = toolbar_append_separator(toolbar);
     }
-
-    gtk_tool_item_set_expand(last_separator, TRUE);
-    gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(last_separator), FALSE);
 
     GLOBALS->time_box = gw_time_display_new();
     gw_time_display_set_project(GW_TIME_DISPLAY(GLOBALS->time_box), GLOBALS->project);
-    toolbar_append_widget(toolbar, GLOBALS->time_box);
+    gtk_widget_set_halign(GLOBALS->time_box, GTK_ALIGN_END);
+
+    GtkToolItem *time_item = toolbar_append_widget(toolbar, GLOBALS->time_box);
+    gtk_tool_item_set_expand(time_item, TRUE);
 
     gtk_widget_show_all(toolbar);
 
