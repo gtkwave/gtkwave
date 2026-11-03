@@ -11,7 +11,6 @@
 #define WAVE_TIMEENTRY_H
 
 void time_update(void);
-void from_entry_callback(GtkWidget *widget, GtkWidget *entry);
-void to_entry_callback(GtkWidget *widget, GtkWidget *entry);
+void show_time_dialog(void);
 
 #endif

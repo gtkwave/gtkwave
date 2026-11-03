@@ -17,9 +17,10 @@
             </object>
         </child>
         <child>
-            <object class="GtkLabel" id="marker_value">
+            <object class="GwTimeLabel" id="marker_value">
                 <property name="xalign">1.0</property>
                 <property name="valign">baseline</property>
+                <property name="ellipsize">end</property>
                 <property name="width-chars">17</property>
                 <style>
                     <class name="value" />
@@ -46,9 +47,10 @@
             </object>
         </child>
         <child>
-            <object class="GtkLabel" id="cursor_value">
+            <object class="GwTimeLabel" id="cursor_value">
                 <property name="xalign">1.0</property>
                 <property name="valign">baseline</property>
+                <property name="ellipsize">end</property>
                 <property name="width-chars">17</property>
                 <style>
                     <class name="value" />

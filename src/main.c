@@ -121,18 +121,6 @@ static void switch_page(GtkNotebook *notebook, gpointer *page, guint page_num, g
     GLOBALS->save_on_exit = g_old->save_on_exit;
     GLOBALS->dbl_mant_dig_override = g_old->dbl_mant_dig_override;
 
-    GwTime global_time_offset = 0;
-    GwTimeDimension time_dimension = GW_TIME_DIMENSION_BASE;
-    if (GLOBALS->dump_file != NULL) {
-        global_time_offset = gw_dump_file_get_global_time_offset(GLOBALS->dump_file);
-        time_dimension = gw_dump_file_get_time_dimension(GLOBALS->dump_file);
-    }
-
-    reformat_time(timestr, GLOBALS->tims.first + global_time_offset, time_dimension);
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->from_entry), timestr);
-    reformat_time(timestr, GLOBALS->tims.last + global_time_offset, time_dimension);
-    gtk_entry_set_text(GTK_ENTRY(GLOBALS->to_entry), timestr);
-
     update_time_box();
 
     if (GLOBALS->second_page_created) {
@@ -477,12 +465,14 @@ static GtkToolItem *toolbar_append_separator(GtkWidget *toolbar)
     return separator;
 }
 
-static void toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
+static GtkToolItem *toolbar_append_widget(GtkWidget *toolbar, GtkWidget *widget)
 {
     GtkToolItem *item = gtk_tool_item_new();
     gtk_container_add(GTK_CONTAINER(item), widget);
 
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+
+    return item;
 }
 
 static GtkWidget *build_toolbar(void)
@@ -527,26 +517,28 @@ static GtkWidget *build_toolbar(void)
 
     toolbar_append_separator(toolbar);
 
-    toolbar_append_widget(toolbar, create_entry_box());
-
-    GtkToolItem *last_separator = toolbar_append_separator(toolbar);
+    toolbar_append_button(toolbar,
+                          "open-menu-symbolic",
+                          "Time Settings",
+                          G_CALLBACK(show_time_dialog),
+                          NULL);
 
     if ((GLOBALS->loaded_file_type != DUMPLESS_FILE) && (!GLOBALS->disable_menus)) {
+        toolbar_append_separator(toolbar);
+
         toolbar_append_button(toolbar,
                               "view-refresh",
                               "Reload",
                               G_CALLBACK(menu_reload_waveform_marshal),
                               NULL);
-
-        last_separator = toolbar_append_separator(toolbar);
     }
-
-    gtk_tool_item_set_expand(last_separator, TRUE);
-    gtk_separator_tool_item_set_draw(GTK_SEPARATOR_TOOL_ITEM(last_separator), FALSE);
 
     GLOBALS->time_box = gw_time_display_new();
     gw_time_display_set_project(GW_TIME_DISPLAY(GLOBALS->time_box), GLOBALS->project);
-    toolbar_append_widget(toolbar, GLOBALS->time_box);
+    gtk_widget_set_halign(GLOBALS->time_box, GTK_ALIGN_END);
+
+    GtkToolItem *time_item = toolbar_append_widget(toolbar, GLOBALS->time_box);
+    gtk_tool_item_set_expand(time_item, TRUE);
 
     gtk_widget_show_all(toolbar);
 
@@ -731,10 +723,6 @@ int main_2(int opt_vcd, int argc, char *argv[])
         /* menu.c */
         GLOBALS->vcd_jmp_buf = old_g->vcd_jmp_buf;
 
-        /* timeentry.c */
-        GLOBALS->from_entry = old_g->from_entry;
-        GLOBALS->to_entry = old_g->to_entry;
-
         /* rc.c */
         GLOBALS->possibly_use_rc_defaults = old_g->possibly_use_rc_defaults;
         GLOBALS->ignore_savefile_pane_pos = old_g->ignore_savefile_pane_pos;
@@ -892,40 +880,24 @@ do_primary_inits:
         while (1) {
             int option_index = 0;
 
-            static struct option long_options[] = {{"dump", 1, 0, 'f'},
-                                                   {"optimize", 0, 0, 'o'},
-                                                   {"nocli", 1, 0, 'n'},
-                                                   {"save", 1, 0, 'a'},
-                                                   {"rcfile", 1, 0, 'r'},
-                                                   {"defaultskip", 0, 0, 'd'},
-                                                   {"logfile", 1, 0, 'l'},
-                                                   {"start", 1, 0, 's'},
-                                                   {"end", 1, 0, 'e'},
-                                                   {"cpus", 1, 0, 'c'},
-                                                   {"stems", 1, 0, 't'},
-                                                   {"nowm", 0, 0, 'N'},
-                                                   {"vcd", 0, 0, 'v'},
-                                                   {"version", 0, 0, 'V'},
-                                                   {"help", 0, 0, 'h'},
-                                                   {"exit", 0, 0, 'x'},
-                                                   {"xid", 1, 0, 'X'},
-                                                   {"nomenus", 0, 0, 'M'},
-                                                   {"dualid", 1, 0, 'D'},
-                                                   {"giga", 0, 0, 'g'},
-                                                   {"wish", 0, 0, 'W'},
-                                                   {"output", 1, 0, 'O'},
-                                                   {"slider-zoom", 0, 0, 'z'},
-                                                   {"rpcid", 1, 0, '1'},
-                                                   {"chdir", 1, 0, '2'},
-                                                   {"restore", 0, 0, '3'},
-                                                   {"rcvar", 1, 0, '4'},
-                                                   {"sstexclude", 1, 0, '5'},
-                                                   {"dark", 0, 0, '6'},
-                                                   {"saveonexit", 0, 0, '7'},
-                                                   {"wcp", 0, 0, 0},
-                                                   {"wcp-port", 1, 0, 0},
-                                                   {"wcp-remote", 0, 0, 0},
-                                                   {0, 0, 0, 0}};
+            static struct option long_options[] = {
+                {"dump", 1, 0, 'f'},        {"optimize", 0, 0, 'o'},
+                {"nocli", 1, 0, 'n'},       {"save", 1, 0, 'a'},
+                {"rcfile", 1, 0, 'r'},      {"defaultskip", 0, 0, 'd'},
+                {"logfile", 1, 0, 'l'},     {"start", 1, 0, 's'},
+                {"end", 1, 0, 'e'},         {"cpus", 1, 0, 'c'},
+                {"stems", 1, 0, 't'},       {"nowm", 0, 0, 'N'},
+                {"vcd", 0, 0, 'v'},         {"version", 0, 0, 'V'},
+                {"help", 0, 0, 'h'},        {"exit", 0, 0, 'x'},
+                {"xid", 1, 0, 'X'},         {"nomenus", 0, 0, 'M'},
+                {"dualid", 1, 0, 'D'},      {"giga", 0, 0, 'g'},
+                {"wish", 0, 0, 'W'},        {"output", 1, 0, 'O'},
+                {"slider-zoom", 0, 0, 'z'}, {"rpcid", 1, 0, '1'},
+                {"chdir", 1, 0, '2'},       {"restore", 0, 0, '3'},
+                {"rcvar", 1, 0, '4'},       {"sstexclude", 1, 0, '5'},
+                {"dark", 0, 0, '6'},        {"saveonexit", 0, 0, '7'},
+                {"wcp", 0, 0, 0},           {"wcp-port", 1, 0, 0},
+                {"wcp-remote", 0, 0, 0},    {0, 0, 0, 0}};
 
             c = getopt_long(argc,
                             argv,
