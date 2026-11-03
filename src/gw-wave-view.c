@@ -696,15 +696,20 @@ static void gw_wave_view_size_allocate(GtkWidget *widget, GtkAllocation *allocat
     GwWaveView *self = GW_WAVE_VIEW(widget);
     int scale;
 
-    GTK_WIDGET_CLASS(gw_wave_view_parent_class)->size_allocate(widget, allocation);
-
-    if (GLOBALS->wavewidth == allocation->width && GLOBALS->waveheight == allocation->height &&
-        self->traces_surface != NULL) {
-        return;
-    }
+    gboolean size_changed =
+        GLOBALS->wavewidth != allocation->width || GLOBALS->waveheight != allocation->height;
 
     GLOBALS->wavewidth = allocation->width;
     GLOBALS->waveheight = allocation->height;
+
+    /* Chain up after updating wavewidth and waveheight: GtkDrawingArea sends the
+     * configure event from its size_allocate, and configure_event() uses them,
+     * e.g. for the initial zoom fit. */
+    GTK_WIDGET_CLASS(gw_wave_view_parent_class)->size_allocate(widget, allocation);
+
+    if (!size_changed && self->traces_surface != NULL) {
+        return;
+    }
 
     g_clear_pointer(&self->traces_surface, cairo_surface_destroy);
 
