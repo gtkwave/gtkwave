@@ -10,9 +10,15 @@
 #ifndef WAVE_SIGNALWINDOW_H
 #define WAVE_SIGNALWINDOW_H
 
-/* for dnd */
-#define WAVE_DRAG_TARGET_SIGNAL_LIST "GTKWAVE_TRACE_SIGNAL_LIST"
-#define WAVE_DRAG_TARGET_TCL "GTKWAVE_TRACE_TCL"
+/* for dnd
+ * MIME-style names are required on macOS: plain names get extra pasteboard
+ * types without a MIME type, which makes GTK's Quartz backend log
+ * "gdk_atom_intern: assertion 'atom_name != NULL' failed" on every drag motion.
+ * Other platforms accept any name: X11 uses it as an atom, Wayland expects MIME
+ * types anyway, and Windows registers it as a clipboard format.
+ */
+#define WAVE_DRAG_TARGET_SIGNAL_LIST "application/x-gtkwave-signal-list"
+#define WAVE_DRAG_TARGET_TCL "application/x-gtkwave-tcl"
 
 enum
 {
