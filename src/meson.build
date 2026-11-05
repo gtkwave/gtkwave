@@ -63,6 +63,7 @@ gtkwave_sources = [
     'tree.c',
     'treesearch.c',
     'ttranslate.c',
+    'utils.c',
     'vcd_saver.c',
     'vcd.c',
     'wcp_gtkwave.c',

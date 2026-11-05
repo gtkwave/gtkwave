@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "wcp_server.h"
+#include "gw-time.h"
 
 #ifndef WCP_DEFAULT_PORT
 #define WCP_DEFAULT_PORT 8765
@@ -48,5 +49,12 @@ void wcp_gtkwave_shutdown(void);
  */
 void wcp_gtkwave_notify_waveforms_loaded(const char *filename);
 
+/** 
+ * Notify WCP client that the primary cursor has been
+ * moved.
+ * Should be tied to the position property of the marker,
+ * or called every time the marker is moved.
+ */
+void wcp_gtkwave_notify_cursor_set(GwTime new_pos);
 #endif /* WCP_GTKWAVE_H */
 

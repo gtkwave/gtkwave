@@ -5,6 +5,7 @@
  */
 
 #include "wcp_protocol.h"
+#include "json-glib/json-glib.h"
 #include <limits.h>
 #include <stddef.h>
 #include <string.h>
@@ -25,6 +26,8 @@ static const char *supported_commands[] = {
     "zoom_to_fit",
     "load",
     "reload",
+    "get_values",
+    "get_cursor",
     NULL
 };
 
@@ -61,6 +64,8 @@ static WcpCommandType parse_command_type(const char *cmd_str)
     if (g_str_equal(cmd_str, "zoom_to_fit"))        return WCP_CMD_ZOOM_TO_FIT;
     if (g_str_equal(cmd_str, "load"))               return WCP_CMD_LOAD;
     if (g_str_equal(cmd_str, "reload"))             return WCP_CMD_RELOAD;
+    if (g_str_equal(cmd_str, "get_values"))         return WCP_CMD_GET_VALUES; 
+    if (g_str_equal(cmd_str, "get_cursor"))         return WCP_CMD_GET_CURSOR; 
     /* clang-format on */
     
     return WCP_CMD_UNKNOWN;
@@ -392,6 +397,50 @@ WcpCommand* wcp_parse_command(const char *json_str, GError **error)
             cmd_valid = TRUE;
             break;
         }
+        case WCP_CMD_GET_VALUES:
+        {
+            JsonArray *arr = NULL;
+            if (!json_object_require_array(obj, "items", &arr, error)) {
+                break;
+            }
+            cmd->data.get_values.items = parse_string_array(arr, error, "items");
+            if (!cmd->data.get_values.items) {
+                break;
+            }
+
+            if (json_object_has_member(obj, "recursive")) {
+                JsonNode *node = json_object_get_member(obj, "recursive");
+                if (!JSON_NODE_HOLDS_VALUE(node) ||
+                    json_node_get_value_type(node) != G_TYPE_BOOLEAN) {
+                    g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                                "Field 'recursive' must be a boolean");
+                    break;
+                }
+                cmd->data.get_values.recursive = json_node_get_boolean(node);
+            }
+
+            // Default to no timestamp provided.
+            cmd->data.get_values.timestamp_provided = FALSE;
+
+            if (json_object_has_member(obj, "timestamp")) {
+                JsonNode* node = json_object_get_member(obj, "timestamp");
+                if(! JSON_NODE_HOLDS_VALUE(node) || 
+                json_node_get_value_type(node) != G_TYPE_INT64) {
+                     g_set_error(error, G_IO_ERROR,G_IO_ERROR_INVALID_DATA,
+                        "Field 'time' shall be an integer");
+                     break;
+                }
+                cmd->data.get_values.timestamp_provided = TRUE;
+                cmd->data.get_values.timestamp = json_node_get_int(node);
+            } else {
+                // As negative values will be actually supported, any value here will be fine.
+                // The information about the timestamp validity is in 
+                // get_values.timestamp_provided defaulted to FALSE.
+                cmd->data.get_values.timestamp = 0; 
+            }
+            cmd_valid = TRUE;
+            break;
+        }
         case WCP_CMD_ADD_MARKERS:
         {
             JsonArray *arr = NULL;
@@ -487,6 +536,7 @@ void wcp_command_free(WcpCommand *cmd)
             break;
             
         case WCP_CMD_ADD_ITEMS:
+        case WCP_CMD_GET_VALUES:
             if (cmd->data.add_items.items) {
                 g_ptr_array_free(cmd->data.add_items.items, TRUE);
             }
@@ -613,6 +663,62 @@ char* wcp_response_item_info(GPtrArray *items)
     return wcp_json_builder_to_string(builder);
 }
 
+char* wcp_response_get_cursor(int64_t time)
+{
+    JsonBuilder *builder = json_builder_new();
+    json_builder_begin_object(builder);
+    json_builder_set_member_name(builder, "type");
+    json_builder_add_string_value(builder, "response");
+    
+    json_builder_set_member_name(builder, "command");
+    json_builder_add_string_value(builder, "get_cursor");
+
+    json_builder_set_member_name(builder, "timestamp");
+    json_builder_add_int_value(builder, time);
+
+    json_builder_end_object(builder);
+    
+    return wcp_json_builder_to_string(builder);
+
+}
+
+char* wcp_response_item_value(GPtrArray *items)
+{
+    JsonBuilder *builder = json_builder_new();
+    
+    json_builder_begin_object(builder);
+    json_builder_set_member_name(builder, "type");
+    json_builder_add_string_value(builder, "response");
+    
+    json_builder_set_member_name(builder, "command");
+    json_builder_add_string_value(builder, "get_values");
+    
+    json_builder_set_member_name(builder, "results");
+    json_builder_begin_array(builder);
+    if (items) {
+        for (size_t i = 0; i < (size_t)items->len; i++) {
+            WcpItemValue *info = g_ptr_array_index(items, i);
+            json_builder_begin_object(builder);
+            
+            json_builder_set_member_name(builder, "id");
+            json_builder_add_string_value(builder, info->id);
+            
+            json_builder_set_member_name(builder, "val");
+            json_builder_add_string_value(builder, info->val);
+                        
+            json_builder_set_member_name(builder, "base");
+            json_builder_add_int_value(builder, info->base);
+
+            json_builder_end_object(builder);
+        }
+    }
+    json_builder_end_array(builder);
+    
+    json_builder_end_object(builder);
+    
+    return wcp_json_builder_to_string(builder);
+}
+
 char* wcp_response_id_list(const char *command, GPtrArray *ids)
 {
     JsonBuilder *builder = json_builder_new();
@@ -651,6 +757,25 @@ char* wcp_event_waveforms_loaded(const char *source)
     
     json_builder_set_member_name(builder, "source");
     json_builder_add_string_value(builder, source);
+    
+    json_builder_end_object(builder);
+    
+    return wcp_json_builder_to_string(builder);
+}
+
+char* wcp_event_cursor_set(const gint64 timestamp)
+{
+    JsonBuilder *builder = json_builder_new();
+    
+    json_builder_begin_object(builder);
+    json_builder_set_member_name(builder, "type");
+    json_builder_add_string_value(builder, "event");
+    
+    json_builder_set_member_name(builder, "event");
+    json_builder_add_string_value(builder, "cursor_set");
+    
+    json_builder_set_member_name(builder, "timestamp");
+    json_builder_add_int_value(builder, timestamp);
     
     json_builder_end_object(builder);
     

@@ -92,5 +92,12 @@ gboolean wcp_server_send(WcpServer *server, char *message);
  */
 void wcp_server_emit_waveforms_loaded(WcpServer *server, const char *source);
 
+/**
+ * Send a cursor_set event to the connected client
+ * @param server The server instance
+ * @param timestamp The new timestamp
+ */
+void wcp_server_emit_cursor_set(WcpServer *server, int64_t timestamp);
+
 #endif /* WCP_SERVER_H */
 

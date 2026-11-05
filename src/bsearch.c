@@ -96,6 +96,9 @@ static int compar_histent(const void *s1, const void *s2)
 
 GwHistEnt *bsearch_node(GwNode *n, GwTime key)
 {
+    if(n->numhist == 1)
+        return n->harray[0];
+    
     GLOBALS->max_compare_time_bsearch_c_1 = -2;
     GLOBALS->max_compare_pos_bsearch_c_1 = NULL;
     GLOBALS->max_compare_index = NULL;
