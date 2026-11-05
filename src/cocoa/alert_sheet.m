@@ -69,7 +69,7 @@ modalCode = NSAlertThirdButtonReturn + (clickedButtonIndex - 2);
 }
 
 -(void) BE_beginSheetModalForWindow:(NSWindow *)aWindow {
-[self beginSheetModalForWindow:aWindow modalDelegate:nil didEndSelector:nil contextInfo:nil];
+[self beginSheetModalForWindow:aWindow completionHandler:nil];
 }
 
 @end
