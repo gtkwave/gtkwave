@@ -47,4 +47,5 @@ executable(
     dependencies: rtlbrowse_dependencies,
     include_directories: rtlbrowse_include_directories,
     install: true,
+    install_rpath: install_rpath,
 )
