@@ -105,6 +105,76 @@ static gchar *trace_flags_to_string(GwTrace *t)
     return g_string_free(str, FALSE);
 }
 
+static GwNode *trace_first_node(GwTrace *t)
+{
+    if (t->vector) {
+        if (t->n.vec != NULL && t->n.vec->bits != NULL && t->n.vec->bits->nnbits > 0) {
+            return t->n.vec->bits->nodes[0];
+        }
+        return NULL;
+    }
+
+    return t->n.nd;
+}
+
+/* For an Extended VCD ($dumpports) port, summarize the EVCD-specific
+ * information that the four-state waveform cannot show: the inferred pin
+ * direction and the drive strength (IEEE 1364 18.4.3).  Returns NULL for
+ * signals that are not EVCD ports. */
+static gchar *evcd_info_to_string(GwTrace *t)
+{
+    GwNode *nd = trace_first_node(t);
+    if (nd == NULL || nd->vartype != GW_VAR_TYPE_VCD_PORT) {
+        return NULL;
+    }
+
+    GString *str = g_string_new(NULL);
+
+    switch (nd->vardir) {
+        case GW_VAR_DIR_IN:
+            g_string_append(str, "in");
+            break;
+        case GW_VAR_DIR_OUT:
+            g_string_append(str, "out");
+            break;
+        case GW_VAR_DIR_INOUT:
+            g_string_append(str, "inout");
+            break;
+        default:
+            g_string_append(str, "port");
+            break;
+    }
+
+    if (nd->evcd_strength_valid) {
+        const gchar *s0 = gw_evcd_strength_name(nd->evcd_strength0);
+        const gchar *s1 = gw_evcd_strength_name(nd->evcd_strength1);
+        if (s0 != NULL && s1 != NULL) {
+            if (g_strcmp0(s0, s1) == 0) {
+                g_string_append_printf(str, ", %s", s0);
+            } else {
+                g_string_append_printf(str, ", strength0=%s strength1=%s", s0, s1);
+            }
+        }
+    }
+
+    return g_string_free(str, FALSE);
+}
+
+static gchar *flags_with_evcd(GwTrace *trace, const gchar *base)
+{
+    gchar *evcd = evcd_info_to_string(trace);
+    gchar *result;
+
+    if (evcd != NULL) {
+        result = g_strdup_printf("%s | EVCD: %s", base, evcd);
+    } else {
+        result = g_strdup(base);
+    }
+
+    g_free(evcd);
+    return result;
+}
+
 static gchar *local_trace_asciival(GwTrace *t, GwTime tim)
 {
     if (t->name == NULL) {
@@ -243,9 +313,11 @@ void gw_mouseover_update(GwMouseover *self, GwTrace *trace, GwTime t)
     gtk_label_set_text(self->name_label, trace->name);
 
     gchar *flags = trace_flags_to_string(trace);
-    gchar *flags_text = g_strdup_printf(" | %s", flags);
+    gchar *flags_with_dir = flags_with_evcd(trace, flags);
+    gchar *flags_text = g_strdup_printf(" | %s", flags_with_dir);
     gtk_label_set_text(GTK_LABEL(self->flags_label), flags_text);
     g_free(flags_text);
+    g_free(flags_with_dir);
     g_free(flags);
 }
 
@@ -269,6 +341,15 @@ void gw_mouseover_update_signal_list(GwMouseover *self, GwTrace *trace, GwTime t
         const gchar *vartype_str = gw_var_type_to_string(vartype);
         flags_text = g_strdup_printf(" | %s:%s", flags, vartype_str);
     }
+
+    gchar *evcd = evcd_info_to_string(trace);
+    if (evcd != NULL) {
+        gchar *with_evcd = g_strdup_printf("%s | EVCD: %s", flags_text, evcd);
+        g_free(flags_text);
+        flags_text = with_evcd;
+        g_free(evcd);
+    }
+
     gtk_label_set_text(GTK_LABEL(self->flags_label), flags_text);
     g_free(flags_text);
     g_free(flags);

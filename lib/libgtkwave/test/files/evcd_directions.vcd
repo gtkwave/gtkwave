@@ -1,0 +1,36 @@
+$timescale
+	1ns
+$end
+$scope module top $end
+$var port 1 <0 d_in $end
+$var port 1 <1 q_out $end
+$var port 1 <2 io $end
+$var port [3:0] <3 bus_out $end
+$var in 1 <4 clk_in $end
+$upscope $end
+$enddefinitions $end
+$dumpports
+#0
+pD 6 6 <0
+pL 5 0 <1
+p0 6 6 <2
+pHHHH 7 0 <3
+pD 6 6 <4
+$end
+#5
+pU 7 0 <0
+pH 0 7 <1
+pZ 6 6 <2
+pLLLL 0 5 <3
+pU 6 6 <4
+#10
+$dumpportsoff
+#15
+$dumpportson
+pd 6 6 <0
+pX 6 6 <1
+pA 7 0 <2
+pHLHL 6 6 <3
+pN 6 6 <4
+#20
+$vcdclose #20

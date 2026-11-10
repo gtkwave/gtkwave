@@ -101,6 +101,11 @@ static char *vcdid_unhash(unsigned int value)
 
 static void evcd_strcpy(char *dst, char *src, int dir)
 {
+    /* This converter splits each EVCD port into separate input and output VCD
+     * signals, so it intentionally uses direction-specific mappings (vcdi/vcdo)
+     * rather than the single four-state collapse in
+     * lib/libgtkwave/src/gw-evcd.c.  The EVCD alphabet (and the direction class
+     * of each character) is documented there. */
     static const char *evcd = "DUNZduLHXTlh01?FAaBbCcf";
     static const char *vcdi = "01xz01zzzzzz01xz0011xxz";
     static const char *vcdo = "zzzzzz01xz0101xz1x0x01z";

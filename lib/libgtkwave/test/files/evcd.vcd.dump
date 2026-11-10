@@ -16,7 +16,7 @@ bit
     node: bit
         vartype: GW_VAR_TYPE_VCD_PORT
         vardt: GW_VAR_DATA_TYPE_NONE
-        vardir: GW_VAR_DIR_IMPLICIT
+        vardir: GW_VAR_DIR_INOUT
         varxt: 0
         extvals: 0
         msi, lsi: 0, 0
@@ -33,7 +33,7 @@ vector[0:22]
     node: vector[0:22]
         vartype: GW_VAR_TYPE_VCD_PORT
         vardt: GW_VAR_DATA_TYPE_NONE
-        vardir: GW_VAR_DIR_IMPLICIT
+        vardir: GW_VAR_DIR_INOUT
         varxt: 0
         extvals: 1
         msi, lsi: 0, 22

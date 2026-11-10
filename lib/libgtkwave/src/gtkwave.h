@@ -22,6 +22,7 @@
 #include "gw-trace.h"
 #include "gw-stems.h"
 #include "gw-var-enums.h"
+#include "gw-evcd.h"
 #include "gw-tree.h"
 #include "gw-tree-builder.h"
 #include "gw-blackout-regions.h"

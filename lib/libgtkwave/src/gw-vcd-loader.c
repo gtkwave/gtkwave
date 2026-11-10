@@ -3,6 +3,7 @@
 #include "gw-vcd-file-private.h"
 #include "gw-util.h"
 #include "gw-hash.h"
+#include "gw-evcd.h"
 #include "vcd-keywords.h"
 #include <stdio.h>
 #include <fstapi.h>
@@ -36,6 +37,12 @@ struct vcdsymbol
     int size;
 
     unsigned char vartype;
+
+    /* Extended VCD ($dumpports) extras, otherwise unused. */
+    unsigned char vardir; /* GwVarDir inferred from port state chars / keyword */
+    unsigned char evcd_strength0; /* last-seen 0_strength_component (0-7) */
+    unsigned char evcd_strength1; /* last-seen 1_strength_component (0-7) */
+    gboolean evcd_strength_seen;
 };
 
 #ifdef WAVE_USE_STRUCT_PACKING
@@ -125,6 +132,7 @@ struct _GwVcdLoader
     int module_len_tree;
 
     gboolean has_escaped_names;
+    gboolean has_nonimplicit_directions;
     guint warning_filesize;
 };
 
@@ -511,6 +519,17 @@ static unsigned int vlist_emit_finalize(GwVcdLoader *self)
         GwNode *n = v->narray[0];
 
         set_vcd_vartype(v, n);
+
+        if (v->vardir != GW_VAR_DIR_IMPLICIT) {
+            n->vardir = v->vardir;
+            self->has_nonimplicit_directions = TRUE;
+        }
+
+        if (v->evcd_strength_seen) {
+            n->evcd_strength_valid = 1;
+            n->evcd_strength0 = v->evcd_strength0 & 0x7;
+            n->evcd_strength1 = v->evcd_strength1 & 0x7;
+        }
 
         if (n->mv.mvlfac_vlist_writer == NULL) {
             GwVlistWriter *writer =
@@ -1139,12 +1158,40 @@ static void parse_valuechange(GwVcdLoader *self)
         case 'P': {
             /* extract port dump value.. */
             gchar *vector = g_alloca(self->yylen);
+
+            /* Classify the EVCD state chars for direction inference before the
+             * value is collapsed to four-state and before get_strtoken() reuses
+             * yytext.  18.4.3.1 ties each char to a pin direction. */
+            GwVarDir observed_dir = GW_VAR_DIR_IMPLICIT;
+            for (const char *p = self->yytext + 1; *p != '\0'; p++) {
+                observed_dir = gw_evcd_direction_merge(observed_dir,
+                                                       gw_evcd_char_to_direction(*p));
+            }
+
             evcd_strcpy(vector, self->yytext + 1); /* convert to regular vcd */
             gint vlen = self->yylen - 1;
 
-            get_strtoken(self); /* throw away 0_strength_component */
-            get_strtoken(self); /* throw away 0_strength_component */
-            get_strtoken(self); /* this is the id                  */
+            get_strtoken(self); /* 0_strength_component (single digit 0-7) */
+            gint strength0 = (self->yytext[0] >= '0' && self->yytext[0] <= '7')
+                                 ? self->yytext[0] - '0'
+                                 : -1;
+            get_strtoken(self); /* 1_strength_component (single digit 0-7) */
+            gint strength1 = (self->yytext[0] >= '0' && self->yytext[0] <= '7')
+                                 ? self->yytext[0] - '0'
+                                 : -1;
+            get_strtoken(self); /* this is the id                         */
+
+            struct vcdsymbol *v = bsearch_vcd(self, self->yytext, self->yylen);
+            if (v != NULL) {
+                v->vardir = gw_evcd_direction_merge(v->vardir, observed_dir);
+                if (strength0 >= 0) {
+                    v->evcd_strength0 = (unsigned char)strength0;
+                }
+                if (strength1 >= 0) {
+                    v->evcd_strength1 = (unsigned char)strength1;
+                }
+                v->evcd_strength_seen = TRUE;
+            }
 
             // type = 'b', because it was already converted to regular VCD values
             process_binary(self, 'b', vector, vlen);
@@ -1158,22 +1205,12 @@ static void parse_valuechange(GwVcdLoader *self)
 
 static void evcd_strcpy(char *dst, char *src)
 {
-    static const char *evcd = "DUNZduLHXTlh01?FAaBbCcf";
-    static const char *vcd = "01xz0101xz0101xzxxxxxxz";
-
+    /* Collapse the EVCD state-char alphabet to four-state VCD for the renderer.
+     * The mapping lives in gw-evcd.c so loaders and converters share it. */
     char ch;
-    int i;
 
     while ((ch = *src)) {
-        for (i = 0; i < 23; i++) {
-            if (evcd[i] == ch) {
-                *dst = vcd[i];
-                break;
-            }
-        }
-        if (i == 23)
-            *dst = 'x';
-
+        *dst = gw_evcd_char_to_vcd(ch);
         src++;
         dst++;
     }
@@ -1636,6 +1673,18 @@ static void vcd_parse_var(GwVcdLoader *self)
     v->msi = v->lsi = -1;
 
     if (vtok == V_PORT) {
+        /* V_PORT/V_IN/V_OUT/V_INOUT share one token code, so recover any
+         * explicit direction from the keyword text before it is overwritten.
+         * The IEEE $dumpports form emits a bare "port"; direction is then
+         * inferred from the state chars in the value changes. */
+        if (!strcmp(self->yytext, "in")) {
+            v->vardir = GW_VAR_DIR_IN;
+        } else if (!strcmp(self->yytext, "out")) {
+            v->vardir = GW_VAR_DIR_OUT;
+        } else if (!strcmp(self->yytext, "inout")) {
+            v->vardir = GW_VAR_DIR_INOUT;
+        }
+
         if (!vcd_parse_var_evcd(self, v, &vtok)) {
             goto err;
         }
@@ -2598,6 +2647,7 @@ static GwDumpFile *gw_vcd_loader_load(GwLoader *loader, const gchar *fname, GErr
                                         "time-range", time_range,
                                         "global-time-offset", self->global_time_offset,
                                         "has-escaped-names", self->has_escaped_names,
+                                        "has-nonimplicit-directions", self->has_nonimplicit_directions,
                                         NULL);
     // clang-format on
 
