@@ -46,9 +46,7 @@ inline
 #endif
 #endif
 static unsigned int
-hash (str, len)
-     register const char *str;
-     register unsigned int len;
+hash (register const char *str, register unsigned int len)
 {
   static const unsigned char asso_values[] =
     {
@@ -110,9 +108,7 @@ __attribute__ ((__gnu_inline__))
 #endif
 #endif
 const char *
-is_builtin_define (str, len)
-     register const char *str;
-     register unsigned int len;
+is_builtin_define (register const char *str, register unsigned int len)
 {
   static const char * const wordlist[] =
     {

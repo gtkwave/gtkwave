@@ -537,7 +537,7 @@ AC_MSG_RESULT([$EXZ])
 
 LIBXZ_LDADD=
 LIBXZ_CFLAGS=
-if test "X$EXZ" == "Xyes"; then
+if test "X$EXZ" = "Xyes"; then
 	have_liblzma=no
 	AC_TRY_COMPILE([#include <lzma.h>], [lzma_end(NULL);],, [have_liblzma=yes])
 	AC_CHECK_LIB([lzma], [lzma_end], [LIBLZMA_LDADD=-llzma] , [have_liblzma=yes])
@@ -566,7 +566,7 @@ fi
 AC_MSG_RESULT([$FASTTREE])
 
 FASTTREE_CFLAGS=
-if test "X$FASTTREE" == "Xno"; then
+if test "X$FASTTREE" = "Xno"; then
 	FASTTREE_CFLAGS='-DWAVE_DISABLE_FAST_TREE'
 fi
 AC_SUBST(FASTTREE_CFLAGS)
@@ -589,7 +589,7 @@ AC_MSG_RESULT([$EJUDY])
 
 LIBJUDY_LDADD=
 LIBJUDY_CFLAGS=
-if test "X$EJUDY" == "Xyes"; then
+if test "X$EJUDY" = "Xyes"; then
 	have_libjudy=no
 	AC_TRY_COMPILE([#include <Judy.h>], [ JudySLIns (NULL, NULL, NULL);],, [have_libjudy=yes])
 	AC_CHECK_LIB([Judy], [JudySLIns], [LIBJUDY_LDADD=-lJudy] , [have_libjudy=yes])
