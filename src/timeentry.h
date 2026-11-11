@@ -10,6 +10,7 @@
 #ifndef WAVE_TIMEENTRY_H
 #define WAVE_TIMEENTRY_H
 
+void update_endcap_times_for_partial_vcd(void);
 void time_update(void);
 void show_time_dialog(void);
 

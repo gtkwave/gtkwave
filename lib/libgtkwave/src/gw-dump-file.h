@@ -47,6 +47,7 @@ guint gw_dump_file_get_enum_filter_for_node(GwDumpFile *self, GwNode *node);
 GwTimeDimension gw_dump_file_get_time_dimension(GwDumpFile *self);
 GwTime gw_dump_file_get_time_scale(GwDumpFile *self);
 GwTimeRange *gw_dump_file_get_time_range(GwDumpFile *self);
+void gw_dump_file_set_time_range(GwDumpFile *self, GwTimeRange *time_range);
 GwTime gw_dump_file_get_global_time_offset(GwDumpFile *self);
 
 gboolean gw_dump_file_has_nonimplicit_directions(GwDumpFile *self);

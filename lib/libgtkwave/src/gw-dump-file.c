@@ -615,6 +615,27 @@ GwTimeRange *gw_dump_file_get_time_range(GwDumpFile *self)
 }
 
 /**
+ * gw_dump_file_set_time_range:
+ * @self: A #GwDumpFile.
+ * @time_range: The new time range.
+ *
+ * Sets the time range for the dump file.
+ */
+void gw_dump_file_set_time_range(GwDumpFile *self, GwTimeRange *time_range)
+{
+    g_return_if_fail(GW_IS_DUMP_FILE(self));
+
+    GwDumpFilePrivate *priv = gw_dump_file_get_instance_private(self);
+
+    if (priv->time_range != time_range) {
+        g_clear_object(&priv->time_range);
+        priv->time_range = time_range ? g_object_ref(time_range) : NULL;
+        
+        g_object_notify_by_pspec(G_OBJECT(self), properties[PROP_TIME_RANGE]);
+    }
+}
+
+/**
  * gw_dump_file_get_global_time_offset:
  * @self: A #GwDumpFile.
  *

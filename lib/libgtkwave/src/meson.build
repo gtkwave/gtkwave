@@ -19,6 +19,7 @@ libgtkwave_public_sources = [
     'gw-named-markers.c',
     'gw-node.c',
     'gw-project.c',
+    'gw-shared-memory.c',
     'gw-stems.c',
     'gw-string-table.c',
     'gw-time-range.c',
@@ -28,6 +29,7 @@ libgtkwave_public_sources = [
     'gw-var-enums.c',
     'gw-vcd-file.c',
     'gw-vcd-loader.c',
+    'gw-vcd-partial-loader.c',
 ]
 
 libgtkwave_public_headers = [
@@ -56,6 +58,7 @@ libgtkwave_public_headers = [
     'gw-marker.h',
     'gw-named-markers.h',
     'gw-project.h',
+    'gw-shared-memory.h',
     'gw-stems.h',
     'gw-string-table.h',
     'gw-symbol.h',
@@ -66,6 +69,7 @@ libgtkwave_public_headers = [
     'gw-var-enums.h',
     'gw-vcd-file.h',
     'gw-vcd-loader.h',
+    'gw-vcd-partial-loader.h',
     'gw-vector-ent.h',
 ]
 

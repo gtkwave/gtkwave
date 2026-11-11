@@ -1,10 +1,23 @@
 #include <gtkwave.h>
 #include <glib-object.h>
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#include <stdio.h>
+#endif
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 static void print_header(const gchar *title)
 {
     g_print("%s\n", title);
-    for (gsize i = 0; i < strlen(title); i++) {
+    /* Use UTF-8 character count to compute underline length so output is
+     * consistent across platforms and locales.
+     */
+    gsize count = g_utf8_strlen(title, -1);
+    for (gsize i = 0; i < count; i++) {
         g_print("-");
     }
     g_print("\n");
@@ -210,6 +223,13 @@ static void dump_aliases(GwDumpFile *file)
 
 int main(int argc, char **argv)
 {
+#ifdef _WIN32
+    /* Ensure stdout is opened in binary mode so the generator writes LF only
+     * on Windows (avoid CRLF) which keeps generated dumps identical to
+     * repository golden files.
+     */
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
     if (argc != 2) {
         g_printerr("USAGE: %s DUMP_FILE\n", argv[0]);
         exit(EXIT_FAILURE);
