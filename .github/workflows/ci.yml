@@ -55,7 +55,7 @@ jobs:
       - name: Setup meson build
         shell: msys2 {0}
         run: |
-          meson setup -Djudy=disabled -Dprefix=/tmp/gtkwave build
+          meson setup -Djudy=disabled -Dcontrib=true -Dprefix=/tmp/gtkwave build
 
       - name: Compile GTKWave
         shell: msys2 {0}
@@ -101,7 +101,7 @@ jobs:
 
       - name: Setup meson build
         run: |
-          meson setup -Djudy=disabled -Dprefix=/tmp/gtkwave build
+          meson setup -Djudy=disabled -Dcontrib=true -Dprefix=/tmp/gtkwave build
 
       - name: Compile GTKWave
         run: |
@@ -184,7 +184,7 @@ jobs:
               librsvg
 
       - name: Setup meson build script
-        run: meson setup build
+        run: meson setup -Dcontrib=true build
 
       - name: Compile GTKWave
         run: meson compile -C build

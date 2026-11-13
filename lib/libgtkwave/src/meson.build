@@ -123,7 +123,7 @@ vcd_keywords_c = custom_target(
     ],
 )
 
-libgtkwave = shared_library(
+libgtkwave = library(
     'gtkwave',
     sources: libgtkwave_public_sources
     + libgtkwave_private_sources

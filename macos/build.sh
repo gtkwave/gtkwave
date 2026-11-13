@@ -7,6 +7,7 @@ meson setup "$DIR/build" \
     -Dbuild_macos_app=true \
     -Dset_rpath=enabled \
     -Dintrospection=false \
+    -Dcontrib=true \
     --prefix=$APP_DIR/GTKWave.app \
     --datadir=Contents/Resources/share \
     --bindir=Contents/Resources/bin \

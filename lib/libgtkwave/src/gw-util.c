@@ -23,7 +23,7 @@ GParamSpec *gw_param_spec_time(const gchar *name,
 #if __STDC_VERSION__ < 199901L
 inline
 #endif
-    int
+    static int
     sigcmp_2(const char *s1, const char *s2)
 {
     char *n1, *n2;
@@ -91,7 +91,7 @@ inline
 #if __STDC_VERSION__ < 199901L
 inline
 #endif
-    int
+    static int
     sigcmp_2(const char *s1, const char *s2)
 {
     unsigned char c1, c2;
